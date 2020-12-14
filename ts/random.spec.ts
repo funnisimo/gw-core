@@ -1,5 +1,6 @@
 import 'jest-extended';
 import { random, cosmetic, configure, RandomFunction, SeedFunction } from './random';
+import * as GW from './gw';
 
 
 function always(testFn: () => any, count=1000) {
@@ -20,6 +21,12 @@ describe('random', () => {
         configure({ make });
         make.mockClear();
     }
+
+    test('GW', () => {
+        expect(GW.types.Random).toBeDefined();
+        expect(GW.random).toBeInstanceOf(GW.types.Random);
+        expect(GW.cosmetic).toBeInstanceOf(GW.types.Random);
+    });
 
     test('works with a seed', () => {
         setupMocks();
