@@ -193,6 +193,64 @@ declare namespace utils_d {
   };
 }
 
-declare function test(): number;
+declare type RandomFunction = () => number;
+declare type SeedFunction = (seed?: number) => RandomFunction;
+interface RandomConfig {
+    make: SeedFunction;
+}
+declare type WeightedArray = number[];
+interface WeightedObject {
+    [key: string]: number;
+}
+declare class Random {
+    private _fn;
+    constructor();
+    seed(val?: number): void;
+    value(): number;
+    float(): number;
+    number(max?: number): number;
+    int(max?: number): number;
+    range(lo: number, hi: number): number;
+    dice(count: number, sides: number, addend?: number): number;
+    weighted(weights: WeightedArray | WeightedObject): string | number;
+    item(list: any[]): any;
+    key(obj: BasicObject): any;
+    shuffle(list: any[], fromIndex?: number, toIndex?: number): any[];
+    sequence(n: number): any[];
+    chance(percent: number, outOf?: number): boolean;
+    clumped(lo: number, hi: number, clumps: number): number;
+}
+declare const random: Random;
+declare const cosmetic: Random;
 
-export { test, utils_d as utils };
+declare class Range {
+    lo: number;
+    hi: number;
+    clumps: number;
+    private _rng;
+    constructor(lower: number | Range | number[], upper?: number, clumps?: number, rng?: Random);
+    value(): number;
+    toString(): string;
+}
+declare function make(config: Range | string | number[] | null, rng?: Random): Range;
+
+type range_d_Range = Range;
+declare const range_d_Range: typeof Range;
+declare const range_d_make: typeof make;
+declare namespace range_d {
+  export {
+    range_d_Range as Range,
+    range_d_make as make,
+  };
+}
+
+interface GWConfig {
+    random: Partial<RandomConfig>;
+}
+declare function configure(config: Partial<GWConfig>): void;
+declare var types: {
+    Random: typeof Random;
+    Range: typeof Range;
+};
+
+export { GWConfig, configure, cosmetic, random, range_d as range, types, utils_d as utils };

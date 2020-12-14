@@ -428,9 +428,253 @@ var utils = {
     removeFromChain: removeFromChain
 };
 
-function test() {
-    return 4;
+const RANDOM_CONFIG = {
+    make: () => { return Math.random.bind(Math); }
+};
+function configure(opts) {
+    if (opts.make) {
+        if (typeof opts.make !== 'function')
+            throw new Error('Random make parameter must be a function.');
+        if (typeof opts.make(12345) !== 'function')
+            throw new Error('Random make function must accept a numeric seed and return a random function.');
+        RANDOM_CONFIG.make = opts.make;
+        random.seed();
+        cosmetic.seed();
+    }
+}
+function lotteryDrawArray(rand, frequencies) {
+    let i, maxFreq, randIndex;
+    maxFreq = 0;
+    for (i = 0; i < frequencies.length; i++) {
+        maxFreq += frequencies[i];
+    }
+    if (maxFreq <= 0) {
+        console.warn('Lottery Draw - no frequencies', frequencies, frequencies.length);
+        return 0;
+    }
+    randIndex = rand.range(0, maxFreq - 1);
+    for (i = 0; i < frequencies.length; i++) {
+        if (frequencies[i] > randIndex) {
+            return i;
+        }
+        else {
+            randIndex -= frequencies[i];
+        }
+    }
+    console.warn('Lottery Draw failed.', frequencies, frequencies.length);
+    return 0;
+}
+function lotteryDrawObject(rand, weights) {
+    const entries = Object.entries(weights);
+    const frequencies = entries.map(([_, weight]) => weight);
+    const index = lotteryDrawArray(rand, frequencies);
+    return entries[index][0];
+}
+class Random {
+    constructor() {
+        this._fn = RANDOM_CONFIG.make();
+    }
+    seed(val) {
+        this._fn = RANDOM_CONFIG.make(val);
+    }
+    value() { return this._fn(); }
+    float() { return this.value(); }
+    number(max = 0) {
+        max = max || Number.MAX_SAFE_INTEGER;
+        return Math.floor(this._fn() * max);
+    }
+    int(max = 0) { return this.number(max); }
+    range(lo, hi) {
+        if (hi <= lo)
+            return hi;
+        const diff = (hi - lo) + 1;
+        return lo + (this.number(diff));
+    }
+    dice(count, sides, addend = 0) {
+        let total = 0;
+        let mult = 1;
+        if (count < 0) {
+            count = -count;
+            mult = -1;
+        }
+        addend = addend || 0;
+        for (let i = 0; i < count; ++i) {
+            total += this.range(1, sides);
+        }
+        total *= mult;
+        return total + addend;
+    }
+    weighted(weights) {
+        if (Array.isArray(weights)) {
+            return lotteryDrawArray(this, weights);
+        }
+        return lotteryDrawObject(this, weights);
+    }
+    item(list) {
+        if (!Array.isArray(list)) {
+            list = Object.values(list);
+        }
+        return list[this.range(0, list.length - 1)];
+    }
+    key(obj) {
+        return this.item(Object.keys(obj));
+    }
+    shuffle(list, fromIndex = 0, toIndex = 0) {
+        if (arguments.length == 2) {
+            toIndex = fromIndex;
+            fromIndex = 0;
+        }
+        let i, r, buf;
+        toIndex = toIndex || list.length;
+        fromIndex = fromIndex || 0;
+        for (i = fromIndex; i < toIndex; i++) {
+            r = this.range(fromIndex, toIndex - 1);
+            if (i != r) {
+                buf = list[r];
+                list[r] = list[i];
+                list[i] = buf;
+            }
+        }
+        return list;
+    }
+    sequence(n) {
+        const list = [];
+        for (let i = 0; i < n; i++) {
+            list[i] = i;
+        }
+        return this.shuffle(list);
+    }
+    chance(percent, outOf = 100) {
+        if (percent <= 0)
+            return false;
+        if (percent >= outOf)
+            return true;
+        return (this.range(0, outOf - 1) < percent);
+    }
+    // Get a random int between lo and hi, inclusive, with probability distribution
+    // affected by clumps.
+    clumped(lo, hi, clumps) {
+        if (hi <= lo) {
+            return lo;
+        }
+        if (clumps <= 1) {
+            return this.range(lo, hi);
+        }
+        let i, total = 0, numSides = Math.floor((hi - lo) / clumps);
+        for (i = 0; i < (hi - lo) % clumps; i++) {
+            total += this.range(0, numSides + 1);
+        }
+        for (; i < clumps; i++) {
+            total += this.range(0, numSides);
+        }
+        return (total + lo);
+    }
+}
+const random = new Random();
+const cosmetic = new Random();
+
+class Range {
+    constructor(lower, upper = 0, clumps = 1, rng) {
+        this._rng = rng || random;
+        if (Array.isArray(lower)) {
+            clumps = lower[2];
+            upper = lower[1];
+            lower = lower[0];
+        }
+        else if (lower instanceof Range) {
+            clumps = lower.clumps;
+            upper = lower.hi;
+            lower = lower.lo;
+        }
+        if (upper < lower) {
+            [upper, lower] = [lower, upper];
+        }
+        this.lo = lower || 0;
+        this.hi = upper || this.lo;
+        this.clumps = clumps || 1;
+    }
+    value() {
+        return this._rng.clumped(this.lo, this.hi, this.clumps);
+    }
+    toString() {
+        if (this.lo >= this.hi) {
+            return '' + this.lo;
+        }
+        return `${this.lo}-${this.hi}`;
+    }
+}
+function make(config, rng) {
+    if (!config)
+        return new Range(0, 0, 0, rng);
+    if (config instanceof Range)
+        return config; // you can supply a custom range object
+    // if (config.value) return config;  // calc or damage
+    if (typeof config == 'function')
+        throw new Error('Custom range functions not supported - extend Range');
+    if (config === undefined || config === null)
+        return new Range(0, 0, 0, rng);
+    if (typeof config == 'number')
+        return new Range(config, config, 1, rng);
+    // @ts-ignore
+    if (config === true || config === false)
+        throw new Error('Invalid random config: ' + config);
+    if (Array.isArray(config)) {
+        return new Range(config[0], config[1], config[2], rng);
+    }
+    if (typeof config !== 'string') {
+        throw new Error('Calculations must be strings.  Received: ' + JSON.stringify(config));
+    }
+    if (config.length == 0)
+        return new Range(0, 0, 0, rng);
+    const RE = /^(?:([+-]?\d*)[Dd](\d+)([+-]?\d*)|([+-]?\d+)-(\d+):?(\d+)?|([+-]?\d+)~(\d+)|([+-]?\d+\.?\d*))/g;
+    let results;
+    while ((results = RE.exec(config)) !== null) {
+        if (results[2]) {
+            let count = Number.parseInt(results[1]) || 1;
+            const sides = Number.parseInt(results[2]);
+            const addend = Number.parseInt(results[3]) || 0;
+            const lower = addend + count;
+            const upper = addend + (count * sides);
+            return new Range(lower, upper, count, rng);
+        }
+        else if (results[4] && results[5]) {
+            const min = Number.parseInt(results[4]);
+            const max = Number.parseInt(results[5]);
+            const clumps = Number.parseInt(results[6]);
+            return new Range(min, max, clumps, rng);
+        }
+        else if (results[7] && results[8]) {
+            const base = Number.parseInt(results[7]);
+            const std = Number.parseInt(results[8]);
+            return new Range(base - 2 * std, base + 2 * std, 3, rng);
+        }
+        else if (results[9]) {
+            const v = Number.parseFloat(results[9]);
+            return new Range(v, v, 1, rng);
+        }
+    }
+    throw new Error('Not a valid range - ' + config);
 }
 
-exports.test = test;
+var range = {
+    __proto__: null,
+    Range: Range,
+    make: make
+};
+
+function configure$1(config) {
+    if (config.random) {
+        configure(config.random);
+    }
+}
+var types = {
+    Random: Random,
+    Range: Range,
+};
+
+exports.configure = configure$1;
+exports.cosmetic = cosmetic;
+exports.random = random;
+exports.range = range;
+exports.types = types;
 exports.utils = utils;

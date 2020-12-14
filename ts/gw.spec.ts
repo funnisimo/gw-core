@@ -4,8 +4,9 @@ import * as GW from './gw';
 
 describe('GW', () => {
 
-    test('Hello', () => {
-        expect(GW.test()).toEqual(4);
+    test('types', () => {
+        expect(GW.types.Random).toBeDefined();
+        expect(GW.types.Range).toBeDefined();
     });
 
 });

@@ -25,6 +25,7 @@
     "build": "npm run compile && npm run bundle && npm run copy",
     "serve": "python -m SimpleHTTPServer",
     "test": "jest",
+    "posttest": "npm run build",
     "test-debug": "node --inspect-brk node_modules/.bin/jest --runInBand"
    },
   "repository": {
