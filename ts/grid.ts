@@ -869,3 +869,60 @@ export function fillBlob(grid: Grid,
 }
 
 // Grid.fillBlob = fillBlob;
+
+
+
+
+// type InitFn<T> = (x:number, y: number) => T;
+
+// class Grid<T> extends Array<Array<T>> {
+//     constructor(w:number, h:number, v:T|InitFn<T>) {
+//         super(w);
+//         for(let x = 0; x < w; ++x) {
+//             if (typeof v === 'function') {
+//                 this[x] = new Array(h).fill(0).map( (_:any, i:number) => (v as InitFn<T>)(x, i));
+//             }
+//             else {
+//                 this[x] = new Array(h).fill(v);
+//             }
+//         }
+//     }
+
+//     // @ts-ignore
+//     fill(v:T) {
+//         super.forEach( (col) => col.fill(v) );
+//     }
+
+//     count(v:T) {
+//         return super.reduce( (sum, col) => col.reduce( (sum2, val) => {
+//             if (val === v) ++sum2;
+//             return sum2;
+//         }, sum), 0);
+//     }
+// }
+
+// const g = new Grid<number>(10, 10, 4);
+// console.log(g[2][3]);
+
+// const s = new Grid<string>(10, 10, 'test');
+// console.log(s[2][3]);
+
+// const c = new Grid<number>(10, 10, (x:number, y:number) => y * 10 + x);
+// console.log(c[2][3]);
+
+// class N {
+//     public x:number;
+//     public y:number;
+//     constructor(x:number, y:number) {
+//         this.x = x;
+//         this.y = y;
+//     }
+
+//     toString() {
+//         return `(${this.x},${this.y})`;
+//     }
+// }
+
+// const l = new Grid<N>(10, 10, (x:number,y:number) => new N(x, y));
+// console.log(l[2][3]);
+
