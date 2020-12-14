@@ -244,6 +244,27 @@ declare namespace range_d {
   };
 }
 
+declare function fl(N: number): number;
+declare function toString(flagObj: any, value: number): string;
+declare function from(obj: any, ...args: any[]): number;
+declare const flags: Record<string, Record<string, number>>;
+declare function install(flagName: string, flag: Record<string, number>): Record<string, number>;
+
+declare const flag_d_fl: typeof fl;
+declare const flag_d_toString: typeof toString;
+declare const flag_d_from: typeof from;
+declare const flag_d_flags: typeof flags;
+declare const flag_d_install: typeof install;
+declare namespace flag_d {
+  export {
+    flag_d_fl as fl,
+    flag_d_toString as toString,
+    flag_d_from as from,
+    flag_d_flags as flags,
+    flag_d_install as install,
+  };
+}
+
 interface GWConfig {
     random: Partial<RandomConfig>;
 }
@@ -253,4 +274,4 @@ declare var types: {
     Range: typeof Range;
 };
 
-export { GWConfig, configure, cosmetic, random, range_d as range, types, utils_d as utils };
+export { GWConfig, configure, cosmetic, flag_d as flag, flags, random, range_d as range, types, utils_d as utils };

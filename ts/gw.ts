@@ -1,6 +1,8 @@
 
 export * as utils from './utils';
 export * as range from './range';
+export * as flag from './flag';
+export { flags } from './flag';
 export { cosmetic, random } from './random';
 
 import * as Random from './random';
