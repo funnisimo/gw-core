@@ -1,0 +1,18 @@
+{
+	"include": ["ts"],
+	"exclude": ["ts/**/*.spec.ts"],
+	"compilerOptions": {
+		"strict": true,
+		"outDir": "js",
+		"target": "es2019",
+		"noUnusedLocals": true,
+		"noUnusedParameters": true,
+		"noEmitOnError": true,
+		"incremental": true,
+		"declaration": true,
+		"declarationDir": "js/types",
+		"moduleResolution": "node",
+		"esModuleInterop": true,
+		"sourceMap": true
+	}
+}
