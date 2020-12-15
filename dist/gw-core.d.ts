@@ -2,7 +2,8 @@
  * GW.utils
  * @module utils
  */
-declare const DIRS: number[][];
+declare type Loc = [number, number];
+declare const DIRS: Loc[];
 declare const NO_DIRECTION = -1;
 declare const UP = 0;
 declare const RIGHT = 1;
@@ -12,7 +13,7 @@ declare const RIGHT_UP = 4;
 declare const RIGHT_DOWN = 5;
 declare const LEFT_DOWN = 6;
 declare const LEFT_UP = 7;
-declare const CLOCK_DIRS: number[][];
+declare const CLOCK_DIRS: Loc[];
 declare function NOOP(): void;
 declare function TRUE(): boolean;
 declare function FALSE(): boolean;
@@ -27,7 +28,6 @@ declare function IDENTITY(x: any): any;
  * @returns {Number} the clamped value
  */
 declare function clamp(v: number, min: number, max: number): number;
-declare type Loc = [number, number];
 interface XY {
     x: number;
     y: number;
@@ -74,6 +74,7 @@ declare function eachChain(item: Chainable | null, fn: (item: Chainable, index: 
 declare function addToChain(obj: BasicObject, name: string, entry: Chainable): boolean;
 declare function removeFromChain(obj: BasicObject, name: string, entry: Chainable): boolean;
 
+type utils_d_Loc = Loc;
 declare const utils_d_DIRS: typeof DIRS;
 declare const utils_d_NO_DIRECTION: typeof NO_DIRECTION;
 declare const utils_d_UP: typeof UP;
@@ -92,7 +93,6 @@ declare const utils_d_ONE: typeof ONE;
 declare const utils_d_ZERO: typeof ZERO;
 declare const utils_d_IDENTITY: typeof IDENTITY;
 declare const utils_d_clamp: typeof clamp;
-type utils_d_Loc = Loc;
 type utils_d_XY = XY;
 declare const utils_d_x: typeof x;
 declare const utils_d_y: typeof y;
@@ -133,6 +133,7 @@ declare const utils_d_addToChain: typeof addToChain;
 declare const utils_d_removeFromChain: typeof removeFromChain;
 declare namespace utils_d {
   export {
+    utils_d_Loc as Loc,
     utils_d_DIRS as DIRS,
     utils_d_NO_DIRECTION as NO_DIRECTION,
     utils_d_UP as UP,
@@ -151,7 +152,6 @@ declare namespace utils_d {
     utils_d_ZERO as ZERO,
     utils_d_IDENTITY as IDENTITY,
     utils_d_clamp as clamp,
-    utils_d_Loc as Loc,
     utils_d_XY as XY,
     utils_d_x as x,
     utils_d_y as y,
@@ -265,25 +265,29 @@ declare namespace flag_d {
   };
 }
 
+declare type Loc$1 = Loc;
 declare type ArrayInit = (i: number) => any;
 declare function makeArray(l: number, fn: ArrayInit): any[];
-declare type GridInit = (x: number, y: number) => any;
-declare type GridEachFunction = (value: any, x: number, y: number, grid: Grid) => any;
-declare type GridMatchFunction = (value: any, x: number, y: number, grid: Grid) => boolean;
-declare class Grid extends Array {
+declare type GridInit<T> = (x: number, y: number) => T;
+declare type GridEach<T> = (value: T, x: number, y: number, grid: Grid<T>) => void;
+declare type GridUpdate<T> = (value: T, x: number, y: number, grid: Grid<T>) => T;
+declare type GridMatch<T> = (value: T, x: number, y: number, grid: Grid<T>) => boolean;
+declare type GridFormat<T> = (value: T, x: number, y: number) => string;
+declare class Grid<T> extends Array<Array<T>> {
     x?: number;
     y?: number;
+    type: string;
     private _width;
     private _height;
-    constructor(w: number, h: number, v: GridInit | number);
+    constructor(w: number, h: number, v: GridInit<T> | T);
     get width(): number;
     get height(): number;
-    resize(width: number, height: number, value: any): this;
-    forEach(fn: GridEachFunction): void;
-    eachNeighbor(x: number, y: number, fn: GridEachFunction, only4dirs?: boolean): void;
-    forRect(x: number, y: number, w: number, h: number, fn: GridEachFunction): void;
-    map(fn: GridEachFunction): any[][];
-    forCircle(x: number, y: number, radius: number, fn: GridEachFunction): void;
+    resize(width: number, height: number, v: GridInit<T> | T): void;
+    forEach(fn: GridEach<T>): void;
+    eachNeighbor(x: number, y: number, fn: GridEach<T>, only4dirs?: boolean): void;
+    forRect(x: number, y: number, w: number, h: number, fn: GridEach<T>): void;
+    map(fn: GridEach<T>): void[][];
+    forCircle(x: number, y: number, radius: number, fn: GridEach<T>): void;
     hasXY(x: number, y: number): boolean;
     isBoundaryXY(x: number, y: number): boolean;
     calcBounds(): {
@@ -292,102 +296,91 @@ declare class Grid extends Array {
         right: number;
         bottom: number;
     };
-    update(fn: GridEachFunction): void;
-    updateRect(x: number, y: number, width: number, height: number, fn: GridEachFunction): void;
-    updateCircle(x: number, y: number, radius: number, fn: GridEachFunction): void;
-    fill(v?: number): void;
-    fillRect(x: number, y: number, w: number, h: number, v?: number): void;
-    fillCircle(x: number, y: number, radius: number, v?: number): void;
-    replace(findValue: number, replaceValue: number): void;
-    copy(from: Grid): void;
-    count(match: GridMatchFunction | number): number;
-    dump(fmtFn: (v: any) => string): void;
-    closestMatchingXY(x: number, y: number, fn: (v: any, x: number, y: number, grid: Grid) => boolean): number[];
-    firstMatchingXY(v: any): number[];
-    randomMatchingXY(v: any, deterministic?: boolean): number[];
-    matchingXYNear(x: number, y: number, v: any, deterministic?: boolean): number[] | null;
-    arcCount(x: number, y: number, testFn: (v: any, x: number, y: number, grid: Grid) => boolean): number;
+    update(fn: GridUpdate<T>): void;
+    updateRect(x: number, y: number, width: number, height: number, fn: GridUpdate<T>): void;
+    updateCircle(x: number, y: number, radius: number, fn: GridUpdate<T>): void;
+    fill(v: T | GridUpdate<T>): void;
+    fillRect(x: number, y: number, w: number, h: number, v: T | GridUpdate<T>): void;
+    fillCircle(x: number, y: number, radius: number, v: T | GridUpdate<T>): void;
+    replace(findValue: T, replaceValue: T): void;
+    copy(from: Grid<T>): void;
+    count(match: GridMatch<T> | T): number;
+    dump(fmtFn?: GridFormat<T>): void;
+    dumpRect(left: number, top: number, width: number, height: number, fmtFn?: GridFormat<T>): void;
+    dumpAround(x: number, y: number, radius: number): void;
+    closestMatchingLoc(x: number, y: number, fn: GridMatch<T>): Loc$1;
+    firstMatchingLoc(v: T | GridMatch<T>): Loc$1;
+    randomMatchingLoc(v: T | GridMatch<T>, deterministic?: boolean): Loc$1;
+    matchingLocNear(x: number, y: number, v: T | GridMatch<T>, deterministic?: boolean): Loc$1;
+    arcCount(x: number, y: number, testFn: GridMatch<T>): number;
 }
-declare function make$1(w: number, h: number, v: any): Grid;
-declare function alloc(w: number, h: number, v?: any): Grid;
-declare function free(grid: Grid): void;
-declare function dump(grid: Grid, fmtFn: (v: any) => string): void;
-declare function dumpRect(grid: Grid, left: number, top: number, width: number, height: number, fmtFn?: (v: any, x: number, y: number) => string): void;
-declare function dumpAround(grid: Grid, x: number, y: number, radius: number): void;
-declare function findAndReplace(grid: Grid, findValueMin: number, findValueMax: number, fillValue: number): void;
-declare function floodFillRange(grid: Grid, x: number, y: number, eligibleValueMin?: number, eligibleValueMax?: number, fillValue?: number): number;
-declare function invert(grid: Grid): void;
-declare function intersection(onto: Grid, a: Grid, b: Grid): void;
-declare function unite(onto: Grid, a: Grid, b: Grid): void;
-declare function closestLocationWithValue(grid: Grid, x: number, y: number, value?: number): number[];
-declare function randomLocationWithValue(grid: Grid, validValue: any): number[];
-declare function getQualifyingLocNear(grid: Grid, x: number, y: number, deterministic?: boolean): number[] | null;
-declare function leastPositiveValue(grid: Grid): number;
-declare function randomLeastPositiveLocation(grid: Grid, deterministic?: boolean): number[];
-declare function floodFill(grid: Grid, x: number, y: number, matchValue: any, fillValue: any): number;
-declare function offsetZip(destGrid: Grid, srcGrid: Grid, srcToDestX: number, srcToDestY: number, value: any): void;
-declare function directionOfDoorSite(grid: Grid, x: number, y: number, isOpen?: number): number;
-declare function fillBlob(grid: Grid, roundCount: number, minBlobWidth: number, minBlobHeight: number, maxBlobWidth: number, maxBlobHeight: number, percentSeeded: number, birthParameters: string, survivalParameters: string): {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-};
+declare class NumGrid extends Grid<number> {
+    static alloc(w: number, h: number, v?: number): NumGrid;
+    static free(grid: NumGrid): void;
+    constructor(w: number, h: number, v?: number);
+    findReplaceRange(findValueMin: number, findValueMax: number, fillValue: number): void;
+    floodFillRange(x: number, y: number, eligibleValueMin?: number, eligibleValueMax?: number, fillValue?: number): number;
+    invert(): void;
+    closestLocWithValue(x: number, y: number, value?: number): Loc$1;
+    randomLocWithValue(validValue?: number): Loc$1;
+    getQualifyingLocNear(x: number, y: number, deterministic?: boolean): Loc;
+    leastPositiveValue(): number;
+    randomLeastPositiveLoc(deterministic?: boolean): Loc$1;
+    floodFill(x: number, y: number, matchValue: number | GridMatch<number>, fillValue: number | GridUpdate<number>): number;
+    protected _cellularAutomataRound(birthParameters: string, survivalParameters: string): boolean;
+    fillBlob(roundCount: number, minBlobWidth: number, minBlobHeight: number, maxBlobWidth: number, maxBlobHeight: number, percentSeeded: number, birthParameters: string, survivalParameters: string): {
+        x: number;
+        y: number;
+        width: number;
+        height: number;
+    };
+}
+declare const alloc: typeof NumGrid.alloc;
+declare const free: typeof NumGrid.free;
+declare function make$1<T>(w: number, h: number, v?: T | GridInit<T>): NumGrid | Grid<T>;
+declare type GridZip<T, U> = (destVal: T, sourceVal: U, destX: number, destY: number, sourceX: number, sourceY: number, destGrid: Grid<T>, sourceGrid: Grid<U>) => void;
+declare function offsetZip<T, U>(destGrid: Grid<T>, srcGrid: Grid<U>, srcToDestX: number, srcToDestY: number, value: T | GridZip<T, U>): void;
+declare function directionOfDoorSite<T>(grid: Grid<T>, x: number, y: number, isOpen: T | GridMatch<T>): number;
+declare function intersection(onto: NumGrid, a: NumGrid, b: NumGrid): void;
+declare function unite(onto: NumGrid, a: NumGrid, b: NumGrid): void;
 
 type grid_d_ArrayInit = ArrayInit;
 declare const grid_d_makeArray: typeof makeArray;
-type grid_d_GridInit = GridInit;
-type grid_d_GridEachFunction = GridEachFunction;
-type grid_d_GridMatchFunction = GridMatchFunction;
-type grid_d_Grid = Grid;
+type grid_d_GridInit<_0> = GridInit<_0>;
+type grid_d_GridEach<_0> = GridEach<_0>;
+type grid_d_GridUpdate<_0> = GridUpdate<_0>;
+type grid_d_GridMatch<_0> = GridMatch<_0>;
+type grid_d_GridFormat<_0> = GridFormat<_0>;
+type grid_d_Grid<_0> = Grid<_0>;
 declare const grid_d_Grid: typeof Grid;
+type grid_d_NumGrid = NumGrid;
+declare const grid_d_NumGrid: typeof NumGrid;
 declare const grid_d_alloc: typeof alloc;
 declare const grid_d_free: typeof free;
-declare const grid_d_dump: typeof dump;
-declare const grid_d_dumpRect: typeof dumpRect;
-declare const grid_d_dumpAround: typeof dumpAround;
-declare const grid_d_findAndReplace: typeof findAndReplace;
-declare const grid_d_floodFillRange: typeof floodFillRange;
-declare const grid_d_invert: typeof invert;
-declare const grid_d_intersection: typeof intersection;
-declare const grid_d_unite: typeof unite;
-declare const grid_d_closestLocationWithValue: typeof closestLocationWithValue;
-declare const grid_d_randomLocationWithValue: typeof randomLocationWithValue;
-declare const grid_d_getQualifyingLocNear: typeof getQualifyingLocNear;
-declare const grid_d_leastPositiveValue: typeof leastPositiveValue;
-declare const grid_d_randomLeastPositiveLocation: typeof randomLeastPositiveLocation;
-declare const grid_d_floodFill: typeof floodFill;
+type grid_d_GridZip<_0, _1> = GridZip<_0, _1>;
 declare const grid_d_offsetZip: typeof offsetZip;
 declare const grid_d_directionOfDoorSite: typeof directionOfDoorSite;
-declare const grid_d_fillBlob: typeof fillBlob;
+declare const grid_d_intersection: typeof intersection;
+declare const grid_d_unite: typeof unite;
 declare namespace grid_d {
   export {
     grid_d_ArrayInit as ArrayInit,
     grid_d_makeArray as makeArray,
     grid_d_GridInit as GridInit,
-    grid_d_GridEachFunction as GridEachFunction,
-    grid_d_GridMatchFunction as GridMatchFunction,
+    grid_d_GridEach as GridEach,
+    grid_d_GridUpdate as GridUpdate,
+    grid_d_GridMatch as GridMatch,
+    grid_d_GridFormat as GridFormat,
     grid_d_Grid as Grid,
-    make$1 as make,
+    grid_d_NumGrid as NumGrid,
     grid_d_alloc as alloc,
     grid_d_free as free,
-    grid_d_dump as dump,
-    grid_d_dumpRect as dumpRect,
-    grid_d_dumpAround as dumpAround,
-    grid_d_findAndReplace as findAndReplace,
-    grid_d_floodFillRange as floodFillRange,
-    grid_d_invert as invert,
-    grid_d_intersection as intersection,
-    grid_d_unite as unite,
-    grid_d_closestLocationWithValue as closestLocationWithValue,
-    grid_d_randomLocationWithValue as randomLocationWithValue,
-    grid_d_getQualifyingLocNear as getQualifyingLocNear,
-    grid_d_leastPositiveValue as leastPositiveValue,
-    grid_d_randomLeastPositiveLocation as randomLeastPositiveLocation,
-    grid_d_floodFill as floodFill,
+    make$1 as make,
+    grid_d_GridZip as GridZip,
     grid_d_offsetZip as offsetZip,
     grid_d_directionOfDoorSite as directionOfDoorSite,
-    grid_d_fillBlob as fillBlob,
+    grid_d_intersection as intersection,
+    grid_d_unite as unite,
   };
 }
 
@@ -399,6 +392,7 @@ declare var types: {
     Random: typeof Random;
     Range: typeof Range;
     Grid: typeof Grid;
+    NumGrid: typeof NumGrid;
 };
 
 export { GWConfig, configure, cosmetic, flag_d as flag, flags, grid_d as grid, random, range_d as range, types, utils_d as utils };

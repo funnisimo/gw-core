@@ -24,4 +24,5 @@ export var types = {
     Random: Random.Random,
     Range: Range.Range,
     Grid: Grid.Grid,
+    NumGrid: Grid.NumGrid,
 }

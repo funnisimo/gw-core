@@ -2,7 +2,8 @@
  * GW.utils
  * @module utils
  */
-export declare const DIRS: number[][];
+export declare type Loc = [number, number];
+export declare const DIRS: Loc[];
 export declare const NO_DIRECTION = -1;
 export declare const UP = 0;
 export declare const RIGHT = 1;
@@ -12,7 +13,7 @@ export declare const RIGHT_UP = 4;
 export declare const RIGHT_DOWN = 5;
 export declare const LEFT_DOWN = 6;
 export declare const LEFT_UP = 7;
-export declare const CLOCK_DIRS: number[][];
+export declare const CLOCK_DIRS: Loc[];
 export declare function NOOP(): void;
 export declare function TRUE(): boolean;
 export declare function FALSE(): boolean;
@@ -27,7 +28,6 @@ export declare function IDENTITY(x: any): any;
  * @returns {Number} the clamped value
  */
 export declare function clamp(v: number, min: number, max: number): number;
-export declare type Loc = [number, number];
 export interface XY {
     x: number;
     y: number;

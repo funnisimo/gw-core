@@ -5,6 +5,7 @@
  * @module utils
  */
 
+export type Loc = [number,number];
 
 // DIRS are organized clockwise
 // - first 4 are arrow directions
@@ -13,7 +14,7 @@
 // - last 4 are diagonals
 //   >> rotate 90 degrees clockwise ==>> newIndex = 4 + (oldIndex + 1) % 4;
 //   >> opposite diagonal ==>> newIndex = 4 + (index + 2) % 4;
-export const DIRS      = [[0,1], [1,0], [0,-1], [-1,0], [1, 1], [ 1,-1], [-1,-1], [-1,1]];
+export const DIRS: Loc[]      = [[0,1], [1,0], [0,-1], [-1,0], [1, 1], [ 1,-1], [-1,-1], [-1,1]];
 
 export const NO_DIRECTION = -1;
 export const UP = 0;
@@ -29,7 +30,7 @@ export const LEFT_UP = 7;
 // >> opposite = (index + 4) % 8
 // >> 90 degrees rotate right = (index + 2) % 8
 // >> 90 degrees rotate left = (8 + index - 2) % 8
-export const CLOCK_DIRS = [[0,1], [1,1], [1, 0], [1,-1], [0,-1], [-1,-1], [-1, 0], [-1,1]];
+export const CLOCK_DIRS: Loc[] = [[0,1], [1,1], [1, 0], [1,-1], [0,-1], [-1,-1], [-1, 0], [-1,1]];
 
 
 export function NOOP()  {}
@@ -52,7 +53,6 @@ export function clamp(v:number, min:number, max:number) {
   return v;
 }
 
-export type Loc = [number,number];
 export interface XY {
     x:number;
     y:number;

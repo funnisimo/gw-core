@@ -15,4 +15,5 @@ export declare var types: {
     Random: typeof Random.Random;
     Range: typeof Range.Range;
     Grid: typeof Grid.Grid;
+    NumGrid: typeof Grid.NumGrid;
 };

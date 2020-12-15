@@ -27,7 +27,7 @@
     "test": "jest",
     "posttest": "npm run build",
     "test-debug": "node --inspect-brk node_modules/.bin/jest --runInBand"
-   },
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/funnisimo/gw-core.git"
