@@ -501,6 +501,35 @@ declare namespace io_d {
   };
 }
 
+interface FovStrategy {
+    isBlocked: (x: number, y: number) => boolean;
+    calcRadius: (x: number, y: number) => number;
+    setVisible: (x: number, y: number, v: number) => void;
+    hasXY: (x: number, y: number) => boolean;
+}
+declare class FOV {
+    protected _isBlocked: (x: number, y: number) => boolean;
+    protected _calcRadius: (x: number, y: number) => number;
+    protected _setVisible: (x: number, y: number, v: number) => void;
+    protected _hasXY: (x: number, y: number) => boolean;
+    protected _startX: number;
+    protected _startY: number;
+    protected _maxRadius: number;
+    constructor(strategy: FovStrategy);
+    calculate(x: number, y: number, maxRadius: number): void;
+    castLight(row: number, startSlope: number, endSlope: number, xx: number, xy: number, yx: number, yy: number): void;
+}
+
+type fov_d_FovStrategy = FovStrategy;
+type fov_d_FOV = FOV;
+declare const fov_d_FOV: typeof FOV;
+declare namespace fov_d {
+  export {
+    fov_d_FovStrategy as FovStrategy,
+    fov_d_FOV as FOV,
+  };
+}
+
 declare var data: {};
 
-export { Random, cosmetic, data, flag_d as flag, flags, grid_d as grid, io_d as io, random, range_d as range, utils_d as utils };
+export { Random, cosmetic, data, flag_d as flag, flags, fov_d as fov, grid_d as grid, io_d as io, random, range_d as range, utils_d as utils };

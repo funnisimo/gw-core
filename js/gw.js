@@ -8,6 +8,8 @@ import * as grid_1 from "./grid";
 export { grid_1 as grid };
 import * as io_1 from "./io";
 export { io_1 as io };
+import * as fov_1 from "./fov";
+export { fov_1 as fov };
 export { flags } from "./flag";
 export { cosmetic, random, Random } from "./random";
 export var data = {};
