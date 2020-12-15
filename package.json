@@ -2,9 +2,10 @@
   "name": "gw-core",
   "version": "0.0.1",
   "description": "Basic Roguelike functionality",
-  "main": "dist/gw-core.js",
+  "main": "dist/gw-core.cjs",
   "browser": "dist/gw-core.min.js",
-  "module": "dist/gw-core.js",
+  "module": "dist/gw-core.mjs",
+  "type": "module",
   "types": "dist/gw-core.d.ts",
   "dependencies": {},
   "devDependencies": {

@@ -12,7 +12,7 @@ export default [
   },
 {
   input: 'js/gw.js',
-  output: {
+  output: [{
     file: 'dist/gw-core.min.js',
     format: 'umd',
     name: 'GW',
@@ -20,15 +20,17 @@ export default [
     extend: true,
     sourcemap: true,
     plugins: [terser()]
-  }
-},
-{
-  input: 'js/gw.js',
-  output: {
-    file: 'dist/gw-core.js',
+  },
+  {
+    file: 'dist/gw-core.mjs',
+    format: 'es',
+    freeze: false,
+  },
+  {
+    file: 'dist/gw-core.cjs',
     format: 'cjs',
     freeze: false,
   }
-},
-
+  ]
+}
 ];

@@ -193,12 +193,18 @@ declare namespace utils_d {
   };
 }
 
+declare type RandomFunction = () => number;
+declare type SeedFunction = (seed?: number) => RandomFunction;
+interface RandomConfig {
+    make: SeedFunction;
+}
 declare type WeightedArray = number[];
 interface WeightedObject {
     [key: string]: number;
 }
 declare class Random {
     private _fn;
+    static configure(opts: Partial<RandomConfig>): void;
     constructor();
     seed(val?: number): void;
     value(): number;
