@@ -1,6 +1,6 @@
 {
   "name": "gw-core",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Basic Roguelike functionality",
   "main": "dist/gw-core.js",
   "browser": "dist/gw-core.min.js",
