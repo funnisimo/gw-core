@@ -1,12 +1,14 @@
 const RANDOM_CONFIG = {
-    make: () => { return Math.random.bind(Math); }
+    make: () => {
+        return Math.random.bind(Math);
+    },
 };
 export function configure(opts) {
     if (opts.make) {
-        if (typeof opts.make !== 'function')
-            throw new Error('Random make parameter must be a function.');
-        if (typeof opts.make(12345) !== 'function')
-            throw new Error('Random make function must accept a numeric seed and return a random function.');
+        if (typeof opts.make !== "function")
+            throw new Error("Random make parameter must be a function.");
+        if (typeof opts.make(12345) !== "function")
+            throw new Error("Random make function must accept a numeric seed and return a random function.");
         RANDOM_CONFIG.make = opts.make;
         random.seed();
         cosmetic.seed();
@@ -19,7 +21,7 @@ function lotteryDrawArray(rand, frequencies) {
         maxFreq += frequencies[i];
     }
     if (maxFreq <= 0) {
-        console.warn('Lottery Draw - no frequencies', frequencies, frequencies.length);
+        console.warn("Lottery Draw - no frequencies", frequencies, frequencies.length);
         return 0;
     }
     randIndex = rand.range(0, maxFreq - 1);
@@ -31,7 +33,7 @@ function lotteryDrawArray(rand, frequencies) {
             randIndex -= frequencies[i];
         }
     }
-    console.warn('Lottery Draw failed.', frequencies, frequencies.length);
+    console.warn("Lottery Draw failed.", frequencies, frequencies.length);
     return 0;
 }
 function lotteryDrawObject(rand, weights) {
@@ -47,18 +49,24 @@ export class Random {
     seed(val) {
         this._fn = RANDOM_CONFIG.make(val);
     }
-    value() { return this._fn(); }
-    float() { return this.value(); }
+    value() {
+        return this._fn();
+    }
+    float() {
+        return this.value();
+    }
     number(max = 0) {
         max = max || Number.MAX_SAFE_INTEGER;
         return Math.floor(this._fn() * max);
     }
-    int(max = 0) { return this.number(max); }
+    int(max = 0) {
+        return this.number(max);
+    }
     range(lo, hi) {
         if (hi <= lo)
             return hi;
-        const diff = (hi - lo) + 1;
-        return lo + (this.number(diff));
+        const diff = hi - lo + 1;
+        return lo + this.number(diff);
     }
     dice(count, sides, addend = 0) {
         let total = 0;
@@ -119,7 +127,7 @@ export class Random {
             return false;
         if (percent >= outOf)
             return true;
-        return (this.range(0, outOf - 1) < percent);
+        return this.range(0, outOf - 1) < percent;
     }
     // Get a random int between lo and hi, inclusive, with probability distribution
     // affected by clumps.
@@ -137,7 +145,7 @@ export class Random {
         for (; i < clumps; i++) {
             total += this.range(0, numSides);
         }
-        return (total + lo);
+        return total + lo;
     }
 }
 export const random = new Random();

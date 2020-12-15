@@ -1,4 +1,4 @@
-import { random } from './random';
+import { random } from "./random";
 export class Range {
     constructor(lower, upper = 0, clumps = 1, rng) {
         this._rng = rng || random;
@@ -24,7 +24,7 @@ export class Range {
     }
     toString() {
         if (this.lo >= this.hi) {
-            return '' + this.lo;
+            return "" + this.lo;
         }
         return `${this.lo}-${this.hi}`;
     }
@@ -35,20 +35,20 @@ export function make(config, rng) {
     if (config instanceof Range)
         return config; // you can supply a custom range object
     // if (config.value) return config;  // calc or damage
-    if (typeof config == 'function')
-        throw new Error('Custom range functions not supported - extend Range');
+    if (typeof config == "function")
+        throw new Error("Custom range functions not supported - extend Range");
     if (config === undefined || config === null)
         return new Range(0, 0, 0, rng);
-    if (typeof config == 'number')
+    if (typeof config == "number")
         return new Range(config, config, 1, rng);
     // @ts-ignore
     if (config === true || config === false)
-        throw new Error('Invalid random config: ' + config);
+        throw new Error("Invalid random config: " + config);
     if (Array.isArray(config)) {
         return new Range(config[0], config[1], config[2], rng);
     }
-    if (typeof config !== 'string') {
-        throw new Error('Calculations must be strings.  Received: ' + JSON.stringify(config));
+    if (typeof config !== "string") {
+        throw new Error("Calculations must be strings.  Received: " + JSON.stringify(config));
     }
     if (config.length == 0)
         return new Range(0, 0, 0, rng);
@@ -60,7 +60,7 @@ export function make(config, rng) {
             const sides = Number.parseInt(results[2]);
             const addend = Number.parseInt(results[3]) || 0;
             const lower = addend + count;
-            const upper = addend + (count * sides);
+            const upper = addend + count * sides;
             return new Range(lower, upper, count, rng);
         }
         else if (results[4] && results[5]) {
@@ -79,6 +79,6 @@ export function make(config, rng) {
             return new Range(v, v, 1, rng);
         }
     }
-    throw new Error('Not a valid range - ' + config);
+    throw new Error("Not a valid range - " + config);
 }
 //# sourceMappingURL=range.js.map

@@ -1,4 +1,4 @@
-import * as Utils from './utils';
+import * as Utils from "./utils";
 declare type Loc = Utils.Loc;
 export declare type ArrayInit<T> = (i: number) => T;
 export declare function makeArray<T>(l: number, fn?: T | ArrayInit<T>): Array<T>;

@@ -1,4 +1,4 @@
-import { BasicObject } from './utils';
+import { BasicObject } from "./utils";
 export declare type RandomFunction = () => number;
 export declare type SeedFunction = (seed?: number) => RandomFunction;
 export interface RandomConfig {

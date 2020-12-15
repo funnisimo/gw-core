@@ -9,7 +9,16 @@
 // - last 4 are diagonals
 //   >> rotate 90 degrees clockwise ==>> newIndex = 4 + (oldIndex + 1) % 4;
 //   >> opposite diagonal ==>> newIndex = 4 + (index + 2) % 4;
-export const DIRS = [[0, 1], [1, 0], [0, -1], [-1, 0], [1, 1], [1, -1], [-1, -1], [-1, 1]];
+export const DIRS = [
+    [0, 1],
+    [1, 0],
+    [0, -1],
+    [-1, 0],
+    [1, 1],
+    [1, -1],
+    [-1, -1],
+    [-1, 1],
+];
 export const NO_DIRECTION = -1;
 export const UP = 0;
 export const RIGHT = 1;
@@ -23,13 +32,32 @@ export const LEFT_UP = 7;
 // >> opposite = (index + 4) % 8
 // >> 90 degrees rotate right = (index + 2) % 8
 // >> 90 degrees rotate left = (8 + index - 2) % 8
-export const CLOCK_DIRS = [[0, 1], [1, 1], [1, 0], [1, -1], [0, -1], [-1, -1], [-1, 0], [-1, 1]];
+export const CLOCK_DIRS = [
+    [0, 1],
+    [1, 1],
+    [1, 0],
+    [1, -1],
+    [0, -1],
+    [-1, -1],
+    [-1, 0],
+    [-1, 1],
+];
 export function NOOP() { }
-export function TRUE() { return true; }
-export function FALSE() { return false; }
-export function ONE() { return 1; }
-export function ZERO() { return 0; }
-export function IDENTITY(x) { return x; }
+export function TRUE() {
+    return true;
+}
+export function FALSE() {
+    return false;
+}
+export function ONE() {
+    return 1;
+}
+export function ZERO() {
+    return 0;
+}
+export function IDENTITY(x) {
+    return x;
+}
 /**
  * clamps a value between min and max (inclusive)
  * @param v {Number} the value to clamp
@@ -61,7 +89,7 @@ export function addXY(dest, src) {
     dest.y += y(src);
 }
 export function equalsXY(dest, src) {
-    return (dest.x == x(src)) && (dest.y == y(src));
+    return dest.x == x(src) && dest.y == y(src);
 }
 export function lerpXY(a, b, pct) {
     if (pct > 1) {
@@ -78,7 +106,7 @@ export function distanceBetween(x1, y1, x2, y2) {
     const x = Math.abs(x1 - x2);
     const y = Math.abs(y1 - y2);
     const min = Math.min(x, y);
-    return x + y - (0.6 * min);
+    return x + y - 0.6 * min;
 }
 export function distanceFromTo(a, b) {
     return distanceBetween(x(a), y(a), x(b), y(b));
@@ -143,8 +171,8 @@ export function stepFromTo(a, b, fn) {
     const c = [0, 0];
     const last = [99999, 99999];
     for (let step = 0; step <= steps; ++step) {
-        c[0] = x0 + Math.floor(diff[0] * step / steps);
-        c[1] = y0 + Math.floor(diff[1] * step / steps);
+        c[0] = x0 + Math.floor((diff[0] * step) / steps);
+        c[1] = y0 + Math.floor((diff[1] * step) / steps);
         if (c[0] != last[0] || c[1] != last[1]) {
             fn(c[0], c[1]);
         }
@@ -155,7 +183,7 @@ export function stepFromTo(a, b, fn) {
 // Draws the smooth gradient that appears on a button when you hover over or depress it.
 // Returns the percentage by which the current tile should be averaged toward a hilite color.
 export function smoothHiliteGradient(currentXValue, maxXValue) {
-    return Math.floor(100 * Math.sin(Math.PI * currentXValue / (maxXValue)));
+    return Math.floor(100 * Math.sin((Math.PI * currentXValue) / maxXValue));
 }
 function assignField(dest, src, key) {
     const current = dest[key];
@@ -193,7 +221,7 @@ function assignField(dest, src, key) {
 //   });
 // }
 export function assignOmitting(omit, dest, src) {
-    if (typeof omit === 'string') {
+    if (typeof omit === "string") {
         omit = omit.split(/[,|]/g).map((t) => t.trim());
     }
     Object.keys(src).forEach((key) => {
@@ -214,14 +242,14 @@ export function setDefaults(obj, def, custom = null) {
         let defValue = def[key];
         dest = obj;
         // allow for => 'stats.health': 100
-        const parts = key.split('.');
+        const parts = key.split(".");
         while (parts.length > 1) {
             key = parts.shift();
             if (dest[key] === undefined) {
                 dest = dest[key] = {};
             }
-            else if (typeof dest[key] !== 'object') {
-                ERROR('Trying to set default member on non-object config item: ' + origKey);
+            else if (typeof dest[key] !== "object") {
+                ERROR("Trying to set default member on non-object config item: " + origKey);
             }
             else {
                 dest = dest[key];
@@ -240,7 +268,7 @@ export function setDefaults(obj, def, custom = null) {
             else if (Array.isArray(defValue)) {
                 dest[key] = defValue.slice();
             }
-            else if (typeof defValue === 'object') {
+            else if (typeof defValue === "object") {
                 dest[key] = defValue; // Object.assign({}, defValue); -- this breaks assigning a Color object as a default...
             }
             else {
@@ -256,13 +284,13 @@ export function kindDefaults(obj, def) {
         if (!current) {
             current = [];
         }
-        else if (typeof current == 'string') {
+        else if (typeof current == "string") {
             current = current.split(/[,|]/).map((t) => t.trim());
         }
         else if (!Array.isArray(current)) {
             current = [current];
         }
-        if (typeof defValue === 'string') {
+        if (typeof defValue === "string") {
             defValue = defValue.split(/[,|]/).map((t) => t.trim());
         }
         else if (!Array.isArray(defValue)) {
@@ -285,7 +313,7 @@ export function pick(obj, ...fields) {
     return data;
 }
 export function clearObject(obj) {
-    Object.keys(obj).forEach((key) => obj[key] = undefined);
+    Object.keys(obj).forEach((key) => (obj[key] = undefined));
 }
 export function ERROR(message) {
     throw new Error(message);
@@ -301,7 +329,7 @@ export function getOpt(obj, member, _default) {
 }
 export function firstOpt(field, ...args) {
     for (let arg of args) {
-        if (typeof arg !== 'object' || Array.isArray(arg)) {
+        if (typeof arg !== "object" || Array.isArray(arg)) {
             return arg;
         }
         if (arg[field] !== undefined) {
@@ -328,7 +356,7 @@ export function chainIncludes(chain, entry) {
     while (chain && chain !== entry) {
         chain = chain.next;
     }
-    return (chain === entry);
+    return chain === entry;
 }
 export function eachChain(item, fn) {
     let index = 0;

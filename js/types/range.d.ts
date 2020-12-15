@@ -1,4 +1,4 @@
-import { Random } from './random';
+import { Random } from "./random";
 export declare class Range {
     lo: number;
     hi: number;

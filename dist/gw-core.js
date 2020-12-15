@@ -13,7 +13,16 @@ Object.defineProperty(exports, '__esModule', { value: true });
 // - last 4 are diagonals
 //   >> rotate 90 degrees clockwise ==>> newIndex = 4 + (oldIndex + 1) % 4;
 //   >> opposite diagonal ==>> newIndex = 4 + (index + 2) % 4;
-const DIRS = [[0, 1], [1, 0], [0, -1], [-1, 0], [1, 1], [1, -1], [-1, -1], [-1, 1]];
+const DIRS = [
+    [0, 1],
+    [1, 0],
+    [0, -1],
+    [-1, 0],
+    [1, 1],
+    [1, -1],
+    [-1, -1],
+    [-1, 1],
+];
 const NO_DIRECTION = -1;
 const UP = 0;
 const RIGHT = 1;
@@ -27,13 +36,32 @@ const LEFT_UP = 7;
 // >> opposite = (index + 4) % 8
 // >> 90 degrees rotate right = (index + 2) % 8
 // >> 90 degrees rotate left = (8 + index - 2) % 8
-const CLOCK_DIRS = [[0, 1], [1, 1], [1, 0], [1, -1], [0, -1], [-1, -1], [-1, 0], [-1, 1]];
+const CLOCK_DIRS = [
+    [0, 1],
+    [1, 1],
+    [1, 0],
+    [1, -1],
+    [0, -1],
+    [-1, -1],
+    [-1, 0],
+    [-1, 1],
+];
 function NOOP() { }
-function TRUE() { return true; }
-function FALSE() { return false; }
-function ONE() { return 1; }
-function ZERO() { return 0; }
-function IDENTITY(x) { return x; }
+function TRUE() {
+    return true;
+}
+function FALSE() {
+    return false;
+}
+function ONE() {
+    return 1;
+}
+function ZERO() {
+    return 0;
+}
+function IDENTITY(x) {
+    return x;
+}
 /**
  * clamps a value between min and max (inclusive)
  * @param v {Number} the value to clamp
@@ -65,7 +93,7 @@ function addXY(dest, src) {
     dest.y += y(src);
 }
 function equalsXY(dest, src) {
-    return (dest.x == x(src)) && (dest.y == y(src));
+    return dest.x == x(src) && dest.y == y(src);
 }
 function lerpXY(a, b, pct) {
     if (pct > 1) {
@@ -82,7 +110,7 @@ function distanceBetween(x1, y1, x2, y2) {
     const x = Math.abs(x1 - x2);
     const y = Math.abs(y1 - y2);
     const min = Math.min(x, y);
-    return x + y - (0.6 * min);
+    return x + y - 0.6 * min;
 }
 function distanceFromTo(a, b) {
     return distanceBetween(x(a), y(a), x(b), y(b));
@@ -147,8 +175,8 @@ function stepFromTo(a, b, fn) {
     const c = [0, 0];
     const last = [99999, 99999];
     for (let step = 0; step <= steps; ++step) {
-        c[0] = x0 + Math.floor(diff[0] * step / steps);
-        c[1] = y0 + Math.floor(diff[1] * step / steps);
+        c[0] = x0 + Math.floor((diff[0] * step) / steps);
+        c[1] = y0 + Math.floor((diff[1] * step) / steps);
         if (c[0] != last[0] || c[1] != last[1]) {
             fn(c[0], c[1]);
         }
@@ -159,7 +187,7 @@ function stepFromTo(a, b, fn) {
 // Draws the smooth gradient that appears on a button when you hover over or depress it.
 // Returns the percentage by which the current tile should be averaged toward a hilite color.
 function smoothHiliteGradient(currentXValue, maxXValue) {
-    return Math.floor(100 * Math.sin(Math.PI * currentXValue / (maxXValue)));
+    return Math.floor(100 * Math.sin((Math.PI * currentXValue) / maxXValue));
 }
 function assignField(dest, src, key) {
     const current = dest[key];
@@ -197,7 +225,7 @@ function assignField(dest, src, key) {
 //   });
 // }
 function assignOmitting(omit, dest, src) {
-    if (typeof omit === 'string') {
+    if (typeof omit === "string") {
         omit = omit.split(/[,|]/g).map((t) => t.trim());
     }
     Object.keys(src).forEach((key) => {
@@ -218,14 +246,14 @@ function setDefaults(obj, def, custom = null) {
         let defValue = def[key];
         dest = obj;
         // allow for => 'stats.health': 100
-        const parts = key.split('.');
+        const parts = key.split(".");
         while (parts.length > 1) {
             key = parts.shift();
             if (dest[key] === undefined) {
                 dest = dest[key] = {};
             }
-            else if (typeof dest[key] !== 'object') {
-                ERROR('Trying to set default member on non-object config item: ' + origKey);
+            else if (typeof dest[key] !== "object") {
+                ERROR("Trying to set default member on non-object config item: " + origKey);
             }
             else {
                 dest = dest[key];
@@ -242,7 +270,7 @@ function setDefaults(obj, def, custom = null) {
             else if (Array.isArray(defValue)) {
                 dest[key] = defValue.slice();
             }
-            else if (typeof defValue === 'object') {
+            else if (typeof defValue === "object") {
                 dest[key] = defValue; // Object.assign({}, defValue); -- this breaks assigning a Color object as a default...
             }
             else {
@@ -258,13 +286,13 @@ function kindDefaults(obj, def) {
         if (!current) {
             current = [];
         }
-        else if (typeof current == 'string') {
+        else if (typeof current == "string") {
             current = current.split(/[,|]/).map((t) => t.trim());
         }
         else if (!Array.isArray(current)) {
             current = [current];
         }
-        if (typeof defValue === 'string') {
+        if (typeof defValue === "string") {
             defValue = defValue.split(/[,|]/).map((t) => t.trim());
         }
         else if (!Array.isArray(defValue)) {
@@ -287,7 +315,7 @@ function pick(obj, ...fields) {
     return data;
 }
 function clearObject(obj) {
-    Object.keys(obj).forEach((key) => obj[key] = undefined);
+    Object.keys(obj).forEach((key) => (obj[key] = undefined));
 }
 function ERROR(message) {
     throw new Error(message);
@@ -303,7 +331,7 @@ function getOpt(obj, member, _default) {
 }
 function firstOpt(field, ...args) {
     for (let arg of args) {
-        if (typeof arg !== 'object' || Array.isArray(arg)) {
+        if (typeof arg !== "object" || Array.isArray(arg)) {
             return arg;
         }
         if (arg[field] !== undefined) {
@@ -330,7 +358,7 @@ function chainIncludes(chain, entry) {
     while (chain && chain !== entry) {
         chain = chain.next;
     }
-    return (chain === entry);
+    return chain === entry;
 }
 function eachChain(item, fn) {
     let index = 0;
@@ -429,7 +457,9 @@ var utils = {
 };
 
 const RANDOM_CONFIG = {
-    make: () => { return Math.random.bind(Math); }
+    make: () => {
+        return Math.random.bind(Math);
+    },
 };
 function lotteryDrawArray(rand, frequencies) {
     let i, maxFreq, randIndex;
@@ -438,7 +468,7 @@ function lotteryDrawArray(rand, frequencies) {
         maxFreq += frequencies[i];
     }
     if (maxFreq <= 0) {
-        console.warn('Lottery Draw - no frequencies', frequencies, frequencies.length);
+        console.warn("Lottery Draw - no frequencies", frequencies, frequencies.length);
         return 0;
     }
     randIndex = rand.range(0, maxFreq - 1);
@@ -450,7 +480,7 @@ function lotteryDrawArray(rand, frequencies) {
             randIndex -= frequencies[i];
         }
     }
-    console.warn('Lottery Draw failed.', frequencies, frequencies.length);
+    console.warn("Lottery Draw failed.", frequencies, frequencies.length);
     return 0;
 }
 function lotteryDrawObject(rand, weights) {
@@ -466,18 +496,24 @@ class Random {
     seed(val) {
         this._fn = RANDOM_CONFIG.make(val);
     }
-    value() { return this._fn(); }
-    float() { return this.value(); }
+    value() {
+        return this._fn();
+    }
+    float() {
+        return this.value();
+    }
     number(max = 0) {
         max = max || Number.MAX_SAFE_INTEGER;
         return Math.floor(this._fn() * max);
     }
-    int(max = 0) { return this.number(max); }
+    int(max = 0) {
+        return this.number(max);
+    }
     range(lo, hi) {
         if (hi <= lo)
             return hi;
-        const diff = (hi - lo) + 1;
-        return lo + (this.number(diff));
+        const diff = hi - lo + 1;
+        return lo + this.number(diff);
     }
     dice(count, sides, addend = 0) {
         let total = 0;
@@ -538,7 +574,7 @@ class Random {
             return false;
         if (percent >= outOf)
             return true;
-        return (this.range(0, outOf - 1) < percent);
+        return this.range(0, outOf - 1) < percent;
     }
     // Get a random int between lo and hi, inclusive, with probability distribution
     // affected by clumps.
@@ -556,7 +592,7 @@ class Random {
         for (; i < clumps; i++) {
             total += this.range(0, numSides);
         }
-        return (total + lo);
+        return total + lo;
     }
 }
 const random = new Random();
@@ -587,7 +623,7 @@ class Range {
     }
     toString() {
         if (this.lo >= this.hi) {
-            return '' + this.lo;
+            return "" + this.lo;
         }
         return `${this.lo}-${this.hi}`;
     }
@@ -598,20 +634,20 @@ function make(config, rng) {
     if (config instanceof Range)
         return config; // you can supply a custom range object
     // if (config.value) return config;  // calc or damage
-    if (typeof config == 'function')
-        throw new Error('Custom range functions not supported - extend Range');
+    if (typeof config == "function")
+        throw new Error("Custom range functions not supported - extend Range");
     if (config === undefined || config === null)
         return new Range(0, 0, 0, rng);
-    if (typeof config == 'number')
+    if (typeof config == "number")
         return new Range(config, config, 1, rng);
     // @ts-ignore
     if (config === true || config === false)
-        throw new Error('Invalid random config: ' + config);
+        throw new Error("Invalid random config: " + config);
     if (Array.isArray(config)) {
         return new Range(config[0], config[1], config[2], rng);
     }
-    if (typeof config !== 'string') {
-        throw new Error('Calculations must be strings.  Received: ' + JSON.stringify(config));
+    if (typeof config !== "string") {
+        throw new Error("Calculations must be strings.  Received: " + JSON.stringify(config));
     }
     if (config.length == 0)
         return new Range(0, 0, 0, rng);
@@ -623,7 +659,7 @@ function make(config, rng) {
             const sides = Number.parseInt(results[2]);
             const addend = Number.parseInt(results[3]) || 0;
             const lower = addend + count;
-            const upper = addend + (count * sides);
+            const upper = addend + count * sides;
             return new Range(lower, upper, count, rng);
         }
         else if (results[4] && results[5]) {
@@ -642,7 +678,7 @@ function make(config, rng) {
             return new Range(v, v, 1, rng);
         }
     }
-    throw new Error('Not a valid range - ' + config);
+    throw new Error("Not a valid range - " + config);
 }
 
 var range = {
@@ -653,7 +689,9 @@ var range = {
 
 ///////////////////////////////////
 // FLAG
-function fl(N) { return (1 << N); }
+function fl(N) {
+    return 1 << N;
+}
 function toString(flagObj, value) {
     const inverse = Object.entries(flagObj).reduce((out, entry) => {
         const [key, value] = entry;
@@ -663,12 +701,12 @@ function toString(flagObj, value) {
     }, []);
     const out = [];
     for (let index = 0; index < 32; ++index) {
-        const fl = (1 << index);
+        const fl = 1 << index;
         if (value & fl) {
             out.push(inverse[fl]);
         }
     }
-    return out.join(' | ');
+    return out.join(" | ");
 }
 function from(obj, ...args) {
     let result = 0;
@@ -676,12 +714,15 @@ function from(obj, ...args) {
         let value = args[index];
         if (value === undefined)
             continue;
-        if (typeof value == 'number') {
+        if (typeof value == "number") {
             result |= value;
             continue; // next
         }
-        else if (typeof value === 'string') {
-            value = value.split(/[,|]/).map((t) => t.trim()).map((u) => {
+        else if (typeof value === "string") {
+            value = value
+                .split(/[,|]/)
+                .map((t) => t.trim())
+                .map((u) => {
                 const n = Number.parseInt(u);
                 if (n >= 0)
                     return n;
@@ -690,9 +731,9 @@ function from(obj, ...args) {
         }
         if (Array.isArray(value)) {
             value.forEach((v) => {
-                if (typeof v == 'string') {
+                if (typeof v == "string") {
                     v = v.trim();
-                    if (v.startsWith('!')) {
+                    if (v.startsWith("!")) {
                         // @ts-ignore
                         const f = obj[v.substring(1)];
                         result &= ~f;
@@ -705,7 +746,8 @@ function from(obj, ...args) {
                         }
                     }
                 }
-                else if (v === 0) { // to allow clearing flags when extending objects
+                else if (v === 0) {
+                    // to allow clearing flags when extending objects
                     result = 0;
                 }
                 else {
@@ -745,33 +787,35 @@ function makeArray(l, fn) {
 }
 function _formatGridValue(v) {
     if (v === false) {
-        return ' ';
+        return " ";
     }
     else if (v === true) {
-        return 'T';
+        return "T";
     }
     else if (v < 10) {
-        return '' + v;
+        return "" + v;
     }
     else if (v < 36) {
-        return String.fromCharCode('a'.charCodeAt(0) + v - 10);
+        return String.fromCharCode("a".charCodeAt(0) + v - 10);
     }
     else if (v < 62) {
-        return String.fromCharCode('A'.charCodeAt(0) + v - 10 - 26);
+        return String.fromCharCode("A".charCodeAt(0) + v - 10 - 26);
     }
-    else if (typeof v === 'string') {
+    else if (typeof v === "string") {
         return v[0];
     }
     else {
-        return '#';
+        return "#";
     }
 }
 class Grid extends Array {
     constructor(w, h, v) {
         super(w);
         for (let x = 0; x < w; ++x) {
-            if (typeof v === 'function') {
-                this[x] = new Array(h).fill(0).map((_, i) => v(x, i));
+            if (typeof v === "function") {
+                this[x] = new Array(h)
+                    .fill(0)
+                    .map((_, i) => v(x, i));
             }
             else {
                 this[x] = new Array(h).fill(v);
@@ -782,10 +826,14 @@ class Grid extends Array {
         // @ts-ignore
         this.type = v.constructor.name;
     }
-    get width() { return this._width; }
-    get height() { return this._height; }
+    get width() {
+        return this._width;
+    }
+    get height() {
+        return this._height;
+    }
     resize(width, height, v) {
-        const fn = (typeof v === 'function') ? v : (() => v);
+        const fn = typeof v === "function" ? v : () => v;
         while (this.length < width)
             this.push([]);
         let x = 0;
@@ -845,7 +893,9 @@ class Grid extends Array {
         let i, j;
         for (i = Math.max(0, x - radius - 1); i < Math.min(this.width, x + radius + 1); i++) {
             for (j = Math.max(0, y - radius - 1); j < Math.min(this.height, y + radius + 1); j++) {
-                if (this.hasXY(i, j) && (((i - x) * (i - x) + (j - y) * (j - y)) < radius * radius + radius)) { // + radius softens the circle
+                if (this.hasXY(i, j) &&
+                    (i - x) * (i - x) + (j - y) * (j - y) < radius * radius + radius) {
+                    // + radius softens the circle
                     fn(this[i][j], i, j, this);
                 }
             }
@@ -855,7 +905,8 @@ class Grid extends Array {
         return x >= 0 && y >= 0 && x < this.width && y < this.height;
     }
     isBoundaryXY(x, y) {
-        return this.hasXY(x, y) && ((x == 0) || (x == this.width - 1) || (y == 0) || (y == this.height - 1));
+        return (this.hasXY(x, y) &&
+            (x == 0 || x == this.width - 1 || y == 0 || y == this.height - 1));
     }
     calcBounds() {
         const bounds = { left: this.width, top: this.height, right: 0, bottom: 0 };
@@ -895,7 +946,9 @@ class Grid extends Array {
         let i, j;
         for (i = Math.max(0, x - radius - 1); i < Math.min(this.width, x + radius + 1); i++) {
             for (j = Math.max(0, y - radius - 1); j < Math.min(this.height, y + radius + 1); j++) {
-                if (this.hasXY(i, j) && (((i - x) * (i - x) + (j - y) * (j - y)) < radius * radius + radius)) { // + radius softens the circle
+                if (this.hasXY(i, j) &&
+                    (i - x) * (i - x) + (j - y) * (j - y) < radius * radius + radius) {
+                    // + radius softens the circle
                     this[i][j] = fn(this[i][j], i, j, this);
                 }
             }
@@ -903,29 +956,33 @@ class Grid extends Array {
     }
     // @ts-ignore
     fill(v) {
-        const fn = (typeof v === 'function') ? v : (() => v);
+        const fn = typeof v === "function" ? v : () => v;
         this.update(fn);
     }
     fillRect(x, y, w, h, v) {
-        const fn = (typeof v === 'function') ? v : (() => v);
+        const fn = typeof v === "function" ? v : () => v;
         this.updateRect(x, y, w, h, fn);
     }
     fillCircle(x, y, radius, v) {
-        const fn = (typeof v === 'function') ? v : (() => v);
+        const fn = typeof v === "function" ? v : () => v;
         this.updateCircle(x, y, radius, fn);
     }
     replace(findValue, replaceValue) {
-        this.update((v) => (v == findValue) ? replaceValue : v);
+        this.update((v) => (v == findValue ? replaceValue : v));
     }
     copy(from) {
         // TODO - check width, height?
         this.update((_, i, j) => from[i][j]);
     }
     count(match) {
-        const fn = (typeof match === 'function') ? match : ((v) => v == match);
+        const fn = typeof match === "function"
+            ? match
+            : (v) => v == match;
         let count = 0;
-        this.forEach((v, i, j) => { if (fn(v, i, j, this))
-            ++count; });
+        this.forEach((v, i, j) => {
+            if (fn(v, i, j, this))
+                ++count;
+        });
         return count;
     }
     dump(fmtFn) {
@@ -940,17 +997,17 @@ class Grid extends Array {
         const bottom = clamp(top + height, 1, this.height - 1);
         let output = [];
         for (j = top; j <= bottom; j++) {
-            let line = ('' + j + ']').padStart(3, ' ');
+            let line = ("" + j + "]").padStart(3, " ");
             for (i = left; i <= right; i++) {
                 if (i % 10 == 0) {
-                    line += ' ';
+                    line += " ";
                 }
                 const v = this[i][j];
                 line += fmtFn(v, i, j)[0];
             }
             output.push(line);
         }
-        console.log(output.join('\n'));
+        console.log(output.join("\n"));
     }
     dumpAround(x, y, radius) {
         this.dumpRect(x - radius, y - radius, 2 * radius, 2 * radius);
@@ -975,7 +1032,7 @@ class Grid extends Array {
         return bestLoc;
     }
     firstMatchingLoc(v) {
-        const fn = (typeof v === 'function') ? v : ((val) => val == v);
+        const fn = typeof v === "function" ? v : (val) => val == v;
         for (let i = 0; i < this.width; ++i) {
             for (let j = 0; j < this.height; ++j) {
                 if (fn(this[i][j], i, j, this)) {
@@ -988,7 +1045,7 @@ class Grid extends Array {
     randomMatchingLoc(v, deterministic = false) {
         let locationCount = 0;
         let i, j, index;
-        const fn = (typeof v === 'function') ? v : ((val) => val == v);
+        const fn = typeof v === "function" ? v : (val) => val == v;
         locationCount = 0;
         this.forEach((v, i, j) => {
             if (fn(v, i, j, this)) {
@@ -1019,15 +1076,15 @@ class Grid extends Array {
     matchingLocNear(x, y, v, deterministic = false) {
         let loc = [-1, -1];
         let i, j, k, candidateLocs, randIndex;
-        const fn = (typeof v === 'function') ? v : ((val) => val == v);
+        const fn = typeof v === "function" ? v : (val) => val == v;
         candidateLocs = 0;
         // count up the number of candidate locations
         for (k = 0; k < Math.max(this.width, this.height) && !candidateLocs; k++) {
             for (i = x - k; i <= x + k; i++) {
                 for (j = y - k; j <= y + k; j++) {
-                    if (this.hasXY(i, j)
-                        && (i == x - k || i == x + k || j == y - k || j == y + k)
-                        && fn(this[i][j], i, j, this)) {
+                    if (this.hasXY(i, j) &&
+                        (i == x - k || i == x + k || j == y - k || j == y + k) &&
+                        fn(this[i][j], i, j, this)) {
                         candidateLocs++;
                     }
                 }
@@ -1046,9 +1103,9 @@ class Grid extends Array {
         for (k = 0; k < Math.max(this.width, this.height); k++) {
             for (i = x - k; i <= x + k; i++) {
                 for (j = y - k; j <= y + k; j++) {
-                    if (this.hasXY(i, j)
-                        && (i == x - k || i == x + k || j == y - k || j == y + k)
-                        && fn(this[i][j], i, j, this)) {
+                    if (this.hasXY(i, j) &&
+                        (i == x - k || i == x + k || j == y - k || j == y + k) &&
+                        fn(this[i][j], i, j, this)) {
                         if (--randIndex == 0) {
                             loc[0] = i;
                             loc[1] = j;
@@ -1079,8 +1136,9 @@ class Grid extends Array {
             newX = x + CDIRS[dir][0];
             newY = y + CDIRS[dir][1];
             // Counts every transition from passable to impassable or vice-versa on the way around the cell:
-            if ((this.hasXY(newX, newY) && testFn(this[newX][newY], newX, newY, this))
-                != (this.hasXY(oldX, oldY) && testFn(this[oldX][oldY], oldX, oldY, this))) {
+            if ((this.hasXY(newX, newY) &&
+                testFn(this[newX][newY], newX, newY, this)) !=
+                (this.hasXY(oldX, oldY) && testFn(this[oldX][oldY], oldX, oldY, this))) {
                 arcCount++;
             }
         }
@@ -1121,22 +1179,22 @@ class NumGrid extends Grid {
         let dir;
         let newX, newY, fillCount = 1;
         if (fillValue >= eligibleValueMin && fillValue <= eligibleValueMax) {
-            throw new Error('Invalid grid flood fill');
+            throw new Error("Invalid grid flood fill");
         }
         this[x][y] = fillValue;
         for (dir = 0; dir < 4; dir++) {
             newX = x + DIRS$1[dir][0];
             newY = y + DIRS$1[dir][1];
-            if (this.hasXY(newX, newY)
-                && this[newX][newY] >= eligibleValueMin
-                && this[newX][newY] <= eligibleValueMax) {
+            if (this.hasXY(newX, newY) &&
+                this[newX][newY] >= eligibleValueMin &&
+                this[newX][newY] <= eligibleValueMax) {
                 fillCount += this.floodFillRange(newX, newY, eligibleValueMin, eligibleValueMax, fillValue);
             }
         }
         return fillCount;
     }
     invert() {
-        this.update((v) => v ? 0 : 1);
+        this.update((v) => (v ? 0 : 1));
     }
     closestLocWithValue(x, y, value = 1) {
         return this.closestMatchingLoc(x, y, (v) => v == value);
@@ -1147,12 +1205,12 @@ class NumGrid extends Grid {
         return this.randomMatchingLoc((v) => v == validValue);
     }
     getQualifyingLocNear(x, y, deterministic = false) {
-        return this.matchingLocNear(x, y, ((v) => !!v), deterministic);
+        return this.matchingLocNear(x, y, (v) => !!v, deterministic);
     }
     leastPositiveValue() {
         let least = Number.MAX_SAFE_INTEGER;
         this.forEach((v) => {
-            if (v > 0 && (v < least)) {
+            if (v > 0 && v < least) {
                 least = v;
             }
         });
@@ -1160,14 +1218,16 @@ class NumGrid extends Grid {
     }
     randomLeastPositiveLoc(deterministic = false) {
         const targetValue = this.leastPositiveValue();
-        return this.randomMatchingLoc(((v) => v == targetValue), deterministic);
+        return this.randomMatchingLoc((v) => v == targetValue, deterministic);
     }
     // Marks a cell as being a member of blobNumber, then recursively iterates through the rest of the blob
     floodFill(x, y, matchValue, fillValue) {
         let dir;
         let newX, newY, numberOfCells = 1;
-        const matchFn = (typeof matchValue == 'function') ? matchValue : ((v) => v == matchValue);
-        const fillFn = (typeof fillValue == 'function') ? fillValue : (() => fillValue);
+        const matchFn = typeof matchValue == "function"
+            ? matchValue
+            : (v) => v == matchValue;
+        const fillFn = typeof fillValue == "function" ? fillValue : () => fillValue;
         this[x][y] = fillFn(this[x][y], x, y, this);
         // Iterate through the four cardinal neighbors.
         for (dir = 0; dir < 4; dir++) {
@@ -1176,7 +1236,8 @@ class NumGrid extends Grid {
             if (!this.hasXY(newX, newY)) {
                 continue;
             }
-            if (matchFn(this[newX][newY], newX, newY, this)) { // If the neighbor is an unmarked region cell,
+            if (matchFn(this[newX][newY], newX, newY, this)) {
+                // If the neighbor is an unmarked region cell,
                 numberOfCells += this.floodFill(newX, newY, matchFn, fillFn); // then recurse.
             }
         }
@@ -1195,16 +1256,15 @@ class NumGrid extends Grid {
                 for (dir = 0; dir < DIRS$1.length; dir++) {
                     newX = i + DIRS$1[dir][0];
                     newY = j + DIRS$1[dir][1];
-                    if (this.hasXY(newX, newY)
-                        && buffer2[newX][newY]) {
+                    if (this.hasXY(newX, newY) && buffer2[newX][newY]) {
                         nbCount++;
                     }
                 }
-                if (!buffer2[i][j] && birthParameters[nbCount] == 't') {
+                if (!buffer2[i][j] && birthParameters[nbCount] == "t") {
                     this[i][j] = 1; // birth
                     didSomething = true;
                 }
-                else if (buffer2[i][j] && survivalParameters[nbCount] == 't') ;
+                else if (buffer2[i][j] && survivalParameters[nbCount] == "t") ;
                 else {
                     this[i][j] = 0; // death
                     didSomething = true;
@@ -1237,7 +1297,7 @@ class NumGrid extends Grid {
             // Fill relevant portion with noise based on the percentSeeded argument.
             for (i = 0; i < maxBlobWidth; i++) {
                 for (j = 0; j < maxBlobHeight; j++) {
-                    this[i + left][j + top] = (random.chance(percentSeeded) ? 1 : 0);
+                    this[i + left][j + top] = random.chance(percentSeeded) ? 1 : 0;
                 }
             }
             // Some iterations of cellular automata
@@ -1257,10 +1317,12 @@ class NumGrid extends Grid {
             blobNumber = 2;
             for (i = 0; i < this.width; i++) {
                 for (j = 0; j < this.height; j++) {
-                    if (this[i][j] == 1) { // an unmarked blob
+                    if (this[i][j] == 1) {
+                        // an unmarked blob
                         // Mark all the cells and returns the total size:
                         blobSize = this.floodFill(i, j, 1, blobNumber);
-                        if (blobSize > topBlobSize) { // if this blob is a new record
+                        if (blobSize > topBlobSize) {
+                            // if this blob is a new record
                             topBlobSize = blobSize;
                             topBlobNumber = blobNumber;
                         }
@@ -1305,11 +1367,11 @@ class NumGrid extends Grid {
                     }
                 }
             }
-            blobWidth = (topBlobMaxX - topBlobMinX) + 1;
-            blobHeight = (topBlobMaxY - topBlobMinY) + 1;
-        } while (blobWidth < minBlobWidth
-            || blobHeight < minBlobHeight
-            || topBlobNumber == 0);
+            blobWidth = topBlobMaxX - topBlobMinX + 1;
+            blobHeight = topBlobMaxY - topBlobMinY + 1;
+        } while (blobWidth < minBlobWidth ||
+            blobHeight < minBlobHeight ||
+            topBlobNumber == 0);
         // Replace the winning blob with 1's, and everything else with 0's:
         for (i = 0; i < this.width; i++) {
             for (j = 0; j < this.height; j++) {
@@ -1322,7 +1384,12 @@ class NumGrid extends Grid {
             }
         }
         // Populate the returned variables.
-        return { x: topBlobMinX, y: topBlobMinY, width: blobWidth, height: blobHeight };
+        return {
+            x: topBlobMinX,
+            y: topBlobMinY,
+            width: blobWidth,
+            height: blobHeight,
+        };
     }
 }
 // Grid.fillBlob = fillBlob;
@@ -1331,12 +1398,14 @@ const free = NumGrid.free.bind(NumGrid);
 function make$1(w, h, v) {
     if (v === undefined)
         return new NumGrid(w, h, 0);
-    if (typeof v === 'number')
+    if (typeof v === "number")
         return new NumGrid(w, h, v);
     return new Grid(w, h, v);
 }
 function offsetZip(destGrid, srcGrid, srcToDestX, srcToDestY, value) {
-    const fn = (typeof value === 'function') ? value : ((_, s, dx, dy) => destGrid[dx][dy] = value || s);
+    const fn = typeof value === "function"
+        ? value
+        : (_, s, dx, dy) => (destGrid[dx][dy] = value || s);
     srcGrid.forEach((c, i, j) => {
         const destX = i + srcToDestX;
         const destY = j + srcToDestY;
@@ -1354,16 +1423,18 @@ function offsetZip(destGrid, srcGrid, srcToDestX, srcToDestY, value) {
 function directionOfDoorSite(grid, x, y, isOpen) {
     let dir, solutionDir;
     let newX, newY, oppX, oppY;
-    const fnOpen = (typeof isOpen === 'function') ? isOpen : ((v) => v == isOpen);
+    const fnOpen = typeof isOpen === "function"
+        ? isOpen
+        : (v) => v == isOpen;
     solutionDir = NO_DIRECTION;
     for (dir = 0; dir < 4; dir++) {
         newX = x + DIRS$1[dir][0];
         newY = y + DIRS$1[dir][1];
         oppX = x - DIRS$1[dir][0];
         oppY = y - DIRS$1[dir][1];
-        if (grid.hasXY(oppX, oppY)
-            && grid.hasXY(newX, newY)
-            && fnOpen(grid[oppX][oppY], oppX, oppY, grid)) {
+        if (grid.hasXY(oppX, oppY) &&
+            grid.hasXY(newX, newY) &&
+            fnOpen(grid[oppX][oppY], oppX, oppY, grid)) {
             // This grid cell would be a valid tile on which to place a door that, facing outward, points dir.
             if (solutionDir != NO_DIRECTION) {
                 // Already claimed by another direction; no doors here!
