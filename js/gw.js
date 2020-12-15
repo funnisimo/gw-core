@@ -8,11 +8,5 @@ import * as grid_1 from './grid';
 export { grid_1 as grid };
 export { flags } from './flag';
 export { cosmetic, random, Random } from './random';
-import * as Random from './random';
-export function configure(config) {
-    if (config.random) {
-        Random.configure(config.random);
-    }
-}
 export var data = {};
 //# sourceMappingURL=gw.js.map

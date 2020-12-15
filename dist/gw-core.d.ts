@@ -193,11 +193,6 @@ declare namespace utils_d {
   };
 }
 
-declare type RandomFunction = () => number;
-declare type SeedFunction = (seed?: number) => RandomFunction;
-interface RandomConfig {
-    make: SeedFunction;
-}
 declare type WeightedArray = number[];
 interface WeightedObject {
     [key: string]: number;
@@ -384,10 +379,6 @@ declare namespace grid_d {
   };
 }
 
-interface GWConfig {
-    random: RandomConfig;
-}
-declare function configure(config: Partial<GWConfig>): void;
 declare var data: {};
 
-export { GWConfig, Random, configure, cosmetic, data, flag_d as flag, flags, grid_d as grid, random, range_d as range, utils_d as utils };
+export { Random, cosmetic, data, flag_d as flag, flags, grid_d as grid, random, range_d as range, utils_d as utils };

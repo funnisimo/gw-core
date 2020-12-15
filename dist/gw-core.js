@@ -431,17 +431,6 @@ var utils = {
 const RANDOM_CONFIG = {
     make: () => { return Math.random.bind(Math); }
 };
-function configure(opts) {
-    if (opts.make) {
-        if (typeof opts.make !== 'function')
-            throw new Error('Random make parameter must be a function.');
-        if (typeof opts.make(12345) !== 'function')
-            throw new Error('Random make function must accept a numeric seed and return a random function.');
-        RANDOM_CONFIG.make = opts.make;
-        random.seed();
-        cosmetic.seed();
-    }
-}
 function lotteryDrawArray(rand, frequencies) {
     let i, maxFreq, randIndex;
     maxFreq = 0;
@@ -1410,15 +1399,9 @@ var grid = {
     unite: unite
 };
 
-function configure$1(config) {
-    if (config.random) {
-        configure(config.random);
-    }
-}
 var data = {};
 
 exports.Random = Random;
-exports.configure = configure$1;
 exports.cosmetic = cosmetic;
 exports.data = data;
 exports.flag = flag;
