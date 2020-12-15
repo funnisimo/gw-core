@@ -745,6 +745,8 @@ var flag = {
 const DIRS$1 = DIRS;
 const CDIRS = CLOCK_DIRS;
 function makeArray(l, fn) {
+    if (fn === undefined)
+        return new Array(l).fill(0);
     fn = fn || (() => 0);
     const arr = new Array(l);
     for (let i = 0; i < l; ++i) {

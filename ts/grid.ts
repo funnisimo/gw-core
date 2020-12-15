@@ -10,10 +10,11 @@ const CDIRS = Utils.CLOCK_DIRS;
 // var GRID = {};
 // export { GRID as grid };
 
-export type ArrayInit = (i:number) => any;
+export type ArrayInit<T> = (i:number) => T;
 
-export function makeArray(l:number, fn:ArrayInit) {
-	fn = fn || (() => 0);
+export function makeArray<T>(l:number, fn?:T|ArrayInit<T>): Array<T> {
+	if (fn === undefined) return new Array(l).fill(0);
+	fn = fn as ArrayInit<T> || (() => 0);
 	const arr = new Array(l);
 	for( let i = 0; i < l; ++i) {
 		arr[i] = fn(i);

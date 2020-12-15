@@ -1,7 +1,7 @@
 import * as Utils from './utils';
 declare type Loc = Utils.Loc;
-export declare type ArrayInit = (i: number) => any;
-export declare function makeArray(l: number, fn: ArrayInit): any[];
+export declare type ArrayInit<T> = (i: number) => T;
+export declare function makeArray<T>(l: number, fn?: T | ArrayInit<T>): Array<T>;
 export declare type GridInit<T> = (x: number, y: number) => T;
 export declare type GridEach<T> = (value: T, x: number, y: number, grid: Grid<T>) => void;
 export declare type GridUpdate<T> = (value: T, x: number, y: number, grid: Grid<T>) => T;

@@ -266,8 +266,8 @@ declare namespace flag_d {
 }
 
 declare type Loc$1 = Loc;
-declare type ArrayInit = (i: number) => any;
-declare function makeArray(l: number, fn: ArrayInit): any[];
+declare type ArrayInit<T> = (i: number) => T;
+declare function makeArray<T>(l: number, fn?: T | ArrayInit<T>): Array<T>;
 declare type GridInit<T> = (x: number, y: number) => T;
 declare type GridEach<T> = (value: T, x: number, y: number, grid: Grid<T>) => void;
 declare type GridUpdate<T> = (value: T, x: number, y: number, grid: Grid<T>) => T;
@@ -344,7 +344,7 @@ declare function directionOfDoorSite<T>(grid: Grid<T>, x: number, y: number, isO
 declare function intersection(onto: NumGrid, a: NumGrid, b: NumGrid): void;
 declare function unite(onto: NumGrid, a: NumGrid, b: NumGrid): void;
 
-type grid_d_ArrayInit = ArrayInit;
+type grid_d_ArrayInit<_0> = ArrayInit<_0>;
 declare const grid_d_makeArray: typeof makeArray;
 type grid_d_GridInit<_0> = GridInit<_0>;
 type grid_d_GridEach<_0> = GridEach<_0>;
