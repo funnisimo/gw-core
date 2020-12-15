@@ -834,8 +834,6 @@ class Grid extends Array {
         }
         this._width = w;
         this._height = h;
-        // @ts-ignore
-        this.type = v.constructor.name;
     }
     get width() {
         return this._width;

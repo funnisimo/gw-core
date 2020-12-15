@@ -85,21 +85,4 @@ describe("GW.grid", () => {
     a.floodFill(0, 0, 1, 2);
     expect(a.count(2)).toEqual(400);
   });
-
-  test("typeof", () => {
-    const g = GW.grid.make(10, 10, 0);
-    expect(typeof g).toEqual("object");
-    expect(g.constructor.name).toEqual("NumGrid");
-    expect(typeof g[0][0]).toEqual("number");
-
-    class T {
-      constructor() {}
-    }
-
-    const t = GW.grid.make(10, 10, () => new T());
-    expect(typeof t).toEqual("object");
-    expect(t.constructor.name).toEqual("Grid");
-    expect(typeof t[0][0]).toEqual("object");
-    expect(t[0][0].constructor.name).toEqual("T");
-  });
 });

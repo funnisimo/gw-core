@@ -8,7 +8,6 @@ export declare type GridUpdate<T> = (value: T, x: number, y: number, grid: Grid<
 export declare type GridMatch<T> = (value: T, x: number, y: number, grid: Grid<T>) => boolean;
 export declare type GridFormat<T> = (value: T, x: number, y: number) => string;
 export declare class Grid<T> extends Array<Array<T>> {
-    type: string;
     protected _width: number;
     protected _height: number;
     constructor(w: number, h: number, v: GridInit<T> | T);

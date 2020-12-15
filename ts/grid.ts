@@ -60,7 +60,6 @@ export type GridMatch<T> = (
 export type GridFormat<T> = (value: T, x: number, y: number) => string;
 
 export class Grid<T> extends Array<Array<T>> {
-  public type: string;
   protected _width: number;
   protected _height: number;
 
@@ -77,8 +76,6 @@ export class Grid<T> extends Array<Array<T>> {
     }
     this._width = w;
     this._height = h;
-    // @ts-ignore
-    this.type = v.constructor.name;
   }
 
   get width() {
