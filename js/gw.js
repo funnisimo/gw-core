@@ -6,6 +6,8 @@ import * as flag_1 from "./flag";
 export { flag_1 as flag };
 import * as grid_1 from "./grid";
 export { grid_1 as grid };
+import * as io_1 from "./io";
+export { io_1 as io };
 export { flags } from "./flag";
 export { cosmetic, random, Random } from "./random";
 export var data = {};

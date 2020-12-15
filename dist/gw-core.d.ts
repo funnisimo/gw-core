@@ -32,6 +32,10 @@ interface XY {
     x: number;
     y: number;
 }
+interface XY {
+    x: number;
+    y: number;
+}
 declare function x(src: XY | Loc): any;
 declare function y(src: XY | Loc): any;
 declare function copyXY(dest: XY, src: XY | Loc): void;
@@ -75,6 +79,7 @@ declare function addToChain(obj: BasicObject, name: string, entry: Chainable): b
 declare function removeFromChain(obj: BasicObject, name: string, entry: Chainable): boolean;
 
 type utils_d_Loc = Loc;
+type utils_d_XY = XY;
 declare const utils_d_DIRS: typeof DIRS;
 declare const utils_d_NO_DIRECTION: typeof NO_DIRECTION;
 declare const utils_d_UP: typeof UP;
@@ -93,7 +98,6 @@ declare const utils_d_ONE: typeof ONE;
 declare const utils_d_ZERO: typeof ZERO;
 declare const utils_d_IDENTITY: typeof IDENTITY;
 declare const utils_d_clamp: typeof clamp;
-type utils_d_XY = XY;
 declare const utils_d_x: typeof x;
 declare const utils_d_y: typeof y;
 declare const utils_d_copyXY: typeof copyXY;
@@ -134,6 +138,7 @@ declare const utils_d_removeFromChain: typeof removeFromChain;
 declare namespace utils_d {
   export {
     utils_d_Loc as Loc,
+    utils_d_XY as XY,
     utils_d_DIRS as DIRS,
     utils_d_NO_DIRECTION as NO_DIRECTION,
     utils_d_UP as UP,
@@ -152,7 +157,6 @@ declare namespace utils_d {
     utils_d_ZERO as ZERO,
     utils_d_IDENTITY as IDENTITY,
     utils_d_clamp as clamp,
-    utils_d_XY as XY,
     utils_d_x as x,
     utils_d_y as y,
     utils_d_copyXY as copyXY,
@@ -384,6 +388,119 @@ declare namespace grid_d {
   };
 }
 
+interface Event {
+    shiftKey: boolean;
+    ctrlKey: boolean;
+    altKey: boolean;
+    metaKey: boolean;
+    type: string;
+    key: string | null;
+    code: string | null;
+    x: number;
+    y: number;
+    clientX: number;
+    clientY: number;
+    dir: Loc | null;
+    dt: number;
+}
+declare type CommandFn = (event: Event) => Promise<boolean>;
+declare var commands: Record<string, CommandFn>;
+declare function addCommand(id: string, fn: CommandFn): void;
+declare type KeyMap = Record<string, CommandFn | boolean>;
+declare type EventMatchFn = (event: Event) => boolean;
+declare const KEYPRESS = "keypress";
+declare const MOUSEMOVE = "mousemove";
+declare const CLICK = "click";
+declare const TICK = "tick";
+declare const MOUSEUP = "mouseup";
+declare function setKeymap(keymap: KeyMap): void;
+declare function hasEvents(): number;
+declare function clearEvents(): void;
+declare function pushEvent(ev: Event): void;
+declare function dispatchEvent(ev: Event, km?: KeyMap | CommandFn): Promise<any>;
+declare function makeTickEvent(dt: number): Event;
+declare function makeKeyEvent(e: KeyboardEvent): Event;
+declare function keyCodeDirection(key: string): Loc | null;
+declare function ignoreKeyEvent(e: KeyboardEvent): boolean;
+declare var mouse: XY;
+declare function makeMouseEvent(e: MouseEvent, x: number, y: number): Event;
+declare function pauseEvents(): void;
+declare function resumeEvents(): void;
+declare function nextEvent(ms?: number, match?: EventMatchFn): Promise<Event | null>;
+declare function tickMs(ms?: number): Promise<unknown>;
+declare function nextKeyPress(ms?: number, match?: EventMatchFn): Promise<Event | null>;
+declare function nextKeyOrClick(ms?: number, matchFn?: EventMatchFn): Promise<Event | null>;
+declare function pause(ms: number): Promise<boolean | null>;
+declare function waitForAck(): Promise<boolean | null>;
+declare function loop(keymap: KeyMap): Promise<void>;
+
+type io_d_Event = Event;
+type io_d_CommandFn = CommandFn;
+declare const io_d_commands: typeof commands;
+declare const io_d_addCommand: typeof addCommand;
+type io_d_KeyMap = KeyMap;
+type io_d_EventMatchFn = EventMatchFn;
+declare const io_d_KEYPRESS: typeof KEYPRESS;
+declare const io_d_MOUSEMOVE: typeof MOUSEMOVE;
+declare const io_d_CLICK: typeof CLICK;
+declare const io_d_TICK: typeof TICK;
+declare const io_d_MOUSEUP: typeof MOUSEUP;
+declare const io_d_setKeymap: typeof setKeymap;
+declare const io_d_hasEvents: typeof hasEvents;
+declare const io_d_clearEvents: typeof clearEvents;
+declare const io_d_pushEvent: typeof pushEvent;
+declare const io_d_dispatchEvent: typeof dispatchEvent;
+declare const io_d_makeTickEvent: typeof makeTickEvent;
+declare const io_d_makeKeyEvent: typeof makeKeyEvent;
+declare const io_d_keyCodeDirection: typeof keyCodeDirection;
+declare const io_d_ignoreKeyEvent: typeof ignoreKeyEvent;
+declare const io_d_mouse: typeof mouse;
+declare const io_d_makeMouseEvent: typeof makeMouseEvent;
+declare const io_d_pauseEvents: typeof pauseEvents;
+declare const io_d_resumeEvents: typeof resumeEvents;
+declare const io_d_nextEvent: typeof nextEvent;
+declare const io_d_tickMs: typeof tickMs;
+declare const io_d_nextKeyPress: typeof nextKeyPress;
+declare const io_d_nextKeyOrClick: typeof nextKeyOrClick;
+declare const io_d_pause: typeof pause;
+declare const io_d_waitForAck: typeof waitForAck;
+declare const io_d_loop: typeof loop;
+declare namespace io_d {
+  export {
+    io_d_Event as Event,
+    io_d_CommandFn as CommandFn,
+    io_d_commands as commands,
+    io_d_addCommand as addCommand,
+    io_d_KeyMap as KeyMap,
+    io_d_EventMatchFn as EventMatchFn,
+    io_d_KEYPRESS as KEYPRESS,
+    io_d_MOUSEMOVE as MOUSEMOVE,
+    io_d_CLICK as CLICK,
+    io_d_TICK as TICK,
+    io_d_MOUSEUP as MOUSEUP,
+    io_d_setKeymap as setKeymap,
+    io_d_hasEvents as hasEvents,
+    io_d_clearEvents as clearEvents,
+    io_d_pushEvent as pushEvent,
+    io_d_dispatchEvent as dispatchEvent,
+    io_d_makeTickEvent as makeTickEvent,
+    io_d_makeKeyEvent as makeKeyEvent,
+    io_d_keyCodeDirection as keyCodeDirection,
+    io_d_ignoreKeyEvent as ignoreKeyEvent,
+    io_d_mouse as mouse,
+    io_d_makeMouseEvent as makeMouseEvent,
+    io_d_pauseEvents as pauseEvents,
+    io_d_resumeEvents as resumeEvents,
+    io_d_nextEvent as nextEvent,
+    io_d_tickMs as tickMs,
+    io_d_nextKeyPress as nextKeyPress,
+    io_d_nextKeyOrClick as nextKeyOrClick,
+    io_d_pause as pause,
+    io_d_waitForAck as waitForAck,
+    io_d_loop as loop,
+  };
+}
+
 declare var data: {};
 
-export { Random, cosmetic, data, flag_d as flag, flags, grid_d as grid, random, range_d as range, utils_d as utils };
+export { Random, cosmetic, data, flag_d as flag, flags, grid_d as grid, io_d as io, random, range_d as range, utils_d as utils };
