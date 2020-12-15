@@ -23,9 +23,8 @@ describe('random', () => {
     }
 
     test('GW', () => {
-        expect(GW.types.Random).toBeDefined();
-        expect(GW.random).toBeInstanceOf(GW.types.Random);
-        expect(GW.cosmetic).toBeInstanceOf(GW.types.Random);
+        expect(GW.random).toBeObject();
+        expect(GW.cosmetic).toBeObject();
     });
 
     test('works with a seed', () => {

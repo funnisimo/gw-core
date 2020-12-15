@@ -1,12 +1,17 @@
 
+import 'jest-extended';
 import * as GW from './gw';
 
 
 describe('GW', () => {
 
-    test('types', () => {
-        expect(GW.types.Random).toBeDefined();
-        expect(GW.types.Range).toBeDefined();
+    test('exports', () => {
+        expect(GW.random).toBeDefined();
+        expect(GW.cosmetic).toBeDefined();
+        expect(GW.grid).toBeDefined();
+        expect(GW.range).toBeDefined();
+        expect(GW.flag).toBeDefined();
+        expect(GW.data).toBeObject();
     });
 
 });

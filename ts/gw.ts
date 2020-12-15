@@ -4,14 +4,12 @@ export * as range from './range';
 export * as flag from './flag';
 export * as grid from './grid';
 export { flags } from './flag';
-export { cosmetic, random } from './random';
+export { cosmetic, random, Random } from './random';
 
 import * as Random from './random';
-import * as Range from './range';
-import * as Grid from './grid';
 
 export interface GWConfig {
-    random: Partial<Random.RandomConfig>;
+    random: Random.RandomConfig;
 }
 
 export function configure(config:Partial<GWConfig>) {
@@ -20,9 +18,4 @@ export function configure(config:Partial<GWConfig>) {
     }
 }
 
-export var types = {
-    Random: Random.Random,
-    Range: Range.Range,
-    Grid: Grid.Grid,
-    NumGrid: Grid.NumGrid,
-}
+export var data = {};

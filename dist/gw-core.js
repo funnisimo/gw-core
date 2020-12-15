@@ -1415,19 +1415,15 @@ function configure$1(config) {
         configure(config.random);
     }
 }
-var types = {
-    Random: Random,
-    Range: Range,
-    Grid: Grid,
-    NumGrid: NumGrid,
-};
+var data = {};
 
+exports.Random = Random;
 exports.configure = configure$1;
 exports.cosmetic = cosmetic;
+exports.data = data;
 exports.flag = flag;
 exports.flags = flags;
 exports.grid = grid;
 exports.random = random;
 exports.range = range;
-exports.types = types;
 exports.utils = utils;
