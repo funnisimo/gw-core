@@ -16,6 +16,18 @@ describe("GW.grid", () => {
     expect(a.hasXY(0, 0)).toBeTruthy();
   });
 
+  test("realloc", () => {
+    a = GW.grid.alloc(10, 10);
+    a.fill(1);
+    expect(a[0][0]).toEqual(1);
+    GW.grid.free(a);
+
+    const b = GW.grid.alloc(10, 10);
+    expect(b).toBe(a);
+    expect(b[0][0]).toEqual(0);
+    GW.grid.free(b);
+  });
+
   test("hasXY", () => {
     a = GW.grid.alloc(10, 10, 0);
     expect(a.hasXY(5, 5)).toBeTruthy();

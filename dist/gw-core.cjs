@@ -843,28 +843,6 @@ class Grid extends Array {
     get height() {
         return this._height;
     }
-    resize(width, height, v) {
-        const fn = typeof v === "function" ? v : () => v;
-        while (this.length < width)
-            this.push([]);
-        let x = 0;
-        let y = 0;
-        for (x = 0; x < width; ++x) {
-            const col = this[x];
-            for (y = 0; y < Math.min(height, col.length); ++y) {
-                col[y] = fn(x, y);
-            }
-            while (col.length < height) {
-                col.push(fn(x, col.length));
-            }
-        }
-        this._width = width;
-        this._height = height;
-        if (this.x !== undefined) {
-            this.x = undefined;
-            this.y = undefined;
-        }
-    }
     // @ts-ignore
     forEach(fn) {
         let i, j;
@@ -1158,7 +1136,12 @@ class Grid extends Array {
 }
 const GRID_CACHE = [];
 class NumGrid extends Grid {
+    constructor(w, h, v = 0) {
+        super(w, h, v);
+    }
     static alloc(w, h, v = 0) {
+        if (!w || !h)
+            throw new Error("Grid alloc requires width and height parameters.");
         let grid = GRID_CACHE.pop();
         if (!grid) {
             return new NumGrid(w, h, v);
@@ -1173,8 +1156,26 @@ class NumGrid extends Grid {
             GRID_CACHE.push(grid);
         }
     }
-    constructor(w, h, v = 0) {
-        super(w, h, v);
+    resize(width, height, v = 0) {
+        const fn = typeof v === "function" ? v : () => v;
+        while (this.length < width)
+            this.push([]);
+        this.length = width;
+        let x = 0;
+        let y = 0;
+        for (x = 0; x < width; ++x) {
+            const col = this[x];
+            for (y = 0; y < height; ++y) {
+                col[y] = fn(x, y);
+            }
+            col.length = height;
+        }
+        this._width = width;
+        this._height = height;
+        if (this.x !== undefined) {
+            this.x = undefined;
+            this.y = undefined;
+        }
     }
     findReplaceRange(findValueMin, findValueMax, fillValue) {
         this.update((v) => {

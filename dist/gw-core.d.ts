@@ -275,15 +275,12 @@ declare type GridUpdate<T> = (value: T, x: number, y: number, grid: Grid<T>) => 
 declare type GridMatch<T> = (value: T, x: number, y: number, grid: Grid<T>) => boolean;
 declare type GridFormat<T> = (value: T, x: number, y: number) => string;
 declare class Grid<T> extends Array<Array<T>> {
-    x?: number;
-    y?: number;
     type: string;
-    private _width;
-    private _height;
+    protected _width: number;
+    protected _height: number;
     constructor(w: number, h: number, v: GridInit<T> | T);
     get width(): number;
     get height(): number;
-    resize(width: number, height: number, v: GridInit<T> | T): void;
     forEach(fn: GridEach<T>): void;
     eachNeighbor(x: number, y: number, fn: GridEach<T>, only4dirs?: boolean): void;
     forRect(x: number, y: number, w: number, h: number, fn: GridEach<T>): void;
@@ -316,9 +313,12 @@ declare class Grid<T> extends Array<Array<T>> {
     arcCount(x: number, y: number, testFn: GridMatch<T>): number;
 }
 declare class NumGrid extends Grid<number> {
+    x?: number;
+    y?: number;
     static alloc(w: number, h: number, v?: number): NumGrid;
     static free(grid: NumGrid): void;
     constructor(w: number, h: number, v?: number);
+    resize(width: number, height: number, v?: GridInit<number> | number): void;
     findReplaceRange(findValueMin: number, findValueMax: number, fillValue: number): void;
     floodFillRange(x: number, y: number, eligibleValueMin?: number, eligibleValueMax?: number, fillValue?: number): number;
     invert(): void;

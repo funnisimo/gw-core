@@ -60,11 +60,9 @@ export type GridMatch<T> = (
 export type GridFormat<T> = (value: T, x: number, y: number) => string;
 
 export class Grid<T> extends Array<Array<T>> {
-  public x?: number;
-  public y?: number;
   public type: string;
-  private _width: number;
-  private _height: number;
+  protected _width: number;
+  protected _height: number;
 
   constructor(w: number, h: number, v: GridInit<T> | T) {
     super(w);
@@ -88,31 +86,6 @@ export class Grid<T> extends Array<Array<T>> {
   }
   get height() {
     return this._height;
-  }
-
-  resize(width: number, height: number, v: GridInit<T> | T) {
-    const fn: GridInit<T> =
-      typeof v === "function" ? (v as GridInit<T>) : () => v;
-
-    while (this.length < width) this.push([]);
-
-    let x = 0;
-    let y = 0;
-    for (x = 0; x < width; ++x) {
-      const col = this[x];
-      for (y = 0; y < Math.min(height, col.length); ++y) {
-        col[y] = fn(x, y);
-      }
-      while (col.length < height) {
-        col.push(fn(x, col.length));
-      }
-    }
-    this._width = width;
-    this._height = height;
-    if (this.x !== undefined) {
-      this.x = undefined;
-      this.y = undefined;
-    }
   }
 
   // @ts-ignore
@@ -509,7 +482,13 @@ let GRID_CREATE_COUNT = 0;
 let GRID_FREE_COUNT = 0;
 
 export class NumGrid extends Grid<number> {
+  public x?: number;
+  public y?: number;
+
   static alloc(w: number, h: number, v = 0): NumGrid {
+    if (!w || !h)
+      throw new Error("Grid alloc requires width and height parameters.");
+
     ++GRID_ACTIVE_COUNT;
     ++GRID_ALLOC_COUNT;
 
@@ -534,6 +513,30 @@ export class NumGrid extends Grid<number> {
 
   constructor(w: number, h: number, v = 0) {
     super(w, h, v);
+  }
+
+  resize(width: number, height: number, v: GridInit<number> | number = 0) {
+    const fn: GridInit<number> =
+      typeof v === "function" ? (v as GridInit<number>) : () => v;
+
+    while (this.length < width) this.push([]);
+    this.length = width;
+
+    let x = 0;
+    let y = 0;
+    for (x = 0; x < width; ++x) {
+      const col = this[x];
+      for (y = 0; y < height; ++y) {
+        col[y] = fn(x, y);
+      }
+      col.length = height;
+    }
+    this._width = width;
+    this._height = height;
+    if (this.x !== undefined) {
+      this.x = undefined;
+      this.y = undefined;
+    }
   }
 
   findReplaceRange(
