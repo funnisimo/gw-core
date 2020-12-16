@@ -10,7 +10,7 @@
   "exports": {
     ".": {
       "require": "./dist/gw-core.cjs",
-      "import": "./js/gw.js"
+      "import": "./dist/gw-core.mjs"
     }
   },
   "dependencies": {},

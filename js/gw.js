@@ -12,6 +12,8 @@ import * as fov_1 from "./fov";
 export { fov_1 as fov };
 import * as path_1 from "./path";
 export { path_1 as path };
+import * as events_1 from "./events";
+export { events_1 as events };
 export { flags } from "./flag";
 export { cosmetic, random, Random } from "./random";
 export var data = {};

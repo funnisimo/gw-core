@@ -5,6 +5,7 @@ export * as grid from "./grid";
 export * as io from "./io";
 export * as fov from "./fov";
 export * as path from "./path";
+export * as events from "./events";
 export { flags } from "./flag";
 export { cosmetic, random, Random } from "./random";
 
