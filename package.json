@@ -5,8 +5,14 @@
   "main": "dist/gw-core.cjs",
   "browser": "dist/gw-core.min.js",
   "module": "dist/gw-core.mjs",
-  "type": "module",
-  "types": "dist/gw-core.d.ts",
+  "type": "commonjs",
+  "types": "js/gw.d.ts",
+  "exports": {
+    ".": {
+      "require": "./dist/gw-core.cjs",
+      "import": "./dist/gw-core.mjs"
+    }
+  },
   "dependencies": {},
   "devDependencies": {
     "@babel/types": "^7.12.10",

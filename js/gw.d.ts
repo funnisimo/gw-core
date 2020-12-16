@@ -4,6 +4,7 @@ export * as flag from "./flag";
 export * as grid from "./grid";
 export * as io from "./io";
 export * as fov from "./fov";
+export * as path from "./path";
 export { flags } from "./flag";
 export { cosmetic, random, Random } from "./random";
 export declare var data: {};
