@@ -5,7 +5,6 @@ export declare const OBSTRUCTION = -2;
 export declare const AVOIDED = 10;
 export declare const NO_PATH = 30000;
 export declare type BlockedFn = (toX: number, toY: number, fromX: number, fromY: number, distanceMap: Grid.NumGrid) => boolean;
-export declare function dijkstraScan(distanceMap: Grid.NumGrid, costMap: Grid.NumGrid, useDiagonals?: boolean): void;
 export declare function calculateDistances(distanceMap: Grid.NumGrid, destinationX: number, destinationY: number, costMap: Grid.NumGrid, eightWays?: boolean): void;
 export declare function nextStep(distanceMap: Grid.NumGrid, x: number, y: number, isBlocked: BlockedFn, useDiagonals?: boolean): Utils.Loc;
 export declare function getPath(distanceMap: Grid.NumGrid, originX: number, originY: number, isBlocked: BlockedFn): number[][] | null;

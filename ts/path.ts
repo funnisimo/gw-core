@@ -194,77 +194,77 @@ function isBoundaryXY(data: Grid.NumGrid, x: number, y: number) {
   return false;
 }
 
-function pdsBatchInput(
-  map: DijkstraMap,
-  distanceMap: Grid.NumGrid,
-  costMap: Grid.NumGrid,
-  maxDistance: number,
-  eightWays: boolean
-) {
-  let i, j;
+// function pdsBatchInput(
+//   map: DijkstraMap,
+//   distanceMap: Grid.NumGrid,
+//   costMap: Grid.NumGrid,
+//   maxDistance: number,
+//   eightWays: boolean
+// ) {
+//   let i, j;
 
-  map.eightWays = eightWays;
+//   map.eightWays = eightWays;
 
-  let left: CostLink | null = map.front;
-  let right: CostLink | null = map.front.right;
+//   let left: CostLink | null = map.front;
+//   let right: CostLink | null = map.front.right;
 
-  map.front.right = null;
-  for (i = 0; i < map.width; i++) {
-    for (j = 0; j < map.height; j++) {
-      let link = getLink(map, i, j);
+//   map.front.right = null;
+//   for (i = 0; i < map.width; i++) {
+//     for (j = 0; j < map.height; j++) {
+//       let link = getLink(map, i, j);
 
-      if (distanceMap != null) {
-        link.distance = distanceMap[i][j];
-      } else {
-        if (costMap != null) {
-          // totally hackish; refactor
-          link.distance = maxDistance;
-        }
-      }
+//       if (distanceMap != null) {
+//         link.distance = distanceMap[i][j];
+//       } else {
+//         if (costMap != null) {
+//           // totally hackish; refactor
+//           link.distance = maxDistance;
+//         }
+//       }
 
-      let cost;
+//       let cost;
 
-      if (isBoundaryXY(costMap, i, j)) {
-        cost = OBSTRUCTION;
-      } else {
-        cost = costMap[i][j];
-      }
+//       if (isBoundaryXY(costMap, i, j)) {
+//         cost = OBSTRUCTION;
+//       } else {
+//         cost = costMap[i][j];
+//       }
 
-      link.cost = cost;
+//       link.cost = cost;
 
-      if (cost > 0) {
-        if (link.distance < maxDistance) {
-          if (right === null || right.distance > link.distance) {
-            // left and right are used to traverse the list; if many cells have similar values,
-            // some time can be saved by not clearing them with each insertion.  this time,
-            // sadly, we have to start from the front.
+//       if (cost > 0) {
+//         if (link.distance < maxDistance) {
+//           if (right === null || right.distance > link.distance) {
+//             // left and right are used to traverse the list; if many cells have similar values,
+//             // some time can be saved by not clearing them with each insertion.  this time,
+//             // sadly, we have to start from the front.
 
-            left = map.front;
-            right = map.front.right;
-          }
+//             left = map.front;
+//             right = map.front.right;
+//           }
 
-          while (right !== null && right.distance < link.distance) {
-            left = right;
-            right = right.right;
-          }
+//           while (right !== null && right.distance < link.distance) {
+//             left = right;
+//             right = right.right;
+//           }
 
-          link.right = right;
-          link.left = left;
-          left.right = link;
-          if (right != null) right.left = link;
+//           link.right = right;
+//           link.left = left;
+//           left.right = link;
+//           if (right != null) right.left = link;
 
-          left = link;
-        } else {
-          link.right = null;
-          link.left = null;
-        }
-      } else {
-        link.right = null;
-        link.left = null;
-      }
-    }
-  }
-}
+//           left = link;
+//         } else {
+//           link.right = null;
+//           link.left = null;
+//         }
+//       } else {
+//         link.right = null;
+//         link.left = null;
+//       }
+//     }
+//   }
+// }
 
 function batchOutput(map: DijkstraMap, distanceMap: Grid.NumGrid) {
   let i, j;
@@ -280,30 +280,30 @@ function batchOutput(map: DijkstraMap, distanceMap: Grid.NumGrid) {
 
 var DIJKSTRA_MAP: DijkstraMap;
 
-export function dijkstraScan(
-  distanceMap: Grid.NumGrid,
-  costMap: Grid.NumGrid,
-  useDiagonals = false
-) {
-  // static makeDijkstraMap map;
+// function dijkstraScan(
+//   distanceMap: Grid.NumGrid,
+//   costMap: Grid.NumGrid,
+//   useDiagonals = false
+// ) {
+//   // static makeDijkstraMap map;
 
-  const width = distanceMap.length;
-  const height = distanceMap[0].length;
+//   const width = distanceMap.length;
+//   const height = distanceMap[0].length;
 
-  if (
-    !DIJKSTRA_MAP ||
-    DIJKSTRA_MAP.width < width ||
-    DIJKSTRA_MAP.height < height
-  ) {
-    DIJKSTRA_MAP = makeDijkstraMap(width, height);
-  }
+//   if (
+//     !DIJKSTRA_MAP ||
+//     DIJKSTRA_MAP.width < width ||
+//     DIJKSTRA_MAP.height < height
+//   ) {
+//     DIJKSTRA_MAP = makeDijkstraMap(width, height);
+//   }
 
-  DIJKSTRA_MAP.width = width;
-  DIJKSTRA_MAP.height = height;
+//   DIJKSTRA_MAP.width = width;
+//   DIJKSTRA_MAP.height = height;
 
-  pdsBatchInput(DIJKSTRA_MAP, distanceMap, costMap, NO_PATH, useDiagonals);
-  batchOutput(DIJKSTRA_MAP, distanceMap);
-}
+//   pdsBatchInput(DIJKSTRA_MAP, distanceMap, costMap, NO_PATH, useDiagonals);
+//   batchOutput(DIJKSTRA_MAP, distanceMap);
+// }
 
 //
 // function populateGenericCostMap(costMap, map) {
