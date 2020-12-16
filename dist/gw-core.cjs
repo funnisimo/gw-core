@@ -2525,6 +2525,135 @@ var events = {
     emit: emit
 };
 
+function make$2(v) {
+    if (v === undefined)
+        return () => 100;
+    if (v === null)
+        return () => 0;
+    if (typeof v === "number")
+        return () => v;
+    if (v && typeof v === "function")
+        return v;
+    let base = {};
+    if (typeof v === "string") {
+        const parts = v.split(/[,|]/).map((t) => t.trim());
+        base = {};
+        parts.forEach((p) => {
+            let [level, weight] = p.split(":");
+            base[level] = Number.parseInt(weight) || 100;
+        });
+    }
+    else {
+        base = v;
+    }
+    if (base && typeof base === "object") {
+        const parts = Object.entries(base);
+        const funcs = parts.map(([levels, frequency]) => {
+            frequency = Number.parseInt(frequency);
+            if (levels.includes("-")) {
+                let [start, end] = levels
+                    .split("-")
+                    .map((t) => t.trim())
+                    .map((v) => Number.parseInt(v));
+                return (level) => level >= start && level <= end ? frequency : 0;
+            }
+            else if (levels.endsWith("+")) {
+                const found = Number.parseInt(levels);
+                return (level) => (level >= found ? frequency : 0);
+            }
+            else {
+                const found = Number.parseInt(levels);
+                return (level) => (level === found ? frequency : 0);
+            }
+        });
+        if (funcs.length == 1)
+            return funcs[0];
+        return (level) => funcs.reduce((out, fn) => out || fn(level), 0);
+    }
+    return () => 0;
+}
+
+var frequency = {
+    __proto__: null,
+    make: make$2
+};
+
+class Scheduler {
+    constructor() {
+        this.next = null;
+        this.time = 0;
+        this.cache = null;
+    }
+    clear() {
+        while (this.next) {
+            const current = this.next;
+            this.next = current.next;
+            current.next = this.cache;
+            this.cache = current;
+        }
+    }
+    push(fn, delay = 1) {
+        let item;
+        if (this.cache) {
+            item = this.cache;
+            this.cache = item.next;
+            item.next = null;
+        }
+        else {
+            item = { fn: null, time: 0, next: null };
+        }
+        item.fn = fn;
+        item.time = this.time + delay;
+        if (!this.next) {
+            this.next = item;
+        }
+        else {
+            let current = this;
+            let next = current.next;
+            while (next && next.time <= item.time) {
+                current = next;
+                next = current.next;
+            }
+            item.next = current.next;
+            current.next = item;
+        }
+        return item;
+    }
+    pop() {
+        const n = this.next;
+        if (!n)
+            return null;
+        this.next = n.next;
+        n.next = this.cache;
+        this.cache = n;
+        this.time = Math.max(n.time, this.time); // so you can schedule -1 as a time uint
+        return n.fn;
+    }
+    remove(item) {
+        if (!item || !this.next)
+            return;
+        if (this.next === item) {
+            this.next = item.next;
+            return;
+        }
+        let prev = this.next;
+        let current = prev.next;
+        while (current && current !== item) {
+            prev = current;
+            current = current.next;
+        }
+        if (current === item) {
+            prev.next = current.next;
+        }
+    }
+}
+// export const scheduler = new Scheduler();
+
+var scheduler = {
+    __proto__: null,
+    Scheduler: Scheduler
+};
+
 var data = {};
 
 exports.Random = Random;
@@ -2534,9 +2663,11 @@ exports.events = events;
 exports.flag = flag;
 exports.flags = flags;
 exports.fov = fov;
+exports.frequency = frequency;
 exports.grid = grid;
 exports.io = io;
 exports.path = path;
 exports.random = random;
 exports.range = range;
+exports.scheduler = scheduler;
 exports.utils = utils;
