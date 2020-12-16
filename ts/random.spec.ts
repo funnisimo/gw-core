@@ -2,9 +2,9 @@ import "jest-extended";
 import {
   random,
   cosmetic,
-  configure,
   RandomFunction,
   SeedFunction,
+  Random,
 } from "./random";
 import * as GW from "./gw";
 
@@ -22,7 +22,7 @@ describe("random", () => {
     rnd = jest.fn().mockReturnValue(0.5);
     make = jest.fn().mockReturnValue(rnd);
     // @ts-ignore
-    configure({ make });
+    Random.configure({ make });
     make.mockClear();
   }
 

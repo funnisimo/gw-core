@@ -4,6 +4,7 @@ module.exports = {
     setupFilesAfterEnv: [
       "jest-extended",
     ],
-    coverageDirectory: "./coverage"
+    coverageDirectory: "./coverage",
+    moduleFileExtensions: ['js', 'json', 'ts', 'node', 'mjs']
   };
   

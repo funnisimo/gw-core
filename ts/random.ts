@@ -13,20 +13,6 @@ const RANDOM_CONFIG: RandomConfig = {
   },
 };
 
-export function configure(opts: Partial<RandomConfig>) {
-  if (opts.make) {
-    if (typeof opts.make !== "function")
-      throw new Error("Random make parameter must be a function.");
-    if (typeof opts.make(12345) !== "function")
-      throw new Error(
-        "Random make function must accept a numeric seed and return a random function."
-      );
-    RANDOM_CONFIG.make = opts.make;
-    random.seed();
-    cosmetic.seed();
-  }
-}
-
 export type WeightedArray = number[];
 
 function lotteryDrawArray(rand: Random, frequencies: WeightedArray) {
@@ -69,6 +55,20 @@ function lotteryDrawObject(rand: Random, weights: WeightedObject) {
 
 export class Random {
   private _fn: RandomFunction;
+
+  static configure(opts: Partial<RandomConfig>) {
+    if (opts.make) {
+      if (typeof opts.make !== "function")
+        throw new Error("Random make parameter must be a function.");
+      if (typeof opts.make(12345) !== "function")
+        throw new Error(
+          "Random make function must accept a numeric seed and return a random function."
+        );
+      RANDOM_CONFIG.make = opts.make;
+      random.seed();
+      cosmetic.seed();
+    }
+  }
 
   constructor() {
     this._fn = RANDOM_CONFIG.make();
@@ -166,7 +166,7 @@ export class Random {
   chance(percent: number, outOf = 100) {
     if (percent <= 0) return false;
     if (percent >= outOf) return true;
-    return this.range(0, outOf - 1) < percent;
+    return this.number(outOf) < percent;
   }
 
   // Get a random int between lo and hi, inclusive, with probability distribution
