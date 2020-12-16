@@ -1,2 +1,3 @@
-# gw-core
-Core functionality for a Roguelike
+# gw-utils
+
+Utility functionality for a Roguelike
