@@ -4,6 +4,10 @@
  */
 
 export type Loc = [number, number];
+export interface XY {
+  x: number;
+  y: number;
+}
 
 // DIRS are organized clockwise
 // - first 4 are arrow directions

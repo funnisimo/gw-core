@@ -3,6 +3,10 @@
  * @module utils
  */
 export declare type Loc = [number, number];
+export interface XY {
+    x: number;
+    y: number;
+}
 export declare const DIRS: Loc[];
 export declare const NO_DIRECTION = -1;
 export declare const UP = 0;

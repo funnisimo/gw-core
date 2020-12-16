@@ -3,17 +3,6 @@ const RANDOM_CONFIG = {
         return Math.random.bind(Math);
     },
 };
-export function configure(opts) {
-    if (opts.make) {
-        if (typeof opts.make !== "function")
-            throw new Error("Random make parameter must be a function.");
-        if (typeof opts.make(12345) !== "function")
-            throw new Error("Random make function must accept a numeric seed and return a random function.");
-        RANDOM_CONFIG.make = opts.make;
-        random.seed();
-        cosmetic.seed();
-    }
-}
 function lotteryDrawArray(rand, frequencies) {
     let i, maxFreq, randIndex;
     maxFreq = 0;
@@ -45,6 +34,17 @@ function lotteryDrawObject(rand, weights) {
 export class Random {
     constructor() {
         this._fn = RANDOM_CONFIG.make();
+    }
+    static configure(opts) {
+        if (opts.make) {
+            if (typeof opts.make !== "function")
+                throw new Error("Random make parameter must be a function.");
+            if (typeof opts.make(12345) !== "function")
+                throw new Error("Random make function must accept a numeric seed and return a random function.");
+            RANDOM_CONFIG.make = opts.make;
+            random.seed();
+            cosmetic.seed();
+        }
     }
     seed(val) {
         this._fn = RANDOM_CONFIG.make(val);
@@ -127,7 +127,7 @@ export class Random {
             return false;
         if (percent >= outOf)
             return true;
-        return this.range(0, outOf - 1) < percent;
+        return this.number(outOf) < percent;
     }
     // Get a random int between lo and hi, inclusive, with probability distribution
     // affected by clumps.

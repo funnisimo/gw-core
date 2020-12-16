@@ -10,7 +10,6 @@
 		"noEmitOnError": true,
 		"incremental": true,
 		"declaration": true,
-		"declarationDir": "js/types",
 		"moduleResolution": "node",
 		"esModuleInterop": true,
 		"sourceMap": true
