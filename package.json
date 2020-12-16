@@ -1,16 +1,16 @@
 {
-  "name": "gw-core",
+  "name": "gw-utils",
   "version": "0.0.2",
   "description": "Basic Roguelike functionality",
-  "main": "dist/gw-core.cjs",
-  "browser": "dist/gw-core.min.js",
-  "module": "dist/gw-core.mjs",
+  "main": "dist/gw-utils.cjs",
+  "browser": "dist/gw-utils.min.js",
+  "module": "dist/gw-utils.mjs",
   "type": "commonjs",
   "types": "js/gw.d.ts",
   "exports": {
     ".": {
-      "require": "./dist/gw-core.cjs",
-      "import": "./dist/gw-core.mjs"
+      "require": "./dist/gw-utils.cjs",
+      "import": "./dist/gw-utils.mjs"
     }
   },
   "dependencies": {},
@@ -29,7 +29,7 @@
   "scripts": {
     "compile": "tsc --build tsconfig.json",
     "bundle": "rollup -c",
-    "copy": "cp dist/gw-core.min.js docs/js",
+    "copy": "cp dist/gw-utils.min.js docs/js",
     "build": "npm run compile && npm run bundle && npm run copy",
     "serve": "python -m SimpleHTTPServer",
     "test": "jest",
@@ -38,7 +38,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/funnisimo/gw-core.git"
+    "url": "git+https://github.com/funnisimo/gw-utils.git"
   },
   "keywords": [
     "Roguelike"
@@ -46,9 +46,9 @@
   "author": "Funnisimo",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/funnisimo/gw-core/issues"
+    "url": "https://github.com/funnisimo/gw-utils/issues"
   },
-  "homepage": "https://github.com/funnisimo/gw-core#readme",
+  "homepage": "https://github.com/funnisimo/gw-utils#readme",
   "files": [
     "dist"
   ]

@@ -1,5 +1,5 @@
 
-// GW-AI: rollup.config.js
+// GW-UTILS: rollup.config.js
 
 import { terser } from "rollup-plugin-terser";
 
@@ -7,7 +7,7 @@ export default [
 {
   input: 'js/gw.js',
   output: [{
-    file: 'dist/gw-core.min.js',
+    file: 'dist/gw-utils.min.js',
     format: 'umd',
     name: 'GW',
     freeze: false,
@@ -16,12 +16,12 @@ export default [
     plugins: [terser()]
   },
   {
-    file: 'dist/gw-core.mjs',
+    file: 'dist/gw-utils.mjs',
     format: 'es',
     freeze: false,
   },
   {
-    file: 'dist/gw-core.cjs',
+    file: 'dist/gw-utils.cjs',
     format: 'cjs',
     freeze: false,
   }
