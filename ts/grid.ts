@@ -85,6 +85,11 @@ export class Grid<T> extends Array<Array<T>> {
     return this._height;
   }
 
+  /**
+   * Calls the supplied function for each cell in the grid.
+   * @param fn - The function to call on each item in the grid.
+   * TSIGNORE
+   */
   // @ts-ignore
   forEach(fn: GridEach<T>) {
     let i, j;
@@ -118,11 +123,18 @@ export class Grid<T> extends Array<Array<T>> {
     }
   }
 
+  /**
+   * Returns a new Grid with the cells mapped according to the supplied function.
+   * @param fn - The function that maps the cell values
+   * TSIGNORE
+   */
   // @ts-ignore
   map(fn: GridEach<T>) {
-    return super.map((col: any[], x: number) => {
-      return col.map((v: any, y: number) => fn(v, x, y, this));
-    });
+    // @ts-ignore
+    const other = new this.constructor(this.width, this.height);
+    other.copy(this);
+    other.update(fn);
+    return other;
   }
 
   forCircle(x: number, y: number, radius: number, fn: GridEach<T>) {
@@ -222,6 +234,11 @@ export class Grid<T> extends Array<Array<T>> {
     }
   }
 
+  /**
+   * Fills the entire grid with the supplied value
+   * @param v - The fill value or a function that returns the fill value.
+   * TSIGNORE
+   */
   // @ts-ignore
   fill(v: T | GridUpdate<T>) {
     const fn: GridUpdate<T> =

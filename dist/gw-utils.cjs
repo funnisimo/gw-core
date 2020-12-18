@@ -399,6 +399,83 @@ function removeFromChain(obj, name, entry) {
     }
     return false;
 }
+// LINES
+const FP_BASE = 16;
+const FP_FACTOR = 1 << 16;
+function forLine(fromX, fromY, toX, toY, stepFn) {
+    let targetVector = [], error = [], currentVector = [], previousVector = [], quadrantTransform = [];
+    let largerTargetComponent, i;
+    let currentLoc = [-1, -1], previousLoc = [-1, -1];
+    if (fromX == toX && fromY == toY) {
+        return;
+    }
+    const originLoc = [fromX, fromY];
+    const targetLoc = [toX, toY];
+    // Neither vector is negative. We keep track of negatives with quadrantTransform.
+    for (i = 0; i <= 1; i++) {
+        targetVector[i] = (targetLoc[i] - originLoc[i]) << FP_BASE; // FIXME: should use parens?
+        if (targetVector[i] < 0) {
+            targetVector[i] *= -1;
+            quadrantTransform[i] = -1;
+        }
+        else {
+            quadrantTransform[i] = 1;
+        }
+        currentVector[i] = previousVector[i] = error[i] = 0;
+        currentLoc[i] = originLoc[i];
+    }
+    // normalize target vector such that one dimension equals 1 and the other is in [0, 1].
+    largerTargetComponent = Math.max(targetVector[0], targetVector[1]);
+    // targetVector[0] = Math.floor( (targetVector[0] << FP_BASE) / largerTargetComponent);
+    // targetVector[1] = Math.floor( (targetVector[1] << FP_BASE) / largerTargetComponent);
+    targetVector[0] = Math.floor((targetVector[0] * FP_FACTOR) / largerTargetComponent);
+    targetVector[1] = Math.floor((targetVector[1] * FP_FACTOR) / largerTargetComponent);
+    do {
+        for (i = 0; i <= 1; i++) {
+            previousLoc[i] = currentLoc[i];
+            currentVector[i] += targetVector[i] >> FP_BASE;
+            error[i] += targetVector[i] == FP_FACTOR ? 0 : targetVector[i];
+            if (error[i] >= Math.floor(FP_FACTOR / 2)) {
+                currentVector[i]++;
+                error[i] -= FP_FACTOR;
+            }
+            currentLoc[i] = Math.floor(quadrantTransform[i] * currentVector[i] + originLoc[i]);
+        }
+        if (stepFn(...currentLoc)) {
+            break;
+        }
+    } while (true);
+}
+// ADAPTED FROM BROGUE 1.7.5
+// Simple line algorithm (maybe this is Bresenham?) that returns a list of coordinates
+// that extends all the way to the edge of the map based on an originLoc (which is not included
+// in the list of coordinates) and a targetLoc.
+// Returns the number of entries in the list, and includes (-1, -1) as an additional
+// terminus indicator after the end of the list.
+function getLine(fromX, fromY, toX, toY) {
+    const line = [];
+    forLine(fromX, fromY, toX, toY, (x, y) => {
+        line.push([x, y]);
+        return x == toX && y == toY;
+    });
+    return line;
+}
+// ADAPTED FROM BROGUE 1.7.5
+// Simple line algorithm (maybe this is Bresenham?) that returns a list of coordinates
+// that extends all the way to the edge of the map based on an originLoc (which is not included
+// in the list of coordinates) and a targetLoc.
+// Returns the number of entries in the list, and includes (-1, -1) as an additional
+// terminus indicator after the end of the list.
+function getLineThru(fromX, fromY, toX, toY, width, height) {
+    const line = [];
+    forLine(fromX, fromY, toX, toY, (x, y) => {
+        if (x < 0 || y < 0 || x >= width || y >= height)
+            return true;
+        line.push([x, y]);
+        return false;
+    });
+    return line;
+}
 
 var utils = {
     __proto__: null,
@@ -453,7 +530,10 @@ var utils = {
     chainIncludes: chainIncludes,
     eachChain: eachChain,
     addToChain: addToChain,
-    removeFromChain: removeFromChain
+    removeFromChain: removeFromChain,
+    forLine: forLine,
+    getLine: getLine,
+    getLineThru: getLineThru
 };
 
 const RANDOM_CONFIG = {
@@ -841,6 +921,11 @@ class Grid extends Array {
     get height() {
         return this._height;
     }
+    /**
+     * Calls the supplied function for each cell in the grid.
+     * @param fn - The function to call on each item in the grid.
+     * TSIGNORE
+     */
     // @ts-ignore
     forEach(fn) {
         let i, j;
@@ -870,11 +955,18 @@ class Grid extends Array {
             }
         }
     }
+    /**
+     * Returns a new Grid with the cells mapped according to the supplied function.
+     * @param fn - The function that maps the cell values
+     * TSIGNORE
+     */
     // @ts-ignore
     map(fn) {
-        return super.map((col, x) => {
-            return col.map((v, y) => fn(v, x, y, this));
-        });
+        // @ts-ignore
+        const other = new this.constructor(this.width, this.height);
+        other.copy(this);
+        other.update(fn);
+        return other;
     }
     forCircle(x, y, radius, fn) {
         let i, j;
@@ -941,6 +1033,11 @@ class Grid extends Array {
             }
         }
     }
+    /**
+     * Fills the entire grid with the supplied value
+     * @param v - The fill value or a function that returns the fill value.
+     * TSIGNORE
+     */
     // @ts-ignore
     fill(v) {
         const fn = typeof v === "function" ? v : () => v;
@@ -2654,9 +2751,2286 @@ var scheduler = {
     Scheduler: Scheduler
 };
 
+// Based on: https://github.com/ondras/fastiles/blob/master/ts/shaders.ts (v2.1.0)
+const VS = `
+#version 300 es
+in uvec2 position;
+in uvec2 uv;
+in uint style;
+out vec2 fsUv;
+flat out uint fsStyle;
+uniform highp uvec2 tileSize;
+uniform uvec2 viewportSize;
+void main() {
+	ivec2 positionPx = ivec2(position * tileSize);
+	vec2 positionNdc = (vec2(positionPx * 2) / vec2(viewportSize))-1.0;
+	positionNdc.y *= -1.0;
+	gl_Position = vec4(positionNdc, 0.0, 1.0);
+	fsUv = vec2(uv);
+	fsStyle = style;
+}`.trim();
+const FS = `
+#version 300 es
+precision highp float;
+in vec2 fsUv;
+flat in uint fsStyle;
+out vec4 fragColor;
+uniform sampler2D font;
+uniform highp uvec2 tileSize;
+void main() {
+	uvec2 fontTiles = uvec2(textureSize(font, 0)) / tileSize;
+
+	uint glyph = (fsStyle & uint(0xFF000000)) >> 24;
+	uint glyphX = (glyph & uint(0xF));
+	uint glyphY = (glyph >> 4);
+	uvec2 fontPosition = uvec2(glyphX, glyphY);
+
+	uvec2 fontPx = (tileSize * fontPosition) + uvec2(vec2(tileSize) * fsUv);
+	vec3 texel = texelFetch(font, ivec2(fontPx), 0).rgb;
+
+	float s = 15.0;
+	uint fr = (fsStyle & uint(0xF00)) >> 8;
+	uint fg = (fsStyle & uint(0x0F0)) >> 4;
+	uint fb = (fsStyle & uint(0x00F)) >> 0;
+	vec3 fgRgb = vec3(fr, fg, fb) / s;
+  
+	uint br = (fsStyle & uint(0xF00000)) >> 20;
+	uint bg = (fsStyle & uint(0x0F0000)) >> 16;
+	uint bb = (fsStyle & uint(0x00F000)) >> 12;
+	vec3 bgRgb = vec3(br, bg, bb) / s;
+  
+	fragColor = vec4(mix(bgRgb, fgRgb, texel), 1.0);
+}`.trim();
+
+class Glyphs {
+    constructor(opts = {}) {
+        this._tileWidth = 12;
+        this._tileHeight = 16;
+        this.needsUpdate = true;
+        this._map = {};
+        opts.font = opts.font || "monospace";
+        this._node = document.createElement("canvas");
+        this._ctx = this.node.getContext("2d");
+        this._configure(opts);
+    }
+    static fromImage(src) {
+        if (typeof src === "string") {
+            if (src.startsWith("data:"))
+                throw new Error("Glyph: You must load a data string into an image element and use that.");
+            const el = document.getElementById(src);
+            if (!el)
+                throw new Error("Glyph: Failed to find image element with id:" + src);
+            src = el;
+        }
+        const glyph = new this({
+            tileWidth: src.width / 16,
+            tileHeight: src.height / 16,
+        });
+        glyph._ctx.drawImage(src, 0, 0);
+        return glyph;
+    }
+    static fromFont(src) {
+        if (typeof src === "string") {
+            src = { font: src };
+        }
+        const glyphs = new this(src);
+        const basicOnly = src.basicOnly || src.basic || false;
+        glyphs._initGlyphs(basicOnly);
+        return glyphs;
+    }
+    get node() {
+        return this._node;
+    }
+    get ctx() {
+        return this._ctx;
+    }
+    get tileWidth() {
+        return this._tileWidth;
+    }
+    get tileHeight() {
+        return this._tileHeight;
+    }
+    get pxWidth() {
+        return this._node.width;
+    }
+    get pxHeight() {
+        return this._node.height;
+    }
+    forChar(ch) {
+        if (ch === null || ch === undefined)
+            return -1;
+        return this._map[ch] || -1;
+    }
+    _configure(opts) {
+        this._tileWidth = opts.tileWidth || this.tileWidth;
+        this._tileHeight = opts.tileHeight || this.tileHeight;
+        this.node.width = 16 * this.tileWidth;
+        this.node.height = 16 * this.tileHeight;
+        this._ctx.fillStyle = "black";
+        this._ctx.fillRect(0, 0, this.pxWidth, this.pxHeight);
+        const size = opts.fontSize || opts.size || Math.max(this.tileWidth, this.tileHeight);
+        this._ctx.font = "" + size + "px " + opts.font;
+        this._ctx.textAlign = "center";
+        this._ctx.textBaseline = "middle";
+        this._ctx.fillStyle = "white";
+    }
+    draw(n, ch) {
+        if (n > 256)
+            throw new Error("Cannot draw more than 256 glyphs.");
+        const x = (n % 16) * this.tileWidth;
+        const y = Math.floor(n / 16) * this.tileHeight;
+        const cx = x + Math.floor(this.tileWidth / 2);
+        const cy = y + Math.floor(this.tileHeight / 2);
+        this._ctx.save();
+        this._ctx.beginPath();
+        this._ctx.rect(x, y, this.tileWidth, this.tileHeight);
+        this._ctx.clip();
+        if (typeof ch === "function") {
+            ch(this._ctx, x, y, this.tileWidth, this.tileHeight);
+        }
+        else {
+            if (this._map[ch] === undefined)
+                this._map[ch] = n;
+            this._ctx.fillText(ch, cx, cy);
+        }
+        this._ctx.restore();
+        this.needsUpdate = true;
+    }
+    _initGlyphs(basicOnly = false) {
+        for (let i = 32; i < 127; ++i) {
+            this.draw(i, String.fromCharCode(i));
+        }
+        if (!basicOnly) {
+            [
+                " ",
+                "\u263a",
+                "\u263b",
+                "\u2665",
+                "\u2666",
+                "\u2663",
+                "\u2660",
+                "\u263c",
+                "\u2600",
+                "\u2605",
+                "\u2606",
+                "\u2642",
+                "\u2640",
+                "\u266a",
+                "\u266b",
+                "\u2638",
+                "\u25b6",
+                "\u25c0",
+                "\u2195",
+                "\u203c",
+                "\u204b",
+                "\u262f",
+                "\u2318",
+                "\u2616",
+                "\u2191",
+                "\u2193",
+                "\u2192",
+                "\u2190",
+                "\u2126",
+                "\u2194",
+                "\u25b2",
+                "\u25bc",
+            ].forEach((ch, i) => {
+                this.draw(i, ch);
+            });
+            // [
+            // '\u2302',
+            // '\u2b09', '\u272a', '\u2718', '\u2610', '\u2611', '\u25ef', '\u25ce', '\u2690',
+            // '\u2691', '\u2598', '\u2596', '\u259d', '\u2597', '\u2744', '\u272d', '\u2727',
+            // '\u25e3', '\u25e4', '\u25e2', '\u25e5', '\u25a8', '\u25a7', '\u259a', '\u265f',
+            // '\u265c', '\u265e', '\u265d', '\u265b', '\u265a', '\u301c', '\u2694', '\u2692',
+            // '\u25b6', '\u25bc', '\u25c0', '\u25b2', '\u25a4', '\u25a5', '\u25a6', '\u257a',
+            // '\u257b', '\u2578', '\u2579', '\u2581', '\u2594', '\u258f', '\u2595', '\u272d',
+            // '\u2591', '\u2592', '\u2593', '\u2503', '\u252b', '\u2561', '\u2562', '\u2556',
+            // '\u2555', '\u2563', '\u2551', '\u2557', '\u255d', '\u255c', '\u255b', '\u2513',
+            // '\u2517', '\u253b', '\u2533', '\u2523', '\u2501', '\u254b', '\u255e', '\u255f',
+            // '\u255a', '\u2554', '\u2569', '\u2566', '\u2560', '\u2550', '\u256c', '\u2567',
+            // '\u2568', '\u2564', '\u2565', '\u2559', '\u2558', '\u2552', '\u2553', '\u256b',
+            // '\u256a', '\u251b', '\u250f', '\u2588', '\u2585', '\u258c', '\u2590', '\u2580',
+            // '\u03b1', '\u03b2', '\u0393', '\u03c0', '\u03a3', '\u03c3', '\u03bc', '\u03c4',
+            // '\u03a6', '\u03b8', '\u03a9', '\u03b4', '\u221e', '\u03b8', '\u03b5', '\u03b7',
+            // '\u039e', '\u00b1', '\u2265', '\u2264', '\u2234', '\u2237', '\u00f7', '\u2248',
+            // '\u22c4', '\u22c5', '\u2217', '\u27b5', '\u2620', '\u2625', '\u25fc', '\u25fb'
+            // ].forEach( (ch, i) => {
+            //   this.draw(i + 127, ch);
+            // });
+            [
+                "\u2302",
+                "\u00C7",
+                "\u00FC",
+                "\u00E9",
+                "\u00E2",
+                "\u00E4",
+                "\u00E0",
+                "\u00E5",
+                "\u00E7",
+                "\u00EA",
+                "\u00EB",
+                "\u00E8",
+                "\u00EF",
+                "\u00EE",
+                "\u00EC",
+                "\u00C4",
+                "\u00C5",
+                "\u00C9",
+                "\u00E6",
+                "\u00C6",
+                "\u00F4",
+                "\u00F6",
+                "\u00F2",
+                "\u00FB",
+                "\u00F9",
+                "\u00FF",
+                "\u00D6",
+                "\u00DC",
+                "\u00A2",
+                "\u00A3",
+                "\u00A5",
+                "\u20A7",
+                "\u0192",
+                "\u00E1",
+                "\u00ED",
+                "\u00F3",
+                "\u00FA",
+                "\u00F1",
+                "\u00D1",
+                "\u00AA",
+                "\u00BA",
+                "\u00BF",
+                "\u2310",
+                "\u00AC",
+                "\u00BD",
+                "\u00BC",
+                "\u00A1",
+                "\u00AB",
+                "\u00BB",
+                "\u2591",
+                "\u2592",
+                "\u2593",
+                "\u2502",
+                "\u2524",
+                "\u2561",
+                "\u2562",
+                "\u2556",
+                "\u2555",
+                "\u2563",
+                "\u2551",
+                "\u2557",
+                "\u255D",
+                "\u255C",
+                "\u255B",
+                "\u2510",
+                "\u2514",
+                "\u2534",
+                "\u252C",
+                "\u251C",
+                "\u2500",
+                "\u253C",
+                "\u255E",
+                "\u255F",
+                "\u255A",
+                "\u2554",
+                "\u2569",
+                "\u2566",
+                "\u2560",
+                "\u2550",
+                "\u256C",
+                "\u2567",
+                "\u2568",
+                "\u2564",
+                "\u2565",
+                "\u2559",
+                "\u2558",
+                "\u2552",
+                "\u2553",
+                "\u256B",
+                "\u256A",
+                "\u2518",
+                "\u250C",
+                "\u2588",
+                "\u2584",
+                "\u258C",
+                "\u2590",
+                "\u2580",
+                "\u03B1",
+                "\u00DF",
+                "\u0393",
+                "\u03C0",
+                "\u03A3",
+                "\u03C3",
+                "\u00B5",
+                "\u03C4",
+                "\u03A6",
+                "\u0398",
+                "\u03A9",
+                "\u03B4",
+                "\u221E",
+                "\u03C6",
+                "\u03B5",
+                "\u2229",
+                "\u2261",
+                "\u00B1",
+                "\u2265",
+                "\u2264",
+                "\u2320",
+                "\u2321",
+                "\u00F7",
+                "\u2248",
+                "\u00B0",
+                "\u2219",
+                "\u00B7",
+                "\u221A",
+                "\u207F",
+                "\u00B2",
+                "\u25A0",
+                "\u00A0",
+            ].forEach((ch, i) => {
+                this.draw(i + 127, ch);
+            });
+        }
+    }
+}
+
+const VERTICES_PER_TILE = 6;
+class NotSupportedError extends Error {
+    constructor(...params) {
+        // Pass remaining arguments (including vendor specific ones) to parent constructor
+        super(...params);
+        // Maintains proper stack trace for where our error was thrown (only available on V8)
+        // @ts-ignore
+        if (Error.captureStackTrace) {
+            // @ts-ignore
+            Error.captureStackTrace(this, NotSupportedError);
+        }
+        this.name = "NotSupportedError";
+    }
+}
+class BaseCanvas {
+    constructor(options) {
+        this._renderRequested = false;
+        this._autoRender = true;
+        this._width = 50;
+        this._height = 25;
+        if (!options.glyphs)
+            throw new Error("You must supply glyphs for the canvas.");
+        this._node = this._createNode();
+        this._createContext();
+        this._configure(options);
+    }
+    get node() {
+        return this._node;
+    }
+    get width() {
+        return this._width;
+    }
+    get height() {
+        return this._height;
+    }
+    get tileWidth() {
+        return this._glyphs.tileWidth;
+    }
+    get tileHeight() {
+        return this._glyphs.tileHeight;
+    }
+    get pxWidth() {
+        return this.node.clientWidth;
+    }
+    get pxHeight() {
+        return this.node.clientHeight;
+    }
+    get glyphs() {
+        return this._glyphs;
+    }
+    set glyphs(glyphs) {
+        this._setGlyphs(glyphs);
+    }
+    _createNode() {
+        return document.createElement("canvas");
+    }
+    _configure(options) {
+        this._width = options.width || this._width;
+        this._height = options.height || this._height;
+        this._autoRender = options.render !== false;
+        this._setGlyphs(options.glyphs);
+        if (options.div) {
+            let el;
+            if (typeof options.div === "string") {
+                el = document.getElementById(options.div);
+                if (!el) {
+                    console.warn("Failed to find parent element by ID: " + options.div);
+                }
+            }
+            else {
+                el = options.div;
+            }
+            if (el && el.appendChild) {
+                el.appendChild(this.node);
+            }
+        }
+    }
+    _setGlyphs(glyphs) {
+        if (glyphs === this._glyphs)
+            return false;
+        this._glyphs = glyphs;
+        this.resize(this._width, this._height);
+        return true;
+    }
+    resize(width, height) {
+        this._width = width;
+        this._height = height;
+        const node = this.node;
+        node.width = this._width * this.tileWidth;
+        node.height = this._height * this.tileHeight;
+    }
+    draw(x, y, glyph, fg, bg) {
+        glyph = glyph & 0xff;
+        bg = bg & 0xfff;
+        fg = fg & 0xfff;
+        const style = glyph * (1 << 24) + bg * (1 << 12) + fg;
+        this._set(x, y, style);
+    }
+    _requestRender() {
+        if (this._renderRequested)
+            return;
+        this._renderRequested = true;
+        if (!this._autoRender)
+            return;
+        requestAnimationFrame(() => this.render());
+    }
+    _set(x, y, style) {
+        let index = y * this.width + x;
+        const current = this._data[index];
+        if (current !== style) {
+            this._data[index] = style;
+            this._requestRender();
+            return true;
+        }
+        return false;
+    }
+    copy(data) {
+        this._data.set(data);
+        this._requestRender();
+    }
+    copyTo(data) {
+        data.set(this._data);
+    }
+    hasXY(x, y) {
+        return x >= 0 && y >= 0 && x < this.width && y < this.height;
+    }
+    toX(x) {
+        return Math.floor((this.width * x) / this.node.clientWidth);
+    }
+    toY(y) {
+        return Math.floor((this.height * y) / this.node.clientHeight);
+    }
+}
+// Based on: https://github.com/ondras/fastiles/blob/master/ts/scene.ts (v2.1.0)
+class Canvas extends BaseCanvas {
+    constructor(options) {
+        super(options);
+    }
+    _createContext() {
+        let gl = this.node.getContext("webgl2");
+        if (!gl) {
+            throw new NotSupportedError("WebGL 2 not supported");
+        }
+        this._gl = gl;
+        this._buffers = {};
+        this._attribs = {};
+        this._uniforms = {};
+        const p = createProgram(gl, VS, FS);
+        gl.useProgram(p);
+        const attributeCount = gl.getProgramParameter(p, gl.ACTIVE_ATTRIBUTES);
+        for (let i = 0; i < attributeCount; i++) {
+            gl.enableVertexAttribArray(i);
+            let info = gl.getActiveAttrib(p, i);
+            this._attribs[info.name] = i;
+        }
+        const uniformCount = gl.getProgramParameter(p, gl.ACTIVE_UNIFORMS);
+        for (let i = 0; i < uniformCount; i++) {
+            let info = gl.getActiveUniform(p, i);
+            this._uniforms[info.name] = gl.getUniformLocation(p, info.name);
+        }
+        gl.uniform1i(this._uniforms["font"], 0);
+        this._texture = createTexture(gl);
+    }
+    _createGeometry() {
+        const gl = this._gl;
+        this._buffers.position && gl.deleteBuffer(this._buffers.position);
+        this._buffers.uv && gl.deleteBuffer(this._buffers.uv);
+        let buffers = createGeometry(gl, this._attribs, this.width, this.height);
+        Object.assign(this._buffers, buffers);
+    }
+    _createData() {
+        const gl = this._gl;
+        const attribs = this._attribs;
+        const tileCount = this.width * this.height;
+        this._buffers.style && gl.deleteBuffer(this._buffers.style);
+        this._data = new Uint32Array(tileCount * VERTICES_PER_TILE);
+        const style = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, style);
+        gl.vertexAttribIPointer(attribs["style"], 1, gl.UNSIGNED_INT, 0, 0);
+        Object.assign(this._buffers, { style });
+    }
+    _setGlyphs(glyphs) {
+        if (!super._setGlyphs(glyphs))
+            return false;
+        const gl = this._gl;
+        const uniforms = this._uniforms;
+        gl.uniform2uiv(uniforms["tileSize"], [this.tileWidth, this.tileHeight]);
+        this._uploadGlyphs();
+        return true;
+    }
+    _uploadGlyphs() {
+        if (!this._glyphs.needsUpdate)
+            return;
+        const gl = this._gl;
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, this._texture);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, this._glyphs.node);
+        this._requestRender();
+        this._glyphs.needsUpdate = false;
+    }
+    resize(width, height) {
+        super.resize(width, height);
+        const gl = this._gl;
+        const uniforms = this._uniforms;
+        gl.viewport(0, 0, this.node.width, this.node.height);
+        gl.uniform2ui(uniforms["viewportSize"], this.node.width, this.node.height);
+        this._createGeometry();
+        this._createData();
+    }
+    _set(x, y, style) {
+        let index = y * this.width + x;
+        index *= VERTICES_PER_TILE;
+        const current = this._data[index + 2];
+        if (current !== style) {
+            this._data[index + 2] = style;
+            this._data[index + 5] = style;
+            this._requestRender();
+            return true;
+        }
+        return false;
+    }
+    copy(data) {
+        data.forEach((style, i) => {
+            const index = i * VERTICES_PER_TILE;
+            this._data[index + 2] = style;
+            this._data[index + 5] = style;
+        });
+        this._requestRender();
+    }
+    copyTo(data) {
+        const n = this.width * this.height;
+        for (let i = 0; i < n; ++i) {
+            const index = i * VERTICES_PER_TILE;
+            data[i] = this._data[index + 2];
+        }
+    }
+    render() {
+        const gl = this._gl;
+        if (this._glyphs.needsUpdate) {
+            // auto keep glyphs up to date
+            this._uploadGlyphs();
+        }
+        else if (!this._renderRequested) {
+            return;
+        }
+        this._renderRequested = false;
+        gl.bindBuffer(gl.ARRAY_BUFFER, this._buffers.style);
+        gl.bufferData(gl.ARRAY_BUFFER, this._data, gl.DYNAMIC_DRAW);
+        gl.drawArrays(gl.TRIANGLES, 0, this._width * this._height * VERTICES_PER_TILE);
+    }
+}
+class Canvas2D extends BaseCanvas {
+    constructor(options) {
+        super(options);
+    }
+    _createContext() {
+        const ctx = this.node.getContext("2d");
+        if (!ctx) {
+            throw new NotSupportedError("2d context not supported!");
+        }
+        this._ctx = ctx;
+    }
+    _set(x, y, style) {
+        const result = super._set(x, y, style);
+        if (result) {
+            this._changed[y * this.width + x] = 1;
+        }
+        return result;
+    }
+    resize(width, height) {
+        super.resize(width, height);
+        this._data = new Uint32Array(width * height);
+        this._changed = new Int8Array(width * height);
+    }
+    copy(data) {
+        for (let i = 0; i < this._data.length; ++i) {
+            if (this._data[i] !== data[i]) {
+                this._data[i] = data[i];
+                this._changed[i] = 1;
+            }
+        }
+        this._requestRender();
+    }
+    render() {
+        this._renderRequested = false;
+        for (let i = 0; i < this._changed.length; ++i) {
+            if (this._changed[i])
+                this._renderCell(i);
+            this._changed[i] = 0;
+        }
+    }
+    _renderCell(index) {
+        const x = index % this.width;
+        const y = Math.floor(index / this.width);
+        const style = this._data[index];
+        const glyph = (style / (1 << 24)) >> 0;
+        const bg = (style >> 12) & 0xfff;
+        const fg = style & 0xfff;
+        const px = x * this.tileWidth;
+        const py = y * this.tileHeight;
+        const gx = (glyph % 16) * this.tileWidth;
+        const gy = Math.floor(glyph / 16) * this.tileHeight;
+        const d = this.glyphs.ctx.getImageData(gx, gy, this.tileWidth, this.tileHeight);
+        for (let di = 0; di < d.width * d.height; ++di) {
+            const pct = d.data[di * 4] / 255;
+            const inv = 1.0 - pct;
+            d.data[di * 4 + 0] =
+                pct * (((fg & 0xf00) >> 8) * 17) + inv * (((bg & 0xf00) >> 8) * 17);
+            d.data[di * 4 + 1] =
+                pct * (((fg & 0xf0) >> 4) * 17) + inv * (((bg & 0xf0) >> 4) * 17);
+            d.data[di * 4 + 2] = pct * ((fg & 0xf) * 17) + inv * ((bg & 0xf) * 17);
+            d.data[di * 4 + 3] = 255; // not transparent anymore
+        }
+        this._ctx.putImageData(d, px, py);
+    }
+}
+function withImage(image) {
+    let opts = {};
+    if (typeof image === "string") {
+        opts.glyphs = Glyphs.fromImage(image);
+    }
+    else if (image instanceof HTMLImageElement) {
+        opts.glyphs = Glyphs.fromImage(image);
+    }
+    else {
+        if (!image.image)
+            throw new Error("You must supply the image.");
+        Object.assign(opts, image);
+        opts.glyphs = Glyphs.fromImage(image.image);
+    }
+    let canvas;
+    try {
+        canvas = new Canvas(opts);
+    }
+    catch (e) {
+        if (!(e instanceof NotSupportedError))
+            throw e;
+    }
+    if (!canvas) {
+        canvas = new Canvas2D(opts);
+    }
+    return canvas;
+}
+function withFont(src) {
+    if (typeof src === "string") {
+        src = { font: src };
+    }
+    src.glyphs = Glyphs.fromFont(src);
+    let canvas;
+    try {
+        canvas = new Canvas(src);
+    }
+    catch (e) {
+        if (!(e instanceof NotSupportedError))
+            throw e;
+    }
+    if (!canvas) {
+        canvas = new Canvas2D(src);
+    }
+    return canvas;
+}
+// Copy of: https://github.com/ondras/fastiles/blob/master/ts/utils.ts (v2.1.0)
+const QUAD = [0, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 1];
+function createProgram(gl, ...sources) {
+    const p = gl.createProgram();
+    [gl.VERTEX_SHADER, gl.FRAGMENT_SHADER].forEach((type, index) => {
+        const shader = gl.createShader(type);
+        gl.shaderSource(shader, sources[index]);
+        gl.compileShader(shader);
+        if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+            throw new Error(gl.getShaderInfoLog(shader));
+        }
+        gl.attachShader(p, shader);
+    });
+    gl.linkProgram(p);
+    if (!gl.getProgramParameter(p, gl.LINK_STATUS)) {
+        throw new Error(gl.getProgramInfoLog(p));
+    }
+    return p;
+}
+function createTexture(gl) {
+    let t = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, t);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    return t;
+}
+function createGeometry(gl, attribs, width, height) {
+    let tileCount = width * height;
+    let positionData = new Uint16Array(tileCount * QUAD.length);
+    let uvData = new Uint8Array(tileCount * QUAD.length);
+    let i = 0;
+    for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+            QUAD.forEach((value) => {
+                positionData[i] = (i % 2 ? y : x) + value;
+                uvData[i] = value;
+                i++;
+            });
+        }
+    }
+    const position = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, position);
+    gl.vertexAttribIPointer(attribs["position"], 2, gl.UNSIGNED_SHORT, 0, 0);
+    gl.bufferData(gl.ARRAY_BUFFER, positionData, gl.STATIC_DRAW);
+    const uv = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, uv);
+    gl.vertexAttribIPointer(attribs["uv"], 2, gl.UNSIGNED_BYTE, 0, 0);
+    gl.bufferData(gl.ARRAY_BUFFER, uvData, gl.STATIC_DRAW);
+    return { position, uv };
+}
+
+function toColorInt(r = 0, g = 0, b = 0, base256 = false) {
+    if (base256) {
+        r = Math.max(0, Math.min(255, Math.round(r * 2.550001)));
+        g = Math.max(0, Math.min(255, Math.round(g * 2.550001)));
+        b = Math.max(0, Math.min(255, Math.round(b * 2.550001)));
+        return (r << 16) + (g << 8) + b;
+    }
+    r = Math.max(0, Math.min(15, Math.round((r / 100) * 15)));
+    g = Math.max(0, Math.min(15, Math.round((g / 100) * 15)));
+    b = Math.max(0, Math.min(15, Math.round((b / 100) * 15)));
+    return (r << 8) + (g << 4) + b;
+}
+const colors = {};
+class Color extends Int16Array {
+    constructor(r = -1, g = 0, b = 0, rand = 0, redRand = 0, greenRand = 0, blueRand = 0, dances = false) {
+        super(7);
+        this.dances = false;
+        this.set([r, g, b, rand, redRand, greenRand, blueRand]);
+        this.dances = dances;
+    }
+    get r() {
+        return Math.round(this[0] * 2.550001);
+    }
+    get _r() {
+        return this[0];
+    }
+    set _r(v) {
+        this[0] = v;
+    }
+    get g() {
+        return Math.round(this[1] * 2.550001);
+    }
+    get _g() {
+        return this[1];
+    }
+    set _g(v) {
+        this[1] = v;
+    }
+    get b() {
+        return Math.round(this[2] * 2.550001);
+    }
+    get _b() {
+        return this[2];
+    }
+    set _b(v) {
+        this[2] = v;
+    }
+    get _rand() {
+        return this[3];
+    }
+    get _redRand() {
+        return this[4];
+    }
+    get _greenRand() {
+        return this[5];
+    }
+    get _blueRand() {
+        return this[6];
+    }
+    // luminosity (0-100)
+    get l() {
+        return Math.round(0.5 *
+            (Math.min(this._r, this._g, this._b) +
+                Math.max(this._r, this._g, this._b)));
+    }
+    // saturation (0-100)
+    get s() {
+        if (this.l >= 100)
+            return 0;
+        return Math.round(((Math.max(this._r, this._g, this._b) -
+            Math.min(this._r, this._g, this._b)) *
+            (100 - Math.abs(this.l * 2 - 100))) /
+            100);
+    }
+    // hue (0-360)
+    get h() {
+        let H = 0;
+        let R = this.r;
+        let G = this.g;
+        let B = this.b;
+        if (R >= G && G >= B) {
+            H = 60 * ((G - B) / (R - B));
+        }
+        else if (G > R && R >= B) {
+            H = 60 * (2 - (R - B) / (G - B));
+        }
+        else if (G >= B && B > R) {
+            H = 60 * (2 + (B - R) / (G - R));
+        }
+        else if (B > G && G > R) {
+            H = 60 * (4 - (G - R) / (B - R));
+        }
+        else if (B > R && R >= G) {
+            H = 60 * (4 + (R - G) / (B - G));
+        }
+        else {
+            H = 60 * (6 - (B - G) / (R - G));
+        }
+        return Math.round(H);
+    }
+    isNull() {
+        return this._r < 0;
+    }
+    equals(other) {
+        if (typeof other === "string") {
+            return other.length > 4
+                ? this.toString(true) == other
+                : this.toString() == other;
+        }
+        else if (typeof other === "number") {
+            return this.toInt() == other || this.toInt(true) == other;
+        }
+        const O = from$1(other);
+        if (this.isNull())
+            return O.isNull();
+        return this.every((v, i) => {
+            return v == (O[i] || 0);
+        });
+    }
+    copy(other) {
+        if (Array.isArray(other)) {
+            this.set(other);
+        }
+        else {
+            const O = from$1(other);
+            this.set(O);
+        }
+        if (other instanceof Color) {
+            this.dances = other.dances;
+            this.name = other.name;
+        }
+        else {
+            this._changed();
+        }
+        return this;
+    }
+    _changed() {
+        this.name = undefined;
+        return this;
+    }
+    clone() {
+        // @ts-ignore
+        const other = new this.constructor();
+        other.copy(this);
+        return other;
+    }
+    assign(_r = -1, _g = 0, _b = 0, _rand = 0, _redRand = 0, _greenRand = 0, _blueRand = 0, dances) {
+        for (let i = 0; i < this.length; ++i) {
+            this[i] = arguments[i] || 0;
+        }
+        if (dances !== undefined) {
+            this.dances = dances;
+        }
+        return this._changed();
+    }
+    assignRGB(_r = -1, _g = 0, _b = 0, _rand = 0, _redRand = 0, _greenRand = 0, _blueRand = 0, dances) {
+        for (let i = 0; i < this.length; ++i) {
+            this[i] = Math.round((arguments[i] || 0) / 2.55);
+        }
+        if (dances !== undefined) {
+            this.dances = dances;
+        }
+        return this._changed();
+    }
+    nullify() {
+        this[0] = -1;
+        this.dances = false;
+        return this._changed();
+    }
+    blackOut() {
+        for (let i = 0; i < this.length; ++i) {
+            this[i] = 0;
+        }
+        this.dances = false;
+        return this._changed();
+    }
+    toInt(base256 = false) {
+        if (this.isNull())
+            return -1;
+        return toColorInt(this._r, this._g, this._b, base256);
+    }
+    clamp() {
+        if (this.isNull())
+            return this;
+        this._r = Math.min(100, Math.max(0, this._r));
+        this._g = Math.min(100, Math.max(0, this._g));
+        this._b = Math.min(100, Math.max(0, this._b));
+        return this._changed();
+    }
+    mix(other, percent) {
+        const O = from$1(other);
+        if (O.isNull())
+            return this;
+        if (this.isNull()) {
+            this.blackOut();
+        }
+        percent = Math.min(100, Math.max(0, percent));
+        const keepPct = 100 - percent;
+        for (let i = 0; i < this.length; ++i) {
+            this[i] = Math.round((this[i] * keepPct + O[i] * percent) / 100);
+        }
+        this.dances = this.dances || O.dances;
+        return this._changed();
+    }
+    // Only adjusts r,g,b
+    lighten(percent) {
+        if (this.isNull())
+            return this;
+        percent = Math.min(100, Math.max(0, percent));
+        if (percent <= 0)
+            return;
+        const keepPct = 100 - percent;
+        for (let i = 0; i < 3; ++i) {
+            this[i] = Math.round((this[i] * keepPct + 100 * percent) / 100);
+        }
+        return this._changed();
+    }
+    // Only adjusts r,g,b
+    darken(percent) {
+        if (this.isNull())
+            return this;
+        percent = Math.min(100, Math.max(0, percent));
+        if (percent <= 0)
+            return;
+        const keepPct = 100 - percent;
+        for (let i = 0; i < 3; ++i) {
+            this[i] = Math.round((this[i] * keepPct + 0 * percent) / 100);
+        }
+        return this._changed();
+    }
+    bake() {
+        if (this.isNull())
+            return this;
+        const d = this;
+        if (d[3] + d[4] + d[5] + d[6]) {
+            const rand = this._rand ? cosmetic.number(this._rand) : 0;
+            const redRand = this._redRand ? cosmetic.number(this._redRand) : 0;
+            const greenRand = this._greenRand ? cosmetic.number(this._greenRand) : 0;
+            const blueRand = this._blueRand ? cosmetic.number(this._blueRand) : 0;
+            this._r += rand + redRand;
+            this._g += rand + greenRand;
+            this._b += rand + blueRand;
+            for (let i = 3; i < this.length; ++i) {
+                this[i] = 0;
+            }
+            return this._changed();
+        }
+        return this;
+    }
+    // Adds a color to this one
+    add(other, percent = 100) {
+        const O = from$1(other);
+        if (O.isNull())
+            return this;
+        if (this.isNull()) {
+            this.blackOut();
+        }
+        for (let i = 0; i < this.length; ++i) {
+            this[i] += Math.round((O[i] * percent) / 100);
+        }
+        this.dances = this.dances || O.dances;
+        return this._changed();
+    }
+    scale(percent) {
+        if (this.isNull() || percent == 100)
+            return this;
+        percent = Math.max(0, percent);
+        for (let i = 0; i < this.length; ++i) {
+            this[i] = Math.round((this[i] * percent) / 100);
+        }
+        return this._changed();
+    }
+    multiply(other) {
+        if (this.isNull())
+            return this;
+        let data = other;
+        if (!Array.isArray(other)) {
+            if (other.isNull())
+                return this;
+            data = other;
+        }
+        const len = Math.max(3, Math.min(this.length, data.length));
+        for (let i = 0; i < len; ++i) {
+            this[i] = Math.round((this[i] * (data[i] || 0)) / 100);
+        }
+        return this._changed();
+    }
+    // scales rgb down to a max of 100
+    normalize() {
+        if (this.isNull())
+            return this;
+        const max = Math.max(this._r, this._g, this._b);
+        if (max <= 100)
+            return this;
+        this._r = Math.round((100 * this._r) / max);
+        this._g = Math.round((100 * this._g) / max);
+        this._b = Math.round((100 * this._b) / max);
+        return this._changed();
+    }
+    /**
+     * Returns the css code for the current RGB values of the color.
+     * @param base256 - Show in base 256 (#abcdef) instead of base 16 (#abc)
+     */
+    css(base256 = false) {
+        const v = this.toInt(base256);
+        return "#" + v.toString(16).padStart(base256 ? 6 : 3, "0");
+    }
+    toString(base256 = false) {
+        if (this.name)
+            return this.name;
+        if (this.isNull())
+            return "null color";
+        return this.css(base256);
+    }
+}
+function fromArray(vals, base256 = false) {
+    while (vals.length < 3)
+        vals.push(0);
+    if (base256) {
+        for (let i = 0; i < 7; ++i) {
+            vals[i] = Math.round(((vals[i] || 0) * 100) / 255);
+        }
+    }
+    return new Color(...vals);
+}
+function fromCss(css) {
+    if (!css.startsWith("#")) {
+        throw new Error('Color CSS strings must be of form "#abc" or "#abcdef" - received: [' +
+            css +
+            "]");
+    }
+    const c = Number.parseInt(css.substring(1), 16);
+    let r, g, b;
+    if (css.length == 4) {
+        r = Math.round(((c >> 8) / 15) * 100);
+        g = Math.round((((c & 0xf0) >> 4) / 15) * 100);
+        b = Math.round(((c & 0xf) / 15) * 100);
+    }
+    else {
+        r = Math.round(((c >> 16) / 255) * 100);
+        g = Math.round((((c & 0xff00) >> 8) / 255) * 100);
+        b = Math.round(((c & 0xff) / 255) * 100);
+    }
+    return new Color(r, g, b);
+}
+function fromName(name) {
+    const c = colors[name];
+    if (!c) {
+        throw new Error("Unknown color name: " + name);
+    }
+    return c;
+}
+function fromNumber(val, base256 = false) {
+    const c = new Color();
+    for (let i = 0; i < c.length; ++i) {
+        c[i] = 0;
+    }
+    if (val < 0) {
+        c.assign(-1);
+    }
+    else if (base256 || val > 0xfff) {
+        c.assign(Math.round((((val & 0xff0000) >> 16) * 100) / 255), Math.round((((val & 0xff00) >> 8) * 100) / 255), Math.round(((val & 0xff) * 100) / 255));
+    }
+    else {
+        c.assign(Math.round((((val & 0xf00) >> 8) * 100) / 15), Math.round((((val & 0xf0) >> 4) * 100) / 15), Math.round(((val & 0xf) * 100) / 15));
+    }
+    return c;
+}
+function make$3(...args) {
+    let arg = args[0];
+    let base256 = args[1];
+    if (args.length == 0)
+        return new Color();
+    if (args.length > 2) {
+        arg = args;
+        base256 = false; // TODO - Change this!!!
+    }
+    if (arg === undefined || arg === null)
+        return new Color(-1);
+    if (arg instanceof Color) {
+        return arg.clone();
+    }
+    if (typeof arg === "string") {
+        if (arg.startsWith("#")) {
+            return fromCss(arg);
+        }
+        return fromName(arg).clone();
+    }
+    else if (Array.isArray(arg)) {
+        return fromArray(arg, base256);
+    }
+    else if (typeof arg === "number") {
+        if (arg < 0)
+            return new Color(-1);
+        return fromNumber(arg, base256);
+    }
+    throw new Error("Failed to make color - unknown argument: " + JSON.stringify(arg));
+}
+function from$1(...args) {
+    const arg = args[0];
+    if (arg instanceof Color)
+        return arg;
+    if (arg < 0 || arg === undefined)
+        return new Color(-1);
+    if (typeof arg === "string") {
+        if (!arg.startsWith("#")) {
+            return fromName(arg);
+        }
+    }
+    return make$3(arg, args[1]);
+}
+// adjusts the luminosity of 2 colors to ensure there is enough separation between them
+function separate(a, b) {
+    if (a.isNull() || b.isNull())
+        return;
+    const A = a.clone().clamp();
+    const B = b.clone().clamp();
+    // console.log('separate');
+    // console.log('- a=%s, h=%d, s=%d, l=%d', A.toString(), A.h, A.s, A.l);
+    // console.log('- b=%s, h=%d, s=%d, l=%d', B.toString(), B.h, B.s, B.l);
+    let hDiff = Math.abs(A.h - B.h);
+    if (hDiff > 180) {
+        hDiff = 360 - hDiff;
+    }
+    if (hDiff > 45)
+        return; // colors are far enough apart in hue to be distinct
+    const dist = 40;
+    if (Math.abs(A.l - B.l) >= dist)
+        return;
+    // Get them sorted by saturation ( we will darken the more saturated color and lighten the other)
+    const [lo, hi] = [A, B].sort((a, b) => a.s - b.s);
+    // console.log('- lo=%s, hi=%s', lo.toString(), hi.toString());
+    while (hi.l - lo.l < dist) {
+        hi.mix(WHITE, 5);
+        lo.mix(BLACK, 5);
+    }
+    a.copy(A);
+    b.copy(B);
+    // console.log('=>', a.toString(), b.toString());
+}
+function swap(a, b) {
+    const temp = a.clone();
+    a.copy(b);
+    b.copy(temp);
+}
+function diff(a, b) {
+    return Math.round((a.r - b.r) * (a.r - b.r) * 0.2126 +
+        (a.g - b.g) * (a.g - b.g) * 0.7152 +
+        (a.b - b.b) * (a.b - b.b) * 0.0722);
+}
+function install$1(name, ...args) {
+    let info = args;
+    if (args.length == 1) {
+        info = args[0];
+    }
+    const c = info instanceof Color ? info : make$3(info);
+    colors[name] = c;
+    c.name = name;
+    return c;
+}
+function installSpread(name, ...args) {
+    const c = install$1(name, ...args);
+    install$1("light_" + name, c.clone().lighten(25));
+    install$1("lighter_" + name, c.clone().lighten(50));
+    install$1("lightest_" + name, c.clone().lighten(75));
+    install$1("dark_" + name, c.clone().darken(25));
+    install$1("darker_" + name, c.clone().darken(50));
+    install$1("darkest_" + name, c.clone().darken(75));
+    return c;
+}
+const BLACK = install$1("black", 0x000);
+const WHITE = install$1("white", 0xfff);
+installSpread("teal", [30, 100, 100]);
+installSpread("brown", [60, 40, 0]);
+installSpread("tan", [80, 70, 55]); // 80, 67,		15);
+installSpread("pink", [100, 60, 66]);
+installSpread("gray", [50, 50, 50]);
+installSpread("yellow", [100, 100, 0]);
+installSpread("purple", [100, 0, 100]);
+installSpread("green", [0, 100, 0]);
+installSpread("orange", [100, 50, 0]);
+installSpread("blue", [0, 0, 100]);
+installSpread("red", [100, 0, 0]);
+installSpread("amber", [100, 75, 0]);
+installSpread("flame", [100, 25, 0]);
+installSpread("fuchsia", [100, 0, 100]);
+installSpread("magenta", [100, 0, 75]);
+installSpread("crimson", [100, 0, 25]);
+installSpread("lime", [75, 100, 0]);
+installSpread("chartreuse", [50, 100, 0]);
+installSpread("sepia", [50, 40, 25]);
+installSpread("violet", [50, 0, 100]);
+installSpread("han", [25, 0, 100]);
+installSpread("cyan", [0, 100, 100]);
+installSpread("turquoise", [0, 100, 75]);
+installSpread("sea", [0, 100, 50]);
+installSpread("sky", [0, 75, 100]);
+installSpread("azure", [0, 50, 100]);
+installSpread("silver", [75, 75, 75]);
+installSpread("gold", [100, 85, 0]);
+
+var color = {
+    __proto__: null,
+    colors: colors,
+    Color: Color,
+    fromArray: fromArray,
+    fromCss: fromCss,
+    fromName: fromName,
+    fromNumber: fromNumber,
+    make: make$3,
+    from: from$1,
+    separate: separate,
+    swap: swap,
+    diff: diff,
+    install: install$1,
+    installSpread: installSpread
+};
+
+class Sprite {
+    constructor(ch, fg, bg, opacity) {
+        if (!ch && ch !== 0)
+            ch = -1;
+        if (typeof fg !== "number")
+            fg = from$1(fg);
+        if (typeof bg !== "number")
+            bg = from$1(bg);
+        this.ch = ch;
+        this.fg = fg;
+        this.bg = bg;
+        this.opacity = opacity;
+    }
+}
+const sprites = {};
+function makeSprite(...args) {
+    let ch = null, fg = -1, bg = -1, opacity;
+    if (args.length == 0) {
+        return new Sprite(null, -1, -1);
+    }
+    else if (args.length == 1 && Array.isArray(args[0])) {
+        args = args[0];
+    }
+    const last = args[args.length - 1];
+    if (typeof last === "number") {
+        opacity = last;
+        args.pop();
+    }
+    if (args.length > 1) {
+        ch = args[0] || null;
+        fg = args[1];
+        bg = args[2];
+    }
+    else if (args.length == 1) {
+        if (typeof args[0] === "string" || typeof args[0] === "number") {
+            bg = args[0];
+        }
+        else if (args[0] instanceof Color) {
+            bg = args[0];
+        }
+        else {
+            const sprite = args[0];
+            ch = sprite.ch || null;
+            fg = sprite.fg || -1;
+            bg = sprite.bg || -1;
+            opacity = sprite.opacity;
+        }
+    }
+    if (typeof fg === "string")
+        fg = from$1(fg);
+    else if (Array.isArray(fg))
+        fg = make$3(fg);
+    else if (fg === undefined || fg === null)
+        fg = -1;
+    if (typeof bg === "string")
+        bg = from$1(bg);
+    else if (Array.isArray(bg))
+        bg = make$3(bg);
+    else if (bg === undefined || bg === null)
+        bg = -1;
+    return new Sprite(ch, fg, bg, opacity);
+}
+function installSprite(name, ...args) {
+    let sprite;
+    // @ts-ignore
+    sprite = this.makeSprite(...args);
+    sprite.name = name;
+    sprites[name] = sprite;
+    return sprite;
+}
+
+class Mixer {
+    constructor() {
+        this.ch = -1;
+        this.fg = new Color();
+        this.bg = new Color();
+    }
+    _changed() {
+        return this;
+    }
+    copy(other) {
+        this.ch = other.ch;
+        this.fg.copy(other.fg);
+        this.bg.copy(other.bg);
+        return this._changed();
+    }
+    clone() {
+        const other = new Mixer();
+        other.copy(this);
+        return other;
+    }
+    equals(other) {
+        return (this.ch == other.ch &&
+            this.fg.equals(other.fg) &&
+            this.bg.equals(other.bg));
+    }
+    nullify() {
+        this.ch = -1;
+        this.fg.nullify();
+        this.bg.nullify();
+        return this._changed();
+    }
+    blackOut() {
+        this.ch = 0;
+        this.fg.blackOut();
+        this.bg.blackOut();
+        return this._changed();
+    }
+    draw(ch = -1, fg = -1, bg = -1) {
+        if (ch && ch !== -1) {
+            this.ch = ch;
+        }
+        if (fg !== -1 && fg !== null) {
+            fg = from$1(fg);
+            this.fg.copy(fg);
+        }
+        if (bg !== -1 && bg !== null) {
+            bg = from$1(bg);
+            this.bg.copy(bg);
+        }
+        return this._changed();
+    }
+    drawSprite(info, opacity) {
+        if (opacity === undefined)
+            opacity = info.opacity;
+        if (opacity === undefined)
+            opacity = 100;
+        if (opacity <= 0)
+            return;
+        if (info.ch !== -1 && (info.ch || info.ch === 0))
+            this.ch = info.ch;
+        if (info.fg && info.fg !== -1)
+            this.fg.mix(info.fg, opacity);
+        if (info.bg && info.bg !== -1)
+            this.bg.mix(info.bg, opacity);
+        return this._changed();
+    }
+    invert() {
+        [this.bg, this.fg] = [this.fg, this.bg];
+        return this._changed();
+    }
+    multiply(color$1, fg = true, bg = true) {
+        color$1 = from$1(color$1);
+        if (fg) {
+            this.fg.multiply(color$1);
+        }
+        if (bg) {
+            this.bg.multiply(color$1);
+        }
+        return this._changed();
+    }
+    mix(color$1, fg = 50, bg = fg) {
+        color$1 = from$1(color$1);
+        if (fg > 0) {
+            this.fg.mix(color$1, fg);
+        }
+        if (bg > 0) {
+            this.bg.mix(color$1, bg);
+        }
+        return this._changed();
+    }
+    add(color$1, fg = 100, bg = fg) {
+        color$1 = from$1(color$1);
+        if (fg > 0) {
+            this.fg.add(color$1, fg);
+        }
+        if (bg > 0) {
+            this.bg.add(color$1, bg);
+        }
+        return this._changed();
+    }
+    separate() {
+        separate(this.fg, this.bg);
+        return this._changed();
+    }
+    bake() {
+        this.fg.bake();
+        this.bg.bake();
+        this._changed();
+        return {
+            ch: this.ch,
+            fg: this.fg.toInt(),
+            bg: this.bg.toInt(),
+        };
+    }
+}
+
+var index = {
+    __proto__: null,
+    NotSupportedError: NotSupportedError,
+    BaseCanvas: BaseCanvas,
+    Canvas: Canvas,
+    Canvas2D: Canvas2D,
+    withImage: withImage,
+    withFont: withFont,
+    Sprite: Sprite,
+    sprites: sprites,
+    makeSprite: makeSprite,
+    installSprite: installSprite,
+    Mixer: Mixer,
+    Glyphs: Glyphs
+};
+
+var options = {
+    colorStart: 'Ω',
+    colorEnd: '∆',
+    field: '§',
+    defaultFg: null,
+    defaultBg: null,
+};
+// const RE_RGB = /^[a-fA-F0-9]*$/;
+// 
+// export function parseColor(color:string) {
+//   if (color.startsWith('#')) {
+//     color = color.substring(1);
+//   }
+//   else if (color.startsWith('0x')) {
+//     color = color.substring(2);
+//   }
+//   if (color.length == 3) {
+//     if (RE_RGB.test(color)) {
+//       return Number.parseInt(color, 16);
+//     }
+//   }
+//   if (color.length == 6) {
+//     if (RE_RGB.test(color)) {
+//       const v = Number.parseInt(color, 16);
+//       const r = Math.round( ((v & 0xFF0000) >> 16) / 17);
+//       const g = Math.round( ((v & 0xFF00) >> 8) / 17);
+//       const b = Math.round((v & 0xFF) / 17);
+//       return (r << 8) + (g << 4) + b;
+//     }
+//   }
+//   return 0xFFF;
+// }
+var helpers = {
+    eachColor: (() => { }),
+    default: ((name, _, value) => {
+        if (value !== undefined)
+            return `${value}.!!${name}!!`;
+        return `!!${name}!!`;
+    }),
+};
+function addHelper(name, fn) {
+    helpers[name] = fn;
+}
+
+function compile(template) {
+    const F = options.field;
+    const parts = template.split(F);
+    const sections = parts.map((part, i) => {
+        if (i % 2 == 0)
+            return textSegment(part);
+        if (part.length == 0)
+            return textSegment(F);
+        return makeVariable(part);
+    });
+    return function (args = {}) {
+        return sections.map((f) => f(args)).join("");
+    };
+}
+function apply(template, args = {}) {
+    const fn = compile(template);
+    const result = fn(args);
+    return result;
+}
+function textSegment(value) {
+    return () => value;
+}
+function baseValue(name) {
+    return function (args) {
+        const h = helpers[name];
+        if (h)
+            return h(name, args);
+        const v = args[name];
+        if (v !== undefined)
+            return v;
+        return helpers.default(name, args);
+    };
+}
+function fieldValue(name, source) {
+    return function (args) {
+        const obj = source(args);
+        if (!obj)
+            return helpers.default(name, args, obj);
+        const value = obj[name];
+        if (value === undefined)
+            return helpers.default(name, args, obj);
+        return value;
+    };
+}
+function helperValue(name, source) {
+    const helper = helpers[name] || helpers.default;
+    if (!source) {
+        return function (args) {
+            return helper(name, args, undefined);
+        };
+    }
+    return function (args) {
+        const base = source(args);
+        return helper(name, args, base);
+    };
+}
+function stringFormat(format, source) {
+    const data = /%(-?\d*)s/.exec(format) || [];
+    const length = Number.parseInt(data[1] || "0");
+    return function (args) {
+        let text = "" + source(args);
+        if (length < 0) {
+            text = text.padEnd(-length);
+        }
+        else if (length) {
+            text = text.padStart(length);
+        }
+        return text;
+    };
+}
+function intFormat(format, source) {
+    const data = /%([\+-]*)(\d*)d/.exec(format) || [];
+    let length = Number.parseInt(data[2] || "0");
+    const wantSign = data[1].includes("+");
+    const left = data[1].includes("-");
+    return function (args) {
+        const value = Number.parseInt(source(args) || 0);
+        let text = "" + value;
+        if (value > 0 && wantSign) {
+            text = "+" + text;
+        }
+        if (length && left) {
+            return text.padEnd(length);
+        }
+        else if (length) {
+            return text.padStart(length);
+        }
+        return text;
+    };
+}
+function floatFormat(format, source) {
+    const data = /%([\+-]*)(\d*)(\.(\d+))?f/.exec(format) || [];
+    let length = Number.parseInt(data[2] || "0");
+    const wantSign = data[1].includes("+");
+    const left = data[1].includes("-");
+    const fixed = Number.parseInt(data[4]) || 0;
+    return function (args) {
+        const value = Number.parseFloat(source(args) || 0);
+        let text;
+        if (fixed) {
+            text = value.toFixed(fixed);
+        }
+        else {
+            text = "" + value;
+        }
+        if (value > 0 && wantSign) {
+            text = "+" + text;
+        }
+        if (length && left) {
+            return text.padEnd(length);
+        }
+        else if (length) {
+            return text.padStart(length);
+        }
+        return text;
+    };
+}
+function makeVariable(pattern) {
+    const data = /((\w+) )?(\w+)(\.(\w+))?(%[\+\.\-\d]*[dsf])?/.exec(pattern) || [];
+    const helper = data[2];
+    const base = data[3];
+    const field = data[5];
+    const format = data[6];
+    let result = baseValue(base);
+    if (field && field.length) {
+        result = fieldValue(field, result);
+    }
+    if (helper && helper.length) {
+        result = helperValue(helper, result);
+    }
+    if (format && format.length) {
+        if (format.endsWith("s")) {
+            result = stringFormat(format, result);
+        }
+        else if (format.endsWith("d")) {
+            result = intFormat(format, result);
+        }
+        else if (format.endsWith("f")) {
+            result = floatFormat(format, result);
+        }
+    }
+    return result;
+}
+
+function eachChar(text, fn, fg, bg) {
+    text = '' + text; // force string
+    if (!text || text.length == 0)
+        return;
+    const colors = [];
+    const colorFn = helpers.eachColor;
+    const ctx = {
+        fg: (fg === undefined) ? options.defaultFg : fg,
+        bg: (bg === undefined) ? options.defaultBg : bg,
+    };
+    const CS = options.colorStart;
+    const CE = options.colorEnd;
+    colorFn(ctx);
+    let n = 0;
+    for (let i = 0; i < text.length; ++i) {
+        const ch = text[i];
+        if (ch == CS) {
+            let j = i + 1;
+            while (j < text.length && text[j] != CS) {
+                ++j;
+            }
+            if (j == text.length) {
+                console.warn('Reached end of string while seeking end of color start section.');
+                console.warn('- text:', text);
+                console.warn('- start @:', i);
+                return; // reached end - done (error though)
+            }
+            if (j == i + 1) { // next char
+                ++i; // fall through
+            }
+            else {
+                colors.push([ctx.fg, ctx.bg]);
+                const color = text.substring(i + 1, j);
+                const newColors = color.split('|');
+                ctx.fg = newColors[0] || ctx.fg;
+                ctx.bg = newColors[1] || ctx.bg;
+                colorFn(ctx);
+                i = j;
+                continue;
+            }
+        }
+        else if (ch == CE) {
+            if (text[i + 1] == CE) {
+                ++i;
+            }
+            else {
+                const c = colors.pop(); // if you pop too many times colors go away
+                [ctx.fg, ctx.bg] = c || [null, null];
+                // colorFn(ctx);
+                continue;
+            }
+        }
+        fn(ch, ctx.fg, ctx.bg, n, i);
+        ++n;
+    }
+}
+
+function length(text) {
+    if (!text || text.length == 0)
+        return 0;
+    let len = 0;
+    const CS = options.colorStart;
+    const CE = options.colorEnd;
+    for (let i = 0; i < text.length; ++i) {
+        const ch = text[i];
+        if (ch == CS) {
+            const end = text.indexOf(CS, i + 1);
+            i = end;
+        }
+        else if (ch == CE) ;
+        else {
+            ++len;
+        }
+    }
+    return len;
+}
+function advanceChars(text, start, count) {
+    const CS = options.colorStart;
+    const CE = options.colorEnd;
+    let i = start;
+    while (count > 0) {
+        const ch = text[i];
+        if (ch === CS) {
+            ++i;
+            while (text[i] !== CS)
+                ++i;
+            ++i;
+        }
+        else if (ch === CE) {
+            if (text[i + 1] === CE) {
+                --count;
+                ++i;
+            }
+            ++i;
+        }
+        else {
+            --count;
+            ++i;
+        }
+    }
+    return i;
+}
+function firstChar(text) {
+    const CS = options.colorStart;
+    const CE = options.colorEnd;
+    let i = 0;
+    while (i < text.length) {
+        const ch = text[i];
+        if (ch === CS) {
+            if (text[i + 1] === CS)
+                return CS;
+            ++i;
+            while (text[i] !== CS)
+                ++i;
+            ++i;
+        }
+        else if (ch === CE) {
+            if (text[i + 1] === CE)
+                return CE;
+            ++i;
+        }
+        else {
+            return ch;
+        }
+    }
+    return null;
+}
+function padStart(text, width, pad = ' ') {
+    const colorLen = text.length - length(text);
+    return text.padStart(width + colorLen, pad);
+}
+function padEnd(text, width, pad = ' ') {
+    const colorLen = text.length - length(text);
+    return text.padEnd(width + colorLen, pad);
+}
+function center(text, width, pad = ' ') {
+    const rawLen = text.length;
+    const len = length(text);
+    const padLen = width - len;
+    if (padLen <= 0)
+        return text;
+    const left = Math.floor(padLen / 2);
+    return text.padStart(rawLen + left, pad).padEnd(rawLen + padLen, pad);
+}
+function capitalize(text) {
+    const CS = options.colorStart;
+    const CE = options.colorEnd;
+    let i = 0;
+    while (i < text.length) {
+        const ch = text[i];
+        if (ch == CS) {
+            ++i;
+            while (text[i] != CS && i < text.length) {
+                ++i;
+            }
+            ++i;
+        }
+        else if (ch == CE) {
+            ++i;
+            while (text[i] == CS && i < text.length) {
+                ++i;
+            }
+        }
+        else {
+            return text.substring(0, i) + ch.toUpperCase() + text.substring(i + 1);
+        }
+    }
+    return text;
+}
+function removeColors(text) {
+    const CS = options.colorStart;
+    const CE = options.colorEnd;
+    let out = '';
+    let start = 0;
+    for (let i = 0; i < text.length; ++i) {
+        const k = text[i];
+        if (k === CS) {
+            if (text[i + 1] == CS) {
+                ++i;
+                continue;
+            }
+            out += text.substring(start, i);
+            ++i;
+            while (text[i] != CS && i < text.length) {
+                ++i;
+            }
+            start = i + 1;
+        }
+        else if (k === CE) {
+            if (text[i + 1] == CE) {
+                ++i;
+                continue;
+            }
+            out += text.substring(start, i);
+            start = i + 1;
+        }
+    }
+    if (start == 0)
+        return text;
+    out += text.substring(start);
+    return out;
+}
+
+function nextBreak(text, start) {
+    const CS = options.colorStart;
+    const CE = options.colorEnd;
+    let i = start;
+    let l = 0;
+    let count = true;
+    while (i < text.length) {
+        const ch = text[i];
+        if (ch == " ") {
+            while (text[i + 1] == " ") {
+                ++i;
+                ++l; // need to count the extra spaces as part of the word
+            }
+            return [i, l];
+        }
+        if (ch == "-") {
+            return [i, l];
+        }
+        if (ch == "\n") {
+            return [i, l];
+        }
+        if (ch == CS) {
+            if (text[i + 1] == CS && count) {
+                l += 1;
+                i += 2;
+                continue;
+            }
+            count = !count;
+            ++i;
+            continue;
+        }
+        else if (ch == CE) {
+            if (text[i + 1] == CE) {
+                l += 1;
+                ++i;
+            }
+            i++;
+            continue;
+        }
+        l += count ? 1 : 0;
+        ++i;
+    }
+    return [i, l];
+}
+function splice(text, start, len, add = "") {
+    return text.substring(0, start) + add + text.substring(start + len);
+}
+function hyphenate(text, width, start, end, wordWidth, spaceLeftOnLine) {
+    if (wordWidth + 1 > width * 2) {
+        throw new Error("Cannot hyphenate - word length > 2 * width");
+    }
+    if (spaceLeftOnLine < 4 || spaceLeftOnLine + width < wordWidth) {
+        text = splice(text, start - 1, 1, "\n");
+        spaceLeftOnLine = width;
+    }
+    if (spaceLeftOnLine + width > wordWidth) {
+        // one hyphen...
+        const hyphenAt = Math.min(Math.floor(wordWidth / 2), spaceLeftOnLine - 1);
+        const w = advanceChars(text, start, hyphenAt);
+        text = splice(text, w, 0, "-\n");
+        return [text, end + 2];
+    }
+    if (width >= wordWidth) {
+        return [text, end];
+    }
+    const hyphenAt = Math.min(wordWidth, width - 1);
+    const w = advanceChars(text, start, hyphenAt);
+    text = splice(text, w, 0, "-\n");
+    return [text, end + 2];
+}
+function wordWrap(text, width, indent = 0) {
+    if (!width)
+        throw new Error("Need string and width");
+    if (text.length < width)
+        return text;
+    if (length(text) < width)
+        return text;
+    if (text.indexOf("\n") == -1) {
+        return wrapLine(text, width, indent);
+    }
+    const lines = text.split("\n");
+    const split = lines.map((line, i) => wrapLine(line, width, i ? indent : 0));
+    return split.join("\n");
+}
+// Returns the number of lines, including the newlines already in the text.
+// Puts the output in "to" only if we receive a "to" -- can make it null and just get a line count.
+function wrapLine(text, width, indent = 0) {
+    if (text.length < width)
+        return text;
+    if (length(text) < width)
+        return text;
+    let spaceLeftOnLine = width;
+    width = width - indent;
+    let printString = text;
+    // Now go through and replace spaces with newlines as needed.
+    // console.log('wordWrap - ', text, width, indent);
+    let removeSpace = true;
+    let i = -1;
+    while (i < printString.length) {
+        // wordWidth counts the word width of the next word without color escapes.
+        // w indicates the position of the space or newline or null terminator that terminates the word.
+        let [w, wordWidth] = nextBreak(printString, i + (removeSpace ? 1 : 0));
+        let hyphen = false;
+        if (printString[w] == "-") {
+            w++;
+            wordWidth++;
+            hyphen = true;
+        }
+        // console.log('- w=%d, width=%d, space=%d, word=%s', w, wordWidth, spaceLeftOnLine, printString.substring(i, w));
+        if (wordWidth > width) {
+            [printString, w] = hyphenate(printString, width, i + 1, w, wordWidth, spaceLeftOnLine);
+        }
+        else if (wordWidth == spaceLeftOnLine) {
+            const nl = w < printString.length ? "\n" : "";
+            const remove = hyphen ? 0 : 1;
+            printString = splice(printString, w, remove, nl); // [i] = '\n';
+            w += 1 - remove; // if we change the length we need to advance our pointer
+            spaceLeftOnLine = width;
+        }
+        else if (wordWidth > spaceLeftOnLine) {
+            const remove = removeSpace ? 1 : 0;
+            printString = splice(printString, i, remove, "\n"); // [i] = '\n';
+            w += 1 - remove; // if we change the length we need to advance our pointer
+            const extra = hyphen ? 0 : 1;
+            spaceLeftOnLine = width - wordWidth - extra; // line width minus the width of the word we just wrapped and the space
+            //printf("\n\n%s", printString);
+        }
+        else {
+            const extra = hyphen ? 0 : 1;
+            spaceLeftOnLine -= wordWidth + extra;
+        }
+        removeSpace = !hyphen;
+        i = w; // Advance to the terminator that follows the word.
+    }
+    return printString;
+}
+// Returns the number of lines, including the newlines already in the text.
+// Puts the output in "to" only if we receive a "to" -- can make it null and just get a line count.
+function splitIntoLines(source, width, indent = 0) {
+    const CS = options.colorStart;
+    const output = [];
+    let text = wordWrap(source, width, indent);
+    let start = 0;
+    let fg0 = null;
+    let bg0 = null;
+    eachChar(text, (ch, fg, bg, _, n) => {
+        if (ch == "\n") {
+            let color = fg0 || bg0 ? `${CS}${fg0 ? fg0 : ""}${bg0 ? "|" + bg0 : ""}${CS}` : "";
+            output.push(color + text.substring(start, n));
+            start = n + 1;
+            fg0 = fg;
+            bg0 = bg;
+        }
+    });
+    let color = fg0 || bg0 ? `${CS}${fg0 ? fg0 : ""}${bg0 ? "|" + bg0 : ""}${CS}` : "";
+    output.push(color + text.substring(start));
+    return output;
+}
+
+function configure(opts = {}) {
+    if (opts.helpers) {
+        Object.entries(opts.helpers).forEach(([name, fn]) => {
+            addHelper(name, fn);
+        });
+    }
+    if (opts.fg) {
+        options.defaultFg = opts.fg;
+    }
+    if (opts.bg) {
+        options.defaultBg = opts.bg;
+    }
+    if (opts.colorStart) {
+        options.colorStart = opts.colorStart;
+    }
+    if (opts.colorEnd) {
+        options.colorEnd = opts.colorEnd;
+    }
+    if (opts.field) {
+        options.field = opts.field;
+    }
+}
+
+var index$1 = {
+    __proto__: null,
+    compile: compile,
+    apply: apply,
+    eachChar: eachChar,
+    length: length,
+    padStart: padStart,
+    padEnd: padEnd,
+    center: center,
+    firstChar: firstChar,
+    capitalize: capitalize,
+    removeColors: removeColors,
+    wordWrap: wordWrap,
+    splitIntoLines: splitIntoLines,
+    configure: configure,
+    addHelper: addHelper,
+    options: options
+};
+
+class DataBuffer {
+    constructor(width, height) {
+        this._width = width;
+        this._height = height;
+        this._data = new Uint32Array(width * height);
+    }
+    get data() {
+        return this._data;
+    }
+    get width() {
+        return this._width;
+    }
+    get height() {
+        return this._height;
+    }
+    get(x, y) {
+        let index = y * this.width + x;
+        const style = this._data[index] || 0;
+        const ch = style >> 24;
+        const bg = (style >> 12) & 0xfff;
+        const fg = style & 0xfff;
+        return { ch, fg, bg };
+    }
+    _toGlyph(ch) {
+        if (ch === null || ch === undefined)
+            return -1;
+        return ch.charCodeAt(0);
+    }
+    draw(x, y, glyph = -1, fg = -1, bg = -1) {
+        let index = y * this.width + x;
+        const current = this._data[index] || 0;
+        if (typeof glyph !== "number") {
+            glyph = this._toGlyph(glyph);
+        }
+        if (typeof fg !== "number") {
+            fg = from$1(fg).toInt();
+        }
+        if (typeof bg !== "number") {
+            bg = from$1(bg).toInt();
+        }
+        glyph = glyph >= 0 ? glyph & 0xff : current >> 24;
+        bg = bg >= 0 ? bg & 0xfff : (current >> 12) & 0xfff;
+        fg = fg >= 0 ? fg & 0xfff : current & 0xfff;
+        const style = (glyph << 24) + (bg << 12) + fg;
+        this._data[index] = style;
+        return this;
+    }
+    // This is without opacity - opacity must be done in Mixer
+    drawSprite(x, y, sprite) {
+        return this.draw(x, y, sprite.ch, sprite.fg, sprite.bg);
+    }
+    blackOut(x, y) {
+        if (arguments.length == 0) {
+            return this.fill(0, 0, 0);
+        }
+        return this.draw(x, y, 0, 0, 0);
+    }
+    fill(glyph = 0, fg = 0xfff, bg = 0) {
+        if (typeof glyph == "string") {
+            glyph = this._toGlyph(glyph);
+        }
+        glyph = glyph & 0xff;
+        fg = fg & 0xfff;
+        bg = bg & 0xfff;
+        const style = (glyph << 24) + (bg << 12) + fg;
+        this._data.fill(style);
+        return this;
+    }
+    copy(other) {
+        this._data.set(other._data);
+        return this;
+    }
+    drawText(x, y, text, fg = 0xfff, bg = -1) {
+        if (typeof fg !== "number")
+            fg = from$1(fg);
+        if (typeof bg !== "number")
+            bg = from$1(bg);
+        eachChar(text, (ch, color, bg, i) => {
+            this.draw(i + x, y, ch, color, bg);
+        }, fg, bg);
+        return ++y;
+    }
+    wrapText(x0, y0, width, text, fg = 0xfff, bg = -1, opts = {}) {
+        if (typeof opts === "number") {
+            opts = { indent: opts };
+        }
+        if (typeof fg !== "number")
+            fg = from$1(fg);
+        if (typeof bg !== "number")
+            bg = from$1(bg);
+        width = Math.min(width, this.width - x0);
+        const indent = opts.indent || 0;
+        text = wordWrap(text, width, indent);
+        let x = x0;
+        let y = y0;
+        eachChar(text, (ch, fg0, bg0) => {
+            if (ch == "\n") {
+                while (x < x0 + width) {
+                    this.draw(x++, y, 0, 0x000, bg0);
+                }
+                ++y;
+                x = x0 + indent;
+                return;
+            }
+            this.draw(x++, y, ch, fg0, bg0);
+        }, fg, bg);
+        while (x < x0 + width) {
+            this.draw(x++, y, " ", 0x000, bg);
+        }
+        return ++y;
+    }
+    fillRect(x, y, w, h, ch = -1, fg = -1, bg = -1) {
+        if (ch === null)
+            ch = -1;
+        fg = typeof fg === "number" ? fg : from$1(fg);
+        bg = typeof bg === "number" ? bg : from$1(bg);
+        for (let i = x; i < x + w; ++i) {
+            for (let j = y; j < y + h; ++j) {
+                this.draw(i, j, ch, fg, bg);
+            }
+        }
+        return this;
+    }
+    blackOutRect(x, y, w, h, bg) {
+        bg = bg || 0x000;
+        return this.fillRect(x, y, w, h, " ", 0, bg);
+    }
+    highlight(x, y, highlightColor, strength) {
+        if (typeof highlightColor !== "number") {
+            highlightColor = from$1(highlightColor);
+        }
+        const mixer = new Mixer();
+        const data = this.get(x, y);
+        mixer.drawSprite(data);
+        mixer.fg.add(highlightColor, strength);
+        mixer.bg.add(highlightColor, strength);
+        this.drawSprite(x, y, mixer);
+        return this;
+    }
+    mix(color$1, percent) {
+        if (typeof color$1 !== "number")
+            color$1 = from$1(color$1);
+        const mixer = new Mixer();
+        for (let x = 0; x < this.width; ++x) {
+            for (let y = 0; y < this.height; ++y) {
+                const data = this.get(x, y);
+                mixer.drawSprite(data);
+                mixer.fg.mix(color$1, percent);
+                mixer.bg.mix(color$1, percent);
+                this.drawSprite(x, y, mixer);
+            }
+        }
+        return this;
+    }
+    dump() {
+        const data = [];
+        let header = "    ";
+        for (let x = 0; x < this.width; ++x) {
+            if (x % 10 == 0)
+                header += " ";
+            header += x % 10;
+        }
+        data.push(header);
+        data.push("");
+        for (let y = 0; y < this.height; ++y) {
+            let line = `${("" + y).padStart(2)}] `;
+            for (let x = 0; x < this.width; ++x) {
+                if (x % 10 == 0)
+                    line += " ";
+                const data = this.get(x, y);
+                const glyph = data.ch;
+                line += String.fromCharCode(glyph || 32);
+            }
+            data.push(line);
+        }
+        console.log(data.join("\n"));
+    }
+}
+class Buffer extends DataBuffer {
+    constructor(canvas) {
+        super(canvas.width, canvas.height);
+        this._canvas = canvas;
+        canvas.copyTo(this.data);
+    }
+    // get canvas() { return this._canvas; }
+    _toGlyph(ch) {
+        return this._canvas.glyphs.forChar(ch);
+    }
+    render() {
+        this._canvas.copy(this.data);
+        return this;
+    }
+    copyFromCanvas() {
+        this._canvas.copyTo(this.data);
+        return this;
+    }
+}
+
+var buffer = {
+    __proto__: null,
+    DataBuffer: DataBuffer,
+    Buffer: Buffer
+};
+
 var data = {};
 
 exports.Random = Random;
+exports.buffer = buffer;
+exports.canvas = index;
+exports.color = color;
+exports.colors = colors;
 exports.cosmetic = cosmetic;
 exports.data = data;
 exports.events = events;
@@ -2670,4 +5044,6 @@ exports.path = path;
 exports.random = random;
 exports.range = range;
 exports.scheduler = scheduler;
+exports.sprites = sprites;
+exports.text = index$1;
 exports.utils = utils;

@@ -6,7 +6,7 @@
   "browser": "dist/gw-utils.min.js",
   "module": "dist/gw-utils.mjs",
   "type": "commonjs",
-  "types": "js/gw.d.ts",
+  "types": "dist/gw-utils.d.ts",
   "exports": {
     ".": {
       "require": "./dist/gw-utils.cjs",
@@ -20,6 +20,7 @@
     "jest": "^26.6.3",
     "jest-extended": "^0.11.5",
     "prettier": "^2.2.1",
+    "replace": "^1.2.0",
     "rollup": "^2.35.0",
     "rollup-plugin-dts": "^2.0.1",
     "rollup-plugin-terser": "^7.0.2",
@@ -30,10 +31,10 @@
     "compile": "tsc --build tsconfig.json",
     "bundle": "rollup -c",
     "copy": "cp dist/gw-utils.min.js docs/js",
-    "build": "npm run compile && npm run bundle && npm run copy",
+    "fixTypes": "replace '\\*\\W+TSIGNORE\\W*(\n)(\\W*)(\\*\\/)' '$3$1$2// @ts-ignore$1' js/grid.d.ts",
+    "build": "npm run compile && npm run fixTypes && npm run bundle && npm run copy",
     "serve": "python -m SimpleHTTPServer",
     "test": "jest",
-    "posttest": "npm run build",
     "test-debug": "node --inspect-brk node_modules/.bin/jest --runInBand"
   },
   "repository": {

@@ -18,7 +18,17 @@ import * as frequency_1 from "./frequency";
 export { frequency_1 as frequency };
 import * as scheduler_1 from "./scheduler";
 export { scheduler_1 as scheduler };
+import * as canvas_1 from "./canvas/index";
+export { canvas_1 as canvas };
+import * as color_1 from "./color";
+export { color_1 as color };
+import * as buffer_1 from "./buffer";
+export { buffer_1 as buffer };
+import * as text_1 from "./text/index";
+export { text_1 as text };
 export { flags } from "./flag";
 export { cosmetic, random, Random } from "./random";
+export { colors } from "./color";
+export { sprites } from "./canvas/index";
 export var data = {};
 //# sourceMappingURL=gw.js.map

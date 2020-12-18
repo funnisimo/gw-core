@@ -13,10 +13,22 @@ export declare class Grid<T> extends Array<Array<T>> {
     constructor(w: number, h: number, v: GridInit<T> | T);
     get width(): number;
     get height(): number;
+    /**
+     * Calls the supplied function for each cell in the grid.
+     * @param fn - The function to call on each item in the grid.
+     */
+     // @ts-ignore
+
     forEach(fn: GridEach<T>): void;
     eachNeighbor(x: number, y: number, fn: GridEach<T>, only4dirs?: boolean): void;
     forRect(x: number, y: number, w: number, h: number, fn: GridEach<T>): void;
-    map(fn: GridEach<T>): void[][];
+    /**
+     * Returns a new Grid with the cells mapped according to the supplied function.
+     * @param fn - The function that maps the cell values
+     */
+     // @ts-ignore
+
+    map(fn: GridEach<T>): any;
     forCircle(x: number, y: number, radius: number, fn: GridEach<T>): void;
     hasXY(x: number, y: number): boolean;
     isBoundaryXY(x: number, y: number): boolean;
@@ -29,6 +41,12 @@ export declare class Grid<T> extends Array<Array<T>> {
     update(fn: GridUpdate<T>): void;
     updateRect(x: number, y: number, width: number, height: number, fn: GridUpdate<T>): void;
     updateCircle(x: number, y: number, radius: number, fn: GridUpdate<T>): void;
+    /**
+     * Fills the entire grid with the supplied value
+     * @param v - The fill value or a function that returns the fill value.
+     */
+     // @ts-ignore
+
     fill(v: T | GridUpdate<T>): void;
     fillRect(x: number, y: number, w: number, h: number, v: T | GridUpdate<T>): void;
     fillCircle(x: number, y: number, radius: number, v: T | GridUpdate<T>): void;

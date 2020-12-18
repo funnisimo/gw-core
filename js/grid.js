@@ -57,6 +57,11 @@ export class Grid extends Array {
     get height() {
         return this._height;
     }
+    /**
+     * Calls the supplied function for each cell in the grid.
+     * @param fn - The function to call on each item in the grid.
+     * TSIGNORE
+     */
     // @ts-ignore
     forEach(fn) {
         let i, j;
@@ -86,11 +91,18 @@ export class Grid extends Array {
             }
         }
     }
+    /**
+     * Returns a new Grid with the cells mapped according to the supplied function.
+     * @param fn - The function that maps the cell values
+     * TSIGNORE
+     */
     // @ts-ignore
     map(fn) {
-        return super.map((col, x) => {
-            return col.map((v, y) => fn(v, x, y, this));
-        });
+        // @ts-ignore
+        const other = new this.constructor(this.width, this.height);
+        other.copy(this);
+        other.update(fn);
+        return other;
     }
     forCircle(x, y, radius, fn) {
         let i, j;
@@ -157,6 +169,11 @@ export class Grid extends Array {
             }
         }
     }
+    /**
+     * Fills the entire grid with the supplied value
+     * @param v - The fill value or a function that returns the fill value.
+     * TSIGNORE
+     */
     // @ts-ignore
     fill(v) {
         const fn = typeof v === "function" ? v : () => v;

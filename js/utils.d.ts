@@ -77,3 +77,6 @@ export declare function chainIncludes(chain: Chainable | null, entry: Chainable)
 export declare function eachChain(item: Chainable | null, fn: (item: Chainable, index: number) => any): number;
 export declare function addToChain(obj: BasicObject, name: string, entry: Chainable): boolean;
 export declare function removeFromChain(obj: BasicObject, name: string, entry: Chainable): boolean;
+export declare function forLine(fromX: number, fromY: number, toX: number, toY: number, stepFn: (x: number, y: number) => boolean): void;
+export declare function getLine(fromX: number, fromY: number, toX: number, toY: number): Loc[];
+export declare function getLineThru(fromX: number, fromY: number, toX: number, toY: number, width: number, height: number): Loc[];
