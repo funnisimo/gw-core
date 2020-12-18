@@ -1,6 +1,6 @@
 {
   "name": "gw-utils",
-  "version": "0.0.3",
+  "version": "0.1.0",
   "description": "Basic Roguelike functionality",
   "main": "dist/gw-utils.cjs",
   "browser": "dist/gw-utils.min.js",
