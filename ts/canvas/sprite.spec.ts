@@ -53,6 +53,12 @@ describe("Sprite", () => {
     expect(l.fg).toEqual(-1);
     expect(l.bg).toBe(colors.blue);
     expect(l.opacity).toBeUndefined();
+
+    const m = Sprite.makeSprite("@", "blue", -1);
+    expect(m.ch).toEqual("@");
+    expect(m.fg).toBe(colors.blue);
+    expect(m.bg).toEqual(-1);
+    expect(m.opacity).toBeUndefined();
   });
 
   test.only("install", () => {
