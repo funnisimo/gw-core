@@ -54,13 +54,18 @@ export function makeSprite(...args: any[]) {
   } else if (args.length == 1 && Array.isArray(args[0])) {
     args = args[0];
   }
-  const last = args[args.length - 1];
-  if (typeof last === "number") {
-    opacity = last;
+  if (args.length > 3) {
+    opacity = args[3];
     args.pop();
+  } else if (
+    args.length == 2 &&
+    typeof args[1] == "number" &&
+    args[0].length > 1
+  ) {
+    opacity = args.pop();
   }
   if (args.length > 1) {
-    ch = args[0] || null;
+    ch = args[0] || -1;
     fg = args[1];
     bg = args[2];
   } else if (args.length == 1) {
@@ -70,7 +75,7 @@ export function makeSprite(...args: any[]) {
       bg = args[0];
     } else {
       const sprite = args[0] as SpriteConfig;
-      ch = sprite.ch || null;
+      ch = sprite.ch || -1;
       fg = sprite.fg || -1;
       bg = sprite.bg || -1;
       opacity = sprite.opacity;
