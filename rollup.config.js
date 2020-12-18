@@ -2,6 +2,7 @@
 // GW-UTILS: rollup.config.js
 
 import { terser } from "rollup-plugin-terser";
+import dts from "rollup-plugin-dts";
 
 export default [
 {
@@ -26,5 +27,10 @@ export default [
     freeze: false,
   }
   ]
-}
+},
+{
+  input: "./js/gw.d.ts",
+  output: [{ file: "dist/gw-utils.d.ts", format: "es" }],
+  plugins: [dts()],
+},
 ];

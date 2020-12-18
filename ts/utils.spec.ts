@@ -238,4 +238,112 @@ describe("Utils", () => {
       expect(dest.flags).toEqual(["B", "C", "A", "B"]);
     });
   });
+
+  describe("getLine", () => {
+    test("straight", () => {
+      const a = Utils.getLine(2, 0, 6, 0);
+      expect(a).toEqual([
+        [3, 0],
+        [4, 0],
+        [5, 0],
+        [6, 0],
+      ]);
+
+      const b = Utils.getLine(0, 2, 0, 6);
+      expect(b).toEqual([
+        [0, 3],
+        [0, 4],
+        [0, 5],
+        [0, 6],
+      ]);
+
+      const c = Utils.getLine(6, 0, 2, 0);
+      expect(c).toEqual([
+        [5, 0],
+        [4, 0],
+        [3, 0],
+        [2, 0],
+      ]);
+
+      const d = Utils.getLine(0, 6, 0, 2);
+      expect(d).toEqual([
+        [0, 5],
+        [0, 4],
+        [0, 3],
+        [0, 2],
+      ]);
+    });
+
+    test("diagonal", () => {
+      const a = Utils.getLine(2, 0, 6, 4);
+      expect(a).toEqual([
+        [3, 1],
+        [4, 2],
+        [5, 3],
+        [6, 4],
+      ]);
+
+      const b = Utils.getLine(0, 2, 4, 6);
+      expect(b).toEqual([
+        [1, 3],
+        [2, 4],
+        [3, 5],
+        [4, 6],
+      ]);
+
+      const c = Utils.getLine(6, 4, 2, 0);
+      expect(c).toEqual([
+        [5, 3],
+        [4, 2],
+        [3, 1],
+        [2, 0],
+      ]);
+
+      const d = Utils.getLine(4, 6, 0, 2);
+      expect(d).toEqual([
+        [3, 5],
+        [2, 4],
+        [1, 3],
+        [0, 2],
+      ]);
+    });
+
+    test("crooked", () => {
+      const a = Utils.getLine(2, 0, 5, 5);
+      expect(a).toEqual([
+        [3, 1],
+        [3, 2],
+        [4, 3],
+        [4, 4],
+        [5, 5],
+      ]);
+
+      const b = Utils.getLine(0, 2, 5, 5);
+      expect(b).toEqual([
+        [1, 3],
+        [2, 3],
+        [3, 4],
+        [4, 4],
+        [5, 5],
+      ]);
+
+      const c = Utils.getLine(5, 5, 2, 0);
+      expect(c).toEqual([
+        [4, 4],
+        [4, 3],
+        [3, 2],
+        [3, 1],
+        [2, 0],
+      ]);
+
+      const d = Utils.getLine(5, 5, 0, 2);
+      expect(d).toEqual([
+        [4, 4],
+        [3, 4],
+        [2, 3],
+        [1, 3],
+        [0, 2],
+      ]);
+    });
+  });
 });
