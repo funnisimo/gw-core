@@ -36,7 +36,7 @@ export function makeSprite(...args) {
         fg = args[1];
         bg = args[2];
     }
-    else if (args.length == 1) {
+    else {
         if (typeof args[0] === "string" || typeof args[0] === "number") {
             bg = args[0];
         }

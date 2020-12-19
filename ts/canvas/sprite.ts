@@ -68,7 +68,7 @@ export function makeSprite(...args: any[]) {
     ch = args[0] || -1;
     fg = args[1];
     bg = args[2];
-  } else if (args.length == 1) {
+  } else {
     if (typeof args[0] === "string" || typeof args[0] === "number") {
       bg = args[0];
     } else if (args[0] instanceof Color.Color) {

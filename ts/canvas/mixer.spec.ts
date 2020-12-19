@@ -32,6 +32,8 @@ describe("Mixer", () => {
     expect(b.ch).toEqual("@");
     expect(b.fg.css()).toEqual("#fff");
     expect(b.bg.css()).toEqual("#333");
+    expect(b.equals(a)).toBeTruthy();
+    expect(a.equals(b)).toBeTruthy();
   });
 
   test("clone", () => {

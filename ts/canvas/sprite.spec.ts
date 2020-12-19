@@ -12,10 +12,12 @@ describe("Sprite", () => {
     expect(b.bg).toBe(colors.blue);
     expect(b.opacity).toEqual(50);
 
-    const d = Sprite.makeSprite("@", [100, 0, 0], null, 50);
+    const d = Sprite.makeSprite("@", [100, 0, 0], [0,0,100], 50);
     expect(d.ch).toEqual("@");
     expect(d.fg).toEqual(colors.red);
-    expect(d.bg).toEqual(-1);
+    expect(d.fg).not.toBe(colors.red);
+    expect(d.bg).toEqual(colors.blue);
+    expect(d.bg).not.toBe(colors.blue);
     expect(d.opacity).toEqual(50);
 
     const e = Sprite.makeSprite(null, null, "green", 50);
@@ -35,6 +37,12 @@ describe("Sprite", () => {
     expect(g.fg).toBe(colors.green);
     expect(g.bg).toEqual(-1);
     expect(g.opacity).toBeUndefined();
+
+    const h = Sprite.makeSprite({});
+    expect(h.ch).toEqual(-1);
+    expect(h.fg).toEqual(-1);
+    expect(h.bg).toEqual(-1);
+    expect(h.opacity).toBeUndefined();
 
     const i = Sprite.makeSprite(null, null, null);
     expect(i).toEqual({ ch: -1, fg: -1, bg: -1 });
@@ -61,7 +69,7 @@ describe("Sprite", () => {
     expect(m.opacity).toBeUndefined();
   });
 
-  test.only("install", () => {
+  test("install", () => {
     // const a = Sprite.installSprite("TEST");
     // expect(a).toEqual({});
 
