@@ -1005,8 +1005,8 @@ declare class Mixer implements DrawInfo {
 
 interface SpriteConfig {
     ch?: string | number | null;
-    fg?: Color | number | string | null;
-    bg?: Color | number | string | null;
+    fg?: ColorBase | null;
+    bg?: ColorBase | null;
     opacity?: number;
 }
 declare class Sprite implements SpriteType {

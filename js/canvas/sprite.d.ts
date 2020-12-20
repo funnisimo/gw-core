@@ -2,8 +2,8 @@ import * as Color from "../color";
 import { SpriteType } from "./mixer";
 export interface SpriteConfig {
     ch?: string | number | null;
-    fg?: Color.Color | number | string | null;
-    bg?: Color.Color | number | string | null;
+    fg?: Color.ColorBase | null;
+    bg?: Color.ColorBase | null;
     opacity?: number;
 }
 export declare class Sprite implements SpriteType {
