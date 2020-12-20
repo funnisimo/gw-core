@@ -51,14 +51,8 @@ export function fieldValue(name: string, source: Template) {
   };
 }
 
-export function helperValue(name: string, source?: Template) {
+export function helperValue(name: string, source: Template) {
   const helper = Config.helpers[name] || Config.helpers.default;
-
-  if (!source) {
-    return function (args: Args) {
-      return helper(name, args, undefined);
-    };
-  }
 
   return function (args: Args) {
     const base = source(args);
@@ -82,7 +76,7 @@ export function stringFormat(format: string, source: Template) {
 }
 
 export function intFormat(format: string, source: Template) {
-  const data = /%([\+-]*)(\d*)d/.exec(format) || [];
+  const data = /%([\+-]*)(\d*)d/.exec(format) || ["", "", "0"];
   let length = Number.parseInt(data[2] || "0");
   const wantSign = data[1].includes("+");
   const left = data[1].includes("-");
@@ -103,7 +97,7 @@ export function intFormat(format: string, source: Template) {
 }
 
 export function floatFormat(format: string, source: Template) {
-  const data = /%([\+-]*)(\d*)(\.(\d+))?f/.exec(format) || [];
+  const data = /%([\+-]*)(\d*)(\.(\d+))?f/.exec(format) || ["", "", "0"];
   let length = Number.parseInt(data[2] || "0");
   const wantSign = data[1].includes("+");
   const left = data[1].includes("-");
@@ -149,7 +143,7 @@ export function makeVariable(pattern: string) {
       result = stringFormat(format, result);
     } else if (format.endsWith("d")) {
       result = intFormat(format, result);
-    } else if (format.endsWith("f")) {
+    } else {
       result = floatFormat(format, result);
     }
   }
