@@ -1,13 +1,21 @@
-import * as Config from './config';
+import * as Config from "./config";
 export function eachChar(text, fn, fg, bg) {
-    text = '' + text; // force string
-    if (!text || text.length == 0)
+    if (text === null || text === undefined)
+        return;
+    if (!fn)
+        return;
+    text = "" + text; // force string
+    if (!text.length)
         return;
     const colors = [];
     const colorFn = Config.helpers.eachColor;
+    if (fg === undefined)
+        fg = Config.options.defaultFg;
+    if (bg === undefined)
+        bg = Config.options.defaultBg;
     const ctx = {
-        fg: (fg === undefined) ? Config.options.defaultFg : fg,
-        bg: (bg === undefined) ? Config.options.defaultBg : bg,
+        fg,
+        bg,
     };
     const CS = Config.options.colorStart;
     const CE = Config.options.colorEnd;
@@ -21,18 +29,17 @@ export function eachChar(text, fn, fg, bg) {
                 ++j;
             }
             if (j == text.length) {
-                console.warn('Reached end of string while seeking end of color start section.');
-                console.warn('- text:', text);
-                console.warn('- start @:', i);
+                console.warn(`Reached end of string while seeking end of color start section.\n- text: ${text}\n- start @: ${i}`);
                 return; // reached end - done (error though)
             }
-            if (j == i + 1) { // next char
+            if (j == i + 1) {
+                // next char
                 ++i; // fall through
             }
             else {
                 colors.push([ctx.fg, ctx.bg]);
                 const color = text.substring(i + 1, j);
-                const newColors = color.split('|');
+                const newColors = color.split("|");
                 ctx.fg = newColors[0] || ctx.fg;
                 ctx.bg = newColors[1] || ctx.bg;
                 colorFn(ctx);
@@ -45,8 +52,8 @@ export function eachChar(text, fn, fg, bg) {
                 ++i;
             }
             else {
-                const c = colors.pop(); // if you pop too many times colors go away
-                [ctx.fg, ctx.bg] = c || [null, null];
+                const c = colors.pop(); // if you pop too many times colors still revert to what you passed in
+                [ctx.fg, ctx.bg] = c || [fg, bg];
                 // colorFn(ctx);
                 continue;
             }

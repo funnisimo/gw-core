@@ -14,9 +14,21 @@ describe('text', () => {
   });
 
   test('exports', () => {
-    expect(Text.configure).toBeDefined();
-    expect(Text.compile).toBeDefined();
-    expect(Text.eachChar).toBeDefined();
+    expect(Text.configure).toBeFunction();
+    expect(Text.compile).toBeFunction();
+    expect(Text.apply).toBeFunction();
+    expect(Text.eachChar).toBeFunction();
+    expect(Text.length).toBeFunction();
+    expect(Text.padStart).toBeFunction();
+    expect(Text.padEnd).toBeFunction();
+    expect(Text.center).toBeFunction();
+    expect(Text.firstChar).toBeFunction();
+    expect(Text.capitalize).toBeFunction();
+    expect(Text.removeColors).toBeFunction();
+    expect(Text.wordWrap).toBeFunction();
+    expect(Text.splitIntoLines).toBeFunction();
+    expect(Text.addHelper).toBeFunction();
+    expect(Text.configure).toBeFunction();
   });
 
   test('default options', () => {

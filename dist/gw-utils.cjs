@@ -4322,11 +4322,6 @@ function fieldValue(name, source) {
 }
 function helperValue(name, source) {
     const helper = helpers[name] || helpers.default;
-    if (!source) {
-        return function (args) {
-            return helper(name, args, undefined);
-        };
-    }
     return function (args) {
         const base = source(args);
         return helper(name, args, base);
@@ -4347,7 +4342,7 @@ function stringFormat(format, source) {
     };
 }
 function intFormat(format, source) {
-    const data = /%([\+-]*)(\d*)d/.exec(format) || [];
+    const data = /%([\+-]*)(\d*)d/.exec(format) || ["", "", "0"];
     let length = Number.parseInt(data[2] || "0");
     const wantSign = data[1].includes("+");
     const left = data[1].includes("-");
@@ -4367,7 +4362,7 @@ function intFormat(format, source) {
     };
 }
 function floatFormat(format, source) {
-    const data = /%([\+-]*)(\d*)(\.(\d+))?f/.exec(format) || [];
+    const data = /%([\+-]*)(\d*)(\.(\d+))?f/.exec(format) || ["", "", "0"];
     let length = Number.parseInt(data[2] || "0");
     const wantSign = data[1].includes("+");
     const left = data[1].includes("-");
@@ -4413,7 +4408,7 @@ function makeVariable(pattern) {
         else if (format.endsWith("d")) {
             result = intFormat(format, result);
         }
-        else if (format.endsWith("f")) {
+        else {
             result = floatFormat(format, result);
         }
     }
@@ -4421,14 +4416,22 @@ function makeVariable(pattern) {
 }
 
 function eachChar(text, fn, fg, bg) {
-    text = '' + text; // force string
-    if (!text || text.length == 0)
+    if (text === null || text === undefined)
+        return;
+    if (!fn)
+        return;
+    text = "" + text; // force string
+    if (!text.length)
         return;
     const colors = [];
     const colorFn = helpers.eachColor;
+    if (fg === undefined)
+        fg = options.defaultFg;
+    if (bg === undefined)
+        bg = options.defaultBg;
     const ctx = {
-        fg: (fg === undefined) ? options.defaultFg : fg,
-        bg: (bg === undefined) ? options.defaultBg : bg,
+        fg,
+        bg,
     };
     const CS = options.colorStart;
     const CE = options.colorEnd;
@@ -4442,18 +4445,17 @@ function eachChar(text, fn, fg, bg) {
                 ++j;
             }
             if (j == text.length) {
-                console.warn('Reached end of string while seeking end of color start section.');
-                console.warn('- text:', text);
-                console.warn('- start @:', i);
+                console.warn(`Reached end of string while seeking end of color start section.\n- text: ${text}\n- start @: ${i}`);
                 return; // reached end - done (error though)
             }
-            if (j == i + 1) { // next char
+            if (j == i + 1) {
+                // next char
                 ++i; // fall through
             }
             else {
                 colors.push([ctx.fg, ctx.bg]);
                 const color = text.substring(i + 1, j);
-                const newColors = color.split('|');
+                const newColors = color.split("|");
                 ctx.fg = newColors[0] || ctx.fg;
                 ctx.bg = newColors[1] || ctx.bg;
                 colorFn(ctx);
@@ -4466,8 +4468,8 @@ function eachChar(text, fn, fg, bg) {
                 ++i;
             }
             else {
-                const c = colors.pop(); // if you pop too many times colors go away
-                [ctx.fg, ctx.bg] = c || [null, null];
+                const c = colors.pop(); // if you pop too many times colors still revert to what you passed in
+                [ctx.fg, ctx.bg] = c || [fg, bg];
                 // colorFn(ctx);
                 continue;
             }
@@ -4783,15 +4785,10 @@ function splitIntoLines(source, width, indent = 0) {
 }
 
 function configure(opts = {}) {
-    if (opts.helpers) {
-        Object.entries(opts.helpers).forEach(([name, fn]) => {
-            addHelper(name, fn);
-        });
-    }
-    if (opts.fg) {
+    if (opts.fg !== undefined) {
         options.defaultFg = opts.fg;
     }
-    if (opts.bg) {
+    if (opts.bg !== undefined) {
         options.defaultBg = opts.bg;
     }
     if (opts.colorStart) {

@@ -45,11 +45,6 @@ export function fieldValue(name, source) {
 }
 export function helperValue(name, source) {
     const helper = Config.helpers[name] || Config.helpers.default;
-    if (!source) {
-        return function (args) {
-            return helper(name, args, undefined);
-        };
-    }
     return function (args) {
         const base = source(args);
         return helper(name, args, base);
@@ -70,7 +65,7 @@ export function stringFormat(format, source) {
     };
 }
 export function intFormat(format, source) {
-    const data = /%([\+-]*)(\d*)d/.exec(format) || [];
+    const data = /%([\+-]*)(\d*)d/.exec(format) || ["", "", "0"];
     let length = Number.parseInt(data[2] || "0");
     const wantSign = data[1].includes("+");
     const left = data[1].includes("-");
@@ -90,7 +85,7 @@ export function intFormat(format, source) {
     };
 }
 export function floatFormat(format, source) {
-    const data = /%([\+-]*)(\d*)(\.(\d+))?f/.exec(format) || [];
+    const data = /%([\+-]*)(\d*)(\.(\d+))?f/.exec(format) || ["", "", "0"];
     let length = Number.parseInt(data[2] || "0");
     const wantSign = data[1].includes("+");
     const left = data[1].includes("-");
@@ -136,7 +131,7 @@ export function makeVariable(pattern) {
         else if (format.endsWith("d")) {
             result = intFormat(format, result);
         }
-        else if (format.endsWith("f")) {
+        else {
             result = floatFormat(format, result);
         }
     }

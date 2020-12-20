@@ -1149,7 +1149,6 @@ declare var options: {
 declare function addHelper(name: string, fn: Function): void;
 
 interface Options {
-    helpers?: Record<string, Function>;
     fg?: any;
     bg?: any;
     colorStart?: string;

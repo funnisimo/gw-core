@@ -4,7 +4,6 @@ import { length, padStart, padEnd, center, capitalize, removeColors, firstChar }
 import { wordWrap, splitIntoLines } from "./lines";
 import { addHelper, options } from "./config";
 interface Options {
-    helpers?: Record<string, Function>;
     fg?: any;
     bg?: any;
     colorStart?: string;
