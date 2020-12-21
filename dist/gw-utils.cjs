@@ -4849,7 +4849,9 @@ class DataBuffer {
             return -1;
         return ch.charCodeAt(0);
     }
-    draw(x, y, glyph = -1, fg = -1, bg = -1) {
+    draw(x, y, glyph = -1, fg = -1, // TODO - White?
+    bg = -1 // TODO - Black?
+    ) {
         let index = y * this.width + x;
         const current = this._data[index] || 0;
         if (typeof glyph !== "number") {
@@ -4870,13 +4872,16 @@ class DataBuffer {
     }
     // This is without opacity - opacity must be done in Mixer
     drawSprite(x, y, sprite) {
-        return this.draw(x, y, sprite.ch, sprite.fg, sprite.bg);
+        const ch = sprite.ch === null ? -1 : sprite.ch;
+        const fg = sprite.fg === null ? -1 : sprite.fg;
+        const bg = sprite.bg === null ? -1 : sprite.bg;
+        return this.draw(x, y, ch, fg, bg);
     }
-    blackOut(x, y) {
-        if (arguments.length == 0) {
+    blackOut(...args) {
+        if (args.length == 0) {
             return this.fill(0, 0, 0);
         }
-        return this.draw(x, y, 0, 0, 0);
+        return this.draw(args[0], args[1], 0, 0, 0);
     }
     fill(glyph = 0, fg = 0xfff, bg = 0) {
         if (typeof glyph == "string") {
@@ -4898,45 +4903,46 @@ class DataBuffer {
             fg = from$1(fg);
         if (typeof bg !== "number")
             bg = from$1(bg);
-        eachChar(text, (ch, color, bg, i) => {
-            this.draw(i + x, y, ch, color, bg);
+        eachChar(text, (ch, fg0, bg0, i) => {
+            if (x + i >= this.width)
+                return;
+            this.draw(i + x, y, ch, fg0, bg0);
         }, fg, bg);
         return ++y;
     }
-    wrapText(x0, y0, width, text, fg = 0xfff, bg = -1, opts = {}) {
-        if (typeof opts === "number") {
-            opts = { indent: opts };
-        }
+    wrapText(x, y, width, text, fg = 0xfff, bg = -1, indent = 0) {
         if (typeof fg !== "number")
             fg = from$1(fg);
         if (typeof bg !== "number")
             bg = from$1(bg);
-        width = Math.min(width, this.width - x0);
-        const indent = opts.indent || 0;
+        width = Math.min(width, this.width - x);
         text = wordWrap(text, width, indent);
-        let x = x0;
-        let y = y0;
+        let xi = x;
         eachChar(text, (ch, fg0, bg0) => {
             if (ch == "\n") {
-                while (x < x0 + width) {
-                    this.draw(x++, y, 0, 0x000, bg0);
+                while (xi < x + width) {
+                    this.draw(xi++, y, 0, 0x000, bg0);
                 }
                 ++y;
-                x = x0 + indent;
+                xi = x + indent;
                 return;
             }
-            this.draw(x++, y, ch, fg0, bg0);
+            this.draw(xi++, y, ch, fg0, bg0);
         }, fg, bg);
-        while (x < x0 + width) {
-            this.draw(x++, y, " ", 0x000, bg);
+        while (xi < x + width) {
+            this.draw(xi++, y, 0, 0x000, bg);
         }
         return ++y;
     }
-    fillRect(x, y, w, h, ch = -1, fg = -1, bg = -1) {
+    fillRect(x, y, w, h, ch = -1, fg = 0xfff, bg = -1) {
         if (ch === null)
             ch = -1;
-        fg = typeof fg === "number" ? fg : from$1(fg);
-        bg = typeof bg === "number" ? bg : from$1(bg);
+        if (typeof ch !== "number")
+            ch = this._toGlyph(ch);
+        if (typeof fg !== "number")
+            fg = from$1(fg).toInt();
+        if (typeof bg !== "number")
+            bg = from$1(bg).toInt();
         for (let i = x; i < x + w; ++i) {
             for (let j = y; j < y + h; ++j) {
                 this.draw(i, j, ch, fg, bg);
@@ -4944,19 +4950,20 @@ class DataBuffer {
         }
         return this;
     }
-    blackOutRect(x, y, w, h, bg) {
-        bg = bg || 0x000;
-        return this.fillRect(x, y, w, h, " ", 0, bg);
+    blackOutRect(x, y, w, h, bg = 0) {
+        if (typeof bg !== "number")
+            bg = from$1(bg);
+        return this.fillRect(x, y, w, h, 0, 0, bg);
     }
-    highlight(x, y, highlightColor, strength) {
-        if (typeof highlightColor !== "number") {
-            highlightColor = from$1(highlightColor);
+    highlight(x, y, color$1, strength) {
+        if (typeof color$1 !== "number") {
+            color$1 = from$1(color$1);
         }
         const mixer = new Mixer();
         const data = this.get(x, y);
         mixer.drawSprite(data);
-        mixer.fg.add(highlightColor, strength);
-        mixer.bg.add(highlightColor, strength);
+        mixer.fg.add(color$1, strength);
+        mixer.bg.add(color$1, strength);
         this.drawSprite(x, y, mixer);
         return this;
     }

@@ -1078,6 +1078,11 @@ declare namespace index_d {
   };
 }
 
+interface Data {
+    ch: number;
+    fg: number;
+    bg: number;
+}
 declare class DataBuffer {
     private _data;
     private _width;
@@ -1086,19 +1091,21 @@ declare class DataBuffer {
     get data(): Uint32Array;
     get width(): number;
     get height(): number;
-    get(x: number, y: number): DrawInfo;
+    get(x: number, y: number): Data;
     protected _toGlyph(ch: string): number;
-    draw(x: number, y: number, glyph?: number | string, fg?: Color | number, bg?: Color | number): this;
-    drawSprite(x: number, y: number, sprite: DrawInfo): this;
-    blackOut(x: number, y: number): this;
+    draw(x: number, y: number, glyph?: number | string, fg?: ColorBase, // TODO - White?
+    bg?: ColorBase): this;
+    drawSprite(x: number, y: number, sprite: Partial<DrawInfo>): this;
+    blackOut(x: number, y: number): void;
+    blackOut(): void;
     fill(glyph?: number | string, fg?: number, bg?: number): this;
     copy(other: DataBuffer): this;
-    drawText(x: number, y: number, text: string, fg?: Color | number | string, bg?: Color | number | string): number;
-    wrapText(x0: number, y0: number, width: number, text: string, fg?: Color | number | string, bg?: Color | number | string, opts?: any): number;
-    fillRect(x: number, y: number, w: number, h: number, ch?: string | number | null, fg?: Color | number | string | null, bg?: Color | number | string | null): this;
-    blackOutRect(x: number, y: number, w: number, h: number, bg?: Color | number): this;
-    highlight(x: number, y: number, highlightColor: Color | number | string, strength: number): this;
-    mix(color: Color | number | string, percent: number): this;
+    drawText(x: number, y: number, text: string, fg?: ColorBase, bg?: ColorBase): number;
+    wrapText(x: number, y: number, width: number, text: string, fg?: Color | number | string, bg?: Color | number | string, indent?: number): number;
+    fillRect(x: number, y: number, w: number, h: number, ch?: string | number | null, fg?: ColorBase | null, bg?: ColorBase | null): this;
+    blackOutRect(x: number, y: number, w: number, h: number, bg?: ColorBase): this;
+    highlight(x: number, y: number, color: ColorBase, strength: number): this;
+    mix(color: ColorBase, percent: number): this;
     dump(): void;
 }
 declare class Buffer extends DataBuffer {
@@ -1109,12 +1116,14 @@ declare class Buffer extends DataBuffer {
     copyFromCanvas(): this;
 }
 
+type buffer_d_Data = Data;
 type buffer_d_DataBuffer = DataBuffer;
 declare const buffer_d_DataBuffer: typeof DataBuffer;
 type buffer_d_Buffer = Buffer;
 declare const buffer_d_Buffer: typeof Buffer;
 declare namespace buffer_d {
   export {
+    buffer_d_Data as Data,
     buffer_d_DataBuffer as DataBuffer,
     buffer_d_Buffer as Buffer,
   };
