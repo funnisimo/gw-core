@@ -41,8 +41,8 @@ export class DataBuffer {
     x: number,
     y: number,
     glyph: number | string = -1,
-    fg: Color.Color | number = -1,
-    bg: Color.Color | number = -1
+    fg: Color.ColorBase = -1,
+    bg: Color.ColorBase = -1
   ) {
     let index = y * this.width + x;
     const current = this._data[index] || 0;
@@ -65,15 +65,20 @@ export class DataBuffer {
   }
 
   // This is without opacity - opacity must be done in Mixer
-  drawSprite(x: number, y: number, sprite: DrawInfo) {
-    return this.draw(x, y, sprite.ch, sprite.fg, sprite.bg);
+  drawSprite(x: number, y: number, sprite: Partial<DrawInfo>) {
+    const ch = (sprite.ch === null) ? -1 : sprite.ch;
+    const fg = (sprite.fg === null) ? -1 : sprite.fg;
+    const bg = (sprite.bg === null) ? -1 : sprite.bg;
+    return this.draw(x, y, ch, fg, bg);
   }
 
-  blackOut(x: number, y: number) {
-    if (arguments.length == 0) {
+  blackOut(x: number, y: number): void;
+  blackOut(): void;
+  blackOut(...args: number[]) {
+    if (args.length == 0) {
       return this.fill(0, 0, 0);
     }
-    return this.draw(x, y, 0, 0, 0);
+    return this.draw(args[0], args[1], 0, 0, 0);
   }
 
   fill(glyph: number | string = 0, fg: number = 0xfff, bg: number = 0) {
@@ -97,16 +102,16 @@ export class DataBuffer {
     x: number,
     y: number,
     text: string,
-    fg: Color.Color | number | string = 0xfff,
-    bg: Color.Color | number | string = -1
+    fg: Color.ColorBase = 0xfff,
+    bg: Color.ColorBase = -1
   ) {
     if (typeof fg !== "number") fg = Color.from(fg);
     if (typeof bg !== "number") bg = Color.from(bg);
 
     Text.eachChar(
       text,
-      (ch, color, bg, i) => {
-        this.draw(i + x, y, ch, color, bg);
+      (ch, fg0, bg0, i) => {
+        this.draw(i + x, y, ch, fg0, bg0);
       },
       fg,
       bg
