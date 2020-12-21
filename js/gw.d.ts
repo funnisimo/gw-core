@@ -16,4 +16,5 @@ export { flags } from "./flag";
 export { cosmetic, random, Random } from "./random";
 export { colors } from "./color";
 export { sprites } from "./canvas/index";
-export declare var data: {};
+export declare const data: any;
+export declare const config: any;

@@ -30,5 +30,6 @@ export { flags } from "./flag";
 export { cosmetic, random, Random } from "./random";
 export { colors } from "./color";
 export { sprites } from "./canvas/index";
-export var data = {};
+export const data = {};
+export const config = {};
 //# sourceMappingURL=gw.js.map

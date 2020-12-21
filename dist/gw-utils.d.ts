@@ -1201,6 +1201,7 @@ declare namespace index_d$1 {
   };
 }
 
-declare var data: {};
+declare const data: any;
+declare const config: any;
 
-export { Random, buffer_d as buffer, index_d as canvas, color_d as color, colors, cosmetic, data, events_d as events, flag_d as flag, flags, fov_d as fov, frequency_d as frequency, grid_d as grid, io_d as io, path_d as path, random, range_d as range, scheduler_d as scheduler, sprites, index_d$1 as text, utils_d as utils };
+export { Random, buffer_d as buffer, index_d as canvas, color_d as color, colors, config, cosmetic, data, events_d as events, flag_d as flag, flags, fov_d as fov, frequency_d as frequency, grid_d as grid, io_d as io, path_d as path, random, range_d as range, scheduler_d as scheduler, sprites, index_d$1 as text, utils_d as utils };

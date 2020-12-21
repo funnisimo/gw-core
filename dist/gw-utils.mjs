@@ -5028,6 +5028,7 @@ var buffer = {
     Buffer: Buffer
 };
 
-var data = {};
+const data = {};
+const config = {};
 
-export { Random, buffer, index as canvas, color, colors, cosmetic, data, events, flag, flags, fov, frequency, grid, io, path, random, range, scheduler, sprites, index$1 as text, utils };
+export { Random, buffer, index as canvas, color, colors, config, cosmetic, data, events, flag, flags, fov, frequency, grid, io, path, random, range, scheduler, sprites, index$1 as text, utils };

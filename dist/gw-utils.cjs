@@ -5032,13 +5032,15 @@ var buffer = {
     Buffer: Buffer
 };
 
-var data = {};
+const data = {};
+const config = {};
 
 exports.Random = Random;
 exports.buffer = buffer;
 exports.canvas = index;
 exports.color = color;
 exports.colors = colors;
+exports.config = config;
 exports.cosmetic = cosmetic;
 exports.data = data;
 exports.events = events;

@@ -9,5 +9,6 @@ describe("GW", () => {
     expect(GW.range).toBeDefined();
     expect(GW.flag).toBeDefined();
     expect(GW.data).toBeObject();
+    expect(GW.config).toBeObject();
   });
 });
