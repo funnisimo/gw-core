@@ -210,16 +210,16 @@ function assignField(dest, src, key) {
         dest[key] = updated;
     }
 }
-// export function copyObject(dest, src) {
-//   Object.keys(dest).forEach( (key) => {
-//     assignField(dest, src, key);
-//   });
-// }
-// export function assignObject(dest, src) {
-//   Object.keys(src).forEach( (key) => {
-//     assignField(dest, src, key);
-//   });
-// }
+export function copyObject(dest, src) {
+    Object.keys(dest).forEach((key) => {
+        assignField(dest, src, key);
+    });
+}
+export function assignObject(dest, src) {
+    Object.keys(src).forEach((key) => {
+        assignField(dest, src, key);
+    });
+}
 export function assignOmitting(omit, dest, src) {
     if (typeof omit === "string") {
         omit = omit.split(/[,|]/g).map((t) => t.trim());

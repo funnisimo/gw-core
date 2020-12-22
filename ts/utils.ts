@@ -255,7 +255,7 @@ export function smoothHiliteGradient(currentXValue: number, maxXValue: number) {
 
 export type BasicObject = { [key: string]: any };
 
-function assignField(dest: BasicObject, src: BasicObject, key: string) {
+function assignField(dest: any, src: any, key: string) {
   const current = dest[key];
   const updated = src[key];
   if (current && current.copy && updated) {
@@ -275,23 +275,19 @@ function assignField(dest: BasicObject, src: BasicObject, key: string) {
   }
 }
 
-// export function copyObject(dest, src) {
-//   Object.keys(dest).forEach( (key) => {
-//     assignField(dest, src, key);
-//   });
-// }
+export function copyObject(dest: any, src: any) {
+  Object.keys(dest).forEach((key) => {
+    assignField(dest, src, key);
+  });
+}
 
-// export function assignObject(dest, src) {
-//   Object.keys(src).forEach( (key) => {
-//     assignField(dest, src, key);
-//   });
-// }
+export function assignObject(dest: any, src: any) {
+  Object.keys(src).forEach((key) => {
+    assignField(dest, src, key);
+  });
+}
 
-export function assignOmitting(
-  omit: string | string[],
-  dest: BasicObject,
-  src: BasicObject
-) {
+export function assignOmitting(omit: string | string[], dest: any, src: any) {
   if (typeof omit === "string") {
     omit = omit.split(/[,|]/g).map((t) => t.trim());
   }
@@ -301,21 +297,21 @@ export function assignOmitting(
   });
 }
 
-export function setDefault(obj: BasicObject, field: string, val: any) {
+export function setDefault(obj: any, field: string, val: any) {
   if (obj[field] === undefined) {
     obj[field] = val;
   }
 }
 
 export type AssignCallback = (
-  dest: BasicObject,
+  dest: any,
   key: string,
   current: any,
   def: any
 ) => boolean;
 
 export function setDefaults(
-  obj: BasicObject,
+  obj: any,
   def: any,
   custom: AssignCallback | null = null
 ) {
@@ -361,8 +357,8 @@ export function setDefaults(
   });
 }
 
-export function kindDefaults(obj: BasicObject, def: BasicObject) {
-  function custom(dest: BasicObject, key: string, current: any, defValue: any) {
+export function kindDefaults(obj: any, def: any) {
+  function custom(dest: any, key: string, current: any, defValue: any) {
     if (key.search(/[fF]lags$/) < 0) return false;
 
     if (!current) {
@@ -388,8 +384,8 @@ export function kindDefaults(obj: BasicObject, def: BasicObject) {
   return setDefaults(obj, def, custom);
 }
 
-export function pick(obj: BasicObject, ...fields: string[]) {
-  const data: BasicObject = {};
+export function pick(obj: any, ...fields: string[]) {
+  const data: any = {};
   fields.forEach((f) => {
     const v = obj[f];
     if (v !== undefined) {
@@ -399,7 +395,7 @@ export function pick(obj: BasicObject, ...fields: string[]) {
   return data;
 }
 
-export function clearObject(obj: BasicObject) {
+export function clearObject(obj: any) {
   Object.keys(obj).forEach((key) => (obj[key] = undefined));
 }
 
@@ -417,7 +413,7 @@ export function getOpt(obj: BasicObject, member: string, _default: any) {
   return v;
 }
 
-export function firstOpt(field: string, ...args: BasicObject[]) {
+export function firstOpt(field: string, ...args: any[]) {
   for (let arg of args) {
     if (typeof arg !== "object" || Array.isArray(arg)) {
       return arg;
@@ -440,10 +436,10 @@ export function sum(arr: number[]) {
 // CHAIN
 
 export interface Chainable {
-  next: Chainable | null;
+  next: any | null;
 }
 
-export function chainLength(root: Chainable | null) {
+export function chainLength<T extends Chainable>(root: T | null) {
   let count = 0;
   while (root) {
     count += 1;
@@ -452,16 +448,16 @@ export function chainLength(root: Chainable | null) {
   return count;
 }
 
-export function chainIncludes(chain: Chainable | null, entry: Chainable) {
+export function chainIncludes<T extends Chainable>(chain: T | null, entry: T) {
   while (chain && chain !== entry) {
     chain = chain.next;
   }
   return chain === entry;
 }
 
-export function eachChain(
-  item: Chainable | null,
-  fn: (item: Chainable, index: number) => any
+export function eachChain<T extends Chainable>(
+  item: T | null,
+  fn: (item: T, index: number) => any
 ) {
   let index = 0;
   while (item) {
@@ -472,16 +468,20 @@ export function eachChain(
   return index; // really count
 }
 
-export function addToChain(obj: BasicObject, name: string, entry: Chainable) {
+export function addToChain<T extends Chainable>(
+  obj: any,
+  name: string,
+  entry: T
+) {
   entry.next = obj[name] || null;
   obj[name] = entry;
   return true;
 }
 
-export function removeFromChain(
-  obj: BasicObject,
+export function removeFromChain<T extends Chainable>(
+  obj: any,
   name: string,
-  entry: Chainable
+  entry: T
 ) {
   const root = obj[name];
   if (root === entry) {

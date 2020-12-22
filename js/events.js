@@ -88,9 +88,8 @@ export function removeListener(event, fn, context, once = false) {
         return;
     }
     Utils.eachChain(EVENTS[event], (obj) => {
-        const l = obj;
-        if (l.matches(fn, context, once)) {
-            Utils.removeFromChain(EVENTS, event, l);
+        if (obj.matches(fn, context, once)) {
+            Utils.removeFromChain(EVENTS, event, obj);
         }
     });
 }

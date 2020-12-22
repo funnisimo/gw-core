@@ -276,8 +276,11 @@ export class Color extends Int16Array {
     return this._changed();
   }
 
-  bake() {
+  bake(clearDancing = false) {
     if (this.isNull()) return this;
+
+    if (this.dances && !clearDancing) return;
+    this.dances = false;
 
     const d = this;
     if (d[3] + d[4] + d[5] + d[6]) {

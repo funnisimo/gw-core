@@ -26,6 +26,8 @@ import * as buffer_1 from "./buffer";
 export { buffer_1 as buffer };
 import * as text_1 from "./text/index";
 export { text_1 as text };
+import * as types_1 from "./types";
+export { types_1 as types };
 export { flags } from "./flag";
 export { cosmetic, random, Random } from "./random";
 export { colors } from "./color";

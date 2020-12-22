@@ -56,27 +56,29 @@ declare function smoothHiliteGradient(currentXValue: number, maxXValue: number):
 declare type BasicObject = {
     [key: string]: any;
 };
-declare function assignOmitting(omit: string | string[], dest: BasicObject, src: BasicObject): void;
-declare function setDefault(obj: BasicObject, field: string, val: any): void;
-declare type AssignCallback = (dest: BasicObject, key: string, current: any, def: any) => boolean;
-declare function setDefaults(obj: BasicObject, def: any, custom?: AssignCallback | null): void;
-declare function kindDefaults(obj: BasicObject, def: BasicObject): void;
-declare function pick(obj: BasicObject, ...fields: string[]): BasicObject;
-declare function clearObject(obj: BasicObject): void;
+declare function copyObject(dest: any, src: any): void;
+declare function assignObject(dest: any, src: any): void;
+declare function assignOmitting(omit: string | string[], dest: any, src: any): void;
+declare function setDefault(obj: any, field: string, val: any): void;
+declare type AssignCallback = (dest: any, key: string, current: any, def: any) => boolean;
+declare function setDefaults(obj: any, def: any, custom?: AssignCallback | null): void;
+declare function kindDefaults(obj: any, def: any): void;
+declare function pick(obj: any, ...fields: string[]): any;
+declare function clearObject(obj: any): void;
 declare function ERROR(message: string): void;
 declare function WARN(...args: string[]): void;
 declare function getOpt(obj: BasicObject, member: string, _default: any): any;
-declare function firstOpt(field: string, ...args: BasicObject[]): any;
+declare function firstOpt(field: string, ...args: any[]): any;
 declare function arraysIntersect(a: any[], b: any[]): boolean;
 declare function sum(arr: number[]): number;
 interface Chainable {
-    next: Chainable | null;
+    next: any | null;
 }
-declare function chainLength(root: Chainable | null): number;
-declare function chainIncludes(chain: Chainable | null, entry: Chainable): boolean;
-declare function eachChain(item: Chainable | null, fn: (item: Chainable, index: number) => any): number;
-declare function addToChain(obj: BasicObject, name: string, entry: Chainable): boolean;
-declare function removeFromChain(obj: BasicObject, name: string, entry: Chainable): boolean;
+declare function chainLength<T extends Chainable>(root: T | null): number;
+declare function chainIncludes<T extends Chainable>(chain: T | null, entry: T): boolean;
+declare function eachChain<T extends Chainable>(item: T | null, fn: (item: T, index: number) => any): number;
+declare function addToChain<T extends Chainable>(obj: any, name: string, entry: T): boolean;
+declare function removeFromChain<T extends Chainable>(obj: any, name: string, entry: T): boolean;
 declare function forLine(fromX: number, fromY: number, toX: number, toY: number, stepFn: (x: number, y: number) => boolean): void;
 declare function getLine(fromX: number, fromY: number, toX: number, toY: number): Loc[];
 declare function getLineThru(fromX: number, fromY: number, toX: number, toY: number, width: number, height: number): Loc[];
@@ -119,6 +121,8 @@ declare const utils_d_dirSpread: typeof dirSpread;
 declare const utils_d_stepFromTo: typeof stepFromTo;
 declare const utils_d_smoothHiliteGradient: typeof smoothHiliteGradient;
 type utils_d_BasicObject = BasicObject;
+declare const utils_d_copyObject: typeof copyObject;
+declare const utils_d_assignObject: typeof assignObject;
 declare const utils_d_assignOmitting: typeof assignOmitting;
 declare const utils_d_setDefault: typeof setDefault;
 type utils_d_AssignCallback = AssignCallback;
@@ -181,6 +185,8 @@ declare namespace utils_d {
     utils_d_stepFromTo as stepFromTo,
     utils_d_smoothHiliteGradient as smoothHiliteGradient,
     utils_d_BasicObject as BasicObject,
+    utils_d_copyObject as copyObject,
+    utils_d_assignObject as assignObject,
     utils_d_assignOmitting as assignOmitting,
     utils_d_setDefault as setDefault,
     utils_d_AssignCallback as AssignCallback,
@@ -237,43 +243,49 @@ declare class Random {
 declare const random: Random;
 declare const cosmetic: Random;
 
+declare type RangeBase = Range | string | number[] | number;
 declare class Range {
     lo: number;
     hi: number;
     clumps: number;
     private _rng;
-    constructor(lower: number | Range | number[], upper?: number, clumps?: number, rng?: Random);
+    constructor(lower: number, upper?: number, clumps?: number, rng?: Random);
     value(): number;
+    copy(other: Range): this;
     toString(): string;
 }
-declare function make(config: Range | string | number[] | null, rng?: Random): Range;
+declare function make(config: RangeBase | null, rng?: Random): Range;
+declare const from: typeof make;
 
+type range_d_RangeBase = RangeBase;
 type range_d_Range = Range;
 declare const range_d_Range: typeof Range;
 declare const range_d_make: typeof make;
+declare const range_d_from: typeof from;
 declare namespace range_d {
   export {
+    range_d_RangeBase as RangeBase,
     range_d_Range as Range,
     range_d_make as make,
+    range_d_from as from,
   };
 }
 
 declare function fl(N: number): number;
 declare function toString(flagObj: any, value: number): string;
-declare function from(obj: any, ...args: any[]): number;
+declare function from$1(obj: any, ...args: any[]): number;
 declare const flags: Record<string, Record<string, number>>;
 declare function install(flagName: string, flag: Record<string, number>): Record<string, number>;
 
 declare const flag_d_fl: typeof fl;
 declare const flag_d_toString: typeof toString;
-declare const flag_d_from: typeof from;
 declare const flag_d_flags: typeof flags;
 declare const flag_d_install: typeof install;
 declare namespace flag_d {
   export {
     flag_d_fl as fl,
     flag_d_toString as toString,
-    flag_d_from as from,
+    from$1 as from,
     flag_d_flags as flags,
     flag_d_install as install,
   };
@@ -905,7 +917,7 @@ declare class Color extends Int16Array {
     mix(other: ColorBase, percent: number): this;
     lighten(percent: number): this | undefined;
     darken(percent: number): this | undefined;
-    bake(): this;
+    bake(clearDancing?: boolean): this | undefined;
     add(other: ColorBase, percent?: number): this;
     scale(percent: number): this;
     multiply(other: ColorData | Color): this;
@@ -926,11 +938,11 @@ declare function make$3(rgb: number, base256?: boolean): Color;
 declare function make$3(color?: ColorBase | null): Color;
 declare function make$3(arrayLike: ArrayLike<number>, base256?: boolean): Color;
 declare function make$3(...rgb: number[]): Color;
-declare function from$1(): Color;
-declare function from$1(rgb: number, base256?: boolean): Color;
-declare function from$1(color?: ColorBase | null): Color;
-declare function from$1(arrayLike: ArrayLike<number>, base256?: boolean): Color;
-declare function from$1(...rgb: number[]): Color;
+declare function from$2(): Color;
+declare function from$2(rgb: number, base256?: boolean): Color;
+declare function from$2(color?: ColorBase | null): Color;
+declare function from$2(arrayLike: ArrayLike<number>, base256?: boolean): Color;
+declare function from$2(...rgb: number[]): Color;
 declare function separate(a: Color, b: Color): void;
 declare function swap(a: Color, b: Color): void;
 declare function diff(a: Color, b: Color): number;
@@ -961,7 +973,7 @@ declare namespace color_d {
     color_d_fromName as fromName,
     color_d_fromNumber as fromNumber,
     make$3 as make,
-    from$1 as from,
+    from$2 as from,
     color_d_separate as separate,
     color_d_swap as swap,
     color_d_diff as diff,
@@ -996,7 +1008,7 @@ declare class Mixer implements DrawInfo {
     mix(color: ColorBase, fg?: number, bg?: number): this;
     add(color: ColorBase, fg?: number, bg?: number): this;
     separate(): this;
-    bake(): {
+    bake(clearDancing?: boolean): {
         ch: string | number;
         fg: number;
         bg: number;
@@ -1201,7 +1213,95 @@ declare namespace index_d$1 {
   };
 }
 
+interface LightType {
+    color: Color;
+    radius: Range;
+    fadeTo: number;
+    passThroughActors: boolean;
+}
+interface ActorType extends XY, Chainable {
+    x: number;
+    y: number;
+    readonly sprite: SpriteType;
+    readonly light: LightType | null;
+    isPlayer: () => boolean;
+    isDetected: () => boolean;
+    blocksVision: () => boolean;
+    avoidsCell: (cell: CellType) => boolean;
+    forbidsCell: (cell: CellType) => boolean;
+    delete: () => void;
+    rememberedInCell: CellType | null;
+    next: ActorType | null;
+}
+interface ItemType extends XY, Chainable {
+    x: number;
+    y: number;
+    quantity: number;
+    avoidsCell: (cell: CellType) => boolean;
+    forbidsCell: (cell: CellType) => boolean;
+    readonly sprite: SpriteType;
+    readonly light: LightType | null;
+    isDetected: () => boolean;
+    delete: () => void;
+    next: ItemType | null;
+}
+interface FxType extends XY, Chainable {
+    x: number;
+    y: number;
+    readonly sprite: SpriteType;
+    next: FxType | null;
+}
+interface TileType {
+    flags: number;
+    mechFlags: number;
+}
+interface CellType {
+    flags: number;
+    mechFlags: number;
+    tileFlags: () => number;
+    tileMechFlags: () => number;
+    actor: ActorType | null;
+    item: ItemType | null;
+    storeMemory: () => void;
+}
+interface MapType {
+    readonly width: number;
+    readonly height: number;
+    cell: (x: number, y: number) => CellType;
+}
+declare class Bounds {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    constructor(x: number, y: number, w: number, h: number);
+    contains(x: number, y: number): boolean;
+    contains(loc: Loc): boolean;
+}
+
+type types_d_LightType = LightType;
+type types_d_ActorType = ActorType;
+type types_d_ItemType = ItemType;
+type types_d_FxType = FxType;
+type types_d_TileType = TileType;
+type types_d_CellType = CellType;
+type types_d_MapType = MapType;
+type types_d_Bounds = Bounds;
+declare const types_d_Bounds: typeof Bounds;
+declare namespace types_d {
+  export {
+    types_d_LightType as LightType,
+    types_d_ActorType as ActorType,
+    types_d_ItemType as ItemType,
+    types_d_FxType as FxType,
+    types_d_TileType as TileType,
+    types_d_CellType as CellType,
+    types_d_MapType as MapType,
+    types_d_Bounds as Bounds,
+  };
+}
+
 declare const data: any;
 declare const config: any;
 
-export { Random, buffer_d as buffer, index_d as canvas, color_d as color, colors, config, cosmetic, data, events_d as events, flag_d as flag, flags, fov_d as fov, frequency_d as frequency, grid_d as grid, io_d as io, path_d as path, random, range_d as range, scheduler_d as scheduler, sprites, index_d$1 as text, utils_d as utils };
+export { Random, buffer_d as buffer, index_d as canvas, color_d as color, colors, config, cosmetic, data, events_d as events, flag_d as flag, flags, fov_d as fov, frequency_d as frequency, grid_d as grid, io_d as io, path_d as path, random, range_d as range, scheduler_d as scheduler, sprites, index_d$1 as text, types_d as types, utils_d as utils };

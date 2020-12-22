@@ -1,26 +1,19 @@
 import { random, Random } from "./random";
 
+export type RangeBase = Range | string | number[] | number;
+
 export class Range {
   public lo: number;
   public hi: number;
   public clumps: number;
   private _rng: Random;
 
-  constructor(
-    lower: number | Range | number[],
-    upper = 0,
-    clumps = 1,
-    rng?: Random
-  ) {
+  constructor(lower: number, upper = 0, clumps = 1, rng?: Random) {
     this._rng = rng || random;
     if (Array.isArray(lower)) {
       clumps = lower[2];
       upper = lower[1];
       lower = lower[0];
-    } else if (lower instanceof Range) {
-      clumps = lower.clumps;
-      upper = lower.hi;
-      lower = lower.lo;
     }
     if (upper < lower) {
       [upper, lower] = [lower, upper];
@@ -35,6 +28,14 @@ export class Range {
     return this._rng.clumped(this.lo, this.hi, this.clumps);
   }
 
+  copy(other: Range) {
+    this.lo = other.lo;
+    this.hi = other.hi;
+    this.clumps = other.clumps;
+    this._rng = other._rng;
+    return this;
+  }
+
   toString() {
     if (this.lo >= this.hi) {
       return "" + this.lo;
@@ -43,9 +44,9 @@ export class Range {
   }
 }
 
-export function make(config: Range | string | number[] | null, rng?: Random) {
+export function make(config: RangeBase | null, rng?: Random) {
   if (!config) return new Range(0, 0, 0, rng);
-  if (config instanceof Range) return config; // you can supply a custom range object
+  if (config instanceof Range) return config; // don't need to clone since they are immutable
   // if (config.value) return config;  // calc or damage
 
   if (typeof config == "function")
@@ -97,3 +98,5 @@ export function make(config: Range | string | number[] | null, rng?: Random) {
 
   throw new Error("Not a valid range - " + config);
 }
+
+export const from = make;

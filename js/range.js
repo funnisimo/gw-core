@@ -7,11 +7,6 @@ export class Range {
             upper = lower[1];
             lower = lower[0];
         }
-        else if (lower instanceof Range) {
-            clumps = lower.clumps;
-            upper = lower.hi;
-            lower = lower.lo;
-        }
         if (upper < lower) {
             [upper, lower] = [lower, upper];
         }
@@ -21,6 +16,13 @@ export class Range {
     }
     value() {
         return this._rng.clumped(this.lo, this.hi, this.clumps);
+    }
+    copy(other) {
+        this.lo = other.lo;
+        this.hi = other.hi;
+        this.clumps = other.clumps;
+        this._rng = other._rng;
+        return this;
     }
     toString() {
         if (this.lo >= this.hi) {
@@ -33,7 +35,7 @@ export function make(config, rng) {
     if (!config)
         return new Range(0, 0, 0, rng);
     if (config instanceof Range)
-        return config; // you can supply a custom range object
+        return config; // don't need to clone since they are immutable
     // if (config.value) return config;  // calc or damage
     if (typeof config == "function")
         throw new Error("Custom range functions not supported - extend Range");
@@ -81,4 +83,5 @@ export function make(config, rng) {
     }
     throw new Error("Not a valid range - " + config);
 }
+export const from = make;
 //# sourceMappingURL=range.js.map

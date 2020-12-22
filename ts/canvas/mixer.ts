@@ -133,9 +133,9 @@ export class Mixer implements DrawInfo {
     return this._changed();
   }
 
-  bake() {
-    this.fg.bake();
-    this.bg.bake();
+  bake(clearDancing = false) {
+    this.fg.bake(clearDancing);
+    this.bg.bake(clearDancing);
     this._changed();
     return {
       ch: this.ch,

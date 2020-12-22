@@ -25,7 +25,7 @@ export declare class Mixer implements DrawInfo {
     mix(color: Color.ColorBase, fg?: number, bg?: number): this;
     add(color: Color.ColorBase, fg?: number, bg?: number): this;
     separate(): this;
-    bake(): {
+    bake(clearDancing?: boolean): {
         ch: string | number;
         fg: number;
         bg: number;

@@ -35,7 +35,7 @@ export declare class Color extends Int16Array {
     mix(other: ColorBase, percent: number): this;
     lighten(percent: number): this | undefined;
     darken(percent: number): this | undefined;
-    bake(): this;
+    bake(clearDancing?: boolean): this | undefined;
     add(other: ColorBase, percent?: number): this;
     scale(percent: number): this;
     multiply(other: ColorData | Color): this;

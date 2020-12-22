@@ -214,16 +214,16 @@ function assignField(dest, src, key) {
         dest[key] = updated;
     }
 }
-// export function copyObject(dest, src) {
-//   Object.keys(dest).forEach( (key) => {
-//     assignField(dest, src, key);
-//   });
-// }
-// export function assignObject(dest, src) {
-//   Object.keys(src).forEach( (key) => {
-//     assignField(dest, src, key);
-//   });
-// }
+function copyObject(dest, src) {
+    Object.keys(dest).forEach((key) => {
+        assignField(dest, src, key);
+    });
+}
+function assignObject(dest, src) {
+    Object.keys(src).forEach((key) => {
+        assignField(dest, src, key);
+    });
+}
 function assignOmitting(omit, dest, src) {
     if (typeof omit === "string") {
         omit = omit.split(/[,|]/g).map((t) => t.trim());
@@ -514,6 +514,8 @@ var utils = {
     dirSpread: dirSpread,
     stepFromTo: stepFromTo,
     smoothHiliteGradient: smoothHiliteGradient,
+    copyObject: copyObject,
+    assignObject: assignObject,
     assignOmitting: assignOmitting,
     setDefault: setDefault,
     setDefaults: setDefaults,
@@ -697,11 +699,6 @@ class Range {
             upper = lower[1];
             lower = lower[0];
         }
-        else if (lower instanceof Range) {
-            clumps = lower.clumps;
-            upper = lower.hi;
-            lower = lower.lo;
-        }
         if (upper < lower) {
             [upper, lower] = [lower, upper];
         }
@@ -711,6 +708,13 @@ class Range {
     }
     value() {
         return this._rng.clumped(this.lo, this.hi, this.clumps);
+    }
+    copy(other) {
+        this.lo = other.lo;
+        this.hi = other.hi;
+        this.clumps = other.clumps;
+        this._rng = other._rng;
+        return this;
     }
     toString() {
         if (this.lo >= this.hi) {
@@ -723,7 +727,7 @@ function make(config, rng) {
     if (!config)
         return new Range(0, 0, 0, rng);
     if (config instanceof Range)
-        return config; // you can supply a custom range object
+        return config; // don't need to clone since they are immutable
     // if (config.value) return config;  // calc or damage
     if (typeof config == "function")
         throw new Error("Custom range functions not supported - extend Range");
@@ -771,11 +775,13 @@ function make(config, rng) {
     }
     throw new Error("Not a valid range - " + config);
 }
+const from = make;
 
 var range = {
     __proto__: null,
     Range: Range,
-    make: make
+    make: make,
+    from: from
 };
 
 ///////////////////////////////////
@@ -799,7 +805,7 @@ function toString(flagObj, value) {
     }
     return out.join(" | ");
 }
-function from(obj, ...args) {
+function from$1(obj, ...args) {
     let result = 0;
     for (let index = 0; index < args.length; ++index) {
         let value = args[index];
@@ -859,7 +865,7 @@ var flag = {
     __proto__: null,
     fl: fl,
     toString: toString,
-    from: from,
+    from: from$1,
     flags: flags,
     install: install
 };
@@ -2543,9 +2549,8 @@ function removeListener(event, fn, context, once = false) {
         return;
     }
     eachChain(EVENTS$1[event], (obj) => {
-        const l = obj;
-        if (l.matches(fn, context, once)) {
-            removeFromChain(EVENTS$1, event, l);
+        if (obj.matches(fn, context, once)) {
+            removeFromChain(EVENTS$1, event, obj);
         }
     });
 }
@@ -3619,7 +3624,7 @@ class Color extends Int16Array {
         else if (typeof other === "number") {
             return this.toInt() == other || this.toInt(true) == other;
         }
-        const O = from$1(other);
+        const O = from$2(other);
         if (this.isNull())
             return O.isNull();
         return this.every((v, i) => {
@@ -3631,7 +3636,7 @@ class Color extends Int16Array {
             this.set(other);
         }
         else {
-            const O = from$1(other);
+            const O = from$2(other);
             this.set(O);
         }
         if (other instanceof Color) {
@@ -3697,7 +3702,7 @@ class Color extends Int16Array {
         return this._changed();
     }
     mix(other, percent) {
-        const O = from$1(other);
+        const O = from$2(other);
         if (O.isNull())
             return this;
         if (this.isNull()) {
@@ -3737,9 +3742,12 @@ class Color extends Int16Array {
         }
         return this._changed();
     }
-    bake() {
+    bake(clearDancing = false) {
         if (this.isNull())
             return this;
+        if (this.dances && !clearDancing)
+            return;
+        this.dances = false;
         const d = this;
         if (d[3] + d[4] + d[5] + d[6]) {
             const rand = this._rand ? cosmetic.number(this._rand) : 0;
@@ -3758,7 +3766,7 @@ class Color extends Int16Array {
     }
     // Adds a color to this one
     add(other, percent = 100) {
-        const O = from$1(other);
+        const O = from$2(other);
         if (O.isNull())
             return this;
         if (this.isNull()) {
@@ -3905,7 +3913,7 @@ function make$3(...args) {
     }
     throw new Error("Failed to make color - unknown argument: " + JSON.stringify(arg));
 }
-function from$1(...args) {
+function from$2(...args) {
     const arg = args[0];
     if (arg instanceof Color)
         return arg;
@@ -4017,7 +4025,7 @@ var color = {
     fromName: fromName,
     fromNumber: fromNumber,
     make: make$3,
-    from: from$1,
+    from: from$2,
     separate: separate,
     swap: swap,
     diff: diff,
@@ -4030,9 +4038,9 @@ class Sprite {
         if (!ch && ch !== 0)
             ch = -1;
         if (typeof fg !== "number")
-            fg = from$1(fg);
+            fg = from$2(fg);
         if (typeof bg !== "number")
-            bg = from$1(bg);
+            bg = from$2(bg);
         this.ch = ch;
         this.fg = fg;
         this.bg = bg;
@@ -4078,13 +4086,13 @@ function makeSprite(...args) {
         }
     }
     if (typeof fg === "string")
-        fg = from$1(fg);
+        fg = from$2(fg);
     else if (Array.isArray(fg))
         fg = make$3(fg);
     else if (fg === undefined || fg === null)
         fg = -1;
     if (typeof bg === "string")
-        bg = from$1(bg);
+        bg = from$2(bg);
     else if (Array.isArray(bg))
         bg = make$3(bg);
     else if (bg === undefined || bg === null)
@@ -4142,11 +4150,11 @@ class Mixer {
             this.ch = ch;
         }
         if (fg !== -1 && fg !== null) {
-            fg = from$1(fg);
+            fg = from$2(fg);
             this.fg.copy(fg);
         }
         if (bg !== -1 && bg !== null) {
-            bg = from$1(bg);
+            bg = from$2(bg);
             this.bg.copy(bg);
         }
         return this._changed();
@@ -4171,7 +4179,7 @@ class Mixer {
         return this._changed();
     }
     multiply(color$1, fg = true, bg = true) {
-        color$1 = from$1(color$1);
+        color$1 = from$2(color$1);
         if (fg) {
             this.fg.multiply(color$1);
         }
@@ -4181,7 +4189,7 @@ class Mixer {
         return this._changed();
     }
     mix(color$1, fg = 50, bg = fg) {
-        color$1 = from$1(color$1);
+        color$1 = from$2(color$1);
         if (fg > 0) {
             this.fg.mix(color$1, fg);
         }
@@ -4191,7 +4199,7 @@ class Mixer {
         return this._changed();
     }
     add(color$1, fg = 100, bg = fg) {
-        color$1 = from$1(color$1);
+        color$1 = from$2(color$1);
         if (fg > 0) {
             this.fg.add(color$1, fg);
         }
@@ -4204,9 +4212,9 @@ class Mixer {
         separate(this.fg, this.bg);
         return this._changed();
     }
-    bake() {
-        this.fg.bake();
-        this.bg.bake();
+    bake(clearDancing = false) {
+        this.fg.bake(clearDancing);
+        this.bg.bake(clearDancing);
         this._changed();
         return {
             ch: this.ch,
@@ -4858,10 +4866,10 @@ class DataBuffer {
             glyph = this._toGlyph(glyph);
         }
         if (typeof fg !== "number") {
-            fg = from$1(fg).toInt();
+            fg = from$2(fg).toInt();
         }
         if (typeof bg !== "number") {
-            bg = from$1(bg).toInt();
+            bg = from$2(bg).toInt();
         }
         glyph = glyph >= 0 ? glyph & 0xff : current >> 24;
         bg = bg >= 0 ? bg & 0xfff : (current >> 12) & 0xfff;
@@ -4900,9 +4908,9 @@ class DataBuffer {
     }
     drawText(x, y, text, fg = 0xfff, bg = -1) {
         if (typeof fg !== "number")
-            fg = from$1(fg);
+            fg = from$2(fg);
         if (typeof bg !== "number")
-            bg = from$1(bg);
+            bg = from$2(bg);
         eachChar(text, (ch, fg0, bg0, i) => {
             if (x + i >= this.width)
                 return;
@@ -4912,9 +4920,9 @@ class DataBuffer {
     }
     wrapText(x, y, width, text, fg = 0xfff, bg = -1, indent = 0) {
         if (typeof fg !== "number")
-            fg = from$1(fg);
+            fg = from$2(fg);
         if (typeof bg !== "number")
-            bg = from$1(bg);
+            bg = from$2(bg);
         width = Math.min(width, this.width - x);
         text = wordWrap(text, width, indent);
         let xi = x;
@@ -4940,9 +4948,9 @@ class DataBuffer {
         if (typeof ch !== "number")
             ch = this._toGlyph(ch);
         if (typeof fg !== "number")
-            fg = from$1(fg).toInt();
+            fg = from$2(fg).toInt();
         if (typeof bg !== "number")
-            bg = from$1(bg).toInt();
+            bg = from$2(bg).toInt();
         for (let i = x; i < x + w; ++i) {
             for (let j = y; j < y + h; ++j) {
                 this.draw(i, j, ch, fg, bg);
@@ -4952,12 +4960,12 @@ class DataBuffer {
     }
     blackOutRect(x, y, w, h, bg = 0) {
         if (typeof bg !== "number")
-            bg = from$1(bg);
+            bg = from$2(bg);
         return this.fillRect(x, y, w, h, 0, 0, bg);
     }
     highlight(x, y, color$1, strength) {
         if (typeof color$1 !== "number") {
-            color$1 = from$1(color$1);
+            color$1 = from$2(color$1);
         }
         const mixer = new Mixer();
         const data = this.get(x, y);
@@ -4969,7 +4977,7 @@ class DataBuffer {
     }
     mix(color$1, percent) {
         if (typeof color$1 !== "number")
-            color$1 = from$1(color$1);
+            color$1 = from$2(color$1);
         const mixer = new Mixer();
         for (let x = 0; x < this.width; ++x) {
             for (let y = 0; y < this.height; ++y) {
@@ -5032,6 +5040,32 @@ var buffer = {
     Buffer: Buffer
 };
 
+class Bounds {
+    constructor(x, y, w, h) {
+        this.x = x;
+        this.y = y;
+        this.width = w;
+        this.height = h;
+    }
+    contains(...args) {
+        let x = args[0];
+        let y = args[1];
+        if (Array.isArray(x)) {
+            y = x[1];
+            x = x[0];
+        }
+        return (this.x <= x &&
+            this.y <= y &&
+            this.x + this.width > x &&
+            this.y + this.height > y);
+    }
+}
+
+var types = {
+    __proto__: null,
+    Bounds: Bounds
+};
+
 const data = {};
 const config = {};
 
@@ -5056,4 +5090,5 @@ exports.range = range;
 exports.scheduler = scheduler;
 exports.sprites = sprites;
 exports.text = index$1;
+exports.types = types;
 exports.utils = utils;
