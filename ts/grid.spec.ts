@@ -1,5 +1,5 @@
 import * as Grid from "./grid";
-import * as GW from "./gw";
+import * as GW from "./index";
 
 describe("GW.grid", () => {
   let a: Grid.NumGrid;

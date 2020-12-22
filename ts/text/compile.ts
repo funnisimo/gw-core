@@ -2,7 +2,7 @@ import * as Config from "./config";
 
 export type Args = Record<string, any>;
 
-type Template = (args: Args) => any;
+export type Template = (args: Args) => any;
 
 export function compile(template: string): Template {
   const F = Config.options.field;

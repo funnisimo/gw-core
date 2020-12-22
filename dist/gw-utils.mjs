@@ -687,6 +687,10 @@ class Random {
 const random = new Random();
 const cosmetic = new Random();
 
+const data = {};
+const config = {};
+const make = {};
+
 class Range {
     constructor(lower, upper = 0, clumps = 1, rng) {
         this._rng = rng || random;
@@ -719,7 +723,7 @@ class Range {
         return `${this.lo}-${this.hi}`;
     }
 }
-function make(config, rng) {
+function make$1(config, rng) {
     if (!config)
         return new Range(0, 0, 0, rng);
     if (config instanceof Range)
@@ -771,12 +775,13 @@ function make(config, rng) {
     }
     throw new Error("Not a valid range - " + config);
 }
-const from = make;
+make.range = make$1;
+const from = make$1;
 
 var range = {
     __proto__: null,
     Range: Range,
-    make: make,
+    make: make$1,
     from: from
 };
 
@@ -1504,13 +1509,14 @@ class NumGrid extends Grid {
 // Grid.fillBlob = fillBlob;
 const alloc = NumGrid.alloc.bind(NumGrid);
 const free = NumGrid.free.bind(NumGrid);
-function make$1(w, h, v) {
+function make$2(w, h, v) {
     if (v === undefined)
         return new NumGrid(w, h, 0);
     if (typeof v === "number")
         return new NumGrid(w, h, v);
     return new Grid(w, h, v);
 }
+make.grid = make$2;
 function offsetZip(destGrid, srcGrid, srcToDestX, srcToDestY, value) {
     const fn = typeof value === "function"
         ? value
@@ -1572,7 +1578,7 @@ var grid = {
     NumGrid: NumGrid,
     alloc: alloc,
     free: free,
-    make: make$1,
+    make: make$2,
     offsetZip: offsetZip,
     directionOfDoorSite: directionOfDoorSite,
     intersection: intersection,
@@ -2623,7 +2629,7 @@ var events = {
     emit: emit
 };
 
-function make$2(v) {
+function make$3(v) {
     if (v === undefined)
         return () => 100;
     if (v === null)
@@ -2673,7 +2679,7 @@ function make$2(v) {
 
 var frequency = {
     __proto__: null,
-    make: make$2
+    make: make$3
 };
 
 class Scheduler {
@@ -3879,7 +3885,7 @@ function fromNumber(val, base256 = false) {
     }
     return c;
 }
-function make$3(...args) {
+function make$4(...args) {
     let arg = args[0];
     let base256 = args[1];
     if (args.length == 0)
@@ -3909,6 +3915,7 @@ function make$3(...args) {
     }
     throw new Error("Failed to make color - unknown argument: " + JSON.stringify(arg));
 }
+make.color = make$4;
 function from$2(...args) {
     const arg = args[0];
     if (arg instanceof Color)
@@ -3920,7 +3927,7 @@ function from$2(...args) {
             return fromName(arg);
         }
     }
-    return make$3(arg, args[1]);
+    return make$4(arg, args[1]);
 }
 // adjusts the luminosity of 2 colors to ensure there is enough separation between them
 function separate(a, b) {
@@ -3966,7 +3973,7 @@ function install$1(name, ...args) {
     if (args.length == 1) {
         info = args[0];
     }
-    const c = info instanceof Color ? info : make$3(info);
+    const c = info instanceof Color ? info : make$4(info);
     colors[name] = c;
     c.name = name;
     return c;
@@ -4020,7 +4027,7 @@ var color = {
     fromCss: fromCss,
     fromName: fromName,
     fromNumber: fromNumber,
-    make: make$3,
+    make: make$4,
     from: from$2,
     separate: separate,
     swap: swap,
@@ -4084,17 +4091,18 @@ function makeSprite(...args) {
     if (typeof fg === "string")
         fg = from$2(fg);
     else if (Array.isArray(fg))
-        fg = make$3(fg);
+        fg = make$4(fg);
     else if (fg === undefined || fg === null)
         fg = -1;
     if (typeof bg === "string")
         bg = from$2(bg);
     else if (Array.isArray(bg))
-        bg = make$3(bg);
+        bg = make$4(bg);
     else if (bg === undefined || bg === null)
         bg = -1;
     return new Sprite(ch, fg, bg, opacity);
 }
+make.sprite = makeSprite;
 function installSprite(name, ...args) {
     let sprite;
     // @ts-ignore
@@ -4219,6 +4227,9 @@ class Mixer {
         };
     }
 }
+make.mixer = function () {
+    return new Mixer();
+};
 
 var index = {
     __proto__: null,
@@ -5062,7 +5073,144 @@ var types = {
     Bounds: Bounds
 };
 
-const data = {};
-const config = {};
+const templates = {};
+function install$2(id, msg) {
+    const template = compile(msg);
+    templates[id] = template;
+}
+function installAll(config) {
+    Object.entries(config).forEach(([id, msg]) => install$2(id, msg));
+}
+// messages
+const ARCHIVE = [];
+const CONFIRMED = [];
+var ARCHIVE_LINES = 30;
+var MSG_WIDTH = 80;
+var CURRENT_ARCHIVE_POS = 0;
+var NEEDS_UPDATE = false;
+let COMBAT_MESSAGE = null;
+function needsUpdate(needs) {
+    if (needs) {
+        NEEDS_UPDATE = true;
+    }
+    return NEEDS_UPDATE;
+}
+function configure$1(opts) {
+    if (!opts)
+        opts = {};
+    ARCHIVE_LINES = opts.length || 30;
+    MSG_WIDTH = opts.width || 80;
+    for (let i = 0; i < ARCHIVE_LINES; ++i) {
+        ARCHIVE[i] = null;
+        CONFIRMED[i] = false;
+    }
+}
+////////////////////////////////////
+// Messages
+function add(msg, args) {
+    const template = templates[msg];
+    if (template) {
+        msg = template(args);
+    }
+    else if (args) {
+        msg = apply(msg, args);
+    }
+    commitCombatMessage();
+    addMessage(msg);
+}
+function fromActor(actor, msg, args) {
+    if (actor.isPlayer() || actor.isVisible()) {
+        add(msg, args);
+    }
+}
+function addCombat(actor, msg, args) {
+    if (actor.isPlayer() || actor.isVisible()) {
+        const template = templates[msg];
+        if (template) {
+            msg = template(args);
+        }
+        else if (args) {
+            msg = apply(msg, args);
+        }
+        addCombatMessage(msg);
+    }
+}
+// function messageWithoutCaps(msg, requireAcknowledgment) {
+function addMessageLine(msg) {
+    if (!length(msg)) {
+        return;
+    }
+    // Add the message to the archive.
+    ARCHIVE[CURRENT_ARCHIVE_POS] = msg;
+    CONFIRMED[CURRENT_ARCHIVE_POS] = false;
+    CURRENT_ARCHIVE_POS = (CURRENT_ARCHIVE_POS + 1) % ARCHIVE_LINES;
+}
+function addMessage(msg) {
+    msg = capitalize(msg);
+    // // Implement the American quotation mark/period/comma ordering rule.
+    // for (i=0; text.text[i] && text.text[i+1]; i++) {
+    //     if (text.charCodeAt(i) === COLOR_ESCAPE) {
+    //         i += 4;
+    //     } else if (text.text[i] === '"'
+    //                && (text.text[i+1] === '.' || text.text[i+1] === ','))
+    // 		{
+    // 			const replace = text.text[i+1] + '"';
+    // 			text.spliceRaw(i, 2, replace);
+    //     }
+    // }
+    const lines = splitIntoLines(msg, MSG_WIDTH);
+    lines.forEach((l) => addMessageLine(l));
+    // display the message:
+    NEEDS_UPDATE = true;
+    // if (GAME.playbackMode) {
+    // 	GAME.playbackDelayThisTurn += GAME.playbackDelayPerTurn * 5;
+    // }
+}
+function addCombatMessage(msg) {
+    if (!COMBAT_MESSAGE) {
+        COMBAT_MESSAGE = msg;
+    }
+    else {
+        COMBAT_MESSAGE += ", " + capitalize(msg);
+    }
+    NEEDS_UPDATE = true;
+}
+function commitCombatMessage() {
+    if (!COMBAT_MESSAGE)
+        return false;
+    addMessage(COMBAT_MESSAGE + ".");
+    COMBAT_MESSAGE = null;
+    return true;
+}
+function confirmAll() {
+    for (let i = 0; i < CONFIRMED.length; i++) {
+        CONFIRMED[i] = true;
+    }
+    NEEDS_UPDATE = true;
+}
+function forEach(fn) {
+    for (let i = 0; i < ARCHIVE_LINES; ++i) {
+        const n = (i + CURRENT_ARCHIVE_POS) % ARCHIVE_LINES;
+        const msg = ARCHIVE[n];
+        if (!msg)
+            return;
+        if (!fn(msg, CONFIRMED[n], i))
+            return;
+    }
+}
 
-export { Random, buffer, index as canvas, color, colors, config, cosmetic, data, events, flag, flags, fov, frequency, grid, io, path, random, range, scheduler, sprites, index$1 as text, types, utils };
+var message = {
+    __proto__: null,
+    templates: templates,
+    install: install$2,
+    installAll: installAll,
+    needsUpdate: needsUpdate,
+    configure: configure$1,
+    add: add,
+    fromActor: fromActor,
+    addCombat: addCombat,
+    confirmAll: confirmAll,
+    forEach: forEach
+};
+
+export { Random, buffer, index as canvas, color, colors, config, cosmetic, data, events, flag, flags, fov, frequency, grid, io, make, message, path, random, range, scheduler, sprites, index$1 as text, types, utils };

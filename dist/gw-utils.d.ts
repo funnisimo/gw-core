@@ -1193,6 +1193,7 @@ declare const index_d$1_splitIntoLines: typeof splitIntoLines;
 declare const index_d$1_configure: typeof configure;
 declare const index_d$1_addHelper: typeof addHelper;
 declare const index_d$1_options: typeof options;
+type index_d$1_Template = Template;
 declare namespace index_d$1 {
   export {
     index_d$1_compile as compile,
@@ -1210,6 +1211,7 @@ declare namespace index_d$1 {
     index_d$1_configure as configure,
     index_d$1_addHelper as addHelper,
     index_d$1_options as options,
+    index_d$1_Template as Template,
   };
 }
 
@@ -1225,6 +1227,7 @@ interface ActorType extends XY, Chainable {
     readonly sprite: SpriteType;
     readonly light: LightType | null;
     isPlayer: () => boolean;
+    isVisible: () => boolean;
     isDetected: () => boolean;
     blocksVision: () => boolean;
     avoidsCell: (cell: CellType) => boolean;
@@ -1237,12 +1240,14 @@ interface ItemType extends XY, Chainable {
     x: number;
     y: number;
     quantity: number;
+    blocksMove: () => boolean;
     avoidsCell: (cell: CellType) => boolean;
     forbidsCell: (cell: CellType) => boolean;
     readonly sprite: SpriteType;
     readonly light: LightType | null;
     isDetected: () => boolean;
     delete: () => void;
+    clone: () => ItemType;
     next: ItemType | null;
 }
 interface FxType extends XY, Chainable {
@@ -1301,7 +1306,51 @@ declare namespace types_d {
   };
 }
 
+declare const templates: Record<string, Template>;
+declare function install$2(id: string, msg: string): void;
+declare function installAll(config: Record<string, string>): void;
+declare function needsUpdate(needs?: boolean): boolean;
+interface MessageOptions {
+    length: number;
+    width: number;
+}
+declare function configure$1(opts: Partial<MessageOptions>): void;
+declare function add(msg: string, args?: any): void;
+declare function fromActor(actor: ActorType, msg: string, args?: any): void;
+declare function addCombat(actor: ActorType, msg: string, args?: any): void;
+declare function confirmAll(): void;
+declare type EachMsgFn = (msg: string, confirmed: boolean, i: number) => boolean;
+declare function forEach(fn: EachMsgFn): void;
+
+declare const message_d_templates: typeof templates;
+declare const message_d_installAll: typeof installAll;
+declare const message_d_needsUpdate: typeof needsUpdate;
+type message_d_MessageOptions = MessageOptions;
+declare const message_d_add: typeof add;
+declare const message_d_fromActor: typeof fromActor;
+declare const message_d_addCombat: typeof addCombat;
+declare const message_d_confirmAll: typeof confirmAll;
+type message_d_EachMsgFn = EachMsgFn;
+declare const message_d_forEach: typeof forEach;
+declare namespace message_d {
+  export {
+    message_d_templates as templates,
+    install$2 as install,
+    message_d_installAll as installAll,
+    message_d_needsUpdate as needsUpdate,
+    message_d_MessageOptions as MessageOptions,
+    configure$1 as configure,
+    message_d_add as add,
+    message_d_fromActor as fromActor,
+    message_d_addCombat as addCombat,
+    message_d_confirmAll as confirmAll,
+    message_d_EachMsgFn as EachMsgFn,
+    message_d_forEach as forEach,
+  };
+}
+
 declare const data: any;
 declare const config: any;
+declare const make$4: any;
 
-export { Random, buffer_d as buffer, index_d as canvas, color_d as color, colors, config, cosmetic, data, events_d as events, flag_d as flag, flags, fov_d as fov, frequency_d as frequency, grid_d as grid, io_d as io, path_d as path, random, range_d as range, scheduler_d as scheduler, sprites, index_d$1 as text, types_d as types, utils_d as utils };
+export { Random, buffer_d as buffer, index_d as canvas, color_d as color, colors, config, cosmetic, data, events_d as events, flag_d as flag, flags, fov_d as fov, frequency_d as frequency, grid_d as grid, io_d as io, make$4 as make, message_d as message, path_d as path, random, range_d as range, scheduler_d as scheduler, sprites, index_d$1 as text, types_d as types, utils_d as utils };

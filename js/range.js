@@ -1,4 +1,5 @@
 import { random } from "./random";
+import { make as Make } from "./gw";
 export class Range {
     constructor(lower, upper = 0, clumps = 1, rng) {
         this._rng = rng || random;
@@ -83,5 +84,6 @@ export function make(config, rng) {
     }
     throw new Error("Not a valid range - " + config);
 }
+Make.range = make;
 export const from = make;
 //# sourceMappingURL=range.js.map

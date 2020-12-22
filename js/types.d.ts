@@ -14,6 +14,7 @@ export interface ActorType extends Utils.XY, Utils.Chainable {
     readonly sprite: SpriteType;
     readonly light: LightType | null;
     isPlayer: () => boolean;
+    isVisible: () => boolean;
     isDetected: () => boolean;
     blocksVision: () => boolean;
     avoidsCell: (cell: CellType) => boolean;
@@ -26,12 +27,14 @@ export interface ItemType extends Utils.XY, Utils.Chainable {
     x: number;
     y: number;
     quantity: number;
+    blocksMove: () => boolean;
     avoidsCell: (cell: CellType) => boolean;
     forbidsCell: (cell: CellType) => boolean;
     readonly sprite: SpriteType;
     readonly light: LightType | null;
     isDetected: () => boolean;
     delete: () => void;
+    clone: () => ItemType;
     next: ItemType | null;
 }
 export interface FxType extends Utils.XY, Utils.Chainable {

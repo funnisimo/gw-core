@@ -6,7 +6,7 @@ import {
   SeedFunction,
   Random,
 } from "./random";
-import * as GW from "./gw";
+import * as GW from "./index";
 
 function always(testFn: () => any, count = 1000) {
   for (let i = 0; i < count; ++i) {

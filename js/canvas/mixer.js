@@ -1,4 +1,5 @@
 import * as Color from "../color";
+import { make } from "../gw";
 export class Mixer {
     constructor() {
         this.ch = -1;
@@ -114,4 +115,7 @@ export class Mixer {
         };
     }
 }
+make.mixer = function () {
+    return new Mixer();
+};
 //# sourceMappingURL=mixer.js.map

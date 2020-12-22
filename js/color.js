@@ -1,4 +1,5 @@
 import { cosmetic } from "./random";
+import { make as Make } from "./gw";
 function toColorInt(r = 0, g = 0, b = 0, base256 = false) {
     if (base256) {
         r = Math.max(0, Math.min(255, Math.round(r * 2.550001)));
@@ -400,6 +401,7 @@ export function make(...args) {
     }
     throw new Error("Failed to make color - unknown argument: " + JSON.stringify(arg));
 }
+Make.color = make;
 export function from(...args) {
     const arg = args[0];
     if (arg instanceof Color)

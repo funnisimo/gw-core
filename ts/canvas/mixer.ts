@@ -1,4 +1,5 @@
 import * as Color from "../color";
+import { make } from "../gw";
 
 export interface DrawInfo {
   ch: string | number;
@@ -144,3 +145,7 @@ export class Mixer implements DrawInfo {
     };
   }
 }
+
+make.mixer = function () {
+  return new Mixer();
+};

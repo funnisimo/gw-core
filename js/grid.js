@@ -1,5 +1,6 @@
 import { random } from "./random";
 import * as Utils from "./utils";
+import { make as Make } from "./gw";
 const DIRS = Utils.DIRS;
 const CDIRS = Utils.CLOCK_DIRS;
 export function makeArray(l, fn) {
@@ -660,6 +661,7 @@ export function make(w, h, v) {
         return new NumGrid(w, h, v);
     return new Grid(w, h, v);
 }
+Make.grid = make;
 export function offsetZip(destGrid, srcGrid, srcToDestX, srcToDestY, value) {
     const fn = typeof value === "function"
         ? value

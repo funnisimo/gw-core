@@ -1,4 +1,4 @@
-import { compile, apply } from "./compile";
+import { compile, apply, Template } from "./compile";
 import { eachChar } from "./each";
 import {
   length,
@@ -55,4 +55,5 @@ export {
   configure,
   addHelper,
   options,
+  Template,
 };

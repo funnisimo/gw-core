@@ -15,6 +15,7 @@ export interface ActorType extends Utils.XY, Utils.Chainable {
   readonly sprite: SpriteType;
   readonly light: LightType | null;
   isPlayer: () => boolean;
+  isVisible: () => boolean;
   isDetected: () => boolean;
   blocksVision: () => boolean; // kind.flags & Flags.ActorKind.AK_BLOCKS_VISION
 
@@ -32,6 +33,7 @@ export interface ItemType extends Utils.XY, Utils.Chainable {
   x: number;
   y: number;
   quantity: number;
+  blocksMove: () => boolean;
   avoidsCell: (cell: CellType) => boolean;
   forbidsCell: (cell: CellType) => boolean;
   // if (cell.flags & Flags.Cell.HAS_ITEM) return false;
@@ -41,6 +43,7 @@ export interface ItemType extends Utils.XY, Utils.Chainable {
   readonly light: LightType | null;
   isDetected: () => boolean; // flags & Flags.Item.ITEM_MAGIC_DETECTED && GW.item.magicChar(theItem)
   delete: () => void;
+  clone: () => ItemType;
   next: ItemType | null;
 }
 

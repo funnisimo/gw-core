@@ -1,4 +1,4 @@
-import * as GW from "./gw";
+import * as GW from "./index";
 
 const Fl = GW.flag.fl;
 

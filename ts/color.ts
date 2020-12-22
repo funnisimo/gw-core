@@ -1,4 +1,5 @@
 import { cosmetic } from "./random";
+import { make as Make } from "./gw";
 
 type ColorData = number[];
 export type ColorBase = string | number | Color | ColorData;
@@ -462,6 +463,8 @@ export function make(...args: any[]): Color {
     "Failed to make color - unknown argument: " + JSON.stringify(arg)
   );
 }
+
+Make.color = make;
 
 export function from(): Color;
 export function from(rgb: number, base256?: boolean): Color;

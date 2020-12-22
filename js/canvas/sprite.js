@@ -1,4 +1,5 @@
 import * as Color from "../color";
+import { make } from "../gw";
 export class Sprite {
     constructor(ch, fg, bg, opacity) {
         if (!ch && ch !== 0)
@@ -65,6 +66,7 @@ export function makeSprite(...args) {
         bg = -1;
     return new Sprite(ch, fg, bg, opacity);
 }
+make.sprite = makeSprite;
 export function installSprite(name, ...args) {
     let sprite;
     // @ts-ignore

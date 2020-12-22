@@ -6,7 +6,7 @@ import dts from "rollup-plugin-dts";
 
 export default [
 {
-  input: 'js/gw.js',
+  input: 'js/index.js',
   output: [{
     file: 'dist/gw-utils.min.js',
     format: 'umd',
@@ -29,7 +29,7 @@ export default [
   ]
 },
 {
-  input: "./js/gw.d.ts",
+  input: "./js/index.d.ts",
   output: [{ file: "dist/gw-utils.d.ts", format: "es" }],
   plugins: [dts()],
 },

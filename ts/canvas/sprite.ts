@@ -1,5 +1,6 @@
 import * as Color from "../color";
 import { SpriteType } from "./mixer";
+import { make } from "../gw";
 
 export interface SpriteConfig {
   ch?: string | number | null;
@@ -91,6 +92,8 @@ export function makeSprite(...args: any[]) {
 
   return new Sprite(ch, fg, bg, opacity);
 }
+
+make.sprite = makeSprite;
 
 export function installSprite(
   name: string,
