@@ -801,86 +801,6 @@ declare class Glyphs {
     _initGlyphs(basicOnly?: boolean): void;
 }
 
-interface CanvasOptions {
-    width?: number;
-    height?: number;
-    glyphs: Glyphs;
-    div?: HTMLElement | string;
-    render?: boolean;
-}
-interface ImageOptions extends CanvasOptions {
-    image: HTMLImageElement | string;
-}
-declare type FontOptions = CanvasOptions & GlyphOptions;
-declare class NotSupportedError extends Error {
-    constructor(...params: any[]);
-}
-declare abstract class BaseCanvas {
-    protected _data: Uint32Array;
-    protected _renderRequested: boolean;
-    protected _glyphs: Glyphs;
-    protected _autoRender: boolean;
-    protected _node: HTMLCanvasElement;
-    protected _width: number;
-    protected _height: number;
-    constructor(options: CanvasOptions);
-    get node(): HTMLCanvasElement;
-    get width(): number;
-    get height(): number;
-    get tileWidth(): number;
-    get tileHeight(): number;
-    get pxWidth(): number;
-    get pxHeight(): number;
-    get glyphs(): Glyphs;
-    set glyphs(glyphs: Glyphs);
-    toGlyph(ch: string): number;
-    protected _createNode(): HTMLCanvasElement;
-    protected abstract _createContext(): void;
-    private _configure;
-    protected _setGlyphs(glyphs: Glyphs): boolean;
-    resize(width: number, height: number): void;
-    draw(x: number, y: number, glyph: number, fg: number, bg: number): void;
-    protected _requestRender(): void;
-    protected _set(x: number, y: number, style: number): boolean;
-    copy(data: Uint32Array): void;
-    copyTo(data: Uint32Array): void;
-    abstract render(): void;
-    hasXY(x: number, y: number): boolean;
-    toX(x: number): number;
-    toY(y: number): number;
-}
-declare class Canvas extends BaseCanvas {
-    private _gl;
-    private _buffers;
-    private _attribs;
-    private _uniforms;
-    private _texture;
-    constructor(options: CanvasOptions);
-    protected _createContext(): void;
-    private _createGeometry;
-    private _createData;
-    protected _setGlyphs(glyphs: Glyphs): boolean;
-    _uploadGlyphs(): void;
-    resize(width: number, height: number): void;
-    protected _set(x: number, y: number, style: number): boolean;
-    copy(data: Uint32Array): void;
-    copyTo(data: Uint32Array): void;
-    render(): void;
-}
-declare class Canvas2D extends BaseCanvas {
-    private _ctx;
-    private _changed;
-    constructor(options: CanvasOptions);
-    protected _createContext(): void;
-    protected _set(x: number, y: number, style: number): boolean;
-    resize(width: number, height: number): void;
-    copy(data: Uint32Array): void;
-    render(): void;
-    protected _renderCell(index: number): void;
-}
-declare function withImage(image: ImageOptions | HTMLImageElement | string): Canvas | Canvas2D;
-declare function withFont(src: FontOptions | string): Canvas | Canvas2D;
-
 declare type ColorData = number[];
 declare type ColorBase = string | number | Color | ColorData;
 declare const colors: Record<string, Color>;
@@ -982,6 +902,146 @@ declare namespace color_d {
     color_d_installSpread as installSpread,
   };
 }
+
+interface Data {
+    ch: number;
+    fg: number;
+    bg: number;
+}
+declare class DataBuffer {
+    private _data;
+    private _width;
+    private _height;
+    constructor(width: number, height: number);
+    get data(): Uint32Array;
+    get width(): number;
+    get height(): number;
+    get(x: number, y: number): Data;
+    protected _toGlyph(ch: string): number;
+    draw(x: number, y: number, glyph?: number | string, fg?: ColorBase, // TODO - White?
+    bg?: ColorBase): this;
+    drawSprite(x: number, y: number, sprite: Partial<DrawInfo>): this;
+    blackOut(x: number, y: number): void;
+    blackOut(): void;
+    fill(glyph?: number | string, fg?: number, bg?: number): this;
+    copy(other: DataBuffer): this;
+    drawText(x: number, y: number, text: string, fg?: ColorBase, bg?: ColorBase): number;
+    wrapText(x: number, y: number, width: number, text: string, fg?: Color | number | string, bg?: Color | number | string, indent?: number): number;
+    fillRect(x: number, y: number, w: number, h: number, ch?: string | number | null, fg?: ColorBase | null, bg?: ColorBase | null): this;
+    blackOutRect(x: number, y: number, w: number, h: number, bg?: ColorBase): this;
+    highlight(x: number, y: number, color: ColorBase, strength: number): this;
+    mix(color: ColorBase, percent: number): this;
+    dump(): void;
+}
+interface BufferTarget {
+    readonly width: number;
+    readonly height: number;
+    copyTo(dest: Uint32Array): void;
+    copy(src: Uint32Array): void;
+    toGlyph(ch: string): number;
+}
+declare class Buffer extends DataBuffer {
+    private _target;
+    constructor(canvas: BufferTarget);
+    _toGlyph(ch: string): number;
+    render(): this;
+    load(): this;
+}
+
+type buffer_d_Data = Data;
+type buffer_d_DataBuffer = DataBuffer;
+declare const buffer_d_DataBuffer: typeof DataBuffer;
+type buffer_d_BufferTarget = BufferTarget;
+type buffer_d_Buffer = Buffer;
+declare const buffer_d_Buffer: typeof Buffer;
+declare namespace buffer_d {
+  export {
+    buffer_d_Data as Data,
+    buffer_d_DataBuffer as DataBuffer,
+    buffer_d_BufferTarget as BufferTarget,
+    buffer_d_Buffer as Buffer,
+  };
+}
+
+interface CanvasOptions {
+    width?: number;
+    height?: number;
+    glyphs: Glyphs;
+    div?: HTMLElement | string;
+    render?: boolean;
+}
+interface ImageOptions extends CanvasOptions {
+    image: HTMLImageElement | string;
+}
+declare type FontOptions = CanvasOptions & GlyphOptions;
+declare class NotSupportedError extends Error {
+    constructor(...params: any[]);
+}
+declare abstract class BaseCanvas implements BufferTarget {
+    protected _data: Uint32Array;
+    protected _renderRequested: boolean;
+    protected _glyphs: Glyphs;
+    protected _autoRender: boolean;
+    protected _node: HTMLCanvasElement;
+    protected _width: number;
+    protected _height: number;
+    constructor(options: CanvasOptions);
+    get node(): HTMLCanvasElement;
+    get width(): number;
+    get height(): number;
+    get tileWidth(): number;
+    get tileHeight(): number;
+    get pxWidth(): number;
+    get pxHeight(): number;
+    get glyphs(): Glyphs;
+    set glyphs(glyphs: Glyphs);
+    toGlyph(ch: string): number;
+    protected _createNode(): HTMLCanvasElement;
+    protected abstract _createContext(): void;
+    private _configure;
+    protected _setGlyphs(glyphs: Glyphs): boolean;
+    resize(width: number, height: number): void;
+    draw(x: number, y: number, glyph: number, fg: number, bg: number): void;
+    protected _requestRender(): void;
+    protected _set(x: number, y: number, style: number): boolean;
+    copy(data: Uint32Array): void;
+    copyTo(data: Uint32Array): void;
+    abstract render(): void;
+    hasXY(x: number, y: number): boolean;
+    toX(x: number): number;
+    toY(y: number): number;
+}
+declare class Canvas extends BaseCanvas {
+    private _gl;
+    private _buffers;
+    private _attribs;
+    private _uniforms;
+    private _texture;
+    constructor(options: CanvasOptions);
+    protected _createContext(): void;
+    private _createGeometry;
+    private _createData;
+    protected _setGlyphs(glyphs: Glyphs): boolean;
+    _uploadGlyphs(): void;
+    resize(width: number, height: number): void;
+    protected _set(x: number, y: number, style: number): boolean;
+    copy(data: Uint32Array): void;
+    copyTo(data: Uint32Array): void;
+    render(): void;
+}
+declare class Canvas2D extends BaseCanvas {
+    private _ctx;
+    private _changed;
+    constructor(options: CanvasOptions);
+    protected _createContext(): void;
+    protected _set(x: number, y: number, style: number): boolean;
+    resize(width: number, height: number): void;
+    copy(data: Uint32Array): void;
+    render(): void;
+    protected _renderCell(index: number): void;
+}
+declare function withImage(image: ImageOptions | HTMLImageElement | string): Canvas | Canvas2D;
+declare function withFont(src: FontOptions | string): Canvas | Canvas2D;
 
 interface DrawInfo {
     ch: string | number;
@@ -1088,66 +1148,6 @@ declare namespace index_d {
     index_d_Mixer as Mixer,
     index_d_GlyphOptions as GlyphOptions,
     index_d_Glyphs as Glyphs,
-  };
-}
-
-interface Data {
-    ch: number;
-    fg: number;
-    bg: number;
-}
-declare class DataBuffer {
-    private _data;
-    private _width;
-    private _height;
-    constructor(width: number, height: number);
-    get data(): Uint32Array;
-    get width(): number;
-    get height(): number;
-    get(x: number, y: number): Data;
-    protected _toGlyph(ch: string): number;
-    draw(x: number, y: number, glyph?: number | string, fg?: ColorBase, // TODO - White?
-    bg?: ColorBase): this;
-    drawSprite(x: number, y: number, sprite: Partial<DrawInfo>): this;
-    blackOut(x: number, y: number): void;
-    blackOut(): void;
-    fill(glyph?: number | string, fg?: number, bg?: number): this;
-    copy(other: DataBuffer): this;
-    drawText(x: number, y: number, text: string, fg?: ColorBase, bg?: ColorBase): number;
-    wrapText(x: number, y: number, width: number, text: string, fg?: Color | number | string, bg?: Color | number | string, indent?: number): number;
-    fillRect(x: number, y: number, w: number, h: number, ch?: string | number | null, fg?: ColorBase | null, bg?: ColorBase | null): this;
-    blackOutRect(x: number, y: number, w: number, h: number, bg?: ColorBase): this;
-    highlight(x: number, y: number, color: ColorBase, strength: number): this;
-    mix(color: ColorBase, percent: number): this;
-    dump(): void;
-}
-interface BufferTarget {
-    readonly width: number;
-    readonly height: number;
-    copyTo(dest: Uint32Array): void;
-    copy(src: Uint32Array): void;
-    toGlyph(ch: string): number;
-}
-declare class Buffer extends DataBuffer {
-    private _target;
-    constructor(canvas: BufferTarget);
-    _toGlyph(ch: string): number;
-    render(): this;
-    load(): this;
-}
-
-type buffer_d_Data = Data;
-type buffer_d_DataBuffer = DataBuffer;
-declare const buffer_d_DataBuffer: typeof DataBuffer;
-type buffer_d_BufferTarget = BufferTarget;
-type buffer_d_Buffer = Buffer;
-declare const buffer_d_Buffer: typeof Buffer;
-declare namespace buffer_d {
-  export {
-    buffer_d_Data as Data,
-    buffer_d_DataBuffer as DataBuffer,
-    buffer_d_BufferTarget as BufferTarget,
-    buffer_d_Buffer as Buffer,
   };
 }
 
