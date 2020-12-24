@@ -63,7 +63,8 @@ export declare function from(arrayLike: ArrayLike<number>, base256?: boolean): C
 export declare function from(...rgb: number[]): Color;
 export declare function separate(a: Color, b: Color): void;
 export declare function swap(a: Color, b: Color): void;
-export declare function diff(a: Color, b: Color): number;
+export declare function relativeLuminance(a: Color, b: Color): number;
+export declare function distance(a: Color, b: Color): number;
 export declare function install(name: string, info: ColorBase): Color;
 export declare function install(name: string, ...rgb: number[]): Color;
 export declare function installSpread(name: string, info: ColorBase): Color;

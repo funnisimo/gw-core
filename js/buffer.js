@@ -1,4 +1,4 @@
-import { Mixer } from "./canvas/index";
+import { Mixer } from "./canvas/mixer";
 import * as Color from "./color";
 import * as Text from "./text/index";
 export class DataBuffer {

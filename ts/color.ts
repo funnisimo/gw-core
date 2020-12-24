@@ -127,9 +127,8 @@ export class Color extends Int16Array {
 
   equals(other: ColorBase) {
     if (typeof other === "string") {
-      return other.length > 4
-        ? this.toString(true) == other
-        : this.toString() == other;
+      if (!other.startsWith("#")) return this.name == other;
+      return this.css(other.length > 4) == other;
     } else if (typeof other === "number") {
       return this.toInt() == other || this.toInt(true) == other;
     }
@@ -456,7 +455,6 @@ export function make(...args: any[]): Color {
   } else if (Array.isArray(arg)) {
     return fromArray(arg, base256);
   } else if (typeof arg === "number") {
-    if (arg < 0) return new Color(-1);
     return fromNumber(arg, base256);
   }
   throw new Error(
@@ -474,7 +472,7 @@ export function from(...rgb: number[]): Color; // TODO - Remove!
 export function from(...args: any[]): Color {
   const arg = args[0];
   if (arg instanceof Color) return arg;
-  if (arg < 0 || arg === undefined) return new Color(-1);
+  if (arg === undefined) return new Color(-1);
   if (typeof arg === "string") {
     if (!arg.startsWith("#")) {
       return fromName(arg);
@@ -524,11 +522,23 @@ export function swap(a: Color, b: Color) {
   b.copy(temp);
 }
 
-export function diff(a: Color, b: Color) {
+export function relativeLuminance(a: Color, b: Color) {
   return Math.round(
-    (a.r - b.r) * (a.r - b.r) * 0.2126 +
-      (a.g - b.g) * (a.g - b.g) * 0.7152 +
-      (a.b - b.b) * (a.b - b.b) * 0.0722
+    (100 *
+      ((a.r - b.r) * (a.r - b.r) * 0.2126 +
+        (a.g - b.g) * (a.g - b.g) * 0.7152 +
+        (a.b - b.b) * (a.b - b.b) * 0.0722)) /
+      65025
+  );
+}
+
+export function distance(a: Color, b: Color) {
+  return Math.round(
+    (100 *
+      ((a.r - b.r) * (a.r - b.r) * 0.3333 +
+        (a.g - b.g) * (a.g - b.g) * 0.3333 +
+        (a.b - b.b) * (a.b - b.b) * 0.3333)) /
+      65025
   );
 }
 

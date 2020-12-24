@@ -1,4 +1,4 @@
-import { Mixer, DrawInfo } from "./canvas/index";
+import { Mixer, DrawInfo } from "./canvas/mixer";
 import * as Color from "./color";
 import * as Text from "./text/index";
 

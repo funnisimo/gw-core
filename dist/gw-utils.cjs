@@ -3626,9 +3626,9 @@ class Color extends Int16Array {
     }
     equals(other) {
         if (typeof other === "string") {
-            return other.length > 4
-                ? this.toString(true) == other
-                : this.toString() == other;
+            if (!other.startsWith("#"))
+                return this.name == other;
+            return this.css(other.length > 4) == other;
         }
         else if (typeof other === "number") {
             return this.toInt() == other || this.toInt(true) == other;
@@ -3916,8 +3916,6 @@ function make$4(...args) {
         return fromArray(arg, base256);
     }
     else if (typeof arg === "number") {
-        if (arg < 0)
-            return new Color(-1);
         return fromNumber(arg, base256);
     }
     throw new Error("Failed to make color - unknown argument: " + JSON.stringify(arg));
@@ -3927,7 +3925,7 @@ function from$2(...args) {
     const arg = args[0];
     if (arg instanceof Color)
         return arg;
-    if (arg < 0 || arg === undefined)
+    if (arg === undefined)
         return new Color(-1);
     if (typeof arg === "string") {
         if (!arg.startsWith("#")) {
@@ -3970,10 +3968,19 @@ function swap(a, b) {
     a.copy(b);
     b.copy(temp);
 }
-function diff(a, b) {
-    return Math.round((a.r - b.r) * (a.r - b.r) * 0.2126 +
-        (a.g - b.g) * (a.g - b.g) * 0.7152 +
-        (a.b - b.b) * (a.b - b.b) * 0.0722);
+function relativeLuminance(a, b) {
+    return Math.round((100 *
+        ((a.r - b.r) * (a.r - b.r) * 0.2126 +
+            (a.g - b.g) * (a.g - b.g) * 0.7152 +
+            (a.b - b.b) * (a.b - b.b) * 0.0722)) /
+        65025);
+}
+function distance(a, b) {
+    return Math.round((100 *
+        ((a.r - b.r) * (a.r - b.r) * 0.3333 +
+            (a.g - b.g) * (a.g - b.g) * 0.3333 +
+            (a.b - b.b) * (a.b - b.b) * 0.3333)) /
+        65025);
 }
 function install$1(name, ...args) {
     let info = args;
@@ -4038,7 +4045,8 @@ var color = {
     from: from$2,
     separate: separate,
     swap: swap,
-    diff: diff,
+    relativeLuminance: relativeLuminance,
+    distance: distance,
     install: install$1,
     installSpread: installSpread
 };

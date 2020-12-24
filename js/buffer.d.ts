@@ -1,4 +1,4 @@
-import { DrawInfo } from "./canvas/index";
+import { DrawInfo } from "./canvas/mixer";
 import * as Color from "./color";
 export interface Data {
     ch: number;

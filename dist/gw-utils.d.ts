@@ -866,7 +866,8 @@ declare function from$2(arrayLike: ArrayLike<number>, base256?: boolean): Color;
 declare function from$2(...rgb: number[]): Color;
 declare function separate(a: Color, b: Color): void;
 declare function swap(a: Color, b: Color): void;
-declare function diff(a: Color, b: Color): number;
+declare function relativeLuminance(a: Color, b: Color): number;
+declare function distance(a: Color, b: Color): number;
 declare function install$1(name: string, info: ColorBase): Color;
 declare function install$1(name: string, ...rgb: number[]): Color;
 declare function installSpread(name: string, info: ColorBase): Color;
@@ -882,7 +883,8 @@ declare const color_d_fromName: typeof fromName;
 declare const color_d_fromNumber: typeof fromNumber;
 declare const color_d_separate: typeof separate;
 declare const color_d_swap: typeof swap;
-declare const color_d_diff: typeof diff;
+declare const color_d_relativeLuminance: typeof relativeLuminance;
+declare const color_d_distance: typeof distance;
 declare const color_d_installSpread: typeof installSpread;
 declare namespace color_d {
   export {
@@ -897,10 +899,44 @@ declare namespace color_d {
     from$2 as from,
     color_d_separate as separate,
     color_d_swap as swap,
-    color_d_diff as diff,
+    color_d_relativeLuminance as relativeLuminance,
+    color_d_distance as distance,
     install$1 as install,
     color_d_installSpread as installSpread,
   };
+}
+
+interface DrawInfo {
+    ch: string | number;
+    fg: Color | number;
+    bg: Color | number;
+}
+interface SpriteType extends DrawInfo {
+    opacity?: number;
+}
+declare class Mixer implements DrawInfo {
+    ch: string | number;
+    fg: Color;
+    bg: Color;
+    constructor();
+    protected _changed(): this;
+    copy(other: Mixer): this;
+    clone(): Mixer;
+    equals(other: Mixer): boolean;
+    nullify(): this;
+    blackOut(): this;
+    draw(ch?: string | number, fg?: ColorBase, bg?: ColorBase): this;
+    drawSprite(info: SpriteType, opacity?: number): this | undefined;
+    invert(): this;
+    multiply(color: ColorBase, fg?: boolean, bg?: boolean): this;
+    mix(color: ColorBase, fg?: number, bg?: number): this;
+    add(color: ColorBase, fg?: number, bg?: number): this;
+    separate(): this;
+    bake(clearDancing?: boolean): {
+        ch: string | number;
+        fg: number;
+        bg: number;
+    };
 }
 
 interface Data {
@@ -1042,39 +1078,6 @@ declare class Canvas2D extends BaseCanvas {
 }
 declare function withImage(image: ImageOptions | HTMLImageElement | string): Canvas | Canvas2D;
 declare function withFont(src: FontOptions | string): Canvas | Canvas2D;
-
-interface DrawInfo {
-    ch: string | number;
-    fg: Color | number;
-    bg: Color | number;
-}
-interface SpriteType extends DrawInfo {
-    opacity?: number;
-}
-declare class Mixer implements DrawInfo {
-    ch: string | number;
-    fg: Color;
-    bg: Color;
-    constructor();
-    protected _changed(): this;
-    copy(other: Mixer): this;
-    clone(): Mixer;
-    equals(other: Mixer): boolean;
-    nullify(): this;
-    blackOut(): this;
-    draw(ch?: string | number, fg?: ColorBase, bg?: ColorBase): this;
-    drawSprite(info: SpriteType, opacity?: number): this | undefined;
-    invert(): this;
-    multiply(color: ColorBase, fg?: boolean, bg?: boolean): this;
-    mix(color: ColorBase, fg?: number, bg?: number): this;
-    add(color: ColorBase, fg?: number, bg?: number): this;
-    separate(): this;
-    bake(clearDancing?: boolean): {
-        ch: string | number;
-        fg: number;
-        bg: number;
-    };
-}
 
 interface SpriteConfig {
     ch?: string | number | null;
