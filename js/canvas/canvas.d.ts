@@ -31,6 +31,7 @@ export declare abstract class BaseCanvas {
     get pxHeight(): number;
     get glyphs(): Glyphs;
     set glyphs(glyphs: Glyphs);
+    toGlyph(ch: string): number;
     protected _createNode(): HTMLCanvasElement;
     protected abstract _createContext(): void;
     private _configure;

@@ -1,4 +1,4 @@
-import { Canvas, Mixer, DrawInfo } from "./canvas/index";
+import { Mixer, DrawInfo } from "./canvas/index";
 import * as Color from "./color";
 import * as Text from "./text/index";
 
@@ -39,7 +39,7 @@ export class DataBuffer {
   }
 
   protected _toGlyph(ch: string) {
-    if (ch === null || ch === undefined) return -1;
+    if (!ch) return -1; // 0 handled elsewhere
     return ch.charCodeAt(0);
   }
 
@@ -172,7 +172,7 @@ export class DataBuffer {
     w: number,
     h: number,
     ch: string | number | null = -1,
-    fg: Color.ColorBase | null = 0xfff,
+    fg: Color.ColorBase | null = -1,
     bg: Color.ColorBase | null = -1
   ) {
     if (ch === null) ch = -1;
@@ -251,28 +251,36 @@ export class DataBuffer {
   }
 }
 
-export class Buffer extends DataBuffer {
-  private _canvas: Canvas;
+export interface BufferTarget {
+  readonly width: number;
+  readonly height: number;
+  copyTo(dest: Uint32Array): void;
+  copy(src: Uint32Array): void;
+  toGlyph(ch: string): number;
+}
 
-  constructor(canvas: Canvas) {
+export class Buffer extends DataBuffer {
+  private _target: BufferTarget;
+
+  constructor(canvas: BufferTarget) {
     super(canvas.width, canvas.height);
-    this._canvas = canvas;
+    this._target = canvas;
     canvas.copyTo(this.data);
   }
 
-  // get canvas() { return this._canvas; }
+  // get canvas() { return this._target; }
 
   _toGlyph(ch: string) {
-    return this._canvas.glyphs.forChar(ch);
+    return this._target.toGlyph(ch);
   }
 
   render() {
-    this._canvas.copy(this.data);
+    this._target.copy(this.data);
     return this;
   }
 
-  copyFromCanvas() {
-    this._canvas.copyTo(this.data);
+  load() {
+    this._target.copyTo(this.data);
     return this;
   }
 }

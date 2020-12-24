@@ -1,4 +1,4 @@
-import { Canvas, DrawInfo } from "./canvas/index";
+import { DrawInfo } from "./canvas/index";
 import * as Color from "./color";
 export interface Data {
     ch: number;
@@ -30,10 +30,17 @@ export declare class DataBuffer {
     mix(color: Color.ColorBase, percent: number): this;
     dump(): void;
 }
+export interface BufferTarget {
+    readonly width: number;
+    readonly height: number;
+    copyTo(dest: Uint32Array): void;
+    copy(src: Uint32Array): void;
+    toGlyph(ch: string): number;
+}
 export declare class Buffer extends DataBuffer {
-    private _canvas;
-    constructor(canvas: Canvas);
+    private _target;
+    constructor(canvas: BufferTarget);
     _toGlyph(ch: string): number;
     render(): this;
-    copyFromCanvas(): this;
+    load(): this;
 }

@@ -3155,6 +3155,9 @@ class BaseCanvas {
     set glyphs(glyphs) {
         this._setGlyphs(glyphs);
     }
+    toGlyph(ch) {
+        return this._glyphs.forChar(ch);
+    }
     _createNode() {
         return document.createElement("canvas");
     }
@@ -4860,8 +4863,8 @@ class DataBuffer {
         return { ch, fg, bg };
     }
     _toGlyph(ch) {
-        if (ch === null || ch === undefined)
-            return -1;
+        if (!ch)
+            return -1; // 0 handled elsewhere
         return ch.charCodeAt(0);
     }
     draw(x, y, glyph = -1, fg = -1, // TODO - White?
@@ -4949,7 +4952,7 @@ class DataBuffer {
         }
         return ++y;
     }
-    fillRect(x, y, w, h, ch = -1, fg = 0xfff, bg = -1) {
+    fillRect(x, y, w, h, ch = -1, fg = -1, bg = -1) {
         if (ch === null)
             ch = -1;
         if (typeof ch !== "number")
@@ -5024,19 +5027,19 @@ class DataBuffer {
 class Buffer extends DataBuffer {
     constructor(canvas) {
         super(canvas.width, canvas.height);
-        this._canvas = canvas;
+        this._target = canvas;
         canvas.copyTo(this.data);
     }
-    // get canvas() { return this._canvas; }
+    // get canvas() { return this._target; }
     _toGlyph(ch) {
-        return this._canvas.glyphs.forChar(ch);
+        return this._target.toGlyph(ch);
     }
     render() {
-        this._canvas.copy(this.data);
+        this._target.copy(this.data);
         return this;
     }
-    copyFromCanvas() {
-        this._canvas.copyTo(this.data);
+    load() {
+        this._target.copyTo(this.data);
         return this;
     }
 }

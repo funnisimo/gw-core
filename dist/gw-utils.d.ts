@@ -833,6 +833,7 @@ declare abstract class BaseCanvas {
     get pxHeight(): number;
     get glyphs(): Glyphs;
     set glyphs(glyphs: Glyphs);
+    toGlyph(ch: string): number;
     protected _createNode(): HTMLCanvasElement;
     protected abstract _createContext(): void;
     private _configure;
@@ -1120,23 +1121,32 @@ declare class DataBuffer {
     mix(color: ColorBase, percent: number): this;
     dump(): void;
 }
+interface BufferTarget {
+    readonly width: number;
+    readonly height: number;
+    copyTo(dest: Uint32Array): void;
+    copy(src: Uint32Array): void;
+    toGlyph(ch: string): number;
+}
 declare class Buffer extends DataBuffer {
-    private _canvas;
-    constructor(canvas: Canvas);
+    private _target;
+    constructor(canvas: BufferTarget);
     _toGlyph(ch: string): number;
     render(): this;
-    copyFromCanvas(): this;
+    load(): this;
 }
 
 type buffer_d_Data = Data;
 type buffer_d_DataBuffer = DataBuffer;
 declare const buffer_d_DataBuffer: typeof DataBuffer;
+type buffer_d_BufferTarget = BufferTarget;
 type buffer_d_Buffer = Buffer;
 declare const buffer_d_Buffer: typeof Buffer;
 declare namespace buffer_d {
   export {
     buffer_d_Data as Data,
     buffer_d_DataBuffer as DataBuffer,
+    buffer_d_BufferTarget as BufferTarget,
     buffer_d_Buffer as Buffer,
   };
 }

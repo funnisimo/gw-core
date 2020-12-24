@@ -28,6 +28,10 @@ describe("buffer", () => {
 
       b.draw(2, 3, "A", colors.white, colors.gray);
       expect(b.get(2, 3)).toEqual({ ch: 65, fg: 0xfff, bg: 0x888 });
+
+      // @ts-ignore
+      b.draw(2, 3, null, null, null);
+      expect(b.get(2, 3)).toEqual({ ch: 65, fg: 0xfff, bg: 0x888 });
     });
 
     test("drawSprite", () => {
@@ -170,6 +174,9 @@ describe("buffer", () => {
 
       b.fillRect(2, 3, 3, 2, null, 0x0f0, null);
       expect(b.get(2, 3)).toEqual({ ch: 65, fg: 0x0f0, bg: 0x00f });
+
+      b.fillRect(2, 3, 3, 2);
+      expect(b.get(2, 3)).toEqual({ ch: 65, fg: 0x0f0, bg: 0x00f });
     });
 
     test("blackOutRect", () => {
@@ -205,6 +212,9 @@ describe("buffer", () => {
       // combines
       b.mix("green", 50);
       expect(b.get(0, 0)).toEqual({ ch: 65, fg: 0x880, bg: 0x088 });
+
+      b.mix(0xfff, 50);
+      expect(b.get(0, 0)).toEqual({ ch: 65, fg: 0xcc8, bg: 0x8cc });
     });
 
     test("dump", () => {
@@ -212,11 +222,52 @@ describe("buffer", () => {
       b.fill("A", 0xf00, 0x00f);
       jest.spyOn(console, "log").mockReturnValue();
 
+      b.draw(2, 2, 0);
       b.dump();
 
       expect(console.log).toHaveBeenCalledWith(
-        "     01234\n\n 0]  AAAAA\n 1]  AAAAA\n 2]  AAAAA\n 3]  AAAAA\n 4]  AAAAA"
+        "     01234\n\n 0]  AAAAA\n 1]  AAAAA\n 2]  AA AA\n 3]  AAAAA\n 4]  AAAAA"
       );
+    });
+  });
+
+  describe("Buffer", () => {
+    let target: Buffer.BufferTarget;
+
+    beforeEach(() => {
+      target = {
+        width: 10,
+        height: 8,
+        copyTo: jest.fn(),
+        copy: jest.fn(),
+        toGlyph: jest.fn().mockImplementation((ch) => ch.charCodeAt(0)),
+      };
+    });
+
+    test("basics", () => {
+      const b = new Buffer.Buffer(target);
+      expect(b.width).toEqual(target.width);
+      expect(b.height).toEqual(target.height);
+      expect(target.copyTo).toHaveBeenCalledWith(b.data);
+
+      // @ts-ignore
+      target.copyTo.mockClear();
+      // @ts-ignore
+      target.copy.mockClear();
+
+      b.render();
+      expect(target.copy).toHaveBeenCalledWith(b.data);
+
+      // @ts-ignore
+      target.copyTo.mockClear();
+      // @ts-ignore
+      target.copy.mockClear();
+
+      b.load();
+      expect(target.copyTo).toHaveBeenCalledWith(b.data);
+
+      b.draw(3, 2, "@", 0xfff);
+      expect(target.toGlyph).toHaveBeenCalledWith("@");
     });
   });
 });

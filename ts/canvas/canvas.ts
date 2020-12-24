@@ -81,6 +81,10 @@ export abstract class BaseCanvas {
     this._setGlyphs(glyphs);
   }
 
+  toGlyph(ch: string) {
+    return this._glyphs.forChar(ch);
+  }
+
   protected _createNode() {
     return document.createElement("canvas");
   }
