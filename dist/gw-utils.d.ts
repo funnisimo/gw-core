@@ -274,20 +274,14 @@ declare namespace range_d {
 declare function fl(N: number): number;
 declare function toString(flagObj: any, value: number): string;
 declare function from$1(obj: any, ...args: any[]): number;
-declare const flags: Record<string, Record<string, number>>;
-declare function install(flagName: string, flag: Record<string, number>): Record<string, number>;
 
 declare const flag_d_fl: typeof fl;
 declare const flag_d_toString: typeof toString;
-declare const flag_d_flags: typeof flags;
-declare const flag_d_install: typeof install;
 declare namespace flag_d {
   export {
     flag_d_fl as fl,
     flag_d_toString as toString,
     from$1 as from,
-    flag_d_flags as flags,
-    flag_d_install as install,
   };
 }
 
@@ -868,8 +862,8 @@ declare function separate(a: Color, b: Color): void;
 declare function swap(a: Color, b: Color): void;
 declare function relativeLuminance(a: Color, b: Color): number;
 declare function distance(a: Color, b: Color): number;
-declare function install$1(name: string, info: ColorBase): Color;
-declare function install$1(name: string, ...rgb: ColorData): Color;
+declare function install(name: string, info: ColorBase): Color;
+declare function install(name: string, ...rgb: ColorData): Color;
 declare function installSpread(name: string, info: ColorBase): Color;
 declare function installSpread(name: string, ...rgb: ColorData): Color;
 
@@ -885,6 +879,7 @@ declare const color_d_separate: typeof separate;
 declare const color_d_swap: typeof swap;
 declare const color_d_relativeLuminance: typeof relativeLuminance;
 declare const color_d_distance: typeof distance;
+declare const color_d_install: typeof install;
 declare const color_d_installSpread: typeof installSpread;
 declare namespace color_d {
   export {
@@ -901,7 +896,7 @@ declare namespace color_d {
     color_d_swap as swap,
     color_d_relativeLuminance as relativeLuminance,
     color_d_distance as distance,
-    install$1 as install,
+    color_d_install as install,
     color_d_installSpread as installSpread,
   };
 }
@@ -1320,7 +1315,7 @@ declare namespace types_d {
 }
 
 declare const templates: Record<string, Template>;
-declare function install$2(id: string, msg: string): void;
+declare function install$1(id: string, msg: string): void;
 declare function installAll(config: Record<string, string>): void;
 declare function needsUpdate(needs?: boolean): boolean;
 interface MessageOptions {
@@ -1348,7 +1343,7 @@ declare const message_d_forEach: typeof forEach;
 declare namespace message_d {
   export {
     message_d_templates as templates,
-    install$2 as install,
+    install$1 as install,
     message_d_installAll as installAll,
     message_d_needsUpdate as needsUpdate,
     message_d_MessageOptions as MessageOptions,
@@ -1365,5 +1360,6 @@ declare namespace message_d {
 declare const data: any;
 declare const config: any;
 declare const make$4: any;
+declare const flags: any;
 
 export { Random, buffer_d as buffer, index_d as canvas, color_d as color, colors, config, cosmetic, data, events_d as events, flag_d as flag, flags, fov_d as fov, frequency_d as frequency, grid_d as grid, io_d as io, make$4 as make, message_d as message, path_d as path, random, range_d as range, scheduler_d as scheduler, sprites, index_d$1 as text, types_d as types, utils_d as utils };

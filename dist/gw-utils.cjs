@@ -694,6 +694,7 @@ const cosmetic = new Random();
 const data = {};
 const config = {};
 const make = {};
+const flags = {};
 
 class Range {
     constructor(lower, upper = 0, clumps = 1, rng) {
@@ -797,7 +798,7 @@ function fl(N) {
 function toString(flagObj, value) {
     const inverse = Object.entries(flagObj).reduce((out, entry) => {
         const [key, value] = entry;
-        if (value)
+        if (typeof value === "number")
             out[value] = key;
         return out;
     }, []);
@@ -860,19 +861,12 @@ function from$1(obj, ...args) {
     }
     return result;
 }
-const flags = {};
-function install(flagName, flag) {
-    flags[flagName] = flag;
-    return flag;
-}
 
 var flag = {
     __proto__: null,
     fl: fl,
     toString: toString,
-    from: from$1,
-    flags: flags,
-    install: install
+    from: from$1
 };
 
 const DIRS$1 = DIRS;
@@ -3985,7 +3979,7 @@ function distance(a, b) {
             (a.b - b.b) * (a.b - b.b) * 0.3333)) /
         65025);
 }
-function install$1(name, ...args) {
+function install(name, ...args) {
     let info = args;
     if (args.length == 1) {
         info = args[0];
@@ -3998,21 +3992,21 @@ function install$1(name, ...args) {
 function installSpread(name, ...args) {
     let c;
     if (args.length == 1) {
-        c = install$1(name, args[0]);
+        c = install(name, args[0]);
     }
     else {
-        c = install$1(name, ...args);
+        c = install(name, ...args);
     }
-    install$1("light_" + name, c.clone().lighten(25));
-    install$1("lighter_" + name, c.clone().lighten(50));
-    install$1("lightest_" + name, c.clone().lighten(75));
-    install$1("dark_" + name, c.clone().darken(25));
-    install$1("darker_" + name, c.clone().darken(50));
-    install$1("darkest_" + name, c.clone().darken(75));
+    install("light_" + name, c.clone().lighten(25));
+    install("lighter_" + name, c.clone().lighten(50));
+    install("lightest_" + name, c.clone().lighten(75));
+    install("dark_" + name, c.clone().darken(25));
+    install("darker_" + name, c.clone().darken(50));
+    install("darkest_" + name, c.clone().darken(75));
     return c;
 }
-const BLACK = install$1("black", 0x000);
-const WHITE = install$1("white", 0xfff);
+const BLACK = install("black", 0x000);
+const WHITE = install("white", 0xfff);
 installSpread("teal", [30, 100, 100]);
 installSpread("brown", [60, 40, 0]);
 installSpread("tan", [80, 70, 55]); // 80, 67,		15);
@@ -4056,7 +4050,7 @@ var color = {
     swap: swap,
     relativeLuminance: relativeLuminance,
     distance: distance,
-    install: install$1,
+    install: install,
     installSpread: installSpread
 };
 
@@ -5098,12 +5092,12 @@ var types = {
 };
 
 const templates = {};
-function install$2(id, msg) {
+function install$1(id, msg) {
     const template = compile(msg);
     templates[id] = template;
 }
 function installAll(config) {
-    Object.entries(config).forEach(([id, msg]) => install$2(id, msg));
+    Object.entries(config).forEach(([id, msg]) => install$1(id, msg));
 }
 // messages
 const ARCHIVE = [];
@@ -5226,7 +5220,7 @@ function forEach(fn) {
 var message = {
     __proto__: null,
     templates: templates,
-    install: install$2,
+    install: install$1,
     installAll: installAll,
     needsUpdate: needsUpdate,
     configure: configure$1,

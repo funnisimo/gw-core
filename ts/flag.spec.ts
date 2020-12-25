@@ -33,5 +33,9 @@ describe("flag", () => {
     );
     expect(GW.flag.from(Flag, Flag.AB, "!A")).toEqual(Flag.B);
     expect(GW.flag.from(Flag, Flag.AB, "0, D")).toEqual(Flag.D);
+
+    expect(GW.flag.toString(Flag, Flag.A | Flag.B | Flag.C | Flag.D)).toEqual(
+      "A | B | C | D"
+    );
   });
 });

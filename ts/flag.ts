@@ -9,7 +9,7 @@ export function toString(flagObj: any, value: number) {
   const inverse = Object.entries(flagObj).reduce(
     (out: string[], entry: [string, unknown]) => {
       const [key, value] = entry as [string, number];
-      if (value) out[value] = key;
+      if (typeof value === "number") out[value] = key;
       return out;
     },
     []
@@ -69,11 +69,4 @@ export function from(obj: any, ...args: any[]) {
     }
   }
   return result;
-}
-
-export const flags: Record<string, Record<string, number>> = {};
-
-export function install(flagName: string, flag: Record<string, number>) {
-  flags[flagName] = flag;
-  return flag;
 }
