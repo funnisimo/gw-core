@@ -1,3 +1,4 @@
+import "jest-extended";
 import * as Color from "./color";
 import { cosmetic } from "./random";
 
@@ -65,6 +66,7 @@ describe("Color", () => {
     const f = Color.fromArray([-50, 510, 255], true);
     expect(f.equals([-20, 200, 100])).toBeTruthy();
 
+    // @ts-ignore
     expect(Color.fromArray([]).toString()).toEqual("#000");
   });
 
@@ -129,6 +131,8 @@ describe("Color", () => {
     expect(a.equals([100, 50, 0])).toBeTruthy();
     expect(a.equals([50, 50, 50])).toBeFalsy();
     expect(a.equals("#f80")).toBeTruthy();
+    expect(a.equals(0xf80)).toBeTruthy();
+    expect(a.equals(0xff8000)).toBeTruthy();
     expect(a.toString(true)).toEqual("#ff8000");
     expect(a.equals("#ff8000")).toBeTruthy();
 
@@ -156,6 +160,12 @@ describe("Color", () => {
 
     a.copy([50, 50, 50]);
     expect(a.css()).toEqual("#888");
+
+    a.copy([50, 50, 50, 10, 10, 10, 10, true]);
+    expect(a.dances).toBeTruthy();
+
+    b.copy(a);
+    expect(b.dances).toBeTruthy();
   });
 
   test("clone", () => {
@@ -312,6 +322,10 @@ describe("Color", () => {
     const e = Color.fromArray([50, 50, 50]);
     e.bake();
     expect(e.toString()).toEqual("#888");
+
+    const f = Color.fromArray([50, 50, 50, 10, 10, 10, 10, true]);
+    f.bake();
+    expect(f.toString()).toEqual("#888");
   });
 
   test("add", () => {
@@ -383,6 +397,10 @@ describe("Color", () => {
     const c = new Color.Color();
     expect(c.isNull()).toBeTruthy();
     expect(c.toString()).toEqual("null color");
+
+    const d = Color.colors.teal;
+    expect(d.toString()).toEqual("teal");
+    expect(d.css()).toEqual("#5ff");
   });
 
   test("rgb hsl", () => {
@@ -524,5 +542,12 @@ describe("Color", () => {
     expect(Color.distance(C.blue, C.red)).toEqual(67);
     expect(Color.distance(C.blue, C.green)).toEqual(67);
     expect(Color.distance(C.blue, C.blue)).toEqual(0);
+  });
+
+  test("installSpread", () => {
+    Color.installSpread("test", 75, 75, 25);
+    expect(Color.colors.test).toBeObject();
+    expect(Color.colors.dark_test).toBeObject();
+    expect(Color.colors.light_test).toBeObject();
   });
 });

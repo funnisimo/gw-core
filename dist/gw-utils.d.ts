@@ -801,7 +801,7 @@ declare class Glyphs {
     _initGlyphs(basicOnly?: boolean): void;
 }
 
-declare type ColorData = number[];
+declare type ColorData = [number, number, number] | [number, number, number, number, number, number, number] | [number, number, number, number, number, number, number, boolean];
 declare type ColorBase = string | number | Color | ColorData;
 declare const colors: Record<string, Color>;
 declare class Color extends Int16Array {
@@ -857,21 +857,21 @@ declare function fromNumber(val: number, base256?: boolean): Color;
 declare function make$3(): Color;
 declare function make$3(rgb: number, base256?: boolean): Color;
 declare function make$3(color?: ColorBase | null): Color;
-declare function make$3(arrayLike: ArrayLike<number>, base256?: boolean): Color;
+declare function make$3(arrayLike: ColorData, base256?: boolean): Color;
 declare function make$3(...rgb: number[]): Color;
 declare function from$2(): Color;
 declare function from$2(rgb: number, base256?: boolean): Color;
 declare function from$2(color?: ColorBase | null): Color;
-declare function from$2(arrayLike: ArrayLike<number>, base256?: boolean): Color;
+declare function from$2(arrayLike: ColorData, base256?: boolean): Color;
 declare function from$2(...rgb: number[]): Color;
 declare function separate(a: Color, b: Color): void;
 declare function swap(a: Color, b: Color): void;
 declare function relativeLuminance(a: Color, b: Color): number;
 declare function distance(a: Color, b: Color): number;
 declare function install$1(name: string, info: ColorBase): Color;
-declare function install$1(name: string, ...rgb: number[]): Color;
+declare function install$1(name: string, ...rgb: ColorData): Color;
 declare function installSpread(name: string, info: ColorBase): Color;
-declare function installSpread(name: string, ...rgb: number[]): Color;
+declare function installSpread(name: string, ...rgb: ColorData): Color;
 
 type color_d_ColorBase = ColorBase;
 declare const color_d_colors: typeof colors;

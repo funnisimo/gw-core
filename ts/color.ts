@@ -1,10 +1,13 @@
 import { cosmetic } from "./random";
 import { make as Make } from "./gw";
 
-type ColorData = number[];
+type ColorData =
+  | [number, number, number]
+  | [number, number, number, number, number, number, number]
+  | [number, number, number, number, number, number, number, boolean];
 export type ColorBase = string | number | Color | ColorData;
 
-function toColorInt(r = 0, g = 0, b = 0, base256 = false) {
+function toColorInt(r: number, g: number, b: number, base256: boolean) {
   if (base256) {
     r = Math.max(0, Math.min(255, Math.round(r * 2.550001)));
     g = Math.max(0, Math.min(255, Math.round(g * 2.550001)));
@@ -135,19 +138,23 @@ export class Color extends Int16Array {
     const O = from(other);
     if (this.isNull()) return O.isNull();
     return this.every((v: number, i: number) => {
-      return v == (O[i] || 0);
+      return v == O[i];
     });
   }
 
   copy(other: ColorBase) {
     if (Array.isArray(other)) {
-      this.set(other);
+      if (other.length === 8) {
+        this.dances = other[7];
+      }
     } else {
-      const O = from(other);
-      this.set(O);
+      other = from(other);
+      this.dances = other.dances;
+    }
+    for (let i = 0; i < this.length; ++i) {
+      this[i] = (other[i] as number) || 0;
     }
     if (other instanceof Color) {
-      this.dances = other.dances;
       this.name = other.name;
     } else {
       this._changed();
@@ -284,10 +291,10 @@ export class Color extends Int16Array {
 
     const d = this;
     if (d[3] + d[4] + d[5] + d[6]) {
-      const rand = this._rand ? cosmetic.number(this._rand) : 0;
-      const redRand = this._redRand ? cosmetic.number(this._redRand) : 0;
-      const greenRand = this._greenRand ? cosmetic.number(this._greenRand) : 0;
-      const blueRand = this._blueRand ? cosmetic.number(this._blueRand) : 0;
+      const rand = cosmetic.number(this._rand);
+      const redRand = cosmetic.number(this._redRand);
+      const greenRand = cosmetic.number(this._greenRand);
+      const blueRand = cosmetic.number(this._blueRand);
       this._r += rand + redRand;
       this._g += rand + greenRand;
       this._b += rand + blueRand;
@@ -370,10 +377,10 @@ export function fromArray(vals: ColorData, base256 = false) {
   while (vals.length < 3) vals.push(0);
   if (base256) {
     for (let i = 0; i < 7; ++i) {
-      vals[i] = Math.round(((vals[i] || 0) * 100) / 255);
+      vals[i] = Math.round((((vals[i] as number) || 0) * 100) / 255);
     }
   }
-  return new Color(...vals);
+  return new Color(...(vals as number[]));
 }
 
 export function fromCss(css: string) {
@@ -432,7 +439,7 @@ export function fromNumber(val: number, base256 = false) {
 export function make(): Color;
 export function make(rgb: number, base256?: boolean): Color;
 export function make(color?: ColorBase | null): Color;
-export function make(arrayLike: ArrayLike<number>, base256?: boolean): Color;
+export function make(arrayLike: ColorData, base256?: boolean): Color;
 export function make(...rgb: number[]): Color; // TODO - Remove!
 export function make(...args: any[]): Color {
   let arg = args[0];
@@ -453,7 +460,7 @@ export function make(...args: any[]): Color {
     }
     return fromName(arg).clone();
   } else if (Array.isArray(arg)) {
-    return fromArray(arg, base256);
+    return fromArray(arg as ColorData, base256);
   } else if (typeof arg === "number") {
     return fromNumber(arg, base256);
   }
@@ -467,7 +474,7 @@ Make.color = make;
 export function from(): Color;
 export function from(rgb: number, base256?: boolean): Color;
 export function from(color?: ColorBase | null): Color;
-export function from(arrayLike: ArrayLike<number>, base256?: boolean): Color;
+export function from(arrayLike: ColorData, base256?: boolean): Color;
 export function from(...rgb: number[]): Color; // TODO - Remove!
 export function from(...args: any[]): Color {
   const arg = args[0];
@@ -543,22 +550,27 @@ export function distance(a: Color, b: Color) {
 }
 
 export function install(name: string, info: ColorBase): Color;
-export function install(name: string, ...rgb: number[]): Color; // TODO - Remove!
+export function install(name: string, ...rgb: ColorData): Color; // TODO - Remove!
 export function install(name: string, ...args: any[]) {
   let info = args;
   if (args.length == 1) {
     info = args[0];
   }
-  const c = info instanceof Color ? info : make(info);
+  const c = info instanceof Color ? info : make(info as ColorBase);
   colors[name] = c;
   c.name = name;
   return c;
 }
 
 export function installSpread(name: string, info: ColorBase): Color;
-export function installSpread(name: string, ...rgb: number[]): Color; // TODO - Remove!
+export function installSpread(name: string, ...rgb: ColorData): Color; // TODO - Remove!
 export function installSpread(name: string, ...args: any[]) {
-  const c = install(name, ...args);
+  let c: Color;
+  if (args.length == 1) {
+    c = install(name, args[0]);
+  } else {
+    c = install(name, ...(args as ColorData));
+  }
   install("light_" + name, c.clone().lighten(25));
   install("lighter_" + name, c.clone().lighten(50));
   install("lightest_" + name, c.clone().lighten(75));

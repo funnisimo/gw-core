@@ -1,6 +1,6 @@
 import { cosmetic } from "./random";
 import { make as Make } from "./gw";
-function toColorInt(r = 0, g = 0, b = 0, base256 = false) {
+function toColorInt(r, g, b, base256) {
     if (base256) {
         r = Math.max(0, Math.min(255, Math.round(r * 2.550001)));
         g = Math.max(0, Math.min(255, Math.round(g * 2.550001)));
@@ -116,19 +116,23 @@ export class Color extends Int16Array {
         if (this.isNull())
             return O.isNull();
         return this.every((v, i) => {
-            return v == (O[i] || 0);
+            return v == O[i];
         });
     }
     copy(other) {
         if (Array.isArray(other)) {
-            this.set(other);
+            if (other.length === 8) {
+                this.dances = other[7];
+            }
         }
         else {
-            const O = from(other);
-            this.set(O);
+            other = from(other);
+            this.dances = other.dances;
+        }
+        for (let i = 0; i < this.length; ++i) {
+            this[i] = other[i] || 0;
         }
         if (other instanceof Color) {
-            this.dances = other.dances;
             this.name = other.name;
         }
         else {
@@ -238,10 +242,10 @@ export class Color extends Int16Array {
         this.dances = false;
         const d = this;
         if (d[3] + d[4] + d[5] + d[6]) {
-            const rand = this._rand ? cosmetic.number(this._rand) : 0;
-            const redRand = this._redRand ? cosmetic.number(this._redRand) : 0;
-            const greenRand = this._greenRand ? cosmetic.number(this._greenRand) : 0;
-            const blueRand = this._blueRand ? cosmetic.number(this._blueRand) : 0;
+            const rand = cosmetic.number(this._rand);
+            const redRand = cosmetic.number(this._redRand);
+            const greenRand = cosmetic.number(this._greenRand);
+            const blueRand = cosmetic.number(this._blueRand);
             this._r += rand + redRand;
             this._g += rand + greenRand;
             this._b += rand + blueRand;
@@ -472,7 +476,13 @@ export function install(name, ...args) {
     return c;
 }
 export function installSpread(name, ...args) {
-    const c = install(name, ...args);
+    let c;
+    if (args.length == 1) {
+        c = install(name, args[0]);
+    }
+    else {
+        c = install(name, ...args);
+    }
     install("light_" + name, c.clone().lighten(25));
     install("lighter_" + name, c.clone().lighten(50));
     install("lightest_" + name, c.clone().lighten(75));
