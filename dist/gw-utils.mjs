@@ -2545,16 +2545,17 @@ function once(event, fn, context) {
  */
 function removeListener(event, fn, context, once = false) {
     if (!EVENTS$1[event])
-        return;
-    if (!fn) {
-        clearEvent(event);
-        return;
-    }
+        return false;
+    if (!fn)
+        return false;
+    let success = false;
     eachChain(EVENTS$1[event], (obj) => {
         if (obj.matches(fn, context, once)) {
             removeFromChain(EVENTS$1, event, obj);
+            success = true;
         }
     });
+    return success;
 }
 /**
  * Remove the listeners of a given event.
@@ -2567,7 +2568,7 @@ function removeListener(event, fn, context, once = false) {
  * @public
  */
 function off(event, fn, context, once = false) {
-    removeListener(event, fn, context, once);
+    return removeListener(event, fn, context, once);
 }
 /**
  * Clear event by name.
@@ -2575,7 +2576,9 @@ function off(event, fn, context, once = false) {
  * @param {String} evt The Event name.
  */
 function clearEvent(event) {
-    EVENTS$1[event] = null;
+    if (EVENTS$1[event]) {
+        EVENTS$1[event] = null;
+    }
 }
 /**
  * Remove all listeners, or those of the specified event.
@@ -2586,8 +2589,7 @@ function clearEvent(event) {
  */
 function removeAllListeners(event) {
     if (event) {
-        if (EVENTS$1[event])
-            clearEvent(event);
+        clearEvent(event);
     }
     else {
         EVENTS$1 = {};
