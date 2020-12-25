@@ -88,4 +88,11 @@ describe("frequency", () => {
       expect(f(i)).toEqual(i >= 5 ? 150 : 0);
     }
   });
+
+  test("function", () => {
+    const fn = jest.fn().mockReturnValue(100);
+
+    const f = Frequency.make(fn);
+    expect(f).toBe(fn);
+  });
 });
