@@ -1,6 +1,7 @@
 import * as Color from "../color";
 import { Mixer } from "./mixer";
 import { cosmetic } from "../random";
+import { make as Make } from "../gw";
 
 describe("Mixer", () => {
   beforeEach(() => {
@@ -18,6 +19,11 @@ describe("Mixer", () => {
     expect(mixer.ch).toEqual(-1);
     expect(mixer.fg.isNull()).toBeTruthy();
     expect(mixer.bg.isNull()).toBeTruthy();
+
+    const b = Make.mixer();
+    expect(b.ch).toEqual(-1);
+    expect(b.fg.isNull()).toBeTruthy();
+    expect(b.bg.isNull()).toBeTruthy();
   });
 
   test("copy", () => {
