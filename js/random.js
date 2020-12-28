@@ -55,7 +55,10 @@ export class Random {
     float() {
         return this.value();
     }
-    number(max = 0) {
+    number(max) {
+        // @ts-ignore
+        if (max <= 0)
+            return 0;
         max = max || Number.MAX_SAFE_INTEGER;
         return Math.floor(this._fn() * max);
     }

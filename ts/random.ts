@@ -86,7 +86,9 @@ export class Random {
     return this.value();
   }
 
-  number(max: number = 0) {
+  number(max?: number) {
+    // @ts-ignore
+    if (max <= 0) return 0;
     max = max || Number.MAX_SAFE_INTEGER;
     return Math.floor(this._fn() * max);
   }

@@ -38,7 +38,12 @@ export function makeSprite(...args) {
         bg = args[2];
     }
     else {
-        if (typeof args[0] === "string" || typeof args[0] === "number") {
+        if (typeof args[0] === "string" && args[0].length == 1) {
+            ch = args[0];
+            fg = "white"; // white is default?
+        }
+        else if ((typeof args[0] === "string" && args[0].length > 1) ||
+            typeof args[0] === "number") {
             bg = args[0];
         }
         else if (args[0] instanceof Color.Color) {

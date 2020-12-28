@@ -311,8 +311,11 @@ describe("Color", () => {
     c.bake();
     expect(c.css()).not.toEqual("#000");
     expect(c.r).toBeGreaterThan(0);
+    expect(c.r).toBeLessThan(256);
     expect(c.g).toBeGreaterThan(0);
+    expect(c.g).toBeLessThan(256);
     expect(c.b).toBeGreaterThan(0);
+    expect(c.b).toBeLessThan(256);
 
     const d = new Color.Color();
     expect(d.isNull()).toBeTruthy();
@@ -326,6 +329,9 @@ describe("Color", () => {
     const f = Color.fromArray([50, 50, 50, 10, 10, 10, 10, true]);
     f.bake();
     expect(f.toString()).toEqual("#888");
+    expect(f.r).toEqual(128);
+    expect(f.g).toEqual(128);
+    expect(f.b).toEqual(128);
   });
 
   test("add", () => {

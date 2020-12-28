@@ -591,7 +591,10 @@ class Random {
     float() {
         return this.value();
     }
-    number(max = 0) {
+    number(max) {
+        // @ts-ignore
+        if (max <= 0)
+            return 0;
         max = max || Number.MAX_SAFE_INTEGER;
         return Math.floor(this._fn() * max);
     }
@@ -4088,7 +4091,12 @@ function makeSprite(...args) {
         bg = args[2];
     }
     else {
-        if (typeof args[0] === "string" || typeof args[0] === "number") {
+        if (typeof args[0] === "string" && args[0].length == 1) {
+            ch = args[0];
+            fg = "white"; // white is default?
+        }
+        else if ((typeof args[0] === "string" && args[0].length > 1) ||
+            typeof args[0] === "number") {
             bg = args[0];
         }
         else if (args[0] instanceof Color) {

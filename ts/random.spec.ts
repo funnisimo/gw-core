@@ -50,6 +50,13 @@ describe("random", () => {
     expect(rnd2).toHaveBeenCalled();
   });
 
+  test("number", () => {
+    setupMocks();
+    expect(random.number(100)).toEqual(50);
+    expect(random.number(0)).toEqual(0);
+    expect(random.number()).toEqual(Math.floor(Number.MAX_SAFE_INTEGER / 2));
+  });
+
   test("gives random percents => [0, 1)", () => {
     always(() => expect(random.value()).toBeWithin(0, 1));
   });

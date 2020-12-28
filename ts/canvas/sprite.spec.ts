@@ -12,7 +12,7 @@ describe("Sprite", () => {
     expect(b.bg).toBe(colors.blue);
     expect(b.opacity).toEqual(50);
 
-    const d = Sprite.makeSprite("@", [100, 0, 0], [0,0,100], 50);
+    const d = Sprite.makeSprite("@", [100, 0, 0], [0, 0, 100], 50);
     expect(d.ch).toEqual("@");
     expect(d.fg).toEqual(colors.red);
     expect(d.fg).not.toBe(colors.red);
@@ -67,6 +67,12 @@ describe("Sprite", () => {
     expect(m.fg).toBe(colors.blue);
     expect(m.bg).toEqual(-1);
     expect(m.opacity).toBeUndefined();
+
+    const n = Sprite.makeSprite("@");
+    expect(n.ch).toEqual("@");
+    expect(n.fg).toBe(colors.white);
+    expect(n.bg).toEqual(-1);
+    expect(n.opacity).toBeUndefined();
   });
 
   test("install", () => {

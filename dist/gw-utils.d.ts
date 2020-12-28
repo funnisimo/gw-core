@@ -906,7 +906,10 @@ interface DrawInfo {
     fg: Color | number;
     bg: Color | number;
 }
-interface SpriteType extends DrawInfo {
+interface SpriteType {
+    ch: string | number;
+    fg: ColorBase;
+    bg: ColorBase;
     opacity?: number;
 }
 declare class Mixer implements DrawInfo {
