@@ -26,6 +26,10 @@ describe("random", () => {
     make.mockClear();
   }
 
+  afterEach(() => {
+    jest.resetAllMocks();
+  });
+
   test("GW", () => {
     expect(GW.random).toBeObject();
     expect(GW.cosmetic).toBeObject();
