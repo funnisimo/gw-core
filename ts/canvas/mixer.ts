@@ -8,9 +8,9 @@ export interface DrawInfo {
 }
 
 export interface SpriteType {
-  ch: string | number;
-  fg: Color.ColorBase;
-  bg: Color.ColorBase;
+  ch?: string | number;
+  fg?: Color.ColorBase;
+  bg?: Color.ColorBase;
   opacity?: number;
 }
 
@@ -87,10 +87,12 @@ export class Mixer implements DrawInfo {
     if (opacity === undefined) opacity = info.opacity;
     if (opacity === undefined) opacity = 100;
     if (opacity <= 0) return;
-    if (info.ch !== -1 && (info.ch || info.ch === 0)) this.ch = info.ch;
 
-    if (info.fg && info.fg !== -1) this.fg.mix(info.fg, opacity);
-    if (info.bg && info.bg !== -1) this.bg.mix(info.bg, opacity);
+    if ((info.ch && info.ch !== -1) || info.ch === 0) this.ch = info.ch;
+    if ((info.fg && info.fg !== -1) || info.fg === 0)
+      this.fg.mix(info.fg, opacity);
+    if ((info.bg && info.bg !== -1) || info.bg === 0)
+      this.bg.mix(info.bg, opacity);
     return this._changed();
   }
 

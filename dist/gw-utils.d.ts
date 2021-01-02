@@ -907,9 +907,9 @@ interface DrawInfo {
     bg: Color | number;
 }
 interface SpriteType {
-    ch: string | number;
-    fg: ColorBase;
-    bg: ColorBase;
+    ch?: string | number;
+    fg?: ColorBase;
+    bg?: ColorBase;
     opacity?: number;
 }
 declare class Mixer implements DrawInfo {
@@ -1268,8 +1268,13 @@ interface FxType extends XY, Chainable {
     next: FxType | null;
 }
 interface TileType {
-    flags: number;
-    mechFlags: number;
+    readonly id: string;
+    readonly priority: number;
+    readonly layer: number;
+    readonly flags: number;
+    readonly mechFlags: number;
+    readonly sprite: SpriteType;
+    readonly light: LightType | null;
 }
 interface CellType {
     flags: number;

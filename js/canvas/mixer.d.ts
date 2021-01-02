@@ -5,9 +5,9 @@ export interface DrawInfo {
     bg: Color.Color | number;
 }
 export interface SpriteType {
-    ch: string | number;
-    fg: Color.ColorBase;
-    bg: Color.ColorBase;
+    ch?: string | number;
+    fg?: Color.ColorBase;
+    bg?: Color.ColorBase;
     opacity?: number;
 }
 export declare class Mixer implements DrawInfo {

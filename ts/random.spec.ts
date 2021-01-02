@@ -28,6 +28,7 @@ describe("random", () => {
 
   afterEach(() => {
     jest.resetAllMocks();
+    Random.configure({ make: () => Math.random.bind(Math) });
   });
 
   test("GW", () => {

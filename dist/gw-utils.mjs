@@ -4192,11 +4192,11 @@ class Mixer {
             opacity = 100;
         if (opacity <= 0)
             return;
-        if (info.ch !== -1 && (info.ch || info.ch === 0))
+        if ((info.ch && info.ch !== -1) || info.ch === 0)
             this.ch = info.ch;
-        if (info.fg && info.fg !== -1)
+        if ((info.fg && info.fg !== -1) || info.fg === 0)
             this.fg.mix(info.fg, opacity);
-        if (info.bg && info.bg !== -1)
+        if ((info.bg && info.bg !== -1) || info.bg === 0)
             this.bg.mix(info.bg, opacity);
         return this._changed();
     }
