@@ -67,6 +67,7 @@ declare function pick(obj: any, ...fields: string[]): any;
 declare function clearObject(obj: any): void;
 declare function ERROR(message: string): void;
 declare function WARN(...args: string[]): void;
+declare function first(...args: any[]): any;
 declare function getOpt(obj: BasicObject, member: string, _default: any): any;
 declare function firstOpt(field: string, ...args: any[]): any;
 declare function arraysIntersect(a: any[], b: any[]): boolean;
@@ -132,6 +133,7 @@ declare const utils_d_pick: typeof pick;
 declare const utils_d_clearObject: typeof clearObject;
 declare const utils_d_ERROR: typeof ERROR;
 declare const utils_d_WARN: typeof WARN;
+declare const utils_d_first: typeof first;
 declare const utils_d_getOpt: typeof getOpt;
 declare const utils_d_firstOpt: typeof firstOpt;
 declare const utils_d_arraysIntersect: typeof arraysIntersect;
@@ -196,6 +198,7 @@ declare namespace utils_d {
     utils_d_clearObject as clearObject,
     utils_d_ERROR as ERROR,
     utils_d_WARN as WARN,
+    utils_d_first as first,
     utils_d_getOpt as getOpt,
     utils_d_firstOpt as firstOpt,
     utils_d_arraysIntersect as arraysIntersect,
@@ -907,10 +910,10 @@ interface DrawInfo {
     bg: Color | number;
 }
 interface SpriteType {
-    ch?: string | number;
-    fg?: ColorBase;
-    bg?: ColorBase;
-    opacity?: number;
+    readonly ch?: string | number;
+    readonly fg?: ColorBase;
+    readonly bg?: ColorBase;
+    readonly opacity?: number;
 }
 declare class Mixer implements DrawInfo {
     ch: string | number;
@@ -1089,7 +1092,7 @@ declare class Sprite implements SpriteType {
     bg: number | Color;
     opacity?: number;
     name?: string;
-    constructor(ch?: string | number | null, fg?: Color | number | null, bg?: Color | number | null, opacity?: number);
+    constructor(ch?: string | number | null, fg?: ColorBase | null, bg?: ColorBase | null, opacity?: number);
 }
 declare const sprites: Record<string, Sprite>;
 declare function makeSprite(): Sprite;
@@ -1267,13 +1270,12 @@ interface FxType extends XY, Chainable {
     readonly sprite: SpriteType;
     next: FxType | null;
 }
-interface TileType {
+interface TileType extends SpriteType {
     readonly id: string;
     readonly priority: number;
     readonly layer: number;
     readonly flags: number;
     readonly mechFlags: number;
-    readonly sprite: SpriteType;
     readonly light: LightType | null;
 }
 interface CellType {

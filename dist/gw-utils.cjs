@@ -323,6 +323,9 @@ function ERROR(message) {
 function WARN(...args) {
     console.warn(...args);
 }
+function first(...args) {
+    return args.find((v) => v !== undefined);
+}
 function getOpt(obj, member, _default) {
     const v = obj[member];
     if (v === undefined)
@@ -524,6 +527,7 @@ var utils = {
     clearObject: clearObject,
     ERROR: ERROR,
     WARN: WARN,
+    first: first,
     getOpt: getOpt,
     firstOpt: firstOpt,
     arraysIntersect: arraysIntersect,

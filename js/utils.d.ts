@@ -67,6 +67,7 @@ export declare function pick(obj: any, ...fields: string[]): any;
 export declare function clearObject(obj: any): void;
 export declare function ERROR(message: string): void;
 export declare function WARN(...args: string[]): void;
+export declare function first(...args: any[]): any;
 export declare function getOpt(obj: BasicObject, member: string, _default: any): any;
 export declare function firstOpt(field: string, ...args: any[]): any;
 export declare function arraysIntersect(a: any[], b: any[]): boolean;

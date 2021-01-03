@@ -12,7 +12,7 @@ export declare class Sprite implements SpriteType {
     bg: number | Color.Color;
     opacity?: number;
     name?: string;
-    constructor(ch?: string | number | null, fg?: Color.Color | number | null, bg?: Color.Color | number | null, opacity?: number);
+    constructor(ch?: string | number | null, fg?: Color.ColorBase | null, bg?: Color.ColorBase | null, opacity?: number);
 }
 export declare const sprites: Record<string, Sprite>;
 export declare function makeSprite(): Sprite;

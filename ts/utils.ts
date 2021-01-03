@@ -407,6 +407,10 @@ export function WARN(...args: string[]) {
   console.warn(...args);
 }
 
+export function first(...args: any[]) {
+  return args.find((v) => v !== undefined);
+}
+
 export function getOpt(obj: BasicObject, member: string, _default: any) {
   const v = obj[member];
   if (v === undefined) return _default;

@@ -43,13 +43,12 @@ export interface FxType extends Utils.XY, Utils.Chainable {
     readonly sprite: SpriteType;
     next: FxType | null;
 }
-export interface TileType {
+export interface TileType extends SpriteType {
     readonly id: string;
     readonly priority: number;
     readonly layer: number;
     readonly flags: number;
     readonly mechFlags: number;
-    readonly sprite: SpriteType;
     readonly light: LightType | null;
 }
 export interface CellType {

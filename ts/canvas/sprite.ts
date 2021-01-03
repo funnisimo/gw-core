@@ -18,8 +18,8 @@ export class Sprite implements SpriteType {
 
   constructor(
     ch?: string | number | null,
-    fg?: Color.Color | number | null,
-    bg?: Color.Color | number | null,
+    fg?: Color.ColorBase | null,
+    bg?: Color.ColorBase | null,
     opacity?: number
   ) {
     if (!ch && ch !== 0) ch = -1;

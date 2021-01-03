@@ -8,10 +8,10 @@ export interface DrawInfo {
 }
 
 export interface SpriteType {
-  ch?: string | number;
-  fg?: Color.ColorBase;
-  bg?: Color.ColorBase;
-  opacity?: number;
+  readonly ch?: string | number;
+  readonly fg?: Color.ColorBase;
+  readonly bg?: Color.ColorBase;
+  readonly opacity?: number;
 }
 
 export class Mixer implements DrawInfo {
