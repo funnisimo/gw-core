@@ -1235,6 +1235,12 @@ interface LightType {
     fadeTo: number;
     passThroughActors: boolean;
 }
+interface TileType {
+    readonly sprite: SpriteType;
+    readonly priority: number;
+    readonly layer: number;
+    readonly light: LightType | null;
+}
 interface ActorType extends XY, Chainable {
     x: number;
     y: number;
@@ -1270,14 +1276,6 @@ interface FxType extends XY, Chainable {
     readonly sprite: SpriteType;
     next: FxType | null;
 }
-interface TileType extends SpriteType {
-    readonly id: string;
-    readonly priority: number;
-    readonly layer: number;
-    readonly flags: number;
-    readonly mechFlags: number;
-    readonly light: LightType | null;
-}
 interface CellType {
     flags: number;
     mechFlags: number;
@@ -1303,10 +1301,10 @@ declare class Bounds {
 }
 
 type types_d_LightType = LightType;
+type types_d_TileType = TileType;
 type types_d_ActorType = ActorType;
 type types_d_ItemType = ItemType;
 type types_d_FxType = FxType;
-type types_d_TileType = TileType;
 type types_d_CellType = CellType;
 type types_d_MapType = MapType;
 type types_d_Bounds = Bounds;
@@ -1314,10 +1312,10 @@ declare const types_d_Bounds: typeof Bounds;
 declare namespace types_d {
   export {
     types_d_LightType as LightType,
+    types_d_TileType as TileType,
     types_d_ActorType as ActorType,
     types_d_ItemType as ItemType,
     types_d_FxType as FxType,
-    types_d_TileType as TileType,
     types_d_CellType as CellType,
     types_d_MapType as MapType,
     types_d_Bounds as Bounds,

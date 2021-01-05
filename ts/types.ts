@@ -9,6 +9,14 @@ export interface LightType {
   fadeTo: number;
   passThroughActors: boolean;
 }
+
+export interface TileType {
+  readonly sprite: SpriteType;
+  readonly priority: number;
+  readonly layer: number;
+  readonly light: LightType | null;
+}
+
 export interface ActorType extends Utils.XY, Utils.Chainable {
   x: number;
   y: number;
@@ -52,15 +60,6 @@ export interface FxType extends Utils.XY, Utils.Chainable {
   y: number;
   readonly sprite: SpriteType;
   next: FxType | null;
-}
-
-export interface TileType extends SpriteType {
-  readonly id: string;
-  readonly priority: number;
-  readonly layer: number;
-  readonly flags: number;
-  readonly mechFlags: number;
-  readonly light: LightType | null;
 }
 
 export interface CellType {
