@@ -4718,27 +4718,44 @@ function splice(text, start, len, add = "") {
     return text.substring(0, start) + add + text.substring(start + len);
 }
 function hyphenate(text, width, start, end, wordWidth, spaceLeftOnLine) {
+    // do not need to hyphenate
+    if (spaceLeftOnLine >= wordWidth)
+        return [text, end];
+    // do not have a strategy for this right now...
     if (wordWidth + 1 > width * 2) {
         throw new Error("Cannot hyphenate - word length > 2 * width");
     }
-    if (spaceLeftOnLine < 4 || spaceLeftOnLine + width < wordWidth) {
+    // not much room left and word fits on next line
+    if (spaceLeftOnLine < 4 && wordWidth <= width) {
+        text = splice(text, start - 1, 1, "\n");
+        return [text, end + 1];
+    }
+    // will not fit on this line + next, but will fit on next 2 lines...
+    // so end this line and reset for placing on next 2 lines.
+    if (spaceLeftOnLine + width <= wordWidth) {
         text = splice(text, start - 1, 1, "\n");
         spaceLeftOnLine = width;
     }
-    if (spaceLeftOnLine + width > wordWidth) {
-        // one hyphen...
-        const hyphenAt = Math.min(Math.floor(wordWidth / 2), spaceLeftOnLine - 1);
-        const w = advanceChars(text, start, hyphenAt);
-        text = splice(text, w, 0, "-\n");
-        return [text, end + 2];
-    }
-    if (width >= wordWidth) {
-        return [text, end];
-    }
-    const hyphenAt = Math.min(wordWidth, width - 1);
+    // one hyphen will work...
+    // if (spaceLeftOnLine + width > wordWidth) {
+    // one hyphen...
+    const hyphenAt = Math.min(Math.floor(wordWidth / 2), spaceLeftOnLine - 1);
     const w = advanceChars(text, start, hyphenAt);
     text = splice(text, w, 0, "-\n");
     return [text, end + 2];
+    // }
+    // if (width >= wordWidth) {
+    //     return [text, end];
+    // }
+    // console.log('hyphenate', { text, start, end, width, wordWidth, spaceLeftOnLine });
+    // throw new Error('Did not expect to get here...');
+    // wordWidth >= spaceLeftOnLine + width
+    // text = splice(text, start - 1, 1, "\n");
+    // spaceLeftOnLine = width;
+    // const hyphenAt = Math.min(wordWidth, width - 1);
+    // const w = Utils.advanceChars(text, start, hyphenAt);
+    // text = splice(text, w, 0, "-\n");
+    // return [text, end + 2];
 }
 function wordWrap(text, width, indent = 0) {
     if (!width)
@@ -4756,7 +4773,7 @@ function wordWrap(text, width, indent = 0) {
 }
 // Returns the number of lines, including the newlines already in the text.
 // Puts the output in "to" only if we receive a "to" -- can make it null and just get a line count.
-function wrapLine(text, width, indent = 0) {
+function wrapLine(text, width, indent) {
     if (text.length < width)
         return text;
     if (length(text) < width)
