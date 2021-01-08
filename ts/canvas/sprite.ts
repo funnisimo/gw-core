@@ -1,5 +1,5 @@
 import * as Color from "../color";
-import { SpriteType } from "./mixer";
+import { SpriteType } from "../types";
 import { make } from "../gw";
 
 export interface SpriteConfig {

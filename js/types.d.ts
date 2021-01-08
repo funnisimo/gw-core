@@ -1,24 +1,43 @@
-import { SpriteType } from "./canvas/mixer";
-import { Color } from "./color";
+import { Color, ColorBase } from "./color";
 import { Range } from "./range";
 import * as Utils from "./utils";
+export interface SpriteType {
+    readonly ch?: string | number;
+    readonly fg?: ColorBase;
+    readonly bg?: ColorBase;
+    readonly opacity?: number;
+}
 export interface LightType {
     color: Color;
     radius: Range;
     fadeTo: number;
     passThroughActors: boolean;
+    paint(map: MapType, x: number, y: number): boolean;
+    paint(map: MapType, x: number, y: number, maintainShadows: boolean): boolean;
+    paint(map: MapType, x: number, y: number, maintainShadows: boolean, isMinersLight: boolean): boolean;
 }
-export interface TileType {
+export interface LayerFlags {
+    readonly layer: number;
+}
+export interface LayerType {
     readonly sprite: SpriteType;
     readonly priority: number;
-    readonly layer: number;
+    readonly depth: number;
     readonly light: LightType | null;
+    readonly flags: LayerFlags;
 }
-export interface ActorType extends Utils.XY, Utils.Chainable {
-    x: number;
-    y: number;
-    readonly sprite: SpriteType;
-    readonly light: LightType | null;
+export interface TileFlags extends LayerFlags {
+    readonly tile: number;
+    readonly tileMech: number;
+}
+export interface TileType extends LayerType {
+    readonly id: string;
+    readonly flags: TileFlags;
+}
+export interface ActorFlags extends LayerFlags {
+    actor: number;
+}
+export interface ActorType extends Utils.XY, Utils.Chainable, LayerType {
     isPlayer: () => boolean;
     isVisible: () => boolean;
     isDetected: () => boolean;
@@ -27,26 +46,24 @@ export interface ActorType extends Utils.XY, Utils.Chainable {
     forbidsCell: (cell: CellType) => boolean;
     delete: () => void;
     rememberedInCell: CellType | null;
+    readonly flags: ActorFlags;
     next: ActorType | null;
 }
-export interface ItemType extends Utils.XY, Utils.Chainable {
-    x: number;
-    y: number;
+export interface ItemFlags extends LayerFlags {
+    item: number;
+}
+export interface ItemType extends Utils.XY, Utils.Chainable, LayerType {
     quantity: number;
+    readonly flags: ItemFlags;
     blocksMove: () => boolean;
     avoidsCell: (cell: CellType) => boolean;
     forbidsCell: (cell: CellType) => boolean;
-    readonly sprite: SpriteType;
-    readonly light: LightType | null;
     isDetected: () => boolean;
     delete: () => void;
-    clone: () => ItemType;
+    clone: () => this;
     next: ItemType | null;
 }
-export interface FxType extends Utils.XY, Utils.Chainable {
-    x: number;
-    y: number;
-    readonly sprite: SpriteType;
+export interface FxType extends Utils.XY, Utils.Chainable, LayerType {
     next: FxType | null;
 }
 export interface CellType {
@@ -70,5 +87,5 @@ export declare class Bounds {
     height: number;
     constructor(x: number, y: number, w: number, h: number);
     contains(x: number, y: number): boolean;
-    contains(loc: Utils.Loc): boolean;
+    contains(loc: Utils.Loc | Utils.XY): boolean;
 }

@@ -274,14 +274,18 @@ declare namespace range_d {
   };
 }
 
+declare type FlagSource = number | string;
+declare type FlagBase = number | string | FlagSource[] | null;
 declare function fl(N: number): number;
 declare function toString(flagObj: any, value: number): string;
-declare function from$1(obj: any, ...args: any[]): number;
+declare function from$1(obj: any, ...args: (FlagBase | undefined)[]): number;
 
+type flag_d_FlagBase = FlagBase;
 declare const flag_d_fl: typeof fl;
 declare const flag_d_toString: typeof toString;
 declare namespace flag_d {
   export {
+    flag_d_FlagBase as FlagBase,
     flag_d_fl as fl,
     flag_d_toString as toString,
     from$1 as from,
@@ -904,16 +908,133 @@ declare namespace color_d {
   };
 }
 
-interface DrawInfo {
-    ch: string | number;
-    fg: Color | number;
-    bg: Color | number;
-}
 interface SpriteType {
     readonly ch?: string | number;
     readonly fg?: ColorBase;
     readonly bg?: ColorBase;
     readonly opacity?: number;
+}
+interface LightType {
+    color: Color;
+    radius: Range;
+    fadeTo: number;
+    passThroughActors: boolean;
+    paint(map: MapType, x: number, y: number): boolean;
+    paint(map: MapType, x: number, y: number, maintainShadows: boolean): boolean;
+    paint(map: MapType, x: number, y: number, maintainShadows: boolean, isMinersLight: boolean): boolean;
+}
+interface LayerFlags {
+    readonly layer: number;
+}
+interface LayerType {
+    readonly sprite: SpriteType;
+    readonly priority: number;
+    readonly depth: number;
+    readonly light: LightType | null;
+    readonly flags: LayerFlags;
+}
+interface TileFlags extends LayerFlags {
+    readonly tile: number;
+    readonly tileMech: number;
+}
+interface TileType extends LayerType {
+    readonly id: string;
+    readonly flags: TileFlags;
+}
+interface ActorFlags extends LayerFlags {
+    actor: number;
+}
+interface ActorType extends XY, Chainable, LayerType {
+    isPlayer: () => boolean;
+    isVisible: () => boolean;
+    isDetected: () => boolean;
+    blocksVision: () => boolean;
+    avoidsCell: (cell: CellType) => boolean;
+    forbidsCell: (cell: CellType) => boolean;
+    delete: () => void;
+    rememberedInCell: CellType | null;
+    readonly flags: ActorFlags;
+    next: ActorType | null;
+}
+interface ItemFlags extends LayerFlags {
+    item: number;
+}
+interface ItemType extends XY, Chainable, LayerType {
+    quantity: number;
+    readonly flags: ItemFlags;
+    blocksMove: () => boolean;
+    avoidsCell: (cell: CellType) => boolean;
+    forbidsCell: (cell: CellType) => boolean;
+    isDetected: () => boolean;
+    delete: () => void;
+    clone: () => this;
+    next: ItemType | null;
+}
+interface FxType extends XY, Chainable, LayerType {
+    next: FxType | null;
+}
+interface CellType {
+    flags: number;
+    mechFlags: number;
+    tileFlags: () => number;
+    tileMechFlags: () => number;
+    actor: ActorType | null;
+    item: ItemType | null;
+    storeMemory: () => void;
+}
+interface MapType {
+    readonly width: number;
+    readonly height: number;
+    cell: (x: number, y: number) => CellType;
+}
+declare class Bounds {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    constructor(x: number, y: number, w: number, h: number);
+    contains(x: number, y: number): boolean;
+    contains(loc: Loc | XY): boolean;
+}
+
+type types_d_SpriteType = SpriteType;
+type types_d_LightType = LightType;
+type types_d_LayerFlags = LayerFlags;
+type types_d_LayerType = LayerType;
+type types_d_TileFlags = TileFlags;
+type types_d_TileType = TileType;
+type types_d_ActorFlags = ActorFlags;
+type types_d_ActorType = ActorType;
+type types_d_ItemFlags = ItemFlags;
+type types_d_ItemType = ItemType;
+type types_d_FxType = FxType;
+type types_d_CellType = CellType;
+type types_d_MapType = MapType;
+type types_d_Bounds = Bounds;
+declare const types_d_Bounds: typeof Bounds;
+declare namespace types_d {
+  export {
+    types_d_SpriteType as SpriteType,
+    types_d_LightType as LightType,
+    types_d_LayerFlags as LayerFlags,
+    types_d_LayerType as LayerType,
+    types_d_TileFlags as TileFlags,
+    types_d_TileType as TileType,
+    types_d_ActorFlags as ActorFlags,
+    types_d_ActorType as ActorType,
+    types_d_ItemFlags as ItemFlags,
+    types_d_ItemType as ItemType,
+    types_d_FxType as FxType,
+    types_d_CellType as CellType,
+    types_d_MapType as MapType,
+    types_d_Bounds as Bounds,
+  };
+}
+
+interface DrawInfo {
+    ch: string | number;
+    fg: Color | number;
+    bg: Color | number;
 }
 declare class Mixer implements DrawInfo {
     ch: string | number;
@@ -1125,7 +1246,6 @@ declare const index_d_sprites: typeof sprites;
 declare const index_d_makeSprite: typeof makeSprite;
 declare const index_d_installSprite: typeof installSprite;
 type index_d_DrawInfo = DrawInfo;
-type index_d_SpriteType = SpriteType;
 type index_d_Mixer = Mixer;
 declare const index_d_Mixer: typeof Mixer;
 type index_d_GlyphOptions = GlyphOptions;
@@ -1148,7 +1268,6 @@ declare namespace index_d {
     index_d_makeSprite as makeSprite,
     index_d_installSprite as installSprite,
     index_d_DrawInfo as DrawInfo,
-    index_d_SpriteType as SpriteType,
     index_d_Mixer as Mixer,
     index_d_GlyphOptions as GlyphOptions,
     index_d_Glyphs as Glyphs,
@@ -1226,99 +1345,6 @@ declare namespace index_d$1 {
     index_d$1_addHelper as addHelper,
     index_d$1_options as options,
     index_d$1_Template as Template,
-  };
-}
-
-interface LightType {
-    color: Color;
-    radius: Range;
-    fadeTo: number;
-    passThroughActors: boolean;
-}
-interface TileType {
-    readonly sprite: SpriteType;
-    readonly priority: number;
-    readonly layer: number;
-    readonly light: LightType | null;
-}
-interface ActorType extends XY, Chainable {
-    x: number;
-    y: number;
-    readonly sprite: SpriteType;
-    readonly light: LightType | null;
-    isPlayer: () => boolean;
-    isVisible: () => boolean;
-    isDetected: () => boolean;
-    blocksVision: () => boolean;
-    avoidsCell: (cell: CellType) => boolean;
-    forbidsCell: (cell: CellType) => boolean;
-    delete: () => void;
-    rememberedInCell: CellType | null;
-    next: ActorType | null;
-}
-interface ItemType extends XY, Chainable {
-    x: number;
-    y: number;
-    quantity: number;
-    blocksMove: () => boolean;
-    avoidsCell: (cell: CellType) => boolean;
-    forbidsCell: (cell: CellType) => boolean;
-    readonly sprite: SpriteType;
-    readonly light: LightType | null;
-    isDetected: () => boolean;
-    delete: () => void;
-    clone: () => ItemType;
-    next: ItemType | null;
-}
-interface FxType extends XY, Chainable {
-    x: number;
-    y: number;
-    readonly sprite: SpriteType;
-    next: FxType | null;
-}
-interface CellType {
-    flags: number;
-    mechFlags: number;
-    tileFlags: () => number;
-    tileMechFlags: () => number;
-    actor: ActorType | null;
-    item: ItemType | null;
-    storeMemory: () => void;
-}
-interface MapType {
-    readonly width: number;
-    readonly height: number;
-    cell: (x: number, y: number) => CellType;
-}
-declare class Bounds {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-    constructor(x: number, y: number, w: number, h: number);
-    contains(x: number, y: number): boolean;
-    contains(loc: Loc): boolean;
-}
-
-type types_d_LightType = LightType;
-type types_d_TileType = TileType;
-type types_d_ActorType = ActorType;
-type types_d_ItemType = ItemType;
-type types_d_FxType = FxType;
-type types_d_CellType = CellType;
-type types_d_MapType = MapType;
-type types_d_Bounds = Bounds;
-declare const types_d_Bounds: typeof Bounds;
-declare namespace types_d {
-  export {
-    types_d_LightType as LightType,
-    types_d_TileType as TileType,
-    types_d_ActorType as ActorType,
-    types_d_ItemType as ItemType,
-    types_d_FxType as FxType,
-    types_d_CellType as CellType,
-    types_d_MapType as MapType,
-    types_d_Bounds as Bounds,
   };
 }
 

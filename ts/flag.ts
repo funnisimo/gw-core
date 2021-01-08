@@ -1,6 +1,9 @@
 ///////////////////////////////////
 // FLAG
 
+type FlagSource = number | string;
+export type FlagBase = number | string | FlagSource[] | null;
+
 export function fl(N: number) {
   return 1 << N;
 }
@@ -25,7 +28,7 @@ export function toString(flagObj: any, value: number) {
   return out.join(" | ");
 }
 
-export function from(obj: any, ...args: any[]) {
+export function from(obj: any, ...args: (FlagBase | undefined)[]) {
   let result = 0;
   for (let index = 0; index < args.length; ++index) {
     let value = args[index];

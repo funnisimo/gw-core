@@ -1,5 +1,5 @@
 import * as Color from "../color";
-import { SpriteType } from "./mixer";
+import { SpriteType } from "../types";
 export interface SpriteConfig {
     ch?: string | number | null;
     fg?: Color.ColorBase | null;

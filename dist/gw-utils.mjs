@@ -5081,16 +5081,16 @@ class Bounds {
         this.height = h;
     }
     contains(...args) {
-        let x = args[0];
-        let y = args[1];
-        if (Array.isArray(x)) {
-            y = x[1];
-            x = x[0];
+        let x$1 = args[0];
+        let y$1 = args[1];
+        if (typeof x$1 !== "number") {
+            y$1 = y(x$1);
+            x$1 = x(x$1);
         }
-        return (this.x <= x &&
-            this.y <= y &&
-            this.x + this.width > x &&
-            this.y + this.height > y);
+        return (this.x <= x$1 &&
+            this.y <= y$1 &&
+            this.x + this.width > x$1 &&
+            this.y + this.height > y$1);
     }
 }
 
