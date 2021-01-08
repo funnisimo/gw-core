@@ -69,7 +69,6 @@ export function hyphenate(text, width, start, end, wordWidth, spaceLeftOnLine) {
     }
     // one hyphen will work...
     // if (spaceLeftOnLine + width > wordWidth) {
-    // one hyphen...
     const hyphenAt = Math.min(Math.floor(wordWidth / 2), spaceLeftOnLine - 1);
     const w = Utils.advanceChars(text, start, hyphenAt);
     text = splice(text, w, 0, "-\n");
