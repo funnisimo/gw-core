@@ -306,6 +306,8 @@ declare class Grid<T> extends Array<Array<T>> {
     constructor(w: number, h: number, v: GridInit<T> | T);
     get width(): number;
     get height(): number;
+    get(x: number, y: number): T | undefined;
+    set(x: number, y: number, v: T): false | undefined;
     /**
      * Calls the supplied function for each cell in the grid.
      * @param fn - The function to call on each item in the grid.

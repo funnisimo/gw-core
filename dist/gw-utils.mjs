@@ -929,6 +929,16 @@ class Grid extends Array {
     get height() {
         return this._height;
     }
+    get(x, y) {
+        if (!this.hasXY(x, y))
+            return undefined;
+        return this[x][y];
+    }
+    set(x, y, v) {
+        if (!this.hasXY(x, y))
+            return false;
+        this[x][y] = v;
+    }
     /**
      * Calls the supplied function for each cell in the grid.
      * @param fn - The function to call on each item in the grid.
@@ -955,8 +965,6 @@ class Grid extends Array {
         }
     }
     forRect(x, y, w, h, fn) {
-        x = Math.max(0, x);
-        y = Math.max(0, y);
         w = Math.min(this.width - x, w);
         h = Math.min(this.height - y, h);
         for (let i = x; i < x + w; ++i) {

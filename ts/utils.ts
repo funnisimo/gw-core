@@ -596,7 +596,7 @@ export function getLine(
   fromY: number,
   toX: number,
   toY: number
-) {
+): Loc[] {
   const line: Array<Loc> = [];
 
   forLine(fromX, fromY, toX, toY, (x: number, y: number) => {
@@ -620,7 +620,7 @@ export function getLineThru(
   toY: number,
   width: number,
   height: number
-) {
+): Loc[] {
   const line: Array<Loc> = [];
 
   forLine(fromX, fromY, toX, toY, (x: number, y: number) => {

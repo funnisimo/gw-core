@@ -1,5 +1,6 @@
 import * as Color from "../color";
 import { SpriteType } from "../types";
+import * as Utils from "../utils";
 import { make } from "../gw";
 
 export interface DrawInfo {
@@ -13,10 +14,10 @@ export class Mixer implements DrawInfo {
   public fg: Color.Color;
   public bg: Color.Color;
 
-  constructor() {
-    this.ch = -1;
-    this.fg = new Color.Color();
-    this.bg = new Color.Color();
+  constructor(base?: Partial<DrawInfo>) {
+    this.ch = Utils.first(base?.ch, -1);
+    this.fg = Color.from(base?.fg);
+    this.bg = Color.from(base?.bg);
   }
 
   protected _changed() {
@@ -143,8 +144,13 @@ export class Mixer implements DrawInfo {
       bg: this.bg.toInt(),
     };
   }
+
+  toString() {
+    // prettier-ignore
+    return `{ ch: ${this.ch}, fg: ${this.fg.toString(true)}, bg: ${this.bg.toString(true)} }`;
+  }
 }
 
-make.mixer = function () {
-  return new Mixer();
+make.mixer = function (base?: Partial<DrawInfo>) {
+  return new Mixer(base);
 };
