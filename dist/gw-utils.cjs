@@ -959,6 +959,8 @@ class Grid extends Array {
         }
     }
     forRect(x, y, w, h, fn) {
+        x = Math.max(0, x);
+        y = Math.max(0, y);
         w = Math.min(this.width - x, w);
         h = Math.min(this.height - y, h);
         for (let i = x; i < x + w; ++i) {
@@ -970,6 +972,9 @@ class Grid extends Array {
     /**
      * Returns a new Grid with the cells mapped according to the supplied function.
      * @param fn - The function that maps the cell values
+     * TODO - Do we need this???
+     * TODO - Should this only be in NumGrid?
+     * TODO - Should it alloc instead of using constructor?
      * TSIGNORE
      */
     // @ts-ignore

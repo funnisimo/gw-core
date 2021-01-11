@@ -318,6 +318,9 @@ declare class Grid<T> extends Array<Array<T>> {
     /**
      * Returns a new Grid with the cells mapped according to the supplied function.
      * @param fn - The function that maps the cell values
+     * TODO - Do we need this???
+     * TODO - Should this only be in NumGrid?
+     * TODO - Should it alloc instead of using constructor?
      */
      // @ts-ignore
 
@@ -358,9 +361,9 @@ declare class Grid<T> extends Array<Array<T>> {
 declare class NumGrid extends Grid<number> {
     x?: number;
     y?: number;
-    static alloc(w: number, h: number, v?: number): NumGrid;
+    static alloc(w: number, h: number, v?: GridInit<number> | number): NumGrid;
     static free(grid: NumGrid): void;
-    constructor(w: number, h: number, v?: number);
+    constructor(w: number, h: number, v?: GridInit<number> | number);
     resize(width: number, height: number, v?: GridInit<number> | number): void;
     findReplaceRange(findValueMin: number, findValueMax: number, fillValue: number): void;
     floodFillRange(x: number, y: number, eligibleValueMin?: number, eligibleValueMax?: number, fillValue?: number): number;
