@@ -4,153 +4,153 @@ import * as Utils from "../utils";
 import { make } from "../gw";
 
 export interface DrawInfo {
-  ch: string | number;
-  fg: Color.Color | number;
-  bg: Color.Color | number;
+    ch: string | number;
+    fg: Color.ColorBase;
+    bg: Color.ColorBase;
 }
 
 export class Mixer implements DrawInfo {
-  public ch: string | number;
-  public fg: Color.Color;
-  public bg: Color.Color;
+    public ch: string | number;
+    public fg: Color.Color;
+    public bg: Color.Color;
 
-  constructor(base?: Partial<DrawInfo>) {
-    this.ch = Utils.first(base?.ch, -1);
-    this.fg = Color.from(base?.fg);
-    this.bg = Color.from(base?.bg);
-  }
-
-  protected _changed() {
-    return this;
-  }
-
-  copy(other: Mixer) {
-    this.ch = other.ch;
-    this.fg.copy(other.fg);
-    this.bg.copy(other.bg);
-    return this._changed();
-  }
-
-  clone() {
-    const other = new Mixer();
-    other.copy(this);
-    return other;
-  }
-
-  equals(other: Mixer) {
-    return (
-      this.ch == other.ch &&
-      this.fg.equals(other.fg) &&
-      this.bg.equals(other.bg)
-    );
-  }
-
-  nullify() {
-    this.ch = -1;
-    this.fg.nullify();
-    this.bg.nullify();
-    return this._changed();
-  }
-
-  blackOut() {
-    this.ch = 0;
-    this.fg.blackOut();
-    this.bg.blackOut();
-    return this._changed();
-  }
-
-  draw(
-    ch: string | number = -1,
-    fg: Color.ColorBase = -1,
-    bg: Color.ColorBase = -1
-  ) {
-    if (ch && ch !== -1) {
-      this.ch = ch;
+    constructor(base?: Partial<DrawInfo>) {
+        this.ch = Utils.first(base?.ch, -1);
+        this.fg = Color.from(base?.fg);
+        this.bg = Color.from(base?.bg);
     }
-    if (fg !== -1 && fg !== null) {
-      fg = Color.from(fg);
-      this.fg.copy(fg);
+
+    protected _changed() {
+        return this;
     }
-    if (bg !== -1 && bg !== null) {
-      bg = Color.from(bg);
-      this.bg.copy(bg);
+
+    copy(other: Mixer) {
+        this.ch = other.ch;
+        this.fg.copy(other.fg);
+        this.bg.copy(other.bg);
+        return this._changed();
     }
-    return this._changed();
-  }
 
-  drawSprite(info: SpriteType, opacity?: number) {
-    if (opacity === undefined) opacity = info.opacity;
-    if (opacity === undefined) opacity = 100;
-    if (opacity <= 0) return;
-
-    if ((info.ch && info.ch !== -1) || info.ch === 0) this.ch = info.ch;
-    if ((info.fg && info.fg !== -1) || info.fg === 0)
-      this.fg.mix(info.fg, opacity);
-    if ((info.bg && info.bg !== -1) || info.bg === 0)
-      this.bg.mix(info.bg, opacity);
-    return this._changed();
-  }
-
-  invert() {
-    [this.bg, this.fg] = [this.fg, this.bg];
-    return this._changed();
-  }
-
-  multiply(color: Color.ColorBase, fg = true, bg = true) {
-    color = Color.from(color);
-    if (fg) {
-      this.fg.multiply(color);
+    clone() {
+        const other = new Mixer();
+        other.copy(this);
+        return other;
     }
-    if (bg) {
-      this.bg.multiply(color);
-    }
-    return this._changed();
-  }
 
-  mix(color: Color.ColorBase, fg = 50, bg = fg) {
-    color = Color.from(color);
-    if (fg > 0) {
-      this.fg.mix(color, fg);
+    equals(other: Mixer) {
+        return (
+            this.ch == other.ch &&
+            this.fg.equals(other.fg) &&
+            this.bg.equals(other.bg)
+        );
     }
-    if (bg > 0) {
-      this.bg.mix(color, bg);
+
+    nullify() {
+        this.ch = -1;
+        this.fg.nullify();
+        this.bg.nullify();
+        return this._changed();
     }
-    return this._changed();
-  }
 
-  add(color: Color.ColorBase, fg = 100, bg = fg) {
-    color = Color.from(color);
-    if (fg > 0) {
-      this.fg.add(color, fg);
+    blackOut() {
+        this.ch = 0;
+        this.fg.blackOut();
+        this.bg.blackOut();
+        return this._changed();
     }
-    if (bg > 0) {
-      this.bg.add(color, bg);
+
+    draw(
+        ch: string | number = -1,
+        fg: Color.ColorBase = -1,
+        bg: Color.ColorBase = -1
+    ) {
+        if (ch && ch !== -1) {
+            this.ch = ch;
+        }
+        if (fg !== -1 && fg !== null) {
+            fg = Color.from(fg);
+            this.fg.copy(fg);
+        }
+        if (bg !== -1 && bg !== null) {
+            bg = Color.from(bg);
+            this.bg.copy(bg);
+        }
+        return this._changed();
     }
-    return this._changed();
-  }
 
-  separate() {
-    Color.separate(this.fg, this.bg);
-    return this._changed();
-  }
+    drawSprite(info: SpriteType, opacity?: number) {
+        if (opacity === undefined) opacity = info.opacity;
+        if (opacity === undefined) opacity = 100;
+        if (opacity <= 0) return;
 
-  bake(clearDancing = false) {
-    this.fg.bake(clearDancing);
-    this.bg.bake(clearDancing);
-    this._changed();
-    return {
-      ch: this.ch,
-      fg: this.fg.toInt(),
-      bg: this.bg.toInt(),
-    };
-  }
+        if ((info.ch && info.ch !== -1) || info.ch === 0) this.ch = info.ch;
+        if ((info.fg && info.fg !== -1) || info.fg === 0)
+            this.fg.mix(info.fg, opacity);
+        if ((info.bg && info.bg !== -1) || info.bg === 0)
+            this.bg.mix(info.bg, opacity);
+        return this._changed();
+    }
 
-  toString() {
-    // prettier-ignore
-    return `{ ch: ${this.ch}, fg: ${this.fg.toString(true)}, bg: ${this.bg.toString(true)} }`;
-  }
+    invert() {
+        [this.bg, this.fg] = [this.fg, this.bg];
+        return this._changed();
+    }
+
+    multiply(color: Color.ColorBase, fg = true, bg = true) {
+        color = Color.from(color);
+        if (fg) {
+            this.fg.multiply(color);
+        }
+        if (bg) {
+            this.bg.multiply(color);
+        }
+        return this._changed();
+    }
+
+    mix(color: Color.ColorBase, fg = 50, bg = fg) {
+        color = Color.from(color);
+        if (fg > 0) {
+            this.fg.mix(color, fg);
+        }
+        if (bg > 0) {
+            this.bg.mix(color, bg);
+        }
+        return this._changed();
+    }
+
+    add(color: Color.ColorBase, fg = 100, bg = fg) {
+        color = Color.from(color);
+        if (fg > 0) {
+            this.fg.add(color, fg);
+        }
+        if (bg > 0) {
+            this.bg.add(color, bg);
+        }
+        return this._changed();
+    }
+
+    separate() {
+        Color.separate(this.fg, this.bg);
+        return this._changed();
+    }
+
+    bake(clearDancing = false) {
+        this.fg.bake(clearDancing);
+        this.bg.bake(clearDancing);
+        this._changed();
+        return {
+            ch: this.ch,
+            fg: this.fg.toInt(),
+            bg: this.bg.toInt(),
+        };
+    }
+
+    toString() {
+        // prettier-ignore
+        return `{ ch: ${this.ch}, fg: ${this.fg.toString(true)}, bg: ${this.bg.toString(true)} }`;
+    }
 }
 
 make.mixer = function (base?: Partial<DrawInfo>) {
-  return new Mixer(base);
+    return new Mixer(base);
 };

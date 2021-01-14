@@ -942,6 +942,7 @@ class Grid extends Array {
         if (!this.hasXY(x, y))
             return false;
         this[x][y] = v;
+        return true;
     }
     /**
      * Calls the supplied function for each cell in the grid.
@@ -1121,12 +1122,13 @@ class Grid extends Array {
     dumpAround(x, y, radius) {
         this.dumpRect(x - radius, y - radius, 2 * radius, 2 * radius);
     }
+    // TODO - Use for(radius) loop to speed this up (do not look at each cell)
     closestMatchingLoc(x, y, fn) {
         let bestLoc = [-1, -1];
-        let bestDistance = this.width + this.height;
+        let bestDistance = 100 * (this.width + this.height);
         this.forEach((v, i, j) => {
             if (fn(v, i, j, this)) {
-                const dist = distanceBetween(x, y, i, j);
+                const dist = Math.floor(100 * distanceBetween(x, y, i, j));
                 if (dist < bestDistance) {
                     bestLoc[0] = i;
                     bestLoc[1] = j;

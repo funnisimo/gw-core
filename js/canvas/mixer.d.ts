@@ -2,8 +2,8 @@ import * as Color from "../color";
 import { SpriteType } from "../types";
 export interface DrawInfo {
     ch: string | number;
-    fg: Color.Color | number;
-    bg: Color.Color | number;
+    fg: Color.ColorBase;
+    bg: Color.ColorBase;
 }
 export declare class Mixer implements DrawInfo {
     ch: string | number;

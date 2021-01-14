@@ -1,5 +1,7 @@
 import * as Grid from "./grid";
 import * as GW from "./index";
+import * as UTILS from '../test/utils';
+import { random } from "./random";
 
 describe("GW.grid", () => {
     let a: Grid.NumGrid;
@@ -15,6 +17,15 @@ describe("GW.grid", () => {
         expect(a.height).toEqual(10);
         expect(a[9][9]).toEqual(0);
         expect(a.hasXY(0, 0)).toBeTruthy();
+
+    });
+
+    test('get/set', () => {
+        a = GW.grid.alloc(10, 10, 0);
+        expect(a.set(3, 4, 5)).toBeTruthy();
+        expect(a.get(3, 4)).toEqual(5);
+        expect(a.set(-1, -1, 5)).toBeFalsy();
+        expect(a.get(-1, -1)).toBeUndefined();
     });
 
     test("realloc", () => {
@@ -248,5 +259,65 @@ describe("GW.grid", () => {
         expect(a.count(1)).toEqual(400);
         a.floodFill(0, 0, 1, 2);
         expect(a.count(2)).toEqual(400);
+    });
+
+    test('closestMatchingLoc', () => {
+        UTILS.mockRandom();
+        random.seed(5);
+
+        a = GW.grid.alloc(10, 10, 0);
+        a[4][1] = 1;
+        a[2][3] = 1;
+
+        function one(v: number) { return v == 1; }
+        expect(a.closestMatchingLoc(2, 2, one)).toEqual([2, 3]);
+        expect(a.closestMatchingLoc(4, 4, one)).toEqual([2, 3]);
+        expect(a.closestMatchingLoc(4, 2, one)).toEqual([4, 1]);
+        expect(a.closestMatchingLoc(3, 2, one)).toEqual([4, 1]);
+    });
+
+    test('firstMatchingLoc', () => {
+        a = GW.grid.alloc(10, 10, 0);
+        a[4][1] = 1;
+        a[2][3] = 1;
+
+        function one(v: number) { return v == 1; }
+        expect(a.firstMatchingLoc(one)).toEqual([2, 3]);
+        function two(v: number) { return v == 2; }
+        expect(a.firstMatchingLoc(two)).toEqual([-1, -1]);
+    });
+
+    test('randomMatchingLoc', () => {
+        UTILS.mockRandom();
+        random.seed(5);
+
+        a = GW.grid.alloc(10, 10, 0);
+        a[4][1] = 1;
+        a[2][3] = 1;
+
+        function one(v: number) { return v == 1; }
+        expect(a.randomMatchingLoc(one)).toEqual([2, 3]);
+
+        random.seed(50);
+        expect(a.randomMatchingLoc(one)).toEqual([4, 1]);
+
+        function two(v: number) { return v == 2; }
+        expect(a.randomMatchingLoc(two)).toEqual([-1, -1]);
+
+        random.seed(5);
+        expect(a.randomMatchingLoc(one, true)).toEqual([4, 1]);
+        random.seed(50);
+        expect(a.randomMatchingLoc(one, true)).toEqual([4, 1]);
+
+        // some kind of error!
+        let ok = false;
+        const test = jest.fn().mockImplementation((v: number, x: number, y: number) => {
+            if (x == 0 && y == 0) ok = !ok;
+            if (!v) return false;
+            return ok;
+        });
+
+        expect(a.randomMatchingLoc(test)).toEqual([-1, -1]);
+
     });
 });

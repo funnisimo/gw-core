@@ -14,7 +14,7 @@ export declare class Grid<T> extends Array<Array<T>> {
     get width(): number;
     get height(): number;
     get(x: number, y: number): T | undefined;
-    set(x: number, y: number, v: T): false | undefined;
+    set(x: number, y: number, v: T): boolean;
     /**
      * Calls the supplied function for each cell in the grid.
      * @param fn - The function to call on each item in the grid.
