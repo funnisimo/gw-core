@@ -473,27 +473,30 @@ export class Grid<T> extends Array<Array<T>> {
   //		Four means it is in the intersection of two hallways.
   //		Five or more means there is a bug.
   arcCount(x: number, y: number, testFn: GridMatch<T>) {
-    let arcCount, dir, oldX, oldY, newX, newY;
+    let oldX, oldY, newX, newY;
 
     // brogueAssert(grid.hasXY(x, y));
 
     testFn = testFn || Utils.IDENTITY;
 
-    arcCount = 0;
-    for (dir = 0; dir < CDIRS.length; dir++) {
+    let arcCount = 0;
+    let matchCount = 0;
+    for (let dir = 0; dir < CDIRS.length; dir++) {
       oldX = x + CDIRS[(dir + 7) % 8][0];
       oldY = y + CDIRS[(dir + 7) % 8][1];
       newX = x + CDIRS[dir][0];
       newY = y + CDIRS[dir][1];
       // Counts every transition from passable to impassable or vice-versa on the way around the cell:
-      if (
-        (this.hasXY(newX, newY) &&
-          testFn(this[newX][newY], newX, newY, this)) !=
-        (this.hasXY(oldX, oldY) && testFn(this[oldX][oldY], oldX, oldY, this))
-      ) {
+      const newOk =
+        this.hasXY(newX, newY) && testFn(this[newX][newY], newX, newY, this);
+      const oldOk =
+        this.hasXY(oldX, oldY) && testFn(this[oldX][oldY], oldX, oldY, this);
+      if (newOk) ++matchCount;
+      if (newOk != oldOk) {
         arcCount++;
       }
     }
+    if (arcCount == 0 && matchCount) return 1;
     return Math.floor(arcCount / 2); // Since we added one when we entered a wall and another when we left.
   }
 }

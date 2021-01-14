@@ -1045,7 +1045,7 @@ declare class Mixer implements DrawInfo {
     ch: string | number;
     fg: Color;
     bg: Color;
-    constructor();
+    constructor(base?: Partial<DrawInfo>);
     protected _changed(): this;
     copy(other: Mixer): this;
     clone(): Mixer;
@@ -1064,6 +1064,7 @@ declare class Mixer implements DrawInfo {
         fg: number;
         bg: number;
     };
+    toString(): string;
 }
 
 interface Data {

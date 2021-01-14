@@ -1,10 +1,11 @@
 import * as Color from "../color";
+import * as Utils from "../utils";
 import { make } from "../gw";
 export class Mixer {
-    constructor() {
-        this.ch = -1;
-        this.fg = new Color.Color();
-        this.bg = new Color.Color();
+    constructor(base) {
+        this.ch = Utils.first(base === null || base === void 0 ? void 0 : base.ch, -1);
+        this.fg = Color.from(base === null || base === void 0 ? void 0 : base.fg);
+        this.bg = Color.from(base === null || base === void 0 ? void 0 : base.bg);
     }
     _changed() {
         return this;
@@ -114,8 +115,12 @@ export class Mixer {
             bg: this.bg.toInt(),
         };
     }
+    toString() {
+        // prettier-ignore
+        return `{ ch: ${this.ch}, fg: ${this.fg.toString(true)}, bg: ${this.bg.toString(true)} }`;
+    }
 }
-make.mixer = function () {
-    return new Mixer();
+make.mixer = function (base) {
+    return new Mixer(base);
 };
 //# sourceMappingURL=mixer.js.map

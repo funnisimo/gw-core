@@ -9,7 +9,7 @@ export declare class Mixer implements DrawInfo {
     ch: string | number;
     fg: Color.Color;
     bg: Color.Color;
-    constructor();
+    constructor(base?: Partial<DrawInfo>);
     protected _changed(): this;
     copy(other: Mixer): this;
     clone(): Mixer;
@@ -28,4 +28,5 @@ export declare class Mixer implements DrawInfo {
         fg: number;
         bg: number;
     };
+    toString(): string;
 }
