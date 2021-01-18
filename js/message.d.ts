@@ -13,5 +13,5 @@ export declare function add(msg: string, args?: any): void;
 export declare function fromActor(actor: Types.ActorType, msg: string, args?: any): void;
 export declare function addCombat(actor: Types.ActorType, msg: string, args?: any): void;
 export declare function confirmAll(): void;
-export declare type EachMsgFn = (msg: string, confirmed: boolean, i: number) => boolean;
+export declare type EachMsgFn = (msg: string, confirmed: boolean, i: number) => any;
 export declare function forEach(fn: EachMsgFn): void;

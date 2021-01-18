@@ -136,13 +136,13 @@ export function confirmAll() {
   NEEDS_UPDATE = true;
 }
 
-export type EachMsgFn = (msg: string, confirmed: boolean, i: number) => boolean;
+export type EachMsgFn = (msg: string, confirmed: boolean, i: number) => any;
 
 export function forEach(fn: EachMsgFn) {
   for (let i = 0; i < ARCHIVE_LINES; ++i) {
-    const n = (i + CURRENT_ARCHIVE_POS) % ARCHIVE_LINES;
+    const n = (i + CURRENT_ARCHIVE_POS - 1) % ARCHIVE_LINES;
     const msg = ARCHIVE[n];
     if (!msg) return;
-    if (!fn(msg, CONFIRMED[n], i)) return;
+    if (fn(msg, CONFIRMED[n], i) === false) return;
   }
 }

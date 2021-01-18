@@ -1367,7 +1367,7 @@ declare function add(msg: string, args?: any): void;
 declare function fromActor(actor: ActorType, msg: string, args?: any): void;
 declare function addCombat(actor: ActorType, msg: string, args?: any): void;
 declare function confirmAll(): void;
-declare type EachMsgFn = (msg: string, confirmed: boolean, i: number) => boolean;
+declare type EachMsgFn = (msg: string, confirmed: boolean, i: number) => any;
 declare function forEach(fn: EachMsgFn): void;
 
 declare const message_d_templates: typeof templates;
