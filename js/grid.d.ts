@@ -61,7 +61,7 @@ export declare class Grid<T> extends Array<Array<T>> {
     dump(fmtFn?: GridFormat<T>): void;
     dumpRect(left: number, top: number, width: number, height: number, fmtFn?: GridFormat<T>): void;
     dumpAround(x: number, y: number, radius: number): void;
-    closestMatchingLoc(x: number, y: number, fn: GridMatch<T>): Loc;
+    closestMatchingLoc(x: number, y: number, v: T | GridMatch<T>): Loc;
     firstMatchingLoc(v: T | GridMatch<T>): Loc;
     randomMatchingLoc(v: T | GridMatch<T>, deterministic?: boolean): Loc;
     matchingLocNear(x: number, y: number, v: T | GridMatch<T>, deterministic?: boolean): Loc;
@@ -73,13 +73,10 @@ export declare class NumGrid extends Grid<number> {
     static alloc(w: number, h: number, v?: GridInit<number> | number): NumGrid;
     static free(grid: NumGrid): void;
     constructor(w: number, h: number, v?: GridInit<number> | number);
-    resize(width: number, height: number, v?: GridInit<number> | number): void;
+    protected _resize(width: number, height: number, v?: GridInit<number> | number): void;
     findReplaceRange(findValueMin: number, findValueMax: number, fillValue: number): void;
     floodFillRange(x: number, y: number, eligibleValueMin?: number, eligibleValueMax?: number, fillValue?: number): number;
     invert(): void;
-    closestLocWithValue(x: number, y: number, value?: number): Loc;
-    randomLocWithValue(validValue?: number): Loc;
-    getQualifyingLocNear(x: number, y: number, deterministic?: boolean): Utils.Loc;
     leastPositiveValue(): number;
     randomLeastPositiveLoc(deterministic?: boolean): Loc;
     floodFill(x: number, y: number, matchValue: number | GridMatch<number>, fillValue: number | GridUpdate<number>): number;

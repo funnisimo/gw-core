@@ -58,6 +58,8 @@ export function ZERO() {
 export function IDENTITY(x) {
     return x;
 }
+export function IS_ZERO(x) { return x == 0; }
+export function IS_NONZERO(x) { return x != 0; }
 /**
  * clamps a value between min and max (inclusive)
  * @param v {Number} the value to clamp

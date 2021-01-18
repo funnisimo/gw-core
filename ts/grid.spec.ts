@@ -18,6 +18,8 @@ describe("GW.grid", () => {
         expect(a[9][9]).toEqual(0);
         expect(a.hasXY(0, 0)).toBeTruthy();
 
+        expect(() => GW.grid.alloc(0, 4)).toThrow();
+        expect(() => GW.grid.alloc(4, 0)).toThrow();
     });
 
     test('get/set', () => {
@@ -32,11 +34,15 @@ describe("GW.grid", () => {
         a = GW.grid.alloc(10, 10);
         a.fill(1);
         expect(a[0][0]).toEqual(1);
+        a.x = 4;
+        a.y = 3;
         GW.grid.free(a);
 
         const b = GW.grid.alloc(10, 10);
         expect(b).toBe(a);
         expect(b[0][0]).toEqual(0);
+        expect(b.x).toBeUndefined();
+        expect(b.y).toBeUndefined();
         GW.grid.free(b);
     });
 
@@ -319,5 +325,133 @@ describe("GW.grid", () => {
 
         expect(a.randomMatchingLoc(test)).toEqual([-1, -1]);
 
+    });
+
+    test('matchingLocNear', () => {
+
+        a = GW.grid.alloc(10, 10, 0);
+        a[4][1] = 1;
+        a[2][3] = 1;
+
+        expect(a.matchingLocNear(3, 0, 1)).toEqual([4, 1]);
+        expect(a.matchingLocNear(2, 3, 1)).toEqual([2, 3]);
+        expect(a.matchingLocNear(2, 3, 2)).toEqual([-1, -1]);
+
+        function one(v: number) { return v == 1; }
+        expect(a.matchingLocNear(3, 0, one)).toEqual([4, 1]);
+
+        a[4][3] = 1;
+        expect(a.matchingLocNear(4, 2, 1)).toEqual([4, 1]);
+        expect(a.matchingLocNear(4, 2, 1, true)).toEqual([4, 3]);
+
+        // This is an error condition...
+        let normal = true;
+        const match = jest.fn().mockImplementation((v: number, x: number, y: number) => {
+            if (!normal) return false;
+            if (x == 4 && y == 3) normal = false;
+            return v == 1;
+        });
+
+        expect(a.matchingLocNear(4, 2, match)).toEqual([-1, -1]);
+    });
+
+    test('arcCount', () => {
+
+        a = GW.grid.alloc(10, 10, 0);
+
+        // all open around
+        expect(a.arcCount(4, 3, GW.utils.IS_ZERO)).toEqual(1);
+
+        // one blocked
+        a[3][3] = 1;
+        expect(a.arcCount(4, 3, GW.utils.IS_ZERO)).toEqual(1);
+        a[3][2] = 1;
+        expect(a.arcCount(4, 3, GW.utils.IS_ZERO)).toEqual(1);
+        a[3][4] = 1;
+        expect(a.arcCount(4, 3, GW.utils.IS_ZERO)).toEqual(1);
+
+        // two blocked
+        a[5][3] = 1;
+        expect(a.arcCount(4, 3, GW.utils.IS_ZERO)).toEqual(2);
+        a[5][2] = 1;
+        expect(a.arcCount(4, 3, GW.utils.IS_ZERO)).toEqual(2);
+        a[5][4] = 1;
+        expect(a.arcCount(4, 3, GW.utils.IS_ZERO)).toEqual(2);
+
+        // T intersection
+        a[5][3] = 0;
+        expect(a.arcCount(4, 3, GW.utils.IS_ZERO)).toEqual(3);
+
+        // + intersection
+        a[3][3] = 0;
+        expect(a.arcCount(4, 3, GW.utils.IS_ZERO)).toEqual(4);
+
+        // all filled around
+        a.fill(1);
+        expect(a.arcCount(4, 3, GW.utils.IS_ZERO)).toEqual(0);
+
+    });
+
+    test('findReplaceRange', () => {
+        a = GW.grid.alloc(10, 10);
+
+        a[5][4] = 5;
+        a[3][2] = 4;
+        a[1][2] = 3;
+        a[7][6] = 2;
+
+        expect(a.count(6)).toEqual(0);
+        expect(a.count(3)).toEqual(1);
+        expect(a.count(4)).toEqual(1);
+        a.findReplaceRange(3, 4, 6);
+        expect(a.count(6)).toEqual(2);
+        expect(a.count(3)).toEqual(0);
+        expect(a.count(4)).toEqual(0);
+        expect(a.count(5)).toEqual(1);
+        expect(a.count(2)).toEqual(1);
+    });
+
+    test('floodFillRange', () => {
+        a = GW.grid.alloc(10, 10);
+        a.fillRect(0, 0, 4, 4, 1);
+        a.fillRect(7, 7, 3, 3, 2);
+        a.fillRect(2, 4, 4, 4, 3);
+        a.fillRect(6, 2, 4, 4, 4);
+        a.fillRect(4, 5, 3, 3, 6);
+
+        expect(a[2][7]).toEqual(3);
+        expect(a[9][2]).toEqual(4);
+
+        expect(a.floodFillRange(4, 4, 2, 5, 9)).toEqual(25);
+        expect(a[2][7]).toEqual(9);
+        expect(a[9][2]).toEqual(9);
+
+        expect(a.count(2)).toEqual(9);
+        expect(a.count(1)).toEqual(16);
+        expect(a.count(6)).toEqual(9);
+        expect(a.count(3)).toEqual(0);
+        expect(a.count(4)).toEqual(0);
+        expect(a.count(9)).toEqual(25);
+
+        expect(a.floodFillRange(4, 5, 2, 5, 9)).toEqual(0);
+
+        expect(() => a.floodFillRange(2, 2, 1, 5, 4)).toThrow();
+    });
+
+    test('invert', () => {
+        a = GW.grid.alloc(10, 10);
+        a.fillRect(0, 0, 4, 4, 1);
+        a.fillRect(7, 7, 3, 3, 2);
+        a.fillRect(2, 4, 4, 4, 3);
+        a.fillRect(6, 2, 4, 4, 4);
+        a.fillRect(4, 5, 3, 3, 6);
+
+        expect(a.count(0)).toEqual(41);
+        expect(a.count(1)).toEqual(16);
+        expect(a.count(2)).toBeGreaterThan(0);
+        a.invert();
+        expect(a.count(0)).toEqual(59);
+        expect(a.count(1)).toEqual(41);
+        expect(a.count(2)).toEqual(0);
     });
 });

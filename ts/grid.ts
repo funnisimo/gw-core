@@ -336,9 +336,12 @@ export class Grid<T> extends Array<Array<T>> {
     }
 
     // TODO - Use for(radius) loop to speed this up (do not look at each cell)
-    closestMatchingLoc(x: number, y: number, fn: GridMatch<T>): Loc {
+    closestMatchingLoc(x: number, y: number, v: T | GridMatch<T>): Loc {
         let bestLoc: Loc = [-1, -1];
         let bestDistance = 100 * (this.width + this.height);
+
+        const fn: GridMatch<T> =
+            typeof v === "function" ? (v as GridMatch<T>) : (val: T) => val == v;
 
         this.forEach((v, i, j) => {
             if (fn(v, i, j, this)) {
@@ -479,7 +482,7 @@ export class Grid<T> extends Array<Array<T>> {
 
         // brogueAssert(grid.hasXY(x, y));
 
-        testFn = testFn || Utils.IDENTITY;
+        testFn = testFn || Utils.IS_NONZERO;
 
         let arcCount = 0;
         let matchCount = 0;
@@ -534,7 +537,7 @@ export class NumGrid extends Grid<number> {
             ++GRID_CREATE_COUNT;
             return new NumGrid(w, h, v);
         }
-        grid.resize(w, h, v);
+        grid._resize(w, h, v);
         return grid;
     }
 
@@ -552,7 +555,7 @@ export class NumGrid extends Grid<number> {
         super(w, h, v);
     }
 
-    resize(width: number, height: number, v: GridInit<number> | number = 0) {
+    protected _resize(width: number, height: number, v: GridInit<number> | number = 0) {
         const fn: GridInit<number> =
             typeof v === "function" ? (v as GridInit<number>) : () => v;
 
@@ -607,15 +610,18 @@ export class NumGrid extends Grid<number> {
             throw new Error("Invalid grid flood fill");
         }
 
+        const ok = (x: number, y: number) => {
+            return this.hasXY(x, y) &&
+                this[x][y] >= eligibleValueMin &&
+                this[x][y] <= eligibleValueMax;
+        }
+
+        if (!ok(x, y)) return 0;
         this[x][y] = fillValue;
         for (dir = 0; dir < 4; dir++) {
             newX = x + DIRS[dir][0];
             newY = y + DIRS[dir][1];
-            if (
-                this.hasXY(newX, newY) &&
-                this[newX][newY] >= eligibleValueMin &&
-                this[newX][newY] <= eligibleValueMax
-            ) {
+            if (ok(newX, newY)) {
                 fillCount += this.floodFillRange(
                     newX,
                     newY,
@@ -630,20 +636,6 @@ export class NumGrid extends Grid<number> {
 
     invert() {
         this.update((v) => (v ? 0 : 1));
-    }
-
-    closestLocWithValue(x: number, y: number, value = 1): Loc {
-        return this.closestMatchingLoc(x, y, (v) => v == value);
-    }
-
-    // Takes a grid as a mask of valid locations, chooses one randomly and returns it as (x, y).
-    // If there are no valid locations, returns (-1, -1).
-    randomLocWithValue(validValue = 1): Loc {
-        return this.randomMatchingLoc((v: any) => v == validValue);
-    }
-
-    getQualifyingLocNear(x: number, y: number, deterministic = false) {
-        return this.matchingLocNear(x, y, (v: number) => !!v, deterministic);
     }
 
     leastPositiveValue() {

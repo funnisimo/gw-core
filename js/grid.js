@@ -248,9 +248,10 @@ export class Grid extends Array {
         this.dumpRect(x - radius, y - radius, 2 * radius, 2 * radius);
     }
     // TODO - Use for(radius) loop to speed this up (do not look at each cell)
-    closestMatchingLoc(x, y, fn) {
+    closestMatchingLoc(x, y, v) {
         let bestLoc = [-1, -1];
         let bestDistance = 100 * (this.width + this.height);
+        const fn = typeof v === "function" ? v : (val) => val == v;
         this.forEach((v, i, j) => {
             if (fn(v, i, j, this)) {
                 const dist = Math.floor(100 * Utils.distanceBetween(x, y, i, j));
@@ -364,7 +365,7 @@ export class Grid extends Array {
     arcCount(x, y, testFn) {
         let oldX, oldY, newX, newY;
         // brogueAssert(grid.hasXY(x, y));
-        testFn = testFn || Utils.IDENTITY;
+        testFn = testFn || Utils.IS_NONZERO;
         let arcCount = 0;
         let matchCount = 0;
         for (let dir = 0; dir < CDIRS.length; dir++) {
@@ -409,7 +410,7 @@ export class NumGrid extends Grid {
             ++GRID_CREATE_COUNT;
             return new NumGrid(w, h, v);
         }
-        grid.resize(w, h, v);
+        grid._resize(w, h, v);
         return grid;
     }
     static free(grid) {
@@ -421,7 +422,7 @@ export class NumGrid extends Grid {
             --GRID_ACTIVE_COUNT;
         }
     }
-    resize(width, height, v = 0) {
+    _resize(width, height, v = 0) {
         const fn = typeof v === "function" ? v : () => v;
         while (this.length < width)
             this.push([]);
@@ -458,13 +459,18 @@ export class NumGrid extends Grid {
         if (fillValue >= eligibleValueMin && fillValue <= eligibleValueMax) {
             throw new Error("Invalid grid flood fill");
         }
+        const ok = (x, y) => {
+            return this.hasXY(x, y) &&
+                this[x][y] >= eligibleValueMin &&
+                this[x][y] <= eligibleValueMax;
+        };
+        if (!ok(x, y))
+            return 0;
         this[x][y] = fillValue;
         for (dir = 0; dir < 4; dir++) {
             newX = x + DIRS[dir][0];
             newY = y + DIRS[dir][1];
-            if (this.hasXY(newX, newY) &&
-                this[newX][newY] >= eligibleValueMin &&
-                this[newX][newY] <= eligibleValueMax) {
+            if (ok(newX, newY)) {
                 fillCount += this.floodFillRange(newX, newY, eligibleValueMin, eligibleValueMax, fillValue);
             }
         }
@@ -472,17 +478,6 @@ export class NumGrid extends Grid {
     }
     invert() {
         this.update((v) => (v ? 0 : 1));
-    }
-    closestLocWithValue(x, y, value = 1) {
-        return this.closestMatchingLoc(x, y, (v) => v == value);
-    }
-    // Takes a grid as a mask of valid locations, chooses one randomly and returns it as (x, y).
-    // If there are no valid locations, returns (-1, -1).
-    randomLocWithValue(validValue = 1) {
-        return this.randomMatchingLoc((v) => v == validValue);
-    }
-    getQualifyingLocNear(x, y, deterministic = false) {
-        return this.matchingLocNear(x, y, (v) => !!v, deterministic);
     }
     leastPositiveValue() {
         let least = Number.MAX_SAFE_INTEGER;

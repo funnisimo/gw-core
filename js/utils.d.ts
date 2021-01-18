@@ -24,6 +24,8 @@ export declare function FALSE(): boolean;
 export declare function ONE(): number;
 export declare function ZERO(): number;
 export declare function IDENTITY(x: any): any;
+export declare function IS_ZERO(x: number): boolean;
+export declare function IS_NONZERO(x: number): boolean;
 /**
  * clamps a value between min and max (inclusive)
  * @param v {Number} the value to clamp

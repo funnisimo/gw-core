@@ -20,6 +20,8 @@ declare function FALSE(): boolean;
 declare function ONE(): number;
 declare function ZERO(): number;
 declare function IDENTITY(x: any): any;
+declare function IS_ZERO(x: number): boolean;
+declare function IS_NONZERO(x: number): boolean;
 /**
  * clamps a value between min and max (inclusive)
  * @param v {Number} the value to clamp
@@ -103,6 +105,8 @@ declare const utils_d_FALSE: typeof FALSE;
 declare const utils_d_ONE: typeof ONE;
 declare const utils_d_ZERO: typeof ZERO;
 declare const utils_d_IDENTITY: typeof IDENTITY;
+declare const utils_d_IS_ZERO: typeof IS_ZERO;
+declare const utils_d_IS_NONZERO: typeof IS_NONZERO;
 declare const utils_d_clamp: typeof clamp;
 declare const utils_d_x: typeof x;
 declare const utils_d_y: typeof y;
@@ -168,6 +172,8 @@ declare namespace utils_d {
     utils_d_ONE as ONE,
     utils_d_ZERO as ZERO,
     utils_d_IDENTITY as IDENTITY,
+    utils_d_IS_ZERO as IS_ZERO,
+    utils_d_IS_NONZERO as IS_NONZERO,
     utils_d_clamp as clamp,
     utils_d_x as x,
     utils_d_y as y,
@@ -354,7 +360,7 @@ declare class Grid<T> extends Array<Array<T>> {
     dump(fmtFn?: GridFormat<T>): void;
     dumpRect(left: number, top: number, width: number, height: number, fmtFn?: GridFormat<T>): void;
     dumpAround(x: number, y: number, radius: number): void;
-    closestMatchingLoc(x: number, y: number, fn: GridMatch<T>): Loc$1;
+    closestMatchingLoc(x: number, y: number, v: T | GridMatch<T>): Loc$1;
     firstMatchingLoc(v: T | GridMatch<T>): Loc$1;
     randomMatchingLoc(v: T | GridMatch<T>, deterministic?: boolean): Loc$1;
     matchingLocNear(x: number, y: number, v: T | GridMatch<T>, deterministic?: boolean): Loc$1;
@@ -366,13 +372,10 @@ declare class NumGrid extends Grid<number> {
     static alloc(w: number, h: number, v?: GridInit<number> | number): NumGrid;
     static free(grid: NumGrid): void;
     constructor(w: number, h: number, v?: GridInit<number> | number);
-    resize(width: number, height: number, v?: GridInit<number> | number): void;
+    protected _resize(width: number, height: number, v?: GridInit<number> | number): void;
     findReplaceRange(findValueMin: number, findValueMax: number, fillValue: number): void;
     floodFillRange(x: number, y: number, eligibleValueMin?: number, eligibleValueMax?: number, fillValue?: number): number;
     invert(): void;
-    closestLocWithValue(x: number, y: number, value?: number): Loc$1;
-    randomLocWithValue(validValue?: number): Loc$1;
-    getQualifyingLocNear(x: number, y: number, deterministic?: boolean): Loc;
     leastPositiveValue(): number;
     randomLeastPositiveLoc(deterministic?: boolean): Loc$1;
     floodFill(x: number, y: number, matchValue: number | GridMatch<number>, fillValue: number | GridUpdate<number>): number;
