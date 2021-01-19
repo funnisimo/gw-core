@@ -490,7 +490,7 @@ export class NumGrid extends Grid {
     }
     randomLeastPositiveLoc(deterministic = false) {
         const targetValue = this.leastPositiveValue();
-        return this.randomMatchingLoc((v) => v == targetValue, deterministic);
+        return this.randomMatchingLoc(targetValue, deterministic);
     }
     // Marks a cell as being a member of blobNumber, then recursively iterates through the rest of the blob
     floodFill(x, y, matchValue, fillValue) {
@@ -549,11 +549,13 @@ export class NumGrid extends Grid {
         return didSomething;
     }
     // Loads up **grid with the results of a cellular automata simulation.
-    fillBlob(roundCount, minBlobWidth, minBlobHeight, maxBlobWidth, maxBlobHeight, percentSeeded, birthParameters, survivalParameters) {
+    fillBlob(roundCount, minBlobWidth, minBlobHeight, maxBlobWidth, maxBlobHeight, percentSeeded = 50, birthParameters = "ffffffttt", survivalParameters = "ffffttttt") {
         let i, j, k;
         let blobNumber, blobSize, topBlobNumber, topBlobSize;
         let topBlobMinX, topBlobMinY, topBlobMaxX, topBlobMaxY, blobWidth, blobHeight;
         let foundACellThisLine;
+        birthParameters = birthParameters.toLowerCase();
+        survivalParameters = survivalParameters.toLowerCase();
         if (minBlobWidth >= maxBlobWidth) {
             minBlobWidth = Math.round(0.75 * maxBlobWidth);
             maxBlobWidth = Math.round(1.25 * maxBlobWidth);
@@ -680,7 +682,7 @@ Make.grid = make;
 export function offsetZip(destGrid, srcGrid, srcToDestX, srcToDestY, value) {
     const fn = typeof value === "function"
         ? value
-        : (_, s, dx, dy) => (destGrid[dx][dy] = value || s);
+        : (_d, _s, dx, dy) => (destGrid[dx][dy] = value);
     srcGrid.forEach((c, i, j) => {
         const destX = i + srcToDestX;
         const destY = j + srcToDestY;
@@ -723,11 +725,13 @@ export function directionOfDoorSite(grid, x, y, isOpen) {
 // Grid.directionOfDoorSite = directionOfDoorSite;
 export function intersection(onto, a, b) {
     b = b || onto;
-    onto.update((_, i, j) => a[i][j] && b[i][j]);
+    // @ts-ignore
+    onto.update((_, i, j) => (a[i][j] && b[i][j]) || 0);
 }
 // Grid.intersection = intersection;
 export function unite(onto, a, b) {
     b = b || onto;
+    // @ts-ignore
     onto.update((_, i, j) => b[i][j] || a[i][j]);
 }
 //# sourceMappingURL=grid.js.map

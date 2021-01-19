@@ -380,7 +380,7 @@ declare class NumGrid extends Grid<number> {
     randomLeastPositiveLoc(deterministic?: boolean): Loc$1;
     floodFill(x: number, y: number, matchValue: number | GridMatch<number>, fillValue: number | GridUpdate<number>): number;
     protected _cellularAutomataRound(birthParameters: string, survivalParameters: string): boolean;
-    fillBlob(roundCount: number, minBlobWidth: number, minBlobHeight: number, maxBlobWidth: number, maxBlobHeight: number, percentSeeded: number, birthParameters: string, survivalParameters: string): {
+    fillBlob(roundCount: number, minBlobWidth: number, minBlobHeight: number, maxBlobWidth: number, maxBlobHeight: number, percentSeeded?: number, birthParameters?: string, survivalParameters?: string): {
         x: number;
         y: number;
         width: number;
@@ -389,12 +389,13 @@ declare class NumGrid extends Grid<number> {
 }
 declare const alloc: typeof NumGrid.alloc;
 declare const free: typeof NumGrid.free;
-declare function make$1<T>(w: number, h: number, v?: T | GridInit<T>): NumGrid | Grid<T>;
+declare function make$1<T>(w: number, h: number, v?: number | GridInit<number>): NumGrid;
+declare function make$1<T>(w: number, h: number, v?: T | GridInit<T>): Grid<T>;
 declare type GridZip<T, U> = (destVal: T, sourceVal: U, destX: number, destY: number, sourceX: number, sourceY: number, destGrid: Grid<T>, sourceGrid: Grid<U>) => void;
 declare function offsetZip<T, U>(destGrid: Grid<T>, srcGrid: Grid<U>, srcToDestX: number, srcToDestY: number, value: T | GridZip<T, U>): void;
 declare function directionOfDoorSite<T>(grid: Grid<T>, x: number, y: number, isOpen: T | GridMatch<T>): number;
-declare function intersection(onto: NumGrid, a: NumGrid, b: NumGrid): void;
-declare function unite(onto: NumGrid, a: NumGrid, b: NumGrid): void;
+declare function intersection(onto: NumGrid, a: NumGrid, b?: NumGrid): void;
+declare function unite(onto: NumGrid, a: NumGrid, b?: NumGrid): void;
 
 type grid_d_ArrayInit<_0> = ArrayInit<_0>;
 declare const grid_d_makeArray: typeof makeArray;

@@ -81,7 +81,7 @@ export declare class NumGrid extends Grid<number> {
     randomLeastPositiveLoc(deterministic?: boolean): Loc;
     floodFill(x: number, y: number, matchValue: number | GridMatch<number>, fillValue: number | GridUpdate<number>): number;
     protected _cellularAutomataRound(birthParameters: string, survivalParameters: string): boolean;
-    fillBlob(roundCount: number, minBlobWidth: number, minBlobHeight: number, maxBlobWidth: number, maxBlobHeight: number, percentSeeded: number, birthParameters: string, survivalParameters: string): {
+    fillBlob(roundCount: number, minBlobWidth: number, minBlobHeight: number, maxBlobWidth: number, maxBlobHeight: number, percentSeeded?: number, birthParameters?: string, survivalParameters?: string): {
         x: number;
         y: number;
         width: number;
@@ -90,10 +90,11 @@ export declare class NumGrid extends Grid<number> {
 }
 export declare const alloc: typeof NumGrid.alloc;
 export declare const free: typeof NumGrid.free;
-export declare function make<T>(w: number, h: number, v?: T | GridInit<T>): NumGrid | Grid<T>;
+export declare function make<T>(w: number, h: number, v?: number | GridInit<number>): NumGrid;
+export declare function make<T>(w: number, h: number, v?: T | GridInit<T>): Grid<T>;
 export declare type GridZip<T, U> = (destVal: T, sourceVal: U, destX: number, destY: number, sourceX: number, sourceY: number, destGrid: Grid<T>, sourceGrid: Grid<U>) => void;
 export declare function offsetZip<T, U>(destGrid: Grid<T>, srcGrid: Grid<U>, srcToDestX: number, srcToDestY: number, value: T | GridZip<T, U>): void;
 export declare function directionOfDoorSite<T>(grid: Grid<T>, x: number, y: number, isOpen: T | GridMatch<T>): number;
-export declare function intersection(onto: NumGrid, a: NumGrid, b: NumGrid): void;
-export declare function unite(onto: NumGrid, a: NumGrid, b: NumGrid): void;
+export declare function intersection(onto: NumGrid, a: NumGrid, b?: NumGrid): void;
+export declare function unite(onto: NumGrid, a: NumGrid, b?: NumGrid): void;
 export {};

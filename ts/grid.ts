@@ -650,7 +650,7 @@ export class NumGrid extends Grid<number> {
 
     randomLeastPositiveLoc(deterministic = false): Loc {
         const targetValue = this.leastPositiveValue();
-        return this.randomMatchingLoc((v: any) => v == targetValue, deterministic);
+        return this.randomMatchingLoc(targetValue, deterministic);
     }
 
     // Marks a cell as being a member of blobNumber, then recursively iterates through the rest of the blob
@@ -733,9 +733,9 @@ export class NumGrid extends Grid<number> {
         minBlobHeight: number,
         maxBlobWidth: number,
         maxBlobHeight: number,
-        percentSeeded: number,
-        birthParameters: string,
-        survivalParameters: string
+        percentSeeded: number = 50,
+        birthParameters: string = "ffffffttt",
+        survivalParameters: string = "ffffttttt"
     ) {
         let i, j, k;
         let blobNumber, blobSize, topBlobNumber, topBlobSize;
@@ -747,6 +747,9 @@ export class NumGrid extends Grid<number> {
             blobWidth,
             blobHeight;
         let foundACellThisLine;
+
+        birthParameters = birthParameters.toLowerCase();
+        survivalParameters = survivalParameters.toLowerCase();
 
         if (minBlobWidth >= maxBlobWidth) {
             minBlobWidth = Math.round(0.75 * maxBlobWidth);
@@ -879,6 +882,8 @@ export class NumGrid extends Grid<number> {
 export const alloc = NumGrid.alloc.bind(NumGrid);
 export const free = NumGrid.free.bind(NumGrid);
 
+export function make<T>(w: number, h: number, v?: number | GridInit<number>): NumGrid;
+export function make<T>(w: number, h: number, v?: T | GridInit<T>): Grid<T>;
 export function make<T>(w: number, h: number, v?: T | GridInit<T>) {
     if (v === undefined) return new NumGrid(w, h, 0);
     if (typeof v === "number") return new NumGrid(w, h, v);
@@ -908,8 +913,8 @@ export function offsetZip<T, U>(
     const fn: GridZip<T, U> =
         typeof value === "function"
             ? (value as GridZip<T, U>)
-            : (_: T, s: any, dx: number, dy: number) =>
-                (destGrid[dx][dy] = value || (s as T));
+            : (_d: T, _s: U, dx: number, dy: number) =>
+                (destGrid[dx][dy] = value);
     srcGrid.forEach((c, i, j) => {
         const destX = i + srcToDestX;
         const destY = j + srcToDestY;
@@ -962,14 +967,16 @@ export function directionOfDoorSite<T>(
 
 // Grid.directionOfDoorSite = directionOfDoorSite;
 
-export function intersection(onto: NumGrid, a: NumGrid, b: NumGrid) {
+export function intersection(onto: NumGrid, a: NumGrid, b?: NumGrid) {
     b = b || onto;
-    onto.update((_, i, j) => a[i][j] && b[i][j]);
+    // @ts-ignore
+    onto.update((_, i, j) => (a[i][j] && b[i][j]) || 0);
 }
 
 // Grid.intersection = intersection;
 
-export function unite(onto: NumGrid, a: NumGrid, b: NumGrid) {
+export function unite(onto: NumGrid, a: NumGrid, b?: NumGrid) {
     b = b || onto;
+    // @ts-ignore
     onto.update((_, i, j) => b[i][j] || a[i][j]);
 }

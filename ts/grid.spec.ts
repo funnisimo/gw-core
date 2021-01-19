@@ -454,4 +454,104 @@ describe("GW.grid", () => {
         expect(a.count(1)).toEqual(41);
         expect(a.count(2)).toEqual(0);
     });
+
+    test('leastPositiveValue', () => {
+        a = GW.grid.alloc(10, 10);
+        a.fillRect(0, 0, 4, 4, -1);
+        a.fillRect(7, 7, 3, 3, 2);
+        a.fillRect(2, 4, 4, 4, 3);
+        a.fillRect(6, 2, 4, 4, -4);
+        a.fillRect(4, 5, 3, 3, 6);
+        expect(a.leastPositiveValue()).toEqual(2);
+    });
+
+    test('randomLeastPositiveLoc', () => {
+        a = GW.grid.alloc(10, 10);
+        a.fillRect(0, 0, 4, 4, -1);
+        a.fillRect(7, 7, 3, 3, 2);
+        a.fillRect(2, 4, 4, 4, 3);
+        a.fillRect(6, 2, 4, 4, -4);
+        a.fillRect(4, 5, 3, 3, 6);
+        expect(a.randomLeastPositiveLoc()).toEqual([9, 7]);
+        expect(a.randomLeastPositiveLoc(true)).toEqual([8, 8]);
+    });
+
+    test('fillBlob', () => {
+        UTILS.mockRandom(12345);
+        a = GW.grid.alloc(50, 50);
+        let results = a.fillBlob(5, 5, 5, 20, 20, 55);
+
+        expect(results).toEqual({
+            x: 17, y: 25, width: 16, height: 9
+        });
+
+        // force an odd return from '_cellularAutomataRound'
+
+        // @ts-ignore
+        jest.spyOn(a, '_cellularAutomataRound').mockReturnValueOnce(false);
+
+        a.fill(0);
+        results = a.fillBlob(5, 5, 5, 20, 20, 55);
+
+        expect(results).toEqual({
+            x: 18, y: 15, width: 10, height: 20
+        });
+
+    });
+
+    test('make', () => {
+        const g = GW.grid.make(5, 6, () => 'taco');
+        expect(g.width).toEqual(5);
+        expect(g.height).toEqual(6);
+        expect(g[0][0]).toEqual('taco');
+    });
+
+    test('offsetZip', () => {
+        a = Grid.alloc(10, 10, 0);
+        a.fillRect(2, 2, 3, 3, 1);
+
+        const dest = Grid.make(10, 10, 0);
+
+        Grid.offsetZip(dest, a, 3, 2, 6);
+        expect(dest[5][4]).toEqual(6);
+        expect(dest[2][2]).toEqual(0);
+    });
+
+    test('directionOfDoorSite', () => {
+        a = Grid.alloc(10, 10, 0);
+
+        a.fillRect(2, 2, 3, 3, 1);
+        expect(Grid.directionOfDoorSite(a, 2, 4, 1)).toEqual(GW.utils.NO_DIRECTION);
+        expect(Grid.directionOfDoorSite(a, 1, 3, 1)).toEqual(GW.utils.LEFT);
+        expect(Grid.directionOfDoorSite(a, 5, 3, 1)).toEqual(GW.utils.RIGHT);
+        expect(Grid.directionOfDoorSite(a, 3, 1, 1)).toEqual(GW.utils.DOWN);
+        expect(Grid.directionOfDoorSite(a, 3, 5, 1)).toEqual(GW.utils.UP);
+    });
+
+    test('intersection', () => {
+        a = Grid.alloc(10, 10, 0);
+        a.fillRect(2, 2, 3, 3, 1);
+
+        const b = Grid.make(10, 10, 0);
+        b.fillRect(4, 4, 3, 3, 2);
+
+        Grid.intersection(b, a);
+        expect(b[4][4]).toEqual(2);
+        expect(b[2][2]).toEqual(0);
+        expect(b[5][5]).toEqual(0);
+    });
+
+    test('unite', () => {
+        a = Grid.alloc(10, 10, 0);
+        a.fillRect(2, 2, 3, 3, 1);
+
+        const b = Grid.make(10, 10, 0);
+        b.fillRect(4, 4, 3, 3, 2);
+
+        Grid.unite(b, a);
+        expect(b[4][4]).toEqual(2);
+        expect(b[2][2]).toEqual(1);
+        expect(b[5][5]).toEqual(2);
+    });
+
 });
