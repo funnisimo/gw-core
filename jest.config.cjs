@@ -5,6 +5,7 @@ module.exports = {
       "jest-extended",
     ],
     coverageDirectory: "./coverage",
+    collectCoverageFrom: ['ts/**'],
     moduleFileExtensions: ['js', 'json', 'ts', 'node', 'mjs']
   };
   

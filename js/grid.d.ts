@@ -13,6 +13,8 @@ export declare class Grid<T> extends Array<Array<T>> {
     constructor(w: number, h: number, v: GridInit<T> | T);
     get width(): number;
     get height(): number;
+    get(x: number, y: number): T | undefined;
+    set(x: number, y: number, v: T): boolean;
     /**
      * Calls the supplied function for each cell in the grid.
      * @param fn - The function to call on each item in the grid.
@@ -25,6 +27,9 @@ export declare class Grid<T> extends Array<Array<T>> {
     /**
      * Returns a new Grid with the cells mapped according to the supplied function.
      * @param fn - The function that maps the cell values
+     * TODO - Do we need this???
+     * TODO - Should this only be in NumGrid?
+     * TODO - Should it alloc instead of using constructor?
      */
      // @ts-ignore
 
@@ -56,7 +61,7 @@ export declare class Grid<T> extends Array<Array<T>> {
     dump(fmtFn?: GridFormat<T>): void;
     dumpRect(left: number, top: number, width: number, height: number, fmtFn?: GridFormat<T>): void;
     dumpAround(x: number, y: number, radius: number): void;
-    closestMatchingLoc(x: number, y: number, fn: GridMatch<T>): Loc;
+    closestMatchingLoc(x: number, y: number, v: T | GridMatch<T>): Loc;
     firstMatchingLoc(v: T | GridMatch<T>): Loc;
     randomMatchingLoc(v: T | GridMatch<T>, deterministic?: boolean): Loc;
     matchingLocNear(x: number, y: number, v: T | GridMatch<T>, deterministic?: boolean): Loc;
@@ -65,21 +70,18 @@ export declare class Grid<T> extends Array<Array<T>> {
 export declare class NumGrid extends Grid<number> {
     x?: number;
     y?: number;
-    static alloc(w: number, h: number, v?: number): NumGrid;
+    static alloc(w: number, h: number, v?: GridInit<number> | number): NumGrid;
     static free(grid: NumGrid): void;
-    constructor(w: number, h: number, v?: number);
-    resize(width: number, height: number, v?: GridInit<number> | number): void;
+    constructor(w: number, h: number, v?: GridInit<number> | number);
+    protected _resize(width: number, height: number, v?: GridInit<number> | number): void;
     findReplaceRange(findValueMin: number, findValueMax: number, fillValue: number): void;
     floodFillRange(x: number, y: number, eligibleValueMin?: number, eligibleValueMax?: number, fillValue?: number): number;
     invert(): void;
-    closestLocWithValue(x: number, y: number, value?: number): Loc;
-    randomLocWithValue(validValue?: number): Loc;
-    getQualifyingLocNear(x: number, y: number, deterministic?: boolean): Utils.Loc;
     leastPositiveValue(): number;
     randomLeastPositiveLoc(deterministic?: boolean): Loc;
     floodFill(x: number, y: number, matchValue: number | GridMatch<number>, fillValue: number | GridUpdate<number>): number;
     protected _cellularAutomataRound(birthParameters: string, survivalParameters: string): boolean;
-    fillBlob(roundCount: number, minBlobWidth: number, minBlobHeight: number, maxBlobWidth: number, maxBlobHeight: number, percentSeeded: number, birthParameters: string, survivalParameters: string): {
+    fillBlob(roundCount: number, minBlobWidth: number, minBlobHeight: number, maxBlobWidth: number, maxBlobHeight: number, percentSeeded?: number, birthParameters?: string, survivalParameters?: string): {
         x: number;
         y: number;
         width: number;
@@ -88,10 +90,11 @@ export declare class NumGrid extends Grid<number> {
 }
 export declare const alloc: typeof NumGrid.alloc;
 export declare const free: typeof NumGrid.free;
-export declare function make<T>(w: number, h: number, v?: T | GridInit<T>): NumGrid | Grid<T>;
+export declare function make<T>(w: number, h: number, v?: number | GridInit<number>): NumGrid;
+export declare function make<T>(w: number, h: number, v?: T | GridInit<T>): Grid<T>;
 export declare type GridZip<T, U> = (destVal: T, sourceVal: U, destX: number, destY: number, sourceX: number, sourceY: number, destGrid: Grid<T>, sourceGrid: Grid<U>) => void;
 export declare function offsetZip<T, U>(destGrid: Grid<T>, srcGrid: Grid<U>, srcToDestX: number, srcToDestY: number, value: T | GridZip<T, U>): void;
 export declare function directionOfDoorSite<T>(grid: Grid<T>, x: number, y: number, isOpen: T | GridMatch<T>): number;
-export declare function intersection(onto: NumGrid, a: NumGrid, b: NumGrid): void;
-export declare function unite(onto: NumGrid, a: NumGrid, b: NumGrid): void;
+export declare function intersection(onto: NumGrid, a: NumGrid, b?: NumGrid): void;
+export declare function unite(onto: NumGrid, a: NumGrid, b?: NumGrid): void;
 export {};

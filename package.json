@@ -1,6 +1,6 @@
 {
   "name": "gw-utils",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Basic Roguelike functionality",
   "main": "dist/gw-utils.cjs",
   "browser": "dist/gw-utils.min.js",
@@ -35,6 +35,7 @@
     "build": "npm run compile && npm run fixTypes && npm run bundle && npm run copy",
     "serve": "python -m SimpleHTTPServer",
     "test": "jest",
+    "coverage": "jest --coverage",
     "test-debug": "node --inspect-brk node_modules/.bin/jest --runInBand"
   },
   "repository": {

@@ -1,5 +1,6 @@
 import * as shaders from "./shaders";
 import { Glyphs, GlyphOptions } from "./glyphs";
+import { BufferTarget } from "../buffer";
 
 type GL = WebGL2RenderingContext;
 const VERTICES_PER_TILE = 6;
@@ -34,7 +35,7 @@ export class NotSupportedError extends Error {
   }
 }
 
-export abstract class BaseCanvas {
+export abstract class BaseCanvas implements BufferTarget {
   protected _data!: Uint32Array;
   protected _renderRequested: boolean = false;
   protected _glyphs!: Glyphs;
@@ -79,6 +80,10 @@ export abstract class BaseCanvas {
   }
   set glyphs(glyphs: Glyphs) {
     this._setGlyphs(glyphs);
+  }
+
+  toGlyph(ch: string) {
+    return this._glyphs.forChar(ch);
   }
 
   protected _createNode() {

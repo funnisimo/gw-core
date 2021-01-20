@@ -58,6 +58,8 @@ function ZERO() {
 function IDENTITY(x) {
     return x;
 }
+function IS_ZERO(x) { return x == 0; }
+function IS_NONZERO(x) { return x != 0; }
 /**
  * clamps a value between min and max (inclusive)
  * @param v {Number} the value to clamp
@@ -210,16 +212,16 @@ function assignField(dest, src, key) {
         dest[key] = updated;
     }
 }
-// export function copyObject(dest, src) {
-//   Object.keys(dest).forEach( (key) => {
-//     assignField(dest, src, key);
-//   });
-// }
-// export function assignObject(dest, src) {
-//   Object.keys(src).forEach( (key) => {
-//     assignField(dest, src, key);
-//   });
-// }
+function copyObject(dest, src) {
+    Object.keys(dest).forEach((key) => {
+        assignField(dest, src, key);
+    });
+}
+function assignObject(dest, src) {
+    Object.keys(src).forEach((key) => {
+        assignField(dest, src, key);
+    });
+}
 function assignOmitting(omit, dest, src) {
     if (typeof omit === "string") {
         omit = omit.split(/[,|]/g).map((t) => t.trim());
@@ -318,6 +320,9 @@ function ERROR(message) {
 }
 function WARN(...args) {
     console.warn(...args);
+}
+function first(...args) {
+    return args.find((v) => v !== undefined);
 }
 function getOpt(obj, member, _default) {
     const v = obj[member];
@@ -492,6 +497,8 @@ var utils = {
     ONE: ONE,
     ZERO: ZERO,
     IDENTITY: IDENTITY,
+    IS_ZERO: IS_ZERO,
+    IS_NONZERO: IS_NONZERO,
     clamp: clamp,
     x: x,
     y: y,
@@ -510,6 +517,8 @@ var utils = {
     dirSpread: dirSpread,
     stepFromTo: stepFromTo,
     smoothHiliteGradient: smoothHiliteGradient,
+    copyObject: copyObject,
+    assignObject: assignObject,
     assignOmitting: assignOmitting,
     setDefault: setDefault,
     setDefaults: setDefaults,
@@ -518,6 +527,7 @@ var utils = {
     clearObject: clearObject,
     ERROR: ERROR,
     WARN: WARN,
+    first: first,
     getOpt: getOpt,
     firstOpt: firstOpt,
     arraysIntersect: arraysIntersect,
@@ -589,7 +599,10 @@ class Random {
     float() {
         return this.value();
     }
-    number(max = 0) {
+    number(max) {
+        // @ts-ignore
+        if (max <= 0)
+            return 0;
         max = max || Number.MAX_SAFE_INTEGER;
         return Math.floor(this._fn() * max);
     }
@@ -685,6 +698,11 @@ class Random {
 const random = new Random();
 const cosmetic = new Random();
 
+const data = {};
+const config = {};
+const make = {};
+const flags = {};
+
 class Range {
     constructor(lower, upper = 0, clumps = 1, rng) {
         this._rng = rng || random;
@@ -692,11 +710,6 @@ class Range {
             clumps = lower[2];
             upper = lower[1];
             lower = lower[0];
-        }
-        else if (lower instanceof Range) {
-            clumps = lower.clumps;
-            upper = lower.hi;
-            lower = lower.lo;
         }
         if (upper < lower) {
             [upper, lower] = [lower, upper];
@@ -708,6 +721,13 @@ class Range {
     value() {
         return this._rng.clumped(this.lo, this.hi, this.clumps);
     }
+    copy(other) {
+        this.lo = other.lo;
+        this.hi = other.hi;
+        this.clumps = other.clumps;
+        this._rng = other._rng;
+        return this;
+    }
     toString() {
         if (this.lo >= this.hi) {
             return "" + this.lo;
@@ -715,11 +735,11 @@ class Range {
         return `${this.lo}-${this.hi}`;
     }
 }
-function make(config, rng) {
+function make$1(config, rng) {
     if (!config)
         return new Range(0, 0, 0, rng);
     if (config instanceof Range)
-        return config; // you can supply a custom range object
+        return config; // don't need to clone since they are immutable
     // if (config.value) return config;  // calc or damage
     if (typeof config == "function")
         throw new Error("Custom range functions not supported - extend Range");
@@ -767,11 +787,14 @@ function make(config, rng) {
     }
     throw new Error("Not a valid range - " + config);
 }
+make.range = make$1;
+const from = make$1;
 
 var range = {
     __proto__: null,
     Range: Range,
-    make: make
+    make: make$1,
+    from: from
 };
 
 ///////////////////////////////////
@@ -782,7 +805,7 @@ function fl(N) {
 function toString(flagObj, value) {
     const inverse = Object.entries(flagObj).reduce((out, entry) => {
         const [key, value] = entry;
-        if (value)
+        if (typeof value === "number")
             out[value] = key;
         return out;
     }, []);
@@ -795,7 +818,7 @@ function toString(flagObj, value) {
     }
     return out.join(" | ");
 }
-function from(obj, ...args) {
+function from$1(obj, ...args) {
     let result = 0;
     for (let index = 0; index < args.length; ++index) {
         let value = args[index];
@@ -845,19 +868,12 @@ function from(obj, ...args) {
     }
     return result;
 }
-const flags = {};
-function install(flagName, flag) {
-    flags[flagName] = flag;
-    return flag;
-}
 
 var flag = {
     __proto__: null,
     fl: fl,
     toString: toString,
-    from: from,
-    flags: flags,
-    install: install
+    from: from$1
 };
 
 const DIRS$1 = DIRS;
@@ -917,6 +933,17 @@ class Grid extends Array {
     get height() {
         return this._height;
     }
+    get(x, y) {
+        if (!this.hasXY(x, y))
+            return undefined;
+        return this[x][y];
+    }
+    set(x, y, v) {
+        if (!this.hasXY(x, y))
+            return false;
+        this[x][y] = v;
+        return true;
+    }
     /**
      * Calls the supplied function for each cell in the grid.
      * @param fn - The function to call on each item in the grid.
@@ -954,6 +981,9 @@ class Grid extends Array {
     /**
      * Returns a new Grid with the cells mapped according to the supplied function.
      * @param fn - The function that maps the cell values
+     * TODO - Do we need this???
+     * TODO - Should this only be in NumGrid?
+     * TODO - Should it alloc instead of using constructor?
      * TSIGNORE
      */
     // @ts-ignore
@@ -1092,12 +1122,14 @@ class Grid extends Array {
     dumpAround(x, y, radius) {
         this.dumpRect(x - radius, y - radius, 2 * radius, 2 * radius);
     }
-    closestMatchingLoc(x, y, fn) {
+    // TODO - Use for(radius) loop to speed this up (do not look at each cell)
+    closestMatchingLoc(x, y, v) {
         let bestLoc = [-1, -1];
-        let bestDistance = this.width + this.height;
+        let bestDistance = 100 * (this.width + this.height);
+        const fn = typeof v === "function" ? v : (val) => val == v;
         this.forEach((v, i, j) => {
             if (fn(v, i, j, this)) {
-                const dist = distanceBetween(x, y, i, j);
+                const dist = Math.floor(100 * distanceBetween(x, y, i, j));
                 if (dist < bestDistance) {
                     bestLoc[0] = i;
                     bestLoc[1] = j;
@@ -1206,22 +1238,27 @@ class Grid extends Array {
     //		Four means it is in the intersection of two hallways.
     //		Five or more means there is a bug.
     arcCount(x, y, testFn) {
-        let arcCount, dir, oldX, oldY, newX, newY;
+        let oldX, oldY, newX, newY;
         // brogueAssert(grid.hasXY(x, y));
-        testFn = testFn || IDENTITY;
-        arcCount = 0;
-        for (dir = 0; dir < CDIRS.length; dir++) {
+        testFn = testFn || IS_NONZERO;
+        let arcCount = 0;
+        let matchCount = 0;
+        for (let dir = 0; dir < CDIRS.length; dir++) {
             oldX = x + CDIRS[(dir + 7) % 8][0];
             oldY = y + CDIRS[(dir + 7) % 8][1];
             newX = x + CDIRS[dir][0];
             newY = y + CDIRS[dir][1];
             // Counts every transition from passable to impassable or vice-versa on the way around the cell:
-            if ((this.hasXY(newX, newY) &&
-                testFn(this[newX][newY], newX, newY, this)) !=
-                (this.hasXY(oldX, oldY) && testFn(this[oldX][oldY], oldX, oldY, this))) {
+            const newOk = this.hasXY(newX, newY) && testFn(this[newX][newY], newX, newY, this);
+            const oldOk = this.hasXY(oldX, oldY) && testFn(this[oldX][oldY], oldX, oldY, this);
+            if (newOk)
+                ++matchCount;
+            if (newOk != oldOk) {
                 arcCount++;
             }
         }
+        if (arcCount == 0 && matchCount)
+            return 1;
         return Math.floor(arcCount / 2); // Since we added one when we entered a wall and another when we left.
     }
 }
@@ -1237,7 +1274,7 @@ class NumGrid extends Grid {
         if (!grid) {
             return new NumGrid(w, h, v);
         }
-        grid.resize(w, h, v);
+        grid._resize(w, h, v);
         return grid;
     }
     static free(grid) {
@@ -1247,7 +1284,7 @@ class NumGrid extends Grid {
             GRID_CACHE.push(grid);
         }
     }
-    resize(width, height, v = 0) {
+    _resize(width, height, v = 0) {
         const fn = typeof v === "function" ? v : () => v;
         while (this.length < width)
             this.push([]);
@@ -1284,13 +1321,18 @@ class NumGrid extends Grid {
         if (fillValue >= eligibleValueMin && fillValue <= eligibleValueMax) {
             throw new Error("Invalid grid flood fill");
         }
+        const ok = (x, y) => {
+            return this.hasXY(x, y) &&
+                this[x][y] >= eligibleValueMin &&
+                this[x][y] <= eligibleValueMax;
+        };
+        if (!ok(x, y))
+            return 0;
         this[x][y] = fillValue;
         for (dir = 0; dir < 4; dir++) {
             newX = x + DIRS$1[dir][0];
             newY = y + DIRS$1[dir][1];
-            if (this.hasXY(newX, newY) &&
-                this[newX][newY] >= eligibleValueMin &&
-                this[newX][newY] <= eligibleValueMax) {
+            if (ok(newX, newY)) {
                 fillCount += this.floodFillRange(newX, newY, eligibleValueMin, eligibleValueMax, fillValue);
             }
         }
@@ -1298,17 +1340,6 @@ class NumGrid extends Grid {
     }
     invert() {
         this.update((v) => (v ? 0 : 1));
-    }
-    closestLocWithValue(x, y, value = 1) {
-        return this.closestMatchingLoc(x, y, (v) => v == value);
-    }
-    // Takes a grid as a mask of valid locations, chooses one randomly and returns it as (x, y).
-    // If there are no valid locations, returns (-1, -1).
-    randomLocWithValue(validValue = 1) {
-        return this.randomMatchingLoc((v) => v == validValue);
-    }
-    getQualifyingLocNear(x, y, deterministic = false) {
-        return this.matchingLocNear(x, y, (v) => !!v, deterministic);
     }
     leastPositiveValue() {
         let least = Number.MAX_SAFE_INTEGER;
@@ -1321,7 +1352,7 @@ class NumGrid extends Grid {
     }
     randomLeastPositiveLoc(deterministic = false) {
         const targetValue = this.leastPositiveValue();
-        return this.randomMatchingLoc((v) => v == targetValue, deterministic);
+        return this.randomMatchingLoc(targetValue, deterministic);
     }
     // Marks a cell as being a member of blobNumber, then recursively iterates through the rest of the blob
     floodFill(x, y, matchValue, fillValue) {
@@ -1378,11 +1409,13 @@ class NumGrid extends Grid {
         return didSomething;
     }
     // Loads up **grid with the results of a cellular automata simulation.
-    fillBlob(roundCount, minBlobWidth, minBlobHeight, maxBlobWidth, maxBlobHeight, percentSeeded, birthParameters, survivalParameters) {
+    fillBlob(roundCount, minBlobWidth, minBlobHeight, maxBlobWidth, maxBlobHeight, percentSeeded = 50, birthParameters = "ffffffttt", survivalParameters = "ffffttttt") {
         let i, j, k;
         let blobNumber, blobSize, topBlobNumber, topBlobSize;
         let topBlobMinX, topBlobMinY, topBlobMaxX, topBlobMaxY, blobWidth, blobHeight;
         let foundACellThisLine;
+        birthParameters = birthParameters.toLowerCase();
+        survivalParameters = survivalParameters.toLowerCase();
         if (minBlobWidth >= maxBlobWidth) {
             minBlobWidth = Math.round(0.75 * maxBlobWidth);
             maxBlobWidth = Math.round(1.25 * maxBlobWidth);
@@ -1498,17 +1531,18 @@ class NumGrid extends Grid {
 // Grid.fillBlob = fillBlob;
 const alloc = NumGrid.alloc.bind(NumGrid);
 const free = NumGrid.free.bind(NumGrid);
-function make$1(w, h, v) {
+function make$2(w, h, v) {
     if (v === undefined)
         return new NumGrid(w, h, 0);
     if (typeof v === "number")
         return new NumGrid(w, h, v);
     return new Grid(w, h, v);
 }
+make.grid = make$2;
 function offsetZip(destGrid, srcGrid, srcToDestX, srcToDestY, value) {
     const fn = typeof value === "function"
         ? value
-        : (_, s, dx, dy) => (destGrid[dx][dy] = value || s);
+        : (_d, _s, dx, dy) => (destGrid[dx][dy] = value);
     srcGrid.forEach((c, i, j) => {
         const destX = i + srcToDestX;
         const destY = j + srcToDestY;
@@ -1551,11 +1585,13 @@ function directionOfDoorSite(grid, x, y, isOpen) {
 // Grid.directionOfDoorSite = directionOfDoorSite;
 function intersection(onto, a, b) {
     b = b || onto;
-    onto.update((_, i, j) => a[i][j] && b[i][j]);
+    // @ts-ignore
+    onto.update((_, i, j) => (a[i][j] && b[i][j]) || 0);
 }
 // Grid.intersection = intersection;
 function unite(onto, a, b) {
     b = b || onto;
+    // @ts-ignore
     onto.update((_, i, j) => b[i][j] || a[i][j]);
 }
 
@@ -1566,7 +1602,7 @@ var grid = {
     NumGrid: NumGrid,
     alloc: alloc,
     free: free,
-    make: make$1,
+    make: make$2,
     offsetZip: offsetZip,
     directionOfDoorSite: directionOfDoorSite,
     intersection: intersection,
@@ -2533,17 +2569,17 @@ function once(event, fn, context) {
  */
 function removeListener(event, fn, context, once = false) {
     if (!EVENTS$1[event])
-        return;
-    if (!fn) {
-        clearEvent(event);
-        return;
-    }
+        return false;
+    if (!fn)
+        return false;
+    let success = false;
     eachChain(EVENTS$1[event], (obj) => {
-        const l = obj;
-        if (l.matches(fn, context, once)) {
-            removeFromChain(EVENTS$1, event, l);
+        if (obj.matches(fn, context, once)) {
+            removeFromChain(EVENTS$1, event, obj);
+            success = true;
         }
     });
+    return success;
 }
 /**
  * Remove the listeners of a given event.
@@ -2556,7 +2592,7 @@ function removeListener(event, fn, context, once = false) {
  * @public
  */
 function off(event, fn, context, once = false) {
-    removeListener(event, fn, context, once);
+    return removeListener(event, fn, context, once);
 }
 /**
  * Clear event by name.
@@ -2564,7 +2600,9 @@ function off(event, fn, context, once = false) {
  * @param {String} evt The Event name.
  */
 function clearEvent(event) {
-    EVENTS$1[event] = null;
+    if (EVENTS$1[event]) {
+        EVENTS$1[event] = null;
+    }
 }
 /**
  * Remove all listeners, or those of the specified event.
@@ -2575,8 +2613,7 @@ function clearEvent(event) {
  */
 function removeAllListeners(event) {
     if (event) {
-        if (EVENTS$1[event])
-            clearEvent(event);
+        clearEvent(event);
     }
     else {
         EVENTS$1 = {};
@@ -2618,14 +2655,14 @@ var events = {
     emit: emit
 };
 
-function make$2(v) {
+function make$3(v) {
     if (v === undefined)
         return () => 100;
     if (v === null)
         return () => 0;
     if (typeof v === "number")
         return () => v;
-    if (v && typeof v === "function")
+    if (typeof v === "function")
         return v;
     let base = {};
     if (typeof v === "string") {
@@ -2639,36 +2676,33 @@ function make$2(v) {
     else {
         base = v;
     }
-    if (base && typeof base === "object") {
-        const parts = Object.entries(base);
-        const funcs = parts.map(([levels, frequency]) => {
-            frequency = Number.parseInt(frequency);
-            if (levels.includes("-")) {
-                let [start, end] = levels
-                    .split("-")
-                    .map((t) => t.trim())
-                    .map((v) => Number.parseInt(v));
-                return (level) => level >= start && level <= end ? frequency : 0;
-            }
-            else if (levels.endsWith("+")) {
-                const found = Number.parseInt(levels);
-                return (level) => (level >= found ? frequency : 0);
-            }
-            else {
-                const found = Number.parseInt(levels);
-                return (level) => (level === found ? frequency : 0);
-            }
-        });
-        if (funcs.length == 1)
-            return funcs[0];
-        return (level) => funcs.reduce((out, fn) => out || fn(level), 0);
-    }
-    return () => 0;
+    const parts = Object.entries(base);
+    const funcs = parts.map(([levels, frequency]) => {
+        frequency = Number.parseInt(frequency);
+        if (levels.includes("-")) {
+            let [start, end] = levels
+                .split("-")
+                .map((t) => t.trim())
+                .map((v) => Number.parseInt(v));
+            return (level) => level >= start && level <= end ? frequency : 0;
+        }
+        else if (levels.endsWith("+")) {
+            const found = Number.parseInt(levels);
+            return (level) => (level >= found ? frequency : 0);
+        }
+        else {
+            const found = Number.parseInt(levels);
+            return (level) => (level === found ? frequency : 0);
+        }
+    });
+    if (funcs.length == 1)
+        return funcs[0];
+    return (level) => funcs.reduce((out, fn) => out || fn(level), 0);
 }
 
 var frequency = {
     __proto__: null,
-    make: make$2
+    make: make$3
 };
 
 class Scheduler {
@@ -3144,6 +3178,9 @@ class BaseCanvas {
     set glyphs(glyphs) {
         this._setGlyphs(glyphs);
     }
+    toGlyph(ch) {
+        return this._glyphs.forChar(ch);
+    }
     _createNode() {
         return document.createElement("canvas");
     }
@@ -3503,7 +3540,7 @@ function createGeometry(gl, attribs, width, height) {
     return { position, uv };
 }
 
-function toColorInt(r = 0, g = 0, b = 0, base256 = false) {
+function toColorInt(r, g, b, base256) {
     if (base256) {
         r = Math.max(0, Math.min(255, Math.round(r * 2.550001)));
         g = Math.max(0, Math.min(255, Math.round(g * 2.550001)));
@@ -3608,30 +3645,34 @@ class Color extends Int16Array {
     }
     equals(other) {
         if (typeof other === "string") {
-            return other.length > 4
-                ? this.toString(true) == other
-                : this.toString() == other;
+            if (!other.startsWith("#"))
+                return this.name == other;
+            return this.css(other.length > 4) == other;
         }
         else if (typeof other === "number") {
             return this.toInt() == other || this.toInt(true) == other;
         }
-        const O = from$1(other);
+        const O = from$2(other);
         if (this.isNull())
             return O.isNull();
         return this.every((v, i) => {
-            return v == (O[i] || 0);
+            return v == O[i];
         });
     }
     copy(other) {
         if (Array.isArray(other)) {
-            this.set(other);
+            if (other.length === 8) {
+                this.dances = other[7];
+            }
         }
         else {
-            const O = from$1(other);
-            this.set(O);
+            other = from$2(other);
+            this.dances = other.dances;
+        }
+        for (let i = 0; i < this.length; ++i) {
+            this[i] = other[i] || 0;
         }
         if (other instanceof Color) {
-            this.dances = other.dances;
             this.name = other.name;
         }
         else {
@@ -3693,7 +3734,7 @@ class Color extends Int16Array {
         return this._changed();
     }
     mix(other, percent) {
-        const O = from$1(other);
+        const O = from$2(other);
         if (O.isNull())
             return this;
         if (this.isNull()) {
@@ -3733,15 +3774,18 @@ class Color extends Int16Array {
         }
         return this._changed();
     }
-    bake() {
+    bake(clearDancing = false) {
         if (this.isNull())
             return this;
+        if (this.dances && !clearDancing)
+            return;
+        this.dances = false;
         const d = this;
         if (d[3] + d[4] + d[5] + d[6]) {
-            const rand = this._rand ? cosmetic.number(this._rand) : 0;
-            const redRand = this._redRand ? cosmetic.number(this._redRand) : 0;
-            const greenRand = this._greenRand ? cosmetic.number(this._greenRand) : 0;
-            const blueRand = this._blueRand ? cosmetic.number(this._blueRand) : 0;
+            const rand = cosmetic.number(this._rand);
+            const redRand = cosmetic.number(this._redRand);
+            const greenRand = cosmetic.number(this._greenRand);
+            const blueRand = cosmetic.number(this._blueRand);
             this._r += rand + redRand;
             this._g += rand + greenRand;
             this._b += rand + blueRand;
@@ -3754,7 +3798,7 @@ class Color extends Int16Array {
     }
     // Adds a color to this one
     add(other, percent = 100) {
-        const O = from$1(other);
+        const O = from$2(other);
         if (O.isNull())
             return this;
         if (this.isNull()) {
@@ -3871,7 +3915,7 @@ function fromNumber(val, base256 = false) {
     }
     return c;
 }
-function make$3(...args) {
+function make$4(...args) {
     let arg = args[0];
     let base256 = args[1];
     if (args.length == 0)
@@ -3895,24 +3939,23 @@ function make$3(...args) {
         return fromArray(arg, base256);
     }
     else if (typeof arg === "number") {
-        if (arg < 0)
-            return new Color(-1);
         return fromNumber(arg, base256);
     }
     throw new Error("Failed to make color - unknown argument: " + JSON.stringify(arg));
 }
-function from$1(...args) {
+make.color = make$4;
+function from$2(...args) {
     const arg = args[0];
     if (arg instanceof Color)
         return arg;
-    if (arg < 0 || arg === undefined)
+    if (arg === undefined)
         return new Color(-1);
     if (typeof arg === "string") {
         if (!arg.startsWith("#")) {
             return fromName(arg);
         }
     }
-    return make$3(arg, args[1]);
+    return make$4(arg, args[1]);
 }
 // adjusts the luminosity of 2 colors to ensure there is enough separation between them
 function separate(a, b) {
@@ -3948,33 +3991,48 @@ function swap(a, b) {
     a.copy(b);
     b.copy(temp);
 }
-function diff(a, b) {
-    return Math.round((a.r - b.r) * (a.r - b.r) * 0.2126 +
-        (a.g - b.g) * (a.g - b.g) * 0.7152 +
-        (a.b - b.b) * (a.b - b.b) * 0.0722);
+function relativeLuminance(a, b) {
+    return Math.round((100 *
+        ((a.r - b.r) * (a.r - b.r) * 0.2126 +
+            (a.g - b.g) * (a.g - b.g) * 0.7152 +
+            (a.b - b.b) * (a.b - b.b) * 0.0722)) /
+        65025);
 }
-function install$1(name, ...args) {
+function distance(a, b) {
+    return Math.round((100 *
+        ((a.r - b.r) * (a.r - b.r) * 0.3333 +
+            (a.g - b.g) * (a.g - b.g) * 0.3333 +
+            (a.b - b.b) * (a.b - b.b) * 0.3333)) /
+        65025);
+}
+function install(name, ...args) {
     let info = args;
     if (args.length == 1) {
         info = args[0];
     }
-    const c = info instanceof Color ? info : make$3(info);
+    const c = info instanceof Color ? info : make$4(info);
     colors[name] = c;
     c.name = name;
     return c;
 }
 function installSpread(name, ...args) {
-    const c = install$1(name, ...args);
-    install$1("light_" + name, c.clone().lighten(25));
-    install$1("lighter_" + name, c.clone().lighten(50));
-    install$1("lightest_" + name, c.clone().lighten(75));
-    install$1("dark_" + name, c.clone().darken(25));
-    install$1("darker_" + name, c.clone().darken(50));
-    install$1("darkest_" + name, c.clone().darken(75));
+    let c;
+    if (args.length == 1) {
+        c = install(name, args[0]);
+    }
+    else {
+        c = install(name, ...args);
+    }
+    install("light_" + name, c.clone().lighten(25));
+    install("lighter_" + name, c.clone().lighten(50));
+    install("lightest_" + name, c.clone().lighten(75));
+    install("dark_" + name, c.clone().darken(25));
+    install("darker_" + name, c.clone().darken(50));
+    install("darkest_" + name, c.clone().darken(75));
     return c;
 }
-const BLACK = install$1("black", 0x000);
-const WHITE = install$1("white", 0xfff);
+const BLACK = install("black", 0x000);
+const WHITE = install("white", 0xfff);
 installSpread("teal", [30, 100, 100]);
 installSpread("brown", [60, 40, 0]);
 installSpread("tan", [80, 70, 55]); // 80, 67,		15);
@@ -4012,12 +4070,13 @@ var color = {
     fromCss: fromCss,
     fromName: fromName,
     fromNumber: fromNumber,
-    make: make$3,
-    from: from$1,
+    make: make$4,
+    from: from$2,
     separate: separate,
     swap: swap,
-    diff: diff,
-    install: install$1,
+    relativeLuminance: relativeLuminance,
+    distance: distance,
+    install: install,
     installSpread: installSpread
 };
 
@@ -4026,9 +4085,9 @@ class Sprite {
         if (!ch && ch !== 0)
             ch = -1;
         if (typeof fg !== "number")
-            fg = from$1(fg);
+            fg = from$2(fg);
         if (typeof bg !== "number")
-            bg = from$1(bg);
+            bg = from$2(bg);
         this.ch = ch;
         this.fg = fg;
         this.bg = bg;
@@ -4058,8 +4117,13 @@ function makeSprite(...args) {
         fg = args[1];
         bg = args[2];
     }
-    else if (args.length == 1) {
-        if (typeof args[0] === "string" || typeof args[0] === "number") {
+    else {
+        if (typeof args[0] === "string" && args[0].length == 1) {
+            ch = args[0];
+            fg = "white"; // white is default?
+        }
+        else if ((typeof args[0] === "string" && args[0].length > 1) ||
+            typeof args[0] === "number") {
             bg = args[0];
         }
         else if (args[0] instanceof Color) {
@@ -4074,19 +4138,20 @@ function makeSprite(...args) {
         }
     }
     if (typeof fg === "string")
-        fg = from$1(fg);
+        fg = from$2(fg);
     else if (Array.isArray(fg))
-        fg = make$3(fg);
+        fg = make$4(fg);
     else if (fg === undefined || fg === null)
         fg = -1;
     if (typeof bg === "string")
-        bg = from$1(bg);
+        bg = from$2(bg);
     else if (Array.isArray(bg))
-        bg = make$3(bg);
+        bg = make$4(bg);
     else if (bg === undefined || bg === null)
         bg = -1;
     return new Sprite(ch, fg, bg, opacity);
 }
+make.sprite = makeSprite;
 function installSprite(name, ...args) {
     let sprite;
     // @ts-ignore
@@ -4097,10 +4162,10 @@ function installSprite(name, ...args) {
 }
 
 class Mixer {
-    constructor() {
-        this.ch = -1;
-        this.fg = new Color();
-        this.bg = new Color();
+    constructor(base) {
+        this.ch = first(base === null || base === void 0 ? void 0 : base.ch, -1);
+        this.fg = from$2(base === null || base === void 0 ? void 0 : base.fg);
+        this.bg = from$2(base === null || base === void 0 ? void 0 : base.bg);
     }
     _changed() {
         return this;
@@ -4138,11 +4203,11 @@ class Mixer {
             this.ch = ch;
         }
         if (fg !== -1 && fg !== null) {
-            fg = from$1(fg);
+            fg = from$2(fg);
             this.fg.copy(fg);
         }
         if (bg !== -1 && bg !== null) {
-            bg = from$1(bg);
+            bg = from$2(bg);
             this.bg.copy(bg);
         }
         return this._changed();
@@ -4154,11 +4219,11 @@ class Mixer {
             opacity = 100;
         if (opacity <= 0)
             return;
-        if (info.ch !== -1 && (info.ch || info.ch === 0))
+        if ((info.ch && info.ch !== -1) || info.ch === 0)
             this.ch = info.ch;
-        if (info.fg && info.fg !== -1)
+        if ((info.fg && info.fg !== -1) || info.fg === 0)
             this.fg.mix(info.fg, opacity);
-        if (info.bg && info.bg !== -1)
+        if ((info.bg && info.bg !== -1) || info.bg === 0)
             this.bg.mix(info.bg, opacity);
         return this._changed();
     }
@@ -4167,7 +4232,7 @@ class Mixer {
         return this._changed();
     }
     multiply(color$1, fg = true, bg = true) {
-        color$1 = from$1(color$1);
+        color$1 = from$2(color$1);
         if (fg) {
             this.fg.multiply(color$1);
         }
@@ -4177,7 +4242,7 @@ class Mixer {
         return this._changed();
     }
     mix(color$1, fg = 50, bg = fg) {
-        color$1 = from$1(color$1);
+        color$1 = from$2(color$1);
         if (fg > 0) {
             this.fg.mix(color$1, fg);
         }
@@ -4187,7 +4252,7 @@ class Mixer {
         return this._changed();
     }
     add(color$1, fg = 100, bg = fg) {
-        color$1 = from$1(color$1);
+        color$1 = from$2(color$1);
         if (fg > 0) {
             this.fg.add(color$1, fg);
         }
@@ -4200,9 +4265,9 @@ class Mixer {
         separate(this.fg, this.bg);
         return this._changed();
     }
-    bake() {
-        this.fg.bake();
-        this.bg.bake();
+    bake(clearDancing = false) {
+        this.fg.bake(clearDancing);
+        this.bg.bake(clearDancing);
         this._changed();
         return {
             ch: this.ch,
@@ -4210,7 +4275,14 @@ class Mixer {
             bg: this.bg.toInt(),
         };
     }
+    toString() {
+        // prettier-ignore
+        return `{ ch: ${this.ch}, fg: ${this.fg.toString(true)}, bg: ${this.bg.toString(true)} }`;
+    }
 }
+make.mixer = function (base) {
+    return new Mixer(base);
+};
 
 var index = {
     __proto__: null,
@@ -4318,11 +4390,6 @@ function fieldValue(name, source) {
 }
 function helperValue(name, source) {
     const helper = helpers[name] || helpers.default;
-    if (!source) {
-        return function (args) {
-            return helper(name, args, undefined);
-        };
-    }
     return function (args) {
         const base = source(args);
         return helper(name, args, base);
@@ -4343,7 +4410,7 @@ function stringFormat(format, source) {
     };
 }
 function intFormat(format, source) {
-    const data = /%([\+-]*)(\d*)d/.exec(format) || [];
+    const data = /%([\+-]*)(\d*)d/.exec(format) || ["", "", "0"];
     let length = Number.parseInt(data[2] || "0");
     const wantSign = data[1].includes("+");
     const left = data[1].includes("-");
@@ -4363,7 +4430,7 @@ function intFormat(format, source) {
     };
 }
 function floatFormat(format, source) {
-    const data = /%([\+-]*)(\d*)(\.(\d+))?f/.exec(format) || [];
+    const data = /%([\+-]*)(\d*)(\.(\d+))?f/.exec(format) || ["", "", "0"];
     let length = Number.parseInt(data[2] || "0");
     const wantSign = data[1].includes("+");
     const left = data[1].includes("-");
@@ -4409,7 +4476,7 @@ function makeVariable(pattern) {
         else if (format.endsWith("d")) {
             result = intFormat(format, result);
         }
-        else if (format.endsWith("f")) {
+        else {
             result = floatFormat(format, result);
         }
     }
@@ -4417,14 +4484,22 @@ function makeVariable(pattern) {
 }
 
 function eachChar(text, fn, fg, bg) {
-    text = '' + text; // force string
-    if (!text || text.length == 0)
+    if (text === null || text === undefined)
+        return;
+    if (!fn)
+        return;
+    text = "" + text; // force string
+    if (!text.length)
         return;
     const colors = [];
     const colorFn = helpers.eachColor;
+    if (fg === undefined)
+        fg = options.defaultFg;
+    if (bg === undefined)
+        bg = options.defaultBg;
     const ctx = {
-        fg: (fg === undefined) ? options.defaultFg : fg,
-        bg: (bg === undefined) ? options.defaultBg : bg,
+        fg,
+        bg,
     };
     const CS = options.colorStart;
     const CE = options.colorEnd;
@@ -4438,18 +4513,17 @@ function eachChar(text, fn, fg, bg) {
                 ++j;
             }
             if (j == text.length) {
-                console.warn('Reached end of string while seeking end of color start section.');
-                console.warn('- text:', text);
-                console.warn('- start @:', i);
+                console.warn(`Reached end of string while seeking end of color start section.\n- text: ${text}\n- start @: ${i}`);
                 return; // reached end - done (error though)
             }
-            if (j == i + 1) { // next char
+            if (j == i + 1) {
+                // next char
                 ++i; // fall through
             }
             else {
                 colors.push([ctx.fg, ctx.bg]);
                 const color = text.substring(i + 1, j);
-                const newColors = color.split('|');
+                const newColors = color.split("|");
                 ctx.fg = newColors[0] || ctx.fg;
                 ctx.bg = newColors[1] || ctx.bg;
                 colorFn(ctx);
@@ -4462,8 +4536,8 @@ function eachChar(text, fn, fg, bg) {
                 ++i;
             }
             else {
-                const c = colors.pop(); // if you pop too many times colors go away
-                [ctx.fg, ctx.bg] = c || [null, null];
+                const c = colors.pop(); // if you pop too many times colors still revert to what you passed in
+                [ctx.fg, ctx.bg] = c || [fg, bg];
                 // colorFn(ctx);
                 continue;
             }
@@ -4500,8 +4574,13 @@ function advanceChars(text, start, count) {
         const ch = text[i];
         if (ch === CS) {
             ++i;
-            while (text[i] !== CS)
-                ++i;
+            if (text[i] === CS) {
+                --count;
+            }
+            else {
+                while (text[i] !== CS)
+                    ++i;
+            }
             ++i;
         }
         else if (ch === CE) {
@@ -4575,12 +4654,15 @@ function capitalize(text) {
         }
         else if (ch == CE) {
             ++i;
-            while (text[i] == CS && i < text.length) {
+            while (text[i] == CE && i < text.length) {
                 ++i;
             }
         }
-        else {
+        else if (/[A-Za-z]/.test(ch)) {
             return text.substring(0, i) + ch.toUpperCase() + text.substring(i + 1);
+        }
+        else {
+            ++i;
         }
     }
     return text;
@@ -4667,27 +4749,43 @@ function splice(text, start, len, add = "") {
     return text.substring(0, start) + add + text.substring(start + len);
 }
 function hyphenate(text, width, start, end, wordWidth, spaceLeftOnLine) {
+    // do not need to hyphenate
+    if (spaceLeftOnLine >= wordWidth)
+        return [text, end];
+    // do not have a strategy for this right now...
     if (wordWidth + 1 > width * 2) {
         throw new Error("Cannot hyphenate - word length > 2 * width");
     }
-    if (spaceLeftOnLine < 4 || spaceLeftOnLine + width < wordWidth) {
+    // not much room left and word fits on next line
+    if (spaceLeftOnLine < 4 && wordWidth <= width) {
+        text = splice(text, start - 1, 1, "\n");
+        return [text, end + 1];
+    }
+    // will not fit on this line + next, but will fit on next 2 lines...
+    // so end this line and reset for placing on next 2 lines.
+    if (spaceLeftOnLine + width <= wordWidth) {
         text = splice(text, start - 1, 1, "\n");
         spaceLeftOnLine = width;
     }
-    if (spaceLeftOnLine + width > wordWidth) {
-        // one hyphen...
-        const hyphenAt = Math.min(Math.floor(wordWidth / 2), spaceLeftOnLine - 1);
-        const w = advanceChars(text, start, hyphenAt);
-        text = splice(text, w, 0, "-\n");
-        return [text, end + 2];
-    }
-    if (width >= wordWidth) {
-        return [text, end];
-    }
-    const hyphenAt = Math.min(wordWidth, width - 1);
+    // one hyphen will work...
+    // if (spaceLeftOnLine + width > wordWidth) {
+    const hyphenAt = Math.min(Math.floor(wordWidth / 2), spaceLeftOnLine - 1);
     const w = advanceChars(text, start, hyphenAt);
     text = splice(text, w, 0, "-\n");
     return [text, end + 2];
+    // }
+    // if (width >= wordWidth) {
+    //     return [text, end];
+    // }
+    // console.log('hyphenate', { text, start, end, width, wordWidth, spaceLeftOnLine });
+    // throw new Error('Did not expect to get here...');
+    // wordWidth >= spaceLeftOnLine + width
+    // text = splice(text, start - 1, 1, "\n");
+    // spaceLeftOnLine = width;
+    // const hyphenAt = Math.min(wordWidth, width - 1);
+    // const w = Utils.advanceChars(text, start, hyphenAt);
+    // text = splice(text, w, 0, "-\n");
+    // return [text, end + 2];
 }
 function wordWrap(text, width, indent = 0) {
     if (!width)
@@ -4705,7 +4803,7 @@ function wordWrap(text, width, indent = 0) {
 }
 // Returns the number of lines, including the newlines already in the text.
 // Puts the output in "to" only if we receive a "to" -- can make it null and just get a line count.
-function wrapLine(text, width, indent = 0) {
+function wrapLine(text, width, indent) {
     if (text.length < width)
         return text;
     if (length(text) < width)
@@ -4779,15 +4877,10 @@ function splitIntoLines(source, width, indent = 0) {
 }
 
 function configure(opts = {}) {
-    if (opts.helpers) {
-        Object.entries(opts.helpers).forEach(([name, fn]) => {
-            addHelper(name, fn);
-        });
-    }
-    if (opts.fg) {
+    if (opts.fg !== undefined) {
         options.defaultFg = opts.fg;
     }
-    if (opts.bg) {
+    if (opts.bg !== undefined) {
         options.defaultBg = opts.bg;
     }
     if (opts.colorStart) {
@@ -4844,21 +4937,23 @@ class DataBuffer {
         return { ch, fg, bg };
     }
     _toGlyph(ch) {
-        if (ch === null || ch === undefined)
-            return -1;
+        if (!ch)
+            return -1; // 0 handled elsewhere
         return ch.charCodeAt(0);
     }
-    draw(x, y, glyph = -1, fg = -1, bg = -1) {
+    draw(x, y, glyph = -1, fg = -1, // TODO - White?
+    bg = -1 // TODO - Black?
+    ) {
         let index = y * this.width + x;
         const current = this._data[index] || 0;
         if (typeof glyph !== "number") {
             glyph = this._toGlyph(glyph);
         }
         if (typeof fg !== "number") {
-            fg = from$1(fg).toInt();
+            fg = from$2(fg).toInt();
         }
         if (typeof bg !== "number") {
-            bg = from$1(bg).toInt();
+            bg = from$2(bg).toInt();
         }
         glyph = glyph >= 0 ? glyph & 0xff : current >> 24;
         bg = bg >= 0 ? bg & 0xfff : (current >> 12) & 0xfff;
@@ -4869,13 +4964,16 @@ class DataBuffer {
     }
     // This is without opacity - opacity must be done in Mixer
     drawSprite(x, y, sprite) {
-        return this.draw(x, y, sprite.ch, sprite.fg, sprite.bg);
+        const ch = sprite.ch === null ? -1 : sprite.ch;
+        const fg = sprite.fg === null ? -1 : sprite.fg;
+        const bg = sprite.bg === null ? -1 : sprite.bg;
+        return this.draw(x, y, ch, fg, bg);
     }
-    blackOut(x, y) {
-        if (arguments.length == 0) {
+    blackOut(...args) {
+        if (args.length == 0) {
             return this.fill(0, 0, 0);
         }
-        return this.draw(x, y, 0, 0, 0);
+        return this.draw(args[0], args[1], 0, 0, 0);
     }
     fill(glyph = 0, fg = 0xfff, bg = 0) {
         if (typeof glyph == "string") {
@@ -4894,48 +4992,49 @@ class DataBuffer {
     }
     drawText(x, y, text, fg = 0xfff, bg = -1) {
         if (typeof fg !== "number")
-            fg = from$1(fg);
+            fg = from$2(fg);
         if (typeof bg !== "number")
-            bg = from$1(bg);
-        eachChar(text, (ch, color, bg, i) => {
-            this.draw(i + x, y, ch, color, bg);
+            bg = from$2(bg);
+        eachChar(text, (ch, fg0, bg0, i) => {
+            if (x + i >= this.width)
+                return;
+            this.draw(i + x, y, ch, fg0, bg0);
         }, fg, bg);
         return ++y;
     }
-    wrapText(x0, y0, width, text, fg = 0xfff, bg = -1, opts = {}) {
-        if (typeof opts === "number") {
-            opts = { indent: opts };
-        }
+    wrapText(x, y, width, text, fg = 0xfff, bg = -1, indent = 0) {
         if (typeof fg !== "number")
-            fg = from$1(fg);
+            fg = from$2(fg);
         if (typeof bg !== "number")
-            bg = from$1(bg);
-        width = Math.min(width, this.width - x0);
-        const indent = opts.indent || 0;
+            bg = from$2(bg);
+        width = Math.min(width, this.width - x);
         text = wordWrap(text, width, indent);
-        let x = x0;
-        let y = y0;
+        let xi = x;
         eachChar(text, (ch, fg0, bg0) => {
             if (ch == "\n") {
-                while (x < x0 + width) {
-                    this.draw(x++, y, 0, 0x000, bg0);
+                while (xi < x + width) {
+                    this.draw(xi++, y, 0, 0x000, bg0);
                 }
                 ++y;
-                x = x0 + indent;
+                xi = x + indent;
                 return;
             }
-            this.draw(x++, y, ch, fg0, bg0);
+            this.draw(xi++, y, ch, fg0, bg0);
         }, fg, bg);
-        while (x < x0 + width) {
-            this.draw(x++, y, " ", 0x000, bg);
+        while (xi < x + width) {
+            this.draw(xi++, y, 0, 0x000, bg);
         }
         return ++y;
     }
     fillRect(x, y, w, h, ch = -1, fg = -1, bg = -1) {
         if (ch === null)
             ch = -1;
-        fg = typeof fg === "number" ? fg : from$1(fg);
-        bg = typeof bg === "number" ? bg : from$1(bg);
+        if (typeof ch !== "number")
+            ch = this._toGlyph(ch);
+        if (typeof fg !== "number")
+            fg = from$2(fg).toInt();
+        if (typeof bg !== "number")
+            bg = from$2(bg).toInt();
         for (let i = x; i < x + w; ++i) {
             for (let j = y; j < y + h; ++j) {
                 this.draw(i, j, ch, fg, bg);
@@ -4943,25 +5042,26 @@ class DataBuffer {
         }
         return this;
     }
-    blackOutRect(x, y, w, h, bg) {
-        bg = bg || 0x000;
-        return this.fillRect(x, y, w, h, " ", 0, bg);
+    blackOutRect(x, y, w, h, bg = 0) {
+        if (typeof bg !== "number")
+            bg = from$2(bg);
+        return this.fillRect(x, y, w, h, 0, 0, bg);
     }
-    highlight(x, y, highlightColor, strength) {
-        if (typeof highlightColor !== "number") {
-            highlightColor = from$1(highlightColor);
+    highlight(x, y, color$1, strength) {
+        if (typeof color$1 !== "number") {
+            color$1 = from$2(color$1);
         }
         const mixer = new Mixer();
         const data = this.get(x, y);
         mixer.drawSprite(data);
-        mixer.fg.add(highlightColor, strength);
-        mixer.bg.add(highlightColor, strength);
+        mixer.fg.add(color$1, strength);
+        mixer.bg.add(color$1, strength);
         this.drawSprite(x, y, mixer);
         return this;
     }
     mix(color$1, percent) {
         if (typeof color$1 !== "number")
-            color$1 = from$1(color$1);
+            color$1 = from$2(color$1);
         const mixer = new Mixer();
         for (let x = 0; x < this.width; ++x) {
             for (let y = 0; y < this.height; ++y) {
@@ -5001,19 +5101,19 @@ class DataBuffer {
 class Buffer extends DataBuffer {
     constructor(canvas) {
         super(canvas.width, canvas.height);
-        this._canvas = canvas;
+        this._target = canvas;
         canvas.copyTo(this.data);
     }
-    // get canvas() { return this._canvas; }
+    // get canvas() { return this._target; }
     _toGlyph(ch) {
-        return this._canvas.glyphs.forChar(ch);
+        return this._target.toGlyph(ch);
     }
     render() {
-        this._canvas.copy(this.data);
+        this._target.copy(this.data);
         return this;
     }
-    copyFromCanvas() {
-        this._canvas.copyTo(this.data);
+    load() {
+        this._target.copyTo(this.data);
         return this;
     }
 }
@@ -5024,6 +5124,170 @@ var buffer = {
     Buffer: Buffer
 };
 
-var data = {};
+class Bounds {
+    constructor(x, y, w, h) {
+        this.x = x;
+        this.y = y;
+        this.width = w;
+        this.height = h;
+    }
+    contains(...args) {
+        let x$1 = args[0];
+        let y$1 = args[1];
+        if (typeof x$1 !== "number") {
+            y$1 = y(x$1);
+            x$1 = x(x$1);
+        }
+        return (this.x <= x$1 &&
+            this.y <= y$1 &&
+            this.x + this.width > x$1 &&
+            this.y + this.height > y$1);
+    }
+}
 
-export { Random, buffer, index as canvas, color, colors, cosmetic, data, events, flag, flags, fov, frequency, grid, io, path, random, range, scheduler, sprites, index$1 as text, utils };
+var types = {
+    __proto__: null,
+    Bounds: Bounds
+};
+
+const templates = {};
+function install$1(id, msg) {
+    const template = compile(msg);
+    templates[id] = template;
+}
+function installAll(config) {
+    Object.entries(config).forEach(([id, msg]) => install$1(id, msg));
+}
+// messages
+const ARCHIVE = [];
+const CONFIRMED = [];
+var ARCHIVE_LINES = 30;
+var MSG_WIDTH = 80;
+var CURRENT_ARCHIVE_POS = 0;
+var NEEDS_UPDATE = false;
+let COMBAT_MESSAGE = null;
+function needsUpdate(needs) {
+    if (needs) {
+        NEEDS_UPDATE = true;
+    }
+    return NEEDS_UPDATE;
+}
+function configure$1(opts) {
+    if (!opts)
+        opts = {};
+    ARCHIVE_LINES = opts.length || 30;
+    MSG_WIDTH = opts.width || 80;
+    for (let i = 0; i < ARCHIVE_LINES; ++i) {
+        ARCHIVE[i] = null;
+        CONFIRMED[i] = false;
+    }
+}
+////////////////////////////////////
+// Messages
+function add(msg, args) {
+    const template = templates[msg];
+    if (template) {
+        msg = template(args);
+    }
+    else if (args) {
+        msg = apply(msg, args);
+    }
+    commitCombatMessage();
+    addMessage(msg);
+}
+function fromActor(actor, msg, args) {
+    if (actor.isPlayer() || actor.isVisible()) {
+        add(msg, args);
+    }
+}
+function addCombat(actor, msg, args) {
+    if (actor.isPlayer() || actor.isVisible()) {
+        const template = templates[msg];
+        if (template) {
+            msg = template(args);
+        }
+        else if (args) {
+            msg = apply(msg, args);
+        }
+        addCombatMessage(msg);
+    }
+}
+// function messageWithoutCaps(msg, requireAcknowledgment) {
+function addMessageLine(msg) {
+    if (!length(msg)) {
+        return;
+    }
+    // Add the message to the archive.
+    ARCHIVE[CURRENT_ARCHIVE_POS] = msg;
+    CONFIRMED[CURRENT_ARCHIVE_POS] = false;
+    CURRENT_ARCHIVE_POS = (CURRENT_ARCHIVE_POS + 1) % ARCHIVE_LINES;
+}
+function addMessage(msg) {
+    msg = capitalize(msg);
+    // // Implement the American quotation mark/period/comma ordering rule.
+    // for (i=0; text.text[i] && text.text[i+1]; i++) {
+    //     if (text.charCodeAt(i) === COLOR_ESCAPE) {
+    //         i += 4;
+    //     } else if (text.text[i] === '"'
+    //                && (text.text[i+1] === '.' || text.text[i+1] === ','))
+    // 		{
+    // 			const replace = text.text[i+1] + '"';
+    // 			text.spliceRaw(i, 2, replace);
+    //     }
+    // }
+    const lines = splitIntoLines(msg, MSG_WIDTH);
+    lines.forEach((l) => addMessageLine(l));
+    // display the message:
+    NEEDS_UPDATE = true;
+    // if (GAME.playbackMode) {
+    // 	GAME.playbackDelayThisTurn += GAME.playbackDelayPerTurn * 5;
+    // }
+}
+function addCombatMessage(msg) {
+    if (!COMBAT_MESSAGE) {
+        COMBAT_MESSAGE = msg;
+    }
+    else {
+        COMBAT_MESSAGE += ", " + capitalize(msg);
+    }
+    NEEDS_UPDATE = true;
+}
+function commitCombatMessage() {
+    if (!COMBAT_MESSAGE)
+        return false;
+    addMessage(COMBAT_MESSAGE + ".");
+    COMBAT_MESSAGE = null;
+    return true;
+}
+function confirmAll() {
+    for (let i = 0; i < CONFIRMED.length; i++) {
+        CONFIRMED[i] = true;
+    }
+    NEEDS_UPDATE = true;
+}
+function forEach(fn) {
+    for (let i = 0; i < ARCHIVE_LINES; ++i) {
+        const n = (i + CURRENT_ARCHIVE_POS - 1) % ARCHIVE_LINES;
+        const msg = ARCHIVE[n];
+        if (!msg)
+            return;
+        if (fn(msg, CONFIRMED[n], i) === false)
+            return;
+    }
+}
+
+var message = {
+    __proto__: null,
+    templates: templates,
+    install: install$1,
+    installAll: installAll,
+    needsUpdate: needsUpdate,
+    configure: configure$1,
+    add: add,
+    fromActor: fromActor,
+    addCombat: addCombat,
+    confirmAll: confirmAll,
+    forEach: forEach
+};
+
+export { Random, buffer, index as canvas, color, colors, config, cosmetic, data, events, flag, flags, fov, frequency, grid, io, make, message, path, random, range, scheduler, sprites, index$1 as text, types, utils };

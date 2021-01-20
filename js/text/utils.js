@@ -28,8 +28,13 @@ export function advanceChars(text, start, count) {
         const ch = text[i];
         if (ch === CS) {
             ++i;
-            while (text[i] !== CS)
-                ++i;
+            if (text[i] === CS) {
+                --count;
+            }
+            else {
+                while (text[i] !== CS)
+                    ++i;
+            }
             ++i;
         }
         else if (ch === CE) {
@@ -103,12 +108,15 @@ export function capitalize(text) {
         }
         else if (ch == CE) {
             ++i;
-            while (text[i] == CS && i < text.length) {
+            while (text[i] == CE && i < text.length) {
                 ++i;
             }
         }
-        else {
+        else if (/[A-Za-z]/.test(ch)) {
             return text.substring(0, i) + ch.toUpperCase() + text.substring(i + 1);
+        }
+        else {
+            ++i;
         }
     }
     return text;

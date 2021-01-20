@@ -1,6 +1,6 @@
 import "jest-extended";
 import * as Range from "./range";
-import * as GW from "./gw";
+import * as GW from "./index";
 
 describe("range", () => {
   test("constructor", () => {

@@ -24,6 +24,8 @@ export declare function FALSE(): boolean;
 export declare function ONE(): number;
 export declare function ZERO(): number;
 export declare function IDENTITY(x: any): any;
+export declare function IS_ZERO(x: number): boolean;
+export declare function IS_NONZERO(x: number): boolean;
 /**
  * clamps a value between min and max (inclusive)
  * @param v {Number} the value to clamp
@@ -56,27 +58,30 @@ export declare function smoothHiliteGradient(currentXValue: number, maxXValue: n
 export declare type BasicObject = {
     [key: string]: any;
 };
-export declare function assignOmitting(omit: string | string[], dest: BasicObject, src: BasicObject): void;
-export declare function setDefault(obj: BasicObject, field: string, val: any): void;
-export declare type AssignCallback = (dest: BasicObject, key: string, current: any, def: any) => boolean;
-export declare function setDefaults(obj: BasicObject, def: any, custom?: AssignCallback | null): void;
-export declare function kindDefaults(obj: BasicObject, def: BasicObject): void;
-export declare function pick(obj: BasicObject, ...fields: string[]): BasicObject;
-export declare function clearObject(obj: BasicObject): void;
+export declare function copyObject(dest: any, src: any): void;
+export declare function assignObject(dest: any, src: any): void;
+export declare function assignOmitting(omit: string | string[], dest: any, src: any): void;
+export declare function setDefault(obj: any, field: string, val: any): void;
+export declare type AssignCallback = (dest: any, key: string, current: any, def: any) => boolean;
+export declare function setDefaults(obj: any, def: any, custom?: AssignCallback | null): void;
+export declare function kindDefaults(obj: any, def: any): void;
+export declare function pick(obj: any, ...fields: string[]): any;
+export declare function clearObject(obj: any): void;
 export declare function ERROR(message: string): void;
 export declare function WARN(...args: string[]): void;
+export declare function first(...args: any[]): any;
 export declare function getOpt(obj: BasicObject, member: string, _default: any): any;
-export declare function firstOpt(field: string, ...args: BasicObject[]): any;
+export declare function firstOpt(field: string, ...args: any[]): any;
 export declare function arraysIntersect(a: any[], b: any[]): boolean;
 export declare function sum(arr: number[]): number;
 export interface Chainable {
-    next: Chainable | null;
+    next: any | null;
 }
-export declare function chainLength(root: Chainable | null): number;
-export declare function chainIncludes(chain: Chainable | null, entry: Chainable): boolean;
-export declare function eachChain(item: Chainable | null, fn: (item: Chainable, index: number) => any): number;
-export declare function addToChain(obj: BasicObject, name: string, entry: Chainable): boolean;
-export declare function removeFromChain(obj: BasicObject, name: string, entry: Chainable): boolean;
+export declare function chainLength<T extends Chainable>(root: T | null): number;
+export declare function chainIncludes<T extends Chainable>(chain: T | null, entry: T): boolean;
+export declare function eachChain<T extends Chainable>(item: T | null, fn: (item: T, index: number) => any): number;
+export declare function addToChain<T extends Chainable>(obj: any, name: string, entry: T): boolean;
+export declare function removeFromChain<T extends Chainable>(obj: any, name: string, entry: T): boolean;
 export declare function forLine(fromX: number, fromY: number, toX: number, toY: number, stepFn: (x: number, y: number) => boolean): void;
 export declare function getLine(fromX: number, fromY: number, toX: number, toY: number): Loc[];
 export declare function getLineThru(fromX: number, fromY: number, toX: number, toY: number, width: number, height: number): Loc[];

@@ -108,18 +108,17 @@ export function removeListener(
   context?: any,
   once = false
 ) {
-  if (!EVENTS[event]) return;
-  if (!fn) {
-    clearEvent(event);
-    return;
-  }
+  if (!EVENTS[event]) return false;
+  if (!fn) return false;
 
-  Utils.eachChain(EVENTS[event], (obj: Utils.Chainable) => {
-    const l: Listener = obj as Listener;
-    if (l.matches(fn, context, once)) {
-      Utils.removeFromChain(EVENTS, event, l);
+  let success = false;
+  Utils.eachChain(EVENTS[event], (obj: Listener) => {
+    if (obj.matches(fn, context, once)) {
+      Utils.removeFromChain(EVENTS, event, obj);
+      success = true;
     }
   });
+  return success;
 }
 
 /**
@@ -133,7 +132,7 @@ export function removeListener(
  * @public
  */
 export function off(event: string, fn: EventFn, context?: any, once = false) {
-  removeListener(event, fn, context, once);
+  return removeListener(event, fn, context, once);
 }
 
 /**
@@ -142,7 +141,9 @@ export function off(event: string, fn: EventFn, context?: any, once = false) {
  * @param {String} evt The Event name.
  */
 export function clearEvent(event: string) {
-  EVENTS[event] = null;
+  if (EVENTS[event]) {
+    EVENTS[event] = null;
+  }
 }
 
 /**
@@ -152,9 +153,9 @@ export function clearEvent(event: string) {
  * @returns {EventEmitter} `this`.
  * @public
  */
-export function removeAllListeners(event: string) {
+export function removeAllListeners(event?: string) {
   if (event) {
-    if (EVENTS[event]) clearEvent(event);
+    clearEvent(event);
   } else {
     EVENTS = {};
   }

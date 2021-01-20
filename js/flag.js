@@ -6,7 +6,7 @@ export function fl(N) {
 export function toString(flagObj, value) {
     const inverse = Object.entries(flagObj).reduce((out, entry) => {
         const [key, value] = entry;
-        if (value)
+        if (typeof value === "number")
             out[value] = key;
         return out;
     }, []);
@@ -68,10 +68,5 @@ export function from(obj, ...args) {
         }
     }
     return result;
-}
-export const flags = {};
-export function install(flagName, flag) {
-    flags[flagName] = flag;
-    return flag;
 }
 //# sourceMappingURL=flag.js.map

@@ -64,7 +64,7 @@ export declare function once(event: string, fn: EventFn, context?: any): Listene
  * @returns {EventEmitter} `this`.
  * @public
  */
-export declare function removeListener(event: string, fn: EventFn, context?: any, once?: boolean): void;
+export declare function removeListener(event: string, fn: EventFn, context?: any, once?: boolean): boolean;
 /**
  * Remove the listeners of a given event.
  *
@@ -75,7 +75,7 @@ export declare function removeListener(event: string, fn: EventFn, context?: any
  * @returns {EventEmitter} `this`.
  * @public
  */
-export declare function off(event: string, fn: EventFn, context?: any, once?: boolean): void;
+export declare function off(event: string, fn: EventFn, context?: any, once?: boolean): boolean;
 /**
  * Clear event by name.
  *
@@ -89,7 +89,7 @@ export declare function clearEvent(event: string): void;
  * @returns {EventEmitter} `this`.
  * @public
  */
-export declare function removeAllListeners(event: string): void;
+export declare function removeAllListeners(event?: string): void;
 /**
  * Calls each of the listeners registered for a given event.
  *

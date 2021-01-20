@@ -4,15 +4,10 @@ import { length, padStart, padEnd, center, capitalize, removeColors, firstChar, 
 import { wordWrap, splitIntoLines } from "./lines";
 import { addHelper, options } from "./config";
 function configure(opts = {}) {
-    if (opts.helpers) {
-        Object.entries(opts.helpers).forEach(([name, fn]) => {
-            addHelper(name, fn);
-        });
-    }
-    if (opts.fg) {
+    if (opts.fg !== undefined) {
         options.defaultFg = opts.fg;
     }
-    if (opts.bg) {
+    if (opts.bg !== undefined) {
         options.defaultBg = opts.bg;
     }
     if (opts.colorStart) {

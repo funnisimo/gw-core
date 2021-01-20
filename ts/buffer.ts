@@ -1,6 +1,12 @@
-import { Canvas, Mixer, DrawInfo } from "./canvas/index";
+import { Mixer, DrawInfo } from "./canvas/mixer";
 import * as Color from "./color";
 import * as Text from "./text/index";
+
+export interface Data {
+  ch: number;
+  fg: number;
+  bg: number;
+}
 
 export class DataBuffer {
   private _data: Uint32Array;
@@ -23,7 +29,7 @@ export class DataBuffer {
     return this._height;
   }
 
-  get(x: number, y: number): DrawInfo {
+  get(x: number, y: number): Data {
     let index = y * this.width + x;
     const style = this._data[index] || 0;
     const ch = style >> 24;
@@ -33,7 +39,7 @@ export class DataBuffer {
   }
 
   protected _toGlyph(ch: string) {
-    if (ch === null || ch === undefined) return -1;
+    if (!ch) return -1; // 0 handled elsewhere
     return ch.charCodeAt(0);
   }
 
@@ -41,8 +47,8 @@ export class DataBuffer {
     x: number,
     y: number,
     glyph: number | string = -1,
-    fg: Color.Color | number = -1,
-    bg: Color.Color | number = -1
+    fg: Color.ColorBase = -1, // TODO - White?
+    bg: Color.ColorBase = -1 // TODO - Black?
   ) {
     let index = y * this.width + x;
     const current = this._data[index] || 0;
@@ -65,15 +71,20 @@ export class DataBuffer {
   }
 
   // This is without opacity - opacity must be done in Mixer
-  drawSprite(x: number, y: number, sprite: DrawInfo) {
-    return this.draw(x, y, sprite.ch, sprite.fg, sprite.bg);
+  drawSprite(x: number, y: number, sprite: Partial<DrawInfo>) {
+    const ch = sprite.ch === null ? -1 : sprite.ch;
+    const fg = sprite.fg === null ? -1 : sprite.fg;
+    const bg = sprite.bg === null ? -1 : sprite.bg;
+    return this.draw(x, y, ch, fg, bg);
   }
 
-  blackOut(x: number, y: number) {
-    if (arguments.length == 0) {
+  blackOut(x: number, y: number): void;
+  blackOut(): void;
+  blackOut(...args: number[]) {
+    if (args.length == 0) {
       return this.fill(0, 0, 0);
     }
-    return this.draw(x, y, 0, 0, 0);
+    return this.draw(args[0], args[1], 0, 0, 0);
   }
 
   fill(glyph: number | string = 0, fg: number = 0xfff, bg: number = 0) {
@@ -97,16 +108,17 @@ export class DataBuffer {
     x: number,
     y: number,
     text: string,
-    fg: Color.Color | number | string = 0xfff,
-    bg: Color.Color | number | string = -1
+    fg: Color.ColorBase = 0xfff,
+    bg: Color.ColorBase = -1
   ) {
     if (typeof fg !== "number") fg = Color.from(fg);
     if (typeof bg !== "number") bg = Color.from(bg);
 
     Text.eachChar(
       text,
-      (ch, color, bg, i) => {
-        this.draw(i + x, y, ch, color, bg);
+      (ch, fg0, bg0, i) => {
+        if (x + i >= this.width) return;
+        this.draw(i + x, y, ch, fg0, bg0);
       },
       fg,
       bg
@@ -115,46 +127,40 @@ export class DataBuffer {
   }
 
   wrapText(
-    x0: number,
-    y0: number,
+    x: number,
+    y: number,
     width: number,
     text: string,
     fg: Color.Color | number | string = 0xfff,
     bg: Color.Color | number | string = -1,
-    opts: any = {}
+    indent = 0
   ) {
-    if (typeof opts === "number") {
-      opts = { indent: opts };
-    }
     if (typeof fg !== "number") fg = Color.from(fg);
     if (typeof bg !== "number") bg = Color.from(bg);
 
-    width = Math.min(width, this.width - x0);
-    const indent = opts.indent || 0;
-
+    width = Math.min(width, this.width - x);
     text = Text.wordWrap(text, width, indent);
 
-    let x = x0;
-    let y = y0;
+    let xi = x;
     Text.eachChar(
       text,
       (ch, fg0, bg0) => {
         if (ch == "\n") {
-          while (x < x0 + width) {
-            this.draw(x++, y, 0, 0x000, bg0);
+          while (xi < x + width) {
+            this.draw(xi++, y, 0, 0x000, bg0);
           }
           ++y;
-          x = x0 + indent;
+          xi = x + indent;
           return;
         }
-        this.draw(x++, y, ch, fg0, bg0);
+        this.draw(xi++, y, ch, fg0, bg0);
       },
       fg,
       bg
     );
 
-    while (x < x0 + width) {
-      this.draw(x++, y, " ", 0x000, bg);
+    while (xi < x + width) {
+      this.draw(xi++, y, 0, 0x000, bg);
     }
 
     return ++y;
@@ -166,12 +172,13 @@ export class DataBuffer {
     w: number,
     h: number,
     ch: string | number | null = -1,
-    fg: Color.Color | number | string | null = -1,
-    bg: Color.Color | number | string | null = -1
+    fg: Color.ColorBase | null = -1,
+    bg: Color.ColorBase | null = -1
   ) {
     if (ch === null) ch = -1;
-    fg = typeof fg === "number" ? fg : Color.from(fg);
-    bg = typeof bg === "number" ? bg : Color.from(bg);
+    if (typeof ch !== "number") ch = this._toGlyph(ch);
+    if (typeof fg !== "number") fg = Color.from(fg).toInt();
+    if (typeof bg !== "number") bg = Color.from(bg).toInt();
 
     for (let i = x; i < x + w; ++i) {
       for (let j = y; j < y + h; ++j) {
@@ -186,31 +193,26 @@ export class DataBuffer {
     y: number,
     w: number,
     h: number,
-    bg?: Color.Color | number
+    bg: Color.ColorBase = 0
   ) {
-    bg = bg || 0x000;
-    return this.fillRect(x, y, w, h, " ", 0, bg);
+    if (typeof bg !== "number") bg = Color.from(bg);
+    return this.fillRect(x, y, w, h, 0, 0, bg);
   }
 
-  highlight(
-    x: number,
-    y: number,
-    highlightColor: Color.Color | number | string,
-    strength: number
-  ) {
-    if (typeof highlightColor !== "number") {
-      highlightColor = Color.from(highlightColor);
+  highlight(x: number, y: number, color: Color.ColorBase, strength: number) {
+    if (typeof color !== "number") {
+      color = Color.from(color);
     }
     const mixer = new Mixer();
     const data = this.get(x, y);
     mixer.drawSprite(data);
-    mixer.fg.add(highlightColor, strength);
-    mixer.bg.add(highlightColor, strength);
+    mixer.fg.add(color, strength);
+    mixer.bg.add(color, strength);
     this.drawSprite(x, y, mixer);
     return this;
   }
 
-  mix(color: Color.Color | number | string, percent: number) {
+  mix(color: Color.ColorBase, percent: number) {
     if (typeof color !== "number") color = Color.from(color);
     const mixer = new Mixer();
     for (let x = 0; x < this.width; ++x) {
@@ -249,28 +251,36 @@ export class DataBuffer {
   }
 }
 
-export class Buffer extends DataBuffer {
-  private _canvas: Canvas;
+export interface BufferTarget {
+  readonly width: number;
+  readonly height: number;
+  copyTo(dest: Uint32Array): void;
+  copy(src: Uint32Array): void;
+  toGlyph(ch: string): number;
+}
 
-  constructor(canvas: Canvas) {
+export class Buffer extends DataBuffer {
+  private _target: BufferTarget;
+
+  constructor(canvas: BufferTarget) {
     super(canvas.width, canvas.height);
-    this._canvas = canvas;
+    this._target = canvas;
     canvas.copyTo(this.data);
   }
 
-  // get canvas() { return this._canvas; }
+  // get canvas() { return this._target; }
 
   _toGlyph(ch: string) {
-    return this._canvas.glyphs.forChar(ch);
+    return this._target.toGlyph(ch);
   }
 
   render() {
-    this._canvas.copy(this.data);
+    this._target.copy(this.data);
     return this;
   }
 
-  copyFromCanvas() {
-    this._canvas.copyTo(this.data);
+  load() {
+    this._target.copyTo(this.data);
     return this;
   }
 }

@@ -58,6 +58,8 @@ export function ZERO() {
 export function IDENTITY(x) {
     return x;
 }
+export function IS_ZERO(x) { return x == 0; }
+export function IS_NONZERO(x) { return x != 0; }
 /**
  * clamps a value between min and max (inclusive)
  * @param v {Number} the value to clamp
@@ -210,16 +212,16 @@ function assignField(dest, src, key) {
         dest[key] = updated;
     }
 }
-// export function copyObject(dest, src) {
-//   Object.keys(dest).forEach( (key) => {
-//     assignField(dest, src, key);
-//   });
-// }
-// export function assignObject(dest, src) {
-//   Object.keys(src).forEach( (key) => {
-//     assignField(dest, src, key);
-//   });
-// }
+export function copyObject(dest, src) {
+    Object.keys(dest).forEach((key) => {
+        assignField(dest, src, key);
+    });
+}
+export function assignObject(dest, src) {
+    Object.keys(src).forEach((key) => {
+        assignField(dest, src, key);
+    });
+}
 export function assignOmitting(omit, dest, src) {
     if (typeof omit === "string") {
         omit = omit.split(/[,|]/g).map((t) => t.trim());
@@ -320,6 +322,9 @@ export function ERROR(message) {
 }
 export function WARN(...args) {
     console.warn(...args);
+}
+export function first(...args) {
+    return args.find((v) => v !== undefined);
 }
 export function getOpt(obj, member, _default) {
     const v = obj[member];

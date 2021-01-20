@@ -53,6 +53,9 @@ export class BaseCanvas {
     set glyphs(glyphs) {
         this._setGlyphs(glyphs);
     }
+    toGlyph(ch) {
+        return this._glyphs.forChar(ch);
+    }
     _createNode() {
         return document.createElement("canvas");
     }

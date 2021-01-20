@@ -1,10 +1,11 @@
 import * as Color from "../color";
-import { SpriteType } from "./mixer";
+import { SpriteType } from "../types";
+import { make } from "../gw";
 
 export interface SpriteConfig {
   ch?: string | number | null;
-  fg?: Color.Color | number | string | null;
-  bg?: Color.Color | number | string | null;
+  fg?: Color.ColorBase | null;
+  bg?: Color.ColorBase | null;
   opacity?: number;
 }
 
@@ -17,8 +18,8 @@ export class Sprite implements SpriteType {
 
   constructor(
     ch?: string | number | null,
-    fg?: Color.Color | number | null,
-    bg?: Color.Color | number | null,
+    fg?: Color.ColorBase | null,
+    bg?: Color.ColorBase | null,
     opacity?: number
   ) {
     if (!ch && ch !== 0) ch = -1;
@@ -68,8 +69,14 @@ export function makeSprite(...args: any[]) {
     ch = args[0] || -1;
     fg = args[1];
     bg = args[2];
-  } else if (args.length == 1) {
-    if (typeof args[0] === "string" || typeof args[0] === "number") {
+  } else {
+    if (typeof args[0] === "string" && args[0].length == 1) {
+      ch = args[0];
+      fg = "white"; // white is default?
+    } else if (
+      (typeof args[0] === "string" && args[0].length > 1) ||
+      typeof args[0] === "number"
+    ) {
       bg = args[0];
     } else if (args[0] instanceof Color.Color) {
       bg = args[0];
@@ -91,6 +98,8 @@ export function makeSprite(...args: any[]) {
 
   return new Sprite(ch, fg, bg, opacity);
 }
+
+make.sprite = makeSprite;
 
 export function installSprite(
   name: string,

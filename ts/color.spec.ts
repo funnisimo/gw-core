@@ -1,3 +1,4 @@
+import "jest-extended";
 import * as Color from "./color";
 import { cosmetic } from "./random";
 
@@ -65,6 +66,7 @@ describe("Color", () => {
     const f = Color.fromArray([-50, 510, 255], true);
     expect(f.equals([-20, 200, 100])).toBeTruthy();
 
+    // @ts-ignore
     expect(Color.fromArray([]).toString()).toEqual("#000");
   });
 
@@ -128,6 +130,11 @@ describe("Color", () => {
     expect(a.equals(c)).toBeFalsy();
     expect(a.equals([100, 50, 0])).toBeTruthy();
     expect(a.equals([50, 50, 50])).toBeFalsy();
+    expect(a.equals("#f80")).toBeTruthy();
+    expect(a.equals(0xf80)).toBeTruthy();
+    expect(a.equals(0xff8000)).toBeTruthy();
+    expect(a.toString(true)).toEqual("#ff8000");
+    expect(a.equals("#ff8000")).toBeTruthy();
 
     // @ts-ignore
     expect(a.equals(null)).toBeFalsy();
@@ -138,6 +145,10 @@ describe("Color", () => {
 
     expect(a.toInt()).toEqual(0xf80);
     expect(a.equals(0xf80)).toBeTruthy();
+
+    expect(Color.colors.black.equals("black")).toBeTruthy();
+    expect(Color.colors.black.equals("#000")).toBeTruthy();
+    expect(Color.colors.black.equals("#000000")).toBeTruthy();
   });
 
   test("copy", () => {
@@ -146,6 +157,15 @@ describe("Color", () => {
     expect(a.equals(b)).toBeFalsy();
     a.copy(b);
     expect(a.equals(b)).toBeTruthy();
+
+    a.copy([50, 50, 50]);
+    expect(a.css()).toEqual("#888");
+
+    a.copy([50, 50, 50, 10, 10, 10, 10, true]);
+    expect(a.dances).toBeTruthy();
+
+    b.copy(a);
+    expect(b.dances).toBeTruthy();
   });
 
   test("clone", () => {
@@ -154,28 +174,34 @@ describe("Color", () => {
     expect(a.equals(b)).toBeTruthy();
   });
 
-  test("set", () => {
+  test("assign", () => {
     const a = new Color.Color();
     a.assign(100, 50, 0);
+    expect(a.dances).toBeFalsy();
     expect(a.equals([100, 50, 0])).toBeTruthy();
 
-    a.assign(1, 2, 3, 4, 5, 6, 7);
+    a.assign(1, 2, 3, 4, 5, 6, 7, true);
     expect(a.equals([1, 2, 3, 4, 5, 6, 7])).toBeTruthy();
+    expect(a.dances).toBeTruthy();
 
     a.assign();
     expect(a.toString()).toEqual("#000");
+    expect(a.dances).toBeTruthy(); // does not change (should it?)
   });
 
   test("assignRGB", () => {
     const a = new Color.Color();
     a.assignRGB(255, 128, 0);
     expect(a.equals([100, 50, 0])).toBeTruthy();
+    expect(a.dances).toBeFalsy();
 
-    a.assignRGB(255, 255, 255, 255, 255, 255, 255);
+    a.assignRGB(255, 255, 255, 255, 255, 255, 255, true);
     expect(a.equals([100, 100, 100, 100, 100, 100, 100])).toBeTruthy();
+    expect(a.dances).toBeTruthy();
 
     a.assignRGB();
     expect(a.toString()).toEqual("#000");
+    expect(a.dances).toBeTruthy(); // does not change (should it?)
   });
 
   test("nullify", () => {
@@ -285,8 +311,11 @@ describe("Color", () => {
     c.bake();
     expect(c.css()).not.toEqual("#000");
     expect(c.r).toBeGreaterThan(0);
+    expect(c.r).toBeLessThan(256);
     expect(c.g).toBeGreaterThan(0);
+    expect(c.g).toBeLessThan(256);
     expect(c.b).toBeGreaterThan(0);
+    expect(c.b).toBeLessThan(256);
 
     const d = new Color.Color();
     expect(d.isNull()).toBeTruthy();
@@ -296,6 +325,13 @@ describe("Color", () => {
     const e = Color.fromArray([50, 50, 50]);
     e.bake();
     expect(e.toString()).toEqual("#888");
+
+    const f = Color.fromArray([50, 50, 50, 10, 10, 10, 10, true]);
+    f.bake();
+    expect(f.toString()).toEqual("#888");
+    expect(f.r).toEqual(128);
+    expect(f.g).toEqual(128);
+    expect(f.b).toEqual(128);
   });
 
   test("add", () => {
@@ -367,6 +403,10 @@ describe("Color", () => {
     const c = new Color.Color();
     expect(c.isNull()).toBeTruthy();
     expect(c.toString()).toEqual("null color");
+
+    const d = Color.colors.teal;
+    expect(d.toString()).toEqual("teal");
+    expect(d.css()).toEqual("#5ff");
   });
 
   test("rgb hsl", () => {
@@ -448,5 +488,72 @@ describe("Color", () => {
     Color.separate(a, b);
     expect(a.toString()).toEqual("#33f");
     expect(b.toString()).toEqual("#006");
+  });
+
+  test("fromName", () => {
+    expect(() => Color.from("taco")).toThrow();
+    expect(() => Color.make("taco")).toThrow();
+  });
+
+  test("fromNumber", () => {
+    const c = Color.from(-4);
+    expect(c.isNull()).toBeTruthy();
+  });
+
+  test("swap", () => {
+    const a = Color.make("brown");
+    const b = Color.make("teal");
+    Color.swap(a, b);
+    expect(a.equals(Color.colors.teal)).toBeTruthy();
+    expect(b.equals(Color.colors.brown)).toBeTruthy();
+  });
+
+  test("relativeLuminance", () => {
+    const C = Color.colors;
+    expect(Color.relativeLuminance(C.white, C.black)).toEqual(100);
+    expect(Color.relativeLuminance(C.white, C.gray)).toEqual(25);
+    expect(Color.relativeLuminance(C.white, C.red)).toEqual(79);
+    expect(Color.relativeLuminance(C.white, C.green)).toEqual(28);
+    expect(Color.relativeLuminance(C.white, C.blue)).toEqual(93);
+    expect(Color.relativeLuminance(C.black, C.red)).toEqual(21);
+    expect(Color.relativeLuminance(C.black, C.green)).toEqual(72);
+    expect(Color.relativeLuminance(C.black, C.blue)).toEqual(7);
+    expect(Color.relativeLuminance(C.red, C.red)).toEqual(0);
+    expect(Color.relativeLuminance(C.red, C.green)).toEqual(93);
+    expect(Color.relativeLuminance(C.red, C.blue)).toEqual(28);
+    expect(Color.relativeLuminance(C.green, C.red)).toEqual(93);
+    expect(Color.relativeLuminance(C.green, C.green)).toEqual(0);
+    expect(Color.relativeLuminance(C.green, C.blue)).toEqual(79);
+    expect(Color.relativeLuminance(C.blue, C.red)).toEqual(28);
+    expect(Color.relativeLuminance(C.blue, C.green)).toEqual(79);
+    expect(Color.relativeLuminance(C.blue, C.blue)).toEqual(0);
+  });
+
+  test("distance", () => {
+    const C = Color.colors;
+    expect(Color.distance(C.white, C.black)).toEqual(100);
+    expect(Color.distance(C.white, C.gray)).toEqual(25);
+    expect(Color.distance(C.white, C.red)).toEqual(67);
+    expect(Color.distance(C.white, C.green)).toEqual(67);
+    expect(Color.distance(C.white, C.blue)).toEqual(67);
+    expect(Color.distance(C.black, C.red)).toEqual(33);
+    expect(Color.distance(C.black, C.green)).toEqual(33);
+    expect(Color.distance(C.black, C.blue)).toEqual(33);
+    expect(Color.distance(C.red, C.red)).toEqual(0);
+    expect(Color.distance(C.red, C.green)).toEqual(67);
+    expect(Color.distance(C.red, C.blue)).toEqual(67);
+    expect(Color.distance(C.green, C.red)).toEqual(67);
+    expect(Color.distance(C.green, C.green)).toEqual(0);
+    expect(Color.distance(C.green, C.blue)).toEqual(67);
+    expect(Color.distance(C.blue, C.red)).toEqual(67);
+    expect(Color.distance(C.blue, C.green)).toEqual(67);
+    expect(Color.distance(C.blue, C.blue)).toEqual(0);
+  });
+
+  test("installSpread", () => {
+    Color.installSpread("test", 75, 75, 25);
+    expect(Color.colors.test).toBeObject();
+    expect(Color.colors.dark_test).toBeObject();
+    expect(Color.colors.light_test).toBeObject();
   });
 });

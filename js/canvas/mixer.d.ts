@@ -1,17 +1,15 @@
 import * as Color from "../color";
+import { SpriteType } from "../types";
 export interface DrawInfo {
     ch: string | number;
-    fg: Color.Color | number;
-    bg: Color.Color | number;
-}
-export interface SpriteType extends DrawInfo {
-    opacity?: number;
+    fg: Color.ColorBase;
+    bg: Color.ColorBase;
 }
 export declare class Mixer implements DrawInfo {
     ch: string | number;
     fg: Color.Color;
     bg: Color.Color;
-    constructor();
+    constructor(base?: Partial<DrawInfo>);
     protected _changed(): this;
     copy(other: Mixer): this;
     clone(): Mixer;
@@ -25,9 +23,10 @@ export declare class Mixer implements DrawInfo {
     mix(color: Color.ColorBase, fg?: number, bg?: number): this;
     add(color: Color.ColorBase, fg?: number, bg?: number): this;
     separate(): this;
-    bake(): {
+    bake(clearDancing?: boolean): {
         ch: string | number;
         fg: number;
         bg: number;
     };
+    toString(): string;
 }

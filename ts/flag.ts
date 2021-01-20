@@ -1,6 +1,9 @@
 ///////////////////////////////////
 // FLAG
 
+type FlagSource = number | string;
+export type FlagBase = number | string | FlagSource[] | null;
+
 export function fl(N: number) {
   return 1 << N;
 }
@@ -9,7 +12,7 @@ export function toString(flagObj: any, value: number) {
   const inverse = Object.entries(flagObj).reduce(
     (out: string[], entry: [string, unknown]) => {
       const [key, value] = entry as [string, number];
-      if (value) out[value] = key;
+      if (typeof value === "number") out[value] = key;
       return out;
     },
     []
@@ -25,7 +28,7 @@ export function toString(flagObj: any, value: number) {
   return out.join(" | ");
 }
 
-export function from(obj: any, ...args: any[]) {
+export function from(obj: any, ...args: (FlagBase | undefined)[]) {
   let result = 0;
   for (let index = 0; index < args.length; ++index) {
     let value = args[index];
@@ -69,11 +72,4 @@ export function from(obj: any, ...args: any[]) {
     }
   }
   return result;
-}
-
-export const flags: Record<string, Record<string, number>> = {};
-
-export function install(flagName: string, flag: Record<string, number>) {
-  flags[flagName] = flag;
-  return flag;
 }

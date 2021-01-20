@@ -1,5 +1,6 @@
 import { cosmetic } from "./random";
-function toColorInt(r = 0, g = 0, b = 0, base256 = false) {
+import { make as Make } from "./gw";
+function toColorInt(r, g, b, base256) {
     if (base256) {
         r = Math.max(0, Math.min(255, Math.round(r * 2.550001)));
         g = Math.max(0, Math.min(255, Math.round(g * 2.550001)));
@@ -104,9 +105,9 @@ export class Color extends Int16Array {
     }
     equals(other) {
         if (typeof other === "string") {
-            return other.length > 4
-                ? this.toString(true) == other
-                : this.toString() == other;
+            if (!other.startsWith("#"))
+                return this.name == other;
+            return this.css(other.length > 4) == other;
         }
         else if (typeof other === "number") {
             return this.toInt() == other || this.toInt(true) == other;
@@ -115,19 +116,23 @@ export class Color extends Int16Array {
         if (this.isNull())
             return O.isNull();
         return this.every((v, i) => {
-            return v == (O[i] || 0);
+            return v == O[i];
         });
     }
     copy(other) {
         if (Array.isArray(other)) {
-            this.set(other);
+            if (other.length === 8) {
+                this.dances = other[7];
+            }
         }
         else {
-            const O = from(other);
-            this.set(O);
+            other = from(other);
+            this.dances = other.dances;
+        }
+        for (let i = 0; i < this.length; ++i) {
+            this[i] = other[i] || 0;
         }
         if (other instanceof Color) {
-            this.dances = other.dances;
             this.name = other.name;
         }
         else {
@@ -229,15 +234,18 @@ export class Color extends Int16Array {
         }
         return this._changed();
     }
-    bake() {
+    bake(clearDancing = false) {
         if (this.isNull())
             return this;
+        if (this.dances && !clearDancing)
+            return;
+        this.dances = false;
         const d = this;
         if (d[3] + d[4] + d[5] + d[6]) {
-            const rand = this._rand ? cosmetic.number(this._rand) : 0;
-            const redRand = this._redRand ? cosmetic.number(this._redRand) : 0;
-            const greenRand = this._greenRand ? cosmetic.number(this._greenRand) : 0;
-            const blueRand = this._blueRand ? cosmetic.number(this._blueRand) : 0;
+            const rand = cosmetic.number(this._rand);
+            const redRand = cosmetic.number(this._redRand);
+            const greenRand = cosmetic.number(this._greenRand);
+            const blueRand = cosmetic.number(this._blueRand);
             this._r += rand + redRand;
             this._g += rand + greenRand;
             this._b += rand + blueRand;
@@ -391,17 +399,16 @@ export function make(...args) {
         return fromArray(arg, base256);
     }
     else if (typeof arg === "number") {
-        if (arg < 0)
-            return new Color(-1);
         return fromNumber(arg, base256);
     }
     throw new Error("Failed to make color - unknown argument: " + JSON.stringify(arg));
 }
+Make.color = make;
 export function from(...args) {
     const arg = args[0];
     if (arg instanceof Color)
         return arg;
-    if (arg < 0 || arg === undefined)
+    if (arg === undefined)
         return new Color(-1);
     if (typeof arg === "string") {
         if (!arg.startsWith("#")) {
@@ -444,10 +451,19 @@ export function swap(a, b) {
     a.copy(b);
     b.copy(temp);
 }
-export function diff(a, b) {
-    return Math.round((a.r - b.r) * (a.r - b.r) * 0.2126 +
-        (a.g - b.g) * (a.g - b.g) * 0.7152 +
-        (a.b - b.b) * (a.b - b.b) * 0.0722);
+export function relativeLuminance(a, b) {
+    return Math.round((100 *
+        ((a.r - b.r) * (a.r - b.r) * 0.2126 +
+            (a.g - b.g) * (a.g - b.g) * 0.7152 +
+            (a.b - b.b) * (a.b - b.b) * 0.0722)) /
+        65025);
+}
+export function distance(a, b) {
+    return Math.round((100 *
+        ((a.r - b.r) * (a.r - b.r) * 0.3333 +
+            (a.g - b.g) * (a.g - b.g) * 0.3333 +
+            (a.b - b.b) * (a.b - b.b) * 0.3333)) /
+        65025);
 }
 export function install(name, ...args) {
     let info = args;
@@ -460,7 +476,13 @@ export function install(name, ...args) {
     return c;
 }
 export function installSpread(name, ...args) {
-    const c = install(name, ...args);
+    let c;
+    if (args.length == 1) {
+        c = install(name, args[0]);
+    }
+    else {
+        c = install(name, ...args);
+    }
     install("light_" + name, c.clone().lighten(25));
     install("lighter_" + name, c.clone().lighten(50));
     install("lightest_" + name, c.clone().lighten(75));

@@ -82,17 +82,17 @@ export function once(event, fn, context) {
  */
 export function removeListener(event, fn, context, once = false) {
     if (!EVENTS[event])
-        return;
-    if (!fn) {
-        clearEvent(event);
-        return;
-    }
+        return false;
+    if (!fn)
+        return false;
+    let success = false;
     Utils.eachChain(EVENTS[event], (obj) => {
-        const l = obj;
-        if (l.matches(fn, context, once)) {
-            Utils.removeFromChain(EVENTS, event, l);
+        if (obj.matches(fn, context, once)) {
+            Utils.removeFromChain(EVENTS, event, obj);
+            success = true;
         }
     });
+    return success;
 }
 /**
  * Remove the listeners of a given event.
@@ -105,7 +105,7 @@ export function removeListener(event, fn, context, once = false) {
  * @public
  */
 export function off(event, fn, context, once = false) {
-    removeListener(event, fn, context, once);
+    return removeListener(event, fn, context, once);
 }
 /**
  * Clear event by name.
@@ -113,7 +113,9 @@ export function off(event, fn, context, once = false) {
  * @param {String} evt The Event name.
  */
 export function clearEvent(event) {
-    EVENTS[event] = null;
+    if (EVENTS[event]) {
+        EVENTS[event] = null;
+    }
 }
 /**
  * Remove all listeners, or those of the specified event.
@@ -124,8 +126,7 @@ export function clearEvent(event) {
  */
 export function removeAllListeners(event) {
     if (event) {
-        if (EVENTS[event])
-            clearEvent(event);
+        clearEvent(event);
     }
     else {
         EVENTS = {};

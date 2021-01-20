@@ -6,7 +6,7 @@ import {
   SeedFunction,
   Random,
 } from "./random";
-import * as GW from "./gw";
+import * as GW from "./index";
 
 function always(testFn: () => any, count = 1000) {
   for (let i = 0; i < count; ++i) {
@@ -25,6 +25,11 @@ describe("random", () => {
     Random.configure({ make });
     make.mockClear();
   }
+
+  afterEach(() => {
+    jest.resetAllMocks();
+    Random.configure({ make: () => Math.random.bind(Math) });
+  });
 
   test("GW", () => {
     expect(GW.random).toBeObject();
@@ -48,6 +53,13 @@ describe("random", () => {
     expect(make).toHaveBeenCalledWith(12345);
     expect(random.number(100)).toEqual(70);
     expect(rnd2).toHaveBeenCalled();
+  });
+
+  test("number", () => {
+    setupMocks();
+    expect(random.number(100)).toEqual(50);
+    expect(random.number(0)).toEqual(0);
+    expect(random.number()).toEqual(Math.floor(Number.MAX_SAFE_INTEGER / 2));
   });
 
   test("gives random percents => [0, 1)", () => {

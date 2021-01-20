@@ -1,5 +1,6 @@
 import { random } from "./random";
 import * as Utils from "./utils";
+import { make as Make } from "./gw";
 const DIRS = Utils.DIRS;
 const CDIRS = Utils.CLOCK_DIRS;
 export function makeArray(l, fn) {
@@ -57,6 +58,17 @@ export class Grid extends Array {
     get height() {
         return this._height;
     }
+    get(x, y) {
+        if (!this.hasXY(x, y))
+            return undefined;
+        return this[x][y];
+    }
+    set(x, y, v) {
+        if (!this.hasXY(x, y))
+            return false;
+        this[x][y] = v;
+        return true;
+    }
     /**
      * Calls the supplied function for each cell in the grid.
      * @param fn - The function to call on each item in the grid.
@@ -94,6 +106,9 @@ export class Grid extends Array {
     /**
      * Returns a new Grid with the cells mapped according to the supplied function.
      * @param fn - The function that maps the cell values
+     * TODO - Do we need this???
+     * TODO - Should this only be in NumGrid?
+     * TODO - Should it alloc instead of using constructor?
      * TSIGNORE
      */
     // @ts-ignore
@@ -232,12 +247,14 @@ export class Grid extends Array {
     dumpAround(x, y, radius) {
         this.dumpRect(x - radius, y - radius, 2 * radius, 2 * radius);
     }
-    closestMatchingLoc(x, y, fn) {
+    // TODO - Use for(radius) loop to speed this up (do not look at each cell)
+    closestMatchingLoc(x, y, v) {
         let bestLoc = [-1, -1];
-        let bestDistance = this.width + this.height;
+        let bestDistance = 100 * (this.width + this.height);
+        const fn = typeof v === "function" ? v : (val) => val == v;
         this.forEach((v, i, j) => {
             if (fn(v, i, j, this)) {
-                const dist = Utils.distanceBetween(x, y, i, j);
+                const dist = Math.floor(100 * Utils.distanceBetween(x, y, i, j));
                 if (dist < bestDistance) {
                     bestLoc[0] = i;
                     bestLoc[1] = j;
@@ -346,22 +363,27 @@ export class Grid extends Array {
     //		Four means it is in the intersection of two hallways.
     //		Five or more means there is a bug.
     arcCount(x, y, testFn) {
-        let arcCount, dir, oldX, oldY, newX, newY;
+        let oldX, oldY, newX, newY;
         // brogueAssert(grid.hasXY(x, y));
-        testFn = testFn || Utils.IDENTITY;
-        arcCount = 0;
-        for (dir = 0; dir < CDIRS.length; dir++) {
+        testFn = testFn || Utils.IS_NONZERO;
+        let arcCount = 0;
+        let matchCount = 0;
+        for (let dir = 0; dir < CDIRS.length; dir++) {
             oldX = x + CDIRS[(dir + 7) % 8][0];
             oldY = y + CDIRS[(dir + 7) % 8][1];
             newX = x + CDIRS[dir][0];
             newY = y + CDIRS[dir][1];
             // Counts every transition from passable to impassable or vice-versa on the way around the cell:
-            if ((this.hasXY(newX, newY) &&
-                testFn(this[newX][newY], newX, newY, this)) !=
-                (this.hasXY(oldX, oldY) && testFn(this[oldX][oldY], oldX, oldY, this))) {
+            const newOk = this.hasXY(newX, newY) && testFn(this[newX][newY], newX, newY, this);
+            const oldOk = this.hasXY(oldX, oldY) && testFn(this[oldX][oldY], oldX, oldY, this);
+            if (newOk)
+                ++matchCount;
+            if (newOk != oldOk) {
                 arcCount++;
             }
         }
+        if (arcCount == 0 && matchCount)
+            return 1;
         return Math.floor(arcCount / 2); // Since we added one when we entered a wall and another when we left.
     }
 }
@@ -388,7 +410,7 @@ export class NumGrid extends Grid {
             ++GRID_CREATE_COUNT;
             return new NumGrid(w, h, v);
         }
-        grid.resize(w, h, v);
+        grid._resize(w, h, v);
         return grid;
     }
     static free(grid) {
@@ -400,7 +422,7 @@ export class NumGrid extends Grid {
             --GRID_ACTIVE_COUNT;
         }
     }
-    resize(width, height, v = 0) {
+    _resize(width, height, v = 0) {
         const fn = typeof v === "function" ? v : () => v;
         while (this.length < width)
             this.push([]);
@@ -437,13 +459,18 @@ export class NumGrid extends Grid {
         if (fillValue >= eligibleValueMin && fillValue <= eligibleValueMax) {
             throw new Error("Invalid grid flood fill");
         }
+        const ok = (x, y) => {
+            return this.hasXY(x, y) &&
+                this[x][y] >= eligibleValueMin &&
+                this[x][y] <= eligibleValueMax;
+        };
+        if (!ok(x, y))
+            return 0;
         this[x][y] = fillValue;
         for (dir = 0; dir < 4; dir++) {
             newX = x + DIRS[dir][0];
             newY = y + DIRS[dir][1];
-            if (this.hasXY(newX, newY) &&
-                this[newX][newY] >= eligibleValueMin &&
-                this[newX][newY] <= eligibleValueMax) {
+            if (ok(newX, newY)) {
                 fillCount += this.floodFillRange(newX, newY, eligibleValueMin, eligibleValueMax, fillValue);
             }
         }
@@ -451,17 +478,6 @@ export class NumGrid extends Grid {
     }
     invert() {
         this.update((v) => (v ? 0 : 1));
-    }
-    closestLocWithValue(x, y, value = 1) {
-        return this.closestMatchingLoc(x, y, (v) => v == value);
-    }
-    // Takes a grid as a mask of valid locations, chooses one randomly and returns it as (x, y).
-    // If there are no valid locations, returns (-1, -1).
-    randomLocWithValue(validValue = 1) {
-        return this.randomMatchingLoc((v) => v == validValue);
-    }
-    getQualifyingLocNear(x, y, deterministic = false) {
-        return this.matchingLocNear(x, y, (v) => !!v, deterministic);
     }
     leastPositiveValue() {
         let least = Number.MAX_SAFE_INTEGER;
@@ -474,7 +490,7 @@ export class NumGrid extends Grid {
     }
     randomLeastPositiveLoc(deterministic = false) {
         const targetValue = this.leastPositiveValue();
-        return this.randomMatchingLoc((v) => v == targetValue, deterministic);
+        return this.randomMatchingLoc(targetValue, deterministic);
     }
     // Marks a cell as being a member of blobNumber, then recursively iterates through the rest of the blob
     floodFill(x, y, matchValue, fillValue) {
@@ -533,11 +549,13 @@ export class NumGrid extends Grid {
         return didSomething;
     }
     // Loads up **grid with the results of a cellular automata simulation.
-    fillBlob(roundCount, minBlobWidth, minBlobHeight, maxBlobWidth, maxBlobHeight, percentSeeded, birthParameters, survivalParameters) {
+    fillBlob(roundCount, minBlobWidth, minBlobHeight, maxBlobWidth, maxBlobHeight, percentSeeded = 50, birthParameters = "ffffffttt", survivalParameters = "ffffttttt") {
         let i, j, k;
         let blobNumber, blobSize, topBlobNumber, topBlobSize;
         let topBlobMinX, topBlobMinY, topBlobMaxX, topBlobMaxY, blobWidth, blobHeight;
         let foundACellThisLine;
+        birthParameters = birthParameters.toLowerCase();
+        survivalParameters = survivalParameters.toLowerCase();
         if (minBlobWidth >= maxBlobWidth) {
             minBlobWidth = Math.round(0.75 * maxBlobWidth);
             maxBlobWidth = Math.round(1.25 * maxBlobWidth);
@@ -660,10 +678,11 @@ export function make(w, h, v) {
         return new NumGrid(w, h, v);
     return new Grid(w, h, v);
 }
+Make.grid = make;
 export function offsetZip(destGrid, srcGrid, srcToDestX, srcToDestY, value) {
     const fn = typeof value === "function"
         ? value
-        : (_, s, dx, dy) => (destGrid[dx][dy] = value || s);
+        : (_d, _s, dx, dy) => (destGrid[dx][dy] = value);
     srcGrid.forEach((c, i, j) => {
         const destX = i + srcToDestX;
         const destY = j + srcToDestY;
@@ -706,11 +725,13 @@ export function directionOfDoorSite(grid, x, y, isOpen) {
 // Grid.directionOfDoorSite = directionOfDoorSite;
 export function intersection(onto, a, b) {
     b = b || onto;
-    onto.update((_, i, j) => a[i][j] && b[i][j]);
+    // @ts-ignore
+    onto.update((_, i, j) => (a[i][j] && b[i][j]) || 0);
 }
 // Grid.intersection = intersection;
 export function unite(onto, a, b) {
     b = b || onto;
+    // @ts-ignore
     onto.update((_, i, j) => b[i][j] || a[i][j]);
 }
 //# sourceMappingURL=grid.js.map

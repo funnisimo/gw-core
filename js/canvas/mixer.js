@@ -1,9 +1,11 @@
 import * as Color from "../color";
+import * as Utils from "../utils";
+import { make } from "../gw";
 export class Mixer {
-    constructor() {
-        this.ch = -1;
-        this.fg = new Color.Color();
-        this.bg = new Color.Color();
+    constructor(base) {
+        this.ch = Utils.first(base === null || base === void 0 ? void 0 : base.ch, -1);
+        this.fg = Color.from(base === null || base === void 0 ? void 0 : base.fg);
+        this.bg = Color.from(base === null || base === void 0 ? void 0 : base.bg);
     }
     _changed() {
         return this;
@@ -57,11 +59,11 @@ export class Mixer {
             opacity = 100;
         if (opacity <= 0)
             return;
-        if (info.ch !== -1 && (info.ch || info.ch === 0))
+        if ((info.ch && info.ch !== -1) || info.ch === 0)
             this.ch = info.ch;
-        if (info.fg && info.fg !== -1)
+        if ((info.fg && info.fg !== -1) || info.fg === 0)
             this.fg.mix(info.fg, opacity);
-        if (info.bg && info.bg !== -1)
+        if ((info.bg && info.bg !== -1) || info.bg === 0)
             this.bg.mix(info.bg, opacity);
         return this._changed();
     }
@@ -103,9 +105,9 @@ export class Mixer {
         Color.separate(this.fg, this.bg);
         return this._changed();
     }
-    bake() {
-        this.fg.bake();
-        this.bg.bake();
+    bake(clearDancing = false) {
+        this.fg.bake(clearDancing);
+        this.bg.bake(clearDancing);
         this._changed();
         return {
             ch: this.ch,
@@ -113,5 +115,12 @@ export class Mixer {
             bg: this.bg.toInt(),
         };
     }
+    toString() {
+        // prettier-ignore
+        return `{ ch: ${this.ch}, fg: ${this.fg.toString(true)}, bg: ${this.bg.toString(true)} }`;
+    }
 }
+make.mixer = function (base) {
+    return new Mixer(base);
+};
 //# sourceMappingURL=mixer.js.map

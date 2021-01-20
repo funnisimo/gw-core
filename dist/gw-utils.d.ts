@@ -20,6 +20,8 @@ declare function FALSE(): boolean;
 declare function ONE(): number;
 declare function ZERO(): number;
 declare function IDENTITY(x: any): any;
+declare function IS_ZERO(x: number): boolean;
+declare function IS_NONZERO(x: number): boolean;
 /**
  * clamps a value between min and max (inclusive)
  * @param v {Number} the value to clamp
@@ -56,27 +58,30 @@ declare function smoothHiliteGradient(currentXValue: number, maxXValue: number):
 declare type BasicObject = {
     [key: string]: any;
 };
-declare function assignOmitting(omit: string | string[], dest: BasicObject, src: BasicObject): void;
-declare function setDefault(obj: BasicObject, field: string, val: any): void;
-declare type AssignCallback = (dest: BasicObject, key: string, current: any, def: any) => boolean;
-declare function setDefaults(obj: BasicObject, def: any, custom?: AssignCallback | null): void;
-declare function kindDefaults(obj: BasicObject, def: BasicObject): void;
-declare function pick(obj: BasicObject, ...fields: string[]): BasicObject;
-declare function clearObject(obj: BasicObject): void;
+declare function copyObject(dest: any, src: any): void;
+declare function assignObject(dest: any, src: any): void;
+declare function assignOmitting(omit: string | string[], dest: any, src: any): void;
+declare function setDefault(obj: any, field: string, val: any): void;
+declare type AssignCallback = (dest: any, key: string, current: any, def: any) => boolean;
+declare function setDefaults(obj: any, def: any, custom?: AssignCallback | null): void;
+declare function kindDefaults(obj: any, def: any): void;
+declare function pick(obj: any, ...fields: string[]): any;
+declare function clearObject(obj: any): void;
 declare function ERROR(message: string): void;
 declare function WARN(...args: string[]): void;
+declare function first(...args: any[]): any;
 declare function getOpt(obj: BasicObject, member: string, _default: any): any;
-declare function firstOpt(field: string, ...args: BasicObject[]): any;
+declare function firstOpt(field: string, ...args: any[]): any;
 declare function arraysIntersect(a: any[], b: any[]): boolean;
 declare function sum(arr: number[]): number;
 interface Chainable {
-    next: Chainable | null;
+    next: any | null;
 }
-declare function chainLength(root: Chainable | null): number;
-declare function chainIncludes(chain: Chainable | null, entry: Chainable): boolean;
-declare function eachChain(item: Chainable | null, fn: (item: Chainable, index: number) => any): number;
-declare function addToChain(obj: BasicObject, name: string, entry: Chainable): boolean;
-declare function removeFromChain(obj: BasicObject, name: string, entry: Chainable): boolean;
+declare function chainLength<T extends Chainable>(root: T | null): number;
+declare function chainIncludes<T extends Chainable>(chain: T | null, entry: T): boolean;
+declare function eachChain<T extends Chainable>(item: T | null, fn: (item: T, index: number) => any): number;
+declare function addToChain<T extends Chainable>(obj: any, name: string, entry: T): boolean;
+declare function removeFromChain<T extends Chainable>(obj: any, name: string, entry: T): boolean;
 declare function forLine(fromX: number, fromY: number, toX: number, toY: number, stepFn: (x: number, y: number) => boolean): void;
 declare function getLine(fromX: number, fromY: number, toX: number, toY: number): Loc[];
 declare function getLineThru(fromX: number, fromY: number, toX: number, toY: number, width: number, height: number): Loc[];
@@ -100,6 +105,8 @@ declare const utils_d_FALSE: typeof FALSE;
 declare const utils_d_ONE: typeof ONE;
 declare const utils_d_ZERO: typeof ZERO;
 declare const utils_d_IDENTITY: typeof IDENTITY;
+declare const utils_d_IS_ZERO: typeof IS_ZERO;
+declare const utils_d_IS_NONZERO: typeof IS_NONZERO;
 declare const utils_d_clamp: typeof clamp;
 declare const utils_d_x: typeof x;
 declare const utils_d_y: typeof y;
@@ -119,6 +126,8 @@ declare const utils_d_dirSpread: typeof dirSpread;
 declare const utils_d_stepFromTo: typeof stepFromTo;
 declare const utils_d_smoothHiliteGradient: typeof smoothHiliteGradient;
 type utils_d_BasicObject = BasicObject;
+declare const utils_d_copyObject: typeof copyObject;
+declare const utils_d_assignObject: typeof assignObject;
 declare const utils_d_assignOmitting: typeof assignOmitting;
 declare const utils_d_setDefault: typeof setDefault;
 type utils_d_AssignCallback = AssignCallback;
@@ -128,6 +137,7 @@ declare const utils_d_pick: typeof pick;
 declare const utils_d_clearObject: typeof clearObject;
 declare const utils_d_ERROR: typeof ERROR;
 declare const utils_d_WARN: typeof WARN;
+declare const utils_d_first: typeof first;
 declare const utils_d_getOpt: typeof getOpt;
 declare const utils_d_firstOpt: typeof firstOpt;
 declare const utils_d_arraysIntersect: typeof arraysIntersect;
@@ -162,6 +172,8 @@ declare namespace utils_d {
     utils_d_ONE as ONE,
     utils_d_ZERO as ZERO,
     utils_d_IDENTITY as IDENTITY,
+    utils_d_IS_ZERO as IS_ZERO,
+    utils_d_IS_NONZERO as IS_NONZERO,
     utils_d_clamp as clamp,
     utils_d_x as x,
     utils_d_y as y,
@@ -181,6 +193,8 @@ declare namespace utils_d {
     utils_d_stepFromTo as stepFromTo,
     utils_d_smoothHiliteGradient as smoothHiliteGradient,
     utils_d_BasicObject as BasicObject,
+    utils_d_copyObject as copyObject,
+    utils_d_assignObject as assignObject,
     utils_d_assignOmitting as assignOmitting,
     utils_d_setDefault as setDefault,
     utils_d_AssignCallback as AssignCallback,
@@ -190,6 +204,7 @@ declare namespace utils_d {
     utils_d_clearObject as clearObject,
     utils_d_ERROR as ERROR,
     utils_d_WARN as WARN,
+    utils_d_first as first,
     utils_d_getOpt as getOpt,
     utils_d_firstOpt as firstOpt,
     utils_d_arraysIntersect as arraysIntersect,
@@ -237,45 +252,49 @@ declare class Random {
 declare const random: Random;
 declare const cosmetic: Random;
 
+declare type RangeBase = Range | string | number[] | number;
 declare class Range {
     lo: number;
     hi: number;
     clumps: number;
     private _rng;
-    constructor(lower: number | Range | number[], upper?: number, clumps?: number, rng?: Random);
+    constructor(lower: number, upper?: number, clumps?: number, rng?: Random);
     value(): number;
+    copy(other: Range): this;
     toString(): string;
 }
-declare function make(config: Range | string | number[] | null, rng?: Random): Range;
+declare function make(config: RangeBase | null, rng?: Random): Range;
+declare const from: typeof make;
 
+type range_d_RangeBase = RangeBase;
 type range_d_Range = Range;
 declare const range_d_Range: typeof Range;
 declare const range_d_make: typeof make;
+declare const range_d_from: typeof from;
 declare namespace range_d {
   export {
+    range_d_RangeBase as RangeBase,
     range_d_Range as Range,
     range_d_make as make,
+    range_d_from as from,
   };
 }
 
+declare type FlagSource = number | string;
+declare type FlagBase = number | string | FlagSource[] | null;
 declare function fl(N: number): number;
 declare function toString(flagObj: any, value: number): string;
-declare function from(obj: any, ...args: any[]): number;
-declare const flags: Record<string, Record<string, number>>;
-declare function install(flagName: string, flag: Record<string, number>): Record<string, number>;
+declare function from$1(obj: any, ...args: (FlagBase | undefined)[]): number;
 
+type flag_d_FlagBase = FlagBase;
 declare const flag_d_fl: typeof fl;
 declare const flag_d_toString: typeof toString;
-declare const flag_d_from: typeof from;
-declare const flag_d_flags: typeof flags;
-declare const flag_d_install: typeof install;
 declare namespace flag_d {
   export {
+    flag_d_FlagBase as FlagBase,
     flag_d_fl as fl,
     flag_d_toString as toString,
-    flag_d_from as from,
-    flag_d_flags as flags,
-    flag_d_install as install,
+    from$1 as from,
   };
 }
 
@@ -293,6 +312,8 @@ declare class Grid<T> extends Array<Array<T>> {
     constructor(w: number, h: number, v: GridInit<T> | T);
     get width(): number;
     get height(): number;
+    get(x: number, y: number): T | undefined;
+    set(x: number, y: number, v: T): boolean;
     /**
      * Calls the supplied function for each cell in the grid.
      * @param fn - The function to call on each item in the grid.
@@ -305,6 +326,9 @@ declare class Grid<T> extends Array<Array<T>> {
     /**
      * Returns a new Grid with the cells mapped according to the supplied function.
      * @param fn - The function that maps the cell values
+     * TODO - Do we need this???
+     * TODO - Should this only be in NumGrid?
+     * TODO - Should it alloc instead of using constructor?
      */
      // @ts-ignore
 
@@ -336,7 +360,7 @@ declare class Grid<T> extends Array<Array<T>> {
     dump(fmtFn?: GridFormat<T>): void;
     dumpRect(left: number, top: number, width: number, height: number, fmtFn?: GridFormat<T>): void;
     dumpAround(x: number, y: number, radius: number): void;
-    closestMatchingLoc(x: number, y: number, fn: GridMatch<T>): Loc$1;
+    closestMatchingLoc(x: number, y: number, v: T | GridMatch<T>): Loc$1;
     firstMatchingLoc(v: T | GridMatch<T>): Loc$1;
     randomMatchingLoc(v: T | GridMatch<T>, deterministic?: boolean): Loc$1;
     matchingLocNear(x: number, y: number, v: T | GridMatch<T>, deterministic?: boolean): Loc$1;
@@ -345,21 +369,18 @@ declare class Grid<T> extends Array<Array<T>> {
 declare class NumGrid extends Grid<number> {
     x?: number;
     y?: number;
-    static alloc(w: number, h: number, v?: number): NumGrid;
+    static alloc(w: number, h: number, v?: GridInit<number> | number): NumGrid;
     static free(grid: NumGrid): void;
-    constructor(w: number, h: number, v?: number);
-    resize(width: number, height: number, v?: GridInit<number> | number): void;
+    constructor(w: number, h: number, v?: GridInit<number> | number);
+    protected _resize(width: number, height: number, v?: GridInit<number> | number): void;
     findReplaceRange(findValueMin: number, findValueMax: number, fillValue: number): void;
     floodFillRange(x: number, y: number, eligibleValueMin?: number, eligibleValueMax?: number, fillValue?: number): number;
     invert(): void;
-    closestLocWithValue(x: number, y: number, value?: number): Loc$1;
-    randomLocWithValue(validValue?: number): Loc$1;
-    getQualifyingLocNear(x: number, y: number, deterministic?: boolean): Loc;
     leastPositiveValue(): number;
     randomLeastPositiveLoc(deterministic?: boolean): Loc$1;
     floodFill(x: number, y: number, matchValue: number | GridMatch<number>, fillValue: number | GridUpdate<number>): number;
     protected _cellularAutomataRound(birthParameters: string, survivalParameters: string): boolean;
-    fillBlob(roundCount: number, minBlobWidth: number, minBlobHeight: number, maxBlobWidth: number, maxBlobHeight: number, percentSeeded: number, birthParameters: string, survivalParameters: string): {
+    fillBlob(roundCount: number, minBlobWidth: number, minBlobHeight: number, maxBlobWidth: number, maxBlobHeight: number, percentSeeded?: number, birthParameters?: string, survivalParameters?: string): {
         x: number;
         y: number;
         width: number;
@@ -368,12 +389,13 @@ declare class NumGrid extends Grid<number> {
 }
 declare const alloc: typeof NumGrid.alloc;
 declare const free: typeof NumGrid.free;
-declare function make$1<T>(w: number, h: number, v?: T | GridInit<T>): NumGrid | Grid<T>;
+declare function make$1<T>(w: number, h: number, v?: number | GridInit<number>): NumGrid;
+declare function make$1<T>(w: number, h: number, v?: T | GridInit<T>): Grid<T>;
 declare type GridZip<T, U> = (destVal: T, sourceVal: U, destX: number, destY: number, sourceX: number, sourceY: number, destGrid: Grid<T>, sourceGrid: Grid<U>) => void;
 declare function offsetZip<T, U>(destGrid: Grid<T>, srcGrid: Grid<U>, srcToDestX: number, srcToDestY: number, value: T | GridZip<T, U>): void;
 declare function directionOfDoorSite<T>(grid: Grid<T>, x: number, y: number, isOpen: T | GridMatch<T>): number;
-declare function intersection(onto: NumGrid, a: NumGrid, b: NumGrid): void;
-declare function unite(onto: NumGrid, a: NumGrid, b: NumGrid): void;
+declare function intersection(onto: NumGrid, a: NumGrid, b?: NumGrid): void;
+declare function unite(onto: NumGrid, a: NumGrid, b?: NumGrid): void;
 
 type grid_d_ArrayInit<_0> = ArrayInit<_0>;
 declare const grid_d_makeArray: typeof makeArray;
@@ -652,7 +674,7 @@ declare function once(event: string, fn: EventFn, context?: any): Listener;
  * @returns {EventEmitter} `this`.
  * @public
  */
-declare function removeListener(event: string, fn: EventFn, context?: any, once?: boolean): void;
+declare function removeListener(event: string, fn: EventFn, context?: any, once?: boolean): boolean;
 /**
  * Remove the listeners of a given event.
  *
@@ -663,7 +685,7 @@ declare function removeListener(event: string, fn: EventFn, context?: any, once?
  * @returns {EventEmitter} `this`.
  * @public
  */
-declare function off(event: string, fn: EventFn, context?: any, once?: boolean): void;
+declare function off(event: string, fn: EventFn, context?: any, once?: boolean): boolean;
 /**
  * Clear event by name.
  *
@@ -677,7 +699,7 @@ declare function clearEvent(event: string): void;
  * @returns {EventEmitter} `this`.
  * @public
  */
-declare function removeAllListeners(event: string): void;
+declare function removeAllListeners(event?: string): void;
 /**
  * Calls each of the listeners registered for a given event.
  *
@@ -789,6 +811,326 @@ declare class Glyphs {
     _initGlyphs(basicOnly?: boolean): void;
 }
 
+declare type ColorData = [number, number, number] | [number, number, number, number, number, number, number] | [number, number, number, number, number, number, number, boolean];
+declare type ColorBase = string | number | Color | ColorData;
+declare const colors: Record<string, Color>;
+declare class Color extends Int16Array {
+    dances: boolean;
+    name?: string;
+    constructor(r?: number, g?: number, b?: number, rand?: number, redRand?: number, greenRand?: number, blueRand?: number, dances?: boolean);
+    get r(): number;
+    protected get _r(): number;
+    protected set _r(v: number);
+    get g(): number;
+    protected get _g(): number;
+    protected set _g(v: number);
+    get b(): number;
+    protected get _b(): number;
+    protected set _b(v: number);
+    protected get _rand(): number;
+    protected get _redRand(): number;
+    protected get _greenRand(): number;
+    protected get _blueRand(): number;
+    get l(): number;
+    get s(): number;
+    get h(): number;
+    isNull(): boolean;
+    equals(other: ColorBase): boolean;
+    copy(other: ColorBase): this;
+    protected _changed(): this;
+    clone(): any;
+    assign(_r?: number, _g?: number, _b?: number, _rand?: number, _redRand?: number, _greenRand?: number, _blueRand?: number, dances?: boolean): this;
+    assignRGB(_r?: number, _g?: number, _b?: number, _rand?: number, _redRand?: number, _greenRand?: number, _blueRand?: number, dances?: boolean): this;
+    nullify(): this;
+    blackOut(): this;
+    toInt(base256?: boolean): number;
+    clamp(): this;
+    mix(other: ColorBase, percent: number): this;
+    lighten(percent: number): this | undefined;
+    darken(percent: number): this | undefined;
+    bake(clearDancing?: boolean): this | undefined;
+    add(other: ColorBase, percent?: number): this;
+    scale(percent: number): this;
+    multiply(other: ColorData | Color): this;
+    normalize(): this;
+    /**
+     * Returns the css code for the current RGB values of the color.
+     * @param base256 - Show in base 256 (#abcdef) instead of base 16 (#abc)
+     */
+    css(base256?: boolean): string;
+    toString(base256?: boolean): string;
+}
+declare function fromArray(vals: ColorData, base256?: boolean): Color;
+declare function fromCss(css: string): Color;
+declare function fromName(name: string): Color;
+declare function fromNumber(val: number, base256?: boolean): Color;
+declare function make$3(): Color;
+declare function make$3(rgb: number, base256?: boolean): Color;
+declare function make$3(color?: ColorBase | null): Color;
+declare function make$3(arrayLike: ColorData, base256?: boolean): Color;
+declare function make$3(...rgb: number[]): Color;
+declare function from$2(): Color;
+declare function from$2(rgb: number, base256?: boolean): Color;
+declare function from$2(color?: ColorBase | null): Color;
+declare function from$2(arrayLike: ColorData, base256?: boolean): Color;
+declare function from$2(...rgb: number[]): Color;
+declare function separate(a: Color, b: Color): void;
+declare function swap(a: Color, b: Color): void;
+declare function relativeLuminance(a: Color, b: Color): number;
+declare function distance(a: Color, b: Color): number;
+declare function install(name: string, info: ColorBase): Color;
+declare function install(name: string, ...rgb: ColorData): Color;
+declare function installSpread(name: string, info: ColorBase): Color;
+declare function installSpread(name: string, ...rgb: ColorData): Color;
+
+type color_d_ColorBase = ColorBase;
+declare const color_d_colors: typeof colors;
+type color_d_Color = Color;
+declare const color_d_Color: typeof Color;
+declare const color_d_fromArray: typeof fromArray;
+declare const color_d_fromCss: typeof fromCss;
+declare const color_d_fromName: typeof fromName;
+declare const color_d_fromNumber: typeof fromNumber;
+declare const color_d_separate: typeof separate;
+declare const color_d_swap: typeof swap;
+declare const color_d_relativeLuminance: typeof relativeLuminance;
+declare const color_d_distance: typeof distance;
+declare const color_d_install: typeof install;
+declare const color_d_installSpread: typeof installSpread;
+declare namespace color_d {
+  export {
+    color_d_ColorBase as ColorBase,
+    color_d_colors as colors,
+    color_d_Color as Color,
+    color_d_fromArray as fromArray,
+    color_d_fromCss as fromCss,
+    color_d_fromName as fromName,
+    color_d_fromNumber as fromNumber,
+    make$3 as make,
+    from$2 as from,
+    color_d_separate as separate,
+    color_d_swap as swap,
+    color_d_relativeLuminance as relativeLuminance,
+    color_d_distance as distance,
+    color_d_install as install,
+    color_d_installSpread as installSpread,
+  };
+}
+
+interface SpriteType {
+    readonly ch?: string | number;
+    readonly fg?: ColorBase;
+    readonly bg?: ColorBase;
+    readonly opacity?: number;
+}
+interface LightType {
+    color: Color;
+    radius: Range;
+    fadeTo: number;
+    passThroughActors: boolean;
+    paint(map: MapType, x: number, y: number): boolean;
+    paint(map: MapType, x: number, y: number, maintainShadows: boolean): boolean;
+    paint(map: MapType, x: number, y: number, maintainShadows: boolean, isMinersLight: boolean): boolean;
+}
+interface LayerFlags {
+    readonly layer: number;
+}
+interface LayerType {
+    readonly sprite: SpriteType;
+    readonly priority: number;
+    readonly depth: number;
+    readonly light: LightType | null;
+    readonly flags: LayerFlags;
+}
+interface TileFlags extends LayerFlags {
+    readonly tile: number;
+    readonly tileMech: number;
+}
+interface TileType extends LayerType {
+    readonly id: string;
+    readonly flags: TileFlags;
+}
+interface ActorFlags extends LayerFlags {
+    actor: number;
+}
+interface ActorType extends XY, Chainable, LayerType {
+    isPlayer: () => boolean;
+    isVisible: () => boolean;
+    isDetected: () => boolean;
+    blocksVision: () => boolean;
+    avoidsCell: (cell: CellType) => boolean;
+    forbidsCell: (cell: CellType) => boolean;
+    delete: () => void;
+    rememberedInCell: CellType | null;
+    readonly flags: ActorFlags;
+    next: ActorType | null;
+}
+interface ItemFlags extends LayerFlags {
+    item: number;
+}
+interface ItemType extends XY, Chainable, LayerType {
+    quantity: number;
+    readonly flags: ItemFlags;
+    blocksMove: () => boolean;
+    avoidsCell: (cell: CellType) => boolean;
+    forbidsCell: (cell: CellType) => boolean;
+    isDetected: () => boolean;
+    delete: () => void;
+    clone: () => this;
+    next: ItemType | null;
+}
+interface FxType extends XY, Chainable, LayerType {
+    next: FxType | null;
+}
+interface CellType {
+    flags: number;
+    mechFlags: number;
+    tileFlags: () => number;
+    tileMechFlags: () => number;
+    actor: ActorType | null;
+    item: ItemType | null;
+    storeMemory: () => void;
+}
+interface MapType {
+    readonly width: number;
+    readonly height: number;
+    cell: (x: number, y: number) => CellType;
+}
+declare class Bounds {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    constructor(x: number, y: number, w: number, h: number);
+    contains(x: number, y: number): boolean;
+    contains(loc: Loc | XY): boolean;
+}
+
+type types_d_SpriteType = SpriteType;
+type types_d_LightType = LightType;
+type types_d_LayerFlags = LayerFlags;
+type types_d_LayerType = LayerType;
+type types_d_TileFlags = TileFlags;
+type types_d_TileType = TileType;
+type types_d_ActorFlags = ActorFlags;
+type types_d_ActorType = ActorType;
+type types_d_ItemFlags = ItemFlags;
+type types_d_ItemType = ItemType;
+type types_d_FxType = FxType;
+type types_d_CellType = CellType;
+type types_d_MapType = MapType;
+type types_d_Bounds = Bounds;
+declare const types_d_Bounds: typeof Bounds;
+declare namespace types_d {
+  export {
+    types_d_SpriteType as SpriteType,
+    types_d_LightType as LightType,
+    types_d_LayerFlags as LayerFlags,
+    types_d_LayerType as LayerType,
+    types_d_TileFlags as TileFlags,
+    types_d_TileType as TileType,
+    types_d_ActorFlags as ActorFlags,
+    types_d_ActorType as ActorType,
+    types_d_ItemFlags as ItemFlags,
+    types_d_ItemType as ItemType,
+    types_d_FxType as FxType,
+    types_d_CellType as CellType,
+    types_d_MapType as MapType,
+    types_d_Bounds as Bounds,
+  };
+}
+
+interface DrawInfo {
+    ch: string | number;
+    fg: ColorBase;
+    bg: ColorBase;
+}
+declare class Mixer implements DrawInfo {
+    ch: string | number;
+    fg: Color;
+    bg: Color;
+    constructor(base?: Partial<DrawInfo>);
+    protected _changed(): this;
+    copy(other: Mixer): this;
+    clone(): Mixer;
+    equals(other: Mixer): boolean;
+    nullify(): this;
+    blackOut(): this;
+    draw(ch?: string | number, fg?: ColorBase, bg?: ColorBase): this;
+    drawSprite(info: SpriteType, opacity?: number): this | undefined;
+    invert(): this;
+    multiply(color: ColorBase, fg?: boolean, bg?: boolean): this;
+    mix(color: ColorBase, fg?: number, bg?: number): this;
+    add(color: ColorBase, fg?: number, bg?: number): this;
+    separate(): this;
+    bake(clearDancing?: boolean): {
+        ch: string | number;
+        fg: number;
+        bg: number;
+    };
+    toString(): string;
+}
+
+interface Data {
+    ch: number;
+    fg: number;
+    bg: number;
+}
+declare class DataBuffer {
+    private _data;
+    private _width;
+    private _height;
+    constructor(width: number, height: number);
+    get data(): Uint32Array;
+    get width(): number;
+    get height(): number;
+    get(x: number, y: number): Data;
+    protected _toGlyph(ch: string): number;
+    draw(x: number, y: number, glyph?: number | string, fg?: ColorBase, // TODO - White?
+    bg?: ColorBase): this;
+    drawSprite(x: number, y: number, sprite: Partial<DrawInfo>): this;
+    blackOut(x: number, y: number): void;
+    blackOut(): void;
+    fill(glyph?: number | string, fg?: number, bg?: number): this;
+    copy(other: DataBuffer): this;
+    drawText(x: number, y: number, text: string, fg?: ColorBase, bg?: ColorBase): number;
+    wrapText(x: number, y: number, width: number, text: string, fg?: Color | number | string, bg?: Color | number | string, indent?: number): number;
+    fillRect(x: number, y: number, w: number, h: number, ch?: string | number | null, fg?: ColorBase | null, bg?: ColorBase | null): this;
+    blackOutRect(x: number, y: number, w: number, h: number, bg?: ColorBase): this;
+    highlight(x: number, y: number, color: ColorBase, strength: number): this;
+    mix(color: ColorBase, percent: number): this;
+    dump(): void;
+}
+interface BufferTarget {
+    readonly width: number;
+    readonly height: number;
+    copyTo(dest: Uint32Array): void;
+    copy(src: Uint32Array): void;
+    toGlyph(ch: string): number;
+}
+declare class Buffer extends DataBuffer {
+    private _target;
+    constructor(canvas: BufferTarget);
+    _toGlyph(ch: string): number;
+    render(): this;
+    load(): this;
+}
+
+type buffer_d_Data = Data;
+type buffer_d_DataBuffer = DataBuffer;
+declare const buffer_d_DataBuffer: typeof DataBuffer;
+type buffer_d_BufferTarget = BufferTarget;
+type buffer_d_Buffer = Buffer;
+declare const buffer_d_Buffer: typeof Buffer;
+declare namespace buffer_d {
+  export {
+    buffer_d_Data as Data,
+    buffer_d_DataBuffer as DataBuffer,
+    buffer_d_BufferTarget as BufferTarget,
+    buffer_d_Buffer as Buffer,
+  };
+}
+
 interface CanvasOptions {
     width?: number;
     height?: number;
@@ -803,7 +1145,7 @@ declare type FontOptions = CanvasOptions & GlyphOptions;
 declare class NotSupportedError extends Error {
     constructor(...params: any[]);
 }
-declare abstract class BaseCanvas {
+declare abstract class BaseCanvas implements BufferTarget {
     protected _data: Uint32Array;
     protected _renderRequested: boolean;
     protected _glyphs: Glyphs;
@@ -821,6 +1163,7 @@ declare abstract class BaseCanvas {
     get pxHeight(): number;
     get glyphs(): Glyphs;
     set glyphs(glyphs: Glyphs);
+    toGlyph(ch: string): number;
     protected _createNode(): HTMLCanvasElement;
     protected abstract _createContext(): void;
     private _configure;
@@ -868,145 +1211,10 @@ declare class Canvas2D extends BaseCanvas {
 declare function withImage(image: ImageOptions | HTMLImageElement | string): Canvas | Canvas2D;
 declare function withFont(src: FontOptions | string): Canvas | Canvas2D;
 
-declare type ColorData = number[];
-declare type ColorBase = string | number | Color | ColorData;
-declare const colors: Record<string, Color>;
-declare class Color extends Int16Array {
-    dances: boolean;
-    name?: string;
-    constructor(r?: number, g?: number, b?: number, rand?: number, redRand?: number, greenRand?: number, blueRand?: number, dances?: boolean);
-    get r(): number;
-    protected get _r(): number;
-    protected set _r(v: number);
-    get g(): number;
-    protected get _g(): number;
-    protected set _g(v: number);
-    get b(): number;
-    protected get _b(): number;
-    protected set _b(v: number);
-    protected get _rand(): number;
-    protected get _redRand(): number;
-    protected get _greenRand(): number;
-    protected get _blueRand(): number;
-    get l(): number;
-    get s(): number;
-    get h(): number;
-    isNull(): boolean;
-    equals(other: ColorBase): boolean;
-    copy(other: ColorBase): this;
-    protected _changed(): this;
-    clone(): any;
-    assign(_r?: number, _g?: number, _b?: number, _rand?: number, _redRand?: number, _greenRand?: number, _blueRand?: number, dances?: boolean): this;
-    assignRGB(_r?: number, _g?: number, _b?: number, _rand?: number, _redRand?: number, _greenRand?: number, _blueRand?: number, dances?: boolean): this;
-    nullify(): this;
-    blackOut(): this;
-    toInt(base256?: boolean): number;
-    clamp(): this;
-    mix(other: ColorBase, percent: number): this;
-    lighten(percent: number): this | undefined;
-    darken(percent: number): this | undefined;
-    bake(): this;
-    add(other: ColorBase, percent?: number): this;
-    scale(percent: number): this;
-    multiply(other: ColorData | Color): this;
-    normalize(): this;
-    /**
-     * Returns the css code for the current RGB values of the color.
-     * @param base256 - Show in base 256 (#abcdef) instead of base 16 (#abc)
-     */
-    css(base256?: boolean): string;
-    toString(base256?: boolean): string;
-}
-declare function fromArray(vals: ColorData, base256?: boolean): Color;
-declare function fromCss(css: string): Color;
-declare function fromName(name: string): Color;
-declare function fromNumber(val: number, base256?: boolean): Color;
-declare function make$3(): Color;
-declare function make$3(rgb: number, base256?: boolean): Color;
-declare function make$3(color?: ColorBase | null): Color;
-declare function make$3(arrayLike: ArrayLike<number>, base256?: boolean): Color;
-declare function make$3(...rgb: number[]): Color;
-declare function from$1(): Color;
-declare function from$1(rgb: number, base256?: boolean): Color;
-declare function from$1(color?: ColorBase | null): Color;
-declare function from$1(arrayLike: ArrayLike<number>, base256?: boolean): Color;
-declare function from$1(...rgb: number[]): Color;
-declare function separate(a: Color, b: Color): void;
-declare function swap(a: Color, b: Color): void;
-declare function diff(a: Color, b: Color): number;
-declare function install$1(name: string, info: ColorBase): Color;
-declare function install$1(name: string, ...rgb: number[]): Color;
-declare function installSpread(name: string, info: ColorBase): Color;
-declare function installSpread(name: string, ...rgb: number[]): Color;
-
-type color_d_ColorBase = ColorBase;
-declare const color_d_colors: typeof colors;
-type color_d_Color = Color;
-declare const color_d_Color: typeof Color;
-declare const color_d_fromArray: typeof fromArray;
-declare const color_d_fromCss: typeof fromCss;
-declare const color_d_fromName: typeof fromName;
-declare const color_d_fromNumber: typeof fromNumber;
-declare const color_d_separate: typeof separate;
-declare const color_d_swap: typeof swap;
-declare const color_d_diff: typeof diff;
-declare const color_d_installSpread: typeof installSpread;
-declare namespace color_d {
-  export {
-    color_d_ColorBase as ColorBase,
-    color_d_colors as colors,
-    color_d_Color as Color,
-    color_d_fromArray as fromArray,
-    color_d_fromCss as fromCss,
-    color_d_fromName as fromName,
-    color_d_fromNumber as fromNumber,
-    make$3 as make,
-    from$1 as from,
-    color_d_separate as separate,
-    color_d_swap as swap,
-    color_d_diff as diff,
-    install$1 as install,
-    color_d_installSpread as installSpread,
-  };
-}
-
-interface DrawInfo {
-    ch: string | number;
-    fg: Color | number;
-    bg: Color | number;
-}
-interface SpriteType extends DrawInfo {
-    opacity?: number;
-}
-declare class Mixer implements DrawInfo {
-    ch: string | number;
-    fg: Color;
-    bg: Color;
-    constructor();
-    protected _changed(): this;
-    copy(other: Mixer): this;
-    clone(): Mixer;
-    equals(other: Mixer): boolean;
-    nullify(): this;
-    blackOut(): this;
-    draw(ch?: string | number, fg?: ColorBase, bg?: ColorBase): this;
-    drawSprite(info: SpriteType, opacity?: number): this | undefined;
-    invert(): this;
-    multiply(color: ColorBase, fg?: boolean, bg?: boolean): this;
-    mix(color: ColorBase, fg?: number, bg?: number): this;
-    add(color: ColorBase, fg?: number, bg?: number): this;
-    separate(): this;
-    bake(): {
-        ch: string | number;
-        fg: number;
-        bg: number;
-    };
-}
-
 interface SpriteConfig {
     ch?: string | number | null;
-    fg?: Color | number | string | null;
-    bg?: Color | number | string | null;
+    fg?: ColorBase | null;
+    bg?: ColorBase | null;
     opacity?: number;
 }
 declare class Sprite implements SpriteType {
@@ -1015,7 +1223,7 @@ declare class Sprite implements SpriteType {
     bg: number | Color;
     opacity?: number;
     name?: string;
-    constructor(ch?: string | number | null, fg?: Color | number | null, bg?: Color | number | null, opacity?: number);
+    constructor(ch?: string | number | null, fg?: ColorBase | null, bg?: ColorBase | null, opacity?: number);
 }
 declare const sprites: Record<string, Sprite>;
 declare function makeSprite(): Sprite;
@@ -1048,7 +1256,6 @@ declare const index_d_sprites: typeof sprites;
 declare const index_d_makeSprite: typeof makeSprite;
 declare const index_d_installSprite: typeof installSprite;
 type index_d_DrawInfo = DrawInfo;
-type index_d_SpriteType = SpriteType;
 type index_d_Mixer = Mixer;
 declare const index_d_Mixer: typeof Mixer;
 type index_d_GlyphOptions = GlyphOptions;
@@ -1071,52 +1278,9 @@ declare namespace index_d {
     index_d_makeSprite as makeSprite,
     index_d_installSprite as installSprite,
     index_d_DrawInfo as DrawInfo,
-    index_d_SpriteType as SpriteType,
     index_d_Mixer as Mixer,
     index_d_GlyphOptions as GlyphOptions,
     index_d_Glyphs as Glyphs,
-  };
-}
-
-declare class DataBuffer {
-    private _data;
-    private _width;
-    private _height;
-    constructor(width: number, height: number);
-    get data(): Uint32Array;
-    get width(): number;
-    get height(): number;
-    get(x: number, y: number): DrawInfo;
-    protected _toGlyph(ch: string): number;
-    draw(x: number, y: number, glyph?: number | string, fg?: Color | number, bg?: Color | number): this;
-    drawSprite(x: number, y: number, sprite: DrawInfo): this;
-    blackOut(x: number, y: number): this;
-    fill(glyph?: number | string, fg?: number, bg?: number): this;
-    copy(other: DataBuffer): this;
-    drawText(x: number, y: number, text: string, fg?: Color | number | string, bg?: Color | number | string): number;
-    wrapText(x0: number, y0: number, width: number, text: string, fg?: Color | number | string, bg?: Color | number | string, opts?: any): number;
-    fillRect(x: number, y: number, w: number, h: number, ch?: string | number | null, fg?: Color | number | string | null, bg?: Color | number | string | null): this;
-    blackOutRect(x: number, y: number, w: number, h: number, bg?: Color | number): this;
-    highlight(x: number, y: number, highlightColor: Color | number | string, strength: number): this;
-    mix(color: Color | number | string, percent: number): this;
-    dump(): void;
-}
-declare class Buffer extends DataBuffer {
-    private _canvas;
-    constructor(canvas: Canvas);
-    _toGlyph(ch: string): number;
-    render(): this;
-    copyFromCanvas(): this;
-}
-
-type buffer_d_DataBuffer = DataBuffer;
-declare const buffer_d_DataBuffer: typeof DataBuffer;
-type buffer_d_Buffer = Buffer;
-declare const buffer_d_Buffer: typeof Buffer;
-declare namespace buffer_d {
-  export {
-    buffer_d_DataBuffer as DataBuffer,
-    buffer_d_Buffer as Buffer,
   };
 }
 
@@ -1149,7 +1313,6 @@ declare var options: {
 declare function addHelper(name: string, fn: Function): void;
 
 interface Options {
-    helpers?: Record<string, Function>;
     fg?: any;
     bg?: any;
     colorStart?: string;
@@ -1173,6 +1336,7 @@ declare const index_d$1_splitIntoLines: typeof splitIntoLines;
 declare const index_d$1_configure: typeof configure;
 declare const index_d$1_addHelper: typeof addHelper;
 declare const index_d$1_options: typeof options;
+type index_d$1_Template = Template;
 declare namespace index_d$1 {
   export {
     index_d$1_compile as compile,
@@ -1190,9 +1354,56 @@ declare namespace index_d$1 {
     index_d$1_configure as configure,
     index_d$1_addHelper as addHelper,
     index_d$1_options as options,
+    index_d$1_Template as Template,
   };
 }
 
-declare var data: {};
+declare const templates: Record<string, Template>;
+declare function install$1(id: string, msg: string): void;
+declare function installAll(config: Record<string, string>): void;
+declare function needsUpdate(needs?: boolean): boolean;
+interface MessageOptions {
+    length: number;
+    width: number;
+}
+declare function configure$1(opts: Partial<MessageOptions>): void;
+declare function add(msg: string, args?: any): void;
+declare function fromActor(actor: ActorType, msg: string, args?: any): void;
+declare function addCombat(actor: ActorType, msg: string, args?: any): void;
+declare function confirmAll(): void;
+declare type EachMsgFn = (msg: string, confirmed: boolean, i: number) => any;
+declare function forEach(fn: EachMsgFn): void;
 
-export { Random, buffer_d as buffer, index_d as canvas, color_d as color, colors, cosmetic, data, events_d as events, flag_d as flag, flags, fov_d as fov, frequency_d as frequency, grid_d as grid, io_d as io, path_d as path, random, range_d as range, scheduler_d as scheduler, sprites, index_d$1 as text, utils_d as utils };
+declare const message_d_templates: typeof templates;
+declare const message_d_installAll: typeof installAll;
+declare const message_d_needsUpdate: typeof needsUpdate;
+type message_d_MessageOptions = MessageOptions;
+declare const message_d_add: typeof add;
+declare const message_d_fromActor: typeof fromActor;
+declare const message_d_addCombat: typeof addCombat;
+declare const message_d_confirmAll: typeof confirmAll;
+type message_d_EachMsgFn = EachMsgFn;
+declare const message_d_forEach: typeof forEach;
+declare namespace message_d {
+  export {
+    message_d_templates as templates,
+    install$1 as install,
+    message_d_installAll as installAll,
+    message_d_needsUpdate as needsUpdate,
+    message_d_MessageOptions as MessageOptions,
+    configure$1 as configure,
+    message_d_add as add,
+    message_d_fromActor as fromActor,
+    message_d_addCombat as addCombat,
+    message_d_confirmAll as confirmAll,
+    message_d_EachMsgFn as EachMsgFn,
+    message_d_forEach as forEach,
+  };
+}
+
+declare const data: any;
+declare const config: any;
+declare const make$4: any;
+declare const flags: any;
+
+export { Random, buffer_d as buffer, index_d as canvas, color_d as color, colors, config, cosmetic, data, events_d as events, flag_d as flag, flags, fov_d as fov, frequency_d as frequency, grid_d as grid, io_d as io, make$4 as make, message_d as message, path_d as path, random, range_d as range, scheduler_d as scheduler, sprites, index_d$1 as text, types_d as types, utils_d as utils };

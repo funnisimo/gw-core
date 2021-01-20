@@ -1,4 +1,5 @@
 import * as Color from "../color";
+import { make } from "../gw";
 export class Sprite {
     constructor(ch, fg, bg, opacity) {
         if (!ch && ch !== 0)
@@ -36,8 +37,13 @@ export function makeSprite(...args) {
         fg = args[1];
         bg = args[2];
     }
-    else if (args.length == 1) {
-        if (typeof args[0] === "string" || typeof args[0] === "number") {
+    else {
+        if (typeof args[0] === "string" && args[0].length == 1) {
+            ch = args[0];
+            fg = "white"; // white is default?
+        }
+        else if ((typeof args[0] === "string" && args[0].length > 1) ||
+            typeof args[0] === "number") {
             bg = args[0];
         }
         else if (args[0] instanceof Color.Color) {
@@ -65,6 +71,7 @@ export function makeSprite(...args) {
         bg = -1;
     return new Sprite(ch, fg, bg, opacity);
 }
+make.sprite = makeSprite;
 export function installSprite(name, ...args) {
     let sprite;
     // @ts-ignore

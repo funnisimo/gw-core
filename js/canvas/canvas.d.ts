@@ -1,4 +1,5 @@
 import { Glyphs, GlyphOptions } from "./glyphs";
+import { BufferTarget } from "../buffer";
 export interface CanvasOptions {
     width?: number;
     height?: number;
@@ -13,7 +14,7 @@ export declare type FontOptions = CanvasOptions & GlyphOptions;
 export declare class NotSupportedError extends Error {
     constructor(...params: any[]);
 }
-export declare abstract class BaseCanvas {
+export declare abstract class BaseCanvas implements BufferTarget {
     protected _data: Uint32Array;
     protected _renderRequested: boolean;
     protected _glyphs: Glyphs;
@@ -31,6 +32,7 @@ export declare abstract class BaseCanvas {
     get pxHeight(): number;
     get glyphs(): Glyphs;
     set glyphs(glyphs: Glyphs);
+    toGlyph(ch: string): number;
     protected _createNode(): HTMLCanvasElement;
     protected abstract _createContext(): void;
     private _configure;
