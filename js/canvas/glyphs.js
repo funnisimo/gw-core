@@ -53,7 +53,7 @@ export class Glyphs {
         return this._node.height;
     }
     forChar(ch) {
-        if (ch === null || ch === undefined)
+        if (!ch || !ch.length)
             return -1;
         return this._map[ch] || -1;
     }

@@ -1,5 +1,7 @@
 import { Glyphs, GlyphOptions } from "./glyphs";
 import { BufferTarget } from "../buffer";
+import * as IO from "../io";
+export declare type MouseEventFn = (ev: IO.Event) => void;
 export interface CanvasOptions {
     width?: number;
     height?: number;
@@ -32,7 +34,7 @@ export declare abstract class BaseCanvas implements BufferTarget {
     get pxHeight(): number;
     get glyphs(): Glyphs;
     set glyphs(glyphs: Glyphs);
-    toGlyph(ch: string): number;
+    toGlyph(ch: string | number): number;
     protected _createNode(): HTMLCanvasElement;
     protected abstract _createContext(): void;
     private _configure;
@@ -45,8 +47,10 @@ export declare abstract class BaseCanvas implements BufferTarget {
     copyTo(data: Uint32Array): void;
     abstract render(): void;
     hasXY(x: number, y: number): boolean;
-    toX(x: number): number;
-    toY(y: number): number;
+    set onclick(fn: MouseEventFn);
+    set onmousemove(fn: MouseEventFn);
+    toX(offsetX: number): number;
+    toY(offsetY: number): number;
 }
 export declare class Canvas extends BaseCanvas {
     private _gl;

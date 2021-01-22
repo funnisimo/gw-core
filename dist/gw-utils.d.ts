@@ -1077,15 +1077,14 @@ interface Data {
     bg: number;
 }
 declare class DataBuffer {
-    private _data;
+    protected _data: Uint32Array;
     private _width;
     private _height;
     constructor(width: number, height: number);
-    get data(): Uint32Array;
     get width(): number;
     get height(): number;
     get(x: number, y: number): Data;
-    protected _toGlyph(ch: string): number;
+    toGlyph(ch: string | number): number;
     draw(x: number, y: number, glyph?: number | string, fg?: ColorBase, // TODO - White?
     bg?: ColorBase): this;
     drawSprite(x: number, y: number, sprite: Partial<DrawInfo>): this;
@@ -1106,12 +1105,12 @@ interface BufferTarget {
     readonly height: number;
     copyTo(dest: Uint32Array): void;
     copy(src: Uint32Array): void;
-    toGlyph(ch: string): number;
+    toGlyph(ch: string | number): number;
 }
 declare class Buffer extends DataBuffer {
     private _target;
     constructor(canvas: BufferTarget);
-    _toGlyph(ch: string): number;
+    toGlyph(ch: string | number): number;
     render(): this;
     load(): this;
 }
@@ -1131,6 +1130,7 @@ declare namespace buffer_d {
   };
 }
 
+declare type MouseEventFn = (ev: Event) => void;
 interface CanvasOptions {
     width?: number;
     height?: number;
@@ -1163,7 +1163,7 @@ declare abstract class BaseCanvas implements BufferTarget {
     get pxHeight(): number;
     get glyphs(): Glyphs;
     set glyphs(glyphs: Glyphs);
-    toGlyph(ch: string): number;
+    toGlyph(ch: string | number): number;
     protected _createNode(): HTMLCanvasElement;
     protected abstract _createContext(): void;
     private _configure;
@@ -1176,8 +1176,10 @@ declare abstract class BaseCanvas implements BufferTarget {
     copyTo(data: Uint32Array): void;
     abstract render(): void;
     hasXY(x: number, y: number): boolean;
-    toX(x: number): number;
-    toY(y: number): number;
+    set onclick(fn: MouseEventFn);
+    set onmousemove(fn: MouseEventFn);
+    toX(offsetX: number): number;
+    toY(offsetY: number): number;
 }
 declare class Canvas extends BaseCanvas {
     private _gl;
@@ -1236,6 +1238,7 @@ declare function installSprite(name: string, ch: string | null, fg: Color | numb
 declare function installSprite(name: string, args: any[]): Sprite;
 declare function installSprite(name: string, info: Partial<SpriteConfig>): Sprite;
 
+type index_d_MouseEventFn = MouseEventFn;
 type index_d_CanvasOptions = CanvasOptions;
 type index_d_ImageOptions = ImageOptions;
 type index_d_FontOptions = FontOptions;
@@ -1263,6 +1266,7 @@ type index_d_Glyphs = Glyphs;
 declare const index_d_Glyphs: typeof Glyphs;
 declare namespace index_d {
   export {
+    index_d_MouseEventFn as MouseEventFn,
     index_d_CanvasOptions as CanvasOptions,
     index_d_ImageOptions as ImageOptions,
     index_d_FontOptions as FontOptions,

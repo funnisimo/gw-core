@@ -2887,7 +2887,7 @@ class Glyphs {
         return this._node.height;
     }
     forChar(ch) {
-        if (ch === null || ch === undefined)
+        if (!ch || !ch.length)
             return -1;
         return this._map[ch] || -1;
     }
@@ -3179,6 +3179,8 @@ class BaseCanvas {
         this._setGlyphs(glyphs);
     }
     toGlyph(ch) {
+        if (typeof ch === "number")
+            return ch;
         return this._glyphs.forChar(ch);
     }
     _createNode() {
@@ -3254,11 +3256,33 @@ class BaseCanvas {
     hasXY(x, y) {
         return x >= 0 && y >= 0 && x < this.width && y < this.height;
     }
-    toX(x) {
-        return Math.floor((this.width * x) / this.node.clientWidth);
+    set onclick(fn) {
+        this.node.onclick = (e) => {
+            const x = this.toX(e.offsetX);
+            const y = this.toY(e.offsetY);
+            const ev = makeMouseEvent(e, x, y);
+            fn(ev);
+        };
     }
-    toY(y) {
-        return Math.floor((this.height * y) / this.node.clientHeight);
+    set onmousemove(fn) {
+        let lastX = -1;
+        let lastY = -1;
+        this.node.onmousemove = (e) => {
+            const x = this.toX(e.offsetX);
+            const y = this.toY(e.offsetY);
+            if (x == lastX && y == lastY)
+                return;
+            lastX = x;
+            lastY = y;
+            const ev = makeMouseEvent(e, x, y);
+            fn(ev);
+        };
+    }
+    toX(offsetX) {
+        return Math.floor(this.width * (offsetX / this.node.clientWidth));
+    }
+    toY(offsetY) {
+        return Math.floor(this.height * (offsetY / this.node.clientHeight));
     }
 }
 // Based on: https://github.com/ondras/fastiles/blob/master/ts/scene.ts (v2.1.0)
@@ -4919,9 +4943,6 @@ class DataBuffer {
         this._height = height;
         this._data = new Uint32Array(width * height);
     }
-    get data() {
-        return this._data;
-    }
     get width() {
         return this._width;
     }
@@ -4936,8 +4957,10 @@ class DataBuffer {
         const fg = style & 0xfff;
         return { ch, fg, bg };
     }
-    _toGlyph(ch) {
-        if (!ch)
+    toGlyph(ch) {
+        if (typeof ch === "number")
+            return ch;
+        if (!ch || !ch.length)
             return -1; // 0 handled elsewhere
         return ch.charCodeAt(0);
     }
@@ -4947,7 +4970,7 @@ class DataBuffer {
         let index = y * this.width + x;
         const current = this._data[index] || 0;
         if (typeof glyph !== "number") {
-            glyph = this._toGlyph(glyph);
+            glyph = this.toGlyph(glyph);
         }
         if (typeof fg !== "number") {
             fg = from$2(fg).toInt();
@@ -4977,7 +5000,7 @@ class DataBuffer {
     }
     fill(glyph = 0, fg = 0xfff, bg = 0) {
         if (typeof glyph == "string") {
-            glyph = this._toGlyph(glyph);
+            glyph = this.toGlyph(glyph);
         }
         glyph = glyph & 0xff;
         fg = fg & 0xfff;
@@ -5030,7 +5053,7 @@ class DataBuffer {
         if (ch === null)
             ch = -1;
         if (typeof ch !== "number")
-            ch = this._toGlyph(ch);
+            ch = this.toGlyph(ch);
         if (typeof fg !== "number")
             fg = from$2(fg).toInt();
         if (typeof bg !== "number")
@@ -5102,18 +5125,18 @@ class Buffer extends DataBuffer {
     constructor(canvas) {
         super(canvas.width, canvas.height);
         this._target = canvas;
-        canvas.copyTo(this.data);
+        canvas.copyTo(this._data);
     }
     // get canvas() { return this._target; }
-    _toGlyph(ch) {
+    toGlyph(ch) {
         return this._target.toGlyph(ch);
     }
     render() {
-        this._target.copy(this.data);
+        this._target.copy(this._data);
         return this;
     }
     load() {
-        this._target.copyTo(this.data);
+        this._target.copyTo(this._data);
         return this;
     }
 }

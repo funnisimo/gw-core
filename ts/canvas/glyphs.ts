@@ -90,7 +90,7 @@ export class Glyphs {
   }
 
   forChar(ch: string) {
-    if (ch === null || ch === undefined) return -1;
+    if (!ch || !ch.length) return -1;
     return this._map[ch] || -1;
   }
 

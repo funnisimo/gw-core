@@ -1,9 +1,12 @@
 import * as shaders from "./shaders";
 import { Glyphs, GlyphOptions } from "./glyphs";
 import { BufferTarget } from "../buffer";
+import * as IO from "../io";
 
 type GL = WebGL2RenderingContext;
 const VERTICES_PER_TILE = 6;
+
+export type MouseEventFn = (ev: IO.Event) => void;
 
 export interface CanvasOptions {
   width?: number;
@@ -82,7 +85,8 @@ export abstract class BaseCanvas implements BufferTarget {
     this._setGlyphs(glyphs);
   }
 
-  toGlyph(ch: string) {
+  toGlyph(ch: string | number) {
+    if (typeof ch === "number") return ch;
     return this._glyphs.forChar(ch);
   }
 
@@ -172,12 +176,35 @@ export abstract class BaseCanvas implements BufferTarget {
     return x >= 0 && y >= 0 && x < this.width && y < this.height;
   }
 
-  toX(x: number) {
-    return Math.floor((this.width * x) / this.node.clientWidth);
+  set onclick(fn: MouseEventFn) {
+    this.node.onclick = (e: MouseEvent) => {
+      const x = this.toX(e.offsetX);
+      const y = this.toY(e.offsetY);
+      const ev = IO.makeMouseEvent(e, x, y);
+      fn(ev);
+    };
   }
 
-  toY(y: number) {
-    return Math.floor((this.height * y) / this.node.clientHeight);
+  set onmousemove(fn: MouseEventFn) {
+    let lastX = -1;
+    let lastY = -1;
+    this.node.onmousemove = (e: MouseEvent) => {
+      const x = this.toX(e.offsetX);
+      const y = this.toY(e.offsetY);
+      if (x == lastX && y == lastY) return;
+      lastX = x;
+      lastY = y;
+      const ev = IO.makeMouseEvent(e, x, y);
+      fn(ev);
+    };
+  }
+
+  toX(offsetX: number) {
+    return Math.floor(this.width * (offsetX / this.node.clientWidth));
+  }
+
+  toY(offsetY: number) {
+    return Math.floor(this.height * (offsetY / this.node.clientHeight));
   }
 }
 

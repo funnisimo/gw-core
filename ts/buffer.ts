@@ -9,7 +9,7 @@ export interface Data {
 }
 
 export class DataBuffer {
-  private _data: Uint32Array;
+  protected _data: Uint32Array;
   private _width: number;
   private _height: number;
 
@@ -19,9 +19,6 @@ export class DataBuffer {
     this._data = new Uint32Array(width * height);
   }
 
-  get data() {
-    return this._data;
-  }
   get width() {
     return this._width;
   }
@@ -38,8 +35,9 @@ export class DataBuffer {
     return { ch, fg, bg };
   }
 
-  protected _toGlyph(ch: string) {
-    if (!ch) return -1; // 0 handled elsewhere
+  toGlyph(ch: string | number) {
+    if (typeof ch === "number") return ch;
+    if (!ch || !ch.length) return -1; // 0 handled elsewhere
     return ch.charCodeAt(0);
   }
 
@@ -54,7 +52,7 @@ export class DataBuffer {
     const current = this._data[index] || 0;
 
     if (typeof glyph !== "number") {
-      glyph = this._toGlyph(glyph);
+      glyph = this.toGlyph(glyph);
     }
     if (typeof fg !== "number") {
       fg = Color.from(fg).toInt();
@@ -89,7 +87,7 @@ export class DataBuffer {
 
   fill(glyph: number | string = 0, fg: number = 0xfff, bg: number = 0) {
     if (typeof glyph == "string") {
-      glyph = this._toGlyph(glyph);
+      glyph = this.toGlyph(glyph);
     }
     glyph = glyph & 0xff;
     fg = fg & 0xfff;
@@ -176,7 +174,7 @@ export class DataBuffer {
     bg: Color.ColorBase | null = -1
   ) {
     if (ch === null) ch = -1;
-    if (typeof ch !== "number") ch = this._toGlyph(ch);
+    if (typeof ch !== "number") ch = this.toGlyph(ch);
     if (typeof fg !== "number") fg = Color.from(fg).toInt();
     if (typeof bg !== "number") bg = Color.from(bg).toInt();
 
@@ -256,7 +254,7 @@ export interface BufferTarget {
   readonly height: number;
   copyTo(dest: Uint32Array): void;
   copy(src: Uint32Array): void;
-  toGlyph(ch: string): number;
+  toGlyph(ch: string | number): number;
 }
 
 export class Buffer extends DataBuffer {
@@ -265,22 +263,22 @@ export class Buffer extends DataBuffer {
   constructor(canvas: BufferTarget) {
     super(canvas.width, canvas.height);
     this._target = canvas;
-    canvas.copyTo(this.data);
+    canvas.copyTo(this._data);
   }
 
   // get canvas() { return this._target; }
 
-  _toGlyph(ch: string) {
+  toGlyph(ch: string | number) {
     return this._target.toGlyph(ch);
   }
 
   render() {
-    this._target.copy(this.data);
+    this._target.copy(this._data);
     return this;
   }
 
   load() {
-    this._target.copyTo(this.data);
+    this._target.copyTo(this._data);
     return this;
   }
 }

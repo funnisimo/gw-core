@@ -6,15 +6,14 @@ export interface Data {
     bg: number;
 }
 export declare class DataBuffer {
-    private _data;
+    protected _data: Uint32Array;
     private _width;
     private _height;
     constructor(width: number, height: number);
-    get data(): Uint32Array;
     get width(): number;
     get height(): number;
     get(x: number, y: number): Data;
-    protected _toGlyph(ch: string): number;
+    toGlyph(ch: string | number): number;
     draw(x: number, y: number, glyph?: number | string, fg?: Color.ColorBase, // TODO - White?
     bg?: Color.ColorBase): this;
     drawSprite(x: number, y: number, sprite: Partial<DrawInfo>): this;
@@ -35,12 +34,12 @@ export interface BufferTarget {
     readonly height: number;
     copyTo(dest: Uint32Array): void;
     copy(src: Uint32Array): void;
-    toGlyph(ch: string): number;
+    toGlyph(ch: string | number): number;
 }
 export declare class Buffer extends DataBuffer {
     private _target;
     constructor(canvas: BufferTarget);
-    _toGlyph(ch: string): number;
+    toGlyph(ch: string | number): number;
     render(): this;
     load(): this;
 }

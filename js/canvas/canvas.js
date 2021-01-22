@@ -1,5 +1,6 @@
 import * as shaders from "./shaders";
 import { Glyphs } from "./glyphs";
+import * as IO from "../io";
 const VERTICES_PER_TILE = 6;
 export class NotSupportedError extends Error {
     constructor(...params) {
@@ -54,6 +55,8 @@ export class BaseCanvas {
         this._setGlyphs(glyphs);
     }
     toGlyph(ch) {
+        if (typeof ch === "number")
+            return ch;
         return this._glyphs.forChar(ch);
     }
     _createNode() {
@@ -129,11 +132,33 @@ export class BaseCanvas {
     hasXY(x, y) {
         return x >= 0 && y >= 0 && x < this.width && y < this.height;
     }
-    toX(x) {
-        return Math.floor((this.width * x) / this.node.clientWidth);
+    set onclick(fn) {
+        this.node.onclick = (e) => {
+            const x = this.toX(e.offsetX);
+            const y = this.toY(e.offsetY);
+            const ev = IO.makeMouseEvent(e, x, y);
+            fn(ev);
+        };
     }
-    toY(y) {
-        return Math.floor((this.height * y) / this.node.clientHeight);
+    set onmousemove(fn) {
+        let lastX = -1;
+        let lastY = -1;
+        this.node.onmousemove = (e) => {
+            const x = this.toX(e.offsetX);
+            const y = this.toY(e.offsetY);
+            if (x == lastX && y == lastY)
+                return;
+            lastX = x;
+            lastY = y;
+            const ev = IO.makeMouseEvent(e, x, y);
+            fn(ev);
+        };
+    }
+    toX(offsetX) {
+        return Math.floor(this.width * (offsetX / this.node.clientWidth));
+    }
+    toY(offsetY) {
+        return Math.floor(this.height * (offsetY / this.node.clientHeight));
     }
 }
 // Based on: https://github.com/ondras/fastiles/blob/master/ts/scene.ts (v2.1.0)
