@@ -1,6 +1,7 @@
 import * as shaders from "./shaders";
 import { Glyphs } from "./glyphs";
 import * as IO from "../io";
+import * as Utils from "../utils";
 const VERTICES_PER_TILE = 6;
 export class NotSupportedError extends Error {
     constructor(...params) {
@@ -155,10 +156,10 @@ export class BaseCanvas {
         };
     }
     toX(offsetX) {
-        return Math.floor(this.width * (offsetX / this.node.clientWidth));
+        return Utils.clamp(Math.floor(this.width * (offsetX / this.node.clientWidth)), 0, this.width - 1);
     }
     toY(offsetY) {
-        return Math.floor(this.height * (offsetY / this.node.clientHeight));
+        return Utils.clamp(Math.floor(this.height * (offsetY / this.node.clientHeight)), 0, this.height - 1);
     }
 }
 // Based on: https://github.com/ondras/fastiles/blob/master/ts/scene.ts (v2.1.0)

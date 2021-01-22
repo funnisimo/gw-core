@@ -3283,10 +3283,10 @@ class BaseCanvas {
         };
     }
     toX(offsetX) {
-        return Math.floor(this.width * (offsetX / this.node.clientWidth));
+        return clamp(Math.floor(this.width * (offsetX / this.node.clientWidth)), 0, this.width - 1);
     }
     toY(offsetY) {
-        return Math.floor(this.height * (offsetY / this.node.clientHeight));
+        return clamp(Math.floor(this.height * (offsetY / this.node.clientHeight)), 0, this.height - 1);
     }
 }
 // Based on: https://github.com/ondras/fastiles/blob/master/ts/scene.ts (v2.1.0)

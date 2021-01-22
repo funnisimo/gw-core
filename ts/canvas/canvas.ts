@@ -2,6 +2,7 @@ import * as shaders from "./shaders";
 import { Glyphs, GlyphOptions } from "./glyphs";
 import { BufferTarget } from "../buffer";
 import * as IO from "../io";
+import * as Utils from "../utils";
 
 type GL = WebGL2RenderingContext;
 const VERTICES_PER_TILE = 6;
@@ -200,11 +201,19 @@ export abstract class BaseCanvas implements BufferTarget {
   }
 
   toX(offsetX: number) {
-    return Math.floor(this.width * (offsetX / this.node.clientWidth));
+    return Utils.clamp(
+      Math.floor(this.width * (offsetX / this.node.clientWidth)),
+      0,
+      this.width - 1
+    );
   }
 
   toY(offsetY: number) {
-    return Math.floor(this.height * (offsetY / this.node.clientHeight));
+    return Utils.clamp(
+      Math.floor(this.height * (offsetY / this.node.clientHeight)),
+      0,
+      this.height - 1
+    );
   }
 }
 

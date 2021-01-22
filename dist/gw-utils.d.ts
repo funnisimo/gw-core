@@ -941,6 +941,7 @@ interface LayerType {
     readonly depth: number;
     readonly light: LightType | null;
     readonly flags: LayerFlags;
+    hasLayerFlag(flag: number): boolean;
 }
 interface TileFlags extends LayerFlags {
     readonly tile: number;

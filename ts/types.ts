@@ -35,6 +35,8 @@ export interface LayerType {
   readonly depth: number;
   readonly light: LightType | null;
   readonly flags: LayerFlags;
+
+  hasLayerFlag(flag: number): boolean;
 }
 
 export interface TileFlags extends LayerFlags {
