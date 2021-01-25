@@ -935,10 +935,10 @@ interface LightType {
 interface LayerFlags {
     readonly layer: number;
 }
-interface LayerType {
+interface EntityType {
     readonly sprite: SpriteType;
     readonly priority: number;
-    readonly depth: number;
+    readonly layer: number;
     readonly light: LightType | null;
     readonly flags: LayerFlags;
     hasLayerFlag(flag: number): boolean;
@@ -947,14 +947,14 @@ interface TileFlags extends LayerFlags {
     readonly tile: number;
     readonly tileMech: number;
 }
-interface TileType extends LayerType {
+interface TileType extends EntityType {
     readonly id: string;
     readonly flags: TileFlags;
 }
 interface ActorFlags extends LayerFlags {
     actor: number;
 }
-interface ActorType extends XY, Chainable, LayerType {
+interface ActorType extends XY, Chainable, EntityType {
     isPlayer: () => boolean;
     isVisible: () => boolean;
     isDetected: () => boolean;
@@ -969,7 +969,7 @@ interface ActorType extends XY, Chainable, LayerType {
 interface ItemFlags extends LayerFlags {
     item: number;
 }
-interface ItemType extends XY, Chainable, LayerType {
+interface ItemType extends XY, Chainable, EntityType {
     quantity: number;
     readonly flags: ItemFlags;
     blocksMove: () => boolean;
@@ -980,7 +980,7 @@ interface ItemType extends XY, Chainable, LayerType {
     clone: () => this;
     next: ItemType | null;
 }
-interface FxType extends XY, Chainable, LayerType {
+interface FxType extends XY, Chainable, EntityType {
     next: FxType | null;
 }
 interface CellType {
@@ -1010,7 +1010,7 @@ declare class Bounds {
 type types_d_SpriteType = SpriteType;
 type types_d_LightType = LightType;
 type types_d_LayerFlags = LayerFlags;
-type types_d_LayerType = LayerType;
+type types_d_EntityType = EntityType;
 type types_d_TileFlags = TileFlags;
 type types_d_TileType = TileType;
 type types_d_ActorFlags = ActorFlags;
@@ -1027,7 +1027,7 @@ declare namespace types_d {
     types_d_SpriteType as SpriteType,
     types_d_LightType as LightType,
     types_d_LayerFlags as LayerFlags,
-    types_d_LayerType as LayerType,
+    types_d_EntityType as EntityType,
     types_d_TileFlags as TileFlags,
     types_d_TileType as TileType,
     types_d_ActorFlags as ActorFlags,

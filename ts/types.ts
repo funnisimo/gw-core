@@ -29,10 +29,10 @@ export interface LayerFlags {
   readonly layer: number;
 }
 
-export interface LayerType {
+export interface EntityType {
   readonly sprite: SpriteType;
   readonly priority: number;
-  readonly depth: number;
+  readonly layer: number;
   readonly light: LightType | null;
   readonly flags: LayerFlags;
 
@@ -44,7 +44,7 @@ export interface TileFlags extends LayerFlags {
   readonly tileMech: number;
 }
 
-export interface TileType extends LayerType {
+export interface TileType extends EntityType {
   readonly id: string;
   readonly flags: TileFlags;
 }
@@ -53,7 +53,7 @@ export interface ActorFlags extends LayerFlags {
   actor: number;
 }
 
-export interface ActorType extends Utils.XY, Utils.Chainable, LayerType {
+export interface ActorType extends Utils.XY, Utils.Chainable, EntityType {
   isPlayer: () => boolean;
   isVisible: () => boolean;
   isDetected: () => boolean;
@@ -74,7 +74,7 @@ export interface ItemFlags extends LayerFlags {
   item: number;
 }
 
-export interface ItemType extends Utils.XY, Utils.Chainable, LayerType {
+export interface ItemType extends Utils.XY, Utils.Chainable, EntityType {
   quantity: number;
   readonly flags: ItemFlags;
   blocksMove: () => boolean;
@@ -89,7 +89,7 @@ export interface ItemType extends Utils.XY, Utils.Chainable, LayerType {
   next: ItemType | null;
 }
 
-export interface FxType extends Utils.XY, Utils.Chainable, LayerType {
+export interface FxType extends Utils.XY, Utils.Chainable, EntityType {
   next: FxType | null;
 }
 
