@@ -1,6 +1,7 @@
 import { Glyphs, GlyphOptions } from "./glyphs";
 import { BufferTarget } from "../buffer";
 import * as IO from "../io";
+import * as Utils from "../utils";
 export declare type MouseEventFn = (ev: IO.Event) => void;
 export interface CanvasOptions {
     width?: number;
@@ -8,6 +9,8 @@ export interface CanvasOptions {
     glyphs: Glyphs;
     div?: HTMLElement | string;
     render?: boolean;
+    io?: IO.Loop;
+    loop?: IO.Loop;
 }
 export interface ImageOptions extends CanvasOptions {
     image: HTMLImageElement | string;
@@ -17,6 +20,7 @@ export declare class NotSupportedError extends Error {
     constructor(...params: any[]);
 }
 export declare abstract class BaseCanvas implements BufferTarget {
+    mouse: Utils.XY;
     protected _data: Uint32Array;
     protected _renderRequested: boolean;
     protected _glyphs: Glyphs;
@@ -47,8 +51,8 @@ export declare abstract class BaseCanvas implements BufferTarget {
     copyTo(data: Uint32Array): void;
     abstract render(): void;
     hasXY(x: number, y: number): boolean;
-    set onclick(fn: MouseEventFn);
-    set onmousemove(fn: MouseEventFn);
+    set onclick(fn: MouseEventFn | null);
+    set onmousemove(fn: MouseEventFn | null);
     toX(offsetX: number): number;
     toY(offsetY: number): number;
 }

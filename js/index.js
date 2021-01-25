@@ -34,4 +34,5 @@ export { cosmetic, random, Random } from "./random";
 export { colors } from "./color";
 export { sprites } from "./canvas/index";
 export * from "./gw";
+export { loop } from "./io";
 //# sourceMappingURL=index.js.map

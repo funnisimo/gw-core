@@ -1,4 +1,5 @@
 import * as Utils from "./utils";
+import { make as Make } from "./gw";
 
 export interface Event {
   shiftKey: boolean;
@@ -29,10 +30,7 @@ export type EventMatchFn = (event: Event) => boolean;
 
 let KEYMAP: KeyMap = {};
 
-const EVENTS: Event[] = [];
 const DEAD_EVENTS: Event[] = [];
-
-const LAST_CLICK: Utils.XY = { x: -1, y: -1 };
 
 export const KEYPRESS = "keypress";
 export const MOUSEMOVE = "mousemove";
@@ -52,69 +50,9 @@ const CONTROL_CODES = [
 ];
 
 type EventHandler = (event: Event) => void;
-var CURRENT_HANDLER: EventHandler | null = null;
-var PAUSED: EventHandler | null = null;
 
 export function setKeymap(keymap: KeyMap) {
   KEYMAP = keymap;
-}
-
-export function hasEvents() {
-  return EVENTS.length;
-}
-
-export function clearEvents() {
-  while (EVENTS.length) {
-    const ev = EVENTS.shift()!;
-    DEAD_EVENTS.push(ev);
-  }
-}
-
-export function pushEvent(ev: Event) {
-  if (PAUSED) {
-    console.log("PAUSED EVENT", ev.type);
-  }
-
-  if (EVENTS.length) {
-    const last = EVENTS[EVENTS.length - 1];
-    if (last.type === ev.type) {
-      if (last.type === MOUSEMOVE) {
-        last.x = ev.x;
-        last.y = ev.y;
-        recycleEvent(ev);
-        return;
-      }
-    }
-  }
-
-  // Keep clicks down to one per cell if holding down mouse button
-  if (ev.type === CLICK) {
-    if (LAST_CLICK.x == ev.x && LAST_CLICK.y == ev.y) {
-      recycleEvent(ev);
-      return;
-    }
-    LAST_CLICK.x = ev.x;
-    LAST_CLICK.y = ev.y;
-  } else if (ev.type == MOUSEUP) {
-    LAST_CLICK.x = -1;
-    LAST_CLICK.y = -1;
-    recycleEvent(ev);
-    return;
-  }
-
-  if (CURRENT_HANDLER) {
-    CURRENT_HANDLER(ev);
-  } else if (ev.type === TICK) {
-    const first = EVENTS[0];
-    if (first && first.type === TICK) {
-      first.dt += ev.dt;
-      recycleEvent(ev);
-      return;
-    }
-    EVENTS.unshift(ev); // ticks go first
-  } else {
-    EVENTS.push(ev);
-  }
 }
 
 export async function dispatchEvent(ev: Event, km?: KeyMap | CommandFn) {
@@ -266,132 +204,215 @@ export function makeMouseEvent(e: MouseEvent, x: number, y: number) {
   return ev;
 }
 
-// IO
+export class Loop {
+  public running = false;
+  public events: Event[] = [];
+  protected CURRENT_HANDLER: EventHandler | null = null;
+  protected PAUSED: EventHandler | null = null;
+  protected LAST_CLICK: Utils.XY = { x: -1, y: -1 };
 
-export function pauseEvents() {
-  if (PAUSED) return;
-  PAUSED = CURRENT_HANDLER;
-  CURRENT_HANDLER = null;
-  // io.debug('events paused');
-}
+  constructor() {}
 
-export function resumeEvents() {
-  if (!PAUSED) return;
-
-  if (CURRENT_HANDLER) {
-    console.warn("overwrite CURRENT HANDLER!");
+  hasEvents() {
+    return this.events.length;
   }
 
-  CURRENT_HANDLER = PAUSED;
-  PAUSED = null;
-  // io.debug('resuming events');
-
-  if (EVENTS.length && CURRENT_HANDLER) {
-    const e: Event = EVENTS.shift()!;
-    // io.debug('- processing paused event', e.type);
-    CURRENT_HANDLER(e);
-    // io.recycleEvent(e);	// DO NOT DO THIS B/C THE HANDLER MAY PUT IT BACK ON THE QUEUE (see tickMs)
+  clearEvents() {
+    while (this.events.length) {
+      const ev = this.events.shift()!;
+      DEAD_EVENTS.push(ev);
+    }
   }
-  // io.debug('events resumed');
-}
 
-export function nextEvent(
-  ms?: number,
-  match?: EventMatchFn
-): Promise<Event | null> {
-  match = match || Utils.TRUE;
-  let elapsed = 0;
-
-  while (EVENTS.length) {
-    const e: Event = EVENTS.shift()!;
-    if (e.type === MOUSEMOVE) {
-      mouse.x = e.x;
-      mouse.y = e.y;
+  pushEvent(ev: Event) {
+    if (this.PAUSED) {
+      console.log("PAUSED EVENT", ev.type);
     }
 
-    if (match(e)) {
-      return Promise.resolve(e);
-    }
-    recycleEvent(e);
-  }
-
-  let done: Function;
-
-  if (ms === undefined) {
-    ms = -1; // wait forever
-  }
-  if (ms == 0) return Promise.resolve(null);
-
-  if (CURRENT_HANDLER) {
-    console.warn("OVERWRITE HANDLER - nextEvent");
-  } else if (EVENTS.length) {
-    console.warn("SET HANDLER WITH QUEUED EVENTS - nextEvent");
-  }
-
-  CURRENT_HANDLER = (e) => {
-    if (e.type === MOUSEMOVE) {
-      mouse.x = e.x;
-      mouse.y = e.y;
+    if (this.events.length) {
+      const last = this.events[this.events.length - 1];
+      if (last.type === ev.type) {
+        if (last.type === MOUSEMOVE) {
+          last.x = ev.x;
+          last.y = ev.y;
+          recycleEvent(ev);
+          return;
+        }
+      }
     }
 
-    if (e.type === TICK && ms! > 0) {
-      elapsed += e.dt;
-      if (elapsed < ms!) {
+    // Keep clicks down to one per cell if holding down mouse button
+    if (ev.type === CLICK) {
+      if (this.LAST_CLICK.x == ev.x && this.LAST_CLICK.y == ev.y) {
+        recycleEvent(ev);
         return;
       }
-    } else if (!match!(e)) return;
+      this.LAST_CLICK.x = ev.x;
+      this.LAST_CLICK.y = ev.y;
+    } else if (ev.type == MOUSEUP) {
+      this.LAST_CLICK.x = -1;
+      this.LAST_CLICK.y = -1;
+      recycleEvent(ev);
+      return;
+    }
 
-    CURRENT_HANDLER = null;
-    e.dt = elapsed;
-    done(e);
-  };
-
-  return new Promise((resolve) => (done = resolve));
-}
-
-export async function tickMs(ms = 1) {
-  let done: Function;
-
-  setTimeout(() => done(), ms);
-
-  return new Promise((resolve) => (done = resolve));
-}
-
-export async function nextKeyPress(ms?: number, match?: EventMatchFn) {
-  if (ms === undefined) ms = -1;
-  match = match || Utils.TRUE;
-  function matchingKey(e: Event) {
-    if (e.type !== KEYPRESS) return false;
-    return match!(e);
-  }
-  return nextEvent(ms, matchingKey);
-}
-
-export async function nextKeyOrClick(ms?: number, matchFn?: EventMatchFn) {
-  if (ms === undefined) ms = -1;
-  matchFn = matchFn || Utils.TRUE;
-  function match(e: Event) {
-    if (e.type !== KEYPRESS && e.type !== CLICK) return false;
-    return matchFn!(e);
-  }
-  return nextEvent(ms, match);
-}
-
-export async function pause(ms: number) {
-  const e = await nextKeyOrClick(ms);
-  return e && e.type !== TICK;
-}
-
-export function waitForAck() {
-  return pause(5 * 60 * 1000); // 5 min
-}
-
-export async function loop(keymap: KeyMap) {
-  let running = true;
-  while (running) {
-    const ev = await nextEvent();
-    if (ev && (await dispatchEvent(ev, keymap))) {
-      running = false;
+    if (this.CURRENT_HANDLER) {
+      this.CURRENT_HANDLER(ev);
+    } else if (ev.type === TICK) {
+      const first = this.events[0];
+      if (first && first.type === TICK) {
+        first.dt += ev.dt;
+        recycleEvent(ev);
+        return;
+      }
+      this.events.unshift(ev); // ticks go first
+    } else {
+      this.events.push(ev);
     }
   }
+
+  nextEvent(ms?: number, match?: EventMatchFn): Promise<Event | null> {
+    match = match || Utils.TRUE;
+    let elapsed = 0;
+
+    while (this.events.length) {
+      const e: Event = this.events.shift()!;
+      if (e.type === MOUSEMOVE) {
+        mouse.x = e.x;
+        mouse.y = e.y;
+      }
+
+      if (match(e)) {
+        return Promise.resolve(e);
+      }
+      recycleEvent(e);
+    }
+
+    let done: Function;
+
+    if (ms === undefined) {
+      ms = -1; // wait forever
+    }
+    if (ms == 0) return Promise.resolve(null);
+
+    if (this.CURRENT_HANDLER) {
+      console.warn("OVERWRITE HANDLER - nextEvent");
+    } else if (this.events.length) {
+      console.warn("SET HANDLER WITH QUEUED EVENTS - nextEvent");
+    }
+
+    this.CURRENT_HANDLER = (e) => {
+      if (e.type === MOUSEMOVE) {
+        mouse.x = e.x;
+        mouse.y = e.y;
+      }
+
+      if (e.type === TICK && ms! > 0) {
+        elapsed += e.dt;
+        if (elapsed < ms!) {
+          return;
+        }
+      } else if (!match!(e)) return;
+
+      this.CURRENT_HANDLER = null;
+      e.dt = elapsed;
+      done(e);
+    };
+
+    return new Promise((resolve) => (done = resolve));
+  }
+
+  async run(keymap: KeyMap, ms = -1) {
+    const interval = (setInterval(() => {
+      const e = makeTickEvent(16);
+      this.pushEvent(e);
+    }, 16) as unknown) as number;
+
+    this.running = true;
+    while (this.running) {
+      const ev = await this.nextEvent(ms);
+      if (ev && (await dispatchEvent(ev, keymap))) {
+        this.running = false;
+      }
+    }
+
+    clearInterval(interval);
+  }
+
+  stop() {
+    this.running = false;
+  }
+
+  pauseEvents() {
+    if (this.PAUSED) return;
+    this.PAUSED = this.CURRENT_HANDLER;
+    this.CURRENT_HANDLER = null;
+    // io.debug('events paused');
+  }
+
+  resumeEvents() {
+    if (!this.PAUSED) return;
+
+    if (this.CURRENT_HANDLER) {
+      console.warn("overwrite CURRENT HANDLER!");
+    }
+
+    this.CURRENT_HANDLER = this.PAUSED;
+    this.PAUSED = null;
+    // io.debug('resuming events');
+
+    if (this.events.length && this.CURRENT_HANDLER) {
+      const e: Event = this.events.shift()!;
+      // io.debug('- processing paused event', e.type);
+      this.CURRENT_HANDLER(e);
+      // io.recycleEvent(e);	// DO NOT DO THIS B/C THE HANDLER MAY PUT IT BACK ON THE QUEUE (see tickMs)
+    }
+    // io.debug('events resumed');
+  }
+
+  // IO
+
+  async tickMs(ms = 1) {
+    let done: Function;
+    setTimeout(() => done(), ms);
+    return new Promise((resolve) => (done = resolve));
+  }
+
+  async nextKeyPress(ms?: number, match?: EventMatchFn) {
+    if (ms === undefined) ms = -1;
+    match = match || Utils.TRUE;
+    function matchingKey(e: Event) {
+      if (e.type !== KEYPRESS) return false;
+      return match!(e);
+    }
+    return this.nextEvent(ms, matchingKey);
+  }
+
+  async nextKeyOrClick(ms?: number, matchFn?: EventMatchFn) {
+    if (ms === undefined) ms = -1;
+    matchFn = matchFn || Utils.TRUE;
+    function match(e: Event) {
+      if (e.type !== KEYPRESS && e.type !== CLICK) return false;
+      return matchFn!(e);
+    }
+    return this.nextEvent(ms, match);
+  }
+
+  async pause(ms: number) {
+    const e = await this.nextKeyOrClick(ms);
+    return e && e.type !== TICK;
+  }
+
+  waitForAck() {
+    return this.pause(5 * 60 * 1000); // 5 min
+  }
 }
+
+export function make() {
+  return new Loop();
+}
+
+Make.loop = make;
+
+// Makes a default global loop that you access through these funcitons...
+export const loop = make();

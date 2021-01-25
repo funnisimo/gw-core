@@ -15,6 +15,8 @@ export interface CanvasOptions {
   glyphs: Glyphs;
   div?: HTMLElement | string;
   render?: boolean;
+  io?: IO.Loop;
+  loop?: IO.Loop;
 }
 
 export interface ImageOptions extends CanvasOptions {
@@ -40,6 +42,7 @@ export class NotSupportedError extends Error {
 }
 
 export abstract class BaseCanvas implements BufferTarget {
+  public mouse: Utils.XY = { x: -1, y: -1 };
   protected _data!: Uint32Array;
   protected _renderRequested: boolean = false;
   protected _glyphs!: Glyphs;
@@ -55,6 +58,12 @@ export abstract class BaseCanvas implements BufferTarget {
     this._node = this._createNode();
     this._createContext();
     this._configure(options);
+
+    const io = options.io || options.loop;
+    if (io) {
+      this.onclick = (e) => io.pushEvent(e);
+      this.onmousemove = (e) => io.pushEvent(e);
+    }
   }
 
   get node(): HTMLCanvasElement {
@@ -177,27 +186,33 @@ export abstract class BaseCanvas implements BufferTarget {
     return x >= 0 && y >= 0 && x < this.width && y < this.height;
   }
 
-  set onclick(fn: MouseEventFn) {
-    this.node.onclick = (e: MouseEvent) => {
-      const x = this.toX(e.offsetX);
-      const y = this.toY(e.offsetY);
-      const ev = IO.makeMouseEvent(e, x, y);
-      fn(ev);
-    };
+  set onclick(fn: MouseEventFn | null) {
+    if (fn) {
+      this.node.onclick = (e: MouseEvent) => {
+        const x = this.toX(e.offsetX);
+        const y = this.toY(e.offsetY);
+        const ev = IO.makeMouseEvent(e, x, y);
+        fn(ev);
+      };
+    } else {
+      this.node.onclick = null;
+    }
   }
 
-  set onmousemove(fn: MouseEventFn) {
-    let lastX = -1;
-    let lastY = -1;
-    this.node.onmousemove = (e: MouseEvent) => {
-      const x = this.toX(e.offsetX);
-      const y = this.toY(e.offsetY);
-      if (x == lastX && y == lastY) return;
-      lastX = x;
-      lastY = y;
-      const ev = IO.makeMouseEvent(e, x, y);
-      fn(ev);
-    };
+  set onmousemove(fn: MouseEventFn | null) {
+    if (fn) {
+      this.node.onmousemove = (e: MouseEvent) => {
+        const x = this.toX(e.offsetX);
+        const y = this.toY(e.offsetY);
+        if (x == this.mouse.x && y == this.mouse.y) return;
+        this.mouse.x = x;
+        this.mouse.y = y;
+        const ev = IO.makeMouseEvent(e, x, y);
+        fn(ev);
+      };
+    } else {
+      this.node.onmousemove = null;
+    }
   }
 
   toX(offsetX: number) {

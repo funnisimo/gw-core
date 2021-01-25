@@ -1618,9 +1618,7 @@ function addCommand(id, fn) {
     commands[id] = fn;
 }
 let KEYMAP = {};
-const EVENTS = [];
 const DEAD_EVENTS = [];
-const LAST_CLICK = { x: -1, y: -1 };
 const KEYPRESS = "keypress";
 const MOUSEMOVE = "mousemove";
 const CLICK = "click";
@@ -1636,65 +1634,8 @@ const CONTROL_CODES = [
     "MetaLeft",
     "MetaRight",
 ];
-var CURRENT_HANDLER = null;
-var PAUSED = null;
 function setKeymap(keymap) {
     KEYMAP = keymap;
-}
-function hasEvents() {
-    return EVENTS.length;
-}
-function clearEvents() {
-    while (EVENTS.length) {
-        const ev = EVENTS.shift();
-        DEAD_EVENTS.push(ev);
-    }
-}
-function pushEvent(ev) {
-    if (PAUSED) {
-        console.log("PAUSED EVENT", ev.type);
-    }
-    if (EVENTS.length) {
-        const last = EVENTS[EVENTS.length - 1];
-        if (last.type === ev.type) {
-            if (last.type === MOUSEMOVE) {
-                last.x = ev.x;
-                last.y = ev.y;
-                recycleEvent(ev);
-                return;
-            }
-        }
-    }
-    // Keep clicks down to one per cell if holding down mouse button
-    if (ev.type === CLICK) {
-        if (LAST_CLICK.x == ev.x && LAST_CLICK.y == ev.y) {
-            recycleEvent(ev);
-            return;
-        }
-        LAST_CLICK.x = ev.x;
-        LAST_CLICK.y = ev.y;
-    }
-    else if (ev.type == MOUSEUP) {
-        LAST_CLICK.x = -1;
-        LAST_CLICK.y = -1;
-        recycleEvent(ev);
-        return;
-    }
-    if (CURRENT_HANDLER) {
-        CURRENT_HANDLER(ev);
-    }
-    else if (ev.type === TICK) {
-        const first = EVENTS[0];
-        if (first && first.type === TICK) {
-            first.dt += ev.dt;
-            recycleEvent(ev);
-            return;
-        }
-        EVENTS.unshift(ev); // ticks go first
-    }
-    else {
-        EVENTS.push(ev);
-    }
 }
 async function dispatchEvent(ev, km) {
     let result;
@@ -1825,119 +1766,197 @@ function makeMouseEvent(e, x, y) {
     ev.dt = 0;
     return ev;
 }
-// IO
-function pauseEvents() {
-    if (PAUSED)
-        return;
-    PAUSED = CURRENT_HANDLER;
-    CURRENT_HANDLER = null;
-    // io.debug('events paused');
-}
-function resumeEvents() {
-    if (!PAUSED)
-        return;
-    if (CURRENT_HANDLER) {
-        console.warn("overwrite CURRENT HANDLER!");
+class Loop {
+    constructor() {
+        this.running = false;
+        this.events = [];
+        this.CURRENT_HANDLER = null;
+        this.PAUSED = null;
+        this.LAST_CLICK = { x: -1, y: -1 };
     }
-    CURRENT_HANDLER = PAUSED;
-    PAUSED = null;
-    // io.debug('resuming events');
-    if (EVENTS.length && CURRENT_HANDLER) {
-        const e = EVENTS.shift();
-        // io.debug('- processing paused event', e.type);
-        CURRENT_HANDLER(e);
-        // io.recycleEvent(e);	// DO NOT DO THIS B/C THE HANDLER MAY PUT IT BACK ON THE QUEUE (see tickMs)
+    hasEvents() {
+        return this.events.length;
     }
-    // io.debug('events resumed');
-}
-function nextEvent(ms, match) {
-    match = match || TRUE;
-    let elapsed = 0;
-    while (EVENTS.length) {
-        const e = EVENTS.shift();
-        if (e.type === MOUSEMOVE) {
-            mouse.x = e.x;
-            mouse.y = e.y;
+    clearEvents() {
+        while (this.events.length) {
+            const ev = this.events.shift();
+            DEAD_EVENTS.push(ev);
         }
-        if (match(e)) {
-            return Promise.resolve(e);
+    }
+    pushEvent(ev) {
+        if (this.PAUSED) {
+            console.log("PAUSED EVENT", ev.type);
         }
-        recycleEvent(e);
-    }
-    let done;
-    if (ms === undefined) {
-        ms = -1; // wait forever
-    }
-    if (ms == 0)
-        return Promise.resolve(null);
-    if (CURRENT_HANDLER) {
-        console.warn("OVERWRITE HANDLER - nextEvent");
-    }
-    else if (EVENTS.length) {
-        console.warn("SET HANDLER WITH QUEUED EVENTS - nextEvent");
-    }
-    CURRENT_HANDLER = (e) => {
-        if (e.type === MOUSEMOVE) {
-            mouse.x = e.x;
-            mouse.y = e.y;
-        }
-        if (e.type === TICK && ms > 0) {
-            elapsed += e.dt;
-            if (elapsed < ms) {
-                return;
+        if (this.events.length) {
+            const last = this.events[this.events.length - 1];
+            if (last.type === ev.type) {
+                if (last.type === MOUSEMOVE) {
+                    last.x = ev.x;
+                    last.y = ev.y;
+                    recycleEvent(ev);
+                    return;
+                }
             }
         }
-        else if (!match(e))
+        // Keep clicks down to one per cell if holding down mouse button
+        if (ev.type === CLICK) {
+            if (this.LAST_CLICK.x == ev.x && this.LAST_CLICK.y == ev.y) {
+                recycleEvent(ev);
+                return;
+            }
+            this.LAST_CLICK.x = ev.x;
+            this.LAST_CLICK.y = ev.y;
+        }
+        else if (ev.type == MOUSEUP) {
+            this.LAST_CLICK.x = -1;
+            this.LAST_CLICK.y = -1;
+            recycleEvent(ev);
             return;
-        CURRENT_HANDLER = null;
-        e.dt = elapsed;
-        done(e);
-    };
-    return new Promise((resolve) => (done = resolve));
-}
-async function tickMs(ms = 1) {
-    let done;
-    setTimeout(() => done(), ms);
-    return new Promise((resolve) => (done = resolve));
-}
-async function nextKeyPress(ms, match) {
-    if (ms === undefined)
-        ms = -1;
-    match = match || TRUE;
-    function matchingKey(e) {
-        if (e.type !== KEYPRESS)
-            return false;
-        return match(e);
-    }
-    return nextEvent(ms, matchingKey);
-}
-async function nextKeyOrClick(ms, matchFn) {
-    if (ms === undefined)
-        ms = -1;
-    matchFn = matchFn || TRUE;
-    function match(e) {
-        if (e.type !== KEYPRESS && e.type !== CLICK)
-            return false;
-        return matchFn(e);
-    }
-    return nextEvent(ms, match);
-}
-async function pause(ms) {
-    const e = await nextKeyOrClick(ms);
-    return e && e.type !== TICK;
-}
-function waitForAck() {
-    return pause(5 * 60 * 1000); // 5 min
-}
-async function loop(keymap) {
-    let running = true;
-    while (running) {
-        const ev = await nextEvent();
-        if (ev && (await dispatchEvent(ev, keymap))) {
-            running = false;
+        }
+        if (this.CURRENT_HANDLER) {
+            this.CURRENT_HANDLER(ev);
+        }
+        else if (ev.type === TICK) {
+            const first = this.events[0];
+            if (first && first.type === TICK) {
+                first.dt += ev.dt;
+                recycleEvent(ev);
+                return;
+            }
+            this.events.unshift(ev); // ticks go first
+        }
+        else {
+            this.events.push(ev);
         }
     }
+    nextEvent(ms, match) {
+        match = match || TRUE;
+        let elapsed = 0;
+        while (this.events.length) {
+            const e = this.events.shift();
+            if (e.type === MOUSEMOVE) {
+                mouse.x = e.x;
+                mouse.y = e.y;
+            }
+            if (match(e)) {
+                return Promise.resolve(e);
+            }
+            recycleEvent(e);
+        }
+        let done;
+        if (ms === undefined) {
+            ms = -1; // wait forever
+        }
+        if (ms == 0)
+            return Promise.resolve(null);
+        if (this.CURRENT_HANDLER) {
+            console.warn("OVERWRITE HANDLER - nextEvent");
+        }
+        else if (this.events.length) {
+            console.warn("SET HANDLER WITH QUEUED EVENTS - nextEvent");
+        }
+        this.CURRENT_HANDLER = (e) => {
+            if (e.type === MOUSEMOVE) {
+                mouse.x = e.x;
+                mouse.y = e.y;
+            }
+            if (e.type === TICK && ms > 0) {
+                elapsed += e.dt;
+                if (elapsed < ms) {
+                    return;
+                }
+            }
+            else if (!match(e))
+                return;
+            this.CURRENT_HANDLER = null;
+            e.dt = elapsed;
+            done(e);
+        };
+        return new Promise((resolve) => (done = resolve));
+    }
+    async run(keymap, ms = -1) {
+        const interval = setInterval(() => {
+            const e = makeTickEvent(16);
+            this.pushEvent(e);
+        }, 16);
+        this.running = true;
+        while (this.running) {
+            const ev = await this.nextEvent(ms);
+            if (ev && (await dispatchEvent(ev, keymap))) {
+                this.running = false;
+            }
+        }
+        clearInterval(interval);
+    }
+    stop() {
+        this.running = false;
+    }
+    pauseEvents() {
+        if (this.PAUSED)
+            return;
+        this.PAUSED = this.CURRENT_HANDLER;
+        this.CURRENT_HANDLER = null;
+        // io.debug('events paused');
+    }
+    resumeEvents() {
+        if (!this.PAUSED)
+            return;
+        if (this.CURRENT_HANDLER) {
+            console.warn("overwrite CURRENT HANDLER!");
+        }
+        this.CURRENT_HANDLER = this.PAUSED;
+        this.PAUSED = null;
+        // io.debug('resuming events');
+        if (this.events.length && this.CURRENT_HANDLER) {
+            const e = this.events.shift();
+            // io.debug('- processing paused event', e.type);
+            this.CURRENT_HANDLER(e);
+            // io.recycleEvent(e);	// DO NOT DO THIS B/C THE HANDLER MAY PUT IT BACK ON THE QUEUE (see tickMs)
+        }
+        // io.debug('events resumed');
+    }
+    // IO
+    async tickMs(ms = 1) {
+        let done;
+        setTimeout(() => done(), ms);
+        return new Promise((resolve) => (done = resolve));
+    }
+    async nextKeyPress(ms, match) {
+        if (ms === undefined)
+            ms = -1;
+        match = match || TRUE;
+        function matchingKey(e) {
+            if (e.type !== KEYPRESS)
+                return false;
+            return match(e);
+        }
+        return this.nextEvent(ms, matchingKey);
+    }
+    async nextKeyOrClick(ms, matchFn) {
+        if (ms === undefined)
+            ms = -1;
+        matchFn = matchFn || TRUE;
+        function match(e) {
+            if (e.type !== KEYPRESS && e.type !== CLICK)
+                return false;
+            return matchFn(e);
+        }
+        return this.nextEvent(ms, match);
+    }
+    async pause(ms) {
+        const e = await this.nextKeyOrClick(ms);
+        return e && e.type !== TICK;
+    }
+    waitForAck() {
+        return this.pause(5 * 60 * 1000); // 5 min
+    }
 }
+function make$3() {
+    return new Loop();
+}
+make.loop = make$3;
+// Makes a default global loop that you access through these funcitons...
+const loop = make$3();
 
 var io = {
     __proto__: null,
@@ -1949,9 +1968,6 @@ var io = {
     TICK: TICK,
     MOUSEUP: MOUSEUP,
     setKeymap: setKeymap,
-    hasEvents: hasEvents,
-    clearEvents: clearEvents,
-    pushEvent: pushEvent,
     dispatchEvent: dispatchEvent,
     makeTickEvent: makeTickEvent,
     makeKeyEvent: makeKeyEvent,
@@ -1959,14 +1975,8 @@ var io = {
     ignoreKeyEvent: ignoreKeyEvent,
     mouse: mouse,
     makeMouseEvent: makeMouseEvent,
-    pauseEvents: pauseEvents,
-    resumeEvents: resumeEvents,
-    nextEvent: nextEvent,
-    tickMs: tickMs,
-    nextKeyPress: nextKeyPress,
-    nextKeyOrClick: nextKeyOrClick,
-    pause: pause,
-    waitForAck: waitForAck,
+    Loop: Loop,
+    make: make$3,
     loop: loop
 };
 
@@ -2519,7 +2529,7 @@ class Listener {
             (!context || this.context === context));
     }
 }
-var EVENTS$1 = {};
+var EVENTS = {};
 /**
  * Add a listener for a given event.
  *
@@ -2534,7 +2544,7 @@ function addListener(event, fn, context, once = false) {
         throw new TypeError("The listener must be a function");
     }
     const listener = new Listener(fn, context || null, once);
-    addToChain(EVENTS$1, event, listener);
+    addToChain(EVENTS, event, listener);
     return listener;
 }
 /**
@@ -2572,14 +2582,14 @@ function once(event, fn, context) {
  * @public
  */
 function removeListener(event, fn, context, once = false) {
-    if (!EVENTS$1[event])
+    if (!EVENTS[event])
         return false;
     if (!fn)
         return false;
     let success = false;
-    eachChain(EVENTS$1[event], (obj) => {
+    eachChain(EVENTS[event], (obj) => {
         if (obj.matches(fn, context, once)) {
-            removeFromChain(EVENTS$1, event, obj);
+            removeFromChain(EVENTS, event, obj);
             success = true;
         }
     });
@@ -2604,8 +2614,8 @@ function off(event, fn, context, once = false) {
  * @param {String} evt The Event name.
  */
 function clearEvent(event) {
-    if (EVENTS$1[event]) {
-        EVENTS$1[event] = null;
+    if (EVENTS[event]) {
+        EVENTS[event] = null;
     }
 }
 /**
@@ -2620,7 +2630,7 @@ function removeAllListeners(event) {
         clearEvent(event);
     }
     else {
-        EVENTS$1 = {};
+        EVENTS = {};
     }
 }
 /**
@@ -2633,13 +2643,13 @@ function removeAllListeners(event) {
  */
 async function emit(...args) {
     const event = args[0];
-    if (!EVENTS$1[event])
+    if (!EVENTS[event])
         return false; // no events to send
-    let listener = EVENTS$1[event];
+    let listener = EVENTS[event];
     while (listener) {
         let next = listener.next;
         if (listener.once)
-            removeFromChain(EVENTS$1, event, listener);
+            removeFromChain(EVENTS, event, listener);
         await listener.fn.apply(listener.context, args);
         listener = next;
     }
@@ -2659,7 +2669,7 @@ var events = {
     emit: emit
 };
 
-function make$3(v) {
+function make$4(v) {
     if (v === undefined)
         return () => 100;
     if (v === null)
@@ -2706,7 +2716,7 @@ function make$3(v) {
 
 var frequency = {
     __proto__: null,
-    make: make$3
+    make: make$4
 };
 
 class Scheduler {
@@ -3145,6 +3155,7 @@ class NotSupportedError extends Error {
 }
 class BaseCanvas {
     constructor(options) {
+        this.mouse = { x: -1, y: -1 };
         this._renderRequested = false;
         this._autoRender = true;
         this._width = 50;
@@ -3154,6 +3165,11 @@ class BaseCanvas {
         this._node = this._createNode();
         this._createContext();
         this._configure(options);
+        const io = options.io || options.loop;
+        if (io) {
+            this.onclick = (e) => io.pushEvent(e);
+            this.onmousemove = (e) => io.pushEvent(e);
+        }
     }
     get node() {
         return this._node;
@@ -3261,26 +3277,34 @@ class BaseCanvas {
         return x >= 0 && y >= 0 && x < this.width && y < this.height;
     }
     set onclick(fn) {
-        this.node.onclick = (e) => {
-            const x = this.toX(e.offsetX);
-            const y = this.toY(e.offsetY);
-            const ev = makeMouseEvent(e, x, y);
-            fn(ev);
-        };
+        if (fn) {
+            this.node.onclick = (e) => {
+                const x = this.toX(e.offsetX);
+                const y = this.toY(e.offsetY);
+                const ev = makeMouseEvent(e, x, y);
+                fn(ev);
+            };
+        }
+        else {
+            this.node.onclick = null;
+        }
     }
     set onmousemove(fn) {
-        let lastX = -1;
-        let lastY = -1;
-        this.node.onmousemove = (e) => {
-            const x = this.toX(e.offsetX);
-            const y = this.toY(e.offsetY);
-            if (x == lastX && y == lastY)
-                return;
-            lastX = x;
-            lastY = y;
-            const ev = makeMouseEvent(e, x, y);
-            fn(ev);
-        };
+        if (fn) {
+            this.node.onmousemove = (e) => {
+                const x = this.toX(e.offsetX);
+                const y = this.toY(e.offsetY);
+                if (x == this.mouse.x && y == this.mouse.y)
+                    return;
+                this.mouse.x = x;
+                this.mouse.y = y;
+                const ev = makeMouseEvent(e, x, y);
+                fn(ev);
+            };
+        }
+        else {
+            this.node.onmousemove = null;
+        }
     }
     toX(offsetX) {
         return clamp(Math.floor(this.width * (offsetX / this.node.clientWidth)), 0, this.width - 1);
@@ -3943,7 +3967,7 @@ function fromNumber(val, base256 = false) {
     }
     return c;
 }
-function make$4(...args) {
+function make$5(...args) {
     let arg = args[0];
     let base256 = args[1];
     if (args.length == 0)
@@ -3971,7 +3995,7 @@ function make$4(...args) {
     }
     throw new Error("Failed to make color - unknown argument: " + JSON.stringify(arg));
 }
-make.color = make$4;
+make.color = make$5;
 function from$2(...args) {
     const arg = args[0];
     if (arg instanceof Color)
@@ -3983,7 +4007,7 @@ function from$2(...args) {
             return fromName(arg);
         }
     }
-    return make$4(arg, args[1]);
+    return make$5(arg, args[1]);
 }
 // adjusts the luminosity of 2 colors to ensure there is enough separation between them
 function separate(a, b) {
@@ -4038,7 +4062,7 @@ function install(name, ...args) {
     if (args.length == 1) {
         info = args[0];
     }
-    const c = info instanceof Color ? info : make$4(info);
+    const c = info instanceof Color ? info : make$5(info);
     colors[name] = c;
     c.name = name;
     return c;
@@ -4098,7 +4122,7 @@ var color = {
     fromCss: fromCss,
     fromName: fromName,
     fromNumber: fromNumber,
-    make: make$4,
+    make: make$5,
     from: from$2,
     separate: separate,
     swap: swap,
@@ -4168,13 +4192,13 @@ function makeSprite(...args) {
     if (typeof fg === "string")
         fg = from$2(fg);
     else if (Array.isArray(fg))
-        fg = make$4(fg);
+        fg = make$5(fg);
     else if (fg === undefined || fg === null)
         fg = -1;
     if (typeof bg === "string")
         bg = from$2(bg);
     else if (Array.isArray(bg))
-        bg = make$4(bg);
+        bg = make$5(bg);
     else if (bg === undefined || bg === null)
         bg = -1;
     return new Sprite(ch, fg, bg, opacity);
@@ -5332,6 +5356,7 @@ exports.fov = fov;
 exports.frequency = frequency;
 exports.grid = grid;
 exports.io = io;
+exports.loop = loop;
 exports.make = make;
 exports.message = message;
 exports.path = path;

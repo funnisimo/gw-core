@@ -462,10 +462,8 @@ declare const MOUSEMOVE = "mousemove";
 declare const CLICK = "click";
 declare const TICK = "tick";
 declare const MOUSEUP = "mouseup";
+declare type EventHandler = (event: Event) => void;
 declare function setKeymap(keymap: KeyMap): void;
-declare function hasEvents(): number;
-declare function clearEvents(): void;
-declare function pushEvent(ev: Event): void;
 declare function dispatchEvent(ev: Event, km?: KeyMap | CommandFn): Promise<any>;
 declare function makeTickEvent(dt: number): Event;
 declare function makeKeyEvent(e: KeyboardEvent): Event;
@@ -473,15 +471,29 @@ declare function keyCodeDirection(key: string): Loc | null;
 declare function ignoreKeyEvent(e: KeyboardEvent): boolean;
 declare var mouse: XY;
 declare function makeMouseEvent(e: MouseEvent, x: number, y: number): Event;
-declare function pauseEvents(): void;
-declare function resumeEvents(): void;
-declare function nextEvent(ms?: number, match?: EventMatchFn): Promise<Event | null>;
-declare function tickMs(ms?: number): Promise<unknown>;
-declare function nextKeyPress(ms?: number, match?: EventMatchFn): Promise<Event | null>;
-declare function nextKeyOrClick(ms?: number, matchFn?: EventMatchFn): Promise<Event | null>;
-declare function pause(ms: number): Promise<boolean | null>;
-declare function waitForAck(): Promise<boolean | null>;
-declare function loop(keymap: KeyMap): Promise<void>;
+declare class Loop {
+    running: boolean;
+    events: Event[];
+    protected CURRENT_HANDLER: EventHandler | null;
+    protected PAUSED: EventHandler | null;
+    protected LAST_CLICK: XY;
+    constructor();
+    hasEvents(): number;
+    clearEvents(): void;
+    pushEvent(ev: Event): void;
+    nextEvent(ms?: number, match?: EventMatchFn): Promise<Event | null>;
+    run(keymap: KeyMap, ms?: number): Promise<void>;
+    stop(): void;
+    pauseEvents(): void;
+    resumeEvents(): void;
+    tickMs(ms?: number): Promise<unknown>;
+    nextKeyPress(ms?: number, match?: EventMatchFn): Promise<Event | null>;
+    nextKeyOrClick(ms?: number, matchFn?: EventMatchFn): Promise<Event | null>;
+    pause(ms: number): Promise<boolean | null>;
+    waitForAck(): Promise<boolean | null>;
+}
+declare function make$2(): Loop;
+declare const loop: Loop;
 
 type io_d_Event = Event;
 type io_d_CommandFn = CommandFn;
@@ -495,9 +507,6 @@ declare const io_d_CLICK: typeof CLICK;
 declare const io_d_TICK: typeof TICK;
 declare const io_d_MOUSEUP: typeof MOUSEUP;
 declare const io_d_setKeymap: typeof setKeymap;
-declare const io_d_hasEvents: typeof hasEvents;
-declare const io_d_clearEvents: typeof clearEvents;
-declare const io_d_pushEvent: typeof pushEvent;
 declare const io_d_dispatchEvent: typeof dispatchEvent;
 declare const io_d_makeTickEvent: typeof makeTickEvent;
 declare const io_d_makeKeyEvent: typeof makeKeyEvent;
@@ -505,14 +514,8 @@ declare const io_d_keyCodeDirection: typeof keyCodeDirection;
 declare const io_d_ignoreKeyEvent: typeof ignoreKeyEvent;
 declare const io_d_mouse: typeof mouse;
 declare const io_d_makeMouseEvent: typeof makeMouseEvent;
-declare const io_d_pauseEvents: typeof pauseEvents;
-declare const io_d_resumeEvents: typeof resumeEvents;
-declare const io_d_nextEvent: typeof nextEvent;
-declare const io_d_tickMs: typeof tickMs;
-declare const io_d_nextKeyPress: typeof nextKeyPress;
-declare const io_d_nextKeyOrClick: typeof nextKeyOrClick;
-declare const io_d_pause: typeof pause;
-declare const io_d_waitForAck: typeof waitForAck;
+type io_d_Loop = Loop;
+declare const io_d_Loop: typeof Loop;
 declare const io_d_loop: typeof loop;
 declare namespace io_d {
   export {
@@ -528,9 +531,6 @@ declare namespace io_d {
     io_d_TICK as TICK,
     io_d_MOUSEUP as MOUSEUP,
     io_d_setKeymap as setKeymap,
-    io_d_hasEvents as hasEvents,
-    io_d_clearEvents as clearEvents,
-    io_d_pushEvent as pushEvent,
     io_d_dispatchEvent as dispatchEvent,
     io_d_makeTickEvent as makeTickEvent,
     io_d_makeKeyEvent as makeKeyEvent,
@@ -538,14 +538,8 @@ declare namespace io_d {
     io_d_ignoreKeyEvent as ignoreKeyEvent,
     io_d_mouse as mouse,
     io_d_makeMouseEvent as makeMouseEvent,
-    io_d_pauseEvents as pauseEvents,
-    io_d_resumeEvents as resumeEvents,
-    io_d_nextEvent as nextEvent,
-    io_d_tickMs as tickMs,
-    io_d_nextKeyPress as nextKeyPress,
-    io_d_nextKeyOrClick as nextKeyOrClick,
-    io_d_pause as pause,
-    io_d_waitForAck as waitForAck,
+    io_d_Loop as Loop,
+    make$2 as make,
     io_d_loop as loop,
   };
 }
@@ -738,7 +732,7 @@ declare namespace events_d {
 
 declare type FrequencyFn = (danger: number) => number;
 declare type FrequencyConfig = FrequencyFn | number | string | Record<string, number> | null;
-declare function make$2(v?: FrequencyConfig): (level: number) => any;
+declare function make$3(v?: FrequencyConfig): (level: number) => any;
 
 type frequency_d_FrequencyFn = FrequencyFn;
 type frequency_d_FrequencyConfig = FrequencyConfig;
@@ -746,7 +740,7 @@ declare namespace frequency_d {
   export {
     frequency_d_FrequencyFn as FrequencyFn,
     frequency_d_FrequencyConfig as FrequencyConfig,
-    make$2 as make,
+    make$3 as make,
   };
 }
 
@@ -864,11 +858,11 @@ declare function fromArray(vals: ColorData, base256?: boolean): Color;
 declare function fromCss(css: string): Color;
 declare function fromName(name: string): Color;
 declare function fromNumber(val: number, base256?: boolean): Color;
-declare function make$3(): Color;
-declare function make$3(rgb: number, base256?: boolean): Color;
-declare function make$3(color?: ColorBase | null): Color;
-declare function make$3(arrayLike: ColorData, base256?: boolean): Color;
-declare function make$3(...rgb: number[]): Color;
+declare function make$4(): Color;
+declare function make$4(rgb: number, base256?: boolean): Color;
+declare function make$4(color?: ColorBase | null): Color;
+declare function make$4(arrayLike: ColorData, base256?: boolean): Color;
+declare function make$4(...rgb: number[]): Color;
 declare function from$2(): Color;
 declare function from$2(rgb: number, base256?: boolean): Color;
 declare function from$2(color?: ColorBase | null): Color;
@@ -906,7 +900,7 @@ declare namespace color_d {
     color_d_fromCss as fromCss,
     color_d_fromName as fromName,
     color_d_fromNumber as fromNumber,
-    make$3 as make,
+    make$4 as make,
     from$2 as from,
     color_d_separate as separate,
     color_d_swap as swap,
@@ -1138,6 +1132,8 @@ interface CanvasOptions {
     glyphs: Glyphs;
     div?: HTMLElement | string;
     render?: boolean;
+    io?: Loop;
+    loop?: Loop;
 }
 interface ImageOptions extends CanvasOptions {
     image: HTMLImageElement | string;
@@ -1147,6 +1143,7 @@ declare class NotSupportedError extends Error {
     constructor(...params: any[]);
 }
 declare abstract class BaseCanvas implements BufferTarget {
+    mouse: XY;
     protected _data: Uint32Array;
     protected _renderRequested: boolean;
     protected _glyphs: Glyphs;
@@ -1177,8 +1174,8 @@ declare abstract class BaseCanvas implements BufferTarget {
     copyTo(data: Uint32Array): void;
     abstract render(): void;
     hasXY(x: number, y: number): boolean;
-    set onclick(fn: MouseEventFn);
-    set onmousemove(fn: MouseEventFn);
+    set onclick(fn: MouseEventFn | null);
+    set onmousemove(fn: MouseEventFn | null);
     toX(offsetX: number): number;
     toY(offsetY: number): number;
 }
@@ -1408,7 +1405,7 @@ declare namespace message_d {
 
 declare const data: any;
 declare const config: any;
-declare const make$4: any;
+declare const make$5: any;
 declare const flags: any;
 
-export { Random, buffer_d as buffer, index_d as canvas, color_d as color, colors, config, cosmetic, data, events_d as events, flag_d as flag, flags, fov_d as fov, frequency_d as frequency, grid_d as grid, io_d as io, make$4 as make, message_d as message, path_d as path, random, range_d as range, scheduler_d as scheduler, sprites, index_d$1 as text, types_d as types, utils_d as utils };
+export { Random, buffer_d as buffer, index_d as canvas, color_d as color, colors, config, cosmetic, data, events_d as events, flag_d as flag, flags, fov_d as fov, frequency_d as frequency, grid_d as grid, io_d as io, loop, make$5 as make, message_d as message, path_d as path, random, range_d as range, scheduler_d as scheduler, sprites, index_d$1 as text, types_d as types, utils_d as utils };
