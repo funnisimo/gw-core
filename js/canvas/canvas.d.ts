@@ -44,7 +44,7 @@ export declare abstract class BaseCanvas implements BufferTarget {
     private _configure;
     protected _setGlyphs(glyphs: Glyphs): boolean;
     resize(width: number, height: number): void;
-    draw(x: number, y: number, glyph: number, fg: number, bg: number): void;
+    draw(x: number, y: number, glyph: number, fg: number, bg: number): this;
     protected _requestRender(): void;
     protected _set(x: number, y: number, style: number): boolean;
     copy(data: Uint32Array): void;

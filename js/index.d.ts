@@ -11,6 +11,7 @@ export * as scheduler from "./scheduler";
 export * as canvas from "./canvas/index";
 export * as color from "./color";
 export * as buffer from "./buffer";
+export * as dancingBuffer from "./dancingBuffer";
 export * as text from "./text/index";
 export * as types from "./types";
 export * as message from "./message";

@@ -110,6 +110,7 @@ export class BaseCanvas {
         fg = fg & 0xfff;
         const style = glyph * (1 << 24) + bg * (1 << 12) + fg;
         this._set(x, y, style);
+        return this;
     }
     _requestRender() {
         if (this._renderRequested)

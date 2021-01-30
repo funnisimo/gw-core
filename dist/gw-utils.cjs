@@ -3247,6 +3247,7 @@ class BaseCanvas {
         fg = fg & 0xfff;
         const style = glyph * (1 << 24) + bg * (1 << 12) + fg;
         this._set(x, y, style);
+        return this;
     }
     _requestRender() {
         if (this._renderRequested)
@@ -5175,6 +5176,221 @@ var buffer = {
     Buffer: Buffer
 };
 
+class DancingData {
+    constructor(width, height) {
+        this._data = [];
+        this._width = width;
+        this._height = height;
+        this._data = new Array(width * height).fill(0).map(() => new Mixer());
+    }
+    get width() {
+        return this._width;
+    }
+    get height() {
+        return this._height;
+    }
+    get(x, y) {
+        let index = y * this.width + x;
+        const style = this._data[index];
+        return style;
+    }
+    toGlyph(ch) {
+        if (typeof ch === "number")
+            return ch;
+        if (!ch || !ch.length)
+            return -1; // 0 handled elsewhere
+        return ch.charCodeAt(0);
+    }
+    draw(x, y, glyph = -1, fg = -1, // TODO - White?
+    bg = -1 // TODO - Black?
+    ) {
+        let index = y * this.width + x;
+        const current = this._data[index];
+        if (!current)
+            return;
+        current.draw(glyph, fg, bg);
+        return this;
+    }
+    // This is without opacity - opacity must be done in Mixer
+    drawSprite(x, y, sprite) {
+        let index = y * this.width + x;
+        const current = this._data[index];
+        if (!current)
+            return;
+        current.drawSprite(sprite);
+        return this;
+    }
+    blackOut(...args) {
+        if (args.length == 0) {
+            return this.fill(0, 0, 0);
+        }
+        return this.draw(args[0], args[1], 0, 0, 0);
+    }
+    fill(glyph = 0, fg = 0xfff, bg = 0) {
+        this._data.forEach((m) => m.draw(glyph, fg, bg));
+        return this;
+    }
+    copy(other) {
+        if (other instanceof DataBuffer) {
+            this._data.forEach((m, i) => {
+                const x = i % this.width;
+                const y = Math.floor(i / this.width);
+                m.copy(other.get(x, y));
+            });
+        }
+        else {
+            this._data.forEach((m, i) => {
+                m.copy(other._data[i]);
+            });
+        }
+        return this;
+    }
+    drawText(x, y, text, fg = 0xfff, bg = -1) {
+        if (typeof fg !== "number")
+            fg = from$2(fg);
+        if (typeof bg !== "number")
+            bg = from$2(bg);
+        eachChar(text, (ch, fg0, bg0, i) => {
+            if (x + i >= this.width)
+                return;
+            this.draw(i + x, y, ch, fg0, bg0);
+        }, fg, bg);
+        return ++y;
+    }
+    wrapText(x, y, width, text, fg = 0xfff, bg = -1, indent = 0) {
+        if (typeof fg !== "number")
+            fg = from$2(fg);
+        if (typeof bg !== "number")
+            bg = from$2(bg);
+        width = Math.min(width, this.width - x);
+        text = wordWrap(text, width, indent);
+        let xi = x;
+        eachChar(text, (ch, fg0, bg0) => {
+            if (ch == "\n") {
+                while (xi < x + width) {
+                    this.draw(xi++, y, 0, 0x000, bg0);
+                }
+                ++y;
+                xi = x + indent;
+                return;
+            }
+            this.draw(xi++, y, ch, fg0, bg0);
+        }, fg, bg);
+        while (xi < x + width) {
+            this.draw(xi++, y, 0, 0x000, bg);
+        }
+        return ++y;
+    }
+    fillRect(x, y, w, h, ch = -1, fg = -1, bg = -1) {
+        if (ch === null)
+            ch = -1;
+        if (typeof ch !== "number")
+            ch = this.toGlyph(ch);
+        if (typeof fg !== "number")
+            fg = from$2(fg).toInt();
+        if (typeof bg !== "number")
+            bg = from$2(bg).toInt();
+        for (let i = x; i < x + w; ++i) {
+            for (let j = y; j < y + h; ++j) {
+                this.draw(i, j, ch, fg, bg);
+            }
+        }
+        return this;
+    }
+    blackOutRect(x, y, w, h, bg = 0) {
+        if (typeof bg !== "number")
+            bg = from$2(bg);
+        return this.fillRect(x, y, w, h, 0, 0, bg);
+    }
+    highlight(x, y, color$1, strength) {
+        if (typeof color$1 !== "number") {
+            color$1 = from$2(color$1);
+        }
+        const mixer = this.get(x, y);
+        mixer.fg.add(color$1, strength);
+        mixer.bg.add(color$1, strength);
+        return this;
+    }
+    mix(color$1, percent) {
+        if (typeof color$1 !== "number")
+            color$1 = from$2(color$1);
+        for (let x = 0; x < this.width; ++x) {
+            for (let y = 0; y < this.height; ++y) {
+                const mixer = this.get(x, y);
+                mixer.fg.mix(color$1, percent);
+                mixer.bg.mix(color$1, percent);
+            }
+        }
+        return this;
+    }
+    dump() {
+        const data = [];
+        let header = "    ";
+        for (let x = 0; x < this.width; ++x) {
+            if (x % 10 == 0)
+                header += " ";
+            header += x % 10;
+        }
+        data.push(header);
+        data.push("");
+        for (let y = 0; y < this.height; ++y) {
+            let line = `${("" + y).padStart(2)}] `;
+            for (let x = 0; x < this.width; ++x) {
+                if (x % 10 == 0)
+                    line += " ";
+                const mixer = this.get(x, y);
+                let glyph = mixer.ch;
+                if (typeof glyph === 'number') {
+                    glyph = String.fromCharCode(glyph || 32);
+                }
+                line += glyph[0];
+            }
+            data.push(line);
+        }
+        console.log(data.join("\n"));
+    }
+}
+class DancingBuffer extends DancingData {
+    constructor(canvas) {
+        super(canvas.width, canvas.height);
+        this._target = canvas;
+        this.load();
+    }
+    // get canvas() { return this._target; }
+    toGlyph(ch) {
+        return this._target.toGlyph(ch);
+    }
+    render() {
+        this._data.forEach((m, i) => {
+            const x = i % this.width;
+            const y = Math.floor(i / this.width);
+            if (typeof m.ch === 'string') {
+                m.ch = this.toGlyph(m.ch);
+            }
+            this._target.draw(x, y, m.ch, m.fg.toInt(), m.bg.toInt());
+        });
+        return this;
+    }
+    load() {
+        const data = new Uint32Array(this.width * this.height);
+        this._target.copyTo(data);
+        data.forEach((style, index) => {
+            const mixer = this._data[index] || 0;
+            const ch = style >> 24;
+            const bg = (style >> 12) & 0xfff;
+            const fg = style & 0xfff;
+            mixer.draw(ch, bg, fg);
+        });
+        return this;
+    }
+}
+
+var dancingBuffer = {
+    __proto__: null,
+    DancingData: DancingData,
+    DancingBuffer: DancingBuffer
+};
+
 class Bounds {
     constructor(x, y, w, h) {
         this.x = x;
@@ -5348,6 +5564,7 @@ exports.color = color;
 exports.colors = colors;
 exports.config = config;
 exports.cosmetic = cosmetic;
+exports.dancingBuffer = dancingBuffer;
 exports.data = data;
 exports.events = events;
 exports.flag = flag;

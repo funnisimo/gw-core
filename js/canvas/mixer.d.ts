@@ -11,7 +11,7 @@ export declare class Mixer implements DrawInfo {
     bg: Color.Color;
     constructor(base?: Partial<DrawInfo>);
     protected _changed(): this;
-    copy(other: Mixer): this;
+    copy(other: DrawInfo): this;
     clone(): Mixer;
     equals(other: Mixer): boolean;
     nullify(): this;
