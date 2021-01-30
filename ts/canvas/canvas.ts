@@ -154,6 +154,7 @@ export abstract class BaseCanvas implements BufferTarget {
         fg = fg & 0xfff;
         const style = glyph * (1 << 24) + bg * (1 << 12) + fg;
         this._set(x, y, style);
+        return this;
     }
 
     protected _requestRender() {

@@ -1045,7 +1045,7 @@ declare class Mixer implements DrawInfo {
     bg: Color;
     constructor(base?: Partial<DrawInfo>);
     protected _changed(): this;
-    copy(other: Mixer): this;
+    copy(other: DrawInfo): this;
     clone(): Mixer;
     equals(other: Mixer): boolean;
     nullify(): this;
@@ -1065,11 +1065,6 @@ declare class Mixer implements DrawInfo {
     toString(): string;
 }
 
-interface Data {
-    ch: number;
-    fg: number;
-    bg: number;
-}
 declare class DataBuffer {
     protected _data: Uint32Array;
     private _width;
@@ -1077,7 +1072,7 @@ declare class DataBuffer {
     constructor(width: number, height: number);
     get width(): number;
     get height(): number;
-    get(x: number, y: number): Data;
+    get(x: number, y: number): DrawInfo;
     toGlyph(ch: string | number): number;
     draw(x: number, y: number, glyph?: number | string, fg?: ColorBase, // TODO - White?
     bg?: ColorBase): this;
@@ -1097,6 +1092,7 @@ declare class DataBuffer {
 interface BufferTarget {
     readonly width: number;
     readonly height: number;
+    draw(x: number, y: number, glyph: number, fg: number, bg: number): BufferTarget;
     copyTo(dest: Uint32Array): void;
     copy(src: Uint32Array): void;
     toGlyph(ch: string | number): number;
@@ -1109,7 +1105,6 @@ declare class Buffer extends DataBuffer {
     load(): this;
 }
 
-type buffer_d_Data = Data;
 type buffer_d_DataBuffer = DataBuffer;
 declare const buffer_d_DataBuffer: typeof DataBuffer;
 type buffer_d_BufferTarget = BufferTarget;
@@ -1117,7 +1112,6 @@ type buffer_d_Buffer = Buffer;
 declare const buffer_d_Buffer: typeof Buffer;
 declare namespace buffer_d {
   export {
-    buffer_d_Data as Data,
     buffer_d_DataBuffer as DataBuffer,
     buffer_d_BufferTarget as BufferTarget,
     buffer_d_Buffer as Buffer,
@@ -1166,7 +1160,7 @@ declare abstract class BaseCanvas implements BufferTarget {
     private _configure;
     protected _setGlyphs(glyphs: Glyphs): boolean;
     resize(width: number, height: number): void;
-    draw(x: number, y: number, glyph: number, fg: number, bg: number): void;
+    draw(x: number, y: number, glyph: number, fg: number, bg: number): this;
     protected _requestRender(): void;
     protected _set(x: number, y: number, style: number): boolean;
     copy(data: Uint32Array): void;
@@ -1283,6 +1277,49 @@ declare namespace index_d {
     index_d_Mixer as Mixer,
     index_d_GlyphOptions as GlyphOptions,
     index_d_Glyphs as Glyphs,
+  };
+}
+
+declare class DancingData {
+    protected _data: Mixer[];
+    private _width;
+    private _height;
+    constructor(width: number, height: number);
+    get width(): number;
+    get height(): number;
+    get(x: number, y: number): Mixer;
+    toGlyph(ch: string | number): number;
+    draw(x: number, y: number, glyph?: number | string, fg?: ColorBase, // TODO - White?
+    bg?: ColorBase): this | undefined;
+    drawSprite(x: number, y: number, sprite: Partial<DrawInfo>): this | undefined;
+    blackOut(x: number, y: number): void;
+    blackOut(): void;
+    fill(glyph?: number | string, fg?: number, bg?: number): this;
+    copy(other: DataBuffer | DancingData): this;
+    drawText(x: number, y: number, text: string, fg?: ColorBase, bg?: ColorBase): number;
+    wrapText(x: number, y: number, width: number, text: string, fg?: Color | number | string, bg?: Color | number | string, indent?: number): number;
+    fillRect(x: number, y: number, w: number, h: number, ch?: string | number | null, fg?: ColorBase | null, bg?: ColorBase | null): this;
+    blackOutRect(x: number, y: number, w: number, h: number, bg?: ColorBase): this;
+    highlight(x: number, y: number, color: ColorBase, strength: number): this;
+    mix(color: ColorBase, percent: number): this;
+    dump(): void;
+}
+declare class DancingBuffer extends DancingData {
+    private _target;
+    constructor(canvas: BufferTarget);
+    toGlyph(ch: string | number): number;
+    render(): this;
+    load(): this;
+}
+
+type dancingBuffer_d_DancingData = DancingData;
+declare const dancingBuffer_d_DancingData: typeof DancingData;
+type dancingBuffer_d_DancingBuffer = DancingBuffer;
+declare const dancingBuffer_d_DancingBuffer: typeof DancingBuffer;
+declare namespace dancingBuffer_d {
+  export {
+    dancingBuffer_d_DancingData as DancingData,
+    dancingBuffer_d_DancingBuffer as DancingBuffer,
   };
 }
 
@@ -1408,4 +1445,4 @@ declare const config: any;
 declare const make$5: any;
 declare const flags: any;
 
-export { Random, buffer_d as buffer, index_d as canvas, color_d as color, colors, config, cosmetic, data, events_d as events, flag_d as flag, flags, fov_d as fov, frequency_d as frequency, grid_d as grid, io_d as io, loop, make$5 as make, message_d as message, path_d as path, random, range_d as range, scheduler_d as scheduler, sprites, index_d$1 as text, types_d as types, utils_d as utils };
+export { Random, buffer_d as buffer, index_d as canvas, color_d as color, colors, config, cosmetic, dancingBuffer_d as dancingBuffer, data, events_d as events, flag_d as flag, flags, fov_d as fov, frequency_d as frequency, grid_d as grid, io_d as io, loop, make$5 as make, message_d as message, path_d as path, random, range_d as range, scheduler_d as scheduler, sprites, index_d$1 as text, types_d as types, utils_d as utils };

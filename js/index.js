@@ -24,6 +24,8 @@ import * as color_1 from "./color";
 export { color_1 as color };
 import * as buffer_1 from "./buffer";
 export { buffer_1 as buffer };
+import * as dancingBuffer_1 from "./dancingBuffer";
+export { dancingBuffer_1 as dancingBuffer };
 import * as text_1 from "./text/index";
 export { text_1 as text };
 import * as types_1 from "./types";

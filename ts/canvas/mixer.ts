@@ -24,7 +24,7 @@ export class Mixer implements DrawInfo {
         return this;
     }
 
-    copy(other: Mixer) {
+    copy(other: DrawInfo) {
         this.ch = other.ch;
         this.fg.copy(other.fg);
         this.bg.copy(other.bg);
