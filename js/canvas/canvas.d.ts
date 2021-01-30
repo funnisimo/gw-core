@@ -1,7 +1,7 @@
-import { Glyphs, GlyphOptions } from "./glyphs";
-import { BufferTarget } from "../buffer";
-import * as IO from "../io";
-import * as Utils from "../utils";
+import { Glyphs, GlyphOptions } from './glyphs';
+import { BufferTarget } from '../buffer';
+import * as IO from '../io';
+import * as Utils from '../utils';
 export declare type MouseEventFn = (ev: IO.Event) => void;
 export interface CanvasOptions {
     width?: number;
@@ -53,6 +53,7 @@ export declare abstract class BaseCanvas implements BufferTarget {
     hasXY(x: number, y: number): boolean;
     set onclick(fn: MouseEventFn | null);
     set onmousemove(fn: MouseEventFn | null);
+    set onmouseup(fn: MouseEventFn | null);
     toX(offsetX: number): number;
     toY(offsetY: number): number;
 }

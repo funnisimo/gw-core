@@ -323,6 +323,7 @@ declare class Grid<T> extends Array<Array<T>> {
     forEach(fn: GridEach<T>): void;
     eachNeighbor(x: number, y: number, fn: GridEach<T>, only4dirs?: boolean): void;
     forRect(x: number, y: number, w: number, h: number, fn: GridEach<T>): void;
+    randomEach(fn: GridEach<T>): void;
     /**
      * Returns a new Grid with the cells mapped according to the supplied function.
      * @param fn - The function that maps the cell values
@@ -469,11 +470,11 @@ declare function makeTickEvent(dt: number): Event;
 declare function makeKeyEvent(e: KeyboardEvent): Event;
 declare function keyCodeDirection(key: string): Loc | null;
 declare function ignoreKeyEvent(e: KeyboardEvent): boolean;
-declare var mouse: XY;
 declare function makeMouseEvent(e: MouseEvent, x: number, y: number): Event;
 declare class Loop {
     running: boolean;
     events: Event[];
+    mouse: XY;
     protected CURRENT_HANDLER: EventHandler | null;
     protected PAUSED: EventHandler | null;
     protected LAST_CLICK: XY;
@@ -512,7 +513,6 @@ declare const io_d_makeTickEvent: typeof makeTickEvent;
 declare const io_d_makeKeyEvent: typeof makeKeyEvent;
 declare const io_d_keyCodeDirection: typeof keyCodeDirection;
 declare const io_d_ignoreKeyEvent: typeof ignoreKeyEvent;
-declare const io_d_mouse: typeof mouse;
 declare const io_d_makeMouseEvent: typeof makeMouseEvent;
 type io_d_Loop = Loop;
 declare const io_d_Loop: typeof Loop;
@@ -536,7 +536,6 @@ declare namespace io_d {
     io_d_makeKeyEvent as makeKeyEvent,
     io_d_keyCodeDirection as keyCodeDirection,
     io_d_ignoreKeyEvent as ignoreKeyEvent,
-    io_d_mouse as mouse,
     io_d_makeMouseEvent as makeMouseEvent,
     io_d_Loop as Loop,
     make$2 as make,
@@ -1176,6 +1175,7 @@ declare abstract class BaseCanvas implements BufferTarget {
     hasXY(x: number, y: number): boolean;
     set onclick(fn: MouseEventFn | null);
     set onmousemove(fn: MouseEventFn | null);
+    set onmouseup(fn: MouseEventFn | null);
     toX(offsetX: number): number;
     toY(offsetY: number): number;
 }

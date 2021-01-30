@@ -1,4 +1,4 @@
-import * as Utils from "./utils";
+import * as Utils from './utils';
 declare type Loc = Utils.Loc;
 export declare type ArrayInit<T> = (i: number) => T;
 export declare function makeArray<T>(l: number, fn?: T | ArrayInit<T>): Array<T>;
@@ -24,6 +24,7 @@ export declare class Grid<T> extends Array<Array<T>> {
     forEach(fn: GridEach<T>): void;
     eachNeighbor(x: number, y: number, fn: GridEach<T>, only4dirs?: boolean): void;
     forRect(x: number, y: number, w: number, h: number, fn: GridEach<T>): void;
+    randomEach(fn: GridEach<T>): void;
     /**
      * Returns a new Grid with the cells mapped according to the supplied function.
      * @param fn - The function that maps the cell values

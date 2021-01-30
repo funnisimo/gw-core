@@ -31,11 +31,11 @@ export declare function makeTickEvent(dt: number): Event;
 export declare function makeKeyEvent(e: KeyboardEvent): Event;
 export declare function keyCodeDirection(key: string): Utils.Loc | null;
 export declare function ignoreKeyEvent(e: KeyboardEvent): boolean;
-export declare var mouse: Utils.XY;
 export declare function makeMouseEvent(e: MouseEvent, x: number, y: number): Event;
 export declare class Loop {
     running: boolean;
     events: Event[];
+    mouse: Utils.XY;
     protected CURRENT_HANDLER: EventHandler | null;
     protected PAUSED: EventHandler | null;
     protected LAST_CLICK: Utils.XY;

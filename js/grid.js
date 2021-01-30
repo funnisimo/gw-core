@@ -1,6 +1,6 @@
-import { random } from "./random";
-import * as Utils from "./utils";
-import { make as Make } from "./gw";
+import { random } from './random';
+import * as Utils from './utils';
+import { make as Make } from './gw';
 const DIRS = Utils.DIRS;
 const CDIRS = Utils.CLOCK_DIRS;
 export function makeArray(l, fn) {
@@ -15,32 +15,32 @@ export function makeArray(l, fn) {
 }
 function _formatGridValue(v) {
     if (v === false) {
-        return " ";
+        return ' ';
     }
     else if (v === true) {
-        return "T";
+        return 'T';
     }
     else if (v < 10) {
-        return "" + v;
+        return '' + v;
     }
     else if (v < 36) {
-        return String.fromCharCode("a".charCodeAt(0) + v - 10);
+        return String.fromCharCode('a'.charCodeAt(0) + v - 10);
     }
     else if (v < 62) {
-        return String.fromCharCode("A".charCodeAt(0) + v - 10 - 26);
+        return String.fromCharCode('A'.charCodeAt(0) + v - 10 - 26);
     }
-    else if (typeof v === "string") {
+    else if (typeof v === 'string') {
         return v[0];
     }
     else {
-        return "#";
+        return '#';
     }
 }
 export class Grid extends Array {
     constructor(w, h, v) {
         super(w);
         for (let x = 0; x < w; ++x) {
-            if (typeof v === "function") {
+            if (typeof v === 'function') {
                 this[x] = new Array(h)
                     .fill(0)
                     .map((_, i) => v(x, i));
@@ -103,6 +103,14 @@ export class Grid extends Array {
             }
         }
     }
+    randomEach(fn) {
+        const sequence = random.sequence(this.width * this.height);
+        sequence.forEach((n) => {
+            const x = n % this.width;
+            const y = Math.floor(n / this.width);
+            fn(this[x][y], x, y, this);
+        });
+    }
     /**
      * Returns a new Grid with the cells mapped according to the supplied function.
      * @param fn - The function that maps the cell values
@@ -124,7 +132,8 @@ export class Grid extends Array {
         for (i = Math.max(0, x - radius - 1); i < Math.min(this.width, x + radius + 1); i++) {
             for (j = Math.max(0, y - radius - 1); j < Math.min(this.height, y + radius + 1); j++) {
                 if (this.hasXY(i, j) &&
-                    (i - x) * (i - x) + (j - y) * (j - y) < radius * radius + radius) {
+                    (i - x) * (i - x) + (j - y) * (j - y) <
+                        radius * radius + radius) {
                     // + radius softens the circle
                     fn(this[i][j], i, j, this);
                 }
@@ -139,7 +148,12 @@ export class Grid extends Array {
             (x == 0 || x == this.width - 1 || y == 0 || y == this.height - 1));
     }
     calcBounds() {
-        const bounds = { left: this.width, top: this.height, right: 0, bottom: 0 };
+        const bounds = {
+            left: this.width,
+            top: this.height,
+            right: 0,
+            bottom: 0,
+        };
         this.forEach((v, i, j) => {
             if (!v)
                 return;
@@ -177,7 +191,8 @@ export class Grid extends Array {
         for (i = Math.max(0, x - radius - 1); i < Math.min(this.width, x + radius + 1); i++) {
             for (j = Math.max(0, y - radius - 1); j < Math.min(this.height, y + radius + 1); j++) {
                 if (this.hasXY(i, j) &&
-                    (i - x) * (i - x) + (j - y) * (j - y) < radius * radius + radius) {
+                    (i - x) * (i - x) + (j - y) * (j - y) <
+                        radius * radius + radius) {
                     // + radius softens the circle
                     this[i][j] = fn(this[i][j], i, j, this);
                 }
@@ -191,15 +206,15 @@ export class Grid extends Array {
      */
     // @ts-ignore
     fill(v) {
-        const fn = typeof v === "function" ? v : () => v;
+        const fn = typeof v === 'function' ? v : () => v;
         this.update(fn);
     }
     fillRect(x, y, w, h, v) {
-        const fn = typeof v === "function" ? v : () => v;
+        const fn = typeof v === 'function' ? v : () => v;
         this.updateRect(x, y, w, h, fn);
     }
     fillCircle(x, y, radius, v) {
-        const fn = typeof v === "function" ? v : () => v;
+        const fn = typeof v === 'function' ? v : () => v;
         this.updateCircle(x, y, radius, fn);
     }
     replace(findValue, replaceValue) {
@@ -210,7 +225,7 @@ export class Grid extends Array {
         this.update((_, i, j) => from[i][j]);
     }
     count(match) {
-        const fn = typeof match === "function"
+        const fn = typeof match === 'function'
             ? match
             : (v) => v == match;
         let count = 0;
@@ -232,17 +247,17 @@ export class Grid extends Array {
         const bottom = Utils.clamp(top + height, 1, this.height - 1);
         let output = [];
         for (j = top; j <= bottom; j++) {
-            let line = ("" + j + "]").padStart(3, " ");
+            let line = ('' + j + ']').padStart(3, ' ');
             for (i = left; i <= right; i++) {
                 if (i % 10 == 0) {
-                    line += " ";
+                    line += ' ';
                 }
                 const v = this[i][j];
                 line += fmtFn(v, i, j)[0];
             }
             output.push(line);
         }
-        console.log(output.join("\n"));
+        console.log(output.join('\n'));
     }
     dumpAround(x, y, radius) {
         this.dumpRect(x - radius, y - radius, 2 * radius, 2 * radius);
@@ -251,7 +266,9 @@ export class Grid extends Array {
     closestMatchingLoc(x, y, v) {
         let bestLoc = [-1, -1];
         let bestDistance = 100 * (this.width + this.height);
-        const fn = typeof v === "function" ? v : (val) => val == v;
+        const fn = typeof v === 'function'
+            ? v
+            : (val) => val == v;
         this.forEach((v, i, j) => {
             if (fn(v, i, j, this)) {
                 const dist = Math.floor(100 * Utils.distanceBetween(x, y, i, j));
@@ -269,7 +286,9 @@ export class Grid extends Array {
         return bestLoc;
     }
     firstMatchingLoc(v) {
-        const fn = typeof v === "function" ? v : (val) => val == v;
+        const fn = typeof v === 'function'
+            ? v
+            : (val) => val == v;
         for (let i = 0; i < this.width; ++i) {
             for (let j = 0; j < this.height; ++j) {
                 if (fn(this[i][j], i, j, this)) {
@@ -282,7 +301,9 @@ export class Grid extends Array {
     randomMatchingLoc(v, deterministic = false) {
         let locationCount = 0;
         let i, j, index;
-        const fn = typeof v === "function" ? v : (val) => val == v;
+        const fn = typeof v === 'function'
+            ? v
+            : (val) => val == v;
         locationCount = 0;
         this.forEach((v, i, j) => {
             if (fn(v, i, j, this)) {
@@ -313,14 +334,19 @@ export class Grid extends Array {
     matchingLocNear(x, y, v, deterministic = false) {
         let loc = [-1, -1];
         let i, j, k, candidateLocs, randIndex;
-        const fn = typeof v === "function" ? v : (val) => val == v;
+        const fn = typeof v === 'function'
+            ? v
+            : (val) => val == v;
         candidateLocs = 0;
         // count up the number of candidate locations
         for (k = 0; k < Math.max(this.width, this.height) && !candidateLocs; k++) {
             for (i = x - k; i <= x + k; i++) {
                 for (j = y - k; j <= y + k; j++) {
                     if (this.hasXY(i, j) &&
-                        (i == x - k || i == x + k || j == y - k || j == y + k) &&
+                        (i == x - k ||
+                            i == x + k ||
+                            j == y - k ||
+                            j == y + k) &&
                         fn(this[i][j], i, j, this)) {
                         candidateLocs++;
                     }
@@ -341,7 +367,10 @@ export class Grid extends Array {
             for (i = x - k; i <= x + k; i++) {
                 for (j = y - k; j <= y + k; j++) {
                     if (this.hasXY(i, j) &&
-                        (i == x - k || i == x + k || j == y - k || j == y + k) &&
+                        (i == x - k ||
+                            i == x + k ||
+                            j == y - k ||
+                            j == y + k) &&
                         fn(this[i][j], i, j, this)) {
                         if (--randIndex == 0) {
                             loc[0] = i;
@@ -374,8 +403,10 @@ export class Grid extends Array {
             newX = x + CDIRS[dir][0];
             newY = y + CDIRS[dir][1];
             // Counts every transition from passable to impassable or vice-versa on the way around the cell:
-            const newOk = this.hasXY(newX, newY) && testFn(this[newX][newY], newX, newY, this);
-            const oldOk = this.hasXY(oldX, oldY) && testFn(this[oldX][oldY], oldX, oldY, this);
+            const newOk = this.hasXY(newX, newY) &&
+                testFn(this[newX][newY], newX, newY, this);
+            const oldOk = this.hasXY(oldX, oldY) &&
+                testFn(this[oldX][oldY], oldX, oldY, this);
             if (newOk)
                 ++matchCount;
             if (newOk != oldOk) {
@@ -402,7 +433,7 @@ export class NumGrid extends Grid {
     }
     static alloc(w, h, v = 0) {
         if (!w || !h)
-            throw new Error("Grid alloc requires width and height parameters.");
+            throw new Error('Grid alloc requires width and height parameters.');
         ++GRID_ACTIVE_COUNT;
         ++GRID_ALLOC_COUNT;
         let grid = GRID_CACHE.pop();
@@ -423,7 +454,7 @@ export class NumGrid extends Grid {
         }
     }
     _resize(width, height, v = 0) {
-        const fn = typeof v === "function" ? v : () => v;
+        const fn = typeof v === 'function' ? v : () => v;
         while (this.length < width)
             this.push([]);
         this.length = width;
@@ -457,12 +488,12 @@ export class NumGrid extends Grid {
         let dir;
         let newX, newY, fillCount = 1;
         if (fillValue >= eligibleValueMin && fillValue <= eligibleValueMax) {
-            throw new Error("Invalid grid flood fill");
+            throw new Error('Invalid grid flood fill');
         }
         const ok = (x, y) => {
-            return this.hasXY(x, y) &&
+            return (this.hasXY(x, y) &&
                 this[x][y] >= eligibleValueMin &&
-                this[x][y] <= eligibleValueMax;
+                this[x][y] <= eligibleValueMax);
         };
         if (!ok(x, y))
             return 0;
@@ -496,10 +527,10 @@ export class NumGrid extends Grid {
     floodFill(x, y, matchValue, fillValue) {
         let dir;
         let newX, newY, numberOfCells = 1;
-        const matchFn = typeof matchValue == "function"
+        const matchFn = typeof matchValue == 'function'
             ? matchValue
             : (v) => v == matchValue;
-        const fillFn = typeof fillValue == "function" ? fillValue : () => fillValue;
+        const fillFn = typeof fillValue == 'function' ? fillValue : () => fillValue;
         this[x][y] = fillFn(this[x][y], x, y, this);
         // Iterate through the four cardinal neighbors.
         for (dir = 0; dir < 4; dir++) {
@@ -532,11 +563,12 @@ export class NumGrid extends Grid {
                         nbCount++;
                     }
                 }
-                if (!buffer2[i][j] && birthParameters[nbCount] == "t") {
+                if (!buffer2[i][j] && birthParameters[nbCount] == 't') {
                     this[i][j] = 1; // birth
                     didSomething = true;
                 }
-                else if (buffer2[i][j] && survivalParameters[nbCount] == "t") {
+                else if (buffer2[i][j] &&
+                    survivalParameters[nbCount] == 't') {
                     // survival
                 }
                 else {
@@ -549,7 +581,7 @@ export class NumGrid extends Grid {
         return didSomething;
     }
     // Loads up **grid with the results of a cellular automata simulation.
-    fillBlob(roundCount, minBlobWidth, minBlobHeight, maxBlobWidth, maxBlobHeight, percentSeeded = 50, birthParameters = "ffffffttt", survivalParameters = "ffffttttt") {
+    fillBlob(roundCount, minBlobWidth, minBlobHeight, maxBlobWidth, maxBlobHeight, percentSeeded = 50, birthParameters = 'ffffffttt', survivalParameters = 'ffffttttt') {
         let i, j, k;
         let blobNumber, blobSize, topBlobNumber, topBlobSize;
         let topBlobMinX, topBlobMinY, topBlobMaxX, topBlobMaxY, blobWidth, blobHeight;
@@ -573,7 +605,9 @@ export class NumGrid extends Grid {
             // Fill relevant portion with noise based on the percentSeeded argument.
             for (i = 0; i < maxBlobWidth; i++) {
                 for (j = 0; j < maxBlobHeight; j++) {
-                    this[i + left][j + top] = random.chance(percentSeeded) ? 1 : 0;
+                    this[i + left][j + top] = random.chance(percentSeeded)
+                        ? 1
+                        : 0;
                 }
             }
             // Some iterations of cellular automata
@@ -674,13 +708,13 @@ export const free = NumGrid.free.bind(NumGrid);
 export function make(w, h, v) {
     if (v === undefined)
         return new NumGrid(w, h, 0);
-    if (typeof v === "number")
+    if (typeof v === 'number')
         return new NumGrid(w, h, v);
     return new Grid(w, h, v);
 }
 Make.grid = make;
 export function offsetZip(destGrid, srcGrid, srcToDestX, srcToDestY, value) {
-    const fn = typeof value === "function"
+    const fn = typeof value === 'function'
         ? value
         : (_d, _s, dx, dy) => (destGrid[dx][dy] = value);
     srcGrid.forEach((c, i, j) => {
@@ -700,7 +734,7 @@ export function offsetZip(destGrid, srcGrid, srcToDestX, srcToDestY, value) {
 export function directionOfDoorSite(grid, x, y, isOpen) {
     let dir, solutionDir;
     let newX, newY, oppX, oppY;
-    const fnOpen = typeof isOpen === "function"
+    const fnOpen = typeof isOpen === 'function'
         ? isOpen
         : (v) => v == isOpen;
     solutionDir = Utils.NO_DIRECTION;

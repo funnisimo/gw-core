@@ -1,6 +1,6 @@
-import { random } from "./random";
-import * as Utils from "./utils";
-import { make as Make } from "./gw";
+import { random } from './random';
+import * as Utils from './utils';
+import { make as Make } from './gw';
 
 type Loc = Utils.Loc;
 const DIRS = Utils.DIRS;
@@ -23,19 +23,19 @@ export function makeArray<T>(l: number, fn?: T | ArrayInit<T>): Array<T> {
 
 function _formatGridValue(v: any) {
     if (v === false) {
-        return " ";
+        return ' ';
     } else if (v === true) {
-        return "T";
+        return 'T';
     } else if (v < 10) {
-        return "" + v;
+        return '' + v;
     } else if (v < 36) {
-        return String.fromCharCode("a".charCodeAt(0) + v - 10);
+        return String.fromCharCode('a'.charCodeAt(0) + v - 10);
     } else if (v < 62) {
-        return String.fromCharCode("A".charCodeAt(0) + v - 10 - 26);
-    } else if (typeof v === "string") {
+        return String.fromCharCode('A'.charCodeAt(0) + v - 10 - 26);
+    } else if (typeof v === 'string') {
         return v[0];
     } else {
-        return "#";
+        return '#';
     }
 }
 
@@ -67,7 +67,7 @@ export class Grid<T> extends Array<Array<T>> {
     constructor(w: number, h: number, v: GridInit<T> | T) {
         super(w);
         for (let x = 0; x < w; ++x) {
-            if (typeof v === "function") {
+            if (typeof v === 'function') {
                 this[x] = new Array(h)
                     .fill(0)
                     .map((_: any, i: number) => (v as GridInit<T>)(x, i));
@@ -135,6 +135,15 @@ export class Grid<T> extends Array<Array<T>> {
         }
     }
 
+    randomEach(fn: GridEach<T>) {
+        const sequence = random.sequence(this.width * this.height);
+        sequence.forEach((n) => {
+            const x = n % this.width;
+            const y = Math.floor(n / this.width);
+            fn(this[x][y], x, y, this);
+        });
+    }
+
     /**
      * Returns a new Grid with the cells mapped according to the supplied function.
      * @param fn - The function that maps the cell values
@@ -167,7 +176,8 @@ export class Grid<T> extends Array<Array<T>> {
             ) {
                 if (
                     this.hasXY(i, j) &&
-                    (i - x) * (i - x) + (j - y) * (j - y) < radius * radius + radius
+                    (i - x) * (i - x) + (j - y) * (j - y) <
+                        radius * radius + radius
                 ) {
                     // + radius softens the circle
                     fn(this[i][j], i, j, this);
@@ -188,7 +198,12 @@ export class Grid<T> extends Array<Array<T>> {
     }
 
     calcBounds() {
-        const bounds = { left: this.width, top: this.height, right: 0, bottom: 0 };
+        const bounds = {
+            left: this.width,
+            top: this.height,
+            right: 0,
+            bottom: 0,
+        };
         this.forEach((v, i, j) => {
             if (!v) return;
             if (bounds.left > i) bounds.left = i;
@@ -240,7 +255,8 @@ export class Grid<T> extends Array<Array<T>> {
             ) {
                 if (
                     this.hasXY(i, j) &&
-                    (i - x) * (i - x) + (j - y) * (j - y) < radius * radius + radius
+                    (i - x) * (i - x) + (j - y) * (j - y) <
+                        radius * radius + radius
                 ) {
                     // + radius softens the circle
                     this[i][j] = fn(this[i][j], i, j, this);
@@ -257,19 +273,19 @@ export class Grid<T> extends Array<Array<T>> {
     // @ts-ignore
     fill(v: T | GridUpdate<T>) {
         const fn: GridUpdate<T> =
-            typeof v === "function" ? (v as GridUpdate<T>) : () => v;
+            typeof v === 'function' ? (v as GridUpdate<T>) : () => v;
         this.update(fn);
     }
 
     fillRect(x: number, y: number, w: number, h: number, v: T | GridUpdate<T>) {
         const fn: GridUpdate<T> =
-            typeof v === "function" ? (v as GridUpdate<T>) : () => v;
+            typeof v === 'function' ? (v as GridUpdate<T>) : () => v;
         this.updateRect(x, y, w, h, fn);
     }
 
     fillCircle(x: number, y: number, radius: number, v: T | GridUpdate<T>) {
         const fn: GridUpdate<T> =
-            typeof v === "function" ? (v as GridUpdate<T>) : () => v;
+            typeof v === 'function' ? (v as GridUpdate<T>) : () => v;
         this.updateCircle(x, y, radius, fn);
     }
 
@@ -284,7 +300,7 @@ export class Grid<T> extends Array<Array<T>> {
 
     count(match: GridMatch<T> | T) {
         const fn: GridMatch<T> =
-            typeof match === "function"
+            typeof match === 'function'
                 ? (match as GridMatch<T>)
                 : (v: T) => v == match;
         let count = 0;
@@ -317,10 +333,10 @@ export class Grid<T> extends Array<Array<T>> {
         let output = [];
 
         for (j = top; j <= bottom; j++) {
-            let line = ("" + j + "]").padStart(3, " ");
+            let line = ('' + j + ']').padStart(3, ' ');
             for (i = left; i <= right; i++) {
                 if (i % 10 == 0) {
-                    line += " ";
+                    line += ' ';
                 }
 
                 const v = this[i][j];
@@ -328,7 +344,7 @@ export class Grid<T> extends Array<Array<T>> {
             }
             output.push(line);
         }
-        console.log(output.join("\n"));
+        console.log(output.join('\n'));
     }
 
     dumpAround(x: number, y: number, radius: number) {
@@ -341,11 +357,15 @@ export class Grid<T> extends Array<Array<T>> {
         let bestDistance = 100 * (this.width + this.height);
 
         const fn: GridMatch<T> =
-            typeof v === "function" ? (v as GridMatch<T>) : (val: T) => val == v;
+            typeof v === 'function'
+                ? (v as GridMatch<T>)
+                : (val: T) => val == v;
 
         this.forEach((v, i, j) => {
             if (fn(v, i, j, this)) {
-                const dist = Math.floor(100 * Utils.distanceBetween(x, y, i, j));
+                const dist = Math.floor(
+                    100 * Utils.distanceBetween(x, y, i, j)
+                );
                 if (dist < bestDistance) {
                     bestLoc[0] = i;
                     bestLoc[1] = j;
@@ -362,7 +382,9 @@ export class Grid<T> extends Array<Array<T>> {
 
     firstMatchingLoc(v: T | GridMatch<T>): Loc {
         const fn: GridMatch<T> =
-            typeof v === "function" ? (v as GridMatch<T>) : (val: T) => val == v;
+            typeof v === 'function'
+                ? (v as GridMatch<T>)
+                : (val: T) => val == v;
 
         for (let i = 0; i < this.width; ++i) {
             for (let j = 0; j < this.height; ++j) {
@@ -379,7 +401,9 @@ export class Grid<T> extends Array<Array<T>> {
         let i, j, index;
 
         const fn: GridMatch<T> =
-            typeof v === "function" ? (v as GridMatch<T>) : (val: T) => val == v;
+            typeof v === 'function'
+                ? (v as GridMatch<T>)
+                : (val: T) => val == v;
 
         locationCount = 0;
         this.forEach((v, i, j) => {
@@ -419,16 +443,25 @@ export class Grid<T> extends Array<Array<T>> {
         let i, j, k, candidateLocs, randIndex;
 
         const fn: GridMatch<T> =
-            typeof v === "function" ? (v as GridMatch<T>) : (val: T) => val == v;
+            typeof v === 'function'
+                ? (v as GridMatch<T>)
+                : (val: T) => val == v;
         candidateLocs = 0;
 
         // count up the number of candidate locations
-        for (k = 0; k < Math.max(this.width, this.height) && !candidateLocs; k++) {
+        for (
+            k = 0;
+            k < Math.max(this.width, this.height) && !candidateLocs;
+            k++
+        ) {
             for (i = x - k; i <= x + k; i++) {
                 for (j = y - k; j <= y + k; j++) {
                     if (
                         this.hasXY(i, j) &&
-                        (i == x - k || i == x + k || j == y - k || j == y + k) &&
+                        (i == x - k ||
+                            i == x + k ||
+                            j == y - k ||
+                            j == y + k) &&
                         fn(this[i][j], i, j, this)
                     ) {
                         candidateLocs++;
@@ -453,7 +486,10 @@ export class Grid<T> extends Array<Array<T>> {
                 for (j = y - k; j <= y + k; j++) {
                     if (
                         this.hasXY(i, j) &&
-                        (i == x - k || i == x + k || j == y - k || j == y + k) &&
+                        (i == x - k ||
+                            i == x + k ||
+                            j == y - k ||
+                            j == y + k) &&
                         fn(this[i][j], i, j, this)
                     ) {
                         if (--randIndex == 0) {
@@ -493,9 +529,11 @@ export class Grid<T> extends Array<Array<T>> {
             newY = y + CDIRS[dir][1];
             // Counts every transition from passable to impassable or vice-versa on the way around the cell:
             const newOk =
-                this.hasXY(newX, newY) && testFn(this[newX][newY], newX, newY, this);
+                this.hasXY(newX, newY) &&
+                testFn(this[newX][newY], newX, newY, this);
             const oldOk =
-                this.hasXY(oldX, oldY) && testFn(this[oldX][oldY], oldX, oldY, this);
+                this.hasXY(oldX, oldY) &&
+                testFn(this[oldX][oldY], oldX, oldY, this);
             if (newOk) ++matchCount;
             if (newOk != oldOk) {
                 arcCount++;
@@ -527,7 +565,7 @@ export class NumGrid extends Grid<number> {
         v: GridInit<number> | number = 0
     ): NumGrid {
         if (!w || !h)
-            throw new Error("Grid alloc requires width and height parameters.");
+            throw new Error('Grid alloc requires width and height parameters.');
 
         ++GRID_ACTIVE_COUNT;
         ++GRID_ALLOC_COUNT;
@@ -555,9 +593,13 @@ export class NumGrid extends Grid<number> {
         super(w, h, v);
     }
 
-    protected _resize(width: number, height: number, v: GridInit<number> | number = 0) {
+    protected _resize(
+        width: number,
+        height: number,
+        v: GridInit<number> | number = 0
+    ) {
         const fn: GridInit<number> =
-            typeof v === "function" ? (v as GridInit<number>) : () => v;
+            typeof v === 'function' ? (v as GridInit<number>) : () => v;
 
         while (this.length < width) this.push([]);
         this.length = width;
@@ -607,14 +649,16 @@ export class NumGrid extends Grid<number> {
             fillCount = 1;
 
         if (fillValue >= eligibleValueMin && fillValue <= eligibleValueMax) {
-            throw new Error("Invalid grid flood fill");
+            throw new Error('Invalid grid flood fill');
         }
 
         const ok = (x: number, y: number) => {
-            return this.hasXY(x, y) &&
+            return (
+                this.hasXY(x, y) &&
                 this[x][y] >= eligibleValueMin &&
-                this[x][y] <= eligibleValueMax;
-        }
+                this[x][y] <= eligibleValueMax
+            );
+        };
 
         if (!ok(x, y)) return 0;
         this[x][y] = fillValue;
@@ -666,10 +710,11 @@ export class NumGrid extends Grid<number> {
             numberOfCells = 1;
 
         const matchFn =
-            typeof matchValue == "function"
+            typeof matchValue == 'function'
                 ? matchValue
                 : (v: any) => v == matchValue;
-        const fillFn = typeof fillValue == "function" ? fillValue : () => fillValue;
+        const fillFn =
+            typeof fillValue == 'function' ? fillValue : () => fillValue;
 
         this[x][y] = fillFn(this[x][y], x, y, this);
 
@@ -710,10 +755,13 @@ export class NumGrid extends Grid<number> {
                         nbCount++;
                     }
                 }
-                if (!buffer2[i][j] && birthParameters[nbCount] == "t") {
+                if (!buffer2[i][j] && birthParameters[nbCount] == 't') {
                     this[i][j] = 1; // birth
                     didSomething = true;
-                } else if (buffer2[i][j] && survivalParameters[nbCount] == "t") {
+                } else if (
+                    buffer2[i][j] &&
+                    survivalParameters[nbCount] == 't'
+                ) {
                     // survival
                 } else {
                     this[i][j] = 0; // death
@@ -734,8 +782,8 @@ export class NumGrid extends Grid<number> {
         maxBlobWidth: number,
         maxBlobHeight: number,
         percentSeeded: number = 50,
-        birthParameters: string = "ffffffttt",
-        survivalParameters: string = "ffffttttt"
+        birthParameters: string = 'ffffffttt',
+        survivalParameters: string = 'ffffttttt'
     ) {
         let i, j, k;
         let blobNumber, blobSize, topBlobNumber, topBlobSize;
@@ -771,13 +819,20 @@ export class NumGrid extends Grid<number> {
             // Fill relevant portion with noise based on the percentSeeded argument.
             for (i = 0; i < maxBlobWidth; i++) {
                 for (j = 0; j < maxBlobHeight; j++) {
-                    this[i + left][j + top] = random.chance(percentSeeded) ? 1 : 0;
+                    this[i + left][j + top] = random.chance(percentSeeded)
+                        ? 1
+                        : 0;
                 }
             }
 
             // Some iterations of cellular automata
             for (k = 0; k < roundCount; k++) {
-                if (!this._cellularAutomataRound(birthParameters, survivalParameters)) {
+                if (
+                    !this._cellularAutomataRound(
+                        birthParameters,
+                        survivalParameters
+                    )
+                ) {
                     k = roundCount; // cellularAutomataRound did not make any changes
                 }
             }
@@ -882,11 +937,15 @@ export class NumGrid extends Grid<number> {
 export const alloc = NumGrid.alloc.bind(NumGrid);
 export const free = NumGrid.free.bind(NumGrid);
 
-export function make<T>(w: number, h: number, v?: number | GridInit<number>): NumGrid;
+export function make<T>(
+    w: number,
+    h: number,
+    v?: number | GridInit<number>
+): NumGrid;
 export function make<T>(w: number, h: number, v?: T | GridInit<T>): Grid<T>;
 export function make<T>(w: number, h: number, v?: T | GridInit<T>) {
     if (v === undefined) return new NumGrid(w, h, 0);
-    if (typeof v === "number") return new NumGrid(w, h, v);
+    if (typeof v === 'number') return new NumGrid(w, h, v);
     return new Grid<T>(w, h, v);
 }
 
@@ -911,10 +970,10 @@ export function offsetZip<T, U>(
     value: T | GridZip<T, U>
 ) {
     const fn: GridZip<T, U> =
-        typeof value === "function"
+        typeof value === 'function'
             ? (value as GridZip<T, U>)
             : (_d: T, _s: U, dx: number, dy: number) =>
-                (destGrid[dx][dy] = value);
+                  (destGrid[dx][dy] = value);
     srcGrid.forEach((c, i, j) => {
         const destX = i + srcToDestX;
         const destY = j + srcToDestY;
@@ -939,7 +998,7 @@ export function directionOfDoorSite<T>(
     let newX, newY, oppX, oppY;
 
     const fnOpen: GridMatch<T> =
-        typeof isOpen === "function"
+        typeof isOpen === 'function'
             ? (isOpen as GridMatch<T>)
             : (v: T) => v == isOpen;
 

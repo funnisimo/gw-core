@@ -178,8 +178,6 @@ export function ignoreKeyEvent(e: KeyboardEvent) {
 
 // MOUSE
 
-export var mouse: Utils.XY = { x: -1, y: -1 };
-
 export function makeMouseEvent(e: MouseEvent, x: number, y: number) {
   const ev: Event = DEAD_EVENTS.pop() || ({} as Event);
 
@@ -207,6 +205,8 @@ export function makeMouseEvent(e: MouseEvent, x: number, y: number) {
 export class Loop {
   public running = false;
   public events: Event[] = [];
+  public mouse: Utils.XY = { x: -1, y: -1 };
+
   protected CURRENT_HANDLER: EventHandler | null = null;
   protected PAUSED: EventHandler | null = null;
   protected LAST_CLICK: Utils.XY = { x: -1, y: -1 };
@@ -278,8 +278,8 @@ export class Loop {
     while (this.events.length) {
       const e: Event = this.events.shift()!;
       if (e.type === MOUSEMOVE) {
-        mouse.x = e.x;
-        mouse.y = e.y;
+        this.mouse.x = e.x;
+        this.mouse.y = e.y;
       }
 
       if (match(e)) {
@@ -303,8 +303,8 @@ export class Loop {
 
     this.CURRENT_HANDLER = (e) => {
       if (e.type === MOUSEMOVE) {
-        mouse.x = e.x;
-        mouse.y = e.y;
+        this.mouse.x = e.x;
+        this.mouse.y = e.y;
       }
 
       if (e.type === TICK && ms! > 0) {

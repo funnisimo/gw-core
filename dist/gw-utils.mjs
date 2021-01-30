@@ -890,32 +890,32 @@ function makeArray(l, fn) {
 }
 function _formatGridValue(v) {
     if (v === false) {
-        return " ";
+        return ' ';
     }
     else if (v === true) {
-        return "T";
+        return 'T';
     }
     else if (v < 10) {
-        return "" + v;
+        return '' + v;
     }
     else if (v < 36) {
-        return String.fromCharCode("a".charCodeAt(0) + v - 10);
+        return String.fromCharCode('a'.charCodeAt(0) + v - 10);
     }
     else if (v < 62) {
-        return String.fromCharCode("A".charCodeAt(0) + v - 10 - 26);
+        return String.fromCharCode('A'.charCodeAt(0) + v - 10 - 26);
     }
-    else if (typeof v === "string") {
+    else if (typeof v === 'string') {
         return v[0];
     }
     else {
-        return "#";
+        return '#';
     }
 }
 class Grid extends Array {
     constructor(w, h, v) {
         super(w);
         for (let x = 0; x < w; ++x) {
-            if (typeof v === "function") {
+            if (typeof v === 'function') {
                 this[x] = new Array(h)
                     .fill(0)
                     .map((_, i) => v(x, i));
@@ -978,6 +978,14 @@ class Grid extends Array {
             }
         }
     }
+    randomEach(fn) {
+        const sequence = random.sequence(this.width * this.height);
+        sequence.forEach((n) => {
+            const x = n % this.width;
+            const y = Math.floor(n / this.width);
+            fn(this[x][y], x, y, this);
+        });
+    }
     /**
      * Returns a new Grid with the cells mapped according to the supplied function.
      * @param fn - The function that maps the cell values
@@ -999,7 +1007,8 @@ class Grid extends Array {
         for (i = Math.max(0, x - radius - 1); i < Math.min(this.width, x + radius + 1); i++) {
             for (j = Math.max(0, y - radius - 1); j < Math.min(this.height, y + radius + 1); j++) {
                 if (this.hasXY(i, j) &&
-                    (i - x) * (i - x) + (j - y) * (j - y) < radius * radius + radius) {
+                    (i - x) * (i - x) + (j - y) * (j - y) <
+                        radius * radius + radius) {
                     // + radius softens the circle
                     fn(this[i][j], i, j, this);
                 }
@@ -1014,7 +1023,12 @@ class Grid extends Array {
             (x == 0 || x == this.width - 1 || y == 0 || y == this.height - 1));
     }
     calcBounds() {
-        const bounds = { left: this.width, top: this.height, right: 0, bottom: 0 };
+        const bounds = {
+            left: this.width,
+            top: this.height,
+            right: 0,
+            bottom: 0,
+        };
         this.forEach((v, i, j) => {
             if (!v)
                 return;
@@ -1052,7 +1066,8 @@ class Grid extends Array {
         for (i = Math.max(0, x - radius - 1); i < Math.min(this.width, x + radius + 1); i++) {
             for (j = Math.max(0, y - radius - 1); j < Math.min(this.height, y + radius + 1); j++) {
                 if (this.hasXY(i, j) &&
-                    (i - x) * (i - x) + (j - y) * (j - y) < radius * radius + radius) {
+                    (i - x) * (i - x) + (j - y) * (j - y) <
+                        radius * radius + radius) {
                     // + radius softens the circle
                     this[i][j] = fn(this[i][j], i, j, this);
                 }
@@ -1066,15 +1081,15 @@ class Grid extends Array {
      */
     // @ts-ignore
     fill(v) {
-        const fn = typeof v === "function" ? v : () => v;
+        const fn = typeof v === 'function' ? v : () => v;
         this.update(fn);
     }
     fillRect(x, y, w, h, v) {
-        const fn = typeof v === "function" ? v : () => v;
+        const fn = typeof v === 'function' ? v : () => v;
         this.updateRect(x, y, w, h, fn);
     }
     fillCircle(x, y, radius, v) {
-        const fn = typeof v === "function" ? v : () => v;
+        const fn = typeof v === 'function' ? v : () => v;
         this.updateCircle(x, y, radius, fn);
     }
     replace(findValue, replaceValue) {
@@ -1085,7 +1100,7 @@ class Grid extends Array {
         this.update((_, i, j) => from[i][j]);
     }
     count(match) {
-        const fn = typeof match === "function"
+        const fn = typeof match === 'function'
             ? match
             : (v) => v == match;
         let count = 0;
@@ -1107,17 +1122,17 @@ class Grid extends Array {
         const bottom = clamp(top + height, 1, this.height - 1);
         let output = [];
         for (j = top; j <= bottom; j++) {
-            let line = ("" + j + "]").padStart(3, " ");
+            let line = ('' + j + ']').padStart(3, ' ');
             for (i = left; i <= right; i++) {
                 if (i % 10 == 0) {
-                    line += " ";
+                    line += ' ';
                 }
                 const v = this[i][j];
                 line += fmtFn(v, i, j)[0];
             }
             output.push(line);
         }
-        console.log(output.join("\n"));
+        console.log(output.join('\n'));
     }
     dumpAround(x, y, radius) {
         this.dumpRect(x - radius, y - radius, 2 * radius, 2 * radius);
@@ -1126,7 +1141,9 @@ class Grid extends Array {
     closestMatchingLoc(x, y, v) {
         let bestLoc = [-1, -1];
         let bestDistance = 100 * (this.width + this.height);
-        const fn = typeof v === "function" ? v : (val) => val == v;
+        const fn = typeof v === 'function'
+            ? v
+            : (val) => val == v;
         this.forEach((v, i, j) => {
             if (fn(v, i, j, this)) {
                 const dist = Math.floor(100 * distanceBetween(x, y, i, j));
@@ -1144,7 +1161,9 @@ class Grid extends Array {
         return bestLoc;
     }
     firstMatchingLoc(v) {
-        const fn = typeof v === "function" ? v : (val) => val == v;
+        const fn = typeof v === 'function'
+            ? v
+            : (val) => val == v;
         for (let i = 0; i < this.width; ++i) {
             for (let j = 0; j < this.height; ++j) {
                 if (fn(this[i][j], i, j, this)) {
@@ -1157,7 +1176,9 @@ class Grid extends Array {
     randomMatchingLoc(v, deterministic = false) {
         let locationCount = 0;
         let i, j, index;
-        const fn = typeof v === "function" ? v : (val) => val == v;
+        const fn = typeof v === 'function'
+            ? v
+            : (val) => val == v;
         locationCount = 0;
         this.forEach((v, i, j) => {
             if (fn(v, i, j, this)) {
@@ -1188,14 +1209,19 @@ class Grid extends Array {
     matchingLocNear(x, y, v, deterministic = false) {
         let loc = [-1, -1];
         let i, j, k, candidateLocs, randIndex;
-        const fn = typeof v === "function" ? v : (val) => val == v;
+        const fn = typeof v === 'function'
+            ? v
+            : (val) => val == v;
         candidateLocs = 0;
         // count up the number of candidate locations
         for (k = 0; k < Math.max(this.width, this.height) && !candidateLocs; k++) {
             for (i = x - k; i <= x + k; i++) {
                 for (j = y - k; j <= y + k; j++) {
                     if (this.hasXY(i, j) &&
-                        (i == x - k || i == x + k || j == y - k || j == y + k) &&
+                        (i == x - k ||
+                            i == x + k ||
+                            j == y - k ||
+                            j == y + k) &&
                         fn(this[i][j], i, j, this)) {
                         candidateLocs++;
                     }
@@ -1216,7 +1242,10 @@ class Grid extends Array {
             for (i = x - k; i <= x + k; i++) {
                 for (j = y - k; j <= y + k; j++) {
                     if (this.hasXY(i, j) &&
-                        (i == x - k || i == x + k || j == y - k || j == y + k) &&
+                        (i == x - k ||
+                            i == x + k ||
+                            j == y - k ||
+                            j == y + k) &&
                         fn(this[i][j], i, j, this)) {
                         if (--randIndex == 0) {
                             loc[0] = i;
@@ -1249,8 +1278,10 @@ class Grid extends Array {
             newX = x + CDIRS[dir][0];
             newY = y + CDIRS[dir][1];
             // Counts every transition from passable to impassable or vice-versa on the way around the cell:
-            const newOk = this.hasXY(newX, newY) && testFn(this[newX][newY], newX, newY, this);
-            const oldOk = this.hasXY(oldX, oldY) && testFn(this[oldX][oldY], oldX, oldY, this);
+            const newOk = this.hasXY(newX, newY) &&
+                testFn(this[newX][newY], newX, newY, this);
+            const oldOk = this.hasXY(oldX, oldY) &&
+                testFn(this[oldX][oldY], oldX, oldY, this);
             if (newOk)
                 ++matchCount;
             if (newOk != oldOk) {
@@ -1269,7 +1300,7 @@ class NumGrid extends Grid {
     }
     static alloc(w, h, v = 0) {
         if (!w || !h)
-            throw new Error("Grid alloc requires width and height parameters.");
+            throw new Error('Grid alloc requires width and height parameters.');
         let grid = GRID_CACHE.pop();
         if (!grid) {
             return new NumGrid(w, h, v);
@@ -1285,7 +1316,7 @@ class NumGrid extends Grid {
         }
     }
     _resize(width, height, v = 0) {
-        const fn = typeof v === "function" ? v : () => v;
+        const fn = typeof v === 'function' ? v : () => v;
         while (this.length < width)
             this.push([]);
         this.length = width;
@@ -1319,12 +1350,12 @@ class NumGrid extends Grid {
         let dir;
         let newX, newY, fillCount = 1;
         if (fillValue >= eligibleValueMin && fillValue <= eligibleValueMax) {
-            throw new Error("Invalid grid flood fill");
+            throw new Error('Invalid grid flood fill');
         }
         const ok = (x, y) => {
-            return this.hasXY(x, y) &&
+            return (this.hasXY(x, y) &&
                 this[x][y] >= eligibleValueMin &&
-                this[x][y] <= eligibleValueMax;
+                this[x][y] <= eligibleValueMax);
         };
         if (!ok(x, y))
             return 0;
@@ -1358,10 +1389,10 @@ class NumGrid extends Grid {
     floodFill(x, y, matchValue, fillValue) {
         let dir;
         let newX, newY, numberOfCells = 1;
-        const matchFn = typeof matchValue == "function"
+        const matchFn = typeof matchValue == 'function'
             ? matchValue
             : (v) => v == matchValue;
-        const fillFn = typeof fillValue == "function" ? fillValue : () => fillValue;
+        const fillFn = typeof fillValue == 'function' ? fillValue : () => fillValue;
         this[x][y] = fillFn(this[x][y], x, y, this);
         // Iterate through the four cardinal neighbors.
         for (dir = 0; dir < 4; dir++) {
@@ -1394,11 +1425,12 @@ class NumGrid extends Grid {
                         nbCount++;
                     }
                 }
-                if (!buffer2[i][j] && birthParameters[nbCount] == "t") {
+                if (!buffer2[i][j] && birthParameters[nbCount] == 't') {
                     this[i][j] = 1; // birth
                     didSomething = true;
                 }
-                else if (buffer2[i][j] && survivalParameters[nbCount] == "t") ;
+                else if (buffer2[i][j] &&
+                    survivalParameters[nbCount] == 't') ;
                 else {
                     this[i][j] = 0; // death
                     didSomething = true;
@@ -1409,7 +1441,7 @@ class NumGrid extends Grid {
         return didSomething;
     }
     // Loads up **grid with the results of a cellular automata simulation.
-    fillBlob(roundCount, minBlobWidth, minBlobHeight, maxBlobWidth, maxBlobHeight, percentSeeded = 50, birthParameters = "ffffffttt", survivalParameters = "ffffttttt") {
+    fillBlob(roundCount, minBlobWidth, minBlobHeight, maxBlobWidth, maxBlobHeight, percentSeeded = 50, birthParameters = 'ffffffttt', survivalParameters = 'ffffttttt') {
         let i, j, k;
         let blobNumber, blobSize, topBlobNumber, topBlobSize;
         let topBlobMinX, topBlobMinY, topBlobMaxX, topBlobMaxY, blobWidth, blobHeight;
@@ -1433,7 +1465,9 @@ class NumGrid extends Grid {
             // Fill relevant portion with noise based on the percentSeeded argument.
             for (i = 0; i < maxBlobWidth; i++) {
                 for (j = 0; j < maxBlobHeight; j++) {
-                    this[i + left][j + top] = random.chance(percentSeeded) ? 1 : 0;
+                    this[i + left][j + top] = random.chance(percentSeeded)
+                        ? 1
+                        : 0;
                 }
             }
             // Some iterations of cellular automata
@@ -1534,13 +1568,13 @@ const free = NumGrid.free.bind(NumGrid);
 function make$2(w, h, v) {
     if (v === undefined)
         return new NumGrid(w, h, 0);
-    if (typeof v === "number")
+    if (typeof v === 'number')
         return new NumGrid(w, h, v);
     return new Grid(w, h, v);
 }
 make.grid = make$2;
 function offsetZip(destGrid, srcGrid, srcToDestX, srcToDestY, value) {
-    const fn = typeof value === "function"
+    const fn = typeof value === 'function'
         ? value
         : (_d, _s, dx, dy) => (destGrid[dx][dy] = value);
     srcGrid.forEach((c, i, j) => {
@@ -1560,7 +1594,7 @@ function offsetZip(destGrid, srcGrid, srcToDestX, srcToDestY, value) {
 function directionOfDoorSite(grid, x, y, isOpen) {
     let dir, solutionDir;
     let newX, newY, oppX, oppY;
-    const fnOpen = typeof isOpen === "function"
+    const fnOpen = typeof isOpen === 'function'
         ? isOpen
         : (v) => v == isOpen;
     solutionDir = NO_DIRECTION;
@@ -1741,7 +1775,6 @@ function ignoreKeyEvent(e) {
     return CONTROL_CODES.includes(e.code);
 }
 // MOUSE
-var mouse = { x: -1, y: -1 };
 function makeMouseEvent(e, x, y) {
     const ev = DEAD_EVENTS.pop() || {};
     ev.shiftKey = e.shiftKey;
@@ -1766,6 +1799,7 @@ class Loop {
     constructor() {
         this.running = false;
         this.events = [];
+        this.mouse = { x: -1, y: -1 };
         this.CURRENT_HANDLER = null;
         this.PAUSED = null;
         this.LAST_CLICK = { x: -1, y: -1 };
@@ -1831,8 +1865,8 @@ class Loop {
         while (this.events.length) {
             const e = this.events.shift();
             if (e.type === MOUSEMOVE) {
-                mouse.x = e.x;
-                mouse.y = e.y;
+                this.mouse.x = e.x;
+                this.mouse.y = e.y;
             }
             if (match(e)) {
                 return Promise.resolve(e);
@@ -1853,8 +1887,8 @@ class Loop {
         }
         this.CURRENT_HANDLER = (e) => {
             if (e.type === MOUSEMOVE) {
-                mouse.x = e.x;
-                mouse.y = e.y;
+                this.mouse.x = e.x;
+                this.mouse.y = e.y;
             }
             if (e.type === TICK && ms > 0) {
                 elapsed += e.dt;
@@ -1969,7 +2003,6 @@ var io = {
     makeKeyEvent: makeKeyEvent,
     keyCodeDirection: keyCodeDirection,
     ignoreKeyEvent: ignoreKeyEvent,
-    mouse: mouse,
     makeMouseEvent: makeMouseEvent,
     Loop: Loop,
     make: make$3,
@@ -3146,7 +3179,7 @@ class NotSupportedError extends Error {
             // @ts-ignore
             Error.captureStackTrace(this, NotSupportedError);
         }
-        this.name = "NotSupportedError";
+        this.name = 'NotSupportedError';
     }
 }
 class BaseCanvas {
@@ -3157,7 +3190,7 @@ class BaseCanvas {
         this._width = 50;
         this._height = 25;
         if (!options.glyphs)
-            throw new Error("You must supply glyphs for the canvas.");
+            throw new Error('You must supply glyphs for the canvas.');
         this._node = this._createNode();
         this._createContext();
         this._configure(options);
@@ -3165,6 +3198,7 @@ class BaseCanvas {
         if (io) {
             this.onclick = (e) => io.pushEvent(e);
             this.onmousemove = (e) => io.pushEvent(e);
+            this.onmouseup = (e) => io.pushEvent(e);
         }
     }
     get node() {
@@ -3195,12 +3229,12 @@ class BaseCanvas {
         this._setGlyphs(glyphs);
     }
     toGlyph(ch) {
-        if (typeof ch === "number")
+        if (typeof ch === 'number')
             return ch;
         return this._glyphs.forChar(ch);
     }
     _createNode() {
-        return document.createElement("canvas");
+        return document.createElement('canvas');
     }
     _configure(options) {
         this._width = options.width || this._width;
@@ -3209,10 +3243,10 @@ class BaseCanvas {
         this._setGlyphs(options.glyphs);
         if (options.div) {
             let el;
-            if (typeof options.div === "string") {
+            if (typeof options.div === 'string') {
                 el = document.getElementById(options.div);
                 if (!el) {
-                    console.warn("Failed to find parent element by ID: " + options.div);
+                    console.warn('Failed to find parent element by ID: ' + options.div);
                 }
             }
             else {
@@ -3302,6 +3336,19 @@ class BaseCanvas {
             this.node.onmousemove = null;
         }
     }
+    set onmouseup(fn) {
+        if (fn) {
+            this.node.onmouseup = (e) => {
+                const x = this.toX(e.offsetX);
+                const y = this.toY(e.offsetY);
+                const ev = makeMouseEvent(e, x, y);
+                fn(ev);
+            };
+        }
+        else {
+            this.node.onmousemove = null;
+        }
+    }
     toX(offsetX) {
         return clamp(Math.floor(this.width * (offsetX / this.node.clientWidth)), 0, this.width - 1);
     }
@@ -3315,9 +3362,9 @@ class Canvas extends BaseCanvas {
         super(options);
     }
     _createContext() {
-        let gl = this.node.getContext("webgl2");
+        let gl = this.node.getContext('webgl2');
         if (!gl) {
-            throw new NotSupportedError("WebGL 2 not supported");
+            throw new NotSupportedError('WebGL 2 not supported');
         }
         this._gl = gl;
         this._buffers = {};
@@ -3336,7 +3383,7 @@ class Canvas extends BaseCanvas {
             let info = gl.getActiveUniform(p, i);
             this._uniforms[info.name] = gl.getUniformLocation(p, info.name);
         }
-        gl.uniform1i(this._uniforms["font"], 0);
+        gl.uniform1i(this._uniforms['font'], 0);
         this._texture = createTexture(gl);
     }
     _createGeometry() {
@@ -3354,7 +3401,7 @@ class Canvas extends BaseCanvas {
         this._data = new Uint32Array(tileCount * VERTICES_PER_TILE);
         const style = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, style);
-        gl.vertexAttribIPointer(attribs["style"], 1, gl.UNSIGNED_INT, 0, 0);
+        gl.vertexAttribIPointer(attribs['style'], 1, gl.UNSIGNED_INT, 0, 0);
         Object.assign(this._buffers, { style });
     }
     _setGlyphs(glyphs) {
@@ -3362,7 +3409,7 @@ class Canvas extends BaseCanvas {
             return false;
         const gl = this._gl;
         const uniforms = this._uniforms;
-        gl.uniform2uiv(uniforms["tileSize"], [this.tileWidth, this.tileHeight]);
+        gl.uniform2uiv(uniforms['tileSize'], [this.tileWidth, this.tileHeight]);
         this._uploadGlyphs();
         return true;
     }
@@ -3381,7 +3428,7 @@ class Canvas extends BaseCanvas {
         const gl = this._gl;
         const uniforms = this._uniforms;
         gl.viewport(0, 0, this.node.width, this.node.height);
-        gl.uniform2ui(uniforms["viewportSize"], this.node.width, this.node.height);
+        gl.uniform2ui(uniforms['viewportSize'], this.node.width, this.node.height);
         this._createGeometry();
         this._createData();
     }
@@ -3432,9 +3479,9 @@ class Canvas2D extends BaseCanvas {
         super(options);
     }
     _createContext() {
-        const ctx = this.node.getContext("2d");
+        const ctx = this.node.getContext('2d');
         if (!ctx) {
-            throw new NotSupportedError("2d context not supported!");
+            throw new NotSupportedError('2d context not supported!');
         }
         this._ctx = ctx;
     }
@@ -3483,10 +3530,13 @@ class Canvas2D extends BaseCanvas {
             const pct = d.data[di * 4] / 255;
             const inv = 1.0 - pct;
             d.data[di * 4 + 0] =
-                pct * (((fg & 0xf00) >> 8) * 17) + inv * (((bg & 0xf00) >> 8) * 17);
+                pct * (((fg & 0xf00) >> 8) * 17) +
+                    inv * (((bg & 0xf00) >> 8) * 17);
             d.data[di * 4 + 1] =
-                pct * (((fg & 0xf0) >> 4) * 17) + inv * (((bg & 0xf0) >> 4) * 17);
-            d.data[di * 4 + 2] = pct * ((fg & 0xf) * 17) + inv * ((bg & 0xf) * 17);
+                pct * (((fg & 0xf0) >> 4) * 17) +
+                    inv * (((bg & 0xf0) >> 4) * 17);
+            d.data[di * 4 + 2] =
+                pct * ((fg & 0xf) * 17) + inv * ((bg & 0xf) * 17);
             d.data[di * 4 + 3] = 255; // not transparent anymore
         }
         this._ctx.putImageData(d, px, py);
@@ -3494,7 +3544,7 @@ class Canvas2D extends BaseCanvas {
 }
 function withImage(image) {
     let opts = {};
-    if (typeof image === "string") {
+    if (typeof image === 'string') {
         opts.glyphs = Glyphs.fromImage(image);
     }
     else if (image instanceof HTMLImageElement) {
@@ -3502,7 +3552,7 @@ function withImage(image) {
     }
     else {
         if (!image.image)
-            throw new Error("You must supply the image.");
+            throw new Error('You must supply the image.');
         Object.assign(opts, image);
         opts.glyphs = Glyphs.fromImage(image.image);
     }
@@ -3520,7 +3570,7 @@ function withImage(image) {
     return canvas;
 }
 function withFont(src) {
-    if (typeof src === "string") {
+    if (typeof src === 'string') {
         src = { font: src };
     }
     src.glyphs = Glyphs.fromFont(src);
@@ -3579,11 +3629,11 @@ function createGeometry(gl, attribs, width, height) {
     }
     const position = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, position);
-    gl.vertexAttribIPointer(attribs["position"], 2, gl.UNSIGNED_SHORT, 0, 0);
+    gl.vertexAttribIPointer(attribs['position'], 2, gl.UNSIGNED_SHORT, 0, 0);
     gl.bufferData(gl.ARRAY_BUFFER, positionData, gl.STATIC_DRAW);
     const uv = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, uv);
-    gl.vertexAttribIPointer(attribs["uv"], 2, gl.UNSIGNED_BYTE, 0, 0);
+    gl.vertexAttribIPointer(attribs['uv'], 2, gl.UNSIGNED_BYTE, 0, 0);
     gl.bufferData(gl.ARRAY_BUFFER, uvData, gl.STATIC_DRAW);
     return { position, uv };
 }

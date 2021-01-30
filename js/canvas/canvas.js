@@ -1,7 +1,7 @@
-import * as shaders from "./shaders";
-import { Glyphs } from "./glyphs";
-import * as IO from "../io";
-import * as Utils from "../utils";
+import * as shaders from './shaders';
+import { Glyphs } from './glyphs';
+import * as IO from '../io';
+import * as Utils from '../utils';
 const VERTICES_PER_TILE = 6;
 export class NotSupportedError extends Error {
     constructor(...params) {
@@ -13,7 +13,7 @@ export class NotSupportedError extends Error {
             // @ts-ignore
             Error.captureStackTrace(this, NotSupportedError);
         }
-        this.name = "NotSupportedError";
+        this.name = 'NotSupportedError';
     }
 }
 export class BaseCanvas {
@@ -24,7 +24,7 @@ export class BaseCanvas {
         this._width = 50;
         this._height = 25;
         if (!options.glyphs)
-            throw new Error("You must supply glyphs for the canvas.");
+            throw new Error('You must supply glyphs for the canvas.');
         this._node = this._createNode();
         this._createContext();
         this._configure(options);
@@ -32,6 +32,7 @@ export class BaseCanvas {
         if (io) {
             this.onclick = (e) => io.pushEvent(e);
             this.onmousemove = (e) => io.pushEvent(e);
+            this.onmouseup = (e) => io.pushEvent(e);
         }
     }
     get node() {
@@ -62,12 +63,12 @@ export class BaseCanvas {
         this._setGlyphs(glyphs);
     }
     toGlyph(ch) {
-        if (typeof ch === "number")
+        if (typeof ch === 'number')
             return ch;
         return this._glyphs.forChar(ch);
     }
     _createNode() {
-        return document.createElement("canvas");
+        return document.createElement('canvas');
     }
     _configure(options) {
         this._width = options.width || this._width;
@@ -76,10 +77,10 @@ export class BaseCanvas {
         this._setGlyphs(options.glyphs);
         if (options.div) {
             let el;
-            if (typeof options.div === "string") {
+            if (typeof options.div === 'string') {
                 el = document.getElementById(options.div);
                 if (!el) {
-                    console.warn("Failed to find parent element by ID: " + options.div);
+                    console.warn('Failed to find parent element by ID: ' + options.div);
                 }
             }
             else {
@@ -169,6 +170,19 @@ export class BaseCanvas {
             this.node.onmousemove = null;
         }
     }
+    set onmouseup(fn) {
+        if (fn) {
+            this.node.onmouseup = (e) => {
+                const x = this.toX(e.offsetX);
+                const y = this.toY(e.offsetY);
+                const ev = IO.makeMouseEvent(e, x, y);
+                fn(ev);
+            };
+        }
+        else {
+            this.node.onmousemove = null;
+        }
+    }
     toX(offsetX) {
         return Utils.clamp(Math.floor(this.width * (offsetX / this.node.clientWidth)), 0, this.width - 1);
     }
@@ -182,9 +196,9 @@ export class Canvas extends BaseCanvas {
         super(options);
     }
     _createContext() {
-        let gl = this.node.getContext("webgl2");
+        let gl = this.node.getContext('webgl2');
         if (!gl) {
-            throw new NotSupportedError("WebGL 2 not supported");
+            throw new NotSupportedError('WebGL 2 not supported');
         }
         this._gl = gl;
         this._buffers = {};
@@ -203,7 +217,7 @@ export class Canvas extends BaseCanvas {
             let info = gl.getActiveUniform(p, i);
             this._uniforms[info.name] = gl.getUniformLocation(p, info.name);
         }
-        gl.uniform1i(this._uniforms["font"], 0);
+        gl.uniform1i(this._uniforms['font'], 0);
         this._texture = createTexture(gl);
     }
     _createGeometry() {
@@ -221,7 +235,7 @@ export class Canvas extends BaseCanvas {
         this._data = new Uint32Array(tileCount * VERTICES_PER_TILE);
         const style = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, style);
-        gl.vertexAttribIPointer(attribs["style"], 1, gl.UNSIGNED_INT, 0, 0);
+        gl.vertexAttribIPointer(attribs['style'], 1, gl.UNSIGNED_INT, 0, 0);
         Object.assign(this._buffers, { style });
     }
     _setGlyphs(glyphs) {
@@ -229,7 +243,7 @@ export class Canvas extends BaseCanvas {
             return false;
         const gl = this._gl;
         const uniforms = this._uniforms;
-        gl.uniform2uiv(uniforms["tileSize"], [this.tileWidth, this.tileHeight]);
+        gl.uniform2uiv(uniforms['tileSize'], [this.tileWidth, this.tileHeight]);
         this._uploadGlyphs();
         return true;
     }
@@ -248,7 +262,7 @@ export class Canvas extends BaseCanvas {
         const gl = this._gl;
         const uniforms = this._uniforms;
         gl.viewport(0, 0, this.node.width, this.node.height);
-        gl.uniform2ui(uniforms["viewportSize"], this.node.width, this.node.height);
+        gl.uniform2ui(uniforms['viewportSize'], this.node.width, this.node.height);
         this._createGeometry();
         this._createData();
     }
@@ -299,9 +313,9 @@ export class Canvas2D extends BaseCanvas {
         super(options);
     }
     _createContext() {
-        const ctx = this.node.getContext("2d");
+        const ctx = this.node.getContext('2d');
         if (!ctx) {
-            throw new NotSupportedError("2d context not supported!");
+            throw new NotSupportedError('2d context not supported!');
         }
         this._ctx = ctx;
     }
@@ -350,10 +364,13 @@ export class Canvas2D extends BaseCanvas {
             const pct = d.data[di * 4] / 255;
             const inv = 1.0 - pct;
             d.data[di * 4 + 0] =
-                pct * (((fg & 0xf00) >> 8) * 17) + inv * (((bg & 0xf00) >> 8) * 17);
+                pct * (((fg & 0xf00) >> 8) * 17) +
+                    inv * (((bg & 0xf00) >> 8) * 17);
             d.data[di * 4 + 1] =
-                pct * (((fg & 0xf0) >> 4) * 17) + inv * (((bg & 0xf0) >> 4) * 17);
-            d.data[di * 4 + 2] = pct * ((fg & 0xf) * 17) + inv * ((bg & 0xf) * 17);
+                pct * (((fg & 0xf0) >> 4) * 17) +
+                    inv * (((bg & 0xf0) >> 4) * 17);
+            d.data[di * 4 + 2] =
+                pct * ((fg & 0xf) * 17) + inv * ((bg & 0xf) * 17);
             d.data[di * 4 + 3] = 255; // not transparent anymore
         }
         this._ctx.putImageData(d, px, py);
@@ -361,7 +378,7 @@ export class Canvas2D extends BaseCanvas {
 }
 export function withImage(image) {
     let opts = {};
-    if (typeof image === "string") {
+    if (typeof image === 'string') {
         opts.glyphs = Glyphs.fromImage(image);
     }
     else if (image instanceof HTMLImageElement) {
@@ -369,7 +386,7 @@ export function withImage(image) {
     }
     else {
         if (!image.image)
-            throw new Error("You must supply the image.");
+            throw new Error('You must supply the image.');
         Object.assign(opts, image);
         opts.glyphs = Glyphs.fromImage(image.image);
     }
@@ -387,7 +404,7 @@ export function withImage(image) {
     return canvas;
 }
 export function withFont(src) {
-    if (typeof src === "string") {
+    if (typeof src === 'string') {
         src = { font: src };
     }
     src.glyphs = Glyphs.fromFont(src);
@@ -446,11 +463,11 @@ function createGeometry(gl, attribs, width, height) {
     }
     const position = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, position);
-    gl.vertexAttribIPointer(attribs["position"], 2, gl.UNSIGNED_SHORT, 0, 0);
+    gl.vertexAttribIPointer(attribs['position'], 2, gl.UNSIGNED_SHORT, 0, 0);
     gl.bufferData(gl.ARRAY_BUFFER, positionData, gl.STATIC_DRAW);
     const uv = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, uv);
-    gl.vertexAttribIPointer(attribs["uv"], 2, gl.UNSIGNED_BYTE, 0, 0);
+    gl.vertexAttribIPointer(attribs['uv'], 2, gl.UNSIGNED_BYTE, 0, 0);
     gl.bufferData(gl.ARRAY_BUFFER, uvData, gl.STATIC_DRAW);
     return { position, uv };
 }

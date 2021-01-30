@@ -132,7 +132,6 @@ export function ignoreKeyEvent(e) {
     return CONTROL_CODES.includes(e.code);
 }
 // MOUSE
-export var mouse = { x: -1, y: -1 };
 export function makeMouseEvent(e, x, y) {
     const ev = DEAD_EVENTS.pop() || {};
     ev.shiftKey = e.shiftKey;
@@ -157,6 +156,7 @@ export class Loop {
     constructor() {
         this.running = false;
         this.events = [];
+        this.mouse = { x: -1, y: -1 };
         this.CURRENT_HANDLER = null;
         this.PAUSED = null;
         this.LAST_CLICK = { x: -1, y: -1 };
@@ -222,8 +222,8 @@ export class Loop {
         while (this.events.length) {
             const e = this.events.shift();
             if (e.type === MOUSEMOVE) {
-                mouse.x = e.x;
-                mouse.y = e.y;
+                this.mouse.x = e.x;
+                this.mouse.y = e.y;
             }
             if (match(e)) {
                 return Promise.resolve(e);
@@ -244,8 +244,8 @@ export class Loop {
         }
         this.CURRENT_HANDLER = (e) => {
             if (e.type === MOUSEMOVE) {
-                mouse.x = e.x;
-                mouse.y = e.y;
+                this.mouse.x = e.x;
+                this.mouse.y = e.y;
             }
             if (e.type === TICK && ms > 0) {
                 elapsed += e.dt;
