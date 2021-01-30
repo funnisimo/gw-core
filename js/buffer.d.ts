@@ -1,5 +1,5 @@
-import { DrawInfo } from "./canvas/mixer";
-import * as Color from "./color";
+import { DrawInfo } from './sprite/mixer';
+import * as Color from './color';
 export declare class DataBuffer {
     protected _data: Uint32Array;
     private _width;

@@ -4183,87 +4183,6 @@ var color = {
     installSpread: installSpread
 };
 
-class Sprite {
-    constructor(ch, fg, bg, opacity) {
-        if (!ch && ch !== 0)
-            ch = -1;
-        if (typeof fg !== "number")
-            fg = from$2(fg);
-        if (typeof bg !== "number")
-            bg = from$2(bg);
-        this.ch = ch;
-        this.fg = fg;
-        this.bg = bg;
-        this.opacity = opacity;
-    }
-}
-const sprites = {};
-function makeSprite(...args) {
-    let ch = null, fg = -1, bg = -1, opacity;
-    if (args.length == 0) {
-        return new Sprite(null, -1, -1);
-    }
-    else if (args.length == 1 && Array.isArray(args[0])) {
-        args = args[0];
-    }
-    if (args.length > 3) {
-        opacity = args[3];
-        args.pop();
-    }
-    else if (args.length == 2 &&
-        typeof args[1] == "number" &&
-        args[0].length > 1) {
-        opacity = args.pop();
-    }
-    if (args.length > 1) {
-        ch = args[0] || -1;
-        fg = args[1];
-        bg = args[2];
-    }
-    else {
-        if (typeof args[0] === "string" && args[0].length == 1) {
-            ch = args[0];
-            fg = "white"; // white is default?
-        }
-        else if ((typeof args[0] === "string" && args[0].length > 1) ||
-            typeof args[0] === "number") {
-            bg = args[0];
-        }
-        else if (args[0] instanceof Color) {
-            bg = args[0];
-        }
-        else {
-            const sprite = args[0];
-            ch = sprite.ch || -1;
-            fg = sprite.fg || -1;
-            bg = sprite.bg || -1;
-            opacity = sprite.opacity;
-        }
-    }
-    if (typeof fg === "string")
-        fg = from$2(fg);
-    else if (Array.isArray(fg))
-        fg = make$5(fg);
-    else if (fg === undefined || fg === null)
-        fg = -1;
-    if (typeof bg === "string")
-        bg = from$2(bg);
-    else if (Array.isArray(bg))
-        bg = make$5(bg);
-    else if (bg === undefined || bg === null)
-        bg = -1;
-    return new Sprite(ch, fg, bg, opacity);
-}
-make.sprite = makeSprite;
-function installSprite(name, ...args) {
-    let sprite;
-    // @ts-ignore
-    sprite = this.makeSprite(...args);
-    sprite.name = name;
-    sprites[name] = sprite;
-    return sprite;
-}
-
 class Mixer {
     constructor(base) {
         this.ch = first(base === null || base === void 0 ? void 0 : base.ch, -1);
@@ -4385,22 +4304,6 @@ class Mixer {
 }
 make.mixer = function (base) {
     return new Mixer(base);
-};
-
-var index = {
-    __proto__: null,
-    NotSupportedError: NotSupportedError,
-    BaseCanvas: BaseCanvas,
-    Canvas: Canvas,
-    Canvas2D: Canvas2D,
-    withImage: withImage,
-    withFont: withFont,
-    Sprite: Sprite,
-    sprites: sprites,
-    makeSprite: makeSprite,
-    installSprite: installSprite,
-    Mixer: Mixer,
-    Glyphs: Glyphs
 };
 
 var options = {
@@ -4997,7 +4900,7 @@ function configure(opts = {}) {
     }
 }
 
-var index$1 = {
+var index = {
     __proto__: null,
     compile: compile,
     apply: apply,
@@ -5037,7 +4940,7 @@ class DataBuffer {
         return { ch, fg, bg };
     }
     toGlyph(ch) {
-        if (typeof ch === "number")
+        if (typeof ch === 'number')
             return ch;
         if (!ch || !ch.length)
             return -1; // 0 handled elsewhere
@@ -5048,13 +4951,13 @@ class DataBuffer {
     ) {
         let index = y * this.width + x;
         const current = this._data[index] || 0;
-        if (typeof glyph !== "number") {
+        if (typeof glyph !== 'number') {
             glyph = this.toGlyph(glyph);
         }
-        if (typeof fg !== "number") {
+        if (typeof fg !== 'number') {
             fg = from$2(fg).toInt();
         }
-        if (typeof bg !== "number") {
+        if (typeof bg !== 'number') {
             bg = from$2(bg).toInt();
         }
         glyph = glyph >= 0 ? glyph & 0xff : current >> 24;
@@ -5078,7 +4981,7 @@ class DataBuffer {
         return this.draw(args[0], args[1], 0, 0, 0);
     }
     fill(glyph = 0, fg = 0xfff, bg = 0) {
-        if (typeof glyph == "string") {
+        if (typeof glyph == 'string') {
             glyph = this.toGlyph(glyph);
         }
         glyph = glyph & 0xff;
@@ -5093,9 +4996,9 @@ class DataBuffer {
         return this;
     }
     drawText(x, y, text, fg = 0xfff, bg = -1) {
-        if (typeof fg !== "number")
+        if (typeof fg !== 'number')
             fg = from$2(fg);
-        if (typeof bg !== "number")
+        if (typeof bg !== 'number')
             bg = from$2(bg);
         eachChar(text, (ch, fg0, bg0, i) => {
             if (x + i >= this.width)
@@ -5105,15 +5008,15 @@ class DataBuffer {
         return ++y;
     }
     wrapText(x, y, width, text, fg = 0xfff, bg = -1, indent = 0) {
-        if (typeof fg !== "number")
+        if (typeof fg !== 'number')
             fg = from$2(fg);
-        if (typeof bg !== "number")
+        if (typeof bg !== 'number')
             bg = from$2(bg);
         width = Math.min(width, this.width - x);
         text = wordWrap(text, width, indent);
         let xi = x;
         eachChar(text, (ch, fg0, bg0) => {
-            if (ch == "\n") {
+            if (ch == '\n') {
                 while (xi < x + width) {
                     this.draw(xi++, y, 0, 0x000, bg0);
                 }
@@ -5131,11 +5034,11 @@ class DataBuffer {
     fillRect(x, y, w, h, ch = -1, fg = -1, bg = -1) {
         if (ch === null)
             ch = -1;
-        if (typeof ch !== "number")
+        if (typeof ch !== 'number')
             ch = this.toGlyph(ch);
-        if (typeof fg !== "number")
+        if (typeof fg !== 'number')
             fg = from$2(fg).toInt();
-        if (typeof bg !== "number")
+        if (typeof bg !== 'number')
             bg = from$2(bg).toInt();
         for (let i = x; i < x + w; ++i) {
             for (let j = y; j < y + h; ++j) {
@@ -5145,12 +5048,12 @@ class DataBuffer {
         return this;
     }
     blackOutRect(x, y, w, h, bg = 0) {
-        if (typeof bg !== "number")
+        if (typeof bg !== 'number')
             bg = from$2(bg);
         return this.fillRect(x, y, w, h, 0, 0, bg);
     }
     highlight(x, y, color$1, strength) {
-        if (typeof color$1 !== "number") {
+        if (typeof color$1 !== 'number') {
             color$1 = from$2(color$1);
         }
         const mixer = new Mixer();
@@ -5162,7 +5065,7 @@ class DataBuffer {
         return this;
     }
     mix(color$1, percent) {
-        if (typeof color$1 !== "number")
+        if (typeof color$1 !== 'number')
             color$1 = from$2(color$1);
         const mixer = new Mixer();
         for (let x = 0; x < this.width; ++x) {
@@ -5178,26 +5081,26 @@ class DataBuffer {
     }
     dump() {
         const data = [];
-        let header = "    ";
+        let header = '    ';
         for (let x = 0; x < this.width; ++x) {
             if (x % 10 == 0)
-                header += " ";
+                header += ' ';
             header += x % 10;
         }
         data.push(header);
-        data.push("");
+        data.push('');
         for (let y = 0; y < this.height; ++y) {
-            let line = `${("" + y).padStart(2)}] `;
+            let line = `${('' + y).padStart(2)}] `;
             for (let x = 0; x < this.width; ++x) {
                 if (x % 10 == 0)
-                    line += " ";
+                    line += ' ';
                 const data = this.get(x, y);
                 const glyph = data.ch;
                 line += String.fromCharCode(glyph || 32);
             }
             data.push(line);
         }
-        console.log(data.join("\n"));
+        console.log(data.join('\n'));
     }
 }
 class Buffer extends DataBuffer {
@@ -5220,12 +5123,6 @@ class Buffer extends DataBuffer {
     }
 }
 
-var buffer = {
-    __proto__: null,
-    DataBuffer: DataBuffer,
-    Buffer: Buffer
-};
-
 class DancingData {
     constructor(width, height) {
         this._data = [];
@@ -5245,7 +5142,7 @@ class DancingData {
         return style;
     }
     toGlyph(ch) {
-        if (typeof ch === "number")
+        if (typeof ch === 'number')
             return ch;
         if (!ch || !ch.length)
             return -1; // 0 handled elsewhere
@@ -5296,9 +5193,9 @@ class DancingData {
         return this;
     }
     drawText(x, y, text, fg = 0xfff, bg = -1) {
-        if (typeof fg !== "number")
+        if (typeof fg !== 'number')
             fg = from$2(fg);
-        if (typeof bg !== "number")
+        if (typeof bg !== 'number')
             bg = from$2(bg);
         eachChar(text, (ch, fg0, bg0, i) => {
             if (x + i >= this.width)
@@ -5308,15 +5205,15 @@ class DancingData {
         return ++y;
     }
     wrapText(x, y, width, text, fg = 0xfff, bg = -1, indent = 0) {
-        if (typeof fg !== "number")
+        if (typeof fg !== 'number')
             fg = from$2(fg);
-        if (typeof bg !== "number")
+        if (typeof bg !== 'number')
             bg = from$2(bg);
         width = Math.min(width, this.width - x);
         text = wordWrap(text, width, indent);
         let xi = x;
         eachChar(text, (ch, fg0, bg0) => {
-            if (ch == "\n") {
+            if (ch == '\n') {
                 while (xi < x + width) {
                     this.draw(xi++, y, 0, 0x000, bg0);
                 }
@@ -5334,11 +5231,11 @@ class DancingData {
     fillRect(x, y, w, h, ch = -1, fg = -1, bg = -1) {
         if (ch === null)
             ch = -1;
-        if (typeof ch !== "number")
+        if (typeof ch !== 'number')
             ch = this.toGlyph(ch);
-        if (typeof fg !== "number")
+        if (typeof fg !== 'number')
             fg = from$2(fg).toInt();
-        if (typeof bg !== "number")
+        if (typeof bg !== 'number')
             bg = from$2(bg).toInt();
         for (let i = x; i < x + w; ++i) {
             for (let j = y; j < y + h; ++j) {
@@ -5348,12 +5245,12 @@ class DancingData {
         return this;
     }
     blackOutRect(x, y, w, h, bg = 0) {
-        if (typeof bg !== "number")
+        if (typeof bg !== 'number')
             bg = from$2(bg);
         return this.fillRect(x, y, w, h, 0, 0, bg);
     }
     highlight(x, y, color$1, strength) {
-        if (typeof color$1 !== "number") {
+        if (typeof color$1 !== 'number') {
             color$1 = from$2(color$1);
         }
         const mixer = this.get(x, y);
@@ -5362,7 +5259,7 @@ class DancingData {
         return this;
     }
     mix(color$1, percent) {
-        if (typeof color$1 !== "number")
+        if (typeof color$1 !== 'number')
             color$1 = from$2(color$1);
         for (let x = 0; x < this.width; ++x) {
             for (let y = 0; y < this.height; ++y) {
@@ -5375,19 +5272,19 @@ class DancingData {
     }
     dump() {
         const data = [];
-        let header = "    ";
+        let header = '    ';
         for (let x = 0; x < this.width; ++x) {
             if (x % 10 == 0)
-                header += " ";
+                header += ' ';
             header += x % 10;
         }
         data.push(header);
-        data.push("");
+        data.push('');
         for (let y = 0; y < this.height; ++y) {
-            let line = `${("" + y).padStart(2)}] `;
+            let line = `${('' + y).padStart(2)}] `;
             for (let x = 0; x < this.width; ++x) {
                 if (x % 10 == 0)
-                    line += " ";
+                    line += ' ';
                 const mixer = this.get(x, y);
                 let glyph = mixer.ch;
                 if (typeof glyph === 'number') {
@@ -5397,7 +5294,7 @@ class DancingData {
             }
             data.push(line);
         }
-        console.log(data.join("\n"));
+        console.log(data.join('\n'));
     }
 }
 class DancingBuffer extends DancingData {
@@ -5435,10 +5332,109 @@ class DancingBuffer extends DancingData {
     }
 }
 
-var dancingBuffer = {
+var index$1 = {
     __proto__: null,
+    NotSupportedError: NotSupportedError,
+    BaseCanvas: BaseCanvas,
+    Canvas: Canvas,
+    Canvas2D: Canvas2D,
+    withImage: withImage,
+    withFont: withFont,
+    Glyphs: Glyphs,
+    DataBuffer: DataBuffer,
+    Buffer: Buffer,
     DancingData: DancingData,
     DancingBuffer: DancingBuffer
+};
+
+class Sprite {
+    constructor(ch, fg, bg, opacity) {
+        if (!ch && ch !== 0)
+            ch = -1;
+        if (typeof fg !== "number")
+            fg = from$2(fg);
+        if (typeof bg !== "number")
+            bg = from$2(bg);
+        this.ch = ch;
+        this.fg = fg;
+        this.bg = bg;
+        this.opacity = opacity;
+    }
+}
+const sprites = {};
+function makeSprite(...args) {
+    let ch = null, fg = -1, bg = -1, opacity;
+    if (args.length == 0) {
+        return new Sprite(null, -1, -1);
+    }
+    else if (args.length == 1 && Array.isArray(args[0])) {
+        args = args[0];
+    }
+    if (args.length > 3) {
+        opacity = args[3];
+        args.pop();
+    }
+    else if (args.length == 2 &&
+        typeof args[1] == "number" &&
+        args[0].length > 1) {
+        opacity = args.pop();
+    }
+    if (args.length > 1) {
+        ch = args[0] || -1;
+        fg = args[1];
+        bg = args[2];
+    }
+    else {
+        if (typeof args[0] === "string" && args[0].length == 1) {
+            ch = args[0];
+            fg = "white"; // white is default?
+        }
+        else if ((typeof args[0] === "string" && args[0].length > 1) ||
+            typeof args[0] === "number") {
+            bg = args[0];
+        }
+        else if (args[0] instanceof Color) {
+            bg = args[0];
+        }
+        else {
+            const sprite = args[0];
+            ch = sprite.ch || -1;
+            fg = sprite.fg || -1;
+            bg = sprite.bg || -1;
+            opacity = sprite.opacity;
+        }
+    }
+    if (typeof fg === "string")
+        fg = from$2(fg);
+    else if (Array.isArray(fg))
+        fg = make$5(fg);
+    else if (fg === undefined || fg === null)
+        fg = -1;
+    if (typeof bg === "string")
+        bg = from$2(bg);
+    else if (Array.isArray(bg))
+        bg = make$5(bg);
+    else if (bg === undefined || bg === null)
+        bg = -1;
+    return new Sprite(ch, fg, bg, opacity);
+}
+make.sprite = makeSprite;
+function installSprite(name, ...args) {
+    let sprite;
+    // @ts-ignore
+    sprite = this.makeSprite(...args);
+    sprite.name = name;
+    sprites[name] = sprite;
+    return sprite;
+}
+
+var index$2 = {
+    __proto__: null,
+    Sprite: Sprite,
+    sprites: sprites,
+    makeSprite: makeSprite,
+    installSprite: installSprite,
+    Mixer: Mixer
 };
 
 class Bounds {
@@ -5608,13 +5604,11 @@ var message = {
 };
 
 exports.Random = Random;
-exports.buffer = buffer;
-exports.canvas = index;
+exports.canvas = index$1;
 exports.color = color;
 exports.colors = colors;
 exports.config = config;
 exports.cosmetic = cosmetic;
-exports.dancingBuffer = dancingBuffer;
 exports.data = data;
 exports.events = events;
 exports.flag = flag;
@@ -5630,7 +5624,8 @@ exports.path = path;
 exports.random = random;
 exports.range = range;
 exports.scheduler = scheduler;
+exports.sprite = index$2;
 exports.sprites = sprites;
-exports.text = index$1;
+exports.text = index;
 exports.types = types;
 exports.utils = utils;

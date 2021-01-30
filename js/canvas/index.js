@@ -1,5 +1,5 @@
-export * from "./canvas";
-export * from "./sprite";
-export * from "./mixer";
-export * from "./glyphs";
+export * from './canvas';
+export * from './glyphs';
+export * from './buffer';
+export * from './dancingBuffer';
 //# sourceMappingURL=index.js.map

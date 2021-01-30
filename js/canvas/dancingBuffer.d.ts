@@ -1,5 +1,5 @@
-import { Mixer, DrawInfo } from './sprite/mixer';
-import * as Color from './color';
+import { Mixer, DrawInfo } from '../sprite/mixer';
+import * as Color from '../color';
 import { DataBuffer, BufferTarget } from './buffer';
 export declare class DancingData {
     protected _data: Mixer[];

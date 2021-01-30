@@ -1,6 +1,6 @@
 import * as shaders from './shaders';
 import { Glyphs, GlyphOptions } from './glyphs';
-import { BufferTarget } from '../buffer';
+import { BufferTarget } from './buffer';
 import * as IO from '../io';
 import * as Utils from '../utils';
 

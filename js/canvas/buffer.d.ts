@@ -1,22 +1,21 @@
-import { Mixer, DrawInfo } from './sprite/mixer';
-import * as Color from './color';
-import { DataBuffer, BufferTarget } from './buffer';
-export declare class DancingData {
-    protected _data: Mixer[];
+import { DrawInfo } from '../sprite/mixer';
+import * as Color from '../color';
+export declare class DataBuffer {
+    protected _data: Uint32Array;
     private _width;
     private _height;
     constructor(width: number, height: number);
     get width(): number;
     get height(): number;
-    get(x: number, y: number): Mixer;
+    get(x: number, y: number): DrawInfo;
     toGlyph(ch: string | number): number;
     draw(x: number, y: number, glyph?: number | string, fg?: Color.ColorBase, // TODO - White?
-    bg?: Color.ColorBase): this | undefined;
-    drawSprite(x: number, y: number, sprite: Partial<DrawInfo>): this | undefined;
+    bg?: Color.ColorBase): this;
+    drawSprite(x: number, y: number, sprite: Partial<DrawInfo>): this;
     blackOut(x: number, y: number): void;
     blackOut(): void;
     fill(glyph?: number | string, fg?: number, bg?: number): this;
-    copy(other: DataBuffer | DancingData): this;
+    copy(other: DataBuffer): this;
     drawText(x: number, y: number, text: string, fg?: Color.ColorBase, bg?: Color.ColorBase): number;
     wrapText(x: number, y: number, width: number, text: string, fg?: Color.Color | number | string, bg?: Color.Color | number | string, indent?: number): number;
     fillRect(x: number, y: number, w: number, h: number, ch?: string | number | null, fg?: Color.ColorBase | null, bg?: Color.ColorBase | null): this;
@@ -25,7 +24,15 @@ export declare class DancingData {
     mix(color: Color.ColorBase, percent: number): this;
     dump(): void;
 }
-export declare class DancingBuffer extends DancingData {
+export interface BufferTarget {
+    readonly width: number;
+    readonly height: number;
+    draw(x: number, y: number, glyph: number, fg: number, bg: number): BufferTarget;
+    copyTo(dest: Uint32Array): void;
+    copy(src: Uint32Array): void;
+    toGlyph(ch: string | number): number;
+}
+export declare class Buffer extends DataBuffer {
     private _target;
     constructor(canvas: BufferTarget);
     toGlyph(ch: string | number): number;

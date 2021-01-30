@@ -1105,19 +1105,6 @@ declare class Buffer extends DataBuffer {
     load(): this;
 }
 
-type buffer_d_DataBuffer = DataBuffer;
-declare const buffer_d_DataBuffer: typeof DataBuffer;
-type buffer_d_BufferTarget = BufferTarget;
-type buffer_d_Buffer = Buffer;
-declare const buffer_d_Buffer: typeof Buffer;
-declare namespace buffer_d {
-  export {
-    buffer_d_DataBuffer as DataBuffer,
-    buffer_d_BufferTarget as BufferTarget,
-    buffer_d_Buffer as Buffer,
-  };
-}
-
 declare type MouseEventFn = (ev: Event) => void;
 interface CanvasOptions {
     width?: number;
@@ -1205,81 +1192,6 @@ declare class Canvas2D extends BaseCanvas {
 declare function withImage(image: ImageOptions | HTMLImageElement | string): Canvas | Canvas2D;
 declare function withFont(src: FontOptions | string): Canvas | Canvas2D;
 
-interface SpriteConfig {
-    ch?: string | number | null;
-    fg?: ColorBase | null;
-    bg?: ColorBase | null;
-    opacity?: number;
-}
-declare class Sprite implements SpriteType {
-    ch: string | number;
-    fg: number | Color;
-    bg: number | Color;
-    opacity?: number;
-    name?: string;
-    constructor(ch?: string | number | null, fg?: ColorBase | null, bg?: ColorBase | null, opacity?: number);
-}
-declare const sprites: Record<string, Sprite>;
-declare function makeSprite(): Sprite;
-declare function makeSprite(bg: ColorBase, opacity?: number): Sprite;
-declare function makeSprite(ch: string | null, fg: ColorBase | null, bg: ColorBase | null, opacity?: number): Sprite;
-declare function makeSprite(args: any[]): Sprite;
-declare function makeSprite(info: Partial<SpriteConfig>): Sprite;
-declare function installSprite(name: string, bg: ColorBase, opacity?: number): Sprite;
-declare function installSprite(name: string, ch: string | null, fg: Color | number | string | number[] | null, bg: Color | number | string | number[] | null, opacity?: number): Sprite;
-declare function installSprite(name: string, args: any[]): Sprite;
-declare function installSprite(name: string, info: Partial<SpriteConfig>): Sprite;
-
-type index_d_MouseEventFn = MouseEventFn;
-type index_d_CanvasOptions = CanvasOptions;
-type index_d_ImageOptions = ImageOptions;
-type index_d_FontOptions = FontOptions;
-type index_d_NotSupportedError = NotSupportedError;
-declare const index_d_NotSupportedError: typeof NotSupportedError;
-type index_d_BaseCanvas = BaseCanvas;
-declare const index_d_BaseCanvas: typeof BaseCanvas;
-type index_d_Canvas = Canvas;
-declare const index_d_Canvas: typeof Canvas;
-type index_d_Canvas2D = Canvas2D;
-declare const index_d_Canvas2D: typeof Canvas2D;
-declare const index_d_withImage: typeof withImage;
-declare const index_d_withFont: typeof withFont;
-type index_d_SpriteConfig = SpriteConfig;
-type index_d_Sprite = Sprite;
-declare const index_d_Sprite: typeof Sprite;
-declare const index_d_sprites: typeof sprites;
-declare const index_d_makeSprite: typeof makeSprite;
-declare const index_d_installSprite: typeof installSprite;
-type index_d_DrawInfo = DrawInfo;
-type index_d_Mixer = Mixer;
-declare const index_d_Mixer: typeof Mixer;
-type index_d_GlyphOptions = GlyphOptions;
-type index_d_Glyphs = Glyphs;
-declare const index_d_Glyphs: typeof Glyphs;
-declare namespace index_d {
-  export {
-    index_d_MouseEventFn as MouseEventFn,
-    index_d_CanvasOptions as CanvasOptions,
-    index_d_ImageOptions as ImageOptions,
-    index_d_FontOptions as FontOptions,
-    index_d_NotSupportedError as NotSupportedError,
-    index_d_BaseCanvas as BaseCanvas,
-    index_d_Canvas as Canvas,
-    index_d_Canvas2D as Canvas2D,
-    index_d_withImage as withImage,
-    index_d_withFont as withFont,
-    index_d_SpriteConfig as SpriteConfig,
-    index_d_Sprite as Sprite,
-    index_d_sprites as sprites,
-    index_d_makeSprite as makeSprite,
-    index_d_installSprite as installSprite,
-    index_d_DrawInfo as DrawInfo,
-    index_d_Mixer as Mixer,
-    index_d_GlyphOptions as GlyphOptions,
-    index_d_Glyphs as Glyphs,
-  };
-}
-
 declare class DancingData {
     protected _data: Mixer[];
     private _width;
@@ -1312,14 +1224,97 @@ declare class DancingBuffer extends DancingData {
     load(): this;
 }
 
-type dancingBuffer_d_DancingData = DancingData;
-declare const dancingBuffer_d_DancingData: typeof DancingData;
-type dancingBuffer_d_DancingBuffer = DancingBuffer;
-declare const dancingBuffer_d_DancingBuffer: typeof DancingBuffer;
-declare namespace dancingBuffer_d {
+type index_d_MouseEventFn = MouseEventFn;
+type index_d_CanvasOptions = CanvasOptions;
+type index_d_ImageOptions = ImageOptions;
+type index_d_FontOptions = FontOptions;
+type index_d_NotSupportedError = NotSupportedError;
+declare const index_d_NotSupportedError: typeof NotSupportedError;
+type index_d_BaseCanvas = BaseCanvas;
+declare const index_d_BaseCanvas: typeof BaseCanvas;
+type index_d_Canvas = Canvas;
+declare const index_d_Canvas: typeof Canvas;
+type index_d_Canvas2D = Canvas2D;
+declare const index_d_Canvas2D: typeof Canvas2D;
+declare const index_d_withImage: typeof withImage;
+declare const index_d_withFont: typeof withFont;
+type index_d_GlyphOptions = GlyphOptions;
+type index_d_Glyphs = Glyphs;
+declare const index_d_Glyphs: typeof Glyphs;
+type index_d_DataBuffer = DataBuffer;
+declare const index_d_DataBuffer: typeof DataBuffer;
+type index_d_BufferTarget = BufferTarget;
+type index_d_Buffer = Buffer;
+declare const index_d_Buffer: typeof Buffer;
+type index_d_DancingData = DancingData;
+declare const index_d_DancingData: typeof DancingData;
+type index_d_DancingBuffer = DancingBuffer;
+declare const index_d_DancingBuffer: typeof DancingBuffer;
+declare namespace index_d {
   export {
-    dancingBuffer_d_DancingData as DancingData,
-    dancingBuffer_d_DancingBuffer as DancingBuffer,
+    index_d_MouseEventFn as MouseEventFn,
+    index_d_CanvasOptions as CanvasOptions,
+    index_d_ImageOptions as ImageOptions,
+    index_d_FontOptions as FontOptions,
+    index_d_NotSupportedError as NotSupportedError,
+    index_d_BaseCanvas as BaseCanvas,
+    index_d_Canvas as Canvas,
+    index_d_Canvas2D as Canvas2D,
+    index_d_withImage as withImage,
+    index_d_withFont as withFont,
+    index_d_GlyphOptions as GlyphOptions,
+    index_d_Glyphs as Glyphs,
+    index_d_DataBuffer as DataBuffer,
+    index_d_BufferTarget as BufferTarget,
+    index_d_Buffer as Buffer,
+    index_d_DancingData as DancingData,
+    index_d_DancingBuffer as DancingBuffer,
+  };
+}
+
+interface SpriteConfig {
+    ch?: string | number | null;
+    fg?: ColorBase | null;
+    bg?: ColorBase | null;
+    opacity?: number;
+}
+declare class Sprite implements SpriteType {
+    ch: string | number;
+    fg: number | Color;
+    bg: number | Color;
+    opacity?: number;
+    name?: string;
+    constructor(ch?: string | number | null, fg?: ColorBase | null, bg?: ColorBase | null, opacity?: number);
+}
+declare const sprites: Record<string, Sprite>;
+declare function makeSprite(): Sprite;
+declare function makeSprite(bg: ColorBase, opacity?: number): Sprite;
+declare function makeSprite(ch: string | null, fg: ColorBase | null, bg: ColorBase | null, opacity?: number): Sprite;
+declare function makeSprite(args: any[]): Sprite;
+declare function makeSprite(info: Partial<SpriteConfig>): Sprite;
+declare function installSprite(name: string, bg: ColorBase, opacity?: number): Sprite;
+declare function installSprite(name: string, ch: string | null, fg: Color | number | string | number[] | null, bg: Color | number | string | number[] | null, opacity?: number): Sprite;
+declare function installSprite(name: string, args: any[]): Sprite;
+declare function installSprite(name: string, info: Partial<SpriteConfig>): Sprite;
+
+type index_d$1_SpriteConfig = SpriteConfig;
+type index_d$1_Sprite = Sprite;
+declare const index_d$1_Sprite: typeof Sprite;
+declare const index_d$1_sprites: typeof sprites;
+declare const index_d$1_makeSprite: typeof makeSprite;
+declare const index_d$1_installSprite: typeof installSprite;
+type index_d$1_DrawInfo = DrawInfo;
+type index_d$1_Mixer = Mixer;
+declare const index_d$1_Mixer: typeof Mixer;
+declare namespace index_d$1 {
+  export {
+    index_d$1_SpriteConfig as SpriteConfig,
+    index_d$1_Sprite as Sprite,
+    index_d$1_sprites as sprites,
+    index_d$1_makeSprite as makeSprite,
+    index_d$1_installSprite as installSprite,
+    index_d$1_DrawInfo as DrawInfo,
+    index_d$1_Mixer as Mixer,
   };
 }
 
@@ -1360,40 +1355,40 @@ interface Options {
 }
 declare function configure(opts?: Options): void;
 
-declare const index_d$1_compile: typeof compile;
-declare const index_d$1_apply: typeof apply;
-declare const index_d$1_eachChar: typeof eachChar;
-declare const index_d$1_length: typeof length;
-declare const index_d$1_padStart: typeof padStart;
-declare const index_d$1_padEnd: typeof padEnd;
-declare const index_d$1_center: typeof center;
-declare const index_d$1_firstChar: typeof firstChar;
-declare const index_d$1_capitalize: typeof capitalize;
-declare const index_d$1_removeColors: typeof removeColors;
-declare const index_d$1_wordWrap: typeof wordWrap;
-declare const index_d$1_splitIntoLines: typeof splitIntoLines;
-declare const index_d$1_configure: typeof configure;
-declare const index_d$1_addHelper: typeof addHelper;
-declare const index_d$1_options: typeof options;
-type index_d$1_Template = Template;
-declare namespace index_d$1 {
+declare const index_d$2_compile: typeof compile;
+declare const index_d$2_apply: typeof apply;
+declare const index_d$2_eachChar: typeof eachChar;
+declare const index_d$2_length: typeof length;
+declare const index_d$2_padStart: typeof padStart;
+declare const index_d$2_padEnd: typeof padEnd;
+declare const index_d$2_center: typeof center;
+declare const index_d$2_firstChar: typeof firstChar;
+declare const index_d$2_capitalize: typeof capitalize;
+declare const index_d$2_removeColors: typeof removeColors;
+declare const index_d$2_wordWrap: typeof wordWrap;
+declare const index_d$2_splitIntoLines: typeof splitIntoLines;
+declare const index_d$2_configure: typeof configure;
+declare const index_d$2_addHelper: typeof addHelper;
+declare const index_d$2_options: typeof options;
+type index_d$2_Template = Template;
+declare namespace index_d$2 {
   export {
-    index_d$1_compile as compile,
-    index_d$1_apply as apply,
-    index_d$1_eachChar as eachChar,
-    index_d$1_length as length,
-    index_d$1_padStart as padStart,
-    index_d$1_padEnd as padEnd,
-    index_d$1_center as center,
-    index_d$1_firstChar as firstChar,
-    index_d$1_capitalize as capitalize,
-    index_d$1_removeColors as removeColors,
-    index_d$1_wordWrap as wordWrap,
-    index_d$1_splitIntoLines as splitIntoLines,
-    index_d$1_configure as configure,
-    index_d$1_addHelper as addHelper,
-    index_d$1_options as options,
-    index_d$1_Template as Template,
+    index_d$2_compile as compile,
+    index_d$2_apply as apply,
+    index_d$2_eachChar as eachChar,
+    index_d$2_length as length,
+    index_d$2_padStart as padStart,
+    index_d$2_padEnd as padEnd,
+    index_d$2_center as center,
+    index_d$2_firstChar as firstChar,
+    index_d$2_capitalize as capitalize,
+    index_d$2_removeColors as removeColors,
+    index_d$2_wordWrap as wordWrap,
+    index_d$2_splitIntoLines as splitIntoLines,
+    index_d$2_configure as configure,
+    index_d$2_addHelper as addHelper,
+    index_d$2_options as options,
+    index_d$2_Template as Template,
   };
 }
 
@@ -1445,4 +1440,4 @@ declare const config: any;
 declare const make$5: any;
 declare const flags: any;
 
-export { Random, buffer_d as buffer, index_d as canvas, color_d as color, colors, config, cosmetic, dancingBuffer_d as dancingBuffer, data, events_d as events, flag_d as flag, flags, fov_d as fov, frequency_d as frequency, grid_d as grid, io_d as io, loop, make$5 as make, message_d as message, path_d as path, random, range_d as range, scheduler_d as scheduler, sprites, index_d$1 as text, types_d as types, utils_d as utils };
+export { Random, index_d as canvas, color_d as color, colors, config, cosmetic, data, events_d as events, flag_d as flag, flags, fov_d as fov, frequency_d as frequency, grid_d as grid, io_d as io, loop, make$5 as make, message_d as message, path_d as path, random, range_d as range, scheduler_d as scheduler, index_d$1 as sprite, sprites, index_d$2 as text, types_d as types, utils_d as utils };
