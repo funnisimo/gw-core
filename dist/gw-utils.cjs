@@ -3747,12 +3747,12 @@ class Color extends Int16Array {
         return this._r < 0;
     }
     equals(other) {
-        if (typeof other === "string") {
-            if (!other.startsWith("#"))
+        if (typeof other === 'string') {
+            if (!other.startsWith('#'))
                 return this.name == other;
             return this.css(other.length > 4) == other;
         }
-        else if (typeof other === "number") {
+        else if (typeof other === 'number') {
             return this.toInt() == other || this.toInt(true) == other;
         }
         const O = from$2(other);
@@ -3826,7 +3826,17 @@ class Color extends Int16Array {
     toInt(base256 = false) {
         if (this.isNull())
             return -1;
-        return toColorInt(this._r, this._g, this._b, base256);
+        if (!this.dances) {
+            return toColorInt(this._r, this._g, this._b, base256);
+        }
+        const rand = cosmetic.number(this._rand);
+        const redRand = cosmetic.number(this._redRand);
+        const greenRand = cosmetic.number(this._greenRand);
+        const blueRand = cosmetic.number(this._blueRand);
+        const r = this._r + rand + redRand;
+        const g = this._g + rand + greenRand;
+        const b = this._b + rand + blueRand;
+        return toColorInt(r, g, b, base256);
     }
     clamp() {
         if (this.isNull())
@@ -3955,13 +3965,13 @@ class Color extends Int16Array {
      */
     css(base256 = false) {
         const v = this.toInt(base256);
-        return "#" + v.toString(16).padStart(base256 ? 6 : 3, "0");
+        return '#' + v.toString(16).padStart(base256 ? 6 : 3, '0');
     }
     toString(base256 = false) {
         if (this.name)
             return this.name;
         if (this.isNull())
-            return "null color";
+            return 'null color';
         return this.css(base256);
     }
 }
@@ -3976,10 +3986,10 @@ function fromArray(vals, base256 = false) {
     return new Color(...vals);
 }
 function fromCss(css) {
-    if (!css.startsWith("#")) {
+    if (!css.startsWith('#')) {
         throw new Error('Color CSS strings must be of form "#abc" or "#abcdef" - received: [' +
             css +
-            "]");
+            ']');
     }
     const c = Number.parseInt(css.substring(1), 16);
     let r, g, b;
@@ -3998,7 +4008,7 @@ function fromCss(css) {
 function fromName(name) {
     const c = colors[name];
     if (!c) {
-        throw new Error("Unknown color name: " + name);
+        throw new Error('Unknown color name: ' + name);
     }
     return c;
 }
@@ -4032,8 +4042,8 @@ function make$5(...args) {
     if (arg instanceof Color) {
         return arg.clone();
     }
-    if (typeof arg === "string") {
-        if (arg.startsWith("#")) {
+    if (typeof arg === 'string') {
+        if (arg.startsWith('#')) {
             return fromCss(arg);
         }
         return fromName(arg).clone();
@@ -4041,10 +4051,10 @@ function make$5(...args) {
     else if (Array.isArray(arg)) {
         return fromArray(arg, base256);
     }
-    else if (typeof arg === "number") {
+    else if (typeof arg === 'number') {
         return fromNumber(arg, base256);
     }
-    throw new Error("Failed to make color - unknown argument: " + JSON.stringify(arg));
+    throw new Error('Failed to make color - unknown argument: ' + JSON.stringify(arg));
 }
 make.color = make$5;
 function from$2(...args) {
@@ -4053,8 +4063,8 @@ function from$2(...args) {
         return arg;
     if (arg === undefined)
         return new Color(-1);
-    if (typeof arg === "string") {
-        if (!arg.startsWith("#")) {
+    if (typeof arg === 'string') {
+        if (!arg.startsWith('#')) {
             return fromName(arg);
         }
     }
@@ -4126,44 +4136,44 @@ function installSpread(name, ...args) {
     else {
         c = install(name, ...args);
     }
-    install("light_" + name, c.clone().lighten(25));
-    install("lighter_" + name, c.clone().lighten(50));
-    install("lightest_" + name, c.clone().lighten(75));
-    install("dark_" + name, c.clone().darken(25));
-    install("darker_" + name, c.clone().darken(50));
-    install("darkest_" + name, c.clone().darken(75));
+    install('light_' + name, c.clone().lighten(25));
+    install('lighter_' + name, c.clone().lighten(50));
+    install('lightest_' + name, c.clone().lighten(75));
+    install('dark_' + name, c.clone().darken(25));
+    install('darker_' + name, c.clone().darken(50));
+    install('darkest_' + name, c.clone().darken(75));
     return c;
 }
-const BLACK = install("black", 0x000);
-const WHITE = install("white", 0xfff);
-installSpread("teal", [30, 100, 100]);
-installSpread("brown", [60, 40, 0]);
-installSpread("tan", [80, 70, 55]); // 80, 67,		15);
-installSpread("pink", [100, 60, 66]);
-installSpread("gray", [50, 50, 50]);
-installSpread("yellow", [100, 100, 0]);
-installSpread("purple", [100, 0, 100]);
-installSpread("green", [0, 100, 0]);
-installSpread("orange", [100, 50, 0]);
-installSpread("blue", [0, 0, 100]);
-installSpread("red", [100, 0, 0]);
-installSpread("amber", [100, 75, 0]);
-installSpread("flame", [100, 25, 0]);
-installSpread("fuchsia", [100, 0, 100]);
-installSpread("magenta", [100, 0, 75]);
-installSpread("crimson", [100, 0, 25]);
-installSpread("lime", [75, 100, 0]);
-installSpread("chartreuse", [50, 100, 0]);
-installSpread("sepia", [50, 40, 25]);
-installSpread("violet", [50, 0, 100]);
-installSpread("han", [25, 0, 100]);
-installSpread("cyan", [0, 100, 100]);
-installSpread("turquoise", [0, 100, 75]);
-installSpread("sea", [0, 100, 50]);
-installSpread("sky", [0, 75, 100]);
-installSpread("azure", [0, 50, 100]);
-installSpread("silver", [75, 75, 75]);
-installSpread("gold", [100, 85, 0]);
+const BLACK = install('black', 0x000);
+const WHITE = install('white', 0xfff);
+installSpread('teal', [30, 100, 100]);
+installSpread('brown', [60, 40, 0]);
+installSpread('tan', [80, 70, 55]); // 80, 67,		15);
+installSpread('pink', [100, 60, 66]);
+installSpread('gray', [50, 50, 50]);
+installSpread('yellow', [100, 100, 0]);
+installSpread('purple', [100, 0, 100]);
+installSpread('green', [0, 100, 0]);
+installSpread('orange', [100, 50, 0]);
+installSpread('blue', [0, 0, 100]);
+installSpread('red', [100, 0, 0]);
+installSpread('amber', [100, 75, 0]);
+installSpread('flame', [100, 25, 0]);
+installSpread('fuchsia', [100, 0, 100]);
+installSpread('magenta', [100, 0, 75]);
+installSpread('crimson', [100, 0, 25]);
+installSpread('lime', [75, 100, 0]);
+installSpread('chartreuse', [50, 100, 0]);
+installSpread('sepia', [50, 40, 25]);
+installSpread('violet', [50, 0, 100]);
+installSpread('han', [25, 0, 100]);
+installSpread('cyan', [0, 100, 100]);
+installSpread('turquoise', [0, 100, 75]);
+installSpread('sea', [0, 100, 50]);
+installSpread('sky', [0, 75, 100]);
+installSpread('azure', [0, 50, 100]);
+installSpread('silver', [75, 75, 75]);
+installSpread('gold', [100, 85, 0]);
 
 var color = {
     __proto__: null,
@@ -5351,9 +5361,9 @@ class Sprite {
     constructor(ch, fg, bg, opacity) {
         if (!ch && ch !== 0)
             ch = -1;
-        if (typeof fg !== "number")
+        if (typeof fg !== 'number')
             fg = from$2(fg);
-        if (typeof bg !== "number")
+        if (typeof bg !== 'number')
             bg = from$2(bg);
         this.ch = ch;
         this.fg = fg;
@@ -5362,7 +5372,7 @@ class Sprite {
     }
 }
 const sprites = {};
-function makeSprite(...args) {
+function make$6(...args) {
     let ch = null, fg = -1, bg = -1, opacity;
     if (args.length == 0) {
         return new Sprite(null, -1, -1);
@@ -5375,7 +5385,7 @@ function makeSprite(...args) {
         args.pop();
     }
     else if (args.length == 2 &&
-        typeof args[1] == "number" &&
+        typeof args[1] == 'number' &&
         args[0].length > 1) {
         opacity = args.pop();
     }
@@ -5385,12 +5395,12 @@ function makeSprite(...args) {
         bg = args[2];
     }
     else {
-        if (typeof args[0] === "string" && args[0].length == 1) {
+        if (typeof args[0] === 'string' && args[0].length == 1) {
             ch = args[0];
-            fg = "white"; // white is default?
+            fg = 'white'; // white is default?
         }
-        else if ((typeof args[0] === "string" && args[0].length > 1) ||
-            typeof args[0] === "number") {
+        else if ((typeof args[0] === 'string' && args[0].length > 1) ||
+            typeof args[0] === 'number') {
             bg = args[0];
         }
         else if (args[0] instanceof Color) {
@@ -5404,13 +5414,13 @@ function makeSprite(...args) {
             opacity = sprite.opacity;
         }
     }
-    if (typeof fg === "string")
+    if (typeof fg === 'string')
         fg = from$2(fg);
     else if (Array.isArray(fg))
         fg = make$5(fg);
     else if (fg === undefined || fg === null)
         fg = -1;
-    if (typeof bg === "string")
+    if (typeof bg === 'string')
         bg = from$2(bg);
     else if (Array.isArray(bg))
         bg = make$5(bg);
@@ -5418,11 +5428,11 @@ function makeSprite(...args) {
         bg = -1;
     return new Sprite(ch, fg, bg, opacity);
 }
-make.sprite = makeSprite;
-function installSprite(name, ...args) {
+make.sprite = make$6;
+function install$1(name, ...args) {
     let sprite;
     // @ts-ignore
-    sprite = this.makeSprite(...args);
+    sprite = make$6(...args);
     sprite.name = name;
     sprites[name] = sprite;
     return sprite;
@@ -5432,8 +5442,8 @@ var index$2 = {
     __proto__: null,
     Sprite: Sprite,
     sprites: sprites,
-    makeSprite: makeSprite,
-    installSprite: installSprite,
+    make: make$6,
+    install: install$1,
     Mixer: Mixer
 };
 
@@ -5464,12 +5474,12 @@ var types = {
 };
 
 const templates = {};
-function install$1(id, msg) {
+function install$2(id, msg) {
     const template = compile(msg);
     templates[id] = template;
 }
 function installAll(config) {
-    Object.entries(config).forEach(([id, msg]) => install$1(id, msg));
+    Object.entries(config).forEach(([id, msg]) => install$2(id, msg));
 }
 // messages
 const ARCHIVE = [];
@@ -5592,7 +5602,7 @@ function forEach(fn) {
 var message = {
     __proto__: null,
     templates: templates,
-    install: install$1,
+    install: install$2,
     installAll: installAll,
     needsUpdate: needsUpdate,
     configure: configure$1,

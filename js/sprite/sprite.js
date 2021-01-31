@@ -1,12 +1,12 @@
-import * as Color from "../color";
-import { make } from "../gw";
+import * as Color from '../color';
+import { make as Make } from '../gw';
 export class Sprite {
     constructor(ch, fg, bg, opacity) {
         if (!ch && ch !== 0)
             ch = -1;
-        if (typeof fg !== "number")
+        if (typeof fg !== 'number')
             fg = Color.from(fg);
-        if (typeof bg !== "number")
+        if (typeof bg !== 'number')
             bg = Color.from(bg);
         this.ch = ch;
         this.fg = fg;
@@ -15,7 +15,7 @@ export class Sprite {
     }
 }
 export const sprites = {};
-export function makeSprite(...args) {
+export function make(...args) {
     let ch = null, fg = -1, bg = -1, opacity;
     if (args.length == 0) {
         return new Sprite(null, -1, -1);
@@ -28,7 +28,7 @@ export function makeSprite(...args) {
         args.pop();
     }
     else if (args.length == 2 &&
-        typeof args[1] == "number" &&
+        typeof args[1] == 'number' &&
         args[0].length > 1) {
         opacity = args.pop();
     }
@@ -38,12 +38,12 @@ export function makeSprite(...args) {
         bg = args[2];
     }
     else {
-        if (typeof args[0] === "string" && args[0].length == 1) {
+        if (typeof args[0] === 'string' && args[0].length == 1) {
             ch = args[0];
-            fg = "white"; // white is default?
+            fg = 'white'; // white is default?
         }
-        else if ((typeof args[0] === "string" && args[0].length > 1) ||
-            typeof args[0] === "number") {
+        else if ((typeof args[0] === 'string' && args[0].length > 1) ||
+            typeof args[0] === 'number') {
             bg = args[0];
         }
         else if (args[0] instanceof Color.Color) {
@@ -57,13 +57,13 @@ export function makeSprite(...args) {
             opacity = sprite.opacity;
         }
     }
-    if (typeof fg === "string")
+    if (typeof fg === 'string')
         fg = Color.from(fg);
     else if (Array.isArray(fg))
         fg = Color.make(fg);
     else if (fg === undefined || fg === null)
         fg = -1;
-    if (typeof bg === "string")
+    if (typeof bg === 'string')
         bg = Color.from(bg);
     else if (Array.isArray(bg))
         bg = Color.make(bg);
@@ -71,11 +71,11 @@ export function makeSprite(...args) {
         bg = -1;
     return new Sprite(ch, fg, bg, opacity);
 }
-make.sprite = makeSprite;
-export function installSprite(name, ...args) {
+Make.sprite = make;
+export function install(name, ...args) {
     let sprite;
     // @ts-ignore
-    sprite = this.makeSprite(...args);
+    sprite = make(...args);
     sprite.name = name;
     sprites[name] = sprite;
     return sprite;

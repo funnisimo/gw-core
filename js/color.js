@@ -1,5 +1,5 @@
-import { cosmetic } from "./random";
-import { make as Make } from "./gw";
+import { cosmetic } from './random';
+import { make as Make } from './gw';
 function toColorInt(r, g, b, base256) {
     if (base256) {
         r = Math.max(0, Math.min(255, Math.round(r * 2.550001)));
@@ -104,12 +104,12 @@ export class Color extends Int16Array {
         return this._r < 0;
     }
     equals(other) {
-        if (typeof other === "string") {
-            if (!other.startsWith("#"))
+        if (typeof other === 'string') {
+            if (!other.startsWith('#'))
                 return this.name == other;
             return this.css(other.length > 4) == other;
         }
-        else if (typeof other === "number") {
+        else if (typeof other === 'number') {
             return this.toInt() == other || this.toInt(true) == other;
         }
         const O = from(other);
@@ -183,7 +183,17 @@ export class Color extends Int16Array {
     toInt(base256 = false) {
         if (this.isNull())
             return -1;
-        return toColorInt(this._r, this._g, this._b, base256);
+        if (!this.dances) {
+            return toColorInt(this._r, this._g, this._b, base256);
+        }
+        const rand = cosmetic.number(this._rand);
+        const redRand = cosmetic.number(this._redRand);
+        const greenRand = cosmetic.number(this._greenRand);
+        const blueRand = cosmetic.number(this._blueRand);
+        const r = this._r + rand + redRand;
+        const g = this._g + rand + greenRand;
+        const b = this._b + rand + blueRand;
+        return toColorInt(r, g, b, base256);
     }
     clamp() {
         if (this.isNull())
@@ -312,13 +322,13 @@ export class Color extends Int16Array {
      */
     css(base256 = false) {
         const v = this.toInt(base256);
-        return "#" + v.toString(16).padStart(base256 ? 6 : 3, "0");
+        return '#' + v.toString(16).padStart(base256 ? 6 : 3, '0');
     }
     toString(base256 = false) {
         if (this.name)
             return this.name;
         if (this.isNull())
-            return "null color";
+            return 'null color';
         return this.css(base256);
     }
 }
@@ -333,10 +343,10 @@ export function fromArray(vals, base256 = false) {
     return new Color(...vals);
 }
 export function fromCss(css) {
-    if (!css.startsWith("#")) {
+    if (!css.startsWith('#')) {
         throw new Error('Color CSS strings must be of form "#abc" or "#abcdef" - received: [' +
             css +
-            "]");
+            ']');
     }
     const c = Number.parseInt(css.substring(1), 16);
     let r, g, b;
@@ -355,7 +365,7 @@ export function fromCss(css) {
 export function fromName(name) {
     const c = colors[name];
     if (!c) {
-        throw new Error("Unknown color name: " + name);
+        throw new Error('Unknown color name: ' + name);
     }
     return c;
 }
@@ -389,8 +399,8 @@ export function make(...args) {
     if (arg instanceof Color) {
         return arg.clone();
     }
-    if (typeof arg === "string") {
-        if (arg.startsWith("#")) {
+    if (typeof arg === 'string') {
+        if (arg.startsWith('#')) {
             return fromCss(arg);
         }
         return fromName(arg).clone();
@@ -398,10 +408,10 @@ export function make(...args) {
     else if (Array.isArray(arg)) {
         return fromArray(arg, base256);
     }
-    else if (typeof arg === "number") {
+    else if (typeof arg === 'number') {
         return fromNumber(arg, base256);
     }
-    throw new Error("Failed to make color - unknown argument: " + JSON.stringify(arg));
+    throw new Error('Failed to make color - unknown argument: ' + JSON.stringify(arg));
 }
 Make.color = make;
 export function from(...args) {
@@ -410,8 +420,8 @@ export function from(...args) {
         return arg;
     if (arg === undefined)
         return new Color(-1);
-    if (typeof arg === "string") {
-        if (!arg.startsWith("#")) {
+    if (typeof arg === 'string') {
+        if (!arg.startsWith('#')) {
             return fromName(arg);
         }
     }
@@ -483,42 +493,42 @@ export function installSpread(name, ...args) {
     else {
         c = install(name, ...args);
     }
-    install("light_" + name, c.clone().lighten(25));
-    install("lighter_" + name, c.clone().lighten(50));
-    install("lightest_" + name, c.clone().lighten(75));
-    install("dark_" + name, c.clone().darken(25));
-    install("darker_" + name, c.clone().darken(50));
-    install("darkest_" + name, c.clone().darken(75));
+    install('light_' + name, c.clone().lighten(25));
+    install('lighter_' + name, c.clone().lighten(50));
+    install('lightest_' + name, c.clone().lighten(75));
+    install('dark_' + name, c.clone().darken(25));
+    install('darker_' + name, c.clone().darken(50));
+    install('darkest_' + name, c.clone().darken(75));
     return c;
 }
-const BLACK = install("black", 0x000);
-const WHITE = install("white", 0xfff);
-installSpread("teal", [30, 100, 100]);
-installSpread("brown", [60, 40, 0]);
-installSpread("tan", [80, 70, 55]); // 80, 67,		15);
-installSpread("pink", [100, 60, 66]);
-installSpread("gray", [50, 50, 50]);
-installSpread("yellow", [100, 100, 0]);
-installSpread("purple", [100, 0, 100]);
-installSpread("green", [0, 100, 0]);
-installSpread("orange", [100, 50, 0]);
-installSpread("blue", [0, 0, 100]);
-installSpread("red", [100, 0, 0]);
-installSpread("amber", [100, 75, 0]);
-installSpread("flame", [100, 25, 0]);
-installSpread("fuchsia", [100, 0, 100]);
-installSpread("magenta", [100, 0, 75]);
-installSpread("crimson", [100, 0, 25]);
-installSpread("lime", [75, 100, 0]);
-installSpread("chartreuse", [50, 100, 0]);
-installSpread("sepia", [50, 40, 25]);
-installSpread("violet", [50, 0, 100]);
-installSpread("han", [25, 0, 100]);
-installSpread("cyan", [0, 100, 100]);
-installSpread("turquoise", [0, 100, 75]);
-installSpread("sea", [0, 100, 50]);
-installSpread("sky", [0, 75, 100]);
-installSpread("azure", [0, 50, 100]);
-installSpread("silver", [75, 75, 75]);
-installSpread("gold", [100, 85, 0]);
+const BLACK = install('black', 0x000);
+const WHITE = install('white', 0xfff);
+installSpread('teal', [30, 100, 100]);
+installSpread('brown', [60, 40, 0]);
+installSpread('tan', [80, 70, 55]); // 80, 67,		15);
+installSpread('pink', [100, 60, 66]);
+installSpread('gray', [50, 50, 50]);
+installSpread('yellow', [100, 100, 0]);
+installSpread('purple', [100, 0, 100]);
+installSpread('green', [0, 100, 0]);
+installSpread('orange', [100, 50, 0]);
+installSpread('blue', [0, 0, 100]);
+installSpread('red', [100, 0, 0]);
+installSpread('amber', [100, 75, 0]);
+installSpread('flame', [100, 25, 0]);
+installSpread('fuchsia', [100, 0, 100]);
+installSpread('magenta', [100, 0, 75]);
+installSpread('crimson', [100, 0, 25]);
+installSpread('lime', [75, 100, 0]);
+installSpread('chartreuse', [50, 100, 0]);
+installSpread('sepia', [50, 40, 25]);
+installSpread('violet', [50, 0, 100]);
+installSpread('han', [25, 0, 100]);
+installSpread('cyan', [0, 100, 100]);
+installSpread('turquoise', [0, 100, 75]);
+installSpread('sea', [0, 100, 50]);
+installSpread('sky', [0, 75, 100]);
+installSpread('azure', [0, 50, 100]);
+installSpread('silver', [75, 75, 75]);
+installSpread('gold', [100, 85, 0]);
 //# sourceMappingURL=color.js.map

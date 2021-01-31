@@ -1287,22 +1287,20 @@ declare class Sprite implements SpriteType {
     constructor(ch?: string | number | null, fg?: ColorBase | null, bg?: ColorBase | null, opacity?: number);
 }
 declare const sprites: Record<string, Sprite>;
-declare function makeSprite(): Sprite;
-declare function makeSprite(bg: ColorBase, opacity?: number): Sprite;
-declare function makeSprite(ch: string | null, fg: ColorBase | null, bg: ColorBase | null, opacity?: number): Sprite;
-declare function makeSprite(args: any[]): Sprite;
-declare function makeSprite(info: Partial<SpriteConfig>): Sprite;
-declare function installSprite(name: string, bg: ColorBase, opacity?: number): Sprite;
-declare function installSprite(name: string, ch: string | null, fg: Color | number | string | number[] | null, bg: Color | number | string | number[] | null, opacity?: number): Sprite;
-declare function installSprite(name: string, args: any[]): Sprite;
-declare function installSprite(name: string, info: Partial<SpriteConfig>): Sprite;
+declare function make$5(): Sprite;
+declare function make$5(bg: ColorBase, opacity?: number): Sprite;
+declare function make$5(ch: string | null, fg: ColorBase | null, bg: ColorBase | null, opacity?: number): Sprite;
+declare function make$5(args: any[]): Sprite;
+declare function make$5(info: Partial<SpriteConfig>): Sprite;
+declare function install$1(name: string, bg: ColorBase, opacity?: number): Sprite;
+declare function install$1(name: string, ch: string | null, fg: Color | number | string | number[] | null, bg: Color | number | string | number[] | null, opacity?: number): Sprite;
+declare function install$1(name: string, args: any[]): Sprite;
+declare function install$1(name: string, info: Partial<SpriteConfig>): Sprite;
 
 type index_d$1_SpriteConfig = SpriteConfig;
 type index_d$1_Sprite = Sprite;
 declare const index_d$1_Sprite: typeof Sprite;
 declare const index_d$1_sprites: typeof sprites;
-declare const index_d$1_makeSprite: typeof makeSprite;
-declare const index_d$1_installSprite: typeof installSprite;
 type index_d$1_DrawInfo = DrawInfo;
 type index_d$1_Mixer = Mixer;
 declare const index_d$1_Mixer: typeof Mixer;
@@ -1311,8 +1309,8 @@ declare namespace index_d$1 {
     index_d$1_SpriteConfig as SpriteConfig,
     index_d$1_Sprite as Sprite,
     index_d$1_sprites as sprites,
-    index_d$1_makeSprite as makeSprite,
-    index_d$1_installSprite as installSprite,
+    make$5 as make,
+    install$1 as install,
     index_d$1_DrawInfo as DrawInfo,
     index_d$1_Mixer as Mixer,
   };
@@ -1393,7 +1391,7 @@ declare namespace index_d$2 {
 }
 
 declare const templates: Record<string, Template>;
-declare function install$1(id: string, msg: string): void;
+declare function install$2(id: string, msg: string): void;
 declare function installAll(config: Record<string, string>): void;
 declare function needsUpdate(needs?: boolean): boolean;
 interface MessageOptions {
@@ -1421,7 +1419,7 @@ declare const message_d_forEach: typeof forEach;
 declare namespace message_d {
   export {
     message_d_templates as templates,
-    install$1 as install,
+    install$2 as install,
     message_d_installAll as installAll,
     message_d_needsUpdate as needsUpdate,
     message_d_MessageOptions as MessageOptions,
@@ -1437,7 +1435,7 @@ declare namespace message_d {
 
 declare const data: any;
 declare const config: any;
-declare const make$5: any;
+declare const make$6: any;
 declare const flags: any;
 
-export { Random, index_d as canvas, color_d as color, colors, config, cosmetic, data, events_d as events, flag_d as flag, flags, fov_d as fov, frequency_d as frequency, grid_d as grid, io_d as io, loop, make$5 as make, message_d as message, path_d as path, random, range_d as range, scheduler_d as scheduler, index_d$1 as sprite, sprites, index_d$2 as text, types_d as types, utils_d as utils };
+export { Random, index_d as canvas, color_d as color, colors, config, cosmetic, data, events_d as events, flag_d as flag, flags, fov_d as fov, frequency_d as frequency, grid_d as grid, io_d as io, loop, make$6 as make, message_d as message, path_d as path, random, range_d as range, scheduler_d as scheduler, index_d$1 as sprite, sprites, index_d$2 as text, types_d as types, utils_d as utils };
