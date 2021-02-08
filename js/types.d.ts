@@ -1,6 +1,6 @@
-import { Color, ColorBase } from "./color";
-import { Range } from "./range";
-import * as Utils from "./utils";
+import { Color, ColorBase } from './color';
+import { Range } from './range';
+import * as Utils from './utils';
 export interface SpriteType {
     readonly ch?: string | number;
     readonly fg?: ColorBase;
@@ -79,7 +79,9 @@ export interface CellType {
 export interface MapType {
     readonly width: number;
     readonly height: number;
-    cell: (x: number, y: number) => CellType;
+    isVisible: (x: number, y: number) => boolean;
+    actorAt: (x: number, y: number) => ActorType | null;
+    itemAt: (x: number, y: number) => ItemType | null;
 }
 export declare class Bounds {
     x: number;

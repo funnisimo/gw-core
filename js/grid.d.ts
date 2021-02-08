@@ -3,7 +3,8 @@ declare type Loc = Utils.Loc;
 export declare type ArrayInit<T> = (i: number) => T;
 export declare function makeArray<T>(l: number, fn?: T | ArrayInit<T>): Array<T>;
 export declare type GridInit<T> = (x: number, y: number) => T;
-export declare type GridEach<T> = (value: T, x: number, y: number, grid: Grid<T>) => void;
+export declare type GridEach<T> = (value: T, x: number, y: number, grid: Grid<T>) => any;
+export declare type AsyncGridEach<T> = (value: T, x: number, y: number, grid: Grid<T>) => Promise<any>;
 export declare type GridUpdate<T> = (value: T, x: number, y: number, grid: Grid<T>) => T;
 export declare type GridMatch<T> = (value: T, x: number, y: number, grid: Grid<T>) => boolean;
 export declare type GridFormat<T> = (value: T, x: number, y: number) => string;
@@ -22,7 +23,9 @@ export declare class Grid<T> extends Array<Array<T>> {
      // @ts-ignore
 
     forEach(fn: GridEach<T>): void;
+    forEachAsync(fn: AsyncGridEach<T>): Promise<void>;
     eachNeighbor(x: number, y: number, fn: GridEach<T>, only4dirs?: boolean): void;
+    eachNeighborAsync(x: number, y: number, fn: AsyncGridEach<T>, only4dirs?: boolean): Promise<void>;
     forRect(x: number, y: number, w: number, h: number, fn: GridEach<T>): void;
     randomEach(fn: GridEach<T>): void;
     /**

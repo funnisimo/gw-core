@@ -1,4 +1,4 @@
-import * as Utils from "./utils";
+import * as Utils from './utils';
 export class Bounds {
     constructor(x, y, w, h) {
         this.x = x;
@@ -9,7 +9,7 @@ export class Bounds {
     contains(...args) {
         let x = args[0];
         let y = args[1];
-        if (typeof x !== "number") {
+        if (typeof x !== 'number') {
             y = Utils.y(x);
             x = Utils.x(x);
         }

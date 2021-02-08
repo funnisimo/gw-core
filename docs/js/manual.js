@@ -190,8 +190,8 @@ var Manual = {
 		$("#year").html(year);
 
 		$.get("VERSION", function(data, status) {
-			if (status != 200) { return; }
-			$("h1").html("<span>v" + data.trim() + "</span>");
+			if (status != "success") { return; }
+			$("#version").html(data.trim());
 		});
 
 		window.onhashchange = this._hashChange.bind(this);

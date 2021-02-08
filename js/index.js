@@ -30,6 +30,8 @@ import * as types_1 from './types';
 export { types_1 as types };
 import * as message_1 from './message';
 export { message_1 as message };
+import * as effect_1 from './effect';
+export { effect_1 as effect };
 export { cosmetic, random, Random } from './random';
 export { colors } from './color';
 export { sprites } from './sprite/index';

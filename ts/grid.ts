@@ -45,7 +45,14 @@ export type GridEach<T> = (
     x: number,
     y: number,
     grid: Grid<T>
-) => void;
+) => any;
+export type AsyncGridEach<T> = (
+    value: T,
+    x: number,
+    y: number,
+    grid: Grid<T>
+) => Promise<any>;
+
 export type GridUpdate<T> = (
     value: T,
     x: number,
@@ -112,6 +119,15 @@ export class Grid<T> extends Array<Array<T>> {
         }
     }
 
+    async forEachAsync(fn: AsyncGridEach<T>) {
+        let i, j;
+        for (i = 0; i < this.width; i++) {
+            for (j = 0; j < this.height; j++) {
+                await fn(this[i][j], i, j, this);
+            }
+        }
+    }
+
     eachNeighbor(x: number, y: number, fn: GridEach<T>, only4dirs = false) {
         const maxIndex = only4dirs ? 4 : 8;
         for (let d = 0; d < maxIndex; ++d) {
@@ -120,6 +136,23 @@ export class Grid<T> extends Array<Array<T>> {
             const j = y + dir[1];
             if (this.hasXY(i, j)) {
                 fn(this[i][j], i, j, this);
+            }
+        }
+    }
+
+    async eachNeighborAsync(
+        x: number,
+        y: number,
+        fn: AsyncGridEach<T>,
+        only4dirs = false
+    ) {
+        const maxIndex = only4dirs ? 4 : 8;
+        for (let d = 0; d < maxIndex; ++d) {
+            const dir = DIRS[d];
+            const i = x + dir[0];
+            const j = y + dir[1];
+            if (this.hasXY(i, j)) {
+                await fn(this[i][j], i, j, this);
             }
         }
     }

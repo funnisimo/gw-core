@@ -83,6 +83,14 @@ export class Grid extends Array {
             }
         }
     }
+    async forEachAsync(fn) {
+        let i, j;
+        for (i = 0; i < this.width; i++) {
+            for (j = 0; j < this.height; j++) {
+                await fn(this[i][j], i, j, this);
+            }
+        }
+    }
     eachNeighbor(x, y, fn, only4dirs = false) {
         const maxIndex = only4dirs ? 4 : 8;
         for (let d = 0; d < maxIndex; ++d) {
@@ -91,6 +99,17 @@ export class Grid extends Array {
             const j = y + dir[1];
             if (this.hasXY(i, j)) {
                 fn(this[i][j], i, j, this);
+            }
+        }
+    }
+    async eachNeighborAsync(x, y, fn, only4dirs = false) {
+        const maxIndex = only4dirs ? 4 : 8;
+        for (let d = 0; d < maxIndex; ++d) {
+            const dir = DIRS[d];
+            const i = x + dir[0];
+            const j = y + dir[1];
+            if (this.hasXY(i, j)) {
+                await fn(this[i][j], i, j, this);
             }
         }
     }

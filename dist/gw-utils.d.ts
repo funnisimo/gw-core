@@ -302,7 +302,8 @@ declare type Loc$1 = Loc;
 declare type ArrayInit<T> = (i: number) => T;
 declare function makeArray<T>(l: number, fn?: T | ArrayInit<T>): Array<T>;
 declare type GridInit<T> = (x: number, y: number) => T;
-declare type GridEach<T> = (value: T, x: number, y: number, grid: Grid<T>) => void;
+declare type GridEach<T> = (value: T, x: number, y: number, grid: Grid<T>) => any;
+declare type AsyncGridEach<T> = (value: T, x: number, y: number, grid: Grid<T>) => Promise<any>;
 declare type GridUpdate<T> = (value: T, x: number, y: number, grid: Grid<T>) => T;
 declare type GridMatch<T> = (value: T, x: number, y: number, grid: Grid<T>) => boolean;
 declare type GridFormat<T> = (value: T, x: number, y: number) => string;
@@ -321,7 +322,9 @@ declare class Grid<T> extends Array<Array<T>> {
      // @ts-ignore
 
     forEach(fn: GridEach<T>): void;
+    forEachAsync(fn: AsyncGridEach<T>): Promise<void>;
     eachNeighbor(x: number, y: number, fn: GridEach<T>, only4dirs?: boolean): void;
+    eachNeighborAsync(x: number, y: number, fn: AsyncGridEach<T>, only4dirs?: boolean): Promise<void>;
     forRect(x: number, y: number, w: number, h: number, fn: GridEach<T>): void;
     randomEach(fn: GridEach<T>): void;
     /**
@@ -402,6 +405,7 @@ type grid_d_ArrayInit<_0> = ArrayInit<_0>;
 declare const grid_d_makeArray: typeof makeArray;
 type grid_d_GridInit<_0> = GridInit<_0>;
 type grid_d_GridEach<_0> = GridEach<_0>;
+type grid_d_AsyncGridEach<_0> = AsyncGridEach<_0>;
 type grid_d_GridUpdate<_0> = GridUpdate<_0>;
 type grid_d_GridMatch<_0> = GridMatch<_0>;
 type grid_d_GridFormat<_0> = GridFormat<_0>;
@@ -422,6 +426,7 @@ declare namespace grid_d {
     grid_d_makeArray as makeArray,
     grid_d_GridInit as GridInit,
     grid_d_GridEach as GridEach,
+    grid_d_AsyncGridEach as AsyncGridEach,
     grid_d_GridUpdate as GridUpdate,
     grid_d_GridMatch as GridMatch,
     grid_d_GridFormat as GridFormat,
@@ -988,7 +993,9 @@ interface CellType {
 interface MapType {
     readonly width: number;
     readonly height: number;
-    cell: (x: number, y: number) => CellType;
+    isVisible: (x: number, y: number) => boolean;
+    actorAt: (x: number, y: number) => ActorType | null;
+    itemAt: (x: number, y: number) => ItemType | null;
 }
 declare class Bounds {
     x: number;
@@ -1433,9 +1440,111 @@ declare namespace message_d {
   };
 }
 
+declare enum Flags {
+    E_NEXT_ALWAYS,
+    E_NEXT_EVERYWHERE,
+    E_TREAT_AS_BLOCKING,
+    E_PERMIT_BLOCKING,
+    E_ABORT_IF_BLOCKS_MAP,
+    E_BLOCKED_BY_ITEMS,
+    E_BLOCKED_BY_ACTORS,
+    E_BLOCKED_BY_OTHER_LAYERS,
+    E_SUPERPRIORITY,
+    E_NO_MARK_FIRED,
+    E_SPREAD_CIRCLE,
+    E_SPREAD_LINE,
+    E_CLEAR_CELL,
+    E_EVACUATE_CREATURES,
+    E_EVACUATE_ITEMS,
+    E_BUILD_IN_WALLS,
+    E_MUST_TOUCH_WALLS,
+    E_NO_TOUCH_WALLS,
+    E_FIRED,
+    E_ONLY_IF_EMPTY,
+    E_ACTIVATE_DORMANT_MONSTER,
+    E_AGGRAVATES_MONSTERS,
+    E_RESURRECT_ALLY,
+    E_EMIT_EVENT
+}
+interface EffectCtx {
+    actor?: ActorType;
+    target?: ActorType;
+    item?: ItemType;
+    layer?: number;
+    force?: boolean;
+}
+declare type EffectFn = (this: any, effect: Effect, x: number, y: number) => Promise<boolean> | boolean;
+declare class Effect {
+    map: MapType | null;
+    ctx: any;
+    protected effects: EffectFn[];
+    flags: Flags;
+    chance: number;
+    next: Effect | string | null;
+    id: string | null;
+    protected _grid: NumGrid | null;
+    constructor(effects: EffectFn | EffectFn[], next?: Effect | string | null);
+    get grid(): NumGrid;
+    fire(map: MapType, x: number, y: number, ctx?: any): Promise<boolean>;
+    reset(): void;
+}
+declare function makeEffects(opts: any): EffectFn[];
+declare const effects: Record<string, Effect>;
+declare function make$6(opts: string | any): Effect;
+declare function from$3(opts: Effect | string): Effect;
+declare function install$3(id: string, effect: Effect | any): any;
+declare function installAll$1(effects: Record<string, Effect | any>): void;
+declare function resetAll(): void;
+declare type EffectMakeFn = (config: any) => EffectFn | null;
+declare const effectTypes: Record<string, EffectMakeFn>;
+declare function installType(id: string, fn: EffectMakeFn): void;
+declare function effectEmit(this: any, effect: Effect, x: number, y: number): Promise<boolean>;
+declare function makeEmit(config: any): EffectFn | null;
+declare function effectMessage(this: any, effect: Effect, x: number, y: number): Promise<boolean>;
+declare function makeMessage(config: any): EffectFn | null;
+
+type effect_d_Flags = Flags;
+declare const effect_d_Flags: typeof Flags;
+type effect_d_EffectCtx = EffectCtx;
+type effect_d_EffectFn = EffectFn;
+type effect_d_Effect = Effect;
+declare const effect_d_Effect: typeof Effect;
+declare const effect_d_makeEffects: typeof makeEffects;
+declare const effect_d_effects: typeof effects;
+declare const effect_d_resetAll: typeof resetAll;
+type effect_d_EffectMakeFn = EffectMakeFn;
+declare const effect_d_effectTypes: typeof effectTypes;
+declare const effect_d_installType: typeof installType;
+declare const effect_d_effectEmit: typeof effectEmit;
+declare const effect_d_makeEmit: typeof makeEmit;
+declare const effect_d_effectMessage: typeof effectMessage;
+declare const effect_d_makeMessage: typeof makeMessage;
+declare namespace effect_d {
+  export {
+    effect_d_Flags as Flags,
+    effect_d_EffectCtx as EffectCtx,
+    effect_d_EffectFn as EffectFn,
+    effect_d_Effect as Effect,
+    effect_d_makeEffects as makeEffects,
+    effect_d_effects as effects,
+    make$6 as make,
+    from$3 as from,
+    install$3 as install,
+    installAll$1 as installAll,
+    effect_d_resetAll as resetAll,
+    effect_d_EffectMakeFn as EffectMakeFn,
+    effect_d_effectTypes as effectTypes,
+    effect_d_installType as installType,
+    effect_d_effectEmit as effectEmit,
+    effect_d_makeEmit as makeEmit,
+    effect_d_effectMessage as effectMessage,
+    effect_d_makeMessage as makeMessage,
+  };
+}
+
 declare const data: any;
 declare const config: any;
-declare const make$6: any;
+declare const make$7: any;
 declare const flags: any;
 
-export { Random, index_d as canvas, color_d as color, colors, config, cosmetic, data, events_d as events, flag_d as flag, flags, fov_d as fov, frequency_d as frequency, grid_d as grid, io_d as io, loop, make$6 as make, message_d as message, path_d as path, random, range_d as range, scheduler_d as scheduler, index_d$1 as sprite, sprites, index_d$2 as text, types_d as types, utils_d as utils };
+export { Random, index_d as canvas, color_d as color, colors, config, cosmetic, data, effect_d as effect, events_d as events, flag_d as flag, flags, fov_d as fov, frequency_d as frequency, grid_d as grid, io_d as io, loop, make$7 as make, message_d as message, path_d as path, random, range_d as range, scheduler_d as scheduler, index_d$1 as sprite, sprites, index_d$2 as text, types_d as types, utils_d as utils };
