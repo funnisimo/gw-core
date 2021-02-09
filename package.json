@@ -1,6 +1,6 @@
 {
   "name": "gw-utils",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Basic Roguelike functionality",
   "main": "dist/gw-utils.cjs",
   "browser": "dist/gw-utils.min.js",
@@ -33,11 +33,12 @@
     "bundle": "rollup -c",
     "copy": "cp dist/gw-utils.min.js docs/js",
     "fixTypes": "replace '\\*\\W+TSIGNORE\\W*(\n)(\\W*)(\\*\\/)' '$3$1$2// @ts-ignore$1' js/grid.d.ts",
-    "build": "npm run compile && npm run fixTypes && npm run bundle && npm run copy",
+    "build": "npm run compile && npm run fixTypes && npm run bundle && npm run copy && npm run version",
     "serve": "cd docs && http-server -p 8080",
     "test": "jest",
     "coverage": "jest --coverage",
-    "test-debug": "node --inspect-brk node_modules/.bin/jest --runInBand"
+    "test-debug": "node --inspect-brk node_modules/.bin/jest --runInBand",
+    "version": "node -e 'const v = require(\"./package.json\").version; console.log(v);' > docs/VERSION"
   },
   "repository": {
     "type": "git",
