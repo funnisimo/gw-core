@@ -1,145 +1,145 @@
-import * as Sprite from "./sprite";
-import { colors } from "../color";
+import * as Sprite from './sprite';
+import { colors } from '../color';
 
-describe("Sprite", () => {
-    test("make", () => {
-        const a = Sprite.makeSprite();
+describe('Sprite', () => {
+    test('make', () => {
+        const a = Sprite.make();
         expect(a).toEqual({ ch: -1, fg: -1, bg: -1 });
 
-        const b = Sprite.makeSprite("@", "green", "blue", 50);
-        expect(b.ch).toEqual("@");
+        const b = Sprite.make('@', 'green', 'blue', 50);
+        expect(b.ch).toEqual('@');
         expect(b.fg).toBe(colors.green);
         expect(b.bg).toBe(colors.blue);
         expect(b.opacity).toEqual(50);
 
-        const d = Sprite.makeSprite("@", [100, 0, 0], [0, 0, 100], 50);
-        expect(d.ch).toEqual("@");
+        const d = Sprite.make('@', [100, 0, 0], [0, 0, 100], 50);
+        expect(d.ch).toEqual('@');
         expect(d.fg).toEqual(colors.red);
         expect(d.fg).not.toBe(colors.red);
         expect(d.bg).toEqual(colors.blue);
         expect(d.bg).not.toBe(colors.blue);
         expect(d.opacity).toEqual(50);
 
-        const e = Sprite.makeSprite(null, null, "green", 50);
+        const e = Sprite.make(null, null, 'green', 50);
         expect(e.ch).toEqual(-1);
         expect(e.fg).toEqual(-1);
         expect(e.bg).toBe(colors.green);
         expect(e.opacity).toEqual(50);
 
-        const f = Sprite.makeSprite("@", null, null, 50);
-        expect(f.ch).toEqual("@");
+        const f = Sprite.make('@', null, null, 50);
+        expect(f.ch).toEqual('@');
         expect(f.fg).toEqual(-1);
         expect(f.bg).toEqual(-1);
         expect(f.opacity).toEqual(50);
 
-        const g = Sprite.makeSprite({ ch: "@", fg: "green" });
-        expect(g.ch).toEqual("@");
+        const g = Sprite.make({ ch: '@', fg: 'green' });
+        expect(g.ch).toEqual('@');
         expect(g.fg).toBe(colors.green);
         expect(g.bg).toEqual(-1);
         expect(g.opacity).toBeUndefined();
 
-        const h = Sprite.makeSprite({});
+        const h = Sprite.make({});
         expect(h.ch).toEqual(-1);
         expect(h.fg).toEqual(-1);
         expect(h.bg).toEqual(-1);
         expect(h.opacity).toBeUndefined();
 
-        const i = Sprite.makeSprite(null, null, null);
+        const i = Sprite.make(null, null, null);
         expect(i).toEqual({ ch: -1, fg: -1, bg: -1 });
 
-        // const j = Sprite.makeSprite(undefined);
+        // const j = Sprite.make(undefined);
         // expect(j).toEqual({});
 
-        const k = Sprite.makeSprite(["$", "blue"]);
-        expect(k.ch).toEqual("$");
+        const k = Sprite.make(['$', 'blue']);
+        expect(k.ch).toEqual('$');
         expect(k.fg).toBe(colors.blue);
         expect(k.bg).toEqual(-1);
         expect(k.opacity).toBeUndefined();
 
-        const l = Sprite.makeSprite(["blue"]);
+        const l = Sprite.make(['blue']);
         expect(l.ch).toEqual(-1);
         expect(l.fg).toEqual(-1);
         expect(l.bg).toBe(colors.blue);
         expect(l.opacity).toBeUndefined();
 
-        const m = Sprite.makeSprite("@", "blue", -1);
-        expect(m.ch).toEqual("@");
+        const m = Sprite.make('@', 'blue', -1);
+        expect(m.ch).toEqual('@');
         expect(m.fg).toBe(colors.blue);
         expect(m.bg).toEqual(-1);
         expect(m.opacity).toBeUndefined();
 
-        const n = Sprite.makeSprite("@");
-        expect(n.ch).toEqual("@");
+        const n = Sprite.make('@');
+        expect(n.ch).toEqual('@');
         expect(n.fg).toBe(colors.white);
         expect(n.bg).toEqual(-1);
         expect(n.opacity).toBeUndefined();
     });
 
-    test("install", () => {
-        // const a = Sprite.installSprite("TEST");
+    test('install', () => {
+        // const a = Sprite.install("TEST");
         // expect(a).toEqual({});
 
-        const b = Sprite.installSprite("TEST", "@", "green", "blue", 50);
-        expect(b.ch).toEqual("@");
+        const b = Sprite.install('TEST', '@', 'green', 'blue', 50);
+        expect(b.ch).toEqual('@');
         expect(b.fg).toBe(colors.green);
         expect(b.bg).toBe(colors.blue);
         expect(b.opacity).toEqual(50);
 
-        const d = Sprite.installSprite("TEST", "@", [100, 0, 0], null, 50);
-        expect(d.ch).toEqual("@");
+        const d = Sprite.install('TEST', '@', [100, 0, 0], null, 50);
+        expect(d.ch).toEqual('@');
         expect(d.fg).toEqual(colors.red);
         expect(d.bg).toEqual(-1);
         expect(d.opacity).toEqual(50);
 
-        const e = Sprite.installSprite("TEST", null, null, "green", 50);
+        const e = Sprite.install('TEST', null, null, 'green', 50);
         expect(e.ch).toEqual(-1);
         expect(e.fg).toEqual(-1);
         expect(e.bg).toBe(colors.green);
         expect(e.opacity).toEqual(50);
 
-        const f = Sprite.installSprite("TEST", "@", null, null, 50);
-        expect(f.ch).toEqual("@");
+        const f = Sprite.install('TEST', '@', null, null, 50);
+        expect(f.ch).toEqual('@');
         expect(f.fg).toEqual(-1);
         expect(f.bg).toEqual(-1);
         expect(f.opacity).toEqual(50);
 
-        const g = Sprite.installSprite("TEST", { ch: "@", fg: "green" });
-        expect(g.ch).toEqual("@");
+        const g = Sprite.install('TEST', { ch: '@', fg: 'green' });
+        expect(g.ch).toEqual('@');
         expect(g.fg).toBe(colors.green);
         expect(g.bg).toEqual(-1);
         expect(g.opacity).toBeUndefined();
 
-        // const h = Sprite.installSprite("TEST", colors.white);
+        // const h = Sprite.install("TEST", colors.white);
         // expect(h.ch).toBeUndefined();
         // expect(h.bg).toBe(colors.white);
         // expect(h.fg).toBeUndefined();
         // expect(h.opacity).toBeUndefined();
 
-        const i = Sprite.installSprite("TEST", null, null, null);
-        expect(i).toEqual({ ch: -1, fg: -1, bg: -1, name: "TEST" });
+        const i = Sprite.install('TEST', null, null, null);
+        expect(i).toEqual({ ch: -1, fg: -1, bg: -1, name: 'TEST' });
 
-        // const j = Sprite.installSprite("TEST", undefined);
+        // const j = Sprite.install("TEST", undefined);
         // expect(j).toEqual({});
 
-        const k = Sprite.installSprite("TEST", ["$", "blue"]);
-        expect(k.ch).toEqual("$");
+        const k = Sprite.install('TEST', ['$', 'blue']);
+        expect(k.ch).toEqual('$');
         expect(k.fg).toBe(colors.blue);
         expect(k.bg).toEqual(-1);
         expect(k.opacity).toBeUndefined();
 
-        const l = Sprite.installSprite("TEST", ["blue"]);
+        const l = Sprite.install('TEST', ['blue']);
         expect(l.ch).toEqual(-1);
         expect(l.fg).toEqual(-1);
         expect(l.bg).toBe(colors.blue);
         expect(l.opacity).toBeUndefined();
 
-        const m = Sprite.installSprite("miss", "green", 50);
+        const m = Sprite.install('miss', 'green', 50);
         expect(m.ch).toEqual(-1);
         expect(m.fg).toEqual(-1);
         expect(m.bg).toBe(colors.green);
         expect(m.opacity).toEqual(50);
 
-        const w = Sprite.installSprite("hilite", colors.white);
+        const w = Sprite.install('hilite', colors.white);
         expect(w.ch).toEqual(-1);
         expect(w.fg).toEqual(-1);
         expect(w.bg).toBe(colors.white);
@@ -173,7 +173,7 @@ describe("Sprite", () => {
 
     //   test("plot", () => {
     //     const s = new Sprite("@", [100, 0, 0], [50, 50, 50]);
-    //     const t = Sprite.makeSprite("$", [0, 100, 0], [0, 100, 50], 50);
+    //     const t = Sprite.make("$", [0, 100, 0], [0, 100, 50], 50);
     //     expect(t.opacity).toEqual(50);
     //     s.needsUpdate = false;
 
@@ -187,7 +187,7 @@ describe("Sprite", () => {
 
     //   test("plot with alpha", () => {
     //     const s = new Sprite("@", [100, 0, 0], [50, 50, 50]);
-    //     const t = Sprite.makeSprite("$", [0, 100, 0], [0, 100, 50], 50);
+    //     const t = Sprite.make("$", [0, 100, 0], [0, 100, 50], 50);
     //     expect(t.opacity).toEqual(50);
     //     s.needsUpdate = false;
 
@@ -207,8 +207,8 @@ describe("Sprite", () => {
 
     //   test("plotting w/o fg/bg", () => {
     //     const dest = new Sprite();
-    //     const tile = Sprite.makeSprite(null, null, "green"); // bg
-    //     const player = Sprite.makeSprite("@", "white", null);
+    //     const tile = Sprite.make(null, null, "green"); // bg
+    //     const player = Sprite.make("@", "white", null);
 
     //     dest.drawSprite(tile);
     //     dest.drawSprite(player);
@@ -222,9 +222,9 @@ describe("Sprite", () => {
 
     //   test("plotting with opacity", () => {
     //     const dest = new Sprite();
-    //     const tile = Sprite.makeSprite("green"); // bg
-    //     const player = Sprite.makeSprite("@", "white");
-    //     const fx = Sprite.makeSprite("red", 50); // bg
+    //     const tile = Sprite.make("green"); // bg
+    //     const player = Sprite.make("@", "white");
+    //     const fx = Sprite.make("red", 50); // bg
 
     //     dest.drawSprite(tile);
     //     dest.drawSprite(player);
@@ -239,9 +239,9 @@ describe("Sprite", () => {
 
     //   test("plotting just fg", () => {
     //     const dest = new Sprite();
-    //     const tile = Sprite.makeSprite("green"); // bg
-    //     const player = Sprite.makeSprite("@", "white");
-    //     const fx = Sprite.makeSprite(null, "red", 50);
+    //     const tile = Sprite.make("green"); // bg
+    //     const player = Sprite.make("@", "white");
+    //     const fx = Sprite.make(null, "red", 50);
 
     //     dest.drawSprite(tile);
     //     dest.drawSprite(player);
@@ -255,7 +255,7 @@ describe("Sprite", () => {
     //   });
 
     // test('will track hanging letter changes in plotChar', () => {
-    //   const s = Sprite.makeSprite('@', 'red');
+    //   const s = Sprite.make('@', 'red');
     //   expect(s.wasHanging).toBeFalsy();
     //   s.draw('|');
     //   expect(s.wasHanging).toBeTruthy();
@@ -274,9 +274,9 @@ describe("Sprite", () => {
     // });
     //
     // test('will track hanging letter changes in plot', () => {
-    //   const s = Sprite.makeSprite('@', 'red');
-    //   const t = Sprite.makeSprite('|', 'blue');
-    //   const u = Sprite.makeSprite('o', 'orange');
+    //   const s = Sprite.make('@', 'red');
+    //   const t = Sprite.make('|', 'blue');
+    //   const u = Sprite.make('o', 'orange');
     //
     //   expect(s.wasHanging).toBeFalsy();
     //   s.drawSprite(t);
