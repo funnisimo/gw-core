@@ -1672,20 +1672,20 @@ function addCommand(id, fn) {
 }
 let KEYMAP = {};
 const DEAD_EVENTS = [];
-const KEYPRESS = "keypress";
-const MOUSEMOVE = "mousemove";
-const CLICK = "click";
-const TICK = "tick";
-const MOUSEUP = "mouseup";
+const KEYPRESS = 'keypress';
+const MOUSEMOVE = 'mousemove';
+const CLICK = 'click';
+const TICK = 'tick';
+const MOUSEUP = 'mouseup';
 const CONTROL_CODES = [
-    "ShiftLeft",
-    "ShiftRight",
-    "ControlLeft",
-    "ControlRight",
-    "AltLeft",
-    "AltRight",
-    "MetaLeft",
-    "MetaRight",
+    'ShiftLeft',
+    'ShiftRight',
+    'ControlLeft',
+    'ControlRight',
+    'AltLeft',
+    'AltRight',
+    'MetaLeft',
+    'MetaRight',
 ];
 function setKeymap(keymap) {
     KEYMAP = keymap;
@@ -1694,7 +1694,7 @@ async function dispatchEvent(ev, km) {
     let result;
     let command;
     km = km || KEYMAP;
-    if (typeof km === "function") {
+    if (typeof km === 'function') {
         command = km;
     }
     else if (ev.dir) {
@@ -1708,17 +1708,17 @@ async function dispatchEvent(ev, km) {
         command = km[ev.type];
     }
     if (command) {
-        if (typeof command === "function") {
+        if (typeof command === 'function') {
             result = await command.call(km, ev);
         }
         else if (commands[command]) {
             result = await commands[command](ev);
         }
         else {
-            WARN("No command found: " + command);
+            WARN('No command found: ' + command);
         }
     }
-    if ("next" in km && km.next === false) {
+    if ('next' in km && km.next === false) {
         result = false;
     }
     recycleEvent(ev);
@@ -1752,15 +1752,15 @@ function makeKeyEvent(e) {
         code = code.toUpperCase();
     }
     if (e.ctrlKey) {
-        key = "^" + key;
-        code = "^" + code;
+        key = '^' + key;
+        code = '^' + code;
     }
     if (e.metaKey) {
-        key = "#" + key;
-        code = "#" + code;
+        key = '#' + key;
+        code = '#' + code;
     }
     if (e.altKey) {
-        code = "/" + code;
+        code = '/' + code;
     }
     const ev = DEAD_EVENTS.pop() || {};
     ev.shiftKey = e.shiftKey;
@@ -1780,16 +1780,16 @@ function makeKeyEvent(e) {
 }
 function keyCodeDirection(key) {
     const lowerKey = key.toLowerCase();
-    if (lowerKey === "arrowup") {
+    if (lowerKey === 'arrowup') {
         return [0, -1];
     }
-    else if (lowerKey === "arrowdown") {
+    else if (lowerKey === 'arrowdown') {
         return [0, 1];
     }
-    else if (lowerKey === "arrowleft") {
+    else if (lowerKey === 'arrowleft') {
         return [-1, 0];
     }
-    else if (lowerKey === "arrowright") {
+    else if (lowerKey === 'arrowright') {
         return [1, 0];
     }
     return null;
@@ -1805,7 +1805,7 @@ function makeMouseEvent(e, x, y) {
     ev.altKey = e.altKey;
     ev.metaKey = e.metaKey;
     ev.type = e.type;
-    if (e.buttons && e.type !== "mouseup") {
+    if (e.buttons && e.type !== 'mouseup') {
         ev.type = CLICK;
     }
     ev.key = null;
@@ -1838,7 +1838,7 @@ class Loop {
     }
     pushEvent(ev) {
         if (this.PAUSED) {
-            console.log("PAUSED EVENT", ev.type);
+            console.log('PAUSED EVENT', ev.type);
         }
         if (this.events.length) {
             const last = this.events[this.events.length - 1];
@@ -1903,10 +1903,10 @@ class Loop {
         if (ms == 0)
             return Promise.resolve(null);
         if (this.CURRENT_HANDLER) {
-            console.warn("OVERWRITE HANDLER - nextEvent");
+            console.warn('OVERWRITE HANDLER - nextEvent');
         }
         else if (this.events.length) {
-            console.warn("SET HANDLER WITH QUEUED EVENTS - nextEvent");
+            console.warn('SET HANDLER WITH QUEUED EVENTS - nextEvent');
         }
         this.CURRENT_HANDLER = (e) => {
             if (e.type === MOUSEMOVE) {
@@ -1938,6 +1938,10 @@ class Loop {
             if (ev && (await dispatchEvent(ev, keymap))) {
                 this.running = false;
             }
+            if (keymap.draw && typeof keymap.draw === 'function') {
+                // @ts-ignore
+                keymap.draw();
+            }
         }
         clearInterval(interval);
     }
@@ -1955,7 +1959,7 @@ class Loop {
         if (!this.PAUSED)
             return;
         if (this.CURRENT_HANDLER) {
-            console.warn("overwrite CURRENT HANDLER!");
+            console.warn('overwrite CURRENT HANDLER!');
         }
         this.CURRENT_HANDLER = this.PAUSED;
         this.PAUSED = null;
