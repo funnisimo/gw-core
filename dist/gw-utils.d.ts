@@ -1499,9 +1499,9 @@ declare type EffectMakeFn = (config: any) => EffectFn | null;
 declare const effectTypes: Record<string, EffectMakeFn>;
 declare function installType(id: string, fn: EffectMakeFn): void;
 declare function effectEmit(this: any, effect: Effect, x: number, y: number): Promise<boolean>;
-declare function makeEmit(config: any): EffectFn | null;
+declare function makeEmit(config: any): EffectFn;
 declare function effectMessage(this: any, effect: Effect, x: number, y: number): Promise<boolean>;
-declare function makeMessage(config: any): EffectFn | null;
+declare function makeMessage(config: any): EffectFn;
 
 type effect_d_Flags = Flags;
 declare const effect_d_Flags: typeof Flags;

@@ -304,10 +304,9 @@ export async function effectEmit(
     return false;
 }
 
-export function makeEmit(config: any): EffectFn | null {
+export function makeEmit(config: any): EffectFn {
     if (typeof config !== 'string') {
         Utils.ERROR('Emit must be configured with name of event to emit');
-        return null;
     }
     return effectEmit.bind({ emit: config });
 }
@@ -336,10 +335,9 @@ export async function effectMessage(
     return false;
 }
 
-export function makeMessage(config: any): EffectFn | null {
+export function makeMessage(config: any): EffectFn {
     if (typeof config !== 'string') {
         Utils.ERROR('Emit must be configured with name of event to emit');
-        return null;
     }
     return effectMessage.bind({ message: config });
 }

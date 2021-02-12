@@ -26,6 +26,32 @@ describe('Effect', () => {
         const te2 = Effect.install('TEST2', te);
         expect(te2).toBe(te);
         expect(Effect.effects.TEST2).toBe(te);
+
+        expect(Effect.make('TEST2')).toBe(te2);
+        expect(() => Effect.make('INVALID')).toThrow();
+    });
+
+    test('make', () => {
+        const eff = Effect.make({
+            emit: 'TEST',
+            next: { message: 'YES!' }
+        });
+
+        expect(eff.next).not.toBeNull();
+        expect(eff.next).toBeObject();
+    });
+
+    test('from', () => {
+        const eff = Effect.install('T', {
+            emit: 'TEST',
+        });
+
+        expect(Effect.from('T')).toBe(eff);
+
+        const e2 = Effect.from(eff);
+        expect(e2).toBe(eff);
+
+        expect(() => Effect.from('INVALID')).toThrow();
     });
 
     test('resetAll', () => {
@@ -81,6 +107,15 @@ describe('Effect', () => {
     describe('emit', () => {
         afterEach(() => {
             Events.removeAllListeners();
+        });
+
+        test('not gonna happen', async () => {
+            const eff = Effect.make({ emit: 'TEST' });
+            await expect(Effect.effectEmit(eff, 3, 4)).resolves.toBeFalsy();
+        });
+
+        test('make', () => {
+            expect(() => Effect.make({ emit: null })).toThrow();
         });
 
         test('emits', async () => {
@@ -202,6 +237,10 @@ describe('Effect', () => {
     describe('message', () => {
         afterEach(() => {
             jest.restoreAllMocks();
+        });
+
+        test('make', () => {
+            expect(() => Effect.make({ message: null })).toThrow();
         });
 
         test('logs', async () => {

@@ -5870,7 +5870,6 @@ async function effectEmit(effect, x, y) {
 function makeEmit(config) {
     if (typeof config !== 'string') {
         ERROR('Emit must be configured with name of event to emit');
-        return null;
     }
     return effectEmit.bind({ emit: config });
 }
@@ -5892,7 +5891,6 @@ async function effectMessage(effect, x, y) {
 function makeMessage(config) {
     if (typeof config !== 'string') {
         ERROR('Emit must be configured with name of event to emit');
-        return null;
     }
     return effectMessage.bind({ message: config });
 }
