@@ -241,7 +241,7 @@ export function make(opts: string | any): Effect {
 
     let next: Effect | string | null = opts.next;
     if (next && typeof next !== 'string') {
-        next = make(next);
+        next = from(next);
     }
 
     const te = new Effect(fns, next);
@@ -258,8 +258,10 @@ export function from(opts: Effect | string): Effect {
         if (effect) return effect;
         Utils.ERROR('Unknown effect - ' + opts);
     }
-    // @ts-ignore
-    return opts;
+    else if (opts instanceof Effect) {
+        return opts;
+    }
+    return make(opts);
 }
 
 export function install(id: string, effect: Effect | any) {
@@ -267,7 +269,7 @@ export function install(id: string, effect: Effect | any) {
         effect = make(effect);
     }
     effects[id] = effect;
-    if (effect) effect.id = id;
+    effect.id = id;
     return effect;
 }
 
@@ -304,10 +306,9 @@ export async function effectEmit(
     return false;
 }
 
-export function makeEmit(config: any): EffectFn | null {
+export function makeEmit(config: any): EffectFn {
     if (typeof config !== 'string') {
         Utils.ERROR('Emit must be configured with name of event to emit');
-        return null;
     }
     return effectEmit.bind({ emit: config });
 }
@@ -336,10 +337,9 @@ export async function effectMessage(
     return false;
 }
 
-export function makeMessage(config: any): EffectFn | null {
+export function makeMessage(config: any): EffectFn {
     if (typeof config !== 'string') {
         Utils.ERROR('Emit must be configured with name of event to emit');
-        return null;
     }
     return effectMessage.bind({ message: config });
 }

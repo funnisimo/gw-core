@@ -5833,7 +5833,7 @@ function make$7(opts) {
     const fns = makeEffects(opts);
     let next = opts.next;
     if (next && typeof next !== 'string') {
-        next = make$7(next);
+        next = from$3(next);
     }
     const te = new Effect(fns, next);
     te.flags = from$1(Flags, opts.flags);
@@ -5848,16 +5848,17 @@ function from$3(opts) {
             return effect;
         ERROR('Unknown effect - ' + opts);
     }
-    // @ts-ignore
-    return opts;
+    else if (opts instanceof Effect) {
+        return opts;
+    }
+    return make$7(opts);
 }
 function install$3(id, effect) {
     if (!(effect instanceof Effect)) {
         effect = make$7(effect);
     }
     effects[id] = effect;
-    if (effect)
-        effect.id = id;
+    effect.id = id;
     return effect;
 }
 function installAll$1(effects) {
@@ -5884,7 +5885,6 @@ async function effectEmit(effect, x, y) {
 function makeEmit(config) {
     if (typeof config !== 'string') {
         ERROR('Emit must be configured with name of event to emit');
-        return null;
     }
     return effectEmit.bind({ emit: config });
 }
@@ -5906,7 +5906,6 @@ async function effectMessage(effect, x, y) {
 function makeMessage(config) {
     if (typeof config !== 'string') {
         ERROR('Emit must be configured with name of event to emit');
-        return null;
     }
     return effectMessage.bind({ message: config });
 }
