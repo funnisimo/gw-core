@@ -265,18 +265,21 @@ declare class Range {
 }
 declare function make(config: RangeBase | null, rng?: Random): Range;
 declare const from: typeof make;
+declare function asFn(config: RangeBase | null, rng?: Random): () => number;
 
 type range_d_RangeBase = RangeBase;
 type range_d_Range = Range;
 declare const range_d_Range: typeof Range;
 declare const range_d_make: typeof make;
 declare const range_d_from: typeof from;
+declare const range_d_asFn: typeof asFn;
 declare namespace range_d {
   export {
     range_d_RangeBase as RangeBase,
     range_d_Range as Range,
     range_d_make as make,
     range_d_from as from,
+    range_d_asFn as asFn,
   };
 }
 

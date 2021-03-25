@@ -739,7 +739,7 @@ class Range {
     }
     toString() {
         if (this.lo >= this.hi) {
-            return "" + this.lo;
+            return '' + this.lo;
         }
         return `${this.lo}-${this.hi}`;
     }
@@ -750,20 +750,20 @@ function make$1(config, rng) {
     if (config instanceof Range)
         return config; // don't need to clone since they are immutable
     // if (config.value) return config;  // calc or damage
-    if (typeof config == "function")
-        throw new Error("Custom range functions not supported - extend Range");
+    if (typeof config == 'function')
+        throw new Error('Custom range functions not supported - extend Range');
     if (config === undefined || config === null)
         return new Range(0, 0, 0, rng);
-    if (typeof config == "number")
+    if (typeof config == 'number')
         return new Range(config, config, 1, rng);
     // @ts-ignore
     if (config === true || config === false)
-        throw new Error("Invalid random config: " + config);
+        throw new Error('Invalid random config: ' + config);
     if (Array.isArray(config)) {
         return new Range(config[0], config[1], config[2], rng);
     }
-    if (typeof config !== "string") {
-        throw new Error("Calculations must be strings.  Received: " + JSON.stringify(config));
+    if (typeof config !== 'string') {
+        throw new Error('Calculations must be strings.  Received: ' + JSON.stringify(config));
     }
     if (config.length == 0)
         return new Range(0, 0, 0, rng);
@@ -794,16 +794,21 @@ function make$1(config, rng) {
             return new Range(v, v, 1, rng);
         }
     }
-    throw new Error("Not a valid range - " + config);
+    throw new Error('Not a valid range - ' + config);
 }
 make.range = make$1;
 const from = make$1;
+function asFn(config, rng) {
+    const range = make$1(config, rng);
+    return () => range.value();
+}
 
 var range = {
     __proto__: null,
     Range: Range,
     make: make$1,
-    from: from
+    from: from,
+    asFn: asFn
 };
 
 ///////////////////////////////////
