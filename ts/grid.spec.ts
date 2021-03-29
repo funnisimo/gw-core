@@ -546,19 +546,6 @@ describe('GW.grid', () => {
         expect(dest[2][2]).toEqual(0);
     });
 
-    test('directionOfDoorSite', () => {
-        a = Grid.alloc(10, 10, 0);
-
-        a.fillRect(2, 2, 3, 3, 1);
-        expect(Grid.directionOfDoorSite(a, 2, 4, 1)).toEqual(
-            GW.utils.NO_DIRECTION
-        );
-        expect(Grid.directionOfDoorSite(a, 1, 3, 1)).toEqual(GW.utils.LEFT);
-        expect(Grid.directionOfDoorSite(a, 5, 3, 1)).toEqual(GW.utils.RIGHT);
-        expect(Grid.directionOfDoorSite(a, 3, 1, 1)).toEqual(GW.utils.UP);
-        expect(Grid.directionOfDoorSite(a, 3, 5, 1)).toEqual(GW.utils.DOWN);
-    });
-
     test('intersection', () => {
         a = Grid.alloc(10, 10, 0);
         a.fillRect(2, 2, 3, 3, 1);

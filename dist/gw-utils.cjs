@@ -1645,35 +1645,6 @@ function offsetZip(destGrid, srcGrid, srcToDestX, srcToDestY, value) {
     });
 }
 // Grid.offsetZip = offsetZip;
-// If the indicated tile is a wall on the room stored in grid, and it could be the site of
-// a door out of that room, then return the outbound direction that the door faces.
-// Otherwise, return def.NO_DIRECTION.
-function directionOfDoorSite(grid, x, y, isOpen) {
-    let dir, solutionDir;
-    let newX, newY, oppX, oppY;
-    const fnOpen = typeof isOpen === 'function'
-        ? isOpen
-        : (v) => v == isOpen;
-    solutionDir = NO_DIRECTION;
-    for (dir = 0; dir < 4; dir++) {
-        newX = x + DIRS$1[dir][0];
-        newY = y + DIRS$1[dir][1];
-        oppX = x - DIRS$1[dir][0];
-        oppY = y - DIRS$1[dir][1];
-        if (grid.hasXY(oppX, oppY) &&
-            grid.hasXY(newX, newY) &&
-            fnOpen(grid[oppX][oppY], oppX, oppY, grid)) {
-            // This grid cell would be a valid tile on which to place a door that, facing outward, points dir.
-            if (solutionDir != NO_DIRECTION) {
-                // Already claimed by another direction; no doors here!
-                return NO_DIRECTION;
-            }
-            solutionDir = dir;
-        }
-    }
-    return solutionDir;
-}
-// Grid.directionOfDoorSite = directionOfDoorSite;
 function intersection(onto, a, b) {
     b = b || onto;
     // @ts-ignore
@@ -1695,7 +1666,6 @@ var grid = {
     free: free,
     make: make$2,
     offsetZip: offsetZip,
-    directionOfDoorSite: directionOfDoorSite,
     intersection: intersection,
     unite: unite
 };

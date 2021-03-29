@@ -628,7 +628,6 @@ declare function make$2<T>(w: number, h: number, v?: number | GridInit<number>):
 declare function make$2<T>(w: number, h: number, v?: T | GridInit<T>): Grid<T>;
 declare type GridZip<T, U> = (destVal: T, sourceVal: U, destX: number, destY: number, sourceX: number, sourceY: number, destGrid: Grid<T>, sourceGrid: Grid<U>) => void;
 declare function offsetZip<T, U>(destGrid: Grid<T>, srcGrid: Grid<U>, srcToDestX: number, srcToDestY: number, value: T | GridZip<T, U>): void;
-declare function directionOfDoorSite<T>(grid: Grid<T>, x: number, y: number, isOpen: T | GridMatch<T>): number;
 declare function intersection(onto: NumGrid, a: NumGrid, b?: NumGrid): void;
 declare function unite(onto: NumGrid, a: NumGrid, b?: NumGrid): void;
 
@@ -648,7 +647,6 @@ declare const grid_d_alloc: typeof alloc;
 declare const grid_d_free: typeof free;
 type grid_d_GridZip<_0, _1> = GridZip<_0, _1>;
 declare const grid_d_offsetZip: typeof offsetZip;
-declare const grid_d_directionOfDoorSite: typeof directionOfDoorSite;
 declare const grid_d_intersection: typeof intersection;
 declare const grid_d_unite: typeof unite;
 declare namespace grid_d {
@@ -668,7 +666,6 @@ declare namespace grid_d {
     make$2 as make,
     grid_d_GridZip as GridZip,
     grid_d_offsetZip as offsetZip,
-    grid_d_directionOfDoorSite as directionOfDoorSite,
     grid_d_intersection as intersection,
     grid_d_unite as unite,
   };
