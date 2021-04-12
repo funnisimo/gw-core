@@ -157,6 +157,25 @@ export abstract class BaseCanvas implements BufferTarget {
         return this;
     }
 
+    fill(bg: number): this;
+    fill(glyph: number, fg: number, bg: number): this;
+    fill(...args: number[]): this {
+        let g = 0,
+            fg = 0,
+            bg = 0;
+        if (args.length == 1) {
+            bg = args[0];
+        } else if (args.length == 3) {
+            [g, fg, bg] = args;
+        }
+        for (let x = 0; x < this._width; ++x) {
+            for (let y = 0; y < this._height; ++y) {
+                this.draw(x, y, g, fg, bg);
+            }
+        }
+        return this;
+    }
+
     protected _requestRender() {
         if (this._renderRequested) return;
         this._renderRequested = true;

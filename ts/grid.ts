@@ -1,5 +1,6 @@
 import { random } from './random';
 import * as Utils from './utils';
+import { Bounds } from './types';
 import { make as Make } from './gw';
 
 type Loc = Utils.Loc;
@@ -730,6 +731,56 @@ export class NumGrid extends Grid<number> {
         return this.randomMatchingLoc(targetValue, deterministic);
     }
 
+    valueBounds(value: number) {
+        let foundValueAtThisLine = false;
+        let i: number, j: number;
+        let left = this.width - 1,
+            right = 0,
+            top = this.height - 1,
+            bottom = 0;
+
+        // Figure out the top blob's height and width:
+        // First find the max & min x:
+        for (i = 0; i < this.width; i++) {
+            foundValueAtThisLine = false;
+            for (j = 0; j < this.height; j++) {
+                if (this[i][j] == value) {
+                    foundValueAtThisLine = true;
+                    break;
+                }
+            }
+            if (foundValueAtThisLine) {
+                if (i < left) {
+                    left = i;
+                }
+                if (i > right) {
+                    right = i;
+                }
+            }
+        }
+
+        // Then the max & min y:
+        for (j = 0; j < this.height; j++) {
+            foundValueAtThisLine = false;
+            for (i = 0; i < this.width; i++) {
+                if (this[i][j] == value) {
+                    foundValueAtThisLine = true;
+                    break;
+                }
+            }
+            if (foundValueAtThisLine) {
+                if (j < top) {
+                    top = j;
+                }
+                if (j > bottom) {
+                    bottom = j;
+                }
+            }
+        }
+
+        return new Bounds(left, top, right - left + 1, bottom - top + 1);
+    }
+
     // Marks a cell as being a member of blobNumber, then recursively iterates through the rest of the blob
     floodFill(
         x: number,
@@ -821,13 +872,7 @@ export class NumGrid extends Grid<number> {
         let i, j, k;
         let blobNumber, blobSize, topBlobNumber, topBlobSize;
 
-        let topBlobMinX,
-            topBlobMinY,
-            topBlobMaxX,
-            topBlobMaxY,
-            blobWidth,
-            blobHeight;
-        let foundACellThisLine;
+        let bounds: Bounds;
 
         birthParameters = birthParameters.toLowerCase();
         survivalParameters = survivalParameters.toLowerCase();
@@ -843,6 +888,8 @@ export class NumGrid extends Grid<number> {
 
         const left = Math.floor((this.width - maxBlobWidth) / 2);
         const top = Math.floor((this.height - maxBlobHeight) / 2);
+
+        let tries = 10;
 
         // Generate blobs until they satisfy the minBlobWidth and minBlobHeight restraints
         do {
@@ -873,10 +920,6 @@ export class NumGrid extends Grid<number> {
             // Now to measure the result. These are best-of variables; start them out at worst-case values.
             topBlobSize = 0;
             topBlobNumber = 0;
-            topBlobMinX = this.width;
-            topBlobMaxX = 0;
-            topBlobMinY = this.height;
-            topBlobMaxY = 0;
 
             // Fill each blob with its own number, starting with 2 (since 1 means floor), and keeping track of the biggest:
             blobNumber = 2;
@@ -898,50 +941,12 @@ export class NumGrid extends Grid<number> {
             }
 
             // Figure out the top blob's height and width:
-            // First find the max & min x:
-            for (i = 0; i < this.width; i++) {
-                foundACellThisLine = false;
-                for (j = 0; j < this.height; j++) {
-                    if (this[i][j] == topBlobNumber) {
-                        foundACellThisLine = true;
-                        break;
-                    }
-                }
-                if (foundACellThisLine) {
-                    if (i < topBlobMinX) {
-                        topBlobMinX = i;
-                    }
-                    if (i > topBlobMaxX) {
-                        topBlobMaxX = i;
-                    }
-                }
-            }
-
-            // Then the max & min y:
-            for (j = 0; j < this.height; j++) {
-                foundACellThisLine = false;
-                for (i = 0; i < this.width; i++) {
-                    if (this[i][j] == topBlobNumber) {
-                        foundACellThisLine = true;
-                        break;
-                    }
-                }
-                if (foundACellThisLine) {
-                    if (j < topBlobMinY) {
-                        topBlobMinY = j;
-                    }
-                    if (j > topBlobMaxY) {
-                        topBlobMaxY = j;
-                    }
-                }
-            }
-
-            blobWidth = topBlobMaxX - topBlobMinX + 1;
-            blobHeight = topBlobMaxY - topBlobMinY + 1;
+            bounds = this.valueBounds(topBlobNumber);
         } while (
-            blobWidth < minBlobWidth ||
-            blobHeight < minBlobHeight ||
-            topBlobNumber == 0
+            (bounds.width < minBlobWidth ||
+                bounds.height < minBlobHeight ||
+                topBlobNumber == 0) &&
+            --tries
         );
 
         // Replace the winning blob with 1's, and everything else with 0's:
@@ -956,12 +961,7 @@ export class NumGrid extends Grid<number> {
         }
 
         // Populate the returned variables.
-        return {
-            x: topBlobMinX,
-            y: topBlobMinY,
-            width: blobWidth,
-            height: blobHeight,
-        };
+        return bounds;
     }
 }
 
@@ -1017,47 +1017,6 @@ export function offsetZip<T, U>(
 }
 
 // Grid.offsetZip = offsetZip;
-
-// If the indicated tile is a wall on the room stored in grid, and it could be the site of
-// a door out of that room, then return the outbound direction that the door faces.
-// Otherwise, return def.NO_DIRECTION.
-export function directionOfDoorSite<T>(
-    grid: Grid<T>,
-    x: number,
-    y: number,
-    isOpen: T | GridMatch<T>
-): number {
-    let dir, solutionDir;
-    let newX, newY, oppX, oppY;
-
-    const fnOpen: GridMatch<T> =
-        typeof isOpen === 'function'
-            ? (isOpen as GridMatch<T>)
-            : (v: T) => v == isOpen;
-
-    solutionDir = Utils.NO_DIRECTION;
-    for (dir = 0; dir < 4; dir++) {
-        newX = x + DIRS[dir][0];
-        newY = y + DIRS[dir][1];
-        oppX = x - DIRS[dir][0];
-        oppY = y - DIRS[dir][1];
-        if (
-            grid.hasXY(oppX, oppY) &&
-            grid.hasXY(newX, newY) &&
-            fnOpen(grid[oppX][oppY], oppX, oppY, grid)
-        ) {
-            // This grid cell would be a valid tile on which to place a door that, facing outward, points dir.
-            if (solutionDir != Utils.NO_DIRECTION) {
-                // Already claimed by another direction; no doors here!
-                return Utils.NO_DIRECTION;
-            }
-            solutionDir = dir;
-        }
-    }
-    return solutionDir;
-}
-
-// Grid.directionOfDoorSite = directionOfDoorSite;
 
 export function intersection(onto: NumGrid, a: NumGrid, b?: NumGrid) {
     b = b || onto;

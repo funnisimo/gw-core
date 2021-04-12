@@ -10,14 +10,14 @@
 //   >> rotate 90 degrees clockwise ==>> newIndex = 4 + (oldIndex + 1) % 4;
 //   >> opposite diagonal ==>> newIndex = 4 + (index + 2) % 4;
 const DIRS = [
-    [0, 1],
-    [1, 0],
     [0, -1],
+    [1, 0],
+    [0, 1],
     [-1, 0],
-    [1, 1],
     [1, -1],
-    [-1, -1],
+    [1, 1],
     [-1, 1],
+    [-1, -1],
 ];
 const NO_DIRECTION = -1;
 const UP = 0;
@@ -58,8 +58,12 @@ function ZERO() {
 function IDENTITY(x) {
     return x;
 }
-function IS_ZERO(x) { return x == 0; }
-function IS_NONZERO(x) { return x != 0; }
+function IS_ZERO(x) {
+    return x == 0;
+}
+function IS_NONZERO(x) {
+    return x != 0;
+}
 /**
  * clamps a value between min and max (inclusive)
  * @param v {Number} the value to clamp
@@ -223,7 +227,7 @@ function assignObject(dest, src) {
     });
 }
 function assignOmitting(omit, dest, src) {
-    if (typeof omit === "string") {
+    if (typeof omit === 'string') {
         omit = omit.split(/[,|]/g).map((t) => t.trim());
     }
     Object.keys(src).forEach((key) => {
@@ -244,14 +248,15 @@ function setDefaults(obj, def, custom = null) {
         let defValue = def[key];
         dest = obj;
         // allow for => 'stats.health': 100
-        const parts = key.split(".");
+        const parts = key.split('.');
         while (parts.length > 1) {
             key = parts.shift();
             if (dest[key] === undefined) {
                 dest = dest[key] = {};
             }
-            else if (typeof dest[key] !== "object") {
-                ERROR("Trying to set default member on non-object config item: " + origKey);
+            else if (typeof dest[key] !== 'object') {
+                ERROR('Trying to set default member on non-object config item: ' +
+                    origKey);
             }
             else {
                 dest = dest[key];
@@ -268,7 +273,7 @@ function setDefaults(obj, def, custom = null) {
             else if (Array.isArray(defValue)) {
                 dest[key] = defValue.slice();
             }
-            else if (typeof defValue === "object") {
+            else if (typeof defValue === 'object') {
                 dest[key] = defValue; // Object.assign({}, defValue); -- this breaks assigning a Color object as a default...
             }
             else {
@@ -284,13 +289,13 @@ function kindDefaults(obj, def) {
         if (!current) {
             current = [];
         }
-        else if (typeof current == "string") {
+        else if (typeof current == 'string') {
             current = current.split(/[,|]/).map((t) => t.trim());
         }
         else if (!Array.isArray(current)) {
             current = [current];
         }
-        if (typeof defValue === "string") {
+        if (typeof defValue === 'string') {
             defValue = defValue.split(/[,|]/).map((t) => t.trim());
         }
         else if (!Array.isArray(defValue)) {
@@ -332,7 +337,7 @@ function getOpt(obj, member, _default) {
 }
 function firstOpt(field, ...args) {
     for (let arg of args) {
-        if (typeof arg !== "object" || Array.isArray(arg)) {
+        if (typeof arg !== 'object' || Array.isArray(arg)) {
             return arg;
         }
         if (arg[field] !== undefined) {
@@ -554,8 +559,12 @@ function lotteryDrawArray(rand, frequencies) {
         maxFreq += frequencies[i];
     }
     if (maxFreq <= 0) {
-        console.warn("Lottery Draw - no frequencies", frequencies, frequencies.length);
-        return 0;
+        // console.warn(
+        //     'Lottery Draw - no frequencies',
+        //     frequencies,
+        //     frequencies.length
+        // );
+        return -1;
     }
     randIndex = rand.range(0, maxFreq - 1);
     for (i = 0; i < frequencies.length; i++) {
@@ -566,7 +575,7 @@ function lotteryDrawArray(rand, frequencies) {
             randIndex -= frequencies[i];
         }
     }
-    console.warn("Lottery Draw failed.", frequencies, frequencies.length);
+    console.warn('Lottery Draw failed.', frequencies, frequencies.length);
     return 0;
 }
 function lotteryDrawObject(rand, weights) {
@@ -581,10 +590,10 @@ class Random {
     }
     static configure(opts) {
         if (opts.make) {
-            if (typeof opts.make !== "function")
-                throw new Error("Random make parameter must be a function.");
-            if (typeof opts.make(12345) !== "function")
-                throw new Error("Random make function must accept a numeric seed and return a random function.");
+            if (typeof opts.make !== 'function')
+                throw new Error('Random make parameter must be a function.');
+            if (typeof opts.make(12345) !== 'function')
+                throw new Error('Random make function must accept a numeric seed and return a random function.');
             RANDOM_CONFIG.make = opts.make;
             random.seed();
             cosmetic.seed();
@@ -730,7 +739,7 @@ class Range {
     }
     toString() {
         if (this.lo >= this.hi) {
-            return "" + this.lo;
+            return '' + this.lo;
         }
         return `${this.lo}-${this.hi}`;
     }
@@ -741,20 +750,20 @@ function make$1(config, rng) {
     if (config instanceof Range)
         return config; // don't need to clone since they are immutable
     // if (config.value) return config;  // calc or damage
-    if (typeof config == "function")
-        throw new Error("Custom range functions not supported - extend Range");
+    if (typeof config == 'function')
+        throw new Error('Custom range functions not supported - extend Range');
     if (config === undefined || config === null)
         return new Range(0, 0, 0, rng);
-    if (typeof config == "number")
+    if (typeof config == 'number')
         return new Range(config, config, 1, rng);
     // @ts-ignore
     if (config === true || config === false)
-        throw new Error("Invalid random config: " + config);
+        throw new Error('Invalid random config: ' + config);
     if (Array.isArray(config)) {
         return new Range(config[0], config[1], config[2], rng);
     }
-    if (typeof config !== "string") {
-        throw new Error("Calculations must be strings.  Received: " + JSON.stringify(config));
+    if (typeof config !== 'string') {
+        throw new Error('Calculations must be strings.  Received: ' + JSON.stringify(config));
     }
     if (config.length == 0)
         return new Range(0, 0, 0, rng);
@@ -785,16 +794,21 @@ function make$1(config, rng) {
             return new Range(v, v, 1, rng);
         }
     }
-    throw new Error("Not a valid range - " + config);
+    throw new Error('Not a valid range - ' + config);
 }
 make.range = make$1;
 const from = make$1;
+function asFn(config, rng) {
+    const range = make$1(config, rng);
+    return () => range.value();
+}
 
 var range = {
     __proto__: null,
     Range: Range,
     make: make$1,
-    from: from
+    from: from,
+    asFn: asFn
 };
 
 ///////////////////////////////////
@@ -874,6 +888,32 @@ var flag = {
     fl: fl,
     toString: toString,
     from: from$1
+};
+
+class Bounds {
+    constructor(x, y, w, h) {
+        this.x = x;
+        this.y = y;
+        this.width = w;
+        this.height = h;
+    }
+    contains(...args) {
+        let x$1 = args[0];
+        let y$1 = args[1];
+        if (typeof x$1 !== 'number') {
+            y$1 = y(x$1);
+            x$1 = x(x$1);
+        }
+        return (this.x <= x$1 &&
+            this.y <= y$1 &&
+            this.x + this.width > x$1 &&
+            this.y + this.height > y$1);
+    }
+}
+
+var types = {
+    __proto__: null,
+    Bounds: Bounds
 };
 
 const DIRS$1 = DIRS;
@@ -1404,6 +1444,49 @@ class NumGrid extends Grid {
         const targetValue = this.leastPositiveValue();
         return this.randomMatchingLoc(targetValue, deterministic);
     }
+    valueBounds(value) {
+        let foundValueAtThisLine = false;
+        let i, j;
+        let left = this.width - 1, right = 0, top = this.height - 1, bottom = 0;
+        // Figure out the top blob's height and width:
+        // First find the max & min x:
+        for (i = 0; i < this.width; i++) {
+            foundValueAtThisLine = false;
+            for (j = 0; j < this.height; j++) {
+                if (this[i][j] == value) {
+                    foundValueAtThisLine = true;
+                    break;
+                }
+            }
+            if (foundValueAtThisLine) {
+                if (i < left) {
+                    left = i;
+                }
+                if (i > right) {
+                    right = i;
+                }
+            }
+        }
+        // Then the max & min y:
+        for (j = 0; j < this.height; j++) {
+            foundValueAtThisLine = false;
+            for (i = 0; i < this.width; i++) {
+                if (this[i][j] == value) {
+                    foundValueAtThisLine = true;
+                    break;
+                }
+            }
+            if (foundValueAtThisLine) {
+                if (j < top) {
+                    top = j;
+                }
+                if (j > bottom) {
+                    bottom = j;
+                }
+            }
+        }
+        return new Bounds(left, top, right - left + 1, bottom - top + 1);
+    }
     // Marks a cell as being a member of blobNumber, then recursively iterates through the rest of the blob
     floodFill(x, y, matchValue, fillValue) {
         let dir;
@@ -1463,8 +1546,7 @@ class NumGrid extends Grid {
     fillBlob(roundCount, minBlobWidth, minBlobHeight, maxBlobWidth, maxBlobHeight, percentSeeded = 50, birthParameters = 'ffffffttt', survivalParameters = 'ffffttttt') {
         let i, j, k;
         let blobNumber, blobSize, topBlobNumber, topBlobSize;
-        let topBlobMinX, topBlobMinY, topBlobMaxX, topBlobMaxY, blobWidth, blobHeight;
-        let foundACellThisLine;
+        let bounds;
         birthParameters = birthParameters.toLowerCase();
         survivalParameters = survivalParameters.toLowerCase();
         if (minBlobWidth >= maxBlobWidth) {
@@ -1477,6 +1559,7 @@ class NumGrid extends Grid {
         }
         const left = Math.floor((this.width - maxBlobWidth) / 2);
         const top = Math.floor((this.height - maxBlobHeight) / 2);
+        let tries = 10;
         // Generate blobs until they satisfy the minBlobWidth and minBlobHeight restraints
         do {
             // Clear buffer.
@@ -1498,10 +1581,6 @@ class NumGrid extends Grid {
             // Now to measure the result. These are best-of variables; start them out at worst-case values.
             topBlobSize = 0;
             topBlobNumber = 0;
-            topBlobMinX = this.width;
-            topBlobMaxX = 0;
-            topBlobMinY = this.height;
-            topBlobMaxY = 0;
             // Fill each blob with its own number, starting with 2 (since 1 means floor), and keeping track of the biggest:
             blobNumber = 2;
             for (i = 0; i < this.width; i++) {
@@ -1520,47 +1599,11 @@ class NumGrid extends Grid {
                 }
             }
             // Figure out the top blob's height and width:
-            // First find the max & min x:
-            for (i = 0; i < this.width; i++) {
-                foundACellThisLine = false;
-                for (j = 0; j < this.height; j++) {
-                    if (this[i][j] == topBlobNumber) {
-                        foundACellThisLine = true;
-                        break;
-                    }
-                }
-                if (foundACellThisLine) {
-                    if (i < topBlobMinX) {
-                        topBlobMinX = i;
-                    }
-                    if (i > topBlobMaxX) {
-                        topBlobMaxX = i;
-                    }
-                }
-            }
-            // Then the max & min y:
-            for (j = 0; j < this.height; j++) {
-                foundACellThisLine = false;
-                for (i = 0; i < this.width; i++) {
-                    if (this[i][j] == topBlobNumber) {
-                        foundACellThisLine = true;
-                        break;
-                    }
-                }
-                if (foundACellThisLine) {
-                    if (j < topBlobMinY) {
-                        topBlobMinY = j;
-                    }
-                    if (j > topBlobMaxY) {
-                        topBlobMaxY = j;
-                    }
-                }
-            }
-            blobWidth = topBlobMaxX - topBlobMinX + 1;
-            blobHeight = topBlobMaxY - topBlobMinY + 1;
-        } while (blobWidth < minBlobWidth ||
-            blobHeight < minBlobHeight ||
-            topBlobNumber == 0);
+            bounds = this.valueBounds(topBlobNumber);
+        } while ((bounds.width < minBlobWidth ||
+            bounds.height < minBlobHeight ||
+            topBlobNumber == 0) &&
+            --tries);
         // Replace the winning blob with 1's, and everything else with 0's:
         for (i = 0; i < this.width; i++) {
             for (j = 0; j < this.height; j++) {
@@ -1573,12 +1616,7 @@ class NumGrid extends Grid {
             }
         }
         // Populate the returned variables.
-        return {
-            x: topBlobMinX,
-            y: topBlobMinY,
-            width: blobWidth,
-            height: blobHeight,
-        };
+        return bounds;
     }
 }
 // Grid.fillBlob = fillBlob;
@@ -1607,35 +1645,6 @@ function offsetZip(destGrid, srcGrid, srcToDestX, srcToDestY, value) {
     });
 }
 // Grid.offsetZip = offsetZip;
-// If the indicated tile is a wall on the room stored in grid, and it could be the site of
-// a door out of that room, then return the outbound direction that the door faces.
-// Otherwise, return def.NO_DIRECTION.
-function directionOfDoorSite(grid, x, y, isOpen) {
-    let dir, solutionDir;
-    let newX, newY, oppX, oppY;
-    const fnOpen = typeof isOpen === 'function'
-        ? isOpen
-        : (v) => v == isOpen;
-    solutionDir = NO_DIRECTION;
-    for (dir = 0; dir < 4; dir++) {
-        newX = x + DIRS$1[dir][0];
-        newY = y + DIRS$1[dir][1];
-        oppX = x - DIRS$1[dir][0];
-        oppY = y - DIRS$1[dir][1];
-        if (grid.hasXY(oppX, oppY) &&
-            grid.hasXY(newX, newY) &&
-            fnOpen(grid[oppX][oppY], oppX, oppY, grid)) {
-            // This grid cell would be a valid tile on which to place a door that, facing outward, points dir.
-            if (solutionDir != NO_DIRECTION) {
-                // Already claimed by another direction; no doors here!
-                return NO_DIRECTION;
-            }
-            solutionDir = dir;
-        }
-    }
-    return solutionDir;
-}
-// Grid.directionOfDoorSite = directionOfDoorSite;
 function intersection(onto, a, b) {
     b = b || onto;
     // @ts-ignore
@@ -1657,7 +1666,6 @@ var grid = {
     free: free,
     make: make$2,
     offsetZip: offsetZip,
-    directionOfDoorSite: directionOfDoorSite,
     intersection: intersection,
     unite: unite
 };
@@ -3300,6 +3308,21 @@ class BaseCanvas {
         fg = fg & 0xfff;
         const style = glyph * (1 << 24) + bg * (1 << 12) + fg;
         this._set(x, y, style);
+        return this;
+    }
+    fill(...args) {
+        let g = 0, fg = 0, bg = 0;
+        if (args.length == 1) {
+            bg = args[0];
+        }
+        else if (args.length == 3) {
+            [g, fg, bg] = args;
+        }
+        for (let x = 0; x < this._width; ++x) {
+            for (let y = 0; y < this._height; ++y) {
+                this.draw(x, y, g, fg, bg);
+            }
+        }
         return this;
     }
     _requestRender() {
@@ -5132,6 +5155,9 @@ class DataBuffer {
         console.log(data.join('\n'));
     }
 }
+make.dataBuffer = function (width, height) {
+    return new DataBuffer(width, height);
+};
 class Buffer extends DataBuffer {
     constructor(canvas) {
         super(canvas.width, canvas.height);
@@ -5150,6 +5176,15 @@ class Buffer extends DataBuffer {
         this._target.copyTo(this._data);
         return this;
     }
+}
+make.buffer = function (canvas) {
+    return new Buffer(canvas);
+};
+function make$6(...args) {
+    if (args.length == 1) {
+        return new Buffer(args[0]);
+    }
+    return new DataBuffer(args[0], args[1]);
 }
 
 class DancingData {
@@ -5372,6 +5407,7 @@ var index$1 = {
     Glyphs: Glyphs,
     DataBuffer: DataBuffer,
     Buffer: Buffer,
+    make: make$6,
     DancingData: DancingData,
     DancingBuffer: DancingBuffer
 };
@@ -5391,7 +5427,7 @@ class Sprite {
     }
 }
 const sprites = {};
-function make$6(...args) {
+function make$7(...args) {
     let ch = null, fg = -1, bg = -1, opacity;
     if (args.length == 0) {
         return new Sprite(null, -1, -1);
@@ -5447,11 +5483,11 @@ function make$6(...args) {
         bg = -1;
     return new Sprite(ch, fg, bg, opacity);
 }
-make.sprite = make$6;
+make.sprite = make$7;
 function install$1(name, ...args) {
     let sprite;
     // @ts-ignore
-    sprite = make$6(...args);
+    sprite = make$7(...args);
     sprite.name = name;
     sprites[name] = sprite;
     return sprite;
@@ -5461,35 +5497,9 @@ var index$2 = {
     __proto__: null,
     Sprite: Sprite,
     sprites: sprites,
-    make: make$6,
+    make: make$7,
     install: install$1,
     Mixer: Mixer
-};
-
-class Bounds {
-    constructor(x, y, w, h) {
-        this.x = x;
-        this.y = y;
-        this.width = w;
-        this.height = h;
-    }
-    contains(...args) {
-        let x$1 = args[0];
-        let y$1 = args[1];
-        if (typeof x$1 !== 'number') {
-            y$1 = y(x$1);
-            x$1 = x(x$1);
-        }
-        return (this.x <= x$1 &&
-            this.y <= y$1 &&
-            this.x + this.width > x$1 &&
-            this.y + this.height > y$1);
-    }
-}
-
-var types = {
-    __proto__: null,
-    Bounds: Bounds
 };
 
 const templates = {};
@@ -5799,7 +5809,7 @@ function makeEffects(opts) {
     return results;
 }
 const effects = {};
-function make$7(opts) {
+function make$8(opts) {
     if (!opts)
         ERROR('opts required to make effect.');
     if (typeof opts === 'string') {
@@ -5815,14 +5825,14 @@ function make$7(opts) {
     const fns = makeEffects(opts);
     let next = opts.next;
     if (next && typeof next !== 'string') {
-        next = make$7(next);
+        next = from$3(next);
     }
     const te = new Effect(fns, next);
     te.flags = from$1(Flags, opts.flags);
     te.chance = opts.chance || 0;
     return te;
 }
-make.tileEvent = make$7;
+make.tileEvent = make$8;
 function from$3(opts) {
     if (typeof opts === 'string') {
         const effect = effects[opts];
@@ -5830,16 +5840,17 @@ function from$3(opts) {
             return effect;
         ERROR('Unknown effect - ' + opts);
     }
-    // @ts-ignore
-    return opts;
+    else if (opts instanceof Effect) {
+        return opts;
+    }
+    return make$8(opts);
 }
 function install$3(id, effect) {
     if (!(effect instanceof Effect)) {
-        effect = make$7(effect);
+        effect = make$8(effect);
     }
     effects[id] = effect;
-    if (effect)
-        effect.id = id;
+    effect.id = id;
     return effect;
 }
 function installAll$1(effects) {
@@ -5854,6 +5865,10 @@ const effectTypes = {};
 function installType(id, fn) {
     effectTypes[id] = fn;
 }
+function fire(effect, map, x, y, ctx = {}) {
+    const e = from$3(effect);
+    return e.fire(map, x, y, ctx);
+}
 //////////////////////////////////////////////
 // EMIT
 async function effectEmit(effect, x, y) {
@@ -5866,7 +5881,6 @@ async function effectEmit(effect, x, y) {
 function makeEmit(config) {
     if (typeof config !== 'string') {
         ERROR('Emit must be configured with name of event to emit');
-        return null;
     }
     return effectEmit.bind({ emit: config });
 }
@@ -5888,7 +5902,6 @@ async function effectMessage(effect, x, y) {
 function makeMessage(config) {
     if (typeof config !== 'string') {
         ERROR('Emit must be configured with name of event to emit');
-        return null;
     }
     return effectMessage.bind({ message: config });
 }
@@ -5900,13 +5913,14 @@ var effect = {
     Effect: Effect,
     makeEffects: makeEffects,
     effects: effects,
-    make: make$7,
+    make: make$8,
     from: from$3,
     install: install$3,
     installAll: installAll$1,
     resetAll: resetAll,
     effectTypes: effectTypes,
     installType: installType,
+    fire: fire,
     effectEmit: effectEmit,
     makeEmit: makeEmit,
     effectMessage: effectMessage,

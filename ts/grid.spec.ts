@@ -1,9 +1,9 @@
-import * as Grid from "./grid";
-import * as GW from "./index";
+import * as Grid from './grid';
+import * as GW from './index';
 import * as UTILS from '../test/utils';
-import { random } from "./random";
+import { random } from './random';
 
-describe("GW.grid", () => {
+describe('GW.grid', () => {
     let a: Grid.NumGrid;
 
     afterEach(() => {
@@ -11,7 +11,7 @@ describe("GW.grid", () => {
         jest.restoreAllMocks();
     });
 
-    test("alloc/free", () => {
+    test('alloc/free', () => {
         a = GW.grid.alloc(10, 10, 0);
         expect(a.width).toEqual(10);
         expect(a.height).toEqual(10);
@@ -30,7 +30,7 @@ describe("GW.grid", () => {
         expect(a.get(-1, -1)).toBeUndefined();
     });
 
-    test("realloc", () => {
+    test('realloc', () => {
         a = GW.grid.alloc(10, 10);
         a.fill(1);
         expect(a[0][0]).toEqual(1);
@@ -51,7 +51,7 @@ describe("GW.grid", () => {
         expect(a.count(4)).toEqual(9);
     });
 
-    test("hasXY", () => {
+    test('hasXY', () => {
         a = GW.grid.alloc(10, 10, 0);
         expect(a.hasXY(5, 5)).toBeTruthy();
         expect(a.hasXY(0, 0)).toBeTruthy();
@@ -62,7 +62,7 @@ describe("GW.grid", () => {
         expect(a.hasXY(0, 10)).toBeFalsy();
     });
 
-    test("isBoundaryXY", () => {
+    test('isBoundaryXY', () => {
         a = GW.grid.alloc(10, 10, 0);
         expect(a.isBoundaryXY(5, 5)).toBeFalsy();
         expect(a.isBoundaryXY(0, 0)).toBeTruthy();
@@ -79,11 +79,21 @@ describe("GW.grid", () => {
 
     test('calcBounds', () => {
         a = GW.grid.alloc(10, 10);
-        expect(a.calcBounds()).toEqual({ left: 10, top: 10, right: 0, bottom: 0 });
+        expect(a.calcBounds()).toEqual({
+            left: 10,
+            top: 10,
+            right: 0,
+            bottom: 0,
+        });
 
         a[3][3] = 1;
         a[5][5] = 1;
-        expect(a.calcBounds()).toEqual({ left: 3, top: 3, right: 5, bottom: 5 });
+        expect(a.calcBounds()).toEqual({
+            left: 3,
+            top: 3,
+            right: 5,
+            bottom: 5,
+        });
     });
 
     test('eachNeighbor', () => {
@@ -101,7 +111,6 @@ describe("GW.grid", () => {
         a.eachNeighbor(1, 1, fn, true);
         expect(fn).toHaveBeenCalledTimes(4);
         fn.mockClear();
-
     });
 
     test('forRect', () => {
@@ -115,7 +124,6 @@ describe("GW.grid", () => {
         a.forRect(1, 1, 3, 3, fn);
         expect(fn).toHaveBeenCalledTimes(9);
         fn.mockClear();
-
     });
 
     test('map', () => {
@@ -130,7 +138,9 @@ describe("GW.grid", () => {
     test('forCircle', () => {
         a = GW.grid.alloc(10, 10);
         a.fill(4);
-        const fn = jest.fn().mockImplementation((v, x, y, g) => g[x][y] = v / 2);
+        const fn = jest
+            .fn()
+            .mockImplementation((v, x, y, g) => (g[x][y] = v / 2));
         a.forCircle(4, 4, 3, fn);
         expect(fn).toHaveBeenCalledTimes(37);
         expect(a.count(2)).toEqual(37);
@@ -154,7 +164,7 @@ describe("GW.grid", () => {
         expect(a.count(3)).toEqual(37);
     });
 
-    test("fill", () => {
+    test('fill', () => {
         a = GW.grid.alloc(10, 10, 10);
         expect(a.count(0)).toEqual(0);
         a.fill(0);
@@ -203,16 +213,18 @@ describe("GW.grid", () => {
 
         jest.spyOn(console, 'log').mockReturnValue(undefined);
         a.dump();
-        expect(console.log).toHaveBeenCalledWith(' 0] aaaaaaaaaa\n' +
-            ' 1] a1aaaaaaaa\n' +
-            ' 2] aa aaaaaaa\n' +
-            ' 3] aaaTaaaaaa\n' +
-            ' 4] aaaaeaaaaa\n' +
-            ' 5] aaaaaUaaaa\n' +
-            ' 6] aaaaaaFaaa\n' +
-            ' 7] aaaaaaa#aa\n' +
-            ' 8] aaaaaaaaaa\n' +
-            ' 9] aaaaaaaaaa');
+        expect(console.log).toHaveBeenCalledWith(
+            ' 0] aaaaaaaaaa\n' +
+                ' 1] a1aaaaaaaa\n' +
+                ' 2] aa aaaaaaa\n' +
+                ' 3] aaaTaaaaaa\n' +
+                ' 4] aaaaeaaaaa\n' +
+                ' 5] aaaaaUaaaa\n' +
+                ' 6] aaaaaaFaaa\n' +
+                ' 7] aaaaaaa#aa\n' +
+                ' 8] aaaaaaaaaa\n' +
+                ' 9] aaaaaaaaaa'
+        );
     });
 
     test('dumpAround', () => {
@@ -233,33 +245,33 @@ describe("GW.grid", () => {
         a.dumpAround(4, 4, 3);
         expect(console.log).toHaveBeenCalledWith(
             ' 1]1aaaaaa\n' +
-            ' 2]a aaaaa\n' +
-            ' 3]aaTaaaa\n' +
-            ' 4]aaaeaaa\n' +
-            ' 5]aaaaUaa\n' +
-            ' 6]aaaaaFa\n' +
-            ' 7]aaaaaa#');
-
+                ' 2]a aaaaa\n' +
+                ' 3]aaTaaaa\n' +
+                ' 4]aaaeaaa\n' +
+                ' 5]aaaaUaa\n' +
+                ' 6]aaaaaFa\n' +
+                ' 7]aaaaaa#'
+        );
     });
 
-    test("fillBlob", () => {
+    test('fillBlob', () => {
         a = GW.grid.alloc(80, 30, 0);
         expect(a.count(1)).toEqual(0);
 
-        a.fillBlob(5, 4, 4, 30, 15, 55, "ffffftttt", "ffffttttt");
+        a.fillBlob(5, 4, 4, 30, 15, 55, 'ffffftttt', 'ffffttttt');
         expect(a.count(1)).toBeGreaterThan(10);
     });
 
-    test("fillBlob - can handle min >= max", () => {
+    test('fillBlob - can handle min >= max', () => {
         GW.random.seed(123456);
         a = GW.grid.alloc(50, 30, 0);
         expect(a.count(1)).toEqual(0);
 
-        a.fillBlob(5, 12, 12, 10, 10, 55, "ffffftttt", "ffffttttt");
+        a.fillBlob(5, 12, 12, 10, 10, 55, 'ffffftttt', 'ffffttttt');
         expect(a.count(1)).toBeGreaterThan(10);
     });
 
-    test("floodFill", () => {
+    test('floodFill', () => {
         a = GW.grid.alloc(20, 20, 0);
         a.fill(1);
         expect(a.count(1)).toEqual(400);
@@ -275,7 +287,9 @@ describe("GW.grid", () => {
         a[4][1] = 1;
         a[2][3] = 1;
 
-        function one(v: number) { return v == 1; }
+        function one(v: number) {
+            return v == 1;
+        }
         expect(a.closestMatchingLoc(2, 2, one)).toEqual([2, 3]);
         expect(a.closestMatchingLoc(4, 4, one)).toEqual([2, 3]);
         expect(a.closestMatchingLoc(4, 2, one)).toEqual([4, 1]);
@@ -287,9 +301,13 @@ describe("GW.grid", () => {
         a[4][1] = 1;
         a[2][3] = 1;
 
-        function one(v: number) { return v == 1; }
+        function one(v: number) {
+            return v == 1;
+        }
         expect(a.firstMatchingLoc(one)).toEqual([2, 3]);
-        function two(v: number) { return v == 2; }
+        function two(v: number) {
+            return v == 2;
+        }
         expect(a.firstMatchingLoc(two)).toEqual([-1, -1]);
     });
 
@@ -301,13 +319,17 @@ describe("GW.grid", () => {
         a[4][1] = 1;
         a[2][3] = 1;
 
-        function one(v: number) { return v == 1; }
+        function one(v: number) {
+            return v == 1;
+        }
         expect(a.randomMatchingLoc(one)).toEqual([2, 3]);
 
         random.seed(50);
         expect(a.randomMatchingLoc(one)).toEqual([4, 1]);
 
-        function two(v: number) { return v == 2; }
+        function two(v: number) {
+            return v == 2;
+        }
         expect(a.randomMatchingLoc(two)).toEqual([-1, -1]);
 
         random.seed(5);
@@ -317,18 +339,18 @@ describe("GW.grid", () => {
 
         // some kind of error!
         let ok = false;
-        const test = jest.fn().mockImplementation((v: number, x: number, y: number) => {
-            if (x == 0 && y == 0) ok = !ok;
-            if (!v) return false;
-            return ok;
-        });
+        const test = jest
+            .fn()
+            .mockImplementation((v: number, x: number, y: number) => {
+                if (x == 0 && y == 0) ok = !ok;
+                if (!v) return false;
+                return ok;
+            });
 
         expect(a.randomMatchingLoc(test)).toEqual([-1, -1]);
-
     });
 
     test('matchingLocNear', () => {
-
         a = GW.grid.alloc(10, 10, 0);
         a[4][1] = 1;
         a[2][3] = 1;
@@ -337,7 +359,9 @@ describe("GW.grid", () => {
         expect(a.matchingLocNear(2, 3, 1)).toEqual([2, 3]);
         expect(a.matchingLocNear(2, 3, 2)).toEqual([-1, -1]);
 
-        function one(v: number) { return v == 1; }
+        function one(v: number) {
+            return v == 1;
+        }
         expect(a.matchingLocNear(3, 0, one)).toEqual([4, 1]);
 
         a[4][3] = 1;
@@ -346,17 +370,18 @@ describe("GW.grid", () => {
 
         // This is an error condition...
         let normal = true;
-        const match = jest.fn().mockImplementation((v: number, x: number, y: number) => {
-            if (!normal) return false;
-            if (x == 4 && y == 3) normal = false;
-            return v == 1;
-        });
+        const match = jest
+            .fn()
+            .mockImplementation((v: number, x: number, y: number) => {
+                if (!normal) return false;
+                if (x == 4 && y == 3) normal = false;
+                return v == 1;
+            });
 
         expect(a.matchingLocNear(4, 2, match)).toEqual([-1, -1]);
     });
 
     test('arcCount', () => {
-
         a = GW.grid.alloc(10, 10, 0);
 
         // all open around
@@ -389,7 +414,6 @@ describe("GW.grid", () => {
         // all filled around
         a.fill(1);
         expect(a.arcCount(4, 3, GW.utils.IS_ZERO)).toEqual(0);
-
     });
 
     test('findReplaceRange', () => {
@@ -482,7 +506,10 @@ describe("GW.grid", () => {
         let results = a.fillBlob(5, 5, 5, 20, 20, 55);
 
         expect(results).toEqual({
-            x: 17, y: 25, width: 16, height: 9
+            x: 17,
+            y: 25,
+            width: 16,
+            height: 9,
         });
 
         // force an odd return from '_cellularAutomataRound'
@@ -494,9 +521,11 @@ describe("GW.grid", () => {
         results = a.fillBlob(5, 5, 5, 20, 20, 55);
 
         expect(results).toEqual({
-            x: 18, y: 15, width: 10, height: 20
+            x: 18,
+            y: 15,
+            width: 10,
+            height: 20,
         });
-
     });
 
     test('make', () => {
@@ -515,17 +544,6 @@ describe("GW.grid", () => {
         Grid.offsetZip(dest, a, 3, 2, 6);
         expect(dest[5][4]).toEqual(6);
         expect(dest[2][2]).toEqual(0);
-    });
-
-    test('directionOfDoorSite', () => {
-        a = Grid.alloc(10, 10, 0);
-
-        a.fillRect(2, 2, 3, 3, 1);
-        expect(Grid.directionOfDoorSite(a, 2, 4, 1)).toEqual(GW.utils.NO_DIRECTION);
-        expect(Grid.directionOfDoorSite(a, 1, 3, 1)).toEqual(GW.utils.LEFT);
-        expect(Grid.directionOfDoorSite(a, 5, 3, 1)).toEqual(GW.utils.RIGHT);
-        expect(Grid.directionOfDoorSite(a, 3, 1, 1)).toEqual(GW.utils.DOWN);
-        expect(Grid.directionOfDoorSite(a, 3, 5, 1)).toEqual(GW.utils.UP);
     });
 
     test('intersection', () => {
@@ -553,5 +571,4 @@ describe("GW.grid", () => {
         expect(b[2][2]).toEqual(1);
         expect(b[5][5]).toEqual(2);
     });
-
 });

@@ -17,14 +17,14 @@ export interface XY {
 //   >> rotate 90 degrees clockwise ==>> newIndex = 4 + (oldIndex + 1) % 4;
 //   >> opposite diagonal ==>> newIndex = 4 + (index + 2) % 4;
 export const DIRS: Loc[] = [
-    [0, 1],
-    [1, 0],
     [0, -1],
+    [1, 0],
+    [0, 1],
     [-1, 0],
-    [1, 1],
     [1, -1],
-    [-1, -1],
+    [1, 1],
     [-1, 1],
+    [-1, -1],
 ];
 
 export const NO_DIRECTION = -1;
@@ -52,7 +52,7 @@ export const CLOCK_DIRS: Loc[] = [
     [-1, 1],
 ];
 
-export function NOOP() { }
+export function NOOP() {}
 export function TRUE() {
     return true;
 }
@@ -68,8 +68,12 @@ export function ZERO() {
 export function IDENTITY(x: any) {
     return x;
 }
-export function IS_ZERO(x: number) { return x == 0; }
-export function IS_NONZERO(x: number) { return x != 0; }
+export function IS_ZERO(x: number) {
+    return x == 0;
+}
+export function IS_NONZERO(x: number) {
+    return x != 0;
+}
 
 /**
  * clamps a value between min and max (inclusive)
@@ -290,7 +294,7 @@ export function assignObject(dest: any, src: any) {
 }
 
 export function assignOmitting(omit: string | string[], dest: any, src: any) {
-    if (typeof omit === "string") {
+    if (typeof omit === 'string') {
         omit = omit.split(/[,|]/g).map((t) => t.trim());
     }
     Object.keys(src).forEach((key) => {
@@ -324,14 +328,15 @@ export function setDefaults(
         dest = obj;
 
         // allow for => 'stats.health': 100
-        const parts = key.split(".");
+        const parts = key.split('.');
         while (parts.length > 1) {
             key = parts.shift()!;
             if (dest[key] === undefined) {
                 dest = dest[key] = {};
-            } else if (typeof dest[key] !== "object") {
+            } else if (typeof dest[key] !== 'object') {
                 ERROR(
-                    "Trying to set default member on non-object config item: " + origKey
+                    'Trying to set default member on non-object config item: ' +
+                        origKey
                 );
             } else {
                 dest = dest[key];
@@ -350,7 +355,7 @@ export function setDefaults(
                 dest[key] = null;
             } else if (Array.isArray(defValue)) {
                 dest[key] = defValue.slice();
-            } else if (typeof defValue === "object") {
+            } else if (typeof defValue === 'object') {
                 dest[key] = defValue; // Object.assign({}, defValue); -- this breaks assigning a Color object as a default...
             } else {
                 dest[key] = defValue;
@@ -365,13 +370,13 @@ export function kindDefaults(obj: any, def: any) {
 
         if (!current) {
             current = [];
-        } else if (typeof current == "string") {
+        } else if (typeof current == 'string') {
             current = current.split(/[,|]/).map((t) => t.trim());
         } else if (!Array.isArray(current)) {
             current = [current];
         }
 
-        if (typeof defValue === "string") {
+        if (typeof defValue === 'string') {
             defValue = defValue.split(/[,|]/).map((t) => t.trim());
         } else if (!Array.isArray(defValue)) {
             defValue = [defValue];
@@ -421,7 +426,7 @@ export function getOpt(obj: BasicObject, member: string, _default: any) {
 
 export function firstOpt(field: string, ...args: any[]) {
     for (let arg of args) {
-        if (typeof arg !== "object" || Array.isArray(arg)) {
+        if (typeof arg !== 'object' || Array.isArray(arg)) {
             return arg;
         }
         if (arg[field] !== undefined) {

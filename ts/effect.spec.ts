@@ -16,6 +16,11 @@ describe('Effect', () => {
         expect(Effect.Flags.E_BUILD_IN_WALLS).toBeGreaterThan(0);
     });
 
+    test('create', () => {
+        const eff = new Effect.Effect(Effect.effectEmit);
+        expect(eff).toBeObject();
+    });
+
     test('install', () => {
         const te = Effect.install('TEST', {
             emit: 'FLOOR',
@@ -26,6 +31,47 @@ describe('Effect', () => {
         const te2 = Effect.install('TEST2', te);
         expect(te2).toBe(te);
         expect(Effect.effects.TEST2).toBe(te);
+
+        expect(Effect.make('TEST2')).toBe(te2);
+        expect(() => Effect.make('INVALID')).toThrow();
+    });
+
+    test('make', () => {
+        const eff = Effect.make({
+            emit: 'TEST',
+            next: { message: 'YES!' }
+        });
+
+        expect(eff.next).not.toBeNull();
+        expect(eff.next).toBeObject();
+
+        expect(() => Effect.make(null)).toThrow();
+    });
+
+    test('from', () => {
+        const eff = Effect.install('T', {
+            emit: 'TEST',
+        });
+
+        expect(Effect.from('T')).toBe(eff);
+
+        const e2 = Effect.from(eff);
+        expect(e2).toBe(eff);
+
+        expect(() => Effect.from('INVALID')).toThrow();
+    });
+
+    describe('custom', () => {
+
+        test('fails to create', () => {
+            const makeEffect = jest.fn().mockReturnValue(null);
+
+            Effect.installType('TEST', makeEffect);
+
+            const eff = Effect.make({ TEST: true });
+            // @ts-ignore
+            expect(eff.effects).toHaveLength(0);
+        });
     });
 
     test('resetAll', () => {
@@ -81,6 +127,15 @@ describe('Effect', () => {
     describe('emit', () => {
         afterEach(() => {
             Events.removeAllListeners();
+        });
+
+        test('not gonna happen', async () => {
+            const eff = Effect.make({ emit: 'TEST' });
+            await expect(Effect.effectEmit(eff, 3, 4)).resolves.toBeFalsy();
+        });
+
+        test('make', () => {
+            expect(() => Effect.make({ emit: null })).toThrow();
         });
 
         test('emits', async () => {
@@ -197,11 +252,77 @@ describe('Effect', () => {
             expect(firstFn).toHaveBeenCalled();
             expect(nextFn).toHaveBeenCalledTimes(9);
         });
+
+        test('next is object', async () => {
+            const nextFn = jest.fn().mockReturnValue(true);
+            const nextEffect = Effect.install('NEXT', {
+                fn: nextFn,
+            });
+
+            const firstFn = jest
+                .fn()
+                .mockImplementation(
+                    (eff: Effect.Effect, x: number, y: number) => {
+                        eff.grid[x][y] = 1;
+                        eff.grid.eachNeighbor(x, y, (_v, i, j, g) => {
+                            g[i][j] = 1;
+                        });
+                        return true;
+                    }
+                );
+            const te2 = Effect.install('FIRST', {
+                flags: 'E_NEXT_EVERYWHERE',
+                fn: firstFn,
+                next: nextEffect,
+            });
+
+            expect(te2.next).toBe(nextEffect);
+
+            await expect(te2.fire(UTILS.mockMap(), 5, 5)).resolves.toBeTruthy();
+            expect(firstFn).toHaveBeenCalled();
+            expect(nextFn).toHaveBeenCalledTimes(9);
+        });
+
+        test('next does nothing', async () => {
+            const next = {
+                fire: jest.fn().mockReturnValue(false)
+            };
+
+            const eff = Effect.make({ emit: 'TEST' });
+            // @ts-ignore
+            eff.next = next;
+
+            await expect(eff.fire(UTILS.mockMap(), 5, 5)).resolves.toBeTruthy();
+            expect(next.fire).toHaveBeenCalled();
+        });
+
+        test('next does nothing - everywhere', async () => {
+            const next = {
+                fire: jest.fn().mockReturnValue(false)
+            };
+
+            const effectFn = jest.fn().mockImplementation((eff, x, y) => {
+                eff.grid[x][y] = 1;
+                return true;
+            });
+
+            const eff = Effect.make({ fn: effectFn, flags: 'E_NEXT_EVERYWHERE' });
+            // @ts-ignore
+            eff.next = next;
+
+            await expect(eff.fire(UTILS.mockMap(), 5, 5)).resolves.toBeTruthy();
+            expect(next.fire).toHaveBeenCalled();
+        });
+
     });
 
     describe('message', () => {
         afterEach(() => {
             jest.restoreAllMocks();
+        });
+
+        test('make', () => {
+            expect(() => Effect.make({ message: null })).toThrow();
         });
 
         test('logs', async () => {
