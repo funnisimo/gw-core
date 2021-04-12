@@ -1107,6 +1107,8 @@ declare class Buffer extends DataBuffer {
     render(): this;
     load(): this;
 }
+declare function make$5(width: number, height: number): DataBuffer;
+declare function make$5(canvas: BufferTarget): Buffer;
 
 declare type MouseEventFn = (ev: Event) => void;
 interface CanvasOptions {
@@ -1272,6 +1274,7 @@ declare namespace index_d {
     index_d_DataBuffer as DataBuffer,
     index_d_BufferTarget as BufferTarget,
     index_d_Buffer as Buffer,
+    make$5 as make,
     index_d_DancingData as DancingData,
     index_d_DancingBuffer as DancingBuffer,
   };
@@ -1292,11 +1295,11 @@ declare class Sprite implements SpriteType {
     constructor(ch?: string | number | null, fg?: ColorBase | null, bg?: ColorBase | null, opacity?: number);
 }
 declare const sprites: Record<string, Sprite>;
-declare function make$5(): Sprite;
-declare function make$5(bg: ColorBase, opacity?: number): Sprite;
-declare function make$5(ch: string | null, fg: ColorBase | null, bg: ColorBase | null, opacity?: number): Sprite;
-declare function make$5(args: any[]): Sprite;
-declare function make$5(info: Partial<SpriteConfig>): Sprite;
+declare function make$6(): Sprite;
+declare function make$6(bg: ColorBase, opacity?: number): Sprite;
+declare function make$6(ch: string | null, fg: ColorBase | null, bg: ColorBase | null, opacity?: number): Sprite;
+declare function make$6(args: any[]): Sprite;
+declare function make$6(info: Partial<SpriteConfig>): Sprite;
 declare function install$1(name: string, bg: ColorBase, opacity?: number): Sprite;
 declare function install$1(name: string, ch: string | null, fg: Color | number | string | number[] | null, bg: Color | number | string | number[] | null, opacity?: number): Sprite;
 declare function install$1(name: string, args: any[]): Sprite;
@@ -1314,7 +1317,7 @@ declare namespace index_d$1 {
     index_d$1_SpriteConfig as SpriteConfig,
     index_d$1_Sprite as Sprite,
     index_d$1_sprites as sprites,
-    make$5 as make,
+    make$6 as make,
     install$1 as install,
     index_d$1_DrawInfo as DrawInfo,
     index_d$1_Mixer as Mixer,
@@ -1488,7 +1491,7 @@ declare class Effect {
 }
 declare function makeEffects(opts: any): EffectFn[];
 declare const effects: Record<string, Effect>;
-declare function make$6(opts: string | any): Effect;
+declare function make$7(opts: string | any): Effect;
 declare function from$3(opts: Effect | string): Effect;
 declare function install$3(id: string, effect: Effect | any): any;
 declare function installAll$1(effects: Record<string, Effect | any>): void;
@@ -1496,6 +1499,7 @@ declare function resetAll(): void;
 declare type EffectMakeFn = (config: any) => EffectFn | null;
 declare const effectTypes: Record<string, EffectMakeFn>;
 declare function installType(id: string, fn: EffectMakeFn): void;
+declare function fire(effect: Effect | any, map: MapType, x: number, y: number, ctx?: any): Promise<boolean>;
 declare function effectEmit(this: any, effect: Effect, x: number, y: number): Promise<boolean>;
 declare function makeEmit(config: any): EffectFn;
 declare function effectMessage(this: any, effect: Effect, x: number, y: number): Promise<boolean>;
@@ -1513,6 +1517,7 @@ declare const effect_d_resetAll: typeof resetAll;
 type effect_d_EffectMakeFn = EffectMakeFn;
 declare const effect_d_effectTypes: typeof effectTypes;
 declare const effect_d_installType: typeof installType;
+declare const effect_d_fire: typeof fire;
 declare const effect_d_effectEmit: typeof effectEmit;
 declare const effect_d_makeEmit: typeof makeEmit;
 declare const effect_d_effectMessage: typeof effectMessage;
@@ -1525,7 +1530,7 @@ declare namespace effect_d {
     effect_d_Effect as Effect,
     effect_d_makeEffects as makeEffects,
     effect_d_effects as effects,
-    make$6 as make,
+    make$7 as make,
     from$3 as from,
     install$3 as install,
     installAll$1 as installAll,
@@ -1533,6 +1538,7 @@ declare namespace effect_d {
     effect_d_EffectMakeFn as EffectMakeFn,
     effect_d_effectTypes as effectTypes,
     effect_d_installType as installType,
+    effect_d_fire as fire,
     effect_d_effectEmit as effectEmit,
     effect_d_makeEmit as makeEmit,
     effect_d_effectMessage as effectMessage,
@@ -1542,7 +1548,7 @@ declare namespace effect_d {
 
 declare const data: any;
 declare const config: any;
-declare const make$7: any;
+declare const make$8: any;
 declare const flags: any;
 
-export { Random, index_d as canvas, color_d as color, colors, config, cosmetic, data, effect_d as effect, events_d as events, flag_d as flag, flags, fov_d as fov, frequency_d as frequency, grid_d as grid, io_d as io, loop, make$7 as make, message_d as message, path_d as path, random, range_d as range, scheduler_d as scheduler, index_d$1 as sprite, sprites, index_d$2 as text, types_d as types, utils_d as utils };
+export { Random, index_d as canvas, color_d as color, colors, config, cosmetic, data, effect_d as effect, events_d as events, flag_d as flag, flags, fov_d as fov, frequency_d as frequency, grid_d as grid, io_d as io, loop, make$8 as make, message_d as message, path_d as path, random, range_d as range, scheduler_d as scheduler, index_d$1 as sprite, sprites, index_d$2 as text, types_d as types, utils_d as utils };

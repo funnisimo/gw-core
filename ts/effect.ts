@@ -257,8 +257,7 @@ export function from(opts: Effect | string): Effect {
         const effect = effects[opts];
         if (effect) return effect;
         Utils.ERROR('Unknown effect - ' + opts);
-    }
-    else if (opts instanceof Effect) {
+    } else if (opts instanceof Effect) {
         return opts;
     }
     return make(opts);
@@ -288,6 +287,17 @@ export const effectTypes: Record<string, EffectMakeFn> = {};
 
 export function installType(id: string, fn: EffectMakeFn) {
     effectTypes[id] = fn;
+}
+
+export function fire(
+    effect: Effect | any,
+    map: Types.MapType,
+    x: number,
+    y: number,
+    ctx: any = {}
+) {
+    const e = from(effect);
+    return e.fire(map, x, y, ctx);
 }
 
 //////////////////////////////////////////////

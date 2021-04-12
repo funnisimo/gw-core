@@ -559,8 +559,12 @@ function lotteryDrawArray(rand, frequencies) {
         maxFreq += frequencies[i];
     }
     if (maxFreq <= 0) {
-        console.warn('Lottery Draw - no frequencies', frequencies, frequencies.length);
-        return 0;
+        // console.warn(
+        //     'Lottery Draw - no frequencies',
+        //     frequencies,
+        //     frequencies.length
+        // );
+        return -1;
     }
     randIndex = rand.range(0, maxFreq - 1);
     for (i = 0; i < frequencies.length; i++) {
@@ -5151,6 +5155,9 @@ class DataBuffer {
         console.log(data.join('\n'));
     }
 }
+make.dataBuffer = function (width, height) {
+    return new DataBuffer(width, height);
+};
 class Buffer extends DataBuffer {
     constructor(canvas) {
         super(canvas.width, canvas.height);
@@ -5169,6 +5176,15 @@ class Buffer extends DataBuffer {
         this._target.copyTo(this._data);
         return this;
     }
+}
+make.buffer = function (canvas) {
+    return new Buffer(canvas);
+};
+function make$6(...args) {
+    if (args.length == 1) {
+        return new Buffer(args[0]);
+    }
+    return new DataBuffer(args[0], args[1]);
 }
 
 class DancingData {
@@ -5391,6 +5407,7 @@ var index$1 = {
     Glyphs: Glyphs,
     DataBuffer: DataBuffer,
     Buffer: Buffer,
+    make: make$6,
     DancingData: DancingData,
     DancingBuffer: DancingBuffer
 };
@@ -5410,7 +5427,7 @@ class Sprite {
     }
 }
 const sprites = {};
-function make$6(...args) {
+function make$7(...args) {
     let ch = null, fg = -1, bg = -1, opacity;
     if (args.length == 0) {
         return new Sprite(null, -1, -1);
@@ -5466,11 +5483,11 @@ function make$6(...args) {
         bg = -1;
     return new Sprite(ch, fg, bg, opacity);
 }
-make.sprite = make$6;
+make.sprite = make$7;
 function install$1(name, ...args) {
     let sprite;
     // @ts-ignore
-    sprite = make$6(...args);
+    sprite = make$7(...args);
     sprite.name = name;
     sprites[name] = sprite;
     return sprite;
@@ -5480,7 +5497,7 @@ var index$2 = {
     __proto__: null,
     Sprite: Sprite,
     sprites: sprites,
-    make: make$6,
+    make: make$7,
     install: install$1,
     Mixer: Mixer
 };
@@ -5792,7 +5809,7 @@ function makeEffects(opts) {
     return results;
 }
 const effects = {};
-function make$7(opts) {
+function make$8(opts) {
     if (!opts)
         ERROR('opts required to make effect.');
     if (typeof opts === 'string') {
@@ -5815,7 +5832,7 @@ function make$7(opts) {
     te.chance = opts.chance || 0;
     return te;
 }
-make.tileEvent = make$7;
+make.tileEvent = make$8;
 function from$3(opts) {
     if (typeof opts === 'string') {
         const effect = effects[opts];
@@ -5826,11 +5843,11 @@ function from$3(opts) {
     else if (opts instanceof Effect) {
         return opts;
     }
-    return make$7(opts);
+    return make$8(opts);
 }
 function install$3(id, effect) {
     if (!(effect instanceof Effect)) {
-        effect = make$7(effect);
+        effect = make$8(effect);
     }
     effects[id] = effect;
     effect.id = id;
@@ -5847,6 +5864,10 @@ function resetAll() {
 const effectTypes = {};
 function installType(id, fn) {
     effectTypes[id] = fn;
+}
+function fire(effect, map, x, y, ctx = {}) {
+    const e = from$3(effect);
+    return e.fire(map, x, y, ctx);
 }
 //////////////////////////////////////////////
 // EMIT
@@ -5892,13 +5913,14 @@ var effect = {
     Effect: Effect,
     makeEffects: makeEffects,
     effects: effects,
-    make: make$7,
+    make: make$8,
     from: from$3,
     install: install$3,
     installAll: installAll$1,
     resetAll: resetAll,
     effectTypes: effectTypes,
     installType: installType,
+    fire: fire,
     effectEmit: effectEmit,
     makeEmit: makeEmit,
     effectMessage: effectMessage,

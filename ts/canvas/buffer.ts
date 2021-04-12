@@ -1,6 +1,7 @@
 import { Mixer, DrawInfo } from '../sprite/mixer';
 import * as Color from '../color';
 import * as Text from '../text/index';
+import { make as Make } from '../gw';
 
 export class DataBuffer {
     protected _data: Uint32Array;
@@ -243,6 +244,10 @@ export class DataBuffer {
     }
 }
 
+Make.dataBuffer = function (width: number, height: number) {
+    return new DataBuffer(width, height);
+};
+
 export interface BufferTarget {
     readonly width: number;
     readonly height: number;
@@ -282,4 +287,17 @@ export class Buffer extends DataBuffer {
         this._target.copyTo(this._data);
         return this;
     }
+}
+
+Make.buffer = function (canvas: BufferTarget) {
+    return new Buffer(canvas);
+};
+
+export function make(width: number, height: number): DataBuffer;
+export function make(canvas: BufferTarget): Buffer;
+export function make(...args: any[]): Buffer | DataBuffer {
+    if (args.length == 1) {
+        return new Buffer(args[0]);
+    }
+    return new DataBuffer(args[0], args[1]);
 }

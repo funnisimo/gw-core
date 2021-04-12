@@ -22,12 +22,12 @@ function lotteryDrawArray(rand: Random, frequencies: WeightedArray) {
         maxFreq += frequencies[i];
     }
     if (maxFreq <= 0) {
-        console.warn(
-            'Lottery Draw - no frequencies',
-            frequencies,
-            frequencies.length
-        );
-        return 0;
+        // console.warn(
+        //     'Lottery Draw - no frequencies',
+        //     frequencies,
+        //     frequencies.length
+        // );
+        return -1;
     }
 
     randIndex = rand.range(0, maxFreq - 1);
