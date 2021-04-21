@@ -4297,7 +4297,7 @@ class Mixer {
             opacity = 100;
         if (opacity <= 0)
             return;
-        if ((info.ch && info.ch !== -1) || info.ch === 0)
+        if (info.ch)
             this.ch = info.ch;
         if ((info.fg && info.fg !== -1) || info.fg === 0)
             this.fg.mix(info.fg, opacity);
@@ -4990,10 +4990,10 @@ class DataBuffer {
     get(x, y) {
         let index = y * this.width + x;
         const style = this._data[index] || 0;
-        const ch = style >> 24;
+        const glyph = style >> 24;
         const bg = (style >> 12) & 0xfff;
         const fg = style & 0xfff;
-        return { ch, fg, bg };
+        return { glyph, fg, bg };
     }
     toGlyph(ch) {
         if (typeof ch === 'number')
@@ -5151,7 +5151,7 @@ class DataBuffer {
                 if (x % 10 == 0)
                     line += ' ';
                 const data = this.get(x, y);
-                const glyph = data.ch;
+                const glyph = data.glyph;
                 line += String.fromCharCode(glyph || 32);
             }
             data.push(line);
@@ -5196,7 +5196,7 @@ class DancingData {
         this._data = [];
         this._width = width;
         this._height = height;
-        this._data = new Array(width * height).fill(0).map(() => new Mixer());
+        this._data = new Array(width * height).fill(0).map(() => { return { glyph: 0, fg: 0, bg: 0 }; });
     }
     get width() {
         return this._width;
@@ -5223,17 +5223,23 @@ class DancingData {
         const current = this._data[index];
         if (!current)
             return;
-        current.draw(glyph, fg, bg);
+        if (typeof glyph !== 'number')
+            glyph = this.toGlyph(glyph);
+        if (glyph !== -1)
+            current.glyph = glyph;
+        if (typeof fg !== 'number')
+            fg = from$2(fg).toInt();
+        if (typeof bg !== 'number')
+            bg = from$2(bg).toInt();
+        if (fg !== -1)
+            current.fg = fg;
+        if (bg !== -1)
+            current.bg = bg;
         return this;
     }
     // This is without opacity - opacity must be done in Mixer
     drawSprite(x, y, sprite) {
-        let index = y * this.width + x;
-        const current = this._data[index];
-        if (!current)
-            return;
-        current.drawSprite(sprite);
-        return this;
+        return this.draw(x, y, sprite.ch || -1, sprite.fg || -1, sprite.bg || -1);
     }
     blackOut(...args) {
         if (args.length == 0) {
@@ -5242,7 +5248,15 @@ class DancingData {
         return this.draw(args[0], args[1], 0, 0, 0);
     }
     fill(glyph = 0, fg = 0xfff, bg = 0) {
-        this._data.forEach((m) => m.draw(glyph, fg, bg));
+        if (typeof glyph !== 'number') {
+            glyph = this.toGlyph(glyph);
+        }
+        this._data.forEach((m) => {
+            // @ts-ignore
+            m.glyph = glyph;
+            m.fg = fg;
+            m.bg = bg;
+        });
         return this;
     }
     copy(other) {
@@ -5250,12 +5264,12 @@ class DancingData {
             this._data.forEach((m, i) => {
                 const x = i % this.width;
                 const y = Math.floor(i / this.width);
-                m.copy(other.get(x, y));
+                Object.assign(m, other.get(x, y));
             });
         }
         else {
             this._data.forEach((m, i) => {
-                m.copy(other._data[i]);
+                Object.assign(m, other._data[i]);
             });
         }
         return this;
@@ -5322,8 +5336,8 @@ class DancingData {
             color$1 = from$2(color$1);
         }
         const mixer = this.get(x, y);
-        mixer.fg.add(color$1, strength);
-        mixer.bg.add(color$1, strength);
+        mixer.fg = from$2(mixer.fg).add(color$1, strength).toInt();
+        mixer.bg = from$2(mixer.bg).add(color$1, strength).toInt();
         return this;
     }
     mix(color$1, percent) {
@@ -5332,8 +5346,8 @@ class DancingData {
         for (let x = 0; x < this.width; ++x) {
             for (let y = 0; y < this.height; ++y) {
                 const mixer = this.get(x, y);
-                mixer.fg.mix(color$1, percent);
-                mixer.bg.mix(color$1, percent);
+                mixer.fg = from$2(mixer.fg).mix(color$1, percent).toInt();
+                mixer.bg = from$2(mixer.bg).mix(color$1, percent).toInt();
             }
         }
         return this;
@@ -5354,11 +5368,8 @@ class DancingData {
                 if (x % 10 == 0)
                     line += ' ';
                 const mixer = this.get(x, y);
-                let glyph = mixer.ch;
-                if (typeof glyph === 'number') {
-                    glyph = String.fromCharCode(glyph || 32);
-                }
-                line += glyph[0];
+                const ch = String.fromCharCode(mixer.glyph || 32);
+                line += ch[0];
             }
             data.push(line);
         }
@@ -5379,10 +5390,7 @@ class DancingBuffer extends DancingData {
         this._data.forEach((m, i) => {
             const x = i % this.width;
             const y = Math.floor(i / this.width);
-            if (typeof m.ch === 'string') {
-                m.ch = this.toGlyph(m.ch);
-            }
-            this._target.draw(x, y, m.ch, m.fg.toInt(), m.bg.toInt());
+            this._target.draw(x, y, m.glyph, m.fg, m.bg);
         });
         return this;
     }
@@ -5390,11 +5398,10 @@ class DancingBuffer extends DancingData {
         const data = new Uint32Array(this.width * this.height);
         this._target.copyTo(data);
         data.forEach((style, index) => {
-            const mixer = this._data[index] || 0;
-            const ch = style >> 24;
-            const bg = (style >> 12) & 0xfff;
-            const fg = style & 0xfff;
-            mixer.draw(ch, bg, fg);
+            const data = this._data[index] || 0;
+            data.glyph = style >> 24;
+            data.bg = (style >> 12) & 0xfff;
+            data.fg = style & 0xfff;
         });
         return this;
     }
@@ -5417,9 +5424,9 @@ var index$1 = {
 };
 
 class Sprite {
-    constructor(ch, fg, bg, opacity) {
-        if (!ch && ch !== 0)
-            ch = -1;
+    constructor(ch, fg, bg, opacity = 100) {
+        if (!ch)
+            ch = null;
         if (typeof fg !== 'number')
             fg = from$2(fg);
         if (typeof bg !== 'number')
@@ -5427,7 +5434,7 @@ class Sprite {
         this.ch = ch;
         this.fg = fg;
         this.bg = bg;
-        this.opacity = opacity;
+        this.opacity = opacity >= 0 ? opacity : 100;
     }
 }
 const sprites = {};
@@ -5449,7 +5456,7 @@ function make$7(...args) {
         opacity = args.pop();
     }
     if (args.length > 1) {
-        ch = args[0] || -1;
+        ch = args[0] || null;
         fg = args[1];
         bg = args[2];
     }
@@ -5467,7 +5474,7 @@ function make$7(...args) {
         }
         else {
             const sprite = args[0];
-            ch = sprite.ch || -1;
+            ch = sprite.ch || null;
             fg = sprite.fg || -1;
             bg = sprite.bg || -1;
             opacity = sprite.opacity;

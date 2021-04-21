@@ -3,6 +3,13 @@ import * as Color from '../color';
 import * as Text from '../text/index';
 import { make as Make } from '../gw';
 
+export interface DrawData {
+    glyph: number;
+    fg: number;
+    bg: number;
+};
+
+
 export class DataBuffer {
     protected _data: Uint32Array;
     private _width: number;
@@ -21,13 +28,13 @@ export class DataBuffer {
         return this._height;
     }
 
-    get(x: number, y: number): DrawInfo {
+    get(x: number, y: number): DrawData {
         let index = y * this.width + x;
         const style = this._data[index] || 0;
-        const ch = style >> 24;
+        const glyph = style >> 24;
         const bg = (style >> 12) & 0xfff;
         const fg = style & 0xfff;
-        return { ch, fg, bg };
+        return { glyph, fg, bg };
     }
 
     toGlyph(ch: string | number) {
@@ -235,7 +242,7 @@ export class DataBuffer {
             for (let x = 0; x < this.width; ++x) {
                 if (x % 10 == 0) line += ' ';
                 const data = this.get(x, y);
-                const glyph = data.ch as number;
+                const glyph = data.glyph;
                 line += String.fromCharCode(glyph || 32);
             }
             data.push(line);
