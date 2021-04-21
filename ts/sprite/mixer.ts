@@ -83,7 +83,7 @@ export class Mixer implements DrawInfo {
         if (opacity === undefined) opacity = 100;
         if (opacity <= 0) return;
 
-        if ((info.ch && info.ch !== -1) || info.ch === 0) this.ch = info.ch;
+        if (info.ch) this.ch = info.ch;
         if ((info.fg && info.fg !== -1) || info.fg === 0)
             this.fg.mix(info.fg, opacity);
         if ((info.bg && info.bg !== -1) || info.bg === 0)

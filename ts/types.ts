@@ -3,7 +3,7 @@ import { Range } from './range';
 import * as Utils from './utils';
 
 export interface SpriteType {
-    readonly ch?: string | number;
+    readonly ch?: string | null;
     readonly fg?: ColorBase;
     readonly bg?: ColorBase;
     readonly opacity?: number;
