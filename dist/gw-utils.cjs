@@ -5838,6 +5838,8 @@ function make$8(opts) {
 }
 make.tileEvent = make$8;
 function from$3(opts) {
+    if (!opts)
+        return null;
     if (typeof opts === 'string') {
         const effect = effects[opts];
         if (effect)
@@ -5871,6 +5873,8 @@ function installType(id, fn) {
 }
 function fire(effect, map, x, y, ctx = {}) {
     const e = from$3(effect);
+    if (!e)
+        return false;
     return e.fire(map, x, y, ctx);
 }
 //////////////////////////////////////////////

@@ -252,7 +252,8 @@ export function make(opts: string | any): Effect {
 
 Make.tileEvent = make;
 
-export function from(opts: Effect | string): Effect {
+export function from(opts: Effect | string | null | undefined): Effect | null {
+    if (!opts) return null;
     if (typeof opts === 'string') {
         const effect = effects[opts];
         if (effect) return effect;
@@ -297,6 +298,8 @@ export function fire(
     ctx: any = {}
 ) {
     const e = from(effect);
+    if (!e) return false;
+
     return e.fire(map, x, y, ctx);
 }
 

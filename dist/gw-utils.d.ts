@@ -1492,14 +1492,14 @@ declare class Effect {
 declare function makeEffects(opts: any): EffectFn[];
 declare const effects: Record<string, Effect>;
 declare function make$7(opts: string | any): Effect;
-declare function from$3(opts: Effect | string): Effect;
+declare function from$3(opts: Effect | string | null | undefined): Effect | null;
 declare function install$3(id: string, effect: Effect | any): any;
 declare function installAll$1(effects: Record<string, Effect | any>): void;
 declare function resetAll(): void;
 declare type EffectMakeFn = (config: any) => EffectFn | null;
 declare const effectTypes: Record<string, EffectMakeFn>;
 declare function installType(id: string, fn: EffectMakeFn): void;
-declare function fire(effect: Effect | any, map: MapType, x: number, y: number, ctx?: any): Promise<boolean>;
+declare function fire(effect: Effect | any, map: MapType, x: number, y: number, ctx?: any): false | Promise<boolean>;
 declare function effectEmit(this: any, effect: Effect, x: number, y: number): Promise<boolean>;
 declare function makeEmit(config: any): EffectFn;
 declare function effectMessage(this: any, effect: Effect, x: number, y: number): Promise<boolean>;
