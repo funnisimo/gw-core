@@ -1,17 +1,17 @@
-import { Mixer, DrawInfo } from '../sprite/mixer';
+import { DrawInfo } from '../sprite/mixer';
 import * as Color from '../color';
 import * as Text from '../text/index';
-import { DataBuffer, BufferTarget } from './buffer';
+import { DataBuffer, BufferTarget, DrawData } from './buffer';
 
 export class DancingData {
-    protected _data: Mixer[] = [];
+    protected _data: DrawData[] = [];
     private _width: number;
     private _height: number;
 
     constructor(width: number, height: number) {
         this._width = width;
         this._height = height;
-        this._data = new Array(width * height).fill(0).map(() => new Mixer());
+        this._data = new Array(width * height).fill(0).map(() => { return { glyph: 0, fg: 0, bg: 0 }; });
     }
 
     get width() {
@@ -21,7 +21,7 @@ export class DancingData {
         return this._height;
     }
 
-    get(x: number, y: number): Mixer {
+    get(x: number, y: number): DrawData {
         let index = y * this.width + x;
         const style = this._data[index];
         return style;
@@ -43,17 +43,19 @@ export class DancingData {
         let index = y * this.width + x;
         const current = this._data[index];
         if (!current) return;
-        current.draw(glyph, fg, bg);
+        if (typeof glyph !== 'number') glyph = this.toGlyph(glyph);
+        if (glyph !== -1) current.glyph = glyph;
+        if (typeof fg !== 'number') fg = Color.from(fg).toInt();
+        if (typeof bg !== 'number') bg = Color.from(bg).toInt();
+
+        if (fg !== -1) current.fg = fg;
+        if (bg !== -1) current.bg = bg;
         return this;
     }
 
     // This is without opacity - opacity must be done in Mixer
     drawSprite(x: number, y: number, sprite: Partial<DrawInfo>) {
-        let index = y * this.width + x;
-        const current = this._data[index];
-        if (!current) return;
-        current.drawSprite(sprite);
-        return this;
+        return this.draw(x, y, sprite.ch || -1, sprite.fg || -1, sprite.bg || -1);
     }
 
     blackOut(x: number, y: number): void;
@@ -66,7 +68,13 @@ export class DancingData {
     }
 
     fill(glyph: number | string = 0, fg: number = 0xfff, bg: number = 0) {
-        this._data.forEach((m) => m.draw(glyph, fg, bg));
+        if (typeof glyph !== 'number') { glyph = this.toGlyph(glyph); }
+        this._data.forEach((m) => {
+            // @ts-ignore
+            m.glyph = glyph;
+            m.fg = fg;
+            m.bg = bg;
+        });
         return this;
     }
 
@@ -75,11 +83,11 @@ export class DancingData {
             this._data.forEach((m, i) => {
                 const x = i % this.width;
                 const y = Math.floor(i / this.width);
-                m.copy(other.get(x, y));
+                Object.assign(m, other.get(x, y));
             });
         } else {
             this._data.forEach((m, i) => {
-                m.copy(other._data[i]);
+                Object.assign(m, other._data[i]);
             });
         }
         return this;
@@ -185,8 +193,8 @@ export class DancingData {
             color = Color.from(color);
         }
         const mixer = this.get(x, y);
-        mixer.fg.add(color, strength);
-        mixer.bg.add(color, strength);
+        mixer.fg = Color.from(mixer.fg).add(color, strength).toInt();
+        mixer.bg = Color.from(mixer.bg).add(color, strength).toInt();
         return this;
     }
 
@@ -195,8 +203,8 @@ export class DancingData {
         for (let x = 0; x < this.width; ++x) {
             for (let y = 0; y < this.height; ++y) {
                 const mixer = this.get(x, y);
-                mixer.fg.mix(color, percent);
-                mixer.bg.mix(color, percent);
+                mixer.fg = Color.from(mixer.fg).mix(color, percent).toInt();
+                mixer.bg = Color.from(mixer.bg).mix(color, percent).toInt();
             }
         }
         return this;
@@ -217,11 +225,8 @@ export class DancingData {
             for (let x = 0; x < this.width; ++x) {
                 if (x % 10 == 0) line += ' ';
                 const mixer = this.get(x, y);
-                let glyph = mixer.ch;
-                if (typeof glyph === 'number') {
-                    glyph = String.fromCharCode(glyph || 32);
-                }
-                line += glyph[0];
+                const ch = String.fromCharCode(mixer.glyph || 32);
+                line += ch[0];
             }
             data.push(line);
         }
@@ -248,10 +253,7 @@ export class DancingBuffer extends DancingData {
         this._data.forEach((m, i) => {
             const x = i % this.width;
             const y = Math.floor(i / this.width);
-            if (typeof m.ch === 'string') {
-                m.ch = this.toGlyph(m.ch);
-            }
-            this._target.draw(x, y, m.ch, m.fg.toInt(), m.bg.toInt());
+            this._target.draw(x, y, m.glyph, m.fg, m.bg);
         });
         return this;
     }
@@ -260,11 +262,10 @@ export class DancingBuffer extends DancingData {
         const data = new Uint32Array(this.width * this.height);
         this._target.copyTo(data);
         data.forEach((style, index) => {
-            const mixer = this._data[index] || 0;
-            const ch = style >> 24;
-            const bg = (style >> 12) & 0xfff;
-            const fg = style & 0xfff;
-            mixer.draw(ch, bg, fg);
+            const data = this._data[index] || 0;
+            data.glyph = style >> 24;
+            data.bg = (style >> 12) & 0xfff;
+            data.fg = style & 0xfff;
         });
         return this;
     }

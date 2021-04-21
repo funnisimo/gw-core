@@ -111,14 +111,14 @@ describe("Mixer", () => {
         expect(mixer.fg.css()).toEqual("#f00");
         expect(mixer.bg.css()).toEqual("#00f");
 
-        mixer.drawSprite({ ch: 100, fg: Color.fromCss("#00F"), bg: 0xff0 });
-        expect(mixer.ch).toEqual(100);
+        mixer.drawSprite({ ch: 'd', fg: Color.fromCss("#00F"), bg: 0xff0 });
+        expect(mixer.ch).toEqual('d');
         expect(mixer.fg.css()).toEqual("#00f");
         expect(mixer.bg.css()).toEqual("#ff0");
 
         // no change if no opacity
         mixer.drawSprite({ ch: "@", fg: 0xf00, bg: Color.fromCss("#00F") }, 0);
-        expect(mixer.ch).toEqual(100);
+        expect(mixer.ch).toEqual('d');
         expect(mixer.fg.css()).toEqual("#00f");
         expect(mixer.bg.css()).toEqual("#ff0");
 
@@ -134,7 +134,7 @@ describe("Mixer", () => {
         expect(mixer.bg.css()).toEqual("#888");
 
         // -1 means do not draw
-        mixer.drawSprite({ ch: -1, fg: -1, bg: -1 });
+        mixer.drawSprite({ ch: null, fg: -1, bg: -1 });
         expect(mixer.ch).toEqual("@");
         expect(mixer.fg.css()).toEqual("#808");
         expect(mixer.bg.css()).toEqual("#888");

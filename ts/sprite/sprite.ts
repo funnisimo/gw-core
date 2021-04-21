@@ -10,25 +10,25 @@ export interface SpriteConfig {
 }
 
 export class Sprite implements SpriteType {
-    public ch: string | number;
+    public ch: string | null;
     public fg: number | Color.Color;
     public bg: number | Color.Color;
     public opacity?: number;
     public name?: string;
 
     constructor(
-        ch?: string | number | null,
+        ch?: string | null,
         fg?: Color.ColorBase | null,
         bg?: Color.ColorBase | null,
-        opacity?: number
+        opacity = 100
     ) {
-        if (!ch && ch !== 0) ch = -1;
+        if (!ch) ch = null;
         if (typeof fg !== 'number') fg = Color.from(fg);
         if (typeof bg !== 'number') bg = Color.from(bg);
         this.ch = ch;
         this.fg = fg;
         this.bg = bg;
-        this.opacity = opacity;
+        this.opacity = opacity >= 0 ? opacity : 100;
     }
 }
 
@@ -66,7 +66,7 @@ export function make(...args: any[]) {
         opacity = args.pop();
     }
     if (args.length > 1) {
-        ch = args[0] || -1;
+        ch = args[0] || null;
         fg = args[1];
         bg = args[2];
     } else {
@@ -82,7 +82,7 @@ export function make(...args: any[]) {
             bg = args[0];
         } else {
             const sprite = args[0] as SpriteConfig;
-            ch = sprite.ch || -1;
+            ch = sprite.ch || null;
             fg = sprite.fg || -1;
             bg = sprite.bg || -1;
             opacity = sprite.opacity;

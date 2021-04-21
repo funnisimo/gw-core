@@ -408,7 +408,7 @@ declare namespace color_d {
 }
 
 interface SpriteType {
-    readonly ch?: string | number;
+    readonly ch?: string | null;
     readonly fg?: ColorBase;
     readonly bg?: ColorBase;
     readonly opacity?: number;
@@ -1068,6 +1068,11 @@ declare class Mixer implements DrawInfo {
     toString(): string;
 }
 
+interface DrawData {
+    glyph: number;
+    fg: number;
+    bg: number;
+}
 declare class DataBuffer {
     protected _data: Uint32Array;
     private _width;
@@ -1075,7 +1080,7 @@ declare class DataBuffer {
     constructor(width: number, height: number);
     get width(): number;
     get height(): number;
-    get(x: number, y: number): DrawInfo;
+    get(x: number, y: number): DrawData;
     toGlyph(ch: string | number): number;
     draw(x: number, y: number, glyph?: number | string, fg?: ColorBase, // TODO - White?
     bg?: ColorBase): this;
@@ -1200,13 +1205,13 @@ declare function withImage(image: ImageOptions | HTMLImageElement | string): Can
 declare function withFont(src: FontOptions | string): Canvas | Canvas2D;
 
 declare class DancingData {
-    protected _data: Mixer[];
+    protected _data: DrawData[];
     private _width;
     private _height;
     constructor(width: number, height: number);
     get width(): number;
     get height(): number;
-    get(x: number, y: number): Mixer;
+    get(x: number, y: number): DrawData;
     toGlyph(ch: string | number): number;
     draw(x: number, y: number, glyph?: number | string, fg?: ColorBase, // TODO - White?
     bg?: ColorBase): this | undefined;
@@ -1248,6 +1253,7 @@ declare const index_d_withFont: typeof withFont;
 type index_d_GlyphOptions = GlyphOptions;
 type index_d_Glyphs = Glyphs;
 declare const index_d_Glyphs: typeof Glyphs;
+type index_d_DrawData = DrawData;
 type index_d_DataBuffer = DataBuffer;
 declare const index_d_DataBuffer: typeof DataBuffer;
 type index_d_BufferTarget = BufferTarget;
@@ -1271,6 +1277,7 @@ declare namespace index_d {
     index_d_withFont as withFont,
     index_d_GlyphOptions as GlyphOptions,
     index_d_Glyphs as Glyphs,
+    index_d_DrawData as DrawData,
     index_d_DataBuffer as DataBuffer,
     index_d_BufferTarget as BufferTarget,
     index_d_Buffer as Buffer,
@@ -1287,12 +1294,12 @@ interface SpriteConfig {
     opacity?: number;
 }
 declare class Sprite implements SpriteType {
-    ch: string | number;
+    ch: string | null;
     fg: number | Color;
     bg: number | Color;
     opacity?: number;
     name?: string;
-    constructor(ch?: string | number | null, fg?: ColorBase | null, bg?: ColorBase | null, opacity?: number);
+    constructor(ch?: string | null, fg?: ColorBase | null, bg?: ColorBase | null, opacity?: number);
 }
 declare const sprites: Record<string, Sprite>;
 declare function make$6(): Sprite;
