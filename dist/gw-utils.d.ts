@@ -1051,10 +1051,11 @@ declare class Mixer implements DrawInfo {
     copy(other: DrawInfo): this;
     clone(): Mixer;
     equals(other: Mixer): boolean;
+    get dances(): boolean;
     nullify(): this;
     blackOut(): this;
     draw(ch?: string | number, fg?: ColorBase, bg?: ColorBase): this;
-    drawSprite(info: SpriteType, opacity?: number): this | undefined;
+    drawSprite(info: SpriteType | Mixer, opacity?: number): this | undefined;
     invert(): this;
     multiply(color: ColorBase, fg?: boolean, bg?: boolean): this;
     mix(color: ColorBase, fg?: number, bg?: number): this;
@@ -1459,15 +1460,20 @@ declare enum Flags {
     E_BLOCKED_BY_OTHER_LAYERS,
     E_SUPERPRIORITY,
     E_NO_MARK_FIRED,
+    E_PROTECTED,
     E_SPREAD_CIRCLE,
     E_SPREAD_LINE,
-    E_CLEAR_CELL,
     E_EVACUATE_CREATURES,
     E_EVACUATE_ITEMS,
     E_BUILD_IN_WALLS,
     E_MUST_TOUCH_WALLS,
     E_NO_TOUCH_WALLS,
     E_FIRED,
+    E_CLEAR_GROUND,
+    E_CLEAR_SURFACE,
+    E_CLEAR_LIQUID,
+    E_CLEAR_GAS,
+    E_CLEAR_CELL,
     E_ONLY_IF_EMPTY,
     E_ACTIVATE_DORMANT_MONSTER,
     E_AGGRAVATES_MONSTERS,
@@ -1506,7 +1512,7 @@ declare function resetAll(): void;
 declare type EffectMakeFn = (config: any) => EffectFn | null;
 declare const effectTypes: Record<string, EffectMakeFn>;
 declare function installType(id: string, fn: EffectMakeFn): void;
-declare function fire(effect: Effect | any, map: MapType, x: number, y: number, ctx?: any): false | Promise<boolean>;
+declare function fire(effect: Effect | any, map: MapType, x: number, y: number, ctx?: any): Promise<boolean>;
 declare function effectEmit(this: any, effect: Effect, x: number, y: number): Promise<boolean>;
 declare function makeEmit(config: any): EffectFn;
 declare function effectMessage(this: any, effect: Effect, x: number, y: number): Promise<boolean>;

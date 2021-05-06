@@ -5,6 +5,7 @@ import * as Utils from './utils';
 import * as Msg from './message';
 import * as Events from './events';
 import * as Grid from './grid';
+import { random } from './random';
 
 ///////////////////////////////////////////////////////
 // TILE EVENT
@@ -26,7 +27,7 @@ export enum Flags {
     E_NO_MARK_FIRED = Fl(11), // Do not mark this cell as having fired an effect (so can log messages multiple times)
     // MUST_REPLACE_LAYER
     // NEEDS_EMPTY_LAYER
-    // E_PROTECTED = Fl(12),
+    E_PROTECTED = Fl(12),
 
     E_SPREAD_CIRCLE = Fl(13), // Spread in a circle around the spot (using FOV), radius calculated using spread+decrement
     E_SPREAD_LINE = Fl(14), // Spread in a line in one random direction
@@ -35,7 +36,6 @@ export enum Flags {
     // E_NULL_LIQUID = Fl(16), // Clear liquid layer
     // E_NULL_GAS = Fl(17), // Clear gas layer
 
-    E_CLEAR_CELL = Fl(17), // clear all existing tiles
     E_EVACUATE_CREATURES = Fl(18), // Creatures in the effect area get moved outside of it
     E_EVACUATE_ITEMS = Fl(19), // Creatures in the effect area get moved outside of it
 
@@ -45,14 +45,24 @@ export enum Flags {
 
     E_FIRED = Fl(23), // has already been fired once
 
+    E_CLEAR_GROUND = Fl(17), // clear all existing tiles
+    E_CLEAR_SURFACE = Fl(24),
+    E_CLEAR_LIQUID = Fl(25),
+    E_CLEAR_GAS = Fl(26),
+
+    E_CLEAR_CELL = E_CLEAR_GROUND |
+        E_CLEAR_SURFACE |
+        E_CLEAR_LIQUID |
+        E_CLEAR_GAS,
+
     E_ONLY_IF_EMPTY = E_BLOCKED_BY_ITEMS | E_BLOCKED_BY_ACTORS,
     // E_NULLIFY_CELL = E_NULL_SURFACE | E_NULL_LIQUID | E_NULL_GAS,
 
     // These should be effect types
-    E_ACTIVATE_DORMANT_MONSTER = Fl(23), // Dormant monsters on this tile will appear -- e.g. when a statue bursts to reveal a monster.
-    E_AGGRAVATES_MONSTERS = Fl(24), // Will act as though an aggravate monster scroll of effectRadius radius had been read at that point.
-    E_RESURRECT_ALLY = Fl(25), // Will bring back to life your most recently deceased ally.
-    E_EMIT_EVENT = Fl(26), // Will emit the effect when activated
+    E_ACTIVATE_DORMANT_MONSTER = Fl(27), // Dormant monsters on this tile will appear -- e.g. when a statue bursts to reveal a monster.
+    E_AGGRAVATES_MONSTERS = Fl(28), // Will act as though an aggravate monster scroll of effectRadius radius had been read at that point.
+    E_RESURRECT_ALLY = Fl(29), // Will bring back to life your most recently deceased ally.
+    E_EMIT_EVENT = Fl(30), // Will emit the effect when activated
 }
 
 export interface EffectCtx {
@@ -154,6 +164,8 @@ export class Effect {
         this.map = map;
         this.ctx = ctx;
 
+        if (this.chance && !random.chance(this.chance)) return false;
+
         // fire all of my functions
         for (let i = 0; i < this.effects.length; ++i) {
             const eff = this.effects[i];
@@ -250,7 +262,7 @@ export function make(opts: string | any): Effect {
     return te;
 }
 
-Make.tileEvent = make;
+Make.effect = make;
 
 export function from(opts: Effect | string | null | undefined): Effect | null {
     if (!opts) return null;
@@ -290,7 +302,7 @@ export function installType(id: string, fn: EffectMakeFn) {
     effectTypes[id] = fn;
 }
 
-export function fire(
+export async function fire(
     effect: Effect | any,
     map: Types.MapType,
     x: number,

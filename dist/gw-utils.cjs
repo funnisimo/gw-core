@@ -4264,6 +4264,9 @@ class Mixer {
             this.fg.equals(other.fg) &&
             this.bg.equals(other.bg));
     }
+    get dances() {
+        return this.fg.dances || this.bg.dances;
+    }
     nullify() {
         this.ch = -1;
         this.fg.nullify();
@@ -4291,6 +4294,7 @@ class Mixer {
         return this._changed();
     }
     drawSprite(info, opacity) {
+        // @ts-ignore
         if (opacity === undefined)
             opacity = info.opacity;
         if (opacity === undefined)
@@ -5671,26 +5675,33 @@ var Flags;
     Flags[Flags["E_NO_MARK_FIRED"] = fl(11)] = "E_NO_MARK_FIRED";
     // MUST_REPLACE_LAYER
     // NEEDS_EMPTY_LAYER
-    // E_PROTECTED = Fl(12),
+    Flags[Flags["E_PROTECTED"] = fl(12)] = "E_PROTECTED";
     Flags[Flags["E_SPREAD_CIRCLE"] = fl(13)] = "E_SPREAD_CIRCLE";
     Flags[Flags["E_SPREAD_LINE"] = fl(14)] = "E_SPREAD_LINE";
     // E_NULL_SURFACE = Fl(15), // Clear the surface layer
     // E_NULL_LIQUID = Fl(16), // Clear liquid layer
     // E_NULL_GAS = Fl(17), // Clear gas layer
-    Flags[Flags["E_CLEAR_CELL"] = fl(17)] = "E_CLEAR_CELL";
     Flags[Flags["E_EVACUATE_CREATURES"] = fl(18)] = "E_EVACUATE_CREATURES";
     Flags[Flags["E_EVACUATE_ITEMS"] = fl(19)] = "E_EVACUATE_ITEMS";
     Flags[Flags["E_BUILD_IN_WALLS"] = fl(20)] = "E_BUILD_IN_WALLS";
     Flags[Flags["E_MUST_TOUCH_WALLS"] = fl(21)] = "E_MUST_TOUCH_WALLS";
     Flags[Flags["E_NO_TOUCH_WALLS"] = fl(22)] = "E_NO_TOUCH_WALLS";
     Flags[Flags["E_FIRED"] = fl(23)] = "E_FIRED";
+    Flags[Flags["E_CLEAR_GROUND"] = fl(17)] = "E_CLEAR_GROUND";
+    Flags[Flags["E_CLEAR_SURFACE"] = fl(24)] = "E_CLEAR_SURFACE";
+    Flags[Flags["E_CLEAR_LIQUID"] = fl(25)] = "E_CLEAR_LIQUID";
+    Flags[Flags["E_CLEAR_GAS"] = fl(26)] = "E_CLEAR_GAS";
+    Flags[Flags["E_CLEAR_CELL"] = Flags.E_CLEAR_GROUND |
+        Flags.E_CLEAR_SURFACE |
+        Flags.E_CLEAR_LIQUID |
+        Flags.E_CLEAR_GAS] = "E_CLEAR_CELL";
     Flags[Flags["E_ONLY_IF_EMPTY"] = Flags.E_BLOCKED_BY_ITEMS | Flags.E_BLOCKED_BY_ACTORS] = "E_ONLY_IF_EMPTY";
     // E_NULLIFY_CELL = E_NULL_SURFACE | E_NULL_LIQUID | E_NULL_GAS,
     // These should be effect types
-    Flags[Flags["E_ACTIVATE_DORMANT_MONSTER"] = fl(23)] = "E_ACTIVATE_DORMANT_MONSTER";
-    Flags[Flags["E_AGGRAVATES_MONSTERS"] = fl(24)] = "E_AGGRAVATES_MONSTERS";
-    Flags[Flags["E_RESURRECT_ALLY"] = fl(25)] = "E_RESURRECT_ALLY";
-    Flags[Flags["E_EMIT_EVENT"] = fl(26)] = "E_EMIT_EVENT";
+    Flags[Flags["E_ACTIVATE_DORMANT_MONSTER"] = fl(27)] = "E_ACTIVATE_DORMANT_MONSTER";
+    Flags[Flags["E_AGGRAVATES_MONSTERS"] = fl(28)] = "E_AGGRAVATES_MONSTERS";
+    Flags[Flags["E_RESURRECT_ALLY"] = fl(29)] = "E_RESURRECT_ALLY";
+    Flags[Flags["E_EMIT_EVENT"] = fl(30)] = "E_EMIT_EVENT";
 })(Flags || (Flags = {}));
 class Effect {
     constructor(effects, next = null) {
@@ -5756,6 +5767,8 @@ class Effect {
         let didSomething = false;
         this.map = map;
         this.ctx = ctx;
+        if (this.chance && !random.chance(this.chance))
+            return false;
         // fire all of my functions
         for (let i = 0; i < this.effects.length; ++i) {
             const eff = this.effects[i];
@@ -5843,7 +5856,7 @@ function make$8(opts) {
     te.chance = opts.chance || 0;
     return te;
 }
-make.tileEvent = make$8;
+make.effect = make$8;
 function from$3(opts) {
     if (!opts)
         return null;
@@ -5878,7 +5891,7 @@ const effectTypes = {};
 function installType(id, fn) {
     effectTypes[id] = fn;
 }
-function fire(effect, map, x, y, ctx = {}) {
+async function fire(effect, map, x, y, ctx = {}) {
     const e = from$3(effect);
     if (!e)
         return false;

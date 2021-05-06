@@ -1,7 +1,7 @@
-import * as Color from "../color";
-import { SpriteType } from "../types";
-import * as Utils from "../utils";
-import { make } from "../gw";
+import * as Color from '../color';
+import { SpriteType } from '../types';
+import * as Utils from '../utils';
+import { make } from '../gw';
 
 export interface DrawInfo {
     ch: string | number;
@@ -45,6 +45,10 @@ export class Mixer implements DrawInfo {
         );
     }
 
+    get dances(): boolean {
+        return this.fg.dances || this.bg.dances;
+    }
+
     nullify() {
         this.ch = -1;
         this.fg.nullify();
@@ -78,7 +82,8 @@ export class Mixer implements DrawInfo {
         return this._changed();
     }
 
-    drawSprite(info: SpriteType, opacity?: number) {
+    drawSprite(info: SpriteType | Mixer, opacity?: number) {
+        // @ts-ignore
         if (opacity === undefined) opacity = info.opacity;
         if (opacity === undefined) opacity = 100;
         if (opacity <= 0) return;
