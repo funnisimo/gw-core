@@ -64,6 +64,7 @@ export interface ActorType extends Utils.XY, Utils.Chainable, EntityType {
     isDetected: () => boolean;
     blocksVision: () => boolean; // kind.flags & Flags.ActorKind.AK_BLOCKS_VISION
 
+    layerFlags: () => number;
     avoidsCell: (cell: CellType) => boolean;
     // if (cell.flags & Flags.Cell.HAS_ACTOR) return false;
     // return !cell.hasTileFlag(forbidTileFlags);
@@ -82,6 +83,8 @@ export interface ItemFlags extends LayerFlags {
 export interface ItemType extends Utils.XY, Utils.Chainable, EntityType {
     quantity: number;
     readonly flags: ItemFlags;
+
+    layerFlags: () => number;
     blocksMove: () => boolean;
     avoidsCell: (cell: CellType) => boolean;
     forbidsCell: (cell: CellType) => boolean;
@@ -98,9 +101,13 @@ export interface FxType extends Utils.XY, Utils.Chainable, EntityType {
     next: FxType | null;
 }
 
+export interface CellFlags {
+    cell: number;
+    cellMech: number;
+}
+
 export interface CellType {
-    flags: number;
-    mechFlags: number;
+    flags: CellFlags;
     tileFlags: () => number;
     tileMechFlags: () => number;
     actor: ActorType | null;

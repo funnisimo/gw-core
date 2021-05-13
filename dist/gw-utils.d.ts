@@ -449,6 +449,7 @@ interface ActorType extends XY, Chainable, EntityType {
     isVisible: () => boolean;
     isDetected: () => boolean;
     blocksVision: () => boolean;
+    layerFlags: () => number;
     avoidsCell: (cell: CellType) => boolean;
     forbidsCell: (cell: CellType) => boolean;
     delete: () => void;
@@ -462,6 +463,7 @@ interface ItemFlags extends LayerFlags {
 interface ItemType extends XY, Chainable, EntityType {
     quantity: number;
     readonly flags: ItemFlags;
+    layerFlags: () => number;
     blocksMove: () => boolean;
     avoidsCell: (cell: CellType) => boolean;
     forbidsCell: (cell: CellType) => boolean;
@@ -473,9 +475,12 @@ interface ItemType extends XY, Chainable, EntityType {
 interface FxType extends XY, Chainable, EntityType {
     next: FxType | null;
 }
+interface CellFlags {
+    cell: number;
+    cellMech: number;
+}
 interface CellType {
-    flags: number;
-    mechFlags: number;
+    flags: CellFlags;
     tileFlags: () => number;
     tileMechFlags: () => number;
     actor: ActorType | null;
@@ -510,6 +515,7 @@ type types_d_ActorType = ActorType;
 type types_d_ItemFlags = ItemFlags;
 type types_d_ItemType = ItemType;
 type types_d_FxType = FxType;
+type types_d_CellFlags = CellFlags;
 type types_d_CellType = CellType;
 type types_d_MapType = MapType;
 type types_d_Bounds = Bounds;
@@ -527,6 +533,7 @@ declare namespace types_d {
     types_d_ItemFlags as ItemFlags,
     types_d_ItemType as ItemType,
     types_d_FxType as FxType,
+    types_d_CellFlags as CellFlags,
     types_d_CellType as CellType,
     types_d_MapType as MapType,
     types_d_Bounds as Bounds,
