@@ -30,6 +30,10 @@ export class Sprite implements SpriteType {
         this.bg = bg;
         this.opacity = opacity >= 0 ? opacity : 100;
     }
+
+    clone() {
+        return new Sprite(this.ch, this.fg, this.bg, this.opacity);
+    }
 }
 
 export const sprites: Record<string, Sprite> = {};

@@ -1308,6 +1308,7 @@ declare class Sprite implements SpriteType {
     opacity?: number;
     name?: string;
     constructor(ch?: string | null, fg?: ColorBase | null, bg?: ColorBase | null, opacity?: number);
+    clone(): Sprite;
 }
 declare const sprites: Record<string, Sprite>;
 declare function make$6(): Sprite;
@@ -1424,6 +1425,7 @@ interface MessageOptions {
 declare function configure$1(opts: Partial<MessageOptions>): void;
 declare function add(msg: string, args?: any): void;
 declare function fromActor(actor: ActorType, msg: string, args?: any): void;
+declare function forPlayer(actor: ActorType, msg: string, args?: any): void;
 declare function addCombat(actor: ActorType, msg: string, args?: any): void;
 declare function confirmAll(): void;
 declare type EachMsgFn = (msg: string, confirmed: boolean, i: number) => any;
@@ -1435,6 +1437,7 @@ declare const message_d_needsUpdate: typeof needsUpdate;
 type message_d_MessageOptions = MessageOptions;
 declare const message_d_add: typeof add;
 declare const message_d_fromActor: typeof fromActor;
+declare const message_d_forPlayer: typeof forPlayer;
 declare const message_d_addCombat: typeof addCombat;
 declare const message_d_confirmAll: typeof confirmAll;
 type message_d_EachMsgFn = EachMsgFn;
@@ -1449,6 +1452,7 @@ declare namespace message_d {
     configure$1 as configure,
     message_d_add as add,
     message_d_fromActor as fromActor,
+    message_d_forPlayer as forPlayer,
     message_d_addCombat as addCombat,
     message_d_confirmAll as confirmAll,
     message_d_EachMsgFn as EachMsgFn,

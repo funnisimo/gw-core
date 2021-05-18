@@ -5441,6 +5441,9 @@ class Sprite {
         this.bg = bg;
         this.opacity = opacity >= 0 ? opacity : 100;
     }
+    clone() {
+        return new Sprite(this.ch, this.fg, this.bg, this.opacity);
+    }
 }
 const sprites = {};
 function make$7(...args) {
@@ -5531,7 +5534,7 @@ const ARCHIVE = [];
 const CONFIRMED = [];
 var ARCHIVE_LINES = 30;
 var MSG_WIDTH = 80;
-var CURRENT_ARCHIVE_POS = 0;
+var NEXT_WRITE_INDEX = 0;
 var NEEDS_UPDATE = false;
 let COMBAT_MESSAGE = null;
 function needsUpdate(needs) {
@@ -5568,6 +5571,11 @@ function fromActor(actor, msg, args) {
         add(msg, args);
     }
 }
+function forPlayer(actor, msg, args) {
+    if (!actor.isPlayer())
+        return;
+    add(msg, args);
+}
 function addCombat(actor, msg, args) {
     if (actor.isPlayer() || actor.isVisible()) {
         const template = templates[msg];
@@ -5586,9 +5594,9 @@ function addMessageLine(msg) {
         return;
     }
     // Add the message to the archive.
-    ARCHIVE[CURRENT_ARCHIVE_POS] = msg;
-    CONFIRMED[CURRENT_ARCHIVE_POS] = false;
-    CURRENT_ARCHIVE_POS = (CURRENT_ARCHIVE_POS + 1) % ARCHIVE_LINES;
+    ARCHIVE[NEXT_WRITE_INDEX] = msg;
+    CONFIRMED[NEXT_WRITE_INDEX] = false;
+    NEXT_WRITE_INDEX = (NEXT_WRITE_INDEX + 1) % ARCHIVE_LINES;
 }
 function addMessage(msg) {
     msg = capitalize(msg);
@@ -5616,14 +5624,14 @@ function addCombatMessage(msg) {
         COMBAT_MESSAGE = msg;
     }
     else {
-        COMBAT_MESSAGE += ", " + capitalize(msg);
+        COMBAT_MESSAGE += ', ' + capitalize(msg);
     }
     NEEDS_UPDATE = true;
 }
 function commitCombatMessage() {
     if (!COMBAT_MESSAGE)
         return false;
-    addMessage(COMBAT_MESSAGE + ".");
+    addMessage(COMBAT_MESSAGE + '.');
     COMBAT_MESSAGE = null;
     return true;
 }
@@ -5634,8 +5642,9 @@ function confirmAll() {
     NEEDS_UPDATE = true;
 }
 function forEach(fn) {
+    commitCombatMessage();
     for (let i = 0; i < ARCHIVE_LINES; ++i) {
-        const n = (i + CURRENT_ARCHIVE_POS - 1) % ARCHIVE_LINES;
+        const n = (ARCHIVE_LINES - i + NEXT_WRITE_INDEX - 1) % ARCHIVE_LINES;
         const msg = ARCHIVE[n];
         if (!msg)
             return;
@@ -5653,6 +5662,7 @@ var message = {
     configure: configure$1,
     add: add,
     fromActor: fromActor,
+    forPlayer: forPlayer,
     addCombat: addCombat,
     confirmAll: confirmAll,
     forEach: forEach
