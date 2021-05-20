@@ -44,6 +44,8 @@ declare function copyXY(dest: XY, src: XY | Loc): void;
 declare function addXY(dest: XY, src: XY | Loc): void;
 declare function equalsXY(dest: XY, src: XY | Loc): boolean;
 declare function lerpXY(a: XY | Loc, b: XY | Loc, pct: number): any[];
+declare type XYMatchFunc = (x: number, y: number) => boolean;
+declare function matchingNeighbor(x: number, y: number, matchFn: XYMatchFunc, only4dirs?: boolean): Loc;
 declare function distanceBetween(x1: number, y1: number, x2: number, y2: number): number;
 declare function distanceFromTo(a: XY | Loc, b: XY | Loc): number;
 declare function calcRadius(x: number, y: number): number;
@@ -114,6 +116,8 @@ declare const utils_d_copyXY: typeof copyXY;
 declare const utils_d_addXY: typeof addXY;
 declare const utils_d_equalsXY: typeof equalsXY;
 declare const utils_d_lerpXY: typeof lerpXY;
+type utils_d_XYMatchFunc = XYMatchFunc;
+declare const utils_d_matchingNeighbor: typeof matchingNeighbor;
 declare const utils_d_distanceBetween: typeof distanceBetween;
 declare const utils_d_distanceFromTo: typeof distanceFromTo;
 declare const utils_d_calcRadius: typeof calcRadius;
@@ -181,6 +185,8 @@ declare namespace utils_d {
     utils_d_addXY as addXY,
     utils_d_equalsXY as equalsXY,
     utils_d_lerpXY as lerpXY,
+    utils_d_XYMatchFunc as XYMatchFunc,
+    utils_d_matchingNeighbor as matchingNeighbor,
     utils_d_distanceBetween as distanceBetween,
     utils_d_distanceFromTo as distanceFromTo,
     utils_d_calcRadius as calcRadius,
@@ -486,6 +492,8 @@ interface CellType {
     actor: ActorType | null;
     item: ItemType | null;
     storeMemory: () => void;
+    isAnyKindOfVisible: () => boolean;
+    isVisible: () => boolean;
 }
 interface MapType {
     readonly width: number;
@@ -1062,7 +1070,7 @@ declare class Mixer implements DrawInfo {
     nullify(): this;
     blackOut(): this;
     draw(ch?: string | number, fg?: ColorBase, bg?: ColorBase): this;
-    drawSprite(info: SpriteType | Mixer, opacity?: number): this | undefined;
+    drawSprite(src: SpriteType | Mixer, opacity?: number): this | undefined;
     invert(): this;
     multiply(color: ColorBase, fg?: boolean, bg?: boolean): this;
     mix(color: ColorBase, fg?: number, bg?: number): this;

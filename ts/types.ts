@@ -113,6 +113,8 @@ export interface CellType {
     actor: ActorType | null;
     item: ItemType | null;
     storeMemory: () => void;
+    isAnyKindOfVisible: () => boolean;
+    isVisible: () => boolean;
 }
 
 export interface MapType {

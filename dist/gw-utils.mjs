@@ -108,6 +108,17 @@ function lerpXY(a, b, pct) {
     const y2 = y(a) + Math.floor(dy * pct);
     return [x2, y2];
 }
+function matchingNeighbor(x, y, matchFn, only4dirs = false) {
+    const maxIndex = only4dirs ? 4 : 8;
+    for (let d = 0; d < maxIndex; ++d) {
+        const dir = DIRS[d];
+        const i = x + dir[0];
+        const j = y + dir[1];
+        if (matchFn(i, j))
+            return [i, j];
+    }
+    return [-1, -1];
+}
 function distanceBetween(x1, y1, x2, y2) {
     const x = Math.abs(x1 - x2);
     const y = Math.abs(y1 - y2);
@@ -511,6 +522,7 @@ var utils = {
     addXY: addXY,
     equalsXY: equalsXY,
     lerpXY: lerpXY,
+    matchingNeighbor: matchingNeighbor,
     distanceBetween: distanceBetween,
     distanceFromTo: distanceFromTo,
     calcRadius: calcRadius,
@@ -4294,20 +4306,22 @@ class Mixer {
         }
         return this._changed();
     }
-    drawSprite(info, opacity) {
+    drawSprite(src, opacity) {
+        if (src === this)
+            return this;
         // @ts-ignore
         if (opacity === undefined)
-            opacity = info.opacity;
+            opacity = src.opacity;
         if (opacity === undefined)
             opacity = 100;
         if (opacity <= 0)
             return;
-        if (info.ch)
-            this.ch = info.ch;
-        if ((info.fg && info.fg !== -1) || info.fg === 0)
-            this.fg.mix(info.fg, opacity);
-        if ((info.bg && info.bg !== -1) || info.bg === 0)
-            this.bg.mix(info.bg, opacity);
+        if (src.ch)
+            this.ch = src.ch;
+        if ((src.fg && src.fg !== -1) || src.fg === 0)
+            this.fg.mix(src.fg, opacity);
+        if ((src.bg && src.bg !== -1) || src.bg === 0)
+            this.bg.mix(src.bg, opacity);
         return this._changed();
     }
     invert() {
