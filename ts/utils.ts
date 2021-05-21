@@ -129,6 +129,23 @@ export function lerpXY(a: XY | Loc, b: XY | Loc, pct: number) {
     return [x2, y2];
 }
 
+export type XYFunc = (x: number, y: number) => any;
+
+export function eachNeighbor(
+    x: number,
+    y: number,
+    fn: XYFunc,
+    only4dirs = false
+) {
+    const max = only4dirs ? 4 : 8;
+    for (let i = 0; i < max; ++i) {
+        const dir = DIRS[i];
+        const x1 = x + dir[0];
+        const y1 = y + dir[1];
+        fn(x1, y1);
+    }
+}
+
 export type XYMatchFunc = (x: number, y: number) => boolean;
 
 export function matchingNeighbor(

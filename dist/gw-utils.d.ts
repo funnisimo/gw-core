@@ -44,6 +44,8 @@ declare function copyXY(dest: XY, src: XY | Loc): void;
 declare function addXY(dest: XY, src: XY | Loc): void;
 declare function equalsXY(dest: XY, src: XY | Loc): boolean;
 declare function lerpXY(a: XY | Loc, b: XY | Loc, pct: number): any[];
+declare type XYFunc = (x: number, y: number) => any;
+declare function eachNeighbor(x: number, y: number, fn: XYFunc, only4dirs?: boolean): void;
 declare type XYMatchFunc = (x: number, y: number) => boolean;
 declare function matchingNeighbor(x: number, y: number, matchFn: XYMatchFunc, only4dirs?: boolean): Loc;
 declare function distanceBetween(x1: number, y1: number, x2: number, y2: number): number;
@@ -116,6 +118,8 @@ declare const utils_d_copyXY: typeof copyXY;
 declare const utils_d_addXY: typeof addXY;
 declare const utils_d_equalsXY: typeof equalsXY;
 declare const utils_d_lerpXY: typeof lerpXY;
+type utils_d_XYFunc = XYFunc;
+declare const utils_d_eachNeighbor: typeof eachNeighbor;
 type utils_d_XYMatchFunc = XYMatchFunc;
 declare const utils_d_matchingNeighbor: typeof matchingNeighbor;
 declare const utils_d_distanceBetween: typeof distanceBetween;
@@ -185,6 +189,8 @@ declare namespace utils_d {
     utils_d_addXY as addXY,
     utils_d_equalsXY as equalsXY,
     utils_d_lerpXY as lerpXY,
+    utils_d_XYFunc as XYFunc,
+    utils_d_eachNeighbor as eachNeighbor,
     utils_d_XYMatchFunc as XYMatchFunc,
     utils_d_matchingNeighbor as matchingNeighbor,
     utils_d_distanceBetween as distanceBetween,

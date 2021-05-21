@@ -112,6 +112,15 @@ function lerpXY(a, b, pct) {
     const y2 = y(a) + Math.floor(dy * pct);
     return [x2, y2];
 }
+function eachNeighbor(x, y, fn, only4dirs = false) {
+    const max = only4dirs ? 4 : 8;
+    for (let i = 0; i < max; ++i) {
+        const dir = DIRS[i];
+        const x1 = x + dir[0];
+        const y1 = y + dir[1];
+        fn(x1, y1);
+    }
+}
 function matchingNeighbor(x, y, matchFn, only4dirs = false) {
     const maxIndex = only4dirs ? 4 : 8;
     for (let d = 0; d < maxIndex; ++d) {
@@ -526,6 +535,7 @@ var utils = {
     addXY: addXY,
     equalsXY: equalsXY,
     lerpXY: lerpXY,
+    eachNeighbor: eachNeighbor,
     matchingNeighbor: matchingNeighbor,
     distanceBetween: distanceBetween,
     distanceFromTo: distanceFromTo,
