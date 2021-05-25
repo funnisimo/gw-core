@@ -263,7 +263,7 @@ export class Random {
         }
 
         // and pick one
-        randIndex = 1 + random.number(candidateLocs);
+        randIndex = 1 + this.number(candidateLocs);
 
         for (k = 0; k < 50; k++) {
             for (i = x - k; i <= x + k; i++) {

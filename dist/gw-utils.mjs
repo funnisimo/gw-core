@@ -852,7 +852,7 @@ class Random {
             return [-1, -1];
         }
         // and pick one
-        randIndex = 1 + random.number(candidateLocs);
+        randIndex = 1 + this.number(candidateLocs);
         for (k = 0; k < 50; k++) {
             for (i = x - k; i <= x + k; i++) {
                 for (j = y - k; j <= y + k; j++) {
