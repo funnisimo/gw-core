@@ -33,13 +33,14 @@ export function mockRandom(s?: number) {
 
 export function mockCell(): Types.CellType {
     return {
-        flags: 0,
-        mechFlags: 0,
+        flags: { cell: 0, cellMech: 0 },
         tileFlags: jest.fn().mockReturnValue(0),
         tileMechFlags: jest.fn().mockReturnValue(0),
         actor: null,
         item: null,
         storeMemory: jest.fn(),
+        isAnyKindOfVisible: jest.fn().mockReturnValue(true),
+        isVisible: jest.fn().mockReturnValue(true),
 
         // isWall: jest.fn().mockReturnValue(false),
         // blocksEffects: jest.fn().mockReturnValue(false),

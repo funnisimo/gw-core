@@ -1,4 +1,5 @@
-import { BasicObject } from './utils';
+import { BasicObject } from './types';
+import * as Utils from './utils';
 
 export type RandomFunction = () => number;
 export type SeedFunction = (seed?: number) => RandomFunction;
@@ -194,6 +195,98 @@ export class Random {
         }
 
         return total + lo;
+    }
+
+    matchingXY(
+        width: number,
+        height: number,
+        matchFn: Utils.XYMatchFunc
+    ): Utils.Loc {
+        let locationCount = 0;
+        let i, j, index;
+
+        locationCount = 0;
+        Utils.forRect(width, height, (i, j) => {
+            if (matchFn(i, j)) {
+                locationCount++;
+            }
+        });
+
+        if (locationCount == 0) {
+            return [-1, -1];
+        } else {
+            index = this.range(0, locationCount - 1);
+        }
+
+        for (i = 0; i < width && index >= 0; i++) {
+            for (j = 0; j < height && index >= 0; j++) {
+                if (matchFn(i, j)) {
+                    if (index == 0) {
+                        return [i, j];
+                    }
+                    index--;
+                }
+            }
+        }
+        return [-1, -1];
+    }
+
+    matchingXYNear(
+        x: number,
+        y: number,
+        matchFn: Utils.XYMatchFunc
+    ): Utils.Loc {
+        let loc: Utils.Loc = [-1, -1];
+        let i, j, k, candidateLocs, randIndex;
+
+        candidateLocs = 0;
+
+        // count up the number of candidate locations
+        for (k = 0; k < 50 && !candidateLocs; k++) {
+            for (i = x - k; i <= x + k; i++) {
+                for (j = y - k; j <= y + k; j++) {
+                    if (
+                        (i == x - k ||
+                            i == x + k ||
+                            j == y - k ||
+                            j == y + k) &&
+                        matchFn(i, j)
+                    ) {
+                        candidateLocs++;
+                    }
+                }
+            }
+        }
+
+        if (candidateLocs == 0) {
+            return [-1, -1];
+        }
+
+        // and pick one
+        randIndex = 1 + random.number(candidateLocs);
+
+        for (k = 0; k < 50; k++) {
+            for (i = x - k; i <= x + k; i++) {
+                for (j = y - k; j <= y + k; j++) {
+                    if (
+                        (i == x - k ||
+                            i == x + k ||
+                            j == y - k ||
+                            j == y + k) &&
+                        matchFn(i, j)
+                    ) {
+                        if (--randIndex == 0) {
+                            loc[0] = i;
+                            loc[1] = j;
+                            return loc;
+                        }
+                    }
+                }
+            }
+        }
+
+        // brogueAssert(false);
+        return [-1, -1]; // should never reach this point
     }
 }
 

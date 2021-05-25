@@ -1,318 +1,3 @@
-/**
- * GW.utils
- * @module utils
- */
-declare type Loc = [number, number];
-declare const DIRS: Loc[];
-declare const NO_DIRECTION = -1;
-declare const UP = 0;
-declare const RIGHT = 1;
-declare const DOWN = 2;
-declare const LEFT = 3;
-declare const RIGHT_UP = 4;
-declare const RIGHT_DOWN = 5;
-declare const LEFT_DOWN = 6;
-declare const LEFT_UP = 7;
-declare const CLOCK_DIRS: Loc[];
-declare function NOOP(): void;
-declare function TRUE(): boolean;
-declare function FALSE(): boolean;
-declare function ONE(): number;
-declare function ZERO(): number;
-declare function IDENTITY(x: any): any;
-declare function IS_ZERO(x: number): boolean;
-declare function IS_NONZERO(x: number): boolean;
-/**
- * clamps a value between min and max (inclusive)
- * @param v {Number} the value to clamp
- * @param min {Number} the minimum value
- * @param max {Number} the maximum value
- * @returns {Number} the clamped value
- */
-declare function clamp(v: number, min: number, max: number): number;
-interface XY {
-    x: number;
-    y: number;
-}
-interface XY {
-    x: number;
-    y: number;
-}
-declare function x(src: XY | Loc): any;
-declare function y(src: XY | Loc): any;
-declare function copyXY(dest: XY, src: XY | Loc): void;
-declare function addXY(dest: XY, src: XY | Loc): void;
-declare function equalsXY(dest: XY, src: XY | Loc): boolean;
-declare function lerpXY(a: XY | Loc, b: XY | Loc, pct: number): any[];
-declare type XYFunc = (x: number, y: number) => any;
-declare function eachNeighbor(x: number, y: number, fn: XYFunc, only4dirs?: boolean): void;
-declare type XYMatchFunc = (x: number, y: number) => boolean;
-declare function matchingNeighbor(x: number, y: number, matchFn: XYMatchFunc, only4dirs?: boolean): Loc;
-declare function distanceBetween(x1: number, y1: number, x2: number, y2: number): number;
-declare function distanceFromTo(a: XY | Loc, b: XY | Loc): number;
-declare function calcRadius(x: number, y: number): number;
-declare function dirBetween(x: number, y: number, toX: number, toY: number): number[];
-declare function dirFromTo(a: XY | Loc, b: XY | Loc): number[];
-declare function dirIndex(dir: XY | Loc): number;
-declare function isOppositeDir(a: Loc, b: Loc): boolean;
-declare function isSameDir(a: Loc, b: Loc): boolean;
-declare function dirSpread(dir: Loc): Loc[];
-declare function stepFromTo(a: XY | Loc, b: XY | Loc, fn: (x: number, y: number) => any): void;
-declare function smoothHiliteGradient(currentXValue: number, maxXValue: number): number;
-declare type BasicObject = {
-    [key: string]: any;
-};
-declare function copyObject(dest: any, src: any): void;
-declare function assignObject(dest: any, src: any): void;
-declare function assignOmitting(omit: string | string[], dest: any, src: any): void;
-declare function setDefault(obj: any, field: string, val: any): void;
-declare type AssignCallback = (dest: any, key: string, current: any, def: any) => boolean;
-declare function setDefaults(obj: any, def: any, custom?: AssignCallback | null): void;
-declare function kindDefaults(obj: any, def: any): void;
-declare function pick(obj: any, ...fields: string[]): any;
-declare function clearObject(obj: any): void;
-declare function ERROR(message: string): void;
-declare function WARN(...args: string[]): void;
-declare function first(...args: any[]): any;
-declare function getOpt(obj: BasicObject, member: string, _default: any): any;
-declare function firstOpt(field: string, ...args: any[]): any;
-declare function arraysIntersect(a: any[], b: any[]): boolean;
-declare function sum(arr: number[]): number;
-interface Chainable {
-    next: any | null;
-}
-declare function chainLength<T extends Chainable>(root: T | null): number;
-declare function chainIncludes<T extends Chainable>(chain: T | null, entry: T): boolean;
-declare function eachChain<T extends Chainable>(item: T | null, fn: (item: T, index: number) => any): number;
-declare function addToChain<T extends Chainable>(obj: any, name: string, entry: T): boolean;
-declare function removeFromChain<T extends Chainable>(obj: any, name: string, entry: T): boolean;
-declare function forLine(fromX: number, fromY: number, toX: number, toY: number, stepFn: (x: number, y: number) => boolean): void;
-declare function getLine(fromX: number, fromY: number, toX: number, toY: number): Loc[];
-declare function getLineThru(fromX: number, fromY: number, toX: number, toY: number, width: number, height: number): Loc[];
-
-type utils_d_Loc = Loc;
-type utils_d_XY = XY;
-declare const utils_d_DIRS: typeof DIRS;
-declare const utils_d_NO_DIRECTION: typeof NO_DIRECTION;
-declare const utils_d_UP: typeof UP;
-declare const utils_d_RIGHT: typeof RIGHT;
-declare const utils_d_DOWN: typeof DOWN;
-declare const utils_d_LEFT: typeof LEFT;
-declare const utils_d_RIGHT_UP: typeof RIGHT_UP;
-declare const utils_d_RIGHT_DOWN: typeof RIGHT_DOWN;
-declare const utils_d_LEFT_DOWN: typeof LEFT_DOWN;
-declare const utils_d_LEFT_UP: typeof LEFT_UP;
-declare const utils_d_CLOCK_DIRS: typeof CLOCK_DIRS;
-declare const utils_d_NOOP: typeof NOOP;
-declare const utils_d_TRUE: typeof TRUE;
-declare const utils_d_FALSE: typeof FALSE;
-declare const utils_d_ONE: typeof ONE;
-declare const utils_d_ZERO: typeof ZERO;
-declare const utils_d_IDENTITY: typeof IDENTITY;
-declare const utils_d_IS_ZERO: typeof IS_ZERO;
-declare const utils_d_IS_NONZERO: typeof IS_NONZERO;
-declare const utils_d_clamp: typeof clamp;
-declare const utils_d_x: typeof x;
-declare const utils_d_y: typeof y;
-declare const utils_d_copyXY: typeof copyXY;
-declare const utils_d_addXY: typeof addXY;
-declare const utils_d_equalsXY: typeof equalsXY;
-declare const utils_d_lerpXY: typeof lerpXY;
-type utils_d_XYFunc = XYFunc;
-declare const utils_d_eachNeighbor: typeof eachNeighbor;
-type utils_d_XYMatchFunc = XYMatchFunc;
-declare const utils_d_matchingNeighbor: typeof matchingNeighbor;
-declare const utils_d_distanceBetween: typeof distanceBetween;
-declare const utils_d_distanceFromTo: typeof distanceFromTo;
-declare const utils_d_calcRadius: typeof calcRadius;
-declare const utils_d_dirBetween: typeof dirBetween;
-declare const utils_d_dirFromTo: typeof dirFromTo;
-declare const utils_d_dirIndex: typeof dirIndex;
-declare const utils_d_isOppositeDir: typeof isOppositeDir;
-declare const utils_d_isSameDir: typeof isSameDir;
-declare const utils_d_dirSpread: typeof dirSpread;
-declare const utils_d_stepFromTo: typeof stepFromTo;
-declare const utils_d_smoothHiliteGradient: typeof smoothHiliteGradient;
-type utils_d_BasicObject = BasicObject;
-declare const utils_d_copyObject: typeof copyObject;
-declare const utils_d_assignObject: typeof assignObject;
-declare const utils_d_assignOmitting: typeof assignOmitting;
-declare const utils_d_setDefault: typeof setDefault;
-type utils_d_AssignCallback = AssignCallback;
-declare const utils_d_setDefaults: typeof setDefaults;
-declare const utils_d_kindDefaults: typeof kindDefaults;
-declare const utils_d_pick: typeof pick;
-declare const utils_d_clearObject: typeof clearObject;
-declare const utils_d_ERROR: typeof ERROR;
-declare const utils_d_WARN: typeof WARN;
-declare const utils_d_first: typeof first;
-declare const utils_d_getOpt: typeof getOpt;
-declare const utils_d_firstOpt: typeof firstOpt;
-declare const utils_d_arraysIntersect: typeof arraysIntersect;
-declare const utils_d_sum: typeof sum;
-type utils_d_Chainable = Chainable;
-declare const utils_d_chainLength: typeof chainLength;
-declare const utils_d_chainIncludes: typeof chainIncludes;
-declare const utils_d_eachChain: typeof eachChain;
-declare const utils_d_addToChain: typeof addToChain;
-declare const utils_d_removeFromChain: typeof removeFromChain;
-declare const utils_d_forLine: typeof forLine;
-declare const utils_d_getLine: typeof getLine;
-declare const utils_d_getLineThru: typeof getLineThru;
-declare namespace utils_d {
-  export {
-    utils_d_Loc as Loc,
-    utils_d_XY as XY,
-    utils_d_DIRS as DIRS,
-    utils_d_NO_DIRECTION as NO_DIRECTION,
-    utils_d_UP as UP,
-    utils_d_RIGHT as RIGHT,
-    utils_d_DOWN as DOWN,
-    utils_d_LEFT as LEFT,
-    utils_d_RIGHT_UP as RIGHT_UP,
-    utils_d_RIGHT_DOWN as RIGHT_DOWN,
-    utils_d_LEFT_DOWN as LEFT_DOWN,
-    utils_d_LEFT_UP as LEFT_UP,
-    utils_d_CLOCK_DIRS as CLOCK_DIRS,
-    utils_d_NOOP as NOOP,
-    utils_d_TRUE as TRUE,
-    utils_d_FALSE as FALSE,
-    utils_d_ONE as ONE,
-    utils_d_ZERO as ZERO,
-    utils_d_IDENTITY as IDENTITY,
-    utils_d_IS_ZERO as IS_ZERO,
-    utils_d_IS_NONZERO as IS_NONZERO,
-    utils_d_clamp as clamp,
-    utils_d_x as x,
-    utils_d_y as y,
-    utils_d_copyXY as copyXY,
-    utils_d_addXY as addXY,
-    utils_d_equalsXY as equalsXY,
-    utils_d_lerpXY as lerpXY,
-    utils_d_XYFunc as XYFunc,
-    utils_d_eachNeighbor as eachNeighbor,
-    utils_d_XYMatchFunc as XYMatchFunc,
-    utils_d_matchingNeighbor as matchingNeighbor,
-    utils_d_distanceBetween as distanceBetween,
-    utils_d_distanceFromTo as distanceFromTo,
-    utils_d_calcRadius as calcRadius,
-    utils_d_dirBetween as dirBetween,
-    utils_d_dirFromTo as dirFromTo,
-    utils_d_dirIndex as dirIndex,
-    utils_d_isOppositeDir as isOppositeDir,
-    utils_d_isSameDir as isSameDir,
-    utils_d_dirSpread as dirSpread,
-    utils_d_stepFromTo as stepFromTo,
-    utils_d_smoothHiliteGradient as smoothHiliteGradient,
-    utils_d_BasicObject as BasicObject,
-    utils_d_copyObject as copyObject,
-    utils_d_assignObject as assignObject,
-    utils_d_assignOmitting as assignOmitting,
-    utils_d_setDefault as setDefault,
-    utils_d_AssignCallback as AssignCallback,
-    utils_d_setDefaults as setDefaults,
-    utils_d_kindDefaults as kindDefaults,
-    utils_d_pick as pick,
-    utils_d_clearObject as clearObject,
-    utils_d_ERROR as ERROR,
-    utils_d_WARN as WARN,
-    utils_d_first as first,
-    utils_d_getOpt as getOpt,
-    utils_d_firstOpt as firstOpt,
-    utils_d_arraysIntersect as arraysIntersect,
-    utils_d_sum as sum,
-    utils_d_Chainable as Chainable,
-    utils_d_chainLength as chainLength,
-    utils_d_chainIncludes as chainIncludes,
-    utils_d_eachChain as eachChain,
-    utils_d_addToChain as addToChain,
-    utils_d_removeFromChain as removeFromChain,
-    utils_d_forLine as forLine,
-    utils_d_getLine as getLine,
-    utils_d_getLineThru as getLineThru,
-  };
-}
-
-declare type RandomFunction = () => number;
-declare type SeedFunction = (seed?: number) => RandomFunction;
-interface RandomConfig {
-    make: SeedFunction;
-}
-declare type WeightedArray = number[];
-interface WeightedObject {
-    [key: string]: number;
-}
-declare class Random {
-    private _fn;
-    static configure(opts: Partial<RandomConfig>): void;
-    constructor();
-    seed(val?: number): void;
-    value(): number;
-    float(): number;
-    number(max?: number): number;
-    int(max?: number): number;
-    range(lo: number, hi: number): number;
-    dice(count: number, sides: number, addend?: number): number;
-    weighted(weights: WeightedArray | WeightedObject): string | number;
-    item(list: any[]): any;
-    key(obj: BasicObject): any;
-    shuffle(list: any[], fromIndex?: number, toIndex?: number): any[];
-    sequence(n: number): any[];
-    chance(percent: number, outOf?: number): boolean;
-    clumped(lo: number, hi: number, clumps: number): number;
-}
-declare const random: Random;
-declare const cosmetic: Random;
-
-declare type RangeBase = Range | string | number[] | number;
-declare class Range {
-    lo: number;
-    hi: number;
-    clumps: number;
-    private _rng;
-    constructor(lower: number, upper?: number, clumps?: number, rng?: Random);
-    value(): number;
-    copy(other: Range): this;
-    toString(): string;
-}
-declare function make(config: RangeBase | null, rng?: Random): Range;
-declare const from: typeof make;
-declare function asFn(config: RangeBase | null, rng?: Random): () => number;
-
-type range_d_RangeBase = RangeBase;
-type range_d_Range = Range;
-declare const range_d_Range: typeof Range;
-declare const range_d_make: typeof make;
-declare const range_d_from: typeof from;
-declare const range_d_asFn: typeof asFn;
-declare namespace range_d {
-  export {
-    range_d_RangeBase as RangeBase,
-    range_d_Range as Range,
-    range_d_make as make,
-    range_d_from as from,
-    range_d_asFn as asFn,
-  };
-}
-
-declare type FlagSource = number | string;
-declare type FlagBase = number | string | FlagSource[] | null;
-declare function fl(N: number): number;
-declare function toString(flagObj: any, value: number): string;
-declare function from$1(obj: any, ...args: (FlagBase | undefined)[]): number;
-
-type flag_d_FlagBase = FlagBase;
-declare const flag_d_fl: typeof fl;
-declare const flag_d_toString: typeof toString;
-declare namespace flag_d {
-  export {
-    flag_d_FlagBase as FlagBase,
-    flag_d_fl as fl,
-    flag_d_toString as toString,
-    from$1 as from,
-  };
-}
-
 declare type ColorData = [number, number, number] | [number, number, number, number, number, number, number] | [number, number, number, number, number, number, number, boolean];
 declare type ColorBase = string | number | Color | ColorData;
 declare const colors: Record<string, Color>;
@@ -366,16 +51,16 @@ declare function fromArray(vals: ColorData, base256?: boolean): Color;
 declare function fromCss(css: string): Color;
 declare function fromName(name: string): Color;
 declare function fromNumber(val: number, base256?: boolean): Color;
-declare function make$1(): Color;
-declare function make$1(rgb: number, base256?: boolean): Color;
-declare function make$1(color?: ColorBase | null): Color;
-declare function make$1(arrayLike: ColorData, base256?: boolean): Color;
-declare function make$1(...rgb: number[]): Color;
-declare function from$2(): Color;
-declare function from$2(rgb: number, base256?: boolean): Color;
-declare function from$2(color?: ColorBase | null): Color;
-declare function from$2(arrayLike: ColorData, base256?: boolean): Color;
-declare function from$2(...rgb: number[]): Color;
+declare function make(): Color;
+declare function make(rgb: number, base256?: boolean): Color;
+declare function make(color?: ColorBase | null): Color;
+declare function make(arrayLike: ColorData, base256?: boolean): Color;
+declare function make(...rgb: number[]): Color;
+declare function from(): Color;
+declare function from(rgb: number, base256?: boolean): Color;
+declare function from(color?: ColorBase | null): Color;
+declare function from(arrayLike: ColorData, base256?: boolean): Color;
+declare function from(...rgb: number[]): Color;
 declare function separate(a: Color, b: Color): void;
 declare function swap(a: Color, b: Color): void;
 declare function relativeLuminance(a: Color, b: Color): number;
@@ -393,6 +78,8 @@ declare const color_d_fromArray: typeof fromArray;
 declare const color_d_fromCss: typeof fromCss;
 declare const color_d_fromName: typeof fromName;
 declare const color_d_fromNumber: typeof fromNumber;
+declare const color_d_make: typeof make;
+declare const color_d_from: typeof from;
 declare const color_d_separate: typeof separate;
 declare const color_d_swap: typeof swap;
 declare const color_d_relativeLuminance: typeof relativeLuminance;
@@ -408,8 +95,8 @@ declare namespace color_d {
     color_d_fromCss as fromCss,
     color_d_fromName as fromName,
     color_d_fromNumber as fromNumber,
-    make$1 as make,
-    from$2 as from,
+    color_d_make as make,
+    color_d_from as from,
     color_d_separate as separate,
     color_d_swap as swap,
     color_d_relativeLuminance as relativeLuminance,
@@ -419,6 +106,79 @@ declare namespace color_d {
   };
 }
 
+declare type RandomFunction = () => number;
+declare type SeedFunction = (seed?: number) => RandomFunction;
+interface RandomConfig {
+    make: SeedFunction;
+}
+declare type WeightedArray = number[];
+interface WeightedObject {
+    [key: string]: number;
+}
+declare class Random {
+    private _fn;
+    static configure(opts: Partial<RandomConfig>): void;
+    constructor();
+    seed(val?: number): void;
+    value(): number;
+    float(): number;
+    number(max?: number): number;
+    int(max?: number): number;
+    range(lo: number, hi: number): number;
+    dice(count: number, sides: number, addend?: number): number;
+    weighted(weights: WeightedArray | WeightedObject): string | number;
+    item(list: any[]): any;
+    key(obj: BasicObject): any;
+    shuffle(list: any[], fromIndex?: number, toIndex?: number): any[];
+    sequence(n: number): any[];
+    chance(percent: number, outOf?: number): boolean;
+    clumped(lo: number, hi: number, clumps: number): number;
+    matchingXY(width: number, height: number, matchFn: XYMatchFunc): Loc;
+    matchingXYNear(x: number, y: number, matchFn: XYMatchFunc): Loc;
+}
+declare const random: Random;
+declare const cosmetic: Random;
+
+declare type RangeBase = Range | string | number[] | number;
+declare class Range {
+    lo: number;
+    hi: number;
+    clumps: number;
+    private _rng;
+    constructor(lower: number, upper?: number, clumps?: number, rng?: Random);
+    value(): number;
+    copy(other: Range): this;
+    toString(): string;
+}
+declare function make$1(config: RangeBase | null, rng?: Random): Range;
+declare const from$1: typeof make$1;
+declare function asFn(config: RangeBase | null, rng?: Random): () => number;
+
+type range_d_RangeBase = RangeBase;
+type range_d_Range = Range;
+declare const range_d_Range: typeof Range;
+declare const range_d_asFn: typeof asFn;
+declare namespace range_d {
+  export {
+    range_d_RangeBase as RangeBase,
+    range_d_Range as Range,
+    make$1 as make,
+    from$1 as from,
+    range_d_asFn as asFn,
+  };
+}
+
+declare type BasicObject = {
+    [key: string]: any;
+};
+declare type Loc = [number, number];
+interface XY {
+    x: number;
+    y: number;
+}
+interface Chainable {
+    next: any | null;
+}
 interface SpriteType {
     readonly ch?: string | null;
     readonly fg?: ColorBase;
@@ -508,16 +268,11 @@ interface MapType {
     actorAt: (x: number, y: number) => ActorType | null;
     itemAt: (x: number, y: number) => ItemType | null;
 }
-declare class Bounds {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-    constructor(x: number, y: number, w: number, h: number);
-    contains(x: number, y: number): boolean;
-    contains(loc: Loc | XY): boolean;
-}
 
+type types_d_BasicObject = BasicObject;
+type types_d_Loc = Loc;
+type types_d_XY = XY;
+type types_d_Chainable = Chainable;
 type types_d_SpriteType = SpriteType;
 type types_d_LightType = LightType;
 type types_d_LayerFlags = LayerFlags;
@@ -532,10 +287,12 @@ type types_d_FxType = FxType;
 type types_d_CellFlags = CellFlags;
 type types_d_CellType = CellType;
 type types_d_MapType = MapType;
-type types_d_Bounds = Bounds;
-declare const types_d_Bounds: typeof Bounds;
 declare namespace types_d {
   export {
+    types_d_BasicObject as BasicObject,
+    types_d_Loc as Loc,
+    types_d_XY as XY,
+    types_d_Chainable as Chainable,
     types_d_SpriteType as SpriteType,
     types_d_LightType as LightType,
     types_d_LayerFlags as LayerFlags,
@@ -550,7 +307,264 @@ declare namespace types_d {
     types_d_CellFlags as CellFlags,
     types_d_CellType as CellType,
     types_d_MapType as MapType,
-    types_d_Bounds as Bounds,
+  };
+}
+
+/**
+ * GW.utils
+ * @module utils
+ */
+
+declare const DIRS: Loc[];
+declare const NO_DIRECTION = -1;
+declare const UP = 0;
+declare const RIGHT = 1;
+declare const DOWN = 2;
+declare const LEFT = 3;
+declare const RIGHT_UP = 4;
+declare const RIGHT_DOWN = 5;
+declare const LEFT_DOWN = 6;
+declare const LEFT_UP = 7;
+declare const CLOCK_DIRS: Loc[];
+declare function NOOP(): void;
+declare function TRUE(): boolean;
+declare function FALSE(): boolean;
+declare function ONE(): number;
+declare function ZERO(): number;
+declare function IDENTITY(x: any): any;
+declare function IS_ZERO(x: number): boolean;
+declare function IS_NONZERO(x: number): boolean;
+/**
+ * clamps a value between min and max (inclusive)
+ * @param v {Number} the value to clamp
+ * @param min {Number} the minimum value
+ * @param max {Number} the maximum value
+ * @returns {Number} the clamped value
+ */
+declare function clamp(v: number, min: number, max: number): number;
+declare function x(src: XY | Loc): any;
+declare function y(src: XY | Loc): any;
+declare class Bounds {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    constructor(x: number, y: number, w: number, h: number);
+    contains(x: number, y: number): boolean;
+    contains(loc: Loc | XY): boolean;
+}
+declare function copyXY(dest: XY, src: XY | Loc): void;
+declare function addXY(dest: XY, src: XY | Loc): void;
+declare function equalsXY(dest: XY, src: XY | Loc): boolean;
+declare function lerpXY(a: XY | Loc, b: XY | Loc, pct: number): any[];
+declare type XYFunc = (x: number, y: number) => any;
+declare function eachNeighbor(x: number, y: number, fn: XYFunc, only4dirs?: boolean): void;
+declare type XYMatchFunc = (x: number, y: number) => boolean;
+declare function matchingNeighbor(x: number, y: number, matchFn: XYMatchFunc, only4dirs?: boolean): Loc;
+declare function distanceBetween(x1: number, y1: number, x2: number, y2: number): number;
+declare function distanceFromTo(a: XY | Loc, b: XY | Loc): number;
+declare function calcRadius(x: number, y: number): number;
+declare function dirBetween(x: number, y: number, toX: number, toY: number): number[];
+declare function dirFromTo(a: XY | Loc, b: XY | Loc): number[];
+declare function dirIndex(dir: XY | Loc): number;
+declare function isOppositeDir(a: Loc, b: Loc): boolean;
+declare function isSameDir(a: Loc, b: Loc): boolean;
+declare function dirSpread(dir: Loc): Loc[];
+declare function stepFromTo(a: XY | Loc, b: XY | Loc, fn: (x: number, y: number) => any): void;
+declare function smoothHiliteGradient(currentXValue: number, maxXValue: number): number;
+declare function copyObject(dest: any, src: any): void;
+declare function assignObject(dest: any, src: any): void;
+declare function assignOmitting(omit: string | string[], dest: any, src: any): void;
+declare function setDefault(obj: any, field: string, val: any): void;
+declare type AssignCallback = (dest: any, key: string, current: any, def: any) => boolean;
+declare function setDefaults(obj: any, def: any, custom?: AssignCallback | null): void;
+declare function kindDefaults(obj: any, def: any): void;
+declare function pick(obj: any, ...fields: string[]): any;
+declare function clearObject(obj: any): void;
+declare function ERROR(message: string): void;
+declare function WARN(...args: string[]): void;
+declare function first(...args: any[]): any;
+declare function getOpt(obj: BasicObject, member: string, _default: any): any;
+declare function firstOpt(field: string, ...args: any[]): any;
+declare function arraysIntersect(a: any[], b: any[]): boolean;
+declare function sum(arr: number[]): number;
+declare function chainLength<T extends Chainable>(root: T | null): number;
+declare function chainIncludes<T extends Chainable>(chain: T | null, entry: T): boolean;
+declare function eachChain<T extends Chainable>(item: T | null, fn: (item: T, index: number) => any): number;
+declare function addToChain<T extends Chainable>(obj: any, name: string, entry: T): boolean;
+declare function removeFromChain<T extends Chainable>(obj: any, name: string, entry: T): boolean;
+declare function forLine(fromX: number, fromY: number, toX: number, toY: number, stepFn: (x: number, y: number) => boolean): void;
+declare function getLine(fromX: number, fromY: number, toX: number, toY: number): Loc[];
+declare function getLineThru(fromX: number, fromY: number, toX: number, toY: number, width: number, height: number): Loc[];
+declare function forCircle(x: number, y: number, radius: number, fn: XYFunc): void;
+declare function forRect(width: number, height: number, fn: XYFunc): void;
+declare function forRect(x: number, y: number, width: number, height: number, fn: XYFunc): void;
+
+type utils_d_BasicObject = BasicObject;
+type utils_d_Loc = Loc;
+type utils_d_XY = XY;
+type utils_d_Chainable = Chainable;
+declare const utils_d_DIRS: typeof DIRS;
+declare const utils_d_NO_DIRECTION: typeof NO_DIRECTION;
+declare const utils_d_UP: typeof UP;
+declare const utils_d_RIGHT: typeof RIGHT;
+declare const utils_d_DOWN: typeof DOWN;
+declare const utils_d_LEFT: typeof LEFT;
+declare const utils_d_RIGHT_UP: typeof RIGHT_UP;
+declare const utils_d_RIGHT_DOWN: typeof RIGHT_DOWN;
+declare const utils_d_LEFT_DOWN: typeof LEFT_DOWN;
+declare const utils_d_LEFT_UP: typeof LEFT_UP;
+declare const utils_d_CLOCK_DIRS: typeof CLOCK_DIRS;
+declare const utils_d_NOOP: typeof NOOP;
+declare const utils_d_TRUE: typeof TRUE;
+declare const utils_d_FALSE: typeof FALSE;
+declare const utils_d_ONE: typeof ONE;
+declare const utils_d_ZERO: typeof ZERO;
+declare const utils_d_IDENTITY: typeof IDENTITY;
+declare const utils_d_IS_ZERO: typeof IS_ZERO;
+declare const utils_d_IS_NONZERO: typeof IS_NONZERO;
+declare const utils_d_clamp: typeof clamp;
+declare const utils_d_x: typeof x;
+declare const utils_d_y: typeof y;
+type utils_d_Bounds = Bounds;
+declare const utils_d_Bounds: typeof Bounds;
+declare const utils_d_copyXY: typeof copyXY;
+declare const utils_d_addXY: typeof addXY;
+declare const utils_d_equalsXY: typeof equalsXY;
+declare const utils_d_lerpXY: typeof lerpXY;
+type utils_d_XYFunc = XYFunc;
+declare const utils_d_eachNeighbor: typeof eachNeighbor;
+type utils_d_XYMatchFunc = XYMatchFunc;
+declare const utils_d_matchingNeighbor: typeof matchingNeighbor;
+declare const utils_d_distanceBetween: typeof distanceBetween;
+declare const utils_d_distanceFromTo: typeof distanceFromTo;
+declare const utils_d_calcRadius: typeof calcRadius;
+declare const utils_d_dirBetween: typeof dirBetween;
+declare const utils_d_dirFromTo: typeof dirFromTo;
+declare const utils_d_dirIndex: typeof dirIndex;
+declare const utils_d_isOppositeDir: typeof isOppositeDir;
+declare const utils_d_isSameDir: typeof isSameDir;
+declare const utils_d_dirSpread: typeof dirSpread;
+declare const utils_d_stepFromTo: typeof stepFromTo;
+declare const utils_d_smoothHiliteGradient: typeof smoothHiliteGradient;
+declare const utils_d_copyObject: typeof copyObject;
+declare const utils_d_assignObject: typeof assignObject;
+declare const utils_d_assignOmitting: typeof assignOmitting;
+declare const utils_d_setDefault: typeof setDefault;
+type utils_d_AssignCallback = AssignCallback;
+declare const utils_d_setDefaults: typeof setDefaults;
+declare const utils_d_kindDefaults: typeof kindDefaults;
+declare const utils_d_pick: typeof pick;
+declare const utils_d_clearObject: typeof clearObject;
+declare const utils_d_ERROR: typeof ERROR;
+declare const utils_d_WARN: typeof WARN;
+declare const utils_d_first: typeof first;
+declare const utils_d_getOpt: typeof getOpt;
+declare const utils_d_firstOpt: typeof firstOpt;
+declare const utils_d_arraysIntersect: typeof arraysIntersect;
+declare const utils_d_sum: typeof sum;
+declare const utils_d_chainLength: typeof chainLength;
+declare const utils_d_chainIncludes: typeof chainIncludes;
+declare const utils_d_eachChain: typeof eachChain;
+declare const utils_d_addToChain: typeof addToChain;
+declare const utils_d_removeFromChain: typeof removeFromChain;
+declare const utils_d_forLine: typeof forLine;
+declare const utils_d_getLine: typeof getLine;
+declare const utils_d_getLineThru: typeof getLineThru;
+declare const utils_d_forCircle: typeof forCircle;
+declare const utils_d_forRect: typeof forRect;
+declare namespace utils_d {
+  export {
+    utils_d_BasicObject as BasicObject,
+    utils_d_Loc as Loc,
+    utils_d_XY as XY,
+    utils_d_Chainable as Chainable,
+    utils_d_DIRS as DIRS,
+    utils_d_NO_DIRECTION as NO_DIRECTION,
+    utils_d_UP as UP,
+    utils_d_RIGHT as RIGHT,
+    utils_d_DOWN as DOWN,
+    utils_d_LEFT as LEFT,
+    utils_d_RIGHT_UP as RIGHT_UP,
+    utils_d_RIGHT_DOWN as RIGHT_DOWN,
+    utils_d_LEFT_DOWN as LEFT_DOWN,
+    utils_d_LEFT_UP as LEFT_UP,
+    utils_d_CLOCK_DIRS as CLOCK_DIRS,
+    utils_d_NOOP as NOOP,
+    utils_d_TRUE as TRUE,
+    utils_d_FALSE as FALSE,
+    utils_d_ONE as ONE,
+    utils_d_ZERO as ZERO,
+    utils_d_IDENTITY as IDENTITY,
+    utils_d_IS_ZERO as IS_ZERO,
+    utils_d_IS_NONZERO as IS_NONZERO,
+    utils_d_clamp as clamp,
+    utils_d_x as x,
+    utils_d_y as y,
+    utils_d_Bounds as Bounds,
+    utils_d_copyXY as copyXY,
+    utils_d_addXY as addXY,
+    utils_d_equalsXY as equalsXY,
+    utils_d_lerpXY as lerpXY,
+    utils_d_XYFunc as XYFunc,
+    utils_d_eachNeighbor as eachNeighbor,
+    utils_d_XYMatchFunc as XYMatchFunc,
+    utils_d_matchingNeighbor as matchingNeighbor,
+    utils_d_distanceBetween as distanceBetween,
+    utils_d_distanceFromTo as distanceFromTo,
+    utils_d_calcRadius as calcRadius,
+    utils_d_dirBetween as dirBetween,
+    utils_d_dirFromTo as dirFromTo,
+    utils_d_dirIndex as dirIndex,
+    utils_d_isOppositeDir as isOppositeDir,
+    utils_d_isSameDir as isSameDir,
+    utils_d_dirSpread as dirSpread,
+    utils_d_stepFromTo as stepFromTo,
+    utils_d_smoothHiliteGradient as smoothHiliteGradient,
+    utils_d_copyObject as copyObject,
+    utils_d_assignObject as assignObject,
+    utils_d_assignOmitting as assignOmitting,
+    utils_d_setDefault as setDefault,
+    utils_d_AssignCallback as AssignCallback,
+    utils_d_setDefaults as setDefaults,
+    utils_d_kindDefaults as kindDefaults,
+    utils_d_pick as pick,
+    utils_d_clearObject as clearObject,
+    utils_d_ERROR as ERROR,
+    utils_d_WARN as WARN,
+    utils_d_first as first,
+    utils_d_getOpt as getOpt,
+    utils_d_firstOpt as firstOpt,
+    utils_d_arraysIntersect as arraysIntersect,
+    utils_d_sum as sum,
+    utils_d_chainLength as chainLength,
+    utils_d_chainIncludes as chainIncludes,
+    utils_d_eachChain as eachChain,
+    utils_d_addToChain as addToChain,
+    utils_d_removeFromChain as removeFromChain,
+    utils_d_forLine as forLine,
+    utils_d_getLine as getLine,
+    utils_d_getLineThru as getLineThru,
+    utils_d_forCircle as forCircle,
+    utils_d_forRect as forRect,
+  };
+}
+
+declare type FlagSource = number | string;
+declare type FlagBase = number | string | FlagSource[] | null;
+declare function fl(N: number): number;
+declare function toString(flagObj: any, value: number): string;
+declare function from$2(obj: any, ...args: (FlagBase | undefined)[]): number;
+
+type flag_d_FlagBase = FlagBase;
+declare const flag_d_fl: typeof fl;
+declare const flag_d_toString: typeof toString;
+declare namespace flag_d {
+  export {
+    flag_d_FlagBase as FlagBase,
+    flag_d_fl as fl,
+    flag_d_toString as toString,
+    from$2 as from,
   };
 }
 
@@ -622,8 +636,8 @@ declare class Grid<T> extends Array<Array<T>> {
     dumpAround(x: number, y: number, radius: number): void;
     closestMatchingLoc(x: number, y: number, v: T | GridMatch<T>): Loc$1;
     firstMatchingLoc(v: T | GridMatch<T>): Loc$1;
-    randomMatchingLoc(v: T | GridMatch<T>, deterministic?: boolean): Loc$1;
-    matchingLocNear(x: number, y: number, v: T | GridMatch<T>, deterministic?: boolean): Loc$1;
+    randomMatchingLoc(v: T | GridMatch<T>): Loc$1;
+    matchingLocNear(x: number, y: number, v: T | GridMatch<T>): Loc$1;
     arcCount(x: number, y: number, testFn: GridMatch<T>): number;
 }
 declare class NumGrid extends Grid<number> {
@@ -637,7 +651,7 @@ declare class NumGrid extends Grid<number> {
     floodFillRange(x: number, y: number, eligibleValueMin?: number, eligibleValueMax?: number, fillValue?: number): number;
     invert(): void;
     leastPositiveValue(): number;
-    randomLeastPositiveLoc(deterministic?: boolean): Loc$1;
+    randomLeastPositiveLoc(): Loc$1;
     valueBounds(value: number): Bounds;
     floodFill(x: number, y: number, matchValue: number | GridMatch<number>, fillValue: number | GridUpdate<number>): number;
     protected _cellularAutomataRound(birthParameters: string, survivalParameters: string): boolean;

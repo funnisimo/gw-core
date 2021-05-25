@@ -3,11 +3,9 @@
  * @module utils
  */
 
-export type Loc = [number, number];
-export interface XY {
-    x: number;
-    y: number;
-}
+import { BasicObject, Loc, XY, Chainable } from './types';
+
+export { BasicObject, Loc, XY, Chainable };
 
 // DIRS are organized clockwise
 // - first 4 are arrow directions
@@ -88,11 +86,6 @@ export function clamp(v: number, min: number, max: number) {
     return v;
 }
 
-export interface XY {
-    x: number;
-    y: number;
-}
-
 export function x(src: XY | Loc) {
     // @ts-ignore
     return src.x || src[0] || 0;
@@ -101,6 +94,37 @@ export function x(src: XY | Loc) {
 export function y(src: XY | Loc) {
     // @ts-ignore
     return src.y || src[1] || 0;
+}
+
+export class Bounds {
+    public x: number;
+    public y: number;
+    public width: number;
+    public height: number;
+
+    constructor(x: number, y: number, w: number, h: number) {
+        this.x = x;
+        this.y = y;
+        this.width = w;
+        this.height = h;
+    }
+
+    contains(x: number, y: number): boolean;
+    contains(loc: Loc | XY): boolean;
+    contains(...args: any[]) {
+        let x = args[0];
+        let y = args[1];
+        if (typeof x !== 'number') {
+            y = y(x);
+            x = x(x);
+        }
+        return (
+            this.x <= x &&
+            this.y <= y &&
+            this.x + this.width > x &&
+            this.y + this.height > y
+        );
+    }
 }
 
 export function copyXY(dest: XY, src: XY | Loc) {
@@ -294,8 +318,6 @@ export function smoothHiliteGradient(currentXValue: number, maxXValue: number) {
 //   return other;
 // }
 
-export type BasicObject = { [key: string]: any };
-
 function assignField(dest: any, src: any, key: string) {
     const current = dest[key];
     const updated = src[key];
@@ -480,10 +502,6 @@ export function sum(arr: number[]) {
 }
 
 // CHAIN
-
-export interface Chainable {
-    next: any | null;
-}
 
 export function chainLength<T extends Chainable>(root: T | null) {
     let count = 0;
@@ -672,4 +690,49 @@ export function getLineThru(
     });
 
     return line;
+}
+
+// CIRCLE
+
+export function forCircle(x: number, y: number, radius: number, fn: XYFunc) {
+    let i, j;
+
+    for (i = x - radius - 1; i < x + radius + 1; i++) {
+        for (j = y - radius - 1; j < y + radius + 1; j++) {
+            if (
+                (i - x) * (i - x) + (j - y) * (j - y) <
+                radius * radius + radius
+            ) {
+                // + radius softens the circle
+                fn(i, j);
+            }
+        }
+    }
+}
+
+// RECT
+export function forRect(width: number, height: number, fn: XYFunc): void;
+export function forRect(
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    fn: XYFunc
+): void;
+export function forRect(...args: any[]) {
+    let left = 0;
+    let top = 0;
+    if (arguments.length > 3) {
+        left = args.shift();
+        top = args.shift();
+    }
+    const right = left + args[0];
+    const bottom = top + args[1];
+    const fn = args[2];
+
+    for (let i = left; i < right; ++i) {
+        for (let j = top; j < bottom; ++j) {
+            fn(i, j);
+        }
+    }
 }

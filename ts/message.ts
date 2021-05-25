@@ -1,7 +1,10 @@
 import * as Text from './text/index';
 import * as Types from './types';
+import * as GW from './gw';
 
 export const templates: Record<string, Text.Template> = {};
+
+GW.config.message = GW.config.message || {};
 
 export function install(id: string, msg: string) {
     const template = Text.compile(msg);
@@ -108,6 +111,9 @@ function addMessage(msg: string) {
     // }
 
     const lines = Text.splitIntoLines(msg, MSG_WIDTH);
+    if (GW.config.message?.reverseMultiLine) {
+        lines.reverse();
+    }
     lines.forEach((l) => addMessageLine(l));
 
     // display the message:

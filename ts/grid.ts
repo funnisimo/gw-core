@@ -1,6 +1,5 @@
 import { random } from './random';
 import * as Utils from './utils';
-import { Bounds } from './types';
 import { make as Make } from './gw';
 
 type Loc = Utils.Loc;
@@ -130,15 +129,16 @@ export class Grid<T> extends Array<Array<T>> {
     }
 
     eachNeighbor(x: number, y: number, fn: GridEach<T>, only4dirs = false) {
-        const maxIndex = only4dirs ? 4 : 8;
-        for (let d = 0; d < maxIndex; ++d) {
-            const dir = DIRS[d];
-            const i = x + dir[0];
-            const j = y + dir[1];
-            if (this.hasXY(i, j)) {
-                fn(this[i][j], i, j, this);
-            }
-        }
+        Utils.eachNeighbor(
+            x,
+            y,
+            (i, j) => {
+                if (this.hasXY(i, j)) {
+                    fn(this[i][j], i, j, this);
+                }
+            },
+            only4dirs
+        );
     }
 
     async eachNeighborAsync(
@@ -159,14 +159,11 @@ export class Grid<T> extends Array<Array<T>> {
     }
 
     forRect(x: number, y: number, w: number, h: number, fn: GridEach<T>) {
-        w = Math.min(this.width - x, w);
-        h = Math.min(this.height - y, h);
-
-        for (let i = x; i < x + w; ++i) {
-            for (let j = y; j < y + h; ++j) {
+        Utils.forRect(x, y, w, h, (i, j) => {
+            if (this.hasXY(i, j)) {
                 fn(this[i][j], i, j, this);
             }
-        }
+        });
     }
 
     randomEach(fn: GridEach<T>) {
@@ -196,28 +193,9 @@ export class Grid<T> extends Array<Array<T>> {
     }
 
     forCircle(x: number, y: number, radius: number, fn: GridEach<T>) {
-        let i, j;
-
-        for (
-            i = Math.max(0, x - radius - 1);
-            i < Math.min(this.width, x + radius + 1);
-            i++
-        ) {
-            for (
-                j = Math.max(0, y - radius - 1);
-                j < Math.min(this.height, y + radius + 1);
-                j++
-            ) {
-                if (
-                    this.hasXY(i, j) &&
-                    (i - x) * (i - x) + (j - y) * (j - y) <
-                        radius * radius + radius
-                ) {
-                    // + radius softens the circle
-                    fn(this[i][j], i, j, this);
-                }
-            }
-        }
+        Utils.forCircle(x, y, radius, (i, j) => {
+            if (this.hasXY(i, j)) fn(this[i][j], i, j, this);
+        });
     }
 
     hasXY(x: number, y: number) {
@@ -249,12 +227,9 @@ export class Grid<T> extends Array<Array<T>> {
     }
 
     update(fn: GridUpdate<T>) {
-        let i, j;
-        for (i = 0; i < this.width; i++) {
-            for (j = 0; j < this.height; j++) {
-                this[i][j] = fn(this[i][j], i, j, this);
-            }
-        }
+        Utils.forRect(this.width, this.height, (i, j) => {
+            if (this.hasXY(i, j)) this[i][j] = fn(this[i][j], i, j, this);
+        });
     }
 
     updateRect(
@@ -264,39 +239,17 @@ export class Grid<T> extends Array<Array<T>> {
         height: number,
         fn: GridUpdate<T>
     ) {
-        let i, j;
-        for (i = x; i < x + width; i++) {
-            for (j = y; j < y + height; j++) {
-                if (this.hasXY(i, j)) {
-                    this[i][j] = fn(this[i][j], i, j, this);
-                }
-            }
-        }
+        Utils.forRect(x, y, width, height, (i, j) => {
+            if (this.hasXY(i, j)) this[i][j] = fn(this[i][j], i, j, this);
+        });
     }
 
     updateCircle(x: number, y: number, radius: number, fn: GridUpdate<T>) {
-        let i, j;
-
-        for (
-            i = Math.max(0, x - radius - 1);
-            i < Math.min(this.width, x + radius + 1);
-            i++
-        ) {
-            for (
-                j = Math.max(0, y - radius - 1);
-                j < Math.min(this.height, y + radius + 1);
-                j++
-            ) {
-                if (
-                    this.hasXY(i, j) &&
-                    (i - x) * (i - x) + (j - y) * (j - y) <
-                        radius * radius + radius
-                ) {
-                    // + radius softens the circle
-                    this[i][j] = fn(this[i][j], i, j, this);
-                }
+        Utils.forCircle(x, y, radius, (i, j) => {
+            if (this.hasXY(i, j)) {
+                this[i][j] = fn(this[i][j], i, j, this);
             }
-        }
+        });
     }
 
     /**
@@ -430,114 +383,22 @@ export class Grid<T> extends Array<Array<T>> {
         return [-1, -1];
     }
 
-    randomMatchingLoc(v: T | GridMatch<T>, deterministic = false): Loc {
-        let locationCount = 0;
-        let i, j, index;
-
-        const fn: GridMatch<T> =
+    randomMatchingLoc(v: T | GridMatch<T>): Loc {
+        const fn: Utils.XYMatchFunc =
             typeof v === 'function'
-                ? (v as GridMatch<T>)
-                : (val: T) => val == v;
+                ? (x, y) => (v as GridMatch<T>)(this[x][y], x, y, this)
+                : (x, y) => this.get(x, y) === v;
 
-        locationCount = 0;
-        this.forEach((v, i, j) => {
-            if (fn(v, i, j, this)) {
-                locationCount++;
-            }
-        });
-
-        if (locationCount == 0) {
-            return [-1, -1];
-        } else if (deterministic) {
-            index = Math.floor(locationCount / 2);
-        } else {
-            index = random.range(0, locationCount - 1);
-        }
-
-        for (i = 0; i < this.width && index >= 0; i++) {
-            for (j = 0; j < this.height && index >= 0; j++) {
-                if (fn(this[i][j], i, j, this)) {
-                    if (index == 0) {
-                        return [i, j];
-                    }
-                    index--;
-                }
-            }
-        }
-        return [-1, -1];
+        return random.matchingXY(this.width, this.height, fn);
     }
 
-    matchingLocNear(
-        x: number,
-        y: number,
-        v: T | GridMatch<T>,
-        deterministic = false
-    ): Loc {
-        let loc: Loc = [-1, -1];
-        let i, j, k, candidateLocs, randIndex;
-
-        const fn: GridMatch<T> =
+    matchingLocNear(x: number, y: number, v: T | GridMatch<T>): Loc {
+        const fn: Utils.XYMatchFunc =
             typeof v === 'function'
-                ? (v as GridMatch<T>)
-                : (val: T) => val == v;
-        candidateLocs = 0;
+                ? (x, y) => (v as GridMatch<T>)(this[x][y], x, y, this)
+                : (x, y) => this.get(x, y) === v;
 
-        // count up the number of candidate locations
-        for (
-            k = 0;
-            k < Math.max(this.width, this.height) && !candidateLocs;
-            k++
-        ) {
-            for (i = x - k; i <= x + k; i++) {
-                for (j = y - k; j <= y + k; j++) {
-                    if (
-                        this.hasXY(i, j) &&
-                        (i == x - k ||
-                            i == x + k ||
-                            j == y - k ||
-                            j == y + k) &&
-                        fn(this[i][j], i, j, this)
-                    ) {
-                        candidateLocs++;
-                    }
-                }
-            }
-        }
-
-        if (candidateLocs == 0) {
-            return [-1, -1];
-        }
-
-        // and pick one
-        if (deterministic) {
-            randIndex = 1 + Math.floor(candidateLocs / 2);
-        } else {
-            randIndex = 1 + random.number(candidateLocs);
-        }
-
-        for (k = 0; k < Math.max(this.width, this.height); k++) {
-            for (i = x - k; i <= x + k; i++) {
-                for (j = y - k; j <= y + k; j++) {
-                    if (
-                        this.hasXY(i, j) &&
-                        (i == x - k ||
-                            i == x + k ||
-                            j == y - k ||
-                            j == y + k) &&
-                        fn(this[i][j], i, j, this)
-                    ) {
-                        if (--randIndex == 0) {
-                            loc[0] = i;
-                            loc[1] = j;
-                            return loc;
-                        }
-                    }
-                }
-            }
-        }
-
-        // brogueAssert(false);
-        return [-1, -1]; // should never reach this point
+        return random.matchingXYNear(x, y, fn);
     }
 
     // Rotates around the cell, counting up the number of distinct strings of neighbors with the same test result in a single revolution.
@@ -726,9 +587,9 @@ export class NumGrid extends Grid<number> {
         return least;
     }
 
-    randomLeastPositiveLoc(deterministic = false): Loc {
+    randomLeastPositiveLoc(): Loc {
         const targetValue = this.leastPositiveValue();
-        return this.randomMatchingLoc(targetValue, deterministic);
+        return this.randomMatchingLoc(targetValue);
     }
 
     valueBounds(value: number) {
@@ -778,7 +639,7 @@ export class NumGrid extends Grid<number> {
             }
         }
 
-        return new Bounds(left, top, right - left + 1, bottom - top + 1);
+        return new Utils.Bounds(left, top, right - left + 1, bottom - top + 1);
     }
 
     // Marks a cell as being a member of blobNumber, then recursively iterates through the rest of the blob
@@ -872,7 +733,7 @@ export class NumGrid extends Grid<number> {
         let i, j, k;
         let blobNumber, blobSize, topBlobNumber, topBlobSize;
 
-        let bounds: Bounds;
+        let bounds: Utils.Bounds;
 
         birthParameters = birthParameters.toLowerCase();
         survivalParameters = survivalParameters.toLowerCase();

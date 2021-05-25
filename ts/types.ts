@@ -1,6 +1,17 @@
 import { Color, ColorBase } from './color';
 import { Range } from './range';
-import * as Utils from './utils';
+
+export type BasicObject = { [key: string]: any };
+
+export type Loc = [number, number];
+export interface XY {
+    x: number;
+    y: number;
+}
+
+export interface Chainable {
+    next: any | null;
+}
 
 export interface SpriteType {
     readonly ch?: string | null;
@@ -58,7 +69,7 @@ export interface ActorFlags extends LayerFlags {
     actor: number;
 }
 
-export interface ActorType extends Utils.XY, Utils.Chainable, EntityType {
+export interface ActorType extends XY, Chainable, EntityType {
     isPlayer: () => boolean;
     isVisible: () => boolean;
     isDetected: () => boolean;
@@ -80,7 +91,7 @@ export interface ItemFlags extends LayerFlags {
     item: number;
 }
 
-export interface ItemType extends Utils.XY, Utils.Chainable, EntityType {
+export interface ItemType extends XY, Chainable, EntityType {
     quantity: number;
     readonly flags: ItemFlags;
 
@@ -97,7 +108,7 @@ export interface ItemType extends Utils.XY, Utils.Chainable, EntityType {
     next: ItemType | null;
 }
 
-export interface FxType extends Utils.XY, Utils.Chainable, EntityType {
+export interface FxType extends XY, Chainable, EntityType {
     next: FxType | null;
 }
 
@@ -124,35 +135,4 @@ export interface MapType {
     isVisible: (x: number, y: number) => boolean;
     actorAt: (x: number, y: number) => ActorType | null;
     itemAt: (x: number, y: number) => ItemType | null;
-}
-
-export class Bounds {
-    public x: number;
-    public y: number;
-    public width: number;
-    public height: number;
-
-    constructor(x: number, y: number, w: number, h: number) {
-        this.x = x;
-        this.y = y;
-        this.width = w;
-        this.height = h;
-    }
-
-    contains(x: number, y: number): boolean;
-    contains(loc: Utils.Loc | Utils.XY): boolean;
-    contains(...args: any[]) {
-        let x = args[0];
-        let y = args[1];
-        if (typeof x !== 'number') {
-            y = Utils.y(x);
-            x = Utils.x(x);
-        }
-        return (
-            this.x <= x &&
-            this.y <= y &&
-            this.x + this.width > x &&
-            this.y + this.height > y
-        );
-    }
 }
