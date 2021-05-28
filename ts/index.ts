@@ -20,3 +20,4 @@ export { colors } from './color';
 export { sprites } from './sprite/index';
 export * from './gw';
 export { loop } from './io';
+export * as blob from './blob';

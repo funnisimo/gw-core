@@ -658,8 +658,6 @@ declare class NumGrid extends Grid<number> {
     randomLeastPositiveLoc(): Loc$1;
     valueBounds(value: number, bounds?: Bounds): Bounds;
     floodFill(x: number, y: number, matchValue: number | GridMatch<number>, fillValue: number | GridUpdate<number>): number;
-    protected _cellularAutomataRound(birthParameters: string, survivalParameters: string): boolean;
-    fillBlob(roundCount: number, minBlobWidth: number, minBlobHeight: number, maxBlobWidth: number, maxBlobHeight: number, percentSeeded?: number, birthParameters?: string, survivalParameters?: string): Bounds;
 }
 declare const alloc: typeof NumGrid.alloc;
 declare const free: typeof NumGrid.free;
@@ -1607,4 +1605,34 @@ declare const config: any;
 declare const make$8: any;
 declare const flags: any;
 
-export { Random, index_d as canvas, color_d as color, colors, config, cosmetic, data, effect_d as effect, events_d as events, flag_d as flag, flags, fov_d as fov, frequency_d as frequency, grid_d as grid, io_d as io, loop, make$8 as make, message_d as message, path_d as path, random, range_d as range, scheduler_d as scheduler, index_d$1 as sprite, sprites, index_d$2 as text, types_d as types, utils_d as utils };
+interface BlobConfig {
+    roundCount: number;
+    minBlobWidth: number;
+    minBlobHeight: number;
+    maxBlobWidth: number;
+    maxBlobHeight: number;
+    percentSeeded: number;
+    birthParameters: string;
+    survivalParameters: string;
+}
+declare class Blob {
+    options: BlobConfig;
+    constructor(opts?: Partial<BlobConfig>);
+    carve(width: number, height: number, setFn: XYFunc): Bounds;
+    _cellularAutomataRound(grid: NumGrid): boolean;
+}
+declare function fillBlob(grid: NumGrid, opts?: Partial<BlobConfig>): Bounds;
+
+type blob_d_BlobConfig = BlobConfig;
+type blob_d_Blob = Blob;
+declare const blob_d_Blob: typeof Blob;
+declare const blob_d_fillBlob: typeof fillBlob;
+declare namespace blob_d {
+  export {
+    blob_d_BlobConfig as BlobConfig,
+    blob_d_Blob as Blob,
+    blob_d_fillBlob as fillBlob,
+  };
+}
+
+export { Random, blob_d as blob, index_d as canvas, color_d as color, colors, config, cosmetic, data, effect_d as effect, events_d as events, flag_d as flag, flags, fov_d as fov, frequency_d as frequency, grid_d as grid, io_d as io, loop, make$8 as make, message_d as message, path_d as path, random, range_d as range, scheduler_d as scheduler, index_d$1 as sprite, sprites, index_d$2 as text, types_d as types, utils_d as utils };

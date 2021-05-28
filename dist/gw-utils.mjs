@@ -1572,114 +1572,6 @@ class NumGrid extends Grid {
         }
         return numberOfCells;
     }
-    _cellularAutomataRound(birthParameters /* char[9] */, survivalParameters /* char[9] */) {
-        let i, j, nbCount, newX, newY;
-        let dir;
-        let buffer2;
-        buffer2 = NumGrid.alloc(this.width, this.height);
-        buffer2.copy(this); // Make a backup of this in buffer2, so that each generation is isolated.
-        let didSomething = false;
-        for (i = 0; i < this.width; i++) {
-            for (j = 0; j < this.height; j++) {
-                nbCount = 0;
-                for (dir = 0; dir < DIRS$1.length; dir++) {
-                    newX = i + DIRS$1[dir][0];
-                    newY = j + DIRS$1[dir][1];
-                    if (this.hasXY(newX, newY) && buffer2[newX][newY]) {
-                        nbCount++;
-                    }
-                }
-                if (!buffer2[i][j] && birthParameters[nbCount] == 't') {
-                    this[i][j] = 1; // birth
-                    didSomething = true;
-                }
-                else if (buffer2[i][j] &&
-                    survivalParameters[nbCount] == 't') ;
-                else {
-                    this[i][j] = 0; // death
-                    didSomething = true;
-                }
-            }
-        }
-        NumGrid.free(buffer2);
-        return didSomething;
-    }
-    // Loads up **grid with the results of a cellular automata simulation.
-    fillBlob(roundCount, minBlobWidth, minBlobHeight, maxBlobWidth, maxBlobHeight, percentSeeded = 50, birthParameters = 'ffffffttt', survivalParameters = 'ffffttttt') {
-        let i, j, k;
-        let blobNumber, blobSize, topBlobNumber, topBlobSize;
-        let bounds = new Bounds(0, 0, 0, 0);
-        birthParameters = birthParameters.toLowerCase();
-        survivalParameters = survivalParameters.toLowerCase();
-        if (minBlobWidth >= maxBlobWidth) {
-            minBlobWidth = Math.round(0.75 * maxBlobWidth);
-            maxBlobWidth = Math.round(1.25 * maxBlobWidth);
-        }
-        if (minBlobHeight >= maxBlobHeight) {
-            minBlobHeight = Math.round(0.75 * maxBlobHeight);
-            maxBlobHeight = Math.round(1.25 * maxBlobHeight);
-        }
-        const left = Math.floor((this.width - maxBlobWidth) / 2);
-        const top = Math.floor((this.height - maxBlobHeight) / 2);
-        let tries = 10;
-        // Generate blobs until they satisfy the minBlobWidth and minBlobHeight restraints
-        do {
-            // Clear buffer.
-            this.fill(0);
-            // Fill relevant portion with noise based on the percentSeeded argument.
-            for (i = 0; i < maxBlobWidth; i++) {
-                for (j = 0; j < maxBlobHeight; j++) {
-                    this[i + left][j + top] = random.chance(percentSeeded)
-                        ? 1
-                        : 0;
-                }
-            }
-            // Some iterations of cellular automata
-            for (k = 0; k < roundCount; k++) {
-                if (!this._cellularAutomataRound(birthParameters, survivalParameters)) {
-                    k = roundCount; // cellularAutomataRound did not make any changes
-                }
-            }
-            // Now to measure the result. These are best-of variables; start them out at worst-case values.
-            topBlobSize = 0;
-            topBlobNumber = 0;
-            // Fill each blob with its own number, starting with 2 (since 1 means floor), and keeping track of the biggest:
-            blobNumber = 2;
-            for (i = 0; i < this.width; i++) {
-                for (j = 0; j < this.height; j++) {
-                    if (this[i][j] == 1) {
-                        // an unmarked blob
-                        // Mark all the cells and returns the total size:
-                        blobSize = this.floodFill(i, j, 1, blobNumber);
-                        if (blobSize > topBlobSize) {
-                            // if this blob is a new record
-                            topBlobSize = blobSize;
-                            topBlobNumber = blobNumber;
-                        }
-                        blobNumber++;
-                    }
-                }
-            }
-            // Figure out the top blob's height and width:
-            this.valueBounds(topBlobNumber, bounds);
-        } while ((bounds.width < minBlobWidth ||
-            bounds.height < minBlobHeight ||
-            topBlobNumber == 0) &&
-            --tries);
-        // Replace the winning blob with 1's, and everything else with 0's:
-        for (i = 0; i < this.width; i++) {
-            for (j = 0; j < this.height; j++) {
-                if (this[i][j] == topBlobNumber) {
-                    this[i][j] = 1;
-                }
-                else {
-                    this[i][j] = 0;
-                }
-            }
-        }
-        // Populate the returned variables.
-        return bounds;
-    }
 }
 // Grid.fillBlob = fillBlob;
 const alloc = NumGrid.alloc.bind(NumGrid);
@@ -6039,4 +5931,137 @@ var effect = {
     makeMessage: makeMessage
 };
 
-export { Random, index$1 as canvas, color, colors, config, cosmetic, data, effect, events, flag, flags, fov, frequency, grid, io, loop, make, message, path, random, range, scheduler, index$2 as sprite, sprites, index as text, types, utils };
+class Blob {
+    constructor(opts = {}) {
+        this.options = {
+            roundCount: 5,
+            minBlobWidth: 10,
+            minBlobHeight: 10,
+            maxBlobWidth: 40,
+            maxBlobHeight: 20,
+            percentSeeded: 50,
+            birthParameters: 'ffffffttt',
+            survivalParameters: 'ffffttttt',
+        };
+        Object.assign(this.options, opts);
+        this.options.birthParameters = this.options.birthParameters.toLowerCase();
+        this.options.survivalParameters = this.options.survivalParameters.toLowerCase();
+        if (this.options.minBlobWidth >= this.options.maxBlobWidth) {
+            this.options.minBlobWidth = Math.round(0.75 * this.options.maxBlobWidth);
+            this.options.maxBlobWidth = Math.round(1.25 * this.options.maxBlobWidth);
+        }
+        if (this.options.minBlobHeight >= this.options.maxBlobHeight) {
+            this.options.minBlobHeight = Math.round(0.75 * this.options.maxBlobHeight);
+            this.options.maxBlobHeight = Math.round(1.25 * this.options.maxBlobHeight);
+        }
+    }
+    carve(width, height, setFn) {
+        let i, j, k;
+        let blobNumber, blobSize, topBlobNumber, topBlobSize;
+        let bounds = new Bounds(0, 0, 0, 0);
+        const dest = alloc(width, height);
+        const left = Math.floor((dest.width - this.options.maxBlobWidth) / 2);
+        const top = Math.floor((dest.height - this.options.maxBlobHeight) / 2);
+        let tries = 10;
+        // Generate blobs until they satisfy the minBlobWidth and minBlobHeight restraints
+        do {
+            // Clear buffer.
+            dest.fill(0);
+            // Fill relevant portion with noise based on the percentSeeded argument.
+            for (i = 0; i < this.options.maxBlobWidth; i++) {
+                for (j = 0; j < this.options.maxBlobHeight; j++) {
+                    dest[i + left][j + top] = random.chance(this.options.percentSeeded)
+                        ? 1
+                        : 0;
+                }
+            }
+            // Some iterations of cellular automata
+            for (k = 0; k < this.options.roundCount; k++) {
+                if (!this._cellularAutomataRound(dest)) {
+                    k = this.options.roundCount; // cellularAutomataRound did not make any changes
+                }
+            }
+            // Now to measure the result. These are best-of variables; start them out at worst-case values.
+            topBlobSize = 0;
+            topBlobNumber = 0;
+            // Fill each blob with its own number, starting with 2 (since 1 means floor), and keeping track of the biggest:
+            blobNumber = 2;
+            for (i = 0; i < dest.width; i++) {
+                for (j = 0; j < dest.height; j++) {
+                    if (dest[i][j] == 1) {
+                        // an unmarked blob
+                        // Mark all the cells and returns the total size:
+                        blobSize = dest.floodFill(i, j, 1, blobNumber);
+                        if (blobSize > topBlobSize) {
+                            // if this blob is a new record
+                            topBlobSize = blobSize;
+                            topBlobNumber = blobNumber;
+                        }
+                        blobNumber++;
+                    }
+                }
+            }
+            // Figure out the top blob's height and width:
+            dest.valueBounds(topBlobNumber, bounds);
+        } while ((bounds.width < this.options.minBlobWidth ||
+            bounds.height < this.options.minBlobHeight ||
+            topBlobNumber == 0) &&
+            --tries);
+        // Replace the winning blob with 1's, and everything else with 0's:
+        for (i = 0; i < dest.width; i++) {
+            for (j = 0; j < dest.height; j++) {
+                if (dest[i][j] == topBlobNumber) {
+                    setFn(i, j);
+                }
+            }
+        }
+        free(dest);
+        // Populate the returned variables.
+        return bounds;
+    }
+    _cellularAutomataRound(grid$1) {
+        let i, j, nbCount, newX, newY;
+        let dir;
+        let buffer2;
+        buffer2 = alloc(grid$1.width, grid$1.height);
+        buffer2.copy(grid$1); // Make a backup of this in buffer2, so that each generation is isolated.
+        let didSomething = false;
+        for (i = 0; i < grid$1.width; i++) {
+            for (j = 0; j < grid$1.height; j++) {
+                nbCount = 0;
+                for (dir = 0; dir < DIRS.length; dir++) {
+                    newX = i + DIRS[dir][0];
+                    newY = j + DIRS[dir][1];
+                    if (grid$1.hasXY(newX, newY) && buffer2[newX][newY]) {
+                        nbCount++;
+                    }
+                }
+                if (!buffer2[i][j] &&
+                    this.options.birthParameters[nbCount] == 't') {
+                    grid$1[i][j] = 1; // birth
+                    didSomething = true;
+                }
+                else if (buffer2[i][j] &&
+                    this.options.survivalParameters[nbCount] == 't') ;
+                else {
+                    grid$1[i][j] = 0; // death
+                    didSomething = true;
+                }
+            }
+        }
+        free(buffer2);
+        return didSomething;
+    }
+}
+function fillBlob(grid, opts = {}) {
+    const blob = new Blob(opts);
+    return blob.carve(grid.width, grid.height, (x, y) => (grid[x][y] = 1));
+}
+
+var blob = {
+    __proto__: null,
+    Blob: Blob,
+    fillBlob: fillBlob
+};
+
+export { Random, blob, index$1 as canvas, color, colors, config, cosmetic, data, effect, events, flag, flags, fov, frequency, grid, io, loop, make, message, path, random, range, scheduler, index$2 as sprite, sprites, index as text, types, utils };
