@@ -592,7 +592,7 @@ export class NumGrid extends Grid<number> {
         return this.randomMatchingLoc(targetValue);
     }
 
-    valueBounds(value: number) {
+    valueBounds(value: number, bounds?: Utils.Bounds) {
         let foundValueAtThisLine = false;
         let i: number, j: number;
         let left = this.width - 1,
@@ -639,7 +639,12 @@ export class NumGrid extends Grid<number> {
             }
         }
 
-        return new Utils.Bounds(left, top, right - left + 1, bottom - top + 1);
+        bounds = bounds || new Utils.Bounds(0, 0, 0, 0);
+        bounds.x = left;
+        bounds.y = top;
+        bounds.width = right - left + 1;
+        bounds.height = bottom - top + 1;
+        return bounds;
     }
 
     // Marks a cell as being a member of blobNumber, then recursively iterates through the rest of the blob
@@ -733,7 +738,7 @@ export class NumGrid extends Grid<number> {
         let i, j, k;
         let blobNumber, blobSize, topBlobNumber, topBlobSize;
 
-        let bounds: Utils.Bounds;
+        let bounds = new Utils.Bounds(0, 0, 0, 0);
 
         birthParameters = birthParameters.toLowerCase();
         survivalParameters = survivalParameters.toLowerCase();
@@ -802,7 +807,7 @@ export class NumGrid extends Grid<number> {
             }
 
             // Figure out the top blob's height and width:
-            bounds = this.valueBounds(topBlobNumber);
+            this.valueBounds(topBlobNumber, bounds);
         } while (
             (bounds.width < minBlobWidth ||
                 bounds.height < minBlobHeight ||

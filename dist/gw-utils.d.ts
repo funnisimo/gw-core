@@ -350,6 +350,10 @@ declare class Bounds {
     width: number;
     height: number;
     constructor(x: number, y: number, w: number, h: number);
+    get left(): number;
+    get right(): number;
+    get top(): number;
+    get bottom(): number;
     contains(x: number, y: number): boolean;
     contains(loc: Loc | XY): boolean;
 }
@@ -652,7 +656,7 @@ declare class NumGrid extends Grid<number> {
     invert(): void;
     leastPositiveValue(): number;
     randomLeastPositiveLoc(): Loc$1;
-    valueBounds(value: number): Bounds;
+    valueBounds(value: number, bounds?: Bounds): Bounds;
     floodFill(x: number, y: number, matchValue: number | GridMatch<number>, fillValue: number | GridUpdate<number>): number;
     protected _cellularAutomataRound(birthParameters: string, survivalParameters: string): boolean;
     fillBlob(roundCount: number, minBlobWidth: number, minBlobHeight: number, maxBlobWidth: number, maxBlobHeight: number, percentSeeded?: number, birthParameters?: string, survivalParameters?: string): Bounds;

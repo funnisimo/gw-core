@@ -97,6 +97,18 @@ class Bounds {
         this.width = w;
         this.height = h;
     }
+    get left() {
+        return this.x;
+    }
+    get right() {
+        return this.x + this.width - 1;
+    }
+    get top() {
+        return this.y;
+    }
+    get bottom() {
+        return this.y + this.height - 1;
+    }
     contains(...args) {
         let x = args[0];
         let y = args[1];
@@ -1493,7 +1505,7 @@ class NumGrid extends Grid {
         const targetValue = this.leastPositiveValue();
         return this.randomMatchingLoc(targetValue);
     }
-    valueBounds(value) {
+    valueBounds(value, bounds) {
         let foundValueAtThisLine = false;
         let i, j;
         let left = this.width - 1, right = 0, top = this.height - 1, bottom = 0;
@@ -1534,7 +1546,12 @@ class NumGrid extends Grid {
                 }
             }
         }
-        return new Bounds(left, top, right - left + 1, bottom - top + 1);
+        bounds = bounds || new Bounds(0, 0, 0, 0);
+        bounds.x = left;
+        bounds.y = top;
+        bounds.width = right - left + 1;
+        bounds.height = bottom - top + 1;
+        return bounds;
     }
     // Marks a cell as being a member of blobNumber, then recursively iterates through the rest of the blob
     floodFill(x, y, matchValue, fillValue) {
@@ -1595,7 +1612,7 @@ class NumGrid extends Grid {
     fillBlob(roundCount, minBlobWidth, minBlobHeight, maxBlobWidth, maxBlobHeight, percentSeeded = 50, birthParameters = 'ffffffttt', survivalParameters = 'ffffttttt') {
         let i, j, k;
         let blobNumber, blobSize, topBlobNumber, topBlobSize;
-        let bounds;
+        let bounds = new Bounds(0, 0, 0, 0);
         birthParameters = birthParameters.toLowerCase();
         survivalParameters = survivalParameters.toLowerCase();
         if (minBlobWidth >= maxBlobWidth) {
@@ -1648,7 +1665,7 @@ class NumGrid extends Grid {
                 }
             }
             // Figure out the top blob's height and width:
-            bounds = this.valueBounds(topBlobNumber);
+            this.valueBounds(topBlobNumber, bounds);
         } while ((bounds.width < minBlobWidth ||
             bounds.height < minBlobHeight ||
             topBlobNumber == 0) &&

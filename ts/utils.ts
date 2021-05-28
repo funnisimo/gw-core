@@ -109,6 +109,19 @@ export class Bounds {
         this.height = h;
     }
 
+    get left() {
+        return this.x;
+    }
+    get right() {
+        return this.x + this.width - 1;
+    }
+    get top() {
+        return this.y;
+    }
+    get bottom() {
+        return this.y + this.height - 1;
+    }
+
     contains(x: number, y: number): boolean;
     contains(loc: Loc | XY): boolean;
     contains(...args: any[]) {
