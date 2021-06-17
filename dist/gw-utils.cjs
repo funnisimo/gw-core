@@ -131,7 +131,11 @@ function addXY(dest, src) {
     dest.y += y(src);
 }
 function equalsXY(dest, src) {
-    return dest.x == x(src) && dest.y == y(src);
+    if (!dest && !src)
+        return true;
+    if (!dest || !src)
+        return false;
+    return x(dest) == x(src) && y(dest) == y(src);
 }
 function lerpXY(a, b, pct) {
     if (pct > 1) {
@@ -324,6 +328,8 @@ function setDefault(obj, field, val) {
 }
 function setDefaults(obj, def, custom = null) {
     let dest;
+    if (!def)
+        return;
     Object.keys(def).forEach((key) => {
         const origKey = key;
         let defValue = def[key];
@@ -361,6 +367,23 @@ function setDefaults(obj, def, custom = null) {
                 dest[key] = defValue;
             }
         }
+    });
+}
+function setOptions(obj, opts) {
+    setDefaults(obj, opts, (dest, key, _current, opt) => {
+        if (opt === null) {
+            dest[key] = null;
+        }
+        else if (Array.isArray(opt)) {
+            dest[key] = opt.slice();
+        }
+        else if (typeof opt === 'object') {
+            dest[key] = opt; // Object.assign({}, opt); -- this breaks assigning a Color object as a default...
+        }
+        else {
+            dest[key] = opt;
+        }
+        return true;
     });
 }
 function kindDefaults(obj, def) {
@@ -641,6 +664,7 @@ var utils = {
     assignOmitting: assignOmitting,
     setDefault: setDefault,
     setDefaults: setDefaults,
+    setOptions: setOptions,
     kindDefaults: kindDefaults,
     pick: pick,
     clearObject: clearObject,
@@ -1759,6 +1783,16 @@ function keyCodeDirection(key) {
 function ignoreKeyEvent(e) {
     return CONTROL_CODES.includes(e.code);
 }
+function onkeydown(e) {
+    if (ignoreKeyEvent(e))
+        return;
+    if (e.code === 'Escape') {
+        loop.clearEvents(); // clear all current events, then push on the escape
+    }
+    const ev = makeKeyEvent(e);
+    loop.pushEvent(ev);
+    e.preventDefault();
+}
 // MOUSE
 function makeMouseEvent(e, x, y) {
     const ev = DEAD_EVENTS.pop() || {};
@@ -1992,6 +2026,7 @@ var io = {
     makeKeyEvent: makeKeyEvent,
     keyCodeDirection: keyCodeDirection,
     ignoreKeyEvent: ignoreKeyEvent,
+    onkeydown: onkeydown,
     makeMouseEvent: makeMouseEvent,
     Loop: Loop,
     make: make$3,
@@ -3160,492 +3195,6 @@ class Glyphs {
             });
         }
     }
-}
-
-const VERTICES_PER_TILE = 6;
-class NotSupportedError extends Error {
-    constructor(...params) {
-        // Pass remaining arguments (including vendor specific ones) to parent constructor
-        super(...params);
-        // Maintains proper stack trace for where our error was thrown (only available on V8)
-        // @ts-ignore
-        if (Error.captureStackTrace) {
-            // @ts-ignore
-            Error.captureStackTrace(this, NotSupportedError);
-        }
-        this.name = 'NotSupportedError';
-    }
-}
-class BaseCanvas {
-    constructor(options) {
-        this.mouse = { x: -1, y: -1 };
-        this._renderRequested = false;
-        this._autoRender = true;
-        this._width = 50;
-        this._height = 25;
-        if (!options.glyphs)
-            throw new Error('You must supply glyphs for the canvas.');
-        this._node = this._createNode();
-        this._createContext();
-        this._configure(options);
-        const io = options.io || options.loop;
-        if (io) {
-            this.onclick = (e) => io.pushEvent(e);
-            this.onmousemove = (e) => io.pushEvent(e);
-            this.onmouseup = (e) => io.pushEvent(e);
-        }
-    }
-    get node() {
-        return this._node;
-    }
-    get width() {
-        return this._width;
-    }
-    get height() {
-        return this._height;
-    }
-    get tileWidth() {
-        return this._glyphs.tileWidth;
-    }
-    get tileHeight() {
-        return this._glyphs.tileHeight;
-    }
-    get pxWidth() {
-        return this.node.clientWidth;
-    }
-    get pxHeight() {
-        return this.node.clientHeight;
-    }
-    get glyphs() {
-        return this._glyphs;
-    }
-    set glyphs(glyphs) {
-        this._setGlyphs(glyphs);
-    }
-    toGlyph(ch) {
-        if (typeof ch === 'number')
-            return ch;
-        return this._glyphs.forChar(ch);
-    }
-    _createNode() {
-        return document.createElement('canvas');
-    }
-    _configure(options) {
-        this._width = options.width || this._width;
-        this._height = options.height || this._height;
-        this._autoRender = options.render !== false;
-        this._setGlyphs(options.glyphs);
-        if (options.div) {
-            let el;
-            if (typeof options.div === 'string') {
-                el = document.getElementById(options.div);
-                if (!el) {
-                    console.warn('Failed to find parent element by ID: ' + options.div);
-                }
-            }
-            else {
-                el = options.div;
-            }
-            if (el && el.appendChild) {
-                el.appendChild(this.node);
-            }
-        }
-    }
-    _setGlyphs(glyphs) {
-        if (glyphs === this._glyphs)
-            return false;
-        this._glyphs = glyphs;
-        this.resize(this._width, this._height);
-        return true;
-    }
-    resize(width, height) {
-        this._width = width;
-        this._height = height;
-        const node = this.node;
-        node.width = this._width * this.tileWidth;
-        node.height = this._height * this.tileHeight;
-    }
-    draw(x, y, glyph, fg, bg) {
-        glyph = glyph & 0xff;
-        bg = bg & 0xfff;
-        fg = fg & 0xfff;
-        const style = glyph * (1 << 24) + bg * (1 << 12) + fg;
-        this._set(x, y, style);
-        return this;
-    }
-    fill(...args) {
-        let g = 0, fg = 0, bg = 0;
-        if (args.length == 1) {
-            bg = args[0];
-        }
-        else if (args.length == 3) {
-            [g, fg, bg] = args;
-        }
-        for (let x = 0; x < this._width; ++x) {
-            for (let y = 0; y < this._height; ++y) {
-                this.draw(x, y, g, fg, bg);
-            }
-        }
-        return this;
-    }
-    _requestRender() {
-        if (this._renderRequested)
-            return;
-        this._renderRequested = true;
-        if (!this._autoRender)
-            return;
-        requestAnimationFrame(() => this.render());
-    }
-    _set(x, y, style) {
-        let index = y * this.width + x;
-        const current = this._data[index];
-        if (current !== style) {
-            this._data[index] = style;
-            this._requestRender();
-            return true;
-        }
-        return false;
-    }
-    copy(data) {
-        this._data.set(data);
-        this._requestRender();
-    }
-    copyTo(data) {
-        data.set(this._data);
-    }
-    hasXY(x, y) {
-        return x >= 0 && y >= 0 && x < this.width && y < this.height;
-    }
-    set onclick(fn) {
-        if (fn) {
-            this.node.onclick = (e) => {
-                const x = this.toX(e.offsetX);
-                const y = this.toY(e.offsetY);
-                const ev = makeMouseEvent(e, x, y);
-                fn(ev);
-            };
-        }
-        else {
-            this.node.onclick = null;
-        }
-    }
-    set onmousemove(fn) {
-        if (fn) {
-            this.node.onmousemove = (e) => {
-                const x = this.toX(e.offsetX);
-                const y = this.toY(e.offsetY);
-                if (x == this.mouse.x && y == this.mouse.y)
-                    return;
-                this.mouse.x = x;
-                this.mouse.y = y;
-                const ev = makeMouseEvent(e, x, y);
-                fn(ev);
-            };
-        }
-        else {
-            this.node.onmousemove = null;
-        }
-    }
-    set onmouseup(fn) {
-        if (fn) {
-            this.node.onmouseup = (e) => {
-                const x = this.toX(e.offsetX);
-                const y = this.toY(e.offsetY);
-                const ev = makeMouseEvent(e, x, y);
-                fn(ev);
-            };
-        }
-        else {
-            this.node.onmousemove = null;
-        }
-    }
-    toX(offsetX) {
-        return clamp(Math.floor(this.width * (offsetX / this.node.clientWidth)), 0, this.width - 1);
-    }
-    toY(offsetY) {
-        return clamp(Math.floor(this.height * (offsetY / this.node.clientHeight)), 0, this.height - 1);
-    }
-}
-// Based on: https://github.com/ondras/fastiles/blob/master/ts/scene.ts (v2.1.0)
-class Canvas extends BaseCanvas {
-    constructor(options) {
-        super(options);
-    }
-    _createContext() {
-        let gl = this.node.getContext('webgl2');
-        if (!gl) {
-            throw new NotSupportedError('WebGL 2 not supported');
-        }
-        this._gl = gl;
-        this._buffers = {};
-        this._attribs = {};
-        this._uniforms = {};
-        const p = createProgram(gl, VS, FS);
-        gl.useProgram(p);
-        const attributeCount = gl.getProgramParameter(p, gl.ACTIVE_ATTRIBUTES);
-        for (let i = 0; i < attributeCount; i++) {
-            gl.enableVertexAttribArray(i);
-            let info = gl.getActiveAttrib(p, i);
-            this._attribs[info.name] = i;
-        }
-        const uniformCount = gl.getProgramParameter(p, gl.ACTIVE_UNIFORMS);
-        for (let i = 0; i < uniformCount; i++) {
-            let info = gl.getActiveUniform(p, i);
-            this._uniforms[info.name] = gl.getUniformLocation(p, info.name);
-        }
-        gl.uniform1i(this._uniforms['font'], 0);
-        this._texture = createTexture(gl);
-    }
-    _createGeometry() {
-        const gl = this._gl;
-        this._buffers.position && gl.deleteBuffer(this._buffers.position);
-        this._buffers.uv && gl.deleteBuffer(this._buffers.uv);
-        let buffers = createGeometry(gl, this._attribs, this.width, this.height);
-        Object.assign(this._buffers, buffers);
-    }
-    _createData() {
-        const gl = this._gl;
-        const attribs = this._attribs;
-        const tileCount = this.width * this.height;
-        this._buffers.style && gl.deleteBuffer(this._buffers.style);
-        this._data = new Uint32Array(tileCount * VERTICES_PER_TILE);
-        const style = gl.createBuffer();
-        gl.bindBuffer(gl.ARRAY_BUFFER, style);
-        gl.vertexAttribIPointer(attribs['style'], 1, gl.UNSIGNED_INT, 0, 0);
-        Object.assign(this._buffers, { style });
-    }
-    _setGlyphs(glyphs) {
-        if (!super._setGlyphs(glyphs))
-            return false;
-        const gl = this._gl;
-        const uniforms = this._uniforms;
-        gl.uniform2uiv(uniforms['tileSize'], [this.tileWidth, this.tileHeight]);
-        this._uploadGlyphs();
-        return true;
-    }
-    _uploadGlyphs() {
-        if (!this._glyphs.needsUpdate)
-            return;
-        const gl = this._gl;
-        gl.activeTexture(gl.TEXTURE0);
-        gl.bindTexture(gl.TEXTURE_2D, this._texture);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, this._glyphs.node);
-        this._requestRender();
-        this._glyphs.needsUpdate = false;
-    }
-    resize(width, height) {
-        super.resize(width, height);
-        const gl = this._gl;
-        const uniforms = this._uniforms;
-        gl.viewport(0, 0, this.node.width, this.node.height);
-        gl.uniform2ui(uniforms['viewportSize'], this.node.width, this.node.height);
-        this._createGeometry();
-        this._createData();
-    }
-    _set(x, y, style) {
-        let index = y * this.width + x;
-        index *= VERTICES_PER_TILE;
-        const current = this._data[index + 2];
-        if (current !== style) {
-            this._data[index + 2] = style;
-            this._data[index + 5] = style;
-            this._requestRender();
-            return true;
-        }
-        return false;
-    }
-    copy(data) {
-        data.forEach((style, i) => {
-            const index = i * VERTICES_PER_TILE;
-            this._data[index + 2] = style;
-            this._data[index + 5] = style;
-        });
-        this._requestRender();
-    }
-    copyTo(data) {
-        const n = this.width * this.height;
-        for (let i = 0; i < n; ++i) {
-            const index = i * VERTICES_PER_TILE;
-            data[i] = this._data[index + 2];
-        }
-    }
-    render() {
-        const gl = this._gl;
-        if (this._glyphs.needsUpdate) {
-            // auto keep glyphs up to date
-            this._uploadGlyphs();
-        }
-        else if (!this._renderRequested) {
-            return;
-        }
-        this._renderRequested = false;
-        gl.bindBuffer(gl.ARRAY_BUFFER, this._buffers.style);
-        gl.bufferData(gl.ARRAY_BUFFER, this._data, gl.DYNAMIC_DRAW);
-        gl.drawArrays(gl.TRIANGLES, 0, this._width * this._height * VERTICES_PER_TILE);
-    }
-}
-class Canvas2D extends BaseCanvas {
-    constructor(options) {
-        super(options);
-    }
-    _createContext() {
-        const ctx = this.node.getContext('2d');
-        if (!ctx) {
-            throw new NotSupportedError('2d context not supported!');
-        }
-        this._ctx = ctx;
-    }
-    _set(x, y, style) {
-        const result = super._set(x, y, style);
-        if (result) {
-            this._changed[y * this.width + x] = 1;
-        }
-        return result;
-    }
-    resize(width, height) {
-        super.resize(width, height);
-        this._data = new Uint32Array(width * height);
-        this._changed = new Int8Array(width * height);
-    }
-    copy(data) {
-        for (let i = 0; i < this._data.length; ++i) {
-            if (this._data[i] !== data[i]) {
-                this._data[i] = data[i];
-                this._changed[i] = 1;
-            }
-        }
-        this._requestRender();
-    }
-    render() {
-        this._renderRequested = false;
-        for (let i = 0; i < this._changed.length; ++i) {
-            if (this._changed[i])
-                this._renderCell(i);
-            this._changed[i] = 0;
-        }
-    }
-    _renderCell(index) {
-        const x = index % this.width;
-        const y = Math.floor(index / this.width);
-        const style = this._data[index];
-        const glyph = (style / (1 << 24)) >> 0;
-        const bg = (style >> 12) & 0xfff;
-        const fg = style & 0xfff;
-        const px = x * this.tileWidth;
-        const py = y * this.tileHeight;
-        const gx = (glyph % 16) * this.tileWidth;
-        const gy = Math.floor(glyph / 16) * this.tileHeight;
-        const d = this.glyphs.ctx.getImageData(gx, gy, this.tileWidth, this.tileHeight);
-        for (let di = 0; di < d.width * d.height; ++di) {
-            const pct = d.data[di * 4] / 255;
-            const inv = 1.0 - pct;
-            d.data[di * 4 + 0] =
-                pct * (((fg & 0xf00) >> 8) * 17) +
-                    inv * (((bg & 0xf00) >> 8) * 17);
-            d.data[di * 4 + 1] =
-                pct * (((fg & 0xf0) >> 4) * 17) +
-                    inv * (((bg & 0xf0) >> 4) * 17);
-            d.data[di * 4 + 2] =
-                pct * ((fg & 0xf) * 17) + inv * ((bg & 0xf) * 17);
-            d.data[di * 4 + 3] = 255; // not transparent anymore
-        }
-        this._ctx.putImageData(d, px, py);
-    }
-}
-function withImage(image) {
-    let opts = {};
-    if (typeof image === 'string') {
-        opts.glyphs = Glyphs.fromImage(image);
-    }
-    else if (image instanceof HTMLImageElement) {
-        opts.glyphs = Glyphs.fromImage(image);
-    }
-    else {
-        if (!image.image)
-            throw new Error('You must supply the image.');
-        Object.assign(opts, image);
-        opts.glyphs = Glyphs.fromImage(image.image);
-    }
-    let canvas;
-    try {
-        canvas = new Canvas(opts);
-    }
-    catch (e) {
-        if (!(e instanceof NotSupportedError))
-            throw e;
-    }
-    if (!canvas) {
-        canvas = new Canvas2D(opts);
-    }
-    return canvas;
-}
-function withFont(src) {
-    if (typeof src === 'string') {
-        src = { font: src };
-    }
-    src.glyphs = Glyphs.fromFont(src);
-    let canvas;
-    try {
-        canvas = new Canvas(src);
-    }
-    catch (e) {
-        if (!(e instanceof NotSupportedError))
-            throw e;
-    }
-    if (!canvas) {
-        canvas = new Canvas2D(src);
-    }
-    return canvas;
-}
-// Copy of: https://github.com/ondras/fastiles/blob/master/ts/utils.ts (v2.1.0)
-const QUAD = [0, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 1];
-function createProgram(gl, ...sources) {
-    const p = gl.createProgram();
-    [gl.VERTEX_SHADER, gl.FRAGMENT_SHADER].forEach((type, index) => {
-        const shader = gl.createShader(type);
-        gl.shaderSource(shader, sources[index]);
-        gl.compileShader(shader);
-        if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-            throw new Error(gl.getShaderInfoLog(shader));
-        }
-        gl.attachShader(p, shader);
-    });
-    gl.linkProgram(p);
-    if (!gl.getProgramParameter(p, gl.LINK_STATUS)) {
-        throw new Error(gl.getProgramInfoLog(p));
-    }
-    return p;
-}
-function createTexture(gl) {
-    let t = gl.createTexture();
-    gl.bindTexture(gl.TEXTURE_2D, t);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-    return t;
-}
-function createGeometry(gl, attribs, width, height) {
-    let tileCount = width * height;
-    let positionData = new Uint16Array(tileCount * QUAD.length);
-    let uvData = new Uint8Array(tileCount * QUAD.length);
-    let i = 0;
-    for (let y = 0; y < height; y++) {
-        for (let x = 0; x < width; x++) {
-            QUAD.forEach((value) => {
-                positionData[i] = (i % 2 ? y : x) + value;
-                uvData[i] = value;
-                i++;
-            });
-        }
-    }
-    const position = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, position);
-    gl.vertexAttribIPointer(attribs['position'], 2, gl.UNSIGNED_SHORT, 0, 0);
-    gl.bufferData(gl.ARRAY_BUFFER, positionData, gl.STATIC_DRAW);
-    const uv = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, uv);
-    gl.vertexAttribIPointer(attribs['uv'], 2, gl.UNSIGNED_BYTE, 0, 0);
-    gl.bufferData(gl.ARRAY_BUFFER, uvData, gl.STATIC_DRAW);
-    return { position, uv };
 }
 
 function toColorInt(r, g, b, base256) {
@@ -4952,6 +4501,18 @@ class DataBuffer {
     get height() {
         return this._height;
     }
+    resize(width, height) {
+        const orig = this._data;
+        this._width = width;
+        this._height = height;
+        if (orig.length < width * height) {
+            this._data = new Uint32Array(width * height);
+            this._data.set(orig, 0);
+        }
+        else {
+            this._data = orig.slice(width * height);
+        }
+    }
     get(x, y) {
         let index = y * this.width + x;
         const style = this._data[index] || 0;
@@ -5146,22 +4707,40 @@ class Buffer extends DataBuffer {
         return this;
     }
 }
-make.buffer = function (canvas) {
-    return new Buffer(canvas);
-};
-function make$6(...args) {
+function makeBuffer(...args) {
     if (args.length == 1) {
         return new Buffer(args[0]);
     }
     return new DataBuffer(args[0], args[1]);
 }
 
-class DancingData {
-    constructor(width, height) {
-        this._data = [];
-        this._width = width;
-        this._height = height;
-        this._data = new Array(width * height).fill(0).map(() => { return { glyph: 0, fg: 0, bg: 0 }; });
+const VERTICES_PER_TILE = 6;
+class NotSupportedError extends Error {
+    constructor(...params) {
+        // Pass remaining arguments (including vendor specific ones) to parent constructor
+        super(...params);
+        // Maintains proper stack trace for where our error was thrown (only available on V8)
+        // @ts-ignore
+        if (Error.captureStackTrace) {
+            // @ts-ignore
+            Error.captureStackTrace(this, NotSupportedError);
+        }
+        this.name = 'NotSupportedError';
+    }
+}
+class BaseCanvas {
+    constructor(width, height, glyphs) {
+        this.mouse = { x: -1, y: -1 };
+        this._renderRequested = false;
+        this._width = 50;
+        this._height = 25;
+        this._node = this._createNode();
+        this._createContext();
+        this._configure(width, height, glyphs);
+        this._buffer = new Buffer(this);
+    }
+    get node() {
+        return this._node;
     }
     get width() {
         return this._width;
@@ -5169,207 +4748,483 @@ class DancingData {
     get height() {
         return this._height;
     }
-    get(x, y) {
-        let index = y * this.width + x;
-        const style = this._data[index];
-        return style;
+    get tileWidth() {
+        return this._glyphs.tileWidth;
+    }
+    get tileHeight() {
+        return this._glyphs.tileHeight;
+    }
+    get pxWidth() {
+        return this.node.clientWidth;
+    }
+    get pxHeight() {
+        return this.node.clientHeight;
+    }
+    get glyphs() {
+        return this._glyphs;
+    }
+    set glyphs(glyphs) {
+        this._setGlyphs(glyphs);
     }
     toGlyph(ch) {
         if (typeof ch === 'number')
             return ch;
-        if (!ch || !ch.length)
-            return -1; // 0 handled elsewhere
-        return ch.charCodeAt(0);
+        return this._glyphs.forChar(ch);
     }
-    draw(x, y, glyph = -1, fg = -1, // TODO - White?
-    bg = -1 // TODO - Black?
-    ) {
-        let index = y * this.width + x;
-        const current = this._data[index];
-        if (!current)
+    get buffer() {
+        return this._buffer;
+    }
+    _createNode() {
+        return document.createElement('canvas');
+    }
+    _configure(width, height, glyphs) {
+        this._width = width;
+        this._height = height;
+        this._setGlyphs(glyphs);
+    }
+    _setGlyphs(glyphs) {
+        if (glyphs === this._glyphs)
+            return false;
+        this._glyphs = glyphs;
+        this.resize(this._width, this._height);
+        return true;
+    }
+    resize(width, height) {
+        this._width = width;
+        this._height = height;
+        if (this._buffer) {
+            this._buffer.resize(width, height);
+        }
+        const node = this.node;
+        node.width = this._width * this.tileWidth;
+        node.height = this._height * this.tileHeight;
+    }
+    // draw(x: number, y: number, glyph: number, fg: number, bg: number) {
+    //     glyph = glyph & 0xff;
+    //     bg = bg & 0xfff;
+    //     fg = fg & 0xfff;
+    //     const style = glyph * (1 << 24) + bg * (1 << 12) + fg;
+    //     this._set(x, y, style);
+    //     return this;
+    // }
+    // fill(bg: number): this;
+    // fill(glyph: number, fg: number, bg: number): this;
+    // fill(...args: number[]): this {
+    //     let g = 0,
+    //         fg = 0,
+    //         bg = 0;
+    //     if (args.length == 1) {
+    //         bg = args[0];
+    //     } else if (args.length == 3) {
+    //         [g, fg, bg] = args;
+    //     }
+    //     for (let x = 0; x < this._width; ++x) {
+    //         for (let y = 0; y < this._height; ++y) {
+    //             this.draw(x, y, g, fg, bg);
+    //         }
+    //     }
+    //     return this;
+    // }
+    _requestRender() {
+        if (this._renderRequested)
             return;
-        if (typeof glyph !== 'number')
-            glyph = this.toGlyph(glyph);
-        if (glyph !== -1)
-            current.glyph = glyph;
-        if (typeof fg !== 'number')
-            fg = from$2(fg).toInt();
-        if (typeof bg !== 'number')
-            bg = from$2(bg).toInt();
-        if (fg !== -1)
-            current.fg = fg;
-        if (bg !== -1)
-            current.bg = bg;
-        return this;
+        this._renderRequested = true;
+        requestAnimationFrame(() => this.render());
     }
-    // This is without opacity - opacity must be done in Mixer
-    drawSprite(x, y, sprite) {
-        return this.draw(x, y, sprite.ch || -1, sprite.fg || -1, sprite.bg || -1);
+    // protected _set(x: number, y: number, style: number) {
+    //     let index = y * this.width + x;
+    //     const current = this._data[index];
+    //     if (current !== style) {
+    //         this._data[index] = style;
+    //         this._requestRender();
+    //         return true;
+    //     }
+    //     return false;
+    // }
+    copy(data) {
+        this._data.set(data);
+        this._requestRender();
     }
-    blackOut(...args) {
-        if (args.length == 0) {
-            return this.fill(0, 0, 0);
-        }
-        return this.draw(args[0], args[1], 0, 0, 0);
+    copyTo(data) {
+        data.set(this._data);
     }
-    fill(glyph = 0, fg = 0xfff, bg = 0) {
-        if (typeof glyph !== 'number') {
-            glyph = this.toGlyph(glyph);
-        }
-        this._data.forEach((m) => {
-            // @ts-ignore
-            m.glyph = glyph;
-            m.fg = fg;
-            m.bg = bg;
-        });
-        return this;
+    hasXY(x, y) {
+        return x >= 0 && y >= 0 && x < this.width && y < this.height;
     }
-    copy(other) {
-        if (other instanceof DataBuffer) {
-            this._data.forEach((m, i) => {
-                const x = i % this.width;
-                const y = Math.floor(i / this.width);
-                Object.assign(m, other.get(x, y));
-            });
+    set onclick(fn) {
+        if (fn) {
+            this.node.onclick = (e) => {
+                const x = this._toX(e.offsetX);
+                const y = this._toY(e.offsetY);
+                const ev = makeMouseEvent(e, x, y);
+                fn(ev);
+            };
         }
         else {
-            this._data.forEach((m, i) => {
-                Object.assign(m, other._data[i]);
-            });
+            this.node.onclick = null;
         }
-        return this;
     }
-    drawText(x, y, text, fg = 0xfff, bg = -1) {
-        if (typeof fg !== 'number')
-            fg = from$2(fg);
-        if (typeof bg !== 'number')
-            bg = from$2(bg);
-        eachChar(text, (ch, fg0, bg0, i) => {
-            if (x + i >= this.width)
-                return;
-            this.draw(i + x, y, ch, fg0, bg0);
-        }, fg, bg);
-        return ++y;
-    }
-    wrapText(x, y, width, text, fg = 0xfff, bg = -1, indent = 0) {
-        if (typeof fg !== 'number')
-            fg = from$2(fg);
-        if (typeof bg !== 'number')
-            bg = from$2(bg);
-        width = Math.min(width, this.width - x);
-        text = wordWrap(text, width, indent);
-        let xi = x;
-        eachChar(text, (ch, fg0, bg0) => {
-            if (ch == '\n') {
-                while (xi < x + width) {
-                    this.draw(xi++, y, 0, 0x000, bg0);
-                }
-                ++y;
-                xi = x + indent;
-                return;
-            }
-            this.draw(xi++, y, ch, fg0, bg0);
-        }, fg, bg);
-        while (xi < x + width) {
-            this.draw(xi++, y, 0, 0x000, bg);
+    set onmousemove(fn) {
+        if (fn) {
+            this.node.onmousemove = (e) => {
+                const x = this._toX(e.offsetX);
+                const y = this._toY(e.offsetY);
+                if (x == this.mouse.x && y == this.mouse.y)
+                    return;
+                this.mouse.x = x;
+                this.mouse.y = y;
+                const ev = makeMouseEvent(e, x, y);
+                fn(ev);
+            };
         }
-        return ++y;
-    }
-    fillRect(x, y, w, h, ch = -1, fg = -1, bg = -1) {
-        if (ch === null)
-            ch = -1;
-        if (typeof ch !== 'number')
-            ch = this.toGlyph(ch);
-        if (typeof fg !== 'number')
-            fg = from$2(fg).toInt();
-        if (typeof bg !== 'number')
-            bg = from$2(bg).toInt();
-        for (let i = x; i < x + w; ++i) {
-            for (let j = y; j < y + h; ++j) {
-                this.draw(i, j, ch, fg, bg);
-            }
+        else {
+            this.node.onmousemove = null;
         }
-        return this;
     }
-    blackOutRect(x, y, w, h, bg = 0) {
-        if (typeof bg !== 'number')
-            bg = from$2(bg);
-        return this.fillRect(x, y, w, h, 0, 0, bg);
+    set onmouseup(fn) {
+        if (fn) {
+            this.node.onmouseup = (e) => {
+                const x = this._toX(e.offsetX);
+                const y = this._toY(e.offsetY);
+                const ev = makeMouseEvent(e, x, y);
+                fn(ev);
+            };
+        }
+        else {
+            this.node.onmousemove = null;
+        }
     }
-    highlight(x, y, color$1, strength) {
-        if (typeof color$1 !== 'number') {
-            color$1 = from$2(color$1);
-        }
-        const mixer = this.get(x, y);
-        mixer.fg = from$2(mixer.fg).add(color$1, strength).toInt();
-        mixer.bg = from$2(mixer.bg).add(color$1, strength).toInt();
-        return this;
+    _toX(offsetX) {
+        return clamp(Math.floor(this.width * (offsetX / this.node.clientWidth)), 0, this.width - 1);
     }
-    mix(color$1, percent) {
-        if (typeof color$1 !== 'number')
-            color$1 = from$2(color$1);
-        for (let x = 0; x < this.width; ++x) {
-            for (let y = 0; y < this.height; ++y) {
-                const mixer = this.get(x, y);
-                mixer.fg = from$2(mixer.fg).mix(color$1, percent).toInt();
-                mixer.bg = from$2(mixer.bg).mix(color$1, percent).toInt();
-            }
-        }
-        return this;
-    }
-    dump() {
-        const data = [];
-        let header = '    ';
-        for (let x = 0; x < this.width; ++x) {
-            if (x % 10 == 0)
-                header += ' ';
-            header += x % 10;
-        }
-        data.push(header);
-        data.push('');
-        for (let y = 0; y < this.height; ++y) {
-            let line = `${('' + y).padStart(2)}] `;
-            for (let x = 0; x < this.width; ++x) {
-                if (x % 10 == 0)
-                    line += ' ';
-                const mixer = this.get(x, y);
-                const ch = String.fromCharCode(mixer.glyph || 32);
-                line += ch[0];
-            }
-            data.push(line);
-        }
-        console.log(data.join('\n'));
+    _toY(offsetY) {
+        return clamp(Math.floor(this.height * (offsetY / this.node.clientHeight)), 0, this.height - 1);
     }
 }
-class DancingBuffer extends DancingData {
-    constructor(canvas) {
-        super(canvas.width, canvas.height);
-        this._target = canvas;
-        this.load();
+// Based on: https://github.com/ondras/fastiles/blob/master/ts/scene.ts (v2.1.0)
+class Canvas extends BaseCanvas {
+    constructor(width, height, glyphs) {
+        super(width, height, glyphs);
     }
-    // get canvas() { return this._target; }
-    toGlyph(ch) {
-        return this._target.toGlyph(ch);
+    _createContext() {
+        let gl = this.node.getContext('webgl2');
+        if (!gl) {
+            throw new NotSupportedError('WebGL 2 not supported');
+        }
+        this._gl = gl;
+        this._buffers = {};
+        this._attribs = {};
+        this._uniforms = {};
+        const p = createProgram(gl, VS, FS);
+        gl.useProgram(p);
+        const attributeCount = gl.getProgramParameter(p, gl.ACTIVE_ATTRIBUTES);
+        for (let i = 0; i < attributeCount; i++) {
+            gl.enableVertexAttribArray(i);
+            let info = gl.getActiveAttrib(p, i);
+            this._attribs[info.name] = i;
+        }
+        const uniformCount = gl.getProgramParameter(p, gl.ACTIVE_UNIFORMS);
+        for (let i = 0; i < uniformCount; i++) {
+            let info = gl.getActiveUniform(p, i);
+            this._uniforms[info.name] = gl.getUniformLocation(p, info.name);
+        }
+        gl.uniform1i(this._uniforms['font'], 0);
+        this._texture = createTexture(gl);
+    }
+    _createGeometry() {
+        const gl = this._gl;
+        this._buffers.position && gl.deleteBuffer(this._buffers.position);
+        this._buffers.uv && gl.deleteBuffer(this._buffers.uv);
+        let buffers = createGeometry(gl, this._attribs, this.width, this.height);
+        Object.assign(this._buffers, buffers);
+    }
+    _createData() {
+        const gl = this._gl;
+        const attribs = this._attribs;
+        const tileCount = this.width * this.height;
+        this._buffers.style && gl.deleteBuffer(this._buffers.style);
+        this._data = new Uint32Array(tileCount * VERTICES_PER_TILE);
+        const style = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, style);
+        gl.vertexAttribIPointer(attribs['style'], 1, gl.UNSIGNED_INT, 0, 0);
+        Object.assign(this._buffers, { style });
+    }
+    _setGlyphs(glyphs) {
+        if (!super._setGlyphs(glyphs))
+            return false;
+        const gl = this._gl;
+        const uniforms = this._uniforms;
+        gl.uniform2uiv(uniforms['tileSize'], [this.tileWidth, this.tileHeight]);
+        this._uploadGlyphs();
+        return true;
+    }
+    _uploadGlyphs() {
+        if (!this._glyphs.needsUpdate)
+            return;
+        const gl = this._gl;
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, this._texture);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, this._glyphs.node);
+        this._requestRender();
+        this._glyphs.needsUpdate = false;
+    }
+    resize(width, height) {
+        super.resize(width, height);
+        const gl = this._gl;
+        const uniforms = this._uniforms;
+        gl.viewport(0, 0, this.node.width, this.node.height);
+        gl.uniform2ui(uniforms['viewportSize'], this.node.width, this.node.height);
+        this._createGeometry();
+        this._createData();
+    }
+    // protected _set(x: number, y: number, style: number) {
+    //     let index = y * this.width + x;
+    //     index *= VERTICES_PER_TILE;
+    //     const current = this._data[index + 2];
+    //     if (current !== style) {
+    //         this._data[index + 2] = style;
+    //         this._data[index + 5] = style;
+    //         this._requestRender();
+    //         return true;
+    //     }
+    //     return false;
+    // }
+    copy(data) {
+        data.forEach((style, i) => {
+            const index = i * VERTICES_PER_TILE;
+            this._data[index + 2] = style;
+            this._data[index + 5] = style;
+        });
+        this._requestRender();
+    }
+    copyTo(data) {
+        const n = this.width * this.height;
+        for (let i = 0; i < n; ++i) {
+            const index = i * VERTICES_PER_TILE;
+            data[i] = this._data[index + 2];
+        }
     }
     render() {
-        this._data.forEach((m, i) => {
-            const x = i % this.width;
-            const y = Math.floor(i / this.width);
-            this._target.draw(x, y, m.glyph, m.fg, m.bg);
-        });
-        return this;
+        const gl = this._gl;
+        if (this._glyphs.needsUpdate) {
+            // auto keep glyphs up to date
+            this._uploadGlyphs();
+        }
+        else if (!this._renderRequested) {
+            return;
+        }
+        this._renderRequested = false;
+        gl.bindBuffer(gl.ARRAY_BUFFER, this._buffers.style);
+        gl.bufferData(gl.ARRAY_BUFFER, this._data, gl.DYNAMIC_DRAW);
+        gl.drawArrays(gl.TRIANGLES, 0, this._width * this._height * VERTICES_PER_TILE);
     }
-    load() {
-        const data = new Uint32Array(this.width * this.height);
-        this._target.copyTo(data);
-        data.forEach((style, index) => {
-            const data = this._data[index] || 0;
-            data.glyph = style >> 24;
-            data.bg = (style >> 12) & 0xfff;
-            data.fg = style & 0xfff;
-        });
-        return this;
+}
+class Canvas2D extends BaseCanvas {
+    constructor(width, height, glyphs) {
+        super(width, height, glyphs);
     }
+    _createContext() {
+        const ctx = this.node.getContext('2d');
+        if (!ctx) {
+            throw new NotSupportedError('2d context not supported!');
+        }
+        this._ctx = ctx;
+    }
+    // protected _set(x: number, y: number, style: number) {
+    //     const result = super._set(x, y, style);
+    //     if (result) {
+    //         this._changed[y * this.width + x] = 1;
+    //     }
+    //     return result;
+    // }
+    resize(width, height) {
+        super.resize(width, height);
+        this._data = new Uint32Array(width * height);
+        this._changed = new Int8Array(width * height);
+    }
+    copy(data) {
+        for (let i = 0; i < this._data.length; ++i) {
+            if (this._data[i] !== data[i]) {
+                this._data[i] = data[i];
+                this._changed[i] = 1;
+            }
+        }
+        this._requestRender();
+    }
+    render() {
+        this._renderRequested = false;
+        for (let i = 0; i < this._changed.length; ++i) {
+            if (this._changed[i])
+                this._renderCell(i);
+            this._changed[i] = 0;
+        }
+    }
+    _renderCell(index) {
+        const x = index % this.width;
+        const y = Math.floor(index / this.width);
+        const style = this._data[index];
+        const glyph = (style / (1 << 24)) >> 0;
+        const bg = (style >> 12) & 0xfff;
+        const fg = style & 0xfff;
+        const px = x * this.tileWidth;
+        const py = y * this.tileHeight;
+        const gx = (glyph % 16) * this.tileWidth;
+        const gy = Math.floor(glyph / 16) * this.tileHeight;
+        const d = this.glyphs.ctx.getImageData(gx, gy, this.tileWidth, this.tileHeight);
+        for (let di = 0; di < d.width * d.height; ++di) {
+            const pct = d.data[di * 4] / 255;
+            const inv = 1.0 - pct;
+            d.data[di * 4 + 0] =
+                pct * (((fg & 0xf00) >> 8) * 17) +
+                    inv * (((bg & 0xf00) >> 8) * 17);
+            d.data[di * 4 + 1] =
+                pct * (((fg & 0xf0) >> 4) * 17) +
+                    inv * (((bg & 0xf0) >> 4) * 17);
+            d.data[di * 4 + 2] =
+                pct * ((fg & 0xf) * 17) + inv * ((bg & 0xf) * 17);
+            d.data[di * 4 + 3] = 255; // not transparent anymore
+        }
+        this._ctx.putImageData(d, px, py);
+    }
+}
+function make$6(...args) {
+    let width = args[0];
+    let height = args[1];
+    let opts = args[2];
+    if (args.length == 1) {
+        opts = args[0];
+        height = opts.height || 34;
+        width = opts.width || 80;
+    }
+    opts = opts || { font: 'monospace' };
+    let glyphs;
+    if (opts.image) {
+        glyphs = Glyphs.fromImage(opts.image);
+    }
+    else {
+        glyphs = Glyphs.fromFont(opts);
+    }
+    let canvas;
+    try {
+        canvas = new Canvas(width, height, glyphs);
+    }
+    catch (e) {
+        if (!(e instanceof NotSupportedError))
+            throw e;
+    }
+    if (!canvas) {
+        canvas = new Canvas2D(width, height, glyphs);
+    }
+    if (opts.div) {
+        let el;
+        if (typeof opts.div === 'string') {
+            el = document.getElementById(opts.div);
+            if (!el) {
+                console.warn('Failed to find parent element by ID: ' + opts.div);
+            }
+        }
+        else {
+            el = opts.div;
+        }
+        if (el && el.appendChild) {
+            el.appendChild(canvas.node);
+        }
+    }
+    if (opts.io || opts.loop) {
+        let loop$1 = opts.loop || loop;
+        canvas.onclick = (e) => loop$1.pushEvent(e);
+        canvas.onmousemove = (e) => loop$1.pushEvent(e);
+        canvas.onmouseup = (e) => loop$1.pushEvent(e);
+    }
+    return canvas;
+}
+// export function withImage(image: ImageOptions | HTMLImageElement | string) {
+//     let opts = {} as CanvasOptions;
+//     if (typeof image === 'string') {
+//         opts.glyphs = Glyphs.fromImage(image);
+//     } else if (image instanceof HTMLImageElement) {
+//         opts.glyphs = Glyphs.fromImage(image);
+//     } else {
+//         if (!image.image) throw new Error('You must supply the image.');
+//         Object.assign(opts, image);
+//         opts.glyphs = Glyphs.fromImage(image.image);
+//     }
+//     let canvas;
+//     try {
+//         canvas = new Canvas(opts);
+//     } catch (e) {
+//         if (!(e instanceof NotSupportedError)) throw e;
+//     }
+//     if (!canvas) {
+//         canvas = new Canvas2D(opts);
+//     }
+//     return canvas;
+// }
+// export function withFont(src: FontOptions | string) {
+//     if (typeof src === 'string') {
+//         src = { font: src } as FontOptions;
+//     }
+//     src.glyphs = Glyphs.fromFont(src);
+//     let canvas;
+//     try {
+//         canvas = new Canvas(src);
+//     } catch (e) {
+//         if (!(e instanceof NotSupportedError)) throw e;
+//     }
+//     if (!canvas) {
+//         canvas = new Canvas2D(src);
+//     }
+//     return canvas;
+// }
+// Copy of: https://github.com/ondras/fastiles/blob/master/ts/utils.ts (v2.1.0)
+const QUAD = [0, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 1];
+function createProgram(gl, ...sources) {
+    const p = gl.createProgram();
+    [gl.VERTEX_SHADER, gl.FRAGMENT_SHADER].forEach((type, index) => {
+        const shader = gl.createShader(type);
+        gl.shaderSource(shader, sources[index]);
+        gl.compileShader(shader);
+        if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+            throw new Error(gl.getShaderInfoLog(shader));
+        }
+        gl.attachShader(p, shader);
+    });
+    gl.linkProgram(p);
+    if (!gl.getProgramParameter(p, gl.LINK_STATUS)) {
+        throw new Error(gl.getProgramInfoLog(p));
+    }
+    return p;
+}
+function createTexture(gl) {
+    let t = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, t);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    return t;
+}
+function createGeometry(gl, attribs, width, height) {
+    let tileCount = width * height;
+    let positionData = new Uint16Array(tileCount * QUAD.length);
+    let uvData = new Uint8Array(tileCount * QUAD.length);
+    let i = 0;
+    for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+            QUAD.forEach((value) => {
+                positionData[i] = (i % 2 ? y : x) + value;
+                uvData[i] = value;
+                i++;
+            });
+        }
+    }
+    const position = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, position);
+    gl.vertexAttribIPointer(attribs['position'], 2, gl.UNSIGNED_SHORT, 0, 0);
+    gl.bufferData(gl.ARRAY_BUFFER, positionData, gl.STATIC_DRAW);
+    const uv = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, uv);
+    gl.vertexAttribIPointer(attribs['uv'], 2, gl.UNSIGNED_BYTE, 0, 0);
+    gl.bufferData(gl.ARRAY_BUFFER, uvData, gl.STATIC_DRAW);
+    return { position, uv };
 }
 
 var index$1 = {
@@ -5378,14 +5233,11 @@ var index$1 = {
     BaseCanvas: BaseCanvas,
     Canvas: Canvas,
     Canvas2D: Canvas2D,
-    withImage: withImage,
-    withFont: withFont,
+    make: make$6,
     Glyphs: Glyphs,
     DataBuffer: DataBuffer,
     Buffer: Buffer,
-    make: make$6,
-    DancingData: DancingData,
-    DancingBuffer: DancingBuffer
+    makeBuffer: makeBuffer
 };
 
 class Sprite {

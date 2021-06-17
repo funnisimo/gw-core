@@ -160,6 +160,24 @@ describe('Utils', () => {
         });
     });
 
+    describe('setOptions', () => {
+        test('basic', () => {
+            const dest: any = { a: 1, d: { e: 1 } };
+            Utils.setOptions(dest, {
+                test: null,
+                a: 2,
+                'b.c': 3,
+                d: { f: 1 },
+            });
+
+            expect(dest.test).toBeNull();
+            expect(dest.a).toEqual(2);
+            expect(dest.b.c).toEqual(3);
+            expect(dest.d.e).toBeUndefined();
+            expect(dest.d.f).toEqual(1);
+        });
+    });
+
     describe('kindDefaults', () => {
         test('sets basic values', () => {
             const dest = {} as Utils.BasicObject;

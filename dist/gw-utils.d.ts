@@ -359,7 +359,7 @@ declare class Bounds {
 }
 declare function copyXY(dest: XY, src: XY | Loc): void;
 declare function addXY(dest: XY, src: XY | Loc): void;
-declare function equalsXY(dest: XY, src: XY | Loc): boolean;
+declare function equalsXY(dest: XY | Loc | null | undefined, src: XY | Loc | null | undefined): boolean;
 declare function lerpXY(a: XY | Loc, b: XY | Loc, pct: number): any[];
 declare type XYFunc = (x: number, y: number) => any;
 declare function eachNeighbor(x: number, y: number, fn: XYFunc, only4dirs?: boolean): void;
@@ -382,6 +382,7 @@ declare function assignOmitting(omit: string | string[], dest: any, src: any): v
 declare function setDefault(obj: any, field: string, val: any): void;
 declare type AssignCallback = (dest: any, key: string, current: any, def: any) => boolean;
 declare function setDefaults(obj: any, def: any, custom?: AssignCallback | null): void;
+declare function setOptions(obj: any, opts: any): void;
 declare function kindDefaults(obj: any, def: any): void;
 declare function pick(obj: any, ...fields: string[]): any;
 declare function clearObject(obj: any): void;
@@ -457,6 +458,7 @@ declare const utils_d_assignOmitting: typeof assignOmitting;
 declare const utils_d_setDefault: typeof setDefault;
 type utils_d_AssignCallback = AssignCallback;
 declare const utils_d_setDefaults: typeof setDefaults;
+declare const utils_d_setOptions: typeof setOptions;
 declare const utils_d_kindDefaults: typeof kindDefaults;
 declare const utils_d_pick: typeof pick;
 declare const utils_d_clearObject: typeof clearObject;
@@ -531,6 +533,7 @@ declare namespace utils_d {
     utils_d_setDefault as setDefault,
     utils_d_AssignCallback as AssignCallback,
     utils_d_setDefaults as setDefaults,
+    utils_d_setOptions as setOptions,
     utils_d_kindDefaults as kindDefaults,
     utils_d_pick as pick,
     utils_d_clearObject as clearObject,
@@ -740,6 +743,7 @@ declare function makeTickEvent(dt: number): Event;
 declare function makeKeyEvent(e: KeyboardEvent): Event;
 declare function keyCodeDirection(key: string): Loc | null;
 declare function ignoreKeyEvent(e: KeyboardEvent): boolean;
+declare function onkeydown(e: KeyboardEvent): void;
 declare function makeMouseEvent(e: MouseEvent, x: number, y: number): Event;
 declare class Loop {
     running: boolean;
@@ -783,6 +787,7 @@ declare const io_d_makeTickEvent: typeof makeTickEvent;
 declare const io_d_makeKeyEvent: typeof makeKeyEvent;
 declare const io_d_keyCodeDirection: typeof keyCodeDirection;
 declare const io_d_ignoreKeyEvent: typeof ignoreKeyEvent;
+declare const io_d_onkeydown: typeof onkeydown;
 declare const io_d_makeMouseEvent: typeof makeMouseEvent;
 type io_d_Loop = Loop;
 declare const io_d_Loop: typeof Loop;
@@ -806,6 +811,7 @@ declare namespace io_d {
     io_d_makeKeyEvent as makeKeyEvent,
     io_d_keyCodeDirection as keyCodeDirection,
     io_d_ignoreKeyEvent as ignoreKeyEvent,
+    io_d_onkeydown as onkeydown,
     io_d_makeMouseEvent as makeMouseEvent,
     io_d_Loop as Loop,
     make$3 as make,
@@ -1044,13 +1050,13 @@ declare type CTX = CanvasRenderingContext2D;
 declare type DrawFunction = (ctx: CTX, x: number, y: number, width: number, height: number) => void;
 declare type DrawType = string | DrawFunction;
 interface GlyphOptions {
-    font?: string;
-    fontSize?: number;
-    size?: number;
-    tileWidth?: number;
-    tileHeight?: number;
-    basicOnly?: boolean;
-    basic?: boolean;
+    font: string;
+    fontSize: number;
+    size: number;
+    tileWidth: number;
+    tileHeight: number;
+    basicOnly: boolean;
+    basic: boolean;
 }
 declare class Glyphs {
     private _node;
@@ -1060,7 +1066,7 @@ declare class Glyphs {
     needsUpdate: boolean;
     private _map;
     static fromImage(src: string | HTMLImageElement): Glyphs;
-    static fromFont(src: GlyphOptions | string): Glyphs;
+    static fromFont(src: Partial<GlyphOptions> | string): Glyphs;
     private constructor();
     get node(): HTMLCanvasElement;
     get ctx(): CanvasRenderingContext2D;
@@ -1111,6 +1117,13 @@ interface DrawData {
     fg: number;
     bg: number;
 }
+interface BufferTarget {
+    readonly width: number;
+    readonly height: number;
+    copyTo(dest: Uint32Array): void;
+    copy(src: Uint32Array): void;
+    toGlyph(ch: string | number): number;
+}
 declare class DataBuffer {
     protected _data: Uint32Array;
     private _width;
@@ -1118,6 +1131,7 @@ declare class DataBuffer {
     constructor(width: number, height: number);
     get width(): number;
     get height(): number;
+    resize(width: number, height: number): void;
     get(x: number, y: number): DrawData;
     toGlyph(ch: string | number): number;
     draw(x: number, y: number, glyph?: number | string, fg?: ColorBase, // TODO - White?
@@ -1135,14 +1149,6 @@ declare class DataBuffer {
     mix(color: ColorBase, percent: number): this;
     dump(): void;
 }
-interface BufferTarget {
-    readonly width: number;
-    readonly height: number;
-    draw(x: number, y: number, glyph: number, fg: number, bg: number): BufferTarget;
-    copyTo(dest: Uint32Array): void;
-    copy(src: Uint32Array): void;
-    toGlyph(ch: string | number): number;
-}
 declare class Buffer extends DataBuffer {
     private _target;
     constructor(canvas: BufferTarget);
@@ -1150,23 +1156,20 @@ declare class Buffer extends DataBuffer {
     render(): this;
     load(): this;
 }
-declare function make$5(width: number, height: number): DataBuffer;
-declare function make$5(canvas: BufferTarget): Buffer;
+declare function makeBuffer(width: number, height: number): DataBuffer;
+declare function makeBuffer(canvas: BufferTarget): Buffer;
 
 declare type MouseEventFn = (ev: Event) => void;
-interface CanvasOptions {
-    width?: number;
-    height?: number;
+interface BaseOptions {
+    width: number;
+    height: number;
     glyphs: Glyphs;
-    div?: HTMLElement | string;
-    render?: boolean;
-    io?: Loop;
-    loop?: Loop;
-}
-interface ImageOptions extends CanvasOptions {
+    div: HTMLElement | string;
+    io: boolean;
+    loop: Loop;
     image: HTMLImageElement | string;
 }
-declare type FontOptions = CanvasOptions & GlyphOptions;
+declare type CanvasOptions = BaseOptions & GlyphOptions;
 declare class NotSupportedError extends Error {
     constructor(...params: any[]);
 }
@@ -1175,11 +1178,11 @@ declare abstract class BaseCanvas implements BufferTarget {
     protected _data: Uint32Array;
     protected _renderRequested: boolean;
     protected _glyphs: Glyphs;
-    protected _autoRender: boolean;
     protected _node: HTMLCanvasElement;
     protected _width: number;
     protected _height: number;
-    constructor(options: CanvasOptions);
+    protected _buffer: Buffer;
+    constructor(width: number, height: number, glyphs: Glyphs);
     get node(): HTMLCanvasElement;
     get width(): number;
     get height(): number;
@@ -1190,16 +1193,13 @@ declare abstract class BaseCanvas implements BufferTarget {
     get glyphs(): Glyphs;
     set glyphs(glyphs: Glyphs);
     toGlyph(ch: string | number): number;
+    get buffer(): Buffer;
     protected _createNode(): HTMLCanvasElement;
     protected abstract _createContext(): void;
     private _configure;
     protected _setGlyphs(glyphs: Glyphs): boolean;
     resize(width: number, height: number): void;
-    draw(x: number, y: number, glyph: number, fg: number, bg: number): this;
-    fill(bg: number): this;
-    fill(glyph: number, fg: number, bg: number): this;
     protected _requestRender(): void;
-    protected _set(x: number, y: number, style: number): boolean;
     copy(data: Uint32Array): void;
     copyTo(data: Uint32Array): void;
     abstract render(): void;
@@ -1207,8 +1207,8 @@ declare abstract class BaseCanvas implements BufferTarget {
     set onclick(fn: MouseEventFn | null);
     set onmousemove(fn: MouseEventFn | null);
     set onmouseup(fn: MouseEventFn | null);
-    toX(offsetX: number): number;
-    toY(offsetY: number): number;
+    protected _toX(offsetX: number): number;
+    protected _toY(offsetY: number): number;
 }
 declare class Canvas extends BaseCanvas {
     private _gl;
@@ -1216,14 +1216,13 @@ declare class Canvas extends BaseCanvas {
     private _attribs;
     private _uniforms;
     private _texture;
-    constructor(options: CanvasOptions);
+    constructor(width: number, height: number, glyphs: Glyphs);
     protected _createContext(): void;
     private _createGeometry;
     private _createData;
     protected _setGlyphs(glyphs: Glyphs): boolean;
     _uploadGlyphs(): void;
     resize(width: number, height: number): void;
-    protected _set(x: number, y: number, style: number): boolean;
     copy(data: Uint32Array): void;
     copyTo(data: Uint32Array): void;
     render(): void;
@@ -1231,53 +1230,18 @@ declare class Canvas extends BaseCanvas {
 declare class Canvas2D extends BaseCanvas {
     private _ctx;
     private _changed;
-    constructor(options: CanvasOptions);
+    constructor(width: number, height: number, glyphs: Glyphs);
     protected _createContext(): void;
-    protected _set(x: number, y: number, style: number): boolean;
     resize(width: number, height: number): void;
     copy(data: Uint32Array): void;
     render(): void;
     protected _renderCell(index: number): void;
 }
-declare function withImage(image: ImageOptions | HTMLImageElement | string): Canvas | Canvas2D;
-declare function withFont(src: FontOptions | string): Canvas | Canvas2D;
-
-declare class DancingData {
-    protected _data: DrawData[];
-    private _width;
-    private _height;
-    constructor(width: number, height: number);
-    get width(): number;
-    get height(): number;
-    get(x: number, y: number): DrawData;
-    toGlyph(ch: string | number): number;
-    draw(x: number, y: number, glyph?: number | string, fg?: ColorBase, // TODO - White?
-    bg?: ColorBase): this | undefined;
-    drawSprite(x: number, y: number, sprite: Partial<DrawInfo>): this | undefined;
-    blackOut(x: number, y: number): void;
-    blackOut(): void;
-    fill(glyph?: number | string, fg?: number, bg?: number): this;
-    copy(other: DataBuffer | DancingData): this;
-    drawText(x: number, y: number, text: string, fg?: ColorBase, bg?: ColorBase): number;
-    wrapText(x: number, y: number, width: number, text: string, fg?: Color | number | string, bg?: Color | number | string, indent?: number): number;
-    fillRect(x: number, y: number, w: number, h: number, ch?: string | number | null, fg?: ColorBase | null, bg?: ColorBase | null): this;
-    blackOutRect(x: number, y: number, w: number, h: number, bg?: ColorBase): this;
-    highlight(x: number, y: number, color: ColorBase, strength: number): this;
-    mix(color: ColorBase, percent: number): this;
-    dump(): void;
-}
-declare class DancingBuffer extends DancingData {
-    private _target;
-    constructor(canvas: BufferTarget);
-    toGlyph(ch: string | number): number;
-    render(): this;
-    load(): this;
-}
+declare function make$5(opts: Partial<CanvasOptions>): BaseCanvas;
+declare function make$5(width: number, height: number, opts?: Partial<CanvasOptions>): BaseCanvas;
 
 type index_d_MouseEventFn = MouseEventFn;
 type index_d_CanvasOptions = CanvasOptions;
-type index_d_ImageOptions = ImageOptions;
-type index_d_FontOptions = FontOptions;
 type index_d_NotSupportedError = NotSupportedError;
 declare const index_d_NotSupportedError: typeof NotSupportedError;
 type index_d_BaseCanvas = BaseCanvas;
@@ -1286,42 +1250,32 @@ type index_d_Canvas = Canvas;
 declare const index_d_Canvas: typeof Canvas;
 type index_d_Canvas2D = Canvas2D;
 declare const index_d_Canvas2D: typeof Canvas2D;
-declare const index_d_withImage: typeof withImage;
-declare const index_d_withFont: typeof withFont;
 type index_d_GlyphOptions = GlyphOptions;
 type index_d_Glyphs = Glyphs;
 declare const index_d_Glyphs: typeof Glyphs;
 type index_d_DrawData = DrawData;
+type index_d_BufferTarget = BufferTarget;
 type index_d_DataBuffer = DataBuffer;
 declare const index_d_DataBuffer: typeof DataBuffer;
-type index_d_BufferTarget = BufferTarget;
 type index_d_Buffer = Buffer;
 declare const index_d_Buffer: typeof Buffer;
-type index_d_DancingData = DancingData;
-declare const index_d_DancingData: typeof DancingData;
-type index_d_DancingBuffer = DancingBuffer;
-declare const index_d_DancingBuffer: typeof DancingBuffer;
+declare const index_d_makeBuffer: typeof makeBuffer;
 declare namespace index_d {
   export {
     index_d_MouseEventFn as MouseEventFn,
     index_d_CanvasOptions as CanvasOptions,
-    index_d_ImageOptions as ImageOptions,
-    index_d_FontOptions as FontOptions,
     index_d_NotSupportedError as NotSupportedError,
     index_d_BaseCanvas as BaseCanvas,
     index_d_Canvas as Canvas,
     index_d_Canvas2D as Canvas2D,
-    index_d_withImage as withImage,
-    index_d_withFont as withFont,
+    make$5 as make,
     index_d_GlyphOptions as GlyphOptions,
     index_d_Glyphs as Glyphs,
     index_d_DrawData as DrawData,
-    index_d_DataBuffer as DataBuffer,
     index_d_BufferTarget as BufferTarget,
+    index_d_DataBuffer as DataBuffer,
     index_d_Buffer as Buffer,
-    make$5 as make,
-    index_d_DancingData as DancingData,
-    index_d_DancingBuffer as DancingBuffer,
+    index_d_makeBuffer as makeBuffer,
   };
 }
 

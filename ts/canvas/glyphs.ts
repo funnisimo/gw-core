@@ -9,16 +9,16 @@ type DrawFunction = (
 type DrawType = string | DrawFunction;
 
 export interface GlyphOptions {
-    font?: string;
+    font: string;
 
-    fontSize?: number;
-    size?: number; // alias for fontSize
+    fontSize: number;
+    size: number; // alias for fontSize
 
-    tileWidth?: number;
-    tileHeight?: number;
+    tileWidth: number;
+    tileHeight: number;
 
-    basicOnly?: boolean;
-    basic?: boolean; // alias for basicOnly
+    basicOnly: boolean;
+    basic: boolean; // alias for basicOnly
 }
 
 export class Glyphs {
@@ -52,9 +52,9 @@ export class Glyphs {
         return glyph;
     }
 
-    static fromFont(src: GlyphOptions | string) {
+    static fromFont(src: Partial<GlyphOptions> | string) {
         if (typeof src === 'string') {
-            src = { font: src } as GlyphOptions;
+            src = { font: src } as Partial<GlyphOptions>;
         }
 
         const glyphs = new this(src);
@@ -63,13 +63,13 @@ export class Glyphs {
         return glyphs;
     }
 
-    private constructor(opts: GlyphOptions = {}) {
+    private constructor(opts: Partial<GlyphOptions> = {}) {
         opts.font = opts.font || 'monospace';
 
         this._node = document.createElement('canvas');
         this._ctx = this.node.getContext('2d') as CanvasRenderingContext2D;
 
-        this._configure(opts as GlyphOptions);
+        this._configure(opts);
     }
 
     get node() {
@@ -96,7 +96,7 @@ export class Glyphs {
         return this._map[ch] || -1;
     }
 
-    private _configure(opts: GlyphOptions) {
+    private _configure(opts: Partial<GlyphOptions>) {
         this._tileWidth = opts.tileWidth || this.tileWidth;
         this._tileHeight = opts.tileHeight || this.tileHeight;
 

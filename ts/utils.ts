@@ -150,8 +150,13 @@ export function addXY(dest: XY, src: XY | Loc) {
     dest.y += y(src);
 }
 
-export function equalsXY(dest: XY, src: XY | Loc) {
-    return dest.x == x(src) && dest.y == y(src);
+export function equalsXY(
+    dest: XY | Loc | null | undefined,
+    src: XY | Loc | null | undefined
+) {
+    if (!dest && !src) return true;
+    if (!dest || !src) return false;
+    return x(dest) == x(src) && y(dest) == y(src);
 }
 
 export function lerpXY(a: XY | Loc, b: XY | Loc, pct: number) {
@@ -392,6 +397,7 @@ export function setDefaults(
     custom: AssignCallback | null = null
 ) {
     let dest;
+    if (!def) return;
     Object.keys(def).forEach((key) => {
         const origKey = key;
         let defValue = def[key];
@@ -431,6 +437,21 @@ export function setDefaults(
                 dest[key] = defValue;
             }
         }
+    });
+}
+
+export function setOptions(obj: any, opts: any) {
+    setDefaults(obj, opts, (dest, key, _current, opt) => {
+        if (opt === null) {
+            dest[key] = null;
+        } else if (Array.isArray(opt)) {
+            dest[key] = opt.slice();
+        } else if (typeof opt === 'object') {
+            dest[key] = opt; // Object.assign({}, opt); -- this breaks assigning a Color object as a default...
+        } else {
+            dest[key] = opt;
+        }
+        return true;
     });
 }
 

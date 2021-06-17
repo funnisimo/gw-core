@@ -7,8 +7,22 @@ export interface DrawData {
     glyph: number;
     fg: number;
     bg: number;
-};
+}
 
+export interface BufferTarget {
+    readonly width: number;
+    readonly height: number;
+    // draw(
+    //     x: number,
+    //     y: number,
+    //     glyph: number,
+    //     fg: number,
+    //     bg: number
+    // ): DrawTarget;
+    copyTo(dest: Uint32Array): void;
+    copy(src: Uint32Array): void;
+    toGlyph(ch: string | number): number;
+}
 
 export class DataBuffer {
     protected _data: Uint32Array;
@@ -26,6 +40,19 @@ export class DataBuffer {
     }
     get height() {
         return this._height;
+    }
+
+    resize(width: number, height: number) {
+        const orig = this._data;
+        this._width = width;
+        this._height = height;
+
+        if (orig.length < width * height) {
+            this._data = new Uint32Array(width * height);
+            this._data.set(orig, 0);
+        } else {
+            this._data = orig.slice(width * height);
+        }
     }
 
     get(x: number, y: number): DrawData {
@@ -255,21 +282,6 @@ Make.dataBuffer = function (width: number, height: number) {
     return new DataBuffer(width, height);
 };
 
-export interface BufferTarget {
-    readonly width: number;
-    readonly height: number;
-    draw(
-        x: number,
-        y: number,
-        glyph: number,
-        fg: number,
-        bg: number
-    ): BufferTarget;
-    copyTo(dest: Uint32Array): void;
-    copy(src: Uint32Array): void;
-    toGlyph(ch: string | number): number;
-}
-
 export class Buffer extends DataBuffer {
     private _target: BufferTarget;
 
@@ -296,13 +308,13 @@ export class Buffer extends DataBuffer {
     }
 }
 
-Make.buffer = function (canvas: BufferTarget) {
-    return new Buffer(canvas);
-};
+// Make.buffer = function (canvas: BufferTarget) {
+//     return new Buffer(canvas);
+// };
 
-export function make(width: number, height: number): DataBuffer;
-export function make(canvas: BufferTarget): Buffer;
-export function make(...args: any[]): Buffer | DataBuffer {
+export function makeBuffer(width: number, height: number): DataBuffer;
+export function makeBuffer(canvas: BufferTarget): Buffer;
+export function makeBuffer(...args: any[]): Buffer | DataBuffer {
     if (args.length == 1) {
         return new Buffer(args[0]);
     }
