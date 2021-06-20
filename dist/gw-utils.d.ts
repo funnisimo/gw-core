@@ -106,20 +106,14 @@ declare namespace color_d {
   };
 }
 
-declare type RandomFunction = () => number;
-declare type SeedFunction = (seed?: number) => RandomFunction;
-interface RandomConfig {
-    make: SeedFunction;
-}
 declare type WeightedArray = number[];
 interface WeightedObject {
     [key: string]: number;
 }
 declare class Random {
     private _fn;
-    static configure(opts: Partial<RandomConfig>): void;
     constructor();
-    seed(val?: number): void;
+    seed(val: number): void;
     value(): number;
     float(): number;
     number(max?: number): number;
@@ -1560,11 +1554,11 @@ declare const make$8: any;
 declare const flags: any;
 
 interface BlobConfig {
-    roundCount: number;
-    minBlobWidth: number;
-    minBlobHeight: number;
-    maxBlobWidth: number;
-    maxBlobHeight: number;
+    rounds: number;
+    minWidth: number;
+    minHeight: number;
+    maxWidth: number;
+    maxHeight: number;
     percentSeeded: number;
     birthParameters: string;
     survivalParameters: string;
@@ -1576,6 +1570,7 @@ declare class Blob {
     _cellularAutomataRound(grid: NumGrid): boolean;
 }
 declare function fillBlob(grid: NumGrid, opts?: Partial<BlobConfig>): Bounds;
+declare function make$9(opts?: Partial<BlobConfig>): Blob;
 
 type blob_d_BlobConfig = BlobConfig;
 type blob_d_Blob = Blob;
@@ -1586,6 +1581,7 @@ declare namespace blob_d {
     blob_d_BlobConfig as BlobConfig,
     blob_d_Blob as Blob,
     blob_d_fillBlob as fillBlob,
+    make$9 as make,
   };
 }
 

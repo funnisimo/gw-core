@@ -1,4 +1,4 @@
-import { Random } from '../ts/random';
+// import { Random } from '../ts/random';
 import * as Types from '../ts/types';
 
 export function extractText(buffer: any, x: any, y: any, width: any) {
@@ -11,25 +11,25 @@ export function extractText(buffer: any, x: any, y: any, width: any) {
     return output.trim();
 }
 
-export const rnd = jest.fn();
+// export const rnd = jest.fn();
 
-export var seed = 0;
+// export var seed = 0;
 
-export function mockRandom(s?: number) {
-    seed = s || 0;
-    rnd.mockImplementation(() => {
-        seed = (seed + 17) % 100;
-        return seed / 100;
-    });
-    const make = jest.fn().mockImplementation((s?: number) => {
-        if (typeof s === 'number') {
-            seed = s % 100;
-        }
-        return rnd;
-    });
-    Random.configure({ make });
-    make.mockClear();
-}
+// export function mockRandom(s?: number) {
+//     seed = s || 0;
+//     rnd.mockImplementation(() => {
+//         seed = (seed + 17) % 100;
+//         return seed / 100;
+//     });
+//     const make = jest.fn().mockImplementation((s?: number) => {
+//         if (typeof s === 'number') {
+//             seed = s % 100;
+//         }
+//         return rnd;
+//     });
+//     Random.configure({ make });
+//     make.mockClear();
+// }
 
 export function mockCell(): Types.CellType {
     return {

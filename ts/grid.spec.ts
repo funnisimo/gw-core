@@ -1,14 +1,14 @@
 import * as Grid from './grid';
 import * as GW from './index';
-import * as UTILS from '../test/utils';
+// import * as UTILS from '../test/utils';
 import { random } from './random';
 
 describe('GW.grid', () => {
     let a: Grid.NumGrid;
 
-    beforeEach(() => {
-        UTILS.mockRandom();
-    });
+    // beforeEach(() => {
+    //     UTILS.mockRandom();
+    // });
 
     afterEach(() => {
         GW.grid.free(a);
@@ -267,7 +267,7 @@ describe('GW.grid', () => {
     });
 
     test('closestMatchingLoc', () => {
-        UTILS.mockRandom();
+        // UTILS.mockRandom();
         random.seed(5);
 
         a = GW.grid.alloc(10, 10, 0);
@@ -299,7 +299,7 @@ describe('GW.grid', () => {
     });
 
     test('randomMatchingLoc', () => {
-        UTILS.mockRandom();
+        // UTILS.mockRandom();
         random.seed(5);
 
         a = GW.grid.alloc(10, 10, 0);
@@ -309,10 +309,17 @@ describe('GW.grid', () => {
         function one(v: number) {
             return v == 1;
         }
-        expect(a.randomMatchingLoc(one)).toEqual([2, 3]);
 
-        random.seed(50);
-        expect(a.randomMatchingLoc(one)).toEqual([4, 1]);
+        const results: Record<number, number> = {};
+        for (let i = 0; i < 1000; ++i) {
+            const xy = a.randomMatchingLoc(one);
+            const v = xy[0] * 10 + xy[1];
+            results[v] = (results[v] || 0) + 1;
+        }
+
+        expect(results[23]).toBeGreaterThan(0);
+        expect(results[41]).toBeGreaterThan(0);
+        expect(Object.keys(results)).toEqual(['23', '41']);
 
         function two(v: number) {
             return v == 2;
@@ -338,6 +345,8 @@ describe('GW.grid', () => {
     });
 
     test('matchingLocNear', () => {
+        random.seed(12345);
+
         a = GW.grid.alloc(10, 10, 0);
         a[4][1] = 1;
         a[2][3] = 1;
@@ -477,6 +486,7 @@ describe('GW.grid', () => {
     });
 
     test('randomLeastPositiveLoc', () => {
+        GW.random.seed(12345);
         a = GW.grid.alloc(10, 10);
         a.fillRect(0, 0, 4, 4, -1);
         a.fillRect(7, 7, 3, 3, 2);
@@ -484,8 +494,9 @@ describe('GW.grid', () => {
         a.fillRect(6, 2, 4, 4, -4);
         a.fillRect(4, 5, 3, 3, 6);
         // a.dump();
+        expect(a.randomLeastPositiveLoc()).toEqual([7, 7]);
+        expect(a.randomLeastPositiveLoc()).toEqual([9, 8]);
         expect(a.randomLeastPositiveLoc()).toEqual([8, 9]);
-        // expect(a.randomLeastPositiveLoc(true)).toEqual([8, 8]);
     });
 
     test('make', () => {

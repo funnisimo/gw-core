@@ -3,11 +3,11 @@ import * as GRID from './grid';
 import { random } from './random';
 
 export interface BlobConfig {
-    roundCount: number;
-    minBlobWidth: number;
-    minBlobHeight: number;
-    maxBlobWidth: number;
-    maxBlobHeight: number;
+    rounds: number;
+    minWidth: number;
+    minHeight: number;
+    maxWidth: number;
+    maxHeight: number;
     percentSeeded: number;
     birthParameters: string /* char[9] */;
     survivalParameters: string /* char[9] */;
@@ -15,11 +15,11 @@ export interface BlobConfig {
 
 export class Blob {
     public options: BlobConfig = {
-        roundCount: 5,
-        minBlobWidth: 10,
-        minBlobHeight: 10,
-        maxBlobWidth: 40,
-        maxBlobHeight: 20,
+        rounds: 5,
+        minWidth: 10,
+        minHeight: 10,
+        maxWidth: 40,
+        maxHeight: 20,
         percentSeeded: 50,
         birthParameters: 'ffffffttt',
         survivalParameters: 'ffffttttt',
@@ -30,21 +30,13 @@ export class Blob {
         this.options.birthParameters = this.options.birthParameters.toLowerCase();
         this.options.survivalParameters = this.options.survivalParameters.toLowerCase();
 
-        if (this.options.minBlobWidth >= this.options.maxBlobWidth) {
-            this.options.minBlobWidth = Math.round(
-                0.75 * this.options.maxBlobWidth
-            );
-            this.options.maxBlobWidth = Math.round(
-                1.25 * this.options.maxBlobWidth
-            );
+        if (this.options.minWidth >= this.options.maxWidth) {
+            this.options.minWidth = Math.round(0.75 * this.options.maxWidth);
+            this.options.maxWidth = Math.round(1.25 * this.options.maxWidth);
         }
-        if (this.options.minBlobHeight >= this.options.maxBlobHeight) {
-            this.options.minBlobHeight = Math.round(
-                0.75 * this.options.maxBlobHeight
-            );
-            this.options.maxBlobHeight = Math.round(
-                1.25 * this.options.maxBlobHeight
-            );
+        if (this.options.minHeight >= this.options.maxHeight) {
+            this.options.minHeight = Math.round(0.75 * this.options.maxHeight);
+            this.options.maxHeight = Math.round(1.25 * this.options.maxHeight);
         }
     }
 
@@ -55,8 +47,8 @@ export class Blob {
         let bounds = new UTILS.Bounds(0, 0, 0, 0);
         const dest = GRID.alloc(width, height);
 
-        const left = Math.floor((dest.width - this.options.maxBlobWidth) / 2);
-        const top = Math.floor((dest.height - this.options.maxBlobHeight) / 2);
+        const left = Math.floor((dest.width - this.options.maxWidth) / 2);
+        const top = Math.floor((dest.height - this.options.maxHeight) / 2);
 
         let tries = 10;
 
@@ -66,8 +58,8 @@ export class Blob {
             dest.fill(0);
 
             // Fill relevant portion with noise based on the percentSeeded argument.
-            for (i = 0; i < this.options.maxBlobWidth; i++) {
-                for (j = 0; j < this.options.maxBlobHeight; j++) {
+            for (i = 0; i < this.options.maxWidth; i++) {
+                for (j = 0; j < this.options.maxHeight; j++) {
                     dest[i + left][j + top] = random.chance(
                         this.options.percentSeeded
                     )
@@ -77,9 +69,9 @@ export class Blob {
             }
 
             // Some iterations of cellular automata
-            for (k = 0; k < this.options.roundCount; k++) {
+            for (k = 0; k < this.options.rounds; k++) {
                 if (!this._cellularAutomataRound(dest)) {
-                    k = this.options.roundCount; // cellularAutomataRound did not make any changes
+                    k = this.options.rounds; // cellularAutomataRound did not make any changes
                 }
             }
 
@@ -109,8 +101,8 @@ export class Blob {
             // Figure out the top blob's height and width:
             dest.valueBounds(topBlobNumber, bounds);
         } while (
-            (bounds.width < this.options.minBlobWidth ||
-                bounds.height < this.options.minBlobHeight ||
+            (bounds.width < this.options.minWidth ||
+                bounds.height < this.options.minHeight ||
                 topBlobNumber == 0) &&
             --tries
         );
@@ -177,4 +169,8 @@ export function fillBlob(
 ): UTILS.Bounds {
     const blob = new Blob(opts);
     return blob.carve(grid.width, grid.height, (x, y) => (grid[x][y] = 1));
+}
+
+export function make(opts: Partial<BlobConfig> = {}) {
+    return new Blob(opts);
 }

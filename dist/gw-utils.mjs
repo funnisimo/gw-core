@@ -1,3 +1,5 @@
+import { RNG } from 'rot-js';
+
 /**
  * GW.utils
  * @module utils
@@ -683,11 +685,6 @@ var utils = {
     forRect: forRect
 };
 
-const RANDOM_CONFIG = {
-    make: () => {
-        return Math.random.bind(Math);
-    },
-};
 function lotteryDrawArray(rand, frequencies) {
     let i, maxFreq, randIndex;
     maxFreq = 0;
@@ -721,25 +718,27 @@ function lotteryDrawObject(rand, weights) {
     return entries[index][0];
 }
 class Random {
+    // static configure(opts: Partial<RandomConfig>) {
+    //     if (opts.make) {
+    //         if (typeof opts.make !== 'function')
+    //             throw new Error('Random make parameter must be a function.');
+    //         if (typeof opts.make(12345) !== 'function')
+    //             throw new Error(
+    //                 'Random make function must accept a numeric seed and return a random function.'
+    //             );
+    //         RANDOM_CONFIG.make = opts.make;
+    //         random.seed();
+    //         cosmetic.seed();
+    //     }
+    // }
     constructor() {
-        this._fn = RANDOM_CONFIG.make();
-    }
-    static configure(opts) {
-        if (opts.make) {
-            if (typeof opts.make !== 'function')
-                throw new Error('Random make parameter must be a function.');
-            if (typeof opts.make(12345) !== 'function')
-                throw new Error('Random make function must accept a numeric seed and return a random function.');
-            RANDOM_CONFIG.make = opts.make;
-            random.seed();
-            cosmetic.seed();
-        }
+        this._fn = RNG.clone();
     }
     seed(val) {
-        this._fn = RANDOM_CONFIG.make(val);
+        this._fn.setSeed(val);
     }
     value() {
-        return this._fn();
+        return this._fn.getUniform();
     }
     float() {
         return this.value();
@@ -749,7 +748,7 @@ class Random {
         if (max <= 0)
             return 0;
         max = max || Number.MAX_SAFE_INTEGER;
-        return Math.floor(this._fn() * max);
+        return Math.floor(this.value() * max);
     }
     int(max = 0) {
         return this.number(max);
@@ -5786,11 +5785,11 @@ var effect = {
 class Blob {
     constructor(opts = {}) {
         this.options = {
-            roundCount: 5,
-            minBlobWidth: 10,
-            minBlobHeight: 10,
-            maxBlobWidth: 40,
-            maxBlobHeight: 20,
+            rounds: 5,
+            minWidth: 10,
+            minHeight: 10,
+            maxWidth: 40,
+            maxHeight: 20,
             percentSeeded: 50,
             birthParameters: 'ffffffttt',
             survivalParameters: 'ffffttttt',
@@ -5798,13 +5797,13 @@ class Blob {
         Object.assign(this.options, opts);
         this.options.birthParameters = this.options.birthParameters.toLowerCase();
         this.options.survivalParameters = this.options.survivalParameters.toLowerCase();
-        if (this.options.minBlobWidth >= this.options.maxBlobWidth) {
-            this.options.minBlobWidth = Math.round(0.75 * this.options.maxBlobWidth);
-            this.options.maxBlobWidth = Math.round(1.25 * this.options.maxBlobWidth);
+        if (this.options.minWidth >= this.options.maxWidth) {
+            this.options.minWidth = Math.round(0.75 * this.options.maxWidth);
+            this.options.maxWidth = Math.round(1.25 * this.options.maxWidth);
         }
-        if (this.options.minBlobHeight >= this.options.maxBlobHeight) {
-            this.options.minBlobHeight = Math.round(0.75 * this.options.maxBlobHeight);
-            this.options.maxBlobHeight = Math.round(1.25 * this.options.maxBlobHeight);
+        if (this.options.minHeight >= this.options.maxHeight) {
+            this.options.minHeight = Math.round(0.75 * this.options.maxHeight);
+            this.options.maxHeight = Math.round(1.25 * this.options.maxHeight);
         }
     }
     carve(width, height, setFn) {
@@ -5812,25 +5811,25 @@ class Blob {
         let blobNumber, blobSize, topBlobNumber, topBlobSize;
         let bounds = new Bounds(0, 0, 0, 0);
         const dest = alloc(width, height);
-        const left = Math.floor((dest.width - this.options.maxBlobWidth) / 2);
-        const top = Math.floor((dest.height - this.options.maxBlobHeight) / 2);
+        const left = Math.floor((dest.width - this.options.maxWidth) / 2);
+        const top = Math.floor((dest.height - this.options.maxHeight) / 2);
         let tries = 10;
         // Generate blobs until they satisfy the minBlobWidth and minBlobHeight restraints
         do {
             // Clear buffer.
             dest.fill(0);
             // Fill relevant portion with noise based on the percentSeeded argument.
-            for (i = 0; i < this.options.maxBlobWidth; i++) {
-                for (j = 0; j < this.options.maxBlobHeight; j++) {
+            for (i = 0; i < this.options.maxWidth; i++) {
+                for (j = 0; j < this.options.maxHeight; j++) {
                     dest[i + left][j + top] = random.chance(this.options.percentSeeded)
                         ? 1
                         : 0;
                 }
             }
             // Some iterations of cellular automata
-            for (k = 0; k < this.options.roundCount; k++) {
+            for (k = 0; k < this.options.rounds; k++) {
                 if (!this._cellularAutomataRound(dest)) {
-                    k = this.options.roundCount; // cellularAutomataRound did not make any changes
+                    k = this.options.rounds; // cellularAutomataRound did not make any changes
                 }
             }
             // Now to measure the result. These are best-of variables; start them out at worst-case values.
@@ -5855,8 +5854,8 @@ class Blob {
             }
             // Figure out the top blob's height and width:
             dest.valueBounds(topBlobNumber, bounds);
-        } while ((bounds.width < this.options.minBlobWidth ||
-            bounds.height < this.options.minBlobHeight ||
+        } while ((bounds.width < this.options.minWidth ||
+            bounds.height < this.options.minHeight ||
             topBlobNumber == 0) &&
             --tries);
         // Replace the winning blob with 1's, and everything else with 0's:
@@ -5909,11 +5908,15 @@ function fillBlob(grid, opts = {}) {
     const blob = new Blob(opts);
     return blob.carve(grid.width, grid.height, (x, y) => (grid[x][y] = 1));
 }
+function make$9(opts = {}) {
+    return new Blob(opts);
+}
 
 var blob = {
     __proto__: null,
     Blob: Blob,
-    fillBlob: fillBlob
+    fillBlob: fillBlob,
+    make: make$9
 };
 
 export { Random, blob, index$1 as canvas, color, colors, config, cosmetic, data, effect, events, flag, flags, fov, frequency, grid, io, loop, make, message, path, random, range, scheduler, index$2 as sprite, sprites, index as text, types, utils };

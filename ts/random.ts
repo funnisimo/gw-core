@@ -1,18 +1,24 @@
 import { BasicObject } from './types';
 import * as Utils from './utils';
+import * as ROT from 'rot-js';
 
-export type RandomFunction = () => number;
-export type SeedFunction = (seed?: number) => RandomFunction;
+// export type RandomFunction = () => number;
+// export type SeedFunction = (seed?: number) => RandomFunction;
 
-export interface RandomConfig {
-    make: SeedFunction;
-}
+// export interface RandomConfig {
+//     make: SeedFunction;
+// }
 
-const RANDOM_CONFIG: RandomConfig = {
-    make: () => {
-        return Math.random.bind(Math);
-    },
-};
+// const RANDOM_CONFIG: RandomConfig = {
+//     make: (seed?: number) => {
+//         let rng = ROT.RNG;
+//         if (seed) {
+//             rng = ROT.RNG.clone();
+//             rng.setSeed(seed);
+//         }
+//         return rng.getUniform.bind(ROT.RNG);
+//     },
+// };
 
 export type WeightedArray = number[];
 
@@ -55,32 +61,32 @@ function lotteryDrawObject(rand: Random, weights: WeightedObject) {
 }
 
 export class Random {
-    private _fn: RandomFunction;
+    private _fn: typeof ROT.RNG;
 
-    static configure(opts: Partial<RandomConfig>) {
-        if (opts.make) {
-            if (typeof opts.make !== 'function')
-                throw new Error('Random make parameter must be a function.');
-            if (typeof opts.make(12345) !== 'function')
-                throw new Error(
-                    'Random make function must accept a numeric seed and return a random function.'
-                );
-            RANDOM_CONFIG.make = opts.make;
-            random.seed();
-            cosmetic.seed();
-        }
-    }
+    // static configure(opts: Partial<RandomConfig>) {
+    //     if (opts.make) {
+    //         if (typeof opts.make !== 'function')
+    //             throw new Error('Random make parameter must be a function.');
+    //         if (typeof opts.make(12345) !== 'function')
+    //             throw new Error(
+    //                 'Random make function must accept a numeric seed and return a random function.'
+    //             );
+    //         RANDOM_CONFIG.make = opts.make;
+    //         random.seed();
+    //         cosmetic.seed();
+    //     }
+    // }
 
     constructor() {
-        this._fn = RANDOM_CONFIG.make();
+        this._fn = ROT.RNG.clone();
     }
 
-    seed(val?: number) {
-        this._fn = RANDOM_CONFIG.make(val);
+    seed(val: number) {
+        this._fn.setSeed(val);
     }
 
     value() {
-        return this._fn();
+        return this._fn.getUniform();
     }
 
     float() {
@@ -91,7 +97,7 @@ export class Random {
         // @ts-ignore
         if (max <= 0) return 0;
         max = max || Number.MAX_SAFE_INTEGER;
-        return Math.floor(this._fn() * max);
+        return Math.floor(this.value() * max);
     }
 
     int(max: number = 0) {

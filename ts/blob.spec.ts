@@ -1,5 +1,5 @@
 import * as GW from './index';
-import * as UTILS from '../test/utils';
+// import * as UTILS from '../test/utils';
 
 describe('Blob', () => {
     let a: GW.grid.NumGrid;
@@ -39,7 +39,7 @@ describe('Blob', () => {
     });
 
     test('fillBlob', () => {
-        UTILS.mockRandom(12345);
+        GW.random.seed(12345);
         a = GW.grid.alloc(50, 50);
 
         const blob = new GW.blob.Blob({
@@ -52,10 +52,10 @@ describe('Blob', () => {
 
         let results = blob.carve(a.width, a.height, (x, y) => (a[x][y] = 1));
         expect(results).toEqual({
-            x: 17,
-            y: 25,
-            width: 16,
-            height: 9,
+            x: 16,
+            y: 23,
+            width: 18,
+            height: 12,
         });
 
         // force an odd return from '_cellularAutomataRound'
@@ -67,10 +67,10 @@ describe('Blob', () => {
         results = blob.carve(a.width, a.height, (x, y) => (a[x][y] = 1));
 
         expect(results).toEqual({
-            x: 18,
+            x: 23,
             y: 15,
-            width: 10,
-            height: 20,
+            width: 12,
+            height: 14,
         });
     });
 });
