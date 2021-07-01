@@ -13,10 +13,10 @@ describe('Blob', () => {
         expect(a.count(1)).toEqual(0);
 
         GW.blob.fillBlob(a, {
-            minBlobWidth: 4,
-            minBlobHeight: 4,
-            maxBlobWidth: 30,
-            maxBlobHeight: 15,
+            minWidth: 4,
+            minHeight: 4,
+            maxWidth: 30,
+            maxHeight: 15,
             percentSeeded: 55,
         });
         expect(a.count(1)).toBeGreaterThan(10);
@@ -28,10 +28,10 @@ describe('Blob', () => {
         expect(a.count(1)).toEqual(0);
 
         GW.blob.fillBlob(a, {
-            minBlobWidth: 12,
-            minBlobHeight: 12,
-            maxBlobWidth: 10,
-            maxBlobHeight: 10,
+            minWidth: 12,
+            minHeight: 12,
+            maxWidth: 10,
+            maxHeight: 10,
             percentSeeded: 55,
         });
 
@@ -43,10 +43,10 @@ describe('Blob', () => {
         a = GW.grid.alloc(50, 50);
 
         const blob = new GW.blob.Blob({
-            minBlobWidth: 5,
-            minBlobHeight: 5,
-            maxBlobWidth: 20,
-            maxBlobHeight: 20,
+            minWidth: 5,
+            minHeight: 5,
+            maxWidth: 20,
+            maxHeight: 20,
             percentSeeded: 55,
         });
 

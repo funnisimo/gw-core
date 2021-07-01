@@ -227,7 +227,7 @@ export function makeEffects(opts: any): EffectFn[] {
             const setup = effectTypes[key];
             if (!setup) return;
 
-            const effect = setup(value);
+            const effect = setup(value, opts);
             if (effect) {
                 results.push(effect);
             }
@@ -295,7 +295,7 @@ export function resetAll() {
     Object.values(effects).forEach((e) => e.reset());
 }
 
-export type EffectMakeFn = (config: any) => EffectFn | null;
+export type EffectMakeFn = (config: any, effect: any) => EffectFn | null;
 export const effectTypes: Record<string, EffectMakeFn> = {};
 
 export function installType(id: string, fn: EffectMakeFn) {

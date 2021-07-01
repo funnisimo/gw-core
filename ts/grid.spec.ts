@@ -22,6 +22,17 @@ describe('GW.grid', () => {
         expect(a[9][9]).toEqual(0);
         expect(a.hasXY(0, 0)).toBeTruthy();
 
+        GW.grid.free(a);
+        GW.grid.free(a); // Can free multiple times
+
+        const b = GW.grid.alloc(10, 10, 0);
+        expect(b).toBe(a);
+        const c = GW.grid.alloc(10, 10, 0);
+        expect(c).not.toBe(a);
+
+        GW.grid.free(c);
+        GW.grid.free(b);
+
         expect(() => GW.grid.alloc(0, 4)).toThrow();
         expect(() => GW.grid.alloc(4, 0)).toThrow();
     });
@@ -47,6 +58,18 @@ describe('GW.grid', () => {
         expect(b[0][0]).toEqual(0);
         expect(b.x).toBeUndefined();
         expect(b.y).toBeUndefined();
+        GW.grid.free(b);
+    });
+
+    test('alloc a clone', () => {
+        a = GW.grid.alloc(10, 10);
+        a.update(() => GW.random.number(100) + 1);
+        expect(a[0][0]).toBeGreaterThan(0);
+
+        const b = GW.grid.alloc(a);
+        b.forEach((v, x, y) => expect(a.get(x, y)).toEqual(v));
+
+        GW.grid.free(a);
         GW.grid.free(b);
     });
 

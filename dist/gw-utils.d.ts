@@ -398,6 +398,7 @@ declare function getLineThru(fromX: number, fromY: number, toX: number, toY: num
 declare function forCircle(x: number, y: number, radius: number, fn: XYFunc): void;
 declare function forRect(width: number, height: number, fn: XYFunc): void;
 declare function forRect(x: number, y: number, width: number, height: number, fn: XYFunc): void;
+declare function arcCount(x: number, y: number, testFn: XYMatchFunc): number;
 
 type utils_d_BasicObject = BasicObject;
 type utils_d_Loc = Loc;
@@ -473,6 +474,7 @@ declare const utils_d_getLine: typeof getLine;
 declare const utils_d_getLineThru: typeof getLineThru;
 declare const utils_d_forCircle: typeof forCircle;
 declare const utils_d_forRect: typeof forRect;
+declare const utils_d_arcCount: typeof arcCount;
 declare namespace utils_d {
   export {
     utils_d_BasicObject as BasicObject,
@@ -548,6 +550,7 @@ declare namespace utils_d {
     utils_d_getLineThru as getLineThru,
     utils_d_forCircle as forCircle,
     utils_d_forRect as forRect,
+    utils_d_arcCount as arcCount,
   };
 }
 
@@ -644,7 +647,9 @@ declare class Grid<T> extends Array<Array<T>> {
 declare class NumGrid extends Grid<number> {
     x?: number;
     y?: number;
-    static alloc(w: number, h: number, v?: GridInit<number> | number): NumGrid;
+    static alloc(w: number, h: number, v: GridInit<number> | number): NumGrid;
+    static alloc(w: number, h: number): NumGrid;
+    static alloc(source: NumGrid): NumGrid;
     static free(grid: NumGrid): void;
     constructor(w: number, h: number, v?: GridInit<number> | number);
     protected _resize(width: number, height: number, v?: GridInit<number> | number): void;
@@ -815,20 +820,22 @@ declare namespace io_d {
 
 interface FovStrategy {
     isBlocked: (x: number, y: number) => boolean;
-    calcRadius: (x: number, y: number) => number;
+    calcRadius?: (x: number, y: number) => number;
     setVisible: (x: number, y: number, v: number) => void;
-    hasXY: (x: number, y: number) => boolean;
+    hasXY?: (x: number, y: number) => boolean;
+    debug?: (...args: any[]) => void;
 }
 declare class FOV {
     protected _isBlocked: (x: number, y: number) => boolean;
     protected _calcRadius: (x: number, y: number) => number;
     protected _setVisible: (x: number, y: number, v: number) => void;
     protected _hasXY: (x: number, y: number) => boolean;
+    protected _debug: (...args: any[]) => void;
     protected _startX: number;
     protected _startY: number;
     protected _maxRadius: number;
     constructor(strategy: FovStrategy);
-    calculate(x: number, y: number, maxRadius: number): void;
+    calculate(x: number, y: number, maxRadius?: number): void;
     castLight(row: number, startSlope: number, endSlope: number, xx: number, xy: number, yx: number, yy: number): void;
 }
 
@@ -847,7 +854,7 @@ declare const OBSTRUCTION = -2;
 declare const AVOIDED = 10;
 declare const NO_PATH = 30000;
 declare type BlockedFn = (toX: number, toY: number, fromX: number, fromY: number, distanceMap: NumGrid) => boolean;
-declare function calculateDistances(distanceMap: NumGrid, destinationX: number, destinationY: number, costMap: NumGrid, eightWays?: boolean): void;
+declare function calculateDistances(distanceMap: NumGrid, destinationX: number, destinationY: number, costMap: NumGrid, eightWays?: boolean, maxDistance?: number): void;
 declare function nextStep(distanceMap: NumGrid, x: number, y: number, isBlocked: BlockedFn, useDiagonals?: boolean): Loc;
 declare function getPath(distanceMap: NumGrid, originX: number, originY: number, isBlocked: BlockedFn): number[][] | null;
 
@@ -1498,7 +1505,7 @@ declare function from$3(opts: Effect | string | null | undefined): Effect | null
 declare function install$3(id: string, effect: Effect | any): any;
 declare function installAll$1(effects: Record<string, Effect | any>): void;
 declare function resetAll(): void;
-declare type EffectMakeFn = (config: any) => EffectFn | null;
+declare type EffectMakeFn = (config: any, effect: any) => EffectFn | null;
 declare const effectTypes: Record<string, EffectMakeFn>;
 declare function installType(id: string, fn: EffectMakeFn): void;
 declare function fire(effect: Effect | any, map: MapType, x: number, y: number, ctx?: any): Promise<boolean>;

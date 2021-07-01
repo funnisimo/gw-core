@@ -618,6 +618,37 @@
             }
         }
     }
+    // ARC COUNT
+    // Rotates around the cell, counting up the number of distinct strings of neighbors with the same test result in a single revolution.
+    //		Zero means there are no impassable tiles adjacent.
+    //		One means it is adjacent to a wall.
+    //		Two means it is in a hallway or something similar.
+    //		Three means it is the center of a T-intersection or something similar.
+    //		Four means it is in the intersection of two hallways.
+    //		Five or more means there is a bug.
+    function arcCount(x, y, testFn) {
+        let oldX, oldY, newX, newY;
+        // brogueAssert(grid.hasXY(x, y));
+        let arcCount = 0;
+        let matchCount = 0;
+        for (let dir = 0; dir < CLOCK_DIRS.length; dir++) {
+            oldX = x + CLOCK_DIRS[(dir + 7) % 8][0];
+            oldY = y + CLOCK_DIRS[(dir + 7) % 8][1];
+            newX = x + CLOCK_DIRS[dir][0];
+            newY = y + CLOCK_DIRS[dir][1];
+            // Counts every transition from passable to impassable or vice-versa on the way around the cell:
+            const newOk = testFn(newX, newY);
+            const oldOk = testFn(oldX, oldY);
+            if (newOk)
+                ++matchCount;
+            if (newOk != oldOk) {
+                arcCount++;
+            }
+        }
+        if (arcCount == 0 && matchCount)
+            return 1;
+        return Math.floor(arcCount / 2); // Since we added one when we entered a wall and another when we left.
+    }
 
     var utils = {
         __proto__: null,
@@ -686,7 +717,8 @@
         getLine: getLine,
         getLineThru: getLineThru,
         forCircle: forCircle,
-        forRect: forRect
+        forRect: forRect,
+        arcCount: arcCount
     };
 
     function lotteryDrawArray(rand, frequencies) {
@@ -1100,7 +1132,6 @@
     };
 
     const DIRS$1 = DIRS;
-    const CDIRS = CLOCK_DIRS;
     function makeArray(l, fn) {
         if (fn === undefined)
             return new Array(l).fill(0);
@@ -1410,30 +1441,9 @@
         //		Four means it is in the intersection of two hallways.
         //		Five or more means there is a bug.
         arcCount(x, y, testFn) {
-            let oldX, oldY, newX, newY;
-            // brogueAssert(grid.hasXY(x, y));
-            testFn = testFn || IS_NONZERO;
-            let arcCount = 0;
-            let matchCount = 0;
-            for (let dir = 0; dir < CDIRS.length; dir++) {
-                oldX = x + CDIRS[(dir + 7) % 8][0];
-                oldY = y + CDIRS[(dir + 7) % 8][1];
-                newX = x + CDIRS[dir][0];
-                newY = y + CDIRS[dir][1];
-                // Counts every transition from passable to impassable or vice-versa on the way around the cell:
-                const newOk = this.hasXY(newX, newY) &&
-                    testFn(this[newX][newY], newX, newY, this);
-                const oldOk = this.hasXY(oldX, oldY) &&
-                    testFn(this[oldX][oldY], oldX, oldY, this);
-                if (newOk)
-                    ++matchCount;
-                if (newOk != oldOk) {
-                    arcCount++;
-                }
-            }
-            if (arcCount == 0 && matchCount)
-                return 1;
-            return Math.floor(arcCount / 2); // Since we added one when we entered a wall and another when we left.
+            return arcCount(x, y, (i, j) => {
+                return this.hasXY(i, j) && testFn(this[i][j], i, j, this);
+            });
         }
     }
     const GRID_CACHE = [];
@@ -1441,7 +1451,16 @@
         constructor(w, h, v = 0) {
             super(w, h, v);
         }
-        static alloc(w, h, v = 0) {
+        static alloc(...args) {
+            let w = args[0] || 0;
+            let h = args[1] || 0;
+            let v = args[2] || 0;
+            if (args.length == 1) {
+                // clone from NumGrid
+                w = args[0].width;
+                h = args[0].height;
+                v = args[0].get.bind(args[0]);
+            }
             if (!w || !h)
                 throw new Error('Grid alloc requires width and height parameters.');
             let grid = GRID_CACHE.pop();
@@ -2042,8 +2061,9 @@
             this._calcRadius = strategy.calcRadius || calcRadius;
             this._setVisible = strategy.setVisible;
             this._hasXY = strategy.hasXY || TRUE;
+            this._debug = strategy.debug || NOOP;
         }
-        calculate(x, y, maxRadius) {
+        calculate(x, y, maxRadius = 10) {
             this._setVisible(x, y, 1);
             this._startX = x;
             this._startY = y;
@@ -2058,14 +2078,14 @@
         // NOTE: slope starts a 1 and ends at 0.
         castLight(row, startSlope, endSlope, xx, xy, yx, yy) {
             if (row >= this._maxRadius) {
-                // fov.debug('CAST: row=%d, start=%d, end=%d, row >= maxRadius => cancel', row, startSlope.toFixed(2), endSlope.toFixed(2));
+                this._debug('CAST: row=%d, start=%d, end=%d, row >= maxRadius => cancel', row, startSlope.toFixed(2), endSlope.toFixed(2));
                 return;
             }
             if (startSlope < endSlope) {
-                // fov.debug('CAST: row=%d, start=%d, end=%d, start < end => cancel', row, startSlope.toFixed(2), endSlope.toFixed(2));
+                this._debug('CAST: row=%d, start=%d, end=%d, start < end => cancel', row, startSlope.toFixed(2), endSlope.toFixed(2));
                 return;
             }
-            // fov.debug('CAST: row=%d, start=%d, end=%d, x=%d,%d, y=%d,%d', row, startSlope.toFixed(2), endSlope.toFixed(2), xx, xy, yx, yy);
+            this._debug('CAST: row=%d, start=%d, end=%d, x=%d,%d, y=%d,%d', row, startSlope.toFixed(2), endSlope.toFixed(2), xx, xy, yx, yy);
             let nextStart = startSlope;
             let blocked = false;
             let deltaY = -row;
@@ -2082,7 +2102,7 @@
                     // nextStart = innerSlope;
                     continue;
                 }
-                // fov.debug('- test %d,%d ... start=%d, min=%d, max=%d, end=%d, dx=%d, dy=%d', currentX, currentY, startSlope.toFixed(2), maxSlope.toFixed(2), minSlope.toFixed(2), endSlope.toFixed(2), deltaX, deltaY);
+                this._debug('- test %d,%d ... start=%d, min=%d, max=%d, end=%d, dx=%d, dy=%d', currentX, currentY, startSlope.toFixed(2), maxSlope.toFixed(2), minSlope.toFixed(2), endSlope.toFixed(2), deltaX, deltaY);
                 if (startSlope < minSlope) {
                     blocked = this._isBlocked(currentX, currentY);
                     continue;
@@ -2095,13 +2115,13 @@
                 if (radius < this._maxRadius) {
                     const bright = 1 - radius / this._maxRadius;
                     this._setVisible(currentX, currentY, bright);
-                    // fov.debug('       - visible');
+                    this._debug('       - visible');
                 }
                 if (blocked) {
                     //previous cell was a blocking one
                     if (this._isBlocked(currentX, currentY)) {
                         //hit a wall
-                        // fov.debug('       - blocked ... nextStart: %d', innerSlope.toFixed(2));
+                        this._debug('       - blocked ... nextStart: %d', innerSlope.toFixed(2));
                         nextStart = innerSlope;
                         continue;
                     }
@@ -2110,9 +2130,10 @@
                     }
                 }
                 else {
-                    if (this._isBlocked(currentX, currentY) && row < this._maxRadius) {
+                    if (this._isBlocked(currentX, currentY) &&
+                        row < this._maxRadius) {
                         //hit a wall within sight line
-                        // fov.debug('       - blocked ... start:%d, end:%d, nextStart: %d', nextStart.toFixed(2), outerSlope.toFixed(2), innerSlope.toFixed(2));
+                        this._debug('       - blocked ... start:%d, end:%d, nextStart: %d', nextStart.toFixed(2), outerSlope.toFixed(2), innerSlope.toFixed(2));
                         blocked = true;
                         this.castLight(row + 1, nextStart, outerSlope, xx, xy, yx, yy);
                         nextStart = innerSlope;
@@ -2414,9 +2435,11 @@
     // GW.path.costFn = baseCostFunction;
     // GW.path.simpleCost = baseCostFunction.bind(undefined, 0, null, false);
     // GW.path.costForActor = ((actor) => baseCostFunction.bind(undefined, GW.actor.forbiddenFlags(actor), actor, actor !== GW.PLAYER));
-    function calculateDistances(distanceMap, destinationX, destinationY, costMap, eightWays = false) {
+    function calculateDistances(distanceMap, destinationX, destinationY, costMap, eightWays = false, maxDistance = NO_PATH) {
         const width = distanceMap.length;
         const height = distanceMap[0].length;
+        if (maxDistance <= 0)
+            maxDistance = NO_PATH;
         if (!DIJKSTRA_MAP ||
             DIJKSTRA_MAP.width < width ||
             DIJKSTRA_MAP.height < height) {
@@ -2432,7 +2455,7 @@
                     : costMap[i][j];
             }
         }
-        clear(DIJKSTRA_MAP, NO_PATH, eightWays);
+        clear(DIJKSTRA_MAP, maxDistance, eightWays);
         setDistance(DIJKSTRA_MAP, destinationX, destinationY, 0);
         batchOutput(DIJKSTRA_MAP, distanceMap);
         // TODO - Add this where called!
@@ -2476,7 +2499,8 @@
             newX = x + DIRS[dir][0];
             newY = y + DIRS[dir][1];
             blocked = isBlocked(newX, newY, x, y, distanceMap);
-            if (!blocked && distanceMap[x][y] - distanceMap[newX][newY] > bestScore) {
+            if (!blocked &&
+                distanceMap[x][y] - distanceMap[newX][newY] > bestScore) {
                 bestDir = dir;
                 bestScore = distanceMap[x][y] - distanceMap[newX][newY];
             }
@@ -2496,7 +2520,8 @@
                 if (distanceMap[i][j] >= 0 && distanceMap[i][j] < NO_PATH) {
                     dist = (i - x) * (i - x) + (j - y) * (j - y);
                     if (dist < closestDistance ||
-                        (dist == closestDistance && distanceMap[i][j] < lowestMapScore)) {
+                        (dist == closestDistance &&
+                            distanceMap[i][j] < lowestMapScore)) {
                         locX = i;
                         locY = j;
                         closestDistance = dist;
@@ -5655,7 +5680,7 @@ void main() {
                 const setup = effectTypes[key];
                 if (!setup)
                     return;
-                const effect = setup(value);
+                const effect = setup(value, opts);
                 if (effect) {
                     results.push(effect);
                 }

@@ -770,3 +770,35 @@ export function forRect(...args: any[]) {
         }
     }
 }
+
+// ARC COUNT
+// Rotates around the cell, counting up the number of distinct strings of neighbors with the same test result in a single revolution.
+//		Zero means there are no impassable tiles adjacent.
+//		One means it is adjacent to a wall.
+//		Two means it is in a hallway or something similar.
+//		Three means it is the center of a T-intersection or something similar.
+//		Four means it is in the intersection of two hallways.
+//		Five or more means there is a bug.
+export function arcCount(x: number, y: number, testFn: XYMatchFunc) {
+    let oldX, oldY, newX, newY;
+
+    // brogueAssert(grid.hasXY(x, y));
+
+    let arcCount = 0;
+    let matchCount = 0;
+    for (let dir = 0; dir < CLOCK_DIRS.length; dir++) {
+        oldX = x + CLOCK_DIRS[(dir + 7) % 8][0];
+        oldY = y + CLOCK_DIRS[(dir + 7) % 8][1];
+        newX = x + CLOCK_DIRS[dir][0];
+        newY = y + CLOCK_DIRS[dir][1];
+        // Counts every transition from passable to impassable or vice-versa on the way around the cell:
+        const newOk = testFn(newX, newY);
+        const oldOk = testFn(oldX, oldY);
+        if (newOk) ++matchCount;
+        if (newOk != oldOk) {
+            arcCount++;
+        }
+    }
+    if (arcCount == 0 && matchCount) return 1;
+    return Math.floor(arcCount / 2); // Since we added one when we entered a wall and another when we left.
+}

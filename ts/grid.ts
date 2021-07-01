@@ -4,7 +4,6 @@ import { make as Make } from './gw';
 
 type Loc = Utils.Loc;
 const DIRS = Utils.DIRS;
-const CDIRS = Utils.CLOCK_DIRS;
 
 // var GRID = {};
 // export { GRID as grid };
@@ -409,33 +408,9 @@ export class Grid<T> extends Array<Array<T>> {
     //		Four means it is in the intersection of two hallways.
     //		Five or more means there is a bug.
     arcCount(x: number, y: number, testFn: GridMatch<T>) {
-        let oldX, oldY, newX, newY;
-
-        // brogueAssert(grid.hasXY(x, y));
-
-        testFn = testFn || Utils.IS_NONZERO;
-
-        let arcCount = 0;
-        let matchCount = 0;
-        for (let dir = 0; dir < CDIRS.length; dir++) {
-            oldX = x + CDIRS[(dir + 7) % 8][0];
-            oldY = y + CDIRS[(dir + 7) % 8][1];
-            newX = x + CDIRS[dir][0];
-            newY = y + CDIRS[dir][1];
-            // Counts every transition from passable to impassable or vice-versa on the way around the cell:
-            const newOk =
-                this.hasXY(newX, newY) &&
-                testFn(this[newX][newY], newX, newY, this);
-            const oldOk =
-                this.hasXY(oldX, oldY) &&
-                testFn(this[oldX][oldY], oldX, oldY, this);
-            if (newOk) ++matchCount;
-            if (newOk != oldOk) {
-                arcCount++;
-            }
-        }
-        if (arcCount == 0 && matchCount) return 1;
-        return Math.floor(arcCount / 2); // Since we added one when we entered a wall and another when we left.
+        return Utils.arcCount(x, y, (i, j) => {
+            return this.hasXY(i, j) && testFn(this[i][j], i, j, this);
+        });
     }
 }
 
@@ -454,11 +429,21 @@ export class NumGrid extends Grid<number> {
     public x?: number;
     public y?: number;
 
-    static alloc(
-        w: number,
-        h: number,
-        v: GridInit<number> | number = 0
-    ): NumGrid {
+    static alloc(w: number, h: number, v: GridInit<number> | number): NumGrid;
+    static alloc(w: number, h: number): NumGrid;
+    static alloc(source: NumGrid): NumGrid;
+    static alloc(...args: any[]): NumGrid {
+        let w = args[0] || 0;
+        let h = args[1] || 0;
+        let v = args[2] || 0;
+
+        if (args.length == 1) {
+            // clone from NumGrid
+            w = args[0].width;
+            h = args[0].height;
+            v = args[0].get.bind(args[0]);
+        }
+
         if (!w || !h)
             throw new Error('Grid alloc requires width and height parameters.');
 
