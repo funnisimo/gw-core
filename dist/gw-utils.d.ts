@@ -1477,81 +1477,74 @@ declare enum Flags {
     E_EMIT_EVENT
 }
 interface EffectCtx {
-    actor?: ActorType;
-    target?: ActorType;
-    item?: ItemType;
+    actor?: ActorType | null;
+    target?: ActorType | null;
+    item?: ItemType | null;
     layer?: number;
     force?: boolean;
+    grid: NumGrid;
+    [id: string]: any;
 }
-declare type EffectFn = (this: any, effect: Effect, x: number, y: number) => Promise<boolean> | boolean;
-declare class Effect {
-    map: MapType | null;
-    ctx: any;
-    protected effects: EffectFn[];
-    flags: Flags;
+interface EffectConfig {
+    flags: FlagBase;
     chance: number;
-    next: Effect | string | null;
-    id: string | null;
-    protected _grid: NumGrid | null;
-    constructor(effects: EffectFn | EffectFn[], next?: Effect | string | null);
-    get grid(): NumGrid;
-    fire(map: MapType, x: number, y: number, ctx?: any): Promise<boolean>;
-    reset(): void;
+    next: Partial<EffectConfig> | string | null;
+    [id: string]: any;
 }
-declare function makeEffects(opts: any): EffectFn[];
-declare const effects: Record<string, Effect>;
-declare function make$7(opts: string | any): Effect;
-declare function from$3(opts: Effect | string | null | undefined): Effect | null;
-declare function install$3(id: string, effect: Effect | any): any;
-declare function installAll$1(effects: Record<string, Effect | any>): void;
+declare type EffectBase = Partial<EffectConfig> | Function;
+interface EffectInfo {
+    flags: number;
+    chance: number;
+    next: EffectInfo | string | null;
+    id: string;
+    [id: string]: any;
+}
+interface EffectHandler {
+    make: (src: Partial<EffectConfig>, dest: EffectInfo) => boolean;
+    fire: (config: EffectInfo, map: MapType, x: number, y: number, ctx: EffectCtx) => boolean | Promise<boolean>;
+}
+declare function fire(effect: EffectInfo | string, map: MapType, x: number, y: number, ctx_?: Partial<EffectCtx>): Promise<boolean>;
+declare function reset(effect: EffectInfo): void;
 declare function resetAll(): void;
-declare type EffectMakeFn = (config: any, effect: any) => EffectFn | null;
-declare const effectTypes: Record<string, EffectMakeFn>;
-declare function installType(id: string, fn: EffectMakeFn): void;
-declare function fire(effect: Effect | any, map: MapType, x: number, y: number, ctx?: any): Promise<boolean>;
-declare function effectEmit(this: any, effect: Effect, x: number, y: number): Promise<boolean>;
-declare function makeEmit(config: any): EffectFn;
-declare function effectMessage(this: any, effect: Effect, x: number, y: number): Promise<boolean>;
-declare function makeMessage(config: any): EffectFn;
+declare const effects: Record<string, EffectInfo>;
+declare function make$7(opts: EffectBase): EffectInfo;
+declare function from$3(opts: EffectBase | string): EffectInfo;
+declare function install$3(id: string, config: Partial<EffectConfig>): EffectInfo;
+declare function installAll$1(effects: Record<string, Partial<EffectConfig>>): void;
+declare const effectTypes: Record<string, EffectHandler>;
+declare function installType(id: string, effectType: EffectHandler): void;
 
 type effect_d_Flags = Flags;
 declare const effect_d_Flags: typeof Flags;
 type effect_d_EffectCtx = EffectCtx;
-type effect_d_EffectFn = EffectFn;
-type effect_d_Effect = Effect;
-declare const effect_d_Effect: typeof Effect;
-declare const effect_d_makeEffects: typeof makeEffects;
-declare const effect_d_effects: typeof effects;
+type effect_d_EffectConfig = EffectConfig;
+type effect_d_EffectBase = EffectBase;
+type effect_d_EffectInfo = EffectInfo;
+type effect_d_EffectHandler = EffectHandler;
+declare const effect_d_fire: typeof fire;
+declare const effect_d_reset: typeof reset;
 declare const effect_d_resetAll: typeof resetAll;
-type effect_d_EffectMakeFn = EffectMakeFn;
+declare const effect_d_effects: typeof effects;
 declare const effect_d_effectTypes: typeof effectTypes;
 declare const effect_d_installType: typeof installType;
-declare const effect_d_fire: typeof fire;
-declare const effect_d_effectEmit: typeof effectEmit;
-declare const effect_d_makeEmit: typeof makeEmit;
-declare const effect_d_effectMessage: typeof effectMessage;
-declare const effect_d_makeMessage: typeof makeMessage;
 declare namespace effect_d {
   export {
     effect_d_Flags as Flags,
     effect_d_EffectCtx as EffectCtx,
-    effect_d_EffectFn as EffectFn,
-    effect_d_Effect as Effect,
-    effect_d_makeEffects as makeEffects,
+    effect_d_EffectConfig as EffectConfig,
+    effect_d_EffectBase as EffectBase,
+    effect_d_EffectInfo as EffectInfo,
+    effect_d_EffectHandler as EffectHandler,
+    effect_d_fire as fire,
+    effect_d_reset as reset,
+    effect_d_resetAll as resetAll,
     effect_d_effects as effects,
     make$7 as make,
     from$3 as from,
     install$3 as install,
     installAll$1 as installAll,
-    effect_d_resetAll as resetAll,
-    effect_d_EffectMakeFn as EffectMakeFn,
     effect_d_effectTypes as effectTypes,
     effect_d_installType as installType,
-    effect_d_fire as fire,
-    effect_d_effectEmit as effectEmit,
-    effect_d_makeEmit as makeEmit,
-    effect_d_effectMessage as effectMessage,
-    effect_d_makeMessage as makeMessage,
   };
 }
 

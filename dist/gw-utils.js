@@ -5559,178 +5559,102 @@ void main() {
         Flags[Flags["E_RESURRECT_ALLY"] = fl(29)] = "E_RESURRECT_ALLY";
         Flags[Flags["E_EMIT_EVENT"] = fl(30)] = "E_EMIT_EVENT";
     })(Flags || (Flags = {}));
-    class Effect {
-        constructor(effects, next = null) {
-            // if (typeof opts === 'function') {
-            //     opts = {
-            //         fn: opts,
-            //     };
-            // }
-            // public tile: string | null;
-            // public fn: Function | null;
-            // public item: string | null;
-            // public message: string | null;
-            // public lightFlare: string | null;
-            // public flashColor: Color.Color | null;
-            // public fired: boolean;
-            // public emit: string | null;
-            this.map = null;
-            this.ctx = {};
-            this.effects = [];
-            this.flags = 0;
-            this.chance = 0;
-            // public chance: number;
-            // public volume: number;
-            // public spread: number;
-            // public radius: number;
-            // public decrement: number;
-            // public flags: number;
-            // public matchTile: string | null;
-            this.next = null;
-            this.id = null;
-            this._grid = null;
-            // this.tile = opts.tile || null;
-            // this.fn = opts.fn || null;
-            // this.item = opts.item || null;
-            // this.chance = opts.chance || 0;
-            // this.volume = opts.volume || 0;
-            // // spawning pattern:
-            // this.spread = opts.spread || 0;
-            // this.radius = opts.radius || 0;
-            // this.decrement = opts.decrement || 0;
-            // this.flags = Flag.from(Flags, opts.flags);
-            // this.matchTile = opts.matchTile || opts.needs || 0; /* ENUM tileType */
-            // this.next = opts.next || null; /* ENUM makeEventTypes */
-            // this.message = opts.message || null;
-            // this.lightFlare = opts.flare || null;
-            // this.flashColor = opts.flash ? Color.from(opts.flash) : null;
-            // // this.effectRadius = radius || 0;
-            // this.fired = false;
-            // this.emit = opts.emit || null; // name of the effect to emit when activated
-            // this.id = opts.id || null;
-            if (!Array.isArray(effects))
-                effects = [effects];
-            this.effects = effects.slice();
-            this.next = next;
+    async function fire(effect, map, x, y, ctx_ = {}) {
+        if (!effect)
+            return false;
+        if (typeof effect === 'string') {
+            const name = effect;
+            effect = from$3(name);
+            if (!effect)
+                throw new Error('Failed to find effect: ' + name);
         }
-        get grid() {
-            if (!this._grid) {
-                this._grid = alloc(this.map.width, this.map.height);
+        const ctx = ctx_;
+        if (!ctx.force && effect.chance && !random.chance(effect.chance, 10000))
+            return false;
+        const grid$1 = (ctx.grid = alloc(map.width, map.height));
+        let didSomething = true;
+        const handlers = Object.values(effectTypes);
+        for (let h of handlers) {
+            if (await h.fire(effect, map, x, y, ctx)) {
+                didSomething = true;
             }
-            return this._grid;
         }
-        async fire(map, x, y, ctx = {}) {
-            let didSomething = false;
-            this.map = map;
-            this.ctx = ctx;
-            if (this.chance && !random.chance(this.chance))
-                return false;
-            // fire all of my functions
-            for (let i = 0; i < this.effects.length; ++i) {
-                const eff = this.effects[i];
-                didSomething = (await eff(this, x, y)) || didSomething;
-            }
-            // bookkeeping
-            if (didSomething &&
-                map.isVisible(x, y) &&
-                !(this.flags & Flags.E_NO_MARK_FIRED)) {
-                this.flags |= Flags.E_FIRED;
-            }
-            // do the next effect - if applicable
-            if (this.next &&
-                (didSomething || this.flags & Flags.E_NEXT_ALWAYS) &&
-                !data.gameHasEnded) {
-                let next = this.next;
-                if (typeof next === 'string') {
-                    next = effects[next] || null;
-                }
-                if (!next) {
-                    ERROR('Unknown next effect - ' + this.next);
-                }
-                else if (this._grid && this.flags & Flags.E_NEXT_EVERYWHERE) {
-                    await this.grid.forEachAsync(async (v, i, j) => {
-                        if (!v)
-                            return;
-                        // @ts-ignore
-                        didSomething = (await next.fire(map, i, j)) || didSomething;
-                    });
-                }
-                else {
-                    didSomething = (await next.fire(map, x, y)) || didSomething;
-                }
-            }
-            if (this._grid) {
-                free(this._grid);
-                this._grid = null;
-            }
-            return didSomething;
+        // bookkeeping
+        if (didSomething &&
+            map.isVisible(x, y) &&
+            !(effect.flags & Flags.E_NO_MARK_FIRED)) {
+            effect.flags |= Flags.E_FIRED;
         }
-        // resetMessageDisplayed
-        reset() {
-            this.flags &= ~Flags.E_FIRED;
-        }
-    }
-    function makeEffects(opts) {
-        const results = [];
-        Object.entries(opts).forEach(([key, value]) => {
-            if (key === 'fn') {
-                results.push(value);
+        // do the next effect - if applicable
+        if (effect.next &&
+            (didSomething || effect.flags & Flags.E_NEXT_ALWAYS) &&
+            !data.gameHasEnded) {
+            const nextInfo = typeof effect.next === 'string' ? from$3(effect.next) : effect.next;
+            if (effect.flags & Flags.E_NEXT_EVERYWHERE) {
+                await grid$1.forEachAsync(async (v, i, j) => {
+                    if (!v)
+                        return;
+                    // @ts-ignore
+                    await fire(nextInfo, map, i, j, ctx);
+                });
             }
             else {
-                const setup = effectTypes[key];
-                if (!setup)
-                    return;
-                const effect = setup(value, opts);
-                if (effect) {
-                    results.push(effect);
-                }
+                await fire(nextInfo, map, x, y, ctx);
             }
-        });
-        return results;
+        }
+        free(grid$1);
+        return didSomething;
+    }
+    // resetMessageDisplayed
+    function reset(effect) {
+        effect.flags &= ~Flags.E_FIRED;
+    }
+    function resetAll() {
+        Object.values(effects).forEach((e) => reset(e));
     }
     const effects = {};
     function make$8(opts) {
+        var _a;
         if (!opts)
-            ERROR('opts required to make effect.');
+            throw new Error('opts required to make effect.');
         if (typeof opts === 'string') {
-            const cached = effects[opts];
-            if (cached)
-                return cached;
-            ERROR('string effect config must be id of installed effect.');
+            throw new Error('Cannot make effect from string: ' + opts);
         }
-        else if (typeof opts === 'function') {
+        if (typeof opts === 'function') {
             opts = { fn: opts };
         }
-        // now make effects
-        const fns = makeEffects(opts);
-        let next = opts.next;
-        if (next && typeof next !== 'string') {
-            next = from$3(next);
+        // now make base effect stuff
+        const info = {
+            flags: from$1(Flags, opts.flags),
+            chance: (_a = opts.chance) !== null && _a !== void 0 ? _a : 0,
+            next: null,
+            id: opts.id || 'n/a',
+        };
+        if (opts.next) {
+            if (typeof opts.next === 'string') {
+                info.next = opts.next;
+            }
+            else {
+                info.next = make$8(opts.next);
+            }
         }
-        const te = new Effect(fns, next);
-        te.flags = from$1(Flags, opts.flags);
-        te.chance = opts.chance || 0;
-        return te;
+        // and all the handlers
+        Object.values(effectTypes).forEach((v) => v.make(opts, info));
+        return info;
     }
-    make.effect = make$8;
     function from$3(opts) {
         if (!opts)
-            return null;
+            throw new Error('Cannot make effect from null | undefined');
         if (typeof opts === 'string') {
             const effect = effects[opts];
             if (effect)
                 return effect;
-            ERROR('Unknown effect - ' + opts);
-        }
-        else if (opts instanceof Effect) {
-            return opts;
+            throw new Error('Unknown effect - ' + opts);
         }
         return make$8(opts);
     }
-    function install$3(id, effect) {
-        if (!(effect instanceof Effect)) {
-            effect = make$8(effect);
-        }
+    function install$3(id, config) {
+        const effect = make$8(config);
         effects[id] = effect;
         effect.id = id;
         return effect;
@@ -5740,75 +5664,93 @@ void main() {
             install$3(id, config);
         });
     }
-    function resetAll() {
-        Object.values(effects).forEach((e) => e.reset());
-    }
     const effectTypes = {};
-    function installType(id, fn) {
-        effectTypes[id] = fn;
+    function installType(id, effectType) {
+        effectTypes[id] = effectType;
     }
-    async function fire(effect, map, x, y, ctx = {}) {
-        const e = from$3(effect);
-        if (!e)
+    //////////////////////////////////////////////
+    // FN
+    class FnEffect {
+        make(src, dest) {
+            if (!src.fn)
+                return true;
+            if (typeof src.fn !== 'function') {
+                throw new Error('fn effects must be functions.');
+            }
+            dest.fn = src.fn;
+            return true;
+        }
+        async fire(config, map, x, y, ctx) {
+            if (config.fn) {
+                return await config.fn(config, map, x, y, ctx);
+            }
             return false;
-        return e.fire(map, x, y, ctx);
+        }
     }
+    installType('fn', new FnEffect());
     //////////////////////////////////////////////
     // EMIT
-    async function effectEmit(effect, x, y) {
-        if (this.emit) {
-            await emit(this.emit, x, y, effect);
+    class EmitEffect {
+        make(src, dest) {
+            if (!src.emit)
+                return true;
+            if (typeof src.emit !== 'string') {
+                throw new Error('emit effects must be string name to emit: { emit: "EVENT" }');
+            }
+            dest.emit = src.emit;
             return true;
         }
-        return false;
-    }
-    function makeEmit(config) {
-        if (typeof config !== 'string') {
-            ERROR('Emit must be configured with name of event to emit');
+        async fire(config, _map, x, y, ctx) {
+            if (config.emit) {
+                return await emit(config.emit, x, y, ctx);
+            }
+            return false;
         }
-        return effectEmit.bind({ emit: config });
     }
-    installType('emit', makeEmit);
+    installType('emit', new EmitEffect());
     //////////////////////////////////////////////
     // MESSAGE
-    async function effectMessage(effect, x, y) {
-        const map = effect.map;
-        const fired = effect.flags & Flags.E_FIRED ? true : false;
-        const ctx = effect.ctx;
-        ctx.actor = ctx.actor || map.actorAt(x, y);
-        ctx.item = ctx.item || map.itemAt(x, y);
-        if (this.message && this.message.length && !fired && map.isVisible(x, y)) {
-            add(this.message, effect.ctx);
+    class MessageEffect {
+        make(src, dest) {
+            if (!src.message)
+                return true;
+            if (typeof src.message !== 'string') {
+                throw new Error('Emit must be configured with name of event to emit');
+            }
+            dest.message = src.message;
             return true;
         }
-        return false;
-    }
-    function makeMessage(config) {
-        if (typeof config !== 'string') {
-            ERROR('Emit must be configured with name of event to emit');
+        async fire(config, map, x, y, ctx) {
+            if (!config.message)
+                return false;
+            const fired = config.flags & Flags.E_FIRED ? true : false;
+            ctx.actor = ctx.actor || (map === null || map === void 0 ? void 0 : map.actorAt(x, y));
+            ctx.item = ctx.item || (map === null || map === void 0 ? void 0 : map.itemAt(x, y));
+            if (config.message &&
+                config.message.length &&
+                !fired &&
+                map.isVisible(x, y)) {
+                add(config.message, ctx);
+                return true;
+            }
+            return false;
         }
-        return effectMessage.bind({ message: config });
     }
-    installType('message', makeMessage);
+    installType('message', new MessageEffect());
 
     var effect = {
         __proto__: null,
         get Flags () { return Flags; },
-        Effect: Effect,
-        makeEffects: makeEffects,
+        fire: fire,
+        reset: reset,
+        resetAll: resetAll,
         effects: effects,
         make: make$8,
         from: from$3,
         install: install$3,
         installAll: installAll$1,
-        resetAll: resetAll,
         effectTypes: effectTypes,
-        installType: installType,
-        fire: fire,
-        effectEmit: effectEmit,
-        makeEmit: makeEmit,
-        effectMessage: effectMessage,
-        makeMessage: makeMessage
+        installType: installType
     };
 
     class Blob {

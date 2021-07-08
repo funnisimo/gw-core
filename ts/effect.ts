@@ -1,7 +1,6 @@
-import { fl as Fl, from as fromFlag } from './flag';
+import { fl as Fl, from as fromFlag, FlagBase } from './flag';
 import * as Types from './types';
-import { make as Make, data as DATA } from './gw';
-import * as Utils from './utils';
+import { data as DATA } from './gw';
 import * as Msg from './message';
 import * as Events from './events';
 import * as Grid from './grid';
@@ -66,307 +65,283 @@ export enum Flags {
 }
 
 export interface EffectCtx {
-    actor?: Types.ActorType;
-    target?: Types.ActorType;
-    item?: Types.ItemType;
+    actor?: Types.ActorType | null;
+    target?: Types.ActorType | null;
+    item?: Types.ItemType | null;
     layer?: number;
     force?: boolean;
+    grid: Grid.NumGrid;
+
+    [id: string]: any; // other config from subtypes
 }
 
-export type EffectFn = (
-    this: any,
-    effect: Effect,
-    x: number,
-    y: number
-) => Promise<boolean> | boolean;
+export interface EffectConfig {
+    flags: FlagBase;
+    chance: number;
+    next: Partial<EffectConfig> | string | null;
 
-export class Effect {
-    // public tile: string | null;
-    // public fn: Function | null;
-    // public item: string | null;
-    // public message: string | null;
-    // public lightFlare: string | null;
-    // public flashColor: Color.Color | null;
-    // public fired: boolean;
-    // public emit: string | null;
+    [id: string]: any; // other config from subtypes
+}
 
-    public map: Types.MapType | null = null;
-    public ctx: any = {};
+export type EffectBase = Partial<EffectConfig> | Function;
 
-    protected effects: EffectFn[] = [];
-    public flags: Flags = 0;
-    public chance = 0;
+export interface EffectInfo {
+    flags: number;
+    chance: number;
+    next: EffectInfo | string | null;
+    id: string;
 
-    // public chance: number;
-    // public volume: number;
-    // public spread: number;
-    // public radius: number;
-    // public decrement: number;
-    // public flags: number;
-    // public matchTile: string | null;
+    [id: string]: any; // other config from subtypes
+}
 
-    public next: Effect | string | null = null;
-    public id: string | null = null;
-
-    protected _grid: Grid.NumGrid | null = null;
-
-    constructor(
-        effects: EffectFn | EffectFn[],
-        next: Effect | string | null = null
-    ) {
-        // if (typeof opts === 'function') {
-        //     opts = {
-        //         fn: opts,
-        //     };
-        // }
-
-        // this.tile = opts.tile || null;
-        // this.fn = opts.fn || null;
-        // this.item = opts.item || null;
-        // this.chance = opts.chance || 0;
-        // this.volume = opts.volume || 0;
-
-        // // spawning pattern:
-        // this.spread = opts.spread || 0;
-        // this.radius = opts.radius || 0;
-        // this.decrement = opts.decrement || 0;
-        // this.flags = Flag.from(Flags, opts.flags);
-        // this.matchTile = opts.matchTile || opts.needs || 0; /* ENUM tileType */
-        // this.next = opts.next || null; /* ENUM makeEventTypes */
-
-        // this.message = opts.message || null;
-        // this.lightFlare = opts.flare || null;
-        // this.flashColor = opts.flash ? Color.from(opts.flash) : null;
-        // // this.effectRadius = radius || 0;
-        // this.fired = false;
-        // this.emit = opts.emit || null; // name of the effect to emit when activated
-        // this.id = opts.id || null;
-
-        if (!Array.isArray(effects)) effects = [effects];
-        this.effects = effects.slice();
-        this.next = next;
-    }
-
-    get grid() {
-        if (!this._grid) {
-            this._grid = Grid.alloc(this.map!.width, this.map!.height);
-        }
-        return this._grid;
-    }
-
-    async fire(
+export interface EffectHandler {
+    make: (src: Partial<EffectConfig>, dest: EffectInfo) => boolean;
+    fire: (
+        config: EffectInfo,
         map: Types.MapType,
         x: number,
         y: number,
-        ctx: any = {}
-    ): Promise<boolean> {
-        let didSomething = false;
-        this.map = map;
-        this.ctx = ctx;
-
-        if (this.chance && !random.chance(this.chance)) return false;
-
-        // fire all of my functions
-        for (let i = 0; i < this.effects.length; ++i) {
-            const eff = this.effects[i];
-            didSomething = (await eff(this, x, y)) || didSomething;
-        }
-
-        // bookkeeping
-        if (
-            didSomething &&
-            map.isVisible(x, y) &&
-            !(this.flags & Flags.E_NO_MARK_FIRED)
-        ) {
-            this.flags |= Flags.E_FIRED;
-        }
-
-        // do the next effect - if applicable
-        if (
-            this.next &&
-            (didSomething || this.flags & Flags.E_NEXT_ALWAYS) &&
-            !DATA.gameHasEnded
-        ) {
-            let next = this.next;
-            if (typeof next === 'string') {
-                next = effects[next] || null;
-            }
-            if (!next) {
-                Utils.ERROR('Unknown next effect - ' + this.next);
-            } else if (this._grid && this.flags & Flags.E_NEXT_EVERYWHERE) {
-                await this.grid.forEachAsync(async (v, i, j) => {
-                    if (!v) return;
-                    // @ts-ignore
-                    didSomething = (await next.fire(map, i, j)) || didSomething;
-                });
-            } else {
-                didSomething = (await next.fire(map, x, y)) || didSomething;
-            }
-        }
-
-        if (this._grid) {
-            Grid.free(this._grid);
-            this._grid = null;
-        }
-
-        return didSomething;
-    }
-
-    // resetMessageDisplayed
-    reset() {
-        this.flags &= ~Flags.E_FIRED;
-    }
+        ctx: EffectCtx
+    ) => boolean | Promise<boolean>;
 }
 
-export function makeEffects(opts: any): EffectFn[] {
-    const results: EffectFn[] = [];
-    Object.entries(opts).forEach(([key, value]) => {
-        if (key === 'fn') {
-            results.push(value as EffectFn);
+export async function fire(
+    effect: EffectInfo | string,
+    map: Types.MapType,
+    x: number,
+    y: number,
+    ctx_: Partial<EffectCtx> = {}
+) {
+    if (!effect) return false;
+    if (typeof effect === 'string') {
+        const name = effect;
+        effect = from(name);
+        if (!effect) throw new Error('Failed to find effect: ' + name);
+    }
+
+    const ctx = ctx_ as EffectCtx;
+    if (!ctx.force && effect.chance && !random.chance(effect.chance, 10000))
+        return false;
+
+    const grid = (ctx.grid = Grid.alloc(map.width, map.height));
+
+    let didSomething = true;
+    const handlers = Object.values(effectTypes);
+    for (let h of handlers) {
+        if (await h.fire(effect, map, x, y, ctx)) {
+            didSomething = true;
+        }
+    }
+
+    // bookkeeping
+    if (
+        didSomething &&
+        map.isVisible(x, y) &&
+        !(effect.flags & Flags.E_NO_MARK_FIRED)
+    ) {
+        effect.flags |= Flags.E_FIRED;
+    }
+
+    // do the next effect - if applicable
+    if (
+        effect.next &&
+        (didSomething || effect.flags & Flags.E_NEXT_ALWAYS) &&
+        !DATA.gameHasEnded
+    ) {
+        const nextInfo =
+            typeof effect.next === 'string' ? from(effect.next) : effect.next;
+        if (effect.flags & Flags.E_NEXT_EVERYWHERE) {
+            await grid.forEachAsync(async (v, i, j) => {
+                if (!v) return;
+                // @ts-ignore
+                await fire(nextInfo, map, i, j, ctx);
+            });
         } else {
-            const setup = effectTypes[key];
-            if (!setup) return;
-
-            const effect = setup(value, opts);
-            if (effect) {
-                results.push(effect);
-            }
+            await fire(nextInfo, map, x, y, ctx);
         }
-    });
-    return results;
+    }
+
+    Grid.free(grid);
+    return didSomething;
 }
 
-export const effects: Record<string, Effect> = {};
+// resetMessageDisplayed
+export function reset(effect: EffectInfo) {
+    effect.flags &= ~Flags.E_FIRED;
+}
 
-export function make(opts: string | any): Effect {
-    if (!opts) Utils.ERROR('opts required to make effect.');
+export function resetAll() {
+    Object.values(effects).forEach((e) => reset(e));
+}
+
+export const effects: Record<string, EffectInfo> = {};
+
+export function make(opts: EffectBase): EffectInfo {
+    if (!opts) throw new Error('opts required to make effect.');
+
     if (typeof opts === 'string') {
-        const cached = effects[opts];
-        if (cached) return cached;
-        Utils.ERROR('string effect config must be id of installed effect.');
-    } else if (typeof opts === 'function') {
+        throw new Error('Cannot make effect from string: ' + opts);
+    }
+
+    if (typeof opts === 'function') {
         opts = { fn: opts };
     }
 
-    // now make effects
-    const fns: EffectFn[] = makeEffects(opts);
+    // now make base effect stuff
+    const info: EffectInfo = {
+        flags: fromFlag(Flags, opts.flags),
+        chance: opts.chance ?? 0, // 0 means always fire
+        next: null,
+        id: opts.id || 'n/a',
+    };
 
-    let next: Effect | string | null = opts.next;
-    if (next && typeof next !== 'string') {
-        next = from(next);
+    if (opts.next) {
+        if (typeof opts.next === 'string') {
+            info.next = opts.next;
+        } else {
+            info.next = make(opts.next);
+        }
     }
 
-    const te = new Effect(fns, next);
-    te.flags = fromFlag(Flags, opts.flags);
-    te.chance = opts.chance || 0;
-    return te;
+    // and all the handlers
+    Object.values(effectTypes).forEach((v: EffectHandler) =>
+        v.make(opts, info)
+    );
+
+    return info;
 }
 
-Make.effect = make;
-
-export function from(opts: Effect | string | null | undefined): Effect | null {
-    if (!opts) return null;
+export function from(opts: EffectBase | string): EffectInfo {
+    if (!opts) throw new Error('Cannot make effect from null | undefined');
     if (typeof opts === 'string') {
         const effect = effects[opts];
         if (effect) return effect;
-        Utils.ERROR('Unknown effect - ' + opts);
-    } else if (opts instanceof Effect) {
-        return opts;
+        throw new Error('Unknown effect - ' + opts);
     }
     return make(opts);
 }
 
-export function install(id: string, effect: Effect | any) {
-    if (!(effect instanceof Effect)) {
-        effect = make(effect);
-    }
+export function install(id: string, config: Partial<EffectConfig>): EffectInfo {
+    const effect = make(config);
     effects[id] = effect;
     effect.id = id;
     return effect;
 }
 
-export function installAll(effects: Record<string, Effect | any>) {
+export function installAll(effects: Record<string, Partial<EffectConfig>>) {
     Object.entries(effects).forEach(([id, config]) => {
         install(id, config);
     });
 }
 
-export function resetAll() {
-    Object.values(effects).forEach((e) => e.reset());
+export const effectTypes: Record<string, EffectHandler> = {};
+
+export function installType(id: string, effectType: EffectHandler) {
+    effectTypes[id] = effectType;
 }
 
-export type EffectMakeFn = (config: any, effect: any) => EffectFn | null;
-export const effectTypes: Record<string, EffectMakeFn> = {};
+//////////////////////////////////////////////
+// FN
 
-export function installType(id: string, fn: EffectMakeFn) {
-    effectTypes[id] = fn;
+class FnEffect implements EffectHandler {
+    make(src: Partial<EffectConfig>, dest: EffectInfo): boolean {
+        if (!src.fn) return true;
+
+        if (typeof src.fn !== 'function') {
+            throw new Error('fn effects must be functions.');
+        }
+        dest.fn = src.fn;
+        return true;
+    }
+
+    async fire(
+        config: any,
+        map: Types.MapType,
+        x: number,
+        y: number,
+        ctx: Partial<EffectCtx>
+    ) {
+        if (config.fn) {
+            return await config.fn(config, map, x, y, ctx);
+        }
+        return false;
+    }
 }
 
-export async function fire(
-    effect: Effect | any,
-    map: Types.MapType,
-    x: number,
-    y: number,
-    ctx: any = {}
-) {
-    const e = from(effect);
-    if (!e) return false;
-
-    return e.fire(map, x, y, ctx);
-}
+installType('fn', new FnEffect());
 
 //////////////////////////////////////////////
 // EMIT
 
-export async function effectEmit(
-    this: any,
-    effect: Effect,
-    x: number,
-    y: number
-) {
-    if (this.emit) {
-        await Events.emit(this.emit, x, y, effect);
+class EmitEffect implements EffectHandler {
+    make(src: Partial<EffectConfig>, dest: EffectInfo): boolean {
+        if (!src.emit) return true;
+
+        if (typeof src.emit !== 'string') {
+            throw new Error(
+                'emit effects must be string name to emit: { emit: "EVENT" }'
+            );
+        }
+        dest.emit = src.emit;
         return true;
     }
-    return false;
-}
 
-export function makeEmit(config: any): EffectFn {
-    if (typeof config !== 'string') {
-        Utils.ERROR('Emit must be configured with name of event to emit');
+    async fire(
+        config: any,
+        _map: Types.MapType,
+        x: number,
+        y: number,
+        ctx: Partial<EffectCtx>
+    ) {
+        if (config.emit) {
+            return await Events.emit(config.emit, x, y, ctx);
+        }
+        return false;
     }
-    return effectEmit.bind({ emit: config });
 }
 
-installType('emit', makeEmit);
+installType('emit', new EmitEffect());
 
 //////////////////////////////////////////////
 // MESSAGE
 
-export async function effectMessage(
-    this: any,
-    effect: Effect,
-    x: number,
-    y: number
-) {
-    const map = effect.map!;
-    const fired = effect.flags & Flags.E_FIRED ? true : false;
-    const ctx = effect.ctx;
+class MessageEffect implements EffectHandler {
+    make(src: Partial<EffectConfig>, dest: EffectInfo): boolean {
+        if (!src.message) return true;
 
-    ctx.actor = ctx.actor || map.actorAt(x, y);
-    ctx.item = ctx.item || map.itemAt(x, y);
-    if (this.message && this.message.length && !fired && map!.isVisible(x, y)) {
-        Msg.add(this.message, effect.ctx);
+        if (typeof src.message !== 'string') {
+            throw new Error(
+                'Emit must be configured with name of event to emit'
+            );
+        }
+        dest.message = src.message;
         return true;
     }
-    return false;
-}
 
-export function makeMessage(config: any): EffectFn {
-    if (typeof config !== 'string') {
-        Utils.ERROR('Emit must be configured with name of event to emit');
+    async fire(
+        config: any,
+        map: Types.MapType,
+        x: number,
+        y: number,
+        ctx: Partial<EffectCtx>
+    ) {
+        if (!config.message) return false;
+
+        const fired = config.flags & Flags.E_FIRED ? true : false;
+
+        ctx.actor = ctx.actor || map?.actorAt(x, y);
+        ctx.item = ctx.item || map?.itemAt(x, y);
+        if (
+            config.message &&
+            config.message.length &&
+            !fired &&
+            map.isVisible(x, y)
+        ) {
+            Msg.add(config.message, ctx);
+            return true;
+        }
+        return false;
     }
-    return effectMessage.bind({ message: config });
 }
 
-installType('message', makeMessage);
+installType('message', new MessageEffect());
