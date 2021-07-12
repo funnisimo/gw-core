@@ -1,11 +1,11 @@
 import 'jest-extended';
-import '../test/matchers';
-import * as UTILS from '../test/utils';
-import * as Effect from './effect';
-import * as Events from './events';
-import * as MSG from './message';
-import * as TYPES from './types';
-import { data as DATA } from './gw';
+import '../../test/matchers';
+import * as UTILS from '../../test/utils';
+import * as Effect from '.';
+import * as Events from '../events';
+import * as MSG from '../message';
+import * as TYPES from '../types';
+import { data as DATA } from '../gw';
 
 describe('Effect', () => {
     afterEach(() => {

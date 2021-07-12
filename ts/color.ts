@@ -590,6 +590,7 @@ export function installSpread(name: string, ...args: any[]) {
     return c;
 }
 
+export const NONE = install('NONE', -1);
 const BLACK = install('black', 0x000);
 const WHITE = install('white', 0xfff);
 

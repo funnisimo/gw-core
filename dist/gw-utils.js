@@ -3743,6 +3743,7 @@ void main() {
         install$3('darkest_' + name, c.clone().darken(75));
         return c;
     }
+    const NONE = install$3('NONE', -1);
     const BLACK = install$3('black', 0x000);
     const WHITE = install$3('white', 0xfff);
     installSpread('teal', [30, 100, 100]);
@@ -3789,7 +3790,8 @@ void main() {
         relativeLuminance: relativeLuminance,
         distance: distance,
         install: install$3,
-        installSpread: installSpread
+        installSpread: installSpread,
+        NONE: NONE
     };
 
     class Mixer {

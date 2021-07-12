@@ -1,10 +1,10 @@
-import { fl as Fl, from as fromFlag, FlagBase } from './flag';
-import * as Types from './types';
-import { data as DATA } from './gw';
-import * as Msg from './message';
-import * as Events from './events';
-import * as Grid from './grid';
-import { random } from './random';
+import { fl as Fl, from as fromFlag, FlagBase } from '../flag';
+import * as Types from '../types';
+import { data as DATA } from '../gw';
+import * as Msg from '../message';
+import * as Events from '../events';
+import * as Grid from '../grid';
+import { random } from '../random';
 
 ///////////////////////////////////////////////////////
 // TILE EVENT

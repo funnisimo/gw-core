@@ -69,6 +69,7 @@ declare function install$3(name: string, info: ColorBase): Color;
 declare function install$3(name: string, ...rgb: ColorData): Color;
 declare function installSpread(name: string, info: ColorBase): Color;
 declare function installSpread(name: string, ...rgb: ColorData): Color;
+declare const NONE: Color;
 
 type color_ColorBase = ColorBase;
 declare const color_colors: typeof colors;
@@ -83,6 +84,7 @@ declare const color_swap: typeof swap;
 declare const color_relativeLuminance: typeof relativeLuminance;
 declare const color_distance: typeof distance;
 declare const color_installSpread: typeof installSpread;
+declare const color_NONE: typeof NONE;
 declare namespace color {
   export {
     color_ColorBase as ColorBase,
@@ -100,6 +102,7 @@ declare namespace color {
     color_distance as distance,
     install$3 as install,
     color_installSpread as installSpread,
+    color_NONE as NONE,
   };
 }
 
