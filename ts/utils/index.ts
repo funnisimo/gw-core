@@ -3,7 +3,7 @@
  * @module utils
  */
 
-import { BasicObject, Loc, XY, Chainable } from './types';
+import { BasicObject, Loc, XY, Chainable } from '../types';
 
 export { BasicObject, Loc, XY, Chainable };
 
