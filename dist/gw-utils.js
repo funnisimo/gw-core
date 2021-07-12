@@ -4,6 +4,28 @@
     (global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global.GW = global.GW || {}, global.ROT));
 }(this, (function (exports, ROT) { 'use strict';
 
+    function _interopNamespace(e) {
+        if (e && e.__esModule) return e;
+        var n = Object.create(null);
+        if (e) {
+            Object.keys(e).forEach(function (k) {
+                if (k !== 'default') {
+                    var d = Object.getOwnPropertyDescriptor(e, k);
+                    Object.defineProperty(n, k, d.get ? d : {
+                        enumerable: true,
+                        get: function () {
+                            return e[k];
+                        }
+                    });
+                }
+            });
+        }
+        n['default'] = e;
+        return n;
+    }
+
+    var ROT__namespace = /*#__PURE__*/_interopNamespace(ROT);
+
     /**
      * GW.utils
      * @module utils
@@ -15,7 +37,7 @@
     // - last 4 are diagonals
     //   >> rotate 90 degrees clockwise ==>> newIndex = 4 + (oldIndex + 1) % 4;
     //   >> opposite diagonal ==>> newIndex = 4 + (index + 2) % 4;
-    const DIRS = [
+    const DIRS$2 = [
         [0, -1],
         [1, 0],
         [0, 1],
@@ -153,7 +175,7 @@
     function eachNeighbor(x, y, fn, only4dirs = false) {
         const max = only4dirs ? 4 : 8;
         for (let i = 0; i < max; ++i) {
-            const dir = DIRS[i];
+            const dir = DIRS$2[i];
             const x1 = x + dir[0];
             const y1 = y + dir[1];
             fn(x1, y1);
@@ -162,7 +184,7 @@
     function matchingNeighbor(x, y, matchFn, only4dirs = false) {
         const maxIndex = only4dirs ? 4 : 8;
         for (let d = 0; d < maxIndex; ++d) {
-            const dir = DIRS[d];
+            const dir = DIRS$2[d];
             const i = x + dir[0];
             const j = y + dir[1];
             if (matchFn(i, j))
@@ -203,7 +225,7 @@
     function dirIndex(dir) {
         const x0 = x(dir);
         const y0 = y(dir);
-        return DIRS.findIndex((a) => a[0] == x0 && a[1] == y0);
+        return DIRS$2.findIndex((a) => a[0] == x0 && a[1] == y0);
     }
     function isOppositeDir(a, b) {
         if (a[0] + b[0] != 0)
@@ -652,7 +674,7 @@
 
     var utils = {
         __proto__: null,
-        DIRS: DIRS,
+        DIRS: DIRS$2,
         NO_DIRECTION: NO_DIRECTION,
         UP: UP,
         RIGHT: RIGHT,
@@ -768,7 +790,7 @@
         //     }
         // }
         constructor() {
-            this._fn = ROT.RNG.clone();
+            this._fn = ROT__namespace.RNG.clone();
         }
         seed(val) {
             this._fn.setSeed(val);
@@ -941,7 +963,6 @@
                     }
                 }
             }
-            // brogueAssert(false);
             return [-1, -1]; // should never reach this point
         }
     }
@@ -950,7 +971,7 @@
 
     const data = {};
     const config = {};
-    const make = {};
+    const make$9 = {};
     const flags = {};
 
     class Range {
@@ -985,7 +1006,7 @@
             return `${this.lo}-${this.hi}`;
         }
     }
-    function make$1(config, rng) {
+    function make$8(config, rng) {
         if (!config)
             return new Range(0, 0, 0, rng);
         if (config instanceof Range)
@@ -1037,18 +1058,18 @@
         }
         throw new Error('Not a valid range - ' + config);
     }
-    make.range = make$1;
-    const from = make$1;
+    make$9.range = make$8;
+    const from$4 = make$8;
     function asFn(config, rng) {
-        const range = make$1(config, rng);
+        const range = make$8(config, rng);
         return () => range.value();
     }
 
     var range = {
         __proto__: null,
         Range: Range,
-        make: make$1,
-        from: from,
+        make: make$8,
+        from: from$4,
         asFn: asFn
     };
 
@@ -1073,7 +1094,7 @@
         }
         return out.join(" | ");
     }
-    function from$1(obj, ...args) {
+    function from$3(obj, ...args) {
         let result = 0;
         for (let index = 0; index < args.length; ++index) {
             let value = args[index];
@@ -1128,10 +1149,10 @@
         __proto__: null,
         fl: fl,
         toString: toString,
-        from: from$1
+        from: from$3
     };
 
-    const DIRS$1 = DIRS;
+    const DIRS$1 = DIRS$2;
     function makeArray(l, fn) {
         if (fn === undefined)
             return new Array(l).fill(0);
@@ -1622,14 +1643,14 @@
     // Grid.fillBlob = fillBlob;
     const alloc = NumGrid.alloc.bind(NumGrid);
     const free = NumGrid.free.bind(NumGrid);
-    function make$2(w, h, v) {
+    function make$7(w, h, v) {
         if (v === undefined)
             return new NumGrid(w, h, 0);
         if (typeof v === 'number')
             return new NumGrid(w, h, v);
         return new Grid(w, h, v);
     }
-    make.grid = make$2;
+    make$9.grid = make$7;
     function offsetZip(destGrid, srcGrid, srcToDestX, srcToDestY, value) {
         const fn = typeof value === 'function'
             ? value
@@ -1664,7 +1685,7 @@
         NumGrid: NumGrid,
         alloc: alloc,
         free: free,
-        make: make$2,
+        make: make$7,
         offsetZip: offsetZip,
         intersection: intersection,
         unite: unite
@@ -2022,12 +2043,12 @@
             return this.pause(5 * 60 * 1000); // 5 min
         }
     }
-    function make$3() {
+    function make$6() {
         return new Loop();
     }
-    make.loop = make$3;
+    make$9.loop = make$6;
     // Makes a default global loop that you access through these funcitons...
-    const loop = make$3();
+    const loop = make$6();
 
     var io = {
         __proto__: null,
@@ -2047,7 +2068,7 @@
         onkeydown: onkeydown,
         makeMouseEvent: makeMouseEvent,
         Loop: Loop,
-        make: make$3,
+        make: make$6,
         loop: loop
     };
 
@@ -2070,7 +2091,7 @@
             this._maxRadius = maxRadius + 1;
             // uses the diagonals
             for (let i = 4; i < 8; ++i) {
-                const d = DIRS[i];
+                const d = DIRS$2[i];
                 this.castLight(1, 1.0, 0.0, 0, d[0], d[1], 0);
                 this.castLight(1, 1.0, 0.0, d[0], 0, 0, d[1]);
             }
@@ -2178,7 +2199,7 @@
     function getLink(map, x, y) {
         return map.links[x + map.width * y];
     }
-    const DIRS$2 = DIRS;
+    const DIRS = DIRS$2;
     function update(map) {
         let dir, dirs;
         let linkIndex;
@@ -2188,7 +2209,7 @@
         map.front.right = null;
         while (head != null) {
             for (dir = 0; dir < dirs; dir++) {
-                linkIndex = head.index + (DIRS$2[dir][0] + map.width * DIRS$2[dir][1]);
+                linkIndex = head.index + (DIRS[dir][0] + map.width * DIRS[dir][1]);
                 if (linkIndex < 0 || linkIndex >= map.width * map.height)
                     continue;
                 link = map.links[linkIndex];
@@ -2199,10 +2220,10 @@
                 if (dir >= 4) {
                     diagCost = 0.4142;
                     let way1, way1index, way2, way2index;
-                    way1index = head.index + DIRS$2[dir][0];
+                    way1index = head.index + DIRS[dir][0];
                     if (way1index < 0 || way1index >= map.width * map.height)
                         continue;
-                    way2index = head.index + map.width * DIRS$2[dir][1];
+                    way2index = head.index + map.width * DIRS[dir][1];
                     if (way2index < 0 || way2index >= map.width * map.height)
                         continue;
                     way1 = map.links[way1index];
@@ -2496,8 +2517,8 @@
         bestScore = 0;
         bestDir = NO_DIRECTION;
         for (dir = 0; dir < (useDiagonals ? 8 : 4); ++dir) {
-            newX = x + DIRS[dir][0];
-            newY = y + DIRS[dir][1];
+            newX = x + DIRS$2[dir][0];
+            newY = y + DIRS$2[dir][1];
             blocked = isBlocked(newX, newY, x, y, distanceMap);
             if (!blocked &&
                 distanceMap[x][y] - distanceMap[newX][newY] > bestScore) {
@@ -2505,7 +2526,7 @@
                 bestScore = distanceMap[x][y] - distanceMap[newX][newY];
             }
         }
-        return DIRS[bestDir] || null;
+        return DIRS$2[bestDir] || null;
     }
     function getClosestValidLocationOnMap(distanceMap, x, y) {
         let i, j, dist, closestDistance, lowestMapScore;
@@ -2746,7 +2767,7 @@
         emit: emit
     };
 
-    function make$4(v) {
+    function make$5(v) {
         if (v === undefined)
             return () => 100;
         if (v === null)
@@ -2793,7 +2814,7 @@
 
     var frequency = {
         __proto__: null,
-        make: make$4
+        make: make$5
     };
 
     class Scheduler {
@@ -3606,7 +3627,7 @@ void main() {
         }
         return c;
     }
-    function make$5(...args) {
+    function make$4(...args) {
         let arg = args[0];
         let base256 = args[1];
         if (args.length == 0)
@@ -3634,7 +3655,7 @@ void main() {
         }
         throw new Error('Failed to make color - unknown argument: ' + JSON.stringify(arg));
     }
-    make.color = make$5;
+    make$9.color = make$4;
     function from$2(...args) {
         const arg = args[0];
         if (arg instanceof Color)
@@ -3646,7 +3667,7 @@ void main() {
                 return fromName(arg);
             }
         }
-        return make$5(arg, args[1]);
+        return make$4(arg, args[1]);
     }
     // adjusts the luminosity of 2 colors to ensure there is enough separation between them
     function separate(a, b) {
@@ -3696,12 +3717,12 @@ void main() {
                 (a.b - b.b) * (a.b - b.b) * 0.3333)) /
             65025);
     }
-    function install(name, ...args) {
+    function install$3(name, ...args) {
         let info = args;
         if (args.length == 1) {
             info = args[0];
         }
-        const c = info instanceof Color ? info : make$5(info);
+        const c = info instanceof Color ? info : make$4(info);
         colors[name] = c;
         c.name = name;
         return c;
@@ -3709,21 +3730,21 @@ void main() {
     function installSpread(name, ...args) {
         let c;
         if (args.length == 1) {
-            c = install(name, args[0]);
+            c = install$3(name, args[0]);
         }
         else {
-            c = install(name, ...args);
+            c = install$3(name, ...args);
         }
-        install('light_' + name, c.clone().lighten(25));
-        install('lighter_' + name, c.clone().lighten(50));
-        install('lightest_' + name, c.clone().lighten(75));
-        install('dark_' + name, c.clone().darken(25));
-        install('darker_' + name, c.clone().darken(50));
-        install('darkest_' + name, c.clone().darken(75));
+        install$3('light_' + name, c.clone().lighten(25));
+        install$3('lighter_' + name, c.clone().lighten(50));
+        install$3('lightest_' + name, c.clone().lighten(75));
+        install$3('dark_' + name, c.clone().darken(25));
+        install$3('darker_' + name, c.clone().darken(50));
+        install$3('darkest_' + name, c.clone().darken(75));
         return c;
     }
-    const BLACK = install('black', 0x000);
-    const WHITE = install('white', 0xfff);
+    const BLACK = install$3('black', 0x000);
+    const WHITE = install$3('white', 0xfff);
     installSpread('teal', [30, 100, 100]);
     installSpread('brown', [60, 40, 0]);
     installSpread('tan', [80, 70, 55]); // 80, 67,		15);
@@ -3761,13 +3782,13 @@ void main() {
         fromCss: fromCss,
         fromName: fromName,
         fromNumber: fromNumber,
-        make: make$5,
+        make: make$4,
         from: from$2,
         separate: separate,
         swap: swap,
         relativeLuminance: relativeLuminance,
         distance: distance,
-        install: install,
+        install: install$3,
         installSpread: installSpread
     };
 
@@ -3896,7 +3917,7 @@ void main() {
             return `{ ch: ${this.ch}, fg: ${this.fg.toString(true)}, bg: ${this.bg.toString(true)} }`;
         }
     }
-    make.mixer = function (base) {
+    make$9.mixer = function (base) {
         return new Mixer(base);
     };
 
@@ -4476,7 +4497,7 @@ void main() {
         return output;
     }
 
-    function configure(opts = {}) {
+    function configure$1(opts = {}) {
         if (opts.fg !== undefined) {
             options.defaultFg = opts.fg;
         }
@@ -4494,7 +4515,7 @@ void main() {
         }
     }
 
-    var index = {
+    var index$2 = {
         __proto__: null,
         compile: compile,
         apply: apply,
@@ -4508,7 +4529,7 @@ void main() {
         removeColors: removeColors,
         wordWrap: wordWrap,
         splitIntoLines: splitIntoLines,
-        configure: configure,
+        configure: configure$1,
         addHelper: addHelper,
         options: options
     };
@@ -4709,7 +4730,7 @@ void main() {
             console.log(data.join('\n'));
         }
     }
-    make.dataBuffer = function (width, height) {
+    make$9.dataBuffer = function (width, height) {
         return new DataBuffer(width, height);
     };
     class Buffer extends DataBuffer {
@@ -5111,7 +5132,7 @@ void main() {
             this._ctx.putImageData(d, px, py);
         }
     }
-    function make$6(...args) {
+    function make$3(...args) {
         let width = args[0];
         let height = args[1];
         let opts = args[2];
@@ -5257,7 +5278,7 @@ void main() {
         BaseCanvas: BaseCanvas,
         Canvas: Canvas,
         Canvas2D: Canvas2D,
-        make: make$6,
+        make: make$3,
         Glyphs: Glyphs,
         DataBuffer: DataBuffer,
         Buffer: Buffer,
@@ -5268,13 +5289,9 @@ void main() {
         constructor(ch, fg, bg, opacity = 100) {
             if (!ch)
                 ch = null;
-            if (typeof fg !== 'number')
-                fg = from$2(fg);
-            if (typeof bg !== 'number')
-                bg = from$2(bg);
             this.ch = ch;
-            this.fg = fg;
-            this.bg = bg;
+            this.fg = from$2(fg);
+            this.bg = from$2(bg);
             this.opacity = opacity >= 0 ? opacity : 100;
         }
         clone() {
@@ -5282,7 +5299,7 @@ void main() {
         }
     }
     const sprites = {};
-    function make$7(...args) {
+    function make$2(...args) {
         let ch = null, fg = -1, bg = -1, opacity;
         if (args.length == 0) {
             return new Sprite(null, -1, -1);
@@ -5327,33 +5344,43 @@ void main() {
         if (typeof fg === 'string')
             fg = from$2(fg);
         else if (Array.isArray(fg))
-            fg = make$5(fg);
+            fg = make$4(fg);
         else if (fg === undefined || fg === null)
             fg = -1;
         if (typeof bg === 'string')
             bg = from$2(bg);
         else if (Array.isArray(bg))
-            bg = make$5(bg);
+            bg = make$4(bg);
         else if (bg === undefined || bg === null)
             bg = -1;
         return new Sprite(ch, fg, bg, opacity);
     }
-    make.sprite = make$7;
-    function install$1(name, ...args) {
+    make$9.sprite = make$2;
+    function from$1(...args) {
+        if (args.length == 1 && typeof args[0] === 'string') {
+            const sprite = sprites[args[0]];
+            if (!sprite)
+                throw new Error('Failed to find sprite: ' + args[0]);
+            return sprite;
+        }
+        return make$2(args);
+    }
+    function install$2(name, ...args) {
         let sprite;
         // @ts-ignore
-        sprite = make$7(...args);
+        sprite = make$2(...args);
         sprite.name = name;
         sprites[name] = sprite;
         return sprite;
     }
 
-    var index$2 = {
+    var index = {
         __proto__: null,
         Sprite: Sprite,
         sprites: sprites,
-        make: make$7,
-        install: install$1,
+        make: make$2,
+        from: from$1,
+        install: install$2,
         Mixer: Mixer
     };
 
@@ -5363,12 +5390,12 @@ void main() {
 
     const templates = {};
     config.message = config.message || {};
-    function install$2(id, msg) {
+    function install$1(id, msg) {
         const template = compile(msg);
         templates[id] = template;
     }
-    function installAll(config) {
-        Object.entries(config).forEach(([id, msg]) => install$2(id, msg));
+    function installAll$1(config) {
+        Object.entries(config).forEach(([id, msg]) => install$1(id, msg));
     }
     // messages
     const ARCHIVE = [];
@@ -5384,7 +5411,7 @@ void main() {
         }
         return NEEDS_UPDATE;
     }
-    function configure$1(opts) {
+    function configure(opts) {
         if (!opts)
             opts = {};
         ARCHIVE_LINES = opts.length || 30;
@@ -5501,10 +5528,10 @@ void main() {
     var message = {
         __proto__: null,
         templates: templates,
-        install: install$2,
-        installAll: installAll,
+        install: install$1,
+        installAll: installAll$1,
         needsUpdate: needsUpdate,
-        configure: configure$1,
+        configure: configure,
         add: add,
         fromActor: fromActor,
         forPlayer: forPlayer,
@@ -5564,7 +5591,7 @@ void main() {
             return false;
         if (typeof effect === 'string') {
             const name = effect;
-            effect = from$3(name);
+            effect = from(name);
             if (!effect)
                 throw new Error('Failed to find effect: ' + name);
         }
@@ -5589,7 +5616,7 @@ void main() {
         if (effect.next &&
             (didSomething || effect.flags & Flags.E_NEXT_ALWAYS) &&
             !data.gameHasEnded) {
-            const nextInfo = typeof effect.next === 'string' ? from$3(effect.next) : effect.next;
+            const nextInfo = typeof effect.next === 'string' ? from(effect.next) : effect.next;
             if (effect.flags & Flags.E_NEXT_EVERYWHERE) {
                 await grid$1.forEachAsync(async (v, i, j) => {
                     if (!v)
@@ -5613,7 +5640,7 @@ void main() {
         Object.values(effects).forEach((e) => reset(e));
     }
     const effects = {};
-    function make$8(opts) {
+    function make$1(opts) {
         var _a;
         if (!opts)
             throw new Error('opts required to make effect.');
@@ -5625,7 +5652,7 @@ void main() {
         }
         // now make base effect stuff
         const info = {
-            flags: from$1(Flags, opts.flags),
+            flags: from$3(Flags, opts.flags),
             chance: (_a = opts.chance) !== null && _a !== void 0 ? _a : 0,
             next: null,
             id: opts.id || 'n/a',
@@ -5635,14 +5662,14 @@ void main() {
                 info.next = opts.next;
             }
             else {
-                info.next = make$8(opts.next);
+                info.next = make$1(opts.next);
             }
         }
         // and all the handlers
         Object.values(effectTypes).forEach((v) => v.make(opts, info));
         return info;
     }
-    function from$3(opts) {
+    function from(opts) {
         if (!opts)
             throw new Error('Cannot make effect from null | undefined');
         if (typeof opts === 'string') {
@@ -5651,17 +5678,17 @@ void main() {
                 return effect;
             throw new Error('Unknown effect - ' + opts);
         }
-        return make$8(opts);
+        return make$1(opts);
     }
-    function install$3(id, config) {
-        const effect = make$8(config);
+    function install(id, config) {
+        const effect = make$1(config);
         effects[id] = effect;
         effect.id = id;
         return effect;
     }
-    function installAll$1(effects) {
+    function installAll(effects) {
         Object.entries(effects).forEach(([id, config]) => {
-            install$3(id, config);
+            install(id, config);
         });
     }
     const effectTypes = {};
@@ -5745,10 +5772,10 @@ void main() {
         reset: reset,
         resetAll: resetAll,
         effects: effects,
-        make: make$8,
-        from: from$3,
-        install: install$3,
-        installAll: installAll$1,
+        make: make$1,
+        from: from,
+        install: install,
+        installAll: installAll,
         effectTypes: effectTypes,
         installType: installType
     };
@@ -5851,9 +5878,9 @@ void main() {
             for (i = 0; i < grid$1.width; i++) {
                 for (j = 0; j < grid$1.height; j++) {
                     nbCount = 0;
-                    for (dir = 0; dir < DIRS.length; dir++) {
-                        newX = i + DIRS[dir][0];
-                        newY = j + DIRS[dir][1];
+                    for (dir = 0; dir < DIRS$2.length; dir++) {
+                        newX = i + DIRS$2[dir][0];
+                        newY = j + DIRS$2[dir][1];
                         if (grid$1.hasXY(newX, newY) && buffer2[newX][newY]) {
                             nbCount++;
                         }
@@ -5879,7 +5906,7 @@ void main() {
         const blob = new Blob(opts);
         return blob.carve(grid.width, grid.height, (x, y) => (grid[x][y] = 1));
     }
-    function make$9(opts = {}) {
+    function make(opts = {}) {
         return new Blob(opts);
     }
 
@@ -5887,7 +5914,7 @@ void main() {
         __proto__: null,
         Blob: Blob,
         fillBlob: fillBlob,
-        make: make$9
+        make: make
     };
 
     exports.Random = Random;
@@ -5907,15 +5934,15 @@ void main() {
     exports.grid = grid;
     exports.io = io;
     exports.loop = loop;
-    exports.make = make;
+    exports.make = make$9;
     exports.message = message;
     exports.path = path;
     exports.random = random;
     exports.range = range;
     exports.scheduler = scheduler;
-    exports.sprite = index$2;
+    exports.sprite = index;
     exports.sprites = sprites;
-    exports.text = index;
+    exports.text = index$2;
     exports.types = types;
     exports.utils = utils;
 

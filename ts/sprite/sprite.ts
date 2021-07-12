@@ -1,19 +1,19 @@
 import * as Color from '../color';
-import { SpriteType } from '../types';
+import { SpriteData } from '../types';
 import { make as Make } from '../gw';
 
 export interface SpriteConfig {
-    ch?: string | number | null;
-    fg?: Color.ColorBase | null;
-    bg?: Color.ColorBase | null;
-    opacity?: number;
+    ch: string | null;
+    fg: Color.ColorBase | null;
+    bg: Color.ColorBase | null;
+    opacity: number;
 }
 
-export class Sprite implements SpriteType {
+export class Sprite implements SpriteData {
     public ch: string | null;
-    public fg: number | Color.Color;
-    public bg: number | Color.Color;
-    public opacity?: number;
+    public fg: Color.Color;
+    public bg: Color.Color;
+    public opacity: number;
     public name?: string;
 
     constructor(
@@ -23,11 +23,9 @@ export class Sprite implements SpriteType {
         opacity = 100
     ) {
         if (!ch) ch = null;
-        if (typeof fg !== 'number') fg = Color.from(fg);
-        if (typeof bg !== 'number') bg = Color.from(bg);
         this.ch = ch;
-        this.fg = fg;
-        this.bg = bg;
+        this.fg = Color.from(fg);
+        this.bg = Color.from(bg);
         this.opacity = opacity >= 0 ? opacity : 100;
     }
 
@@ -104,6 +102,17 @@ export function make(...args: any[]) {
 }
 
 Make.sprite = make;
+
+export function from(name: string): Sprite;
+export function from(config: Partial<SpriteConfig>): Sprite;
+export function from(...args: any[]): Sprite {
+    if (args.length == 1 && typeof args[0] === 'string') {
+        const sprite = sprites[args[0]];
+        if (!sprite) throw new Error('Failed to find sprite: ' + args[0]);
+        return sprite;
+    }
+    return make(args);
+}
 
 export function install(
     name: string,

@@ -1,6 +1,6 @@
 import { Mixer, DrawInfo } from '../sprite/mixer';
 import * as Color from '../color';
-import * as Text from '../text/index';
+import * as Text from '../text';
 import { make as Make } from '../gw';
 
 export interface DrawData {

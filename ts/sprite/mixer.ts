@@ -1,5 +1,5 @@
 import * as Color from '../color';
-import { SpriteType } from '../types';
+import { SpriteData } from '../types';
 import * as Utils from '../utils';
 import { make } from '../gw';
 
@@ -82,7 +82,7 @@ export class Mixer implements DrawInfo {
         return this._changed();
     }
 
-    drawSprite(src: SpriteType | Mixer, opacity?: number) {
+    drawSprite(src: SpriteData | Mixer, opacity?: number) {
         if (src === this) return this;
 
         // @ts-ignore

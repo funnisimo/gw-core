@@ -13,7 +13,7 @@ export interface Chainable {
     next: any | null;
 }
 
-export interface SpriteType {
+export interface SpriteData {
     readonly ch?: string | null;
     readonly fg?: ColorBase;
     readonly bg?: ColorBase;
@@ -46,7 +46,7 @@ export interface LayerFlags {
 }
 
 export interface EntityType {
-    readonly sprite: SpriteType;
+    readonly sprite: SpriteData;
     readonly priority: number;
     readonly layer: number;
     readonly light: LightType | null;

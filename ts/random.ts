@@ -291,7 +291,6 @@ export class Random {
             }
         }
 
-        // brogueAssert(false);
         return [-1, -1]; // should never reach this point
     }
 }
