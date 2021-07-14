@@ -151,7 +151,7 @@ describe('Utils', () => {
 
     describe('setDefaults', () => {
         test('null', () => {
-            const dest = {} as Utils.BasicObject;
+            const dest = {} as any;
             Utils.setDefaults(dest, {
                 test: null,
             });
@@ -180,7 +180,7 @@ describe('Utils', () => {
 
     describe('kindDefaults', () => {
         test('sets basic values', () => {
-            const dest = {} as Utils.BasicObject;
+            const dest = {} as any;
             Utils.kindDefaults(dest, {
                 a: 1,
                 b: 2,
@@ -199,7 +199,7 @@ describe('Utils', () => {
                 b: 3,
                 c: { h: 2 },
                 e: { f: { g: 5 } },
-            } as Utils.BasicObject;
+            } as any;
             Utils.kindDefaults(dest, {
                 a: 1,
                 b: 2,
@@ -214,7 +214,7 @@ describe('Utils', () => {
         });
 
         test('treats flags as an array', () => {
-            const dest = {} as Utils.BasicObject;
+            const dest = {} as any;
             Utils.kindDefaults(dest, {
                 flags: 'TEST',
             });
@@ -224,7 +224,7 @@ describe('Utils', () => {
         test('concats default value first', () => {
             const dest = {
                 flags: 'VALUE',
-            } as Utils.BasicObject;
+            } as any;
             Utils.kindDefaults(dest, {
                 flags: 'TEST',
             });

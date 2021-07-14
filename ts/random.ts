@@ -1,4 +1,3 @@
-import { BasicObject } from './types';
 import * as Utils from './utils';
 import * as ROT from 'rot-js';
 
@@ -139,7 +138,7 @@ export class Random {
         return list[this.range(0, list.length - 1)];
     }
 
-    key(obj: BasicObject) {
+    key(obj: object) {
         return this.item(Object.keys(obj));
     }
 

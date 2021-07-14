@@ -614,6 +614,25 @@ function forRect(...args) {
         }
     }
 }
+function forBorder(...args) {
+    let left = 0;
+    let top = 0;
+    if (arguments.length > 3) {
+        left = args.shift();
+        top = args.shift();
+    }
+    const right = left + args[0] - 1;
+    const bottom = top + args[1] - 1;
+    const fn = args[2];
+    for (let x = left; x <= right; ++x) {
+        fn(x, top);
+        fn(x, bottom);
+    }
+    for (let y = top; y <= bottom; ++y) {
+        fn(left, y);
+        fn(right, y);
+    }
+}
 // ARC COUNT
 // Rotates around the cell, counting up the number of distinct strings of neighbors with the same test result in a single revolution.
 //		Zero means there are no impassable tiles adjacent.
@@ -646,7 +665,7 @@ function arcCount(x, y, testFn) {
     return Math.floor(arcCount / 2); // Since we added one when we entered a wall and another when we left.
 }
 
-var utils = {
+var index$7 = {
     __proto__: null,
     DIRS: DIRS$2,
     NO_DIRECTION: NO_DIRECTION,
@@ -714,6 +733,7 @@ var utils = {
     getLineThru: getLineThru,
     forCircle: forCircle,
     forRect: forRect,
+    forBorder: forBorder,
     arcCount: arcCount
 };
 
@@ -943,11 +963,6 @@ class Random {
 const random = new Random();
 const cosmetic = new Random();
 
-const data = {};
-const config = {};
-const make$9 = {};
-const flags = {};
-
 class Range {
     constructor(lower, upper = 0, clumps = 1, rng) {
         this._rng = rng || random;
@@ -980,7 +995,7 @@ class Range {
         return `${this.lo}-${this.hi}`;
     }
 }
-function make$8(config, rng) {
+function make$a(config, rng) {
     if (!config)
         return new Range(0, 0, 0, rng);
     if (config instanceof Range)
@@ -1032,18 +1047,17 @@ function make$8(config, rng) {
     }
     throw new Error('Not a valid range - ' + config);
 }
-make$9.range = make$8;
-const from$4 = make$8;
+const from$5 = make$a;
 function asFn(config, rng) {
-    const range = make$8(config, rng);
+    const range = make$a(config, rng);
     return () => range.value();
 }
 
 var range = {
     __proto__: null,
     Range: Range,
-    make: make$8,
-    from: from$4,
+    make: make$a,
+    from: from$5,
     asFn: asFn
 };
 
@@ -1068,7 +1082,7 @@ function toString(flagObj, value) {
     }
     return out.join(" | ");
 }
-function from$3(obj, ...args) {
+function from$4(obj, ...args) {
     let result = 0;
     for (let index = 0; index < args.length; ++index) {
         let value = args[index];
@@ -1123,8 +1137,13 @@ var flag = {
     __proto__: null,
     fl: fl,
     toString: toString,
-    from: from$3
+    from: from$4
 };
+
+const data = {};
+const config$1 = {};
+const make$9 = {};
+const flags$2 = {};
 
 const DIRS$1 = DIRS$2;
 function makeArray(l, fn) {
@@ -1617,14 +1636,14 @@ class NumGrid extends Grid {
 // Grid.fillBlob = fillBlob;
 const alloc = NumGrid.alloc.bind(NumGrid);
 const free = NumGrid.free.bind(NumGrid);
-function make$7(w, h, v) {
+function make$8(w, h, v) {
     if (v === undefined)
         return new NumGrid(w, h, 0);
     if (typeof v === 'number')
         return new NumGrid(w, h, v);
     return new Grid(w, h, v);
 }
-make$9.grid = make$7;
+make$9.grid = make$8;
 function offsetZip(destGrid, srcGrid, srcToDestX, srcToDestY, value) {
     const fn = typeof value === 'function'
         ? value
@@ -1659,7 +1678,7 @@ var grid = {
     NumGrid: NumGrid,
     alloc: alloc,
     free: free,
-    make: make$7,
+    make: make$8,
     offsetZip: offsetZip,
     intersection: intersection,
     unite: unite
@@ -2017,12 +2036,12 @@ class Loop {
         return this.pause(5 * 60 * 1000); // 5 min
     }
 }
-function make$6() {
+function make$7() {
     return new Loop();
 }
-make$9.loop = make$6;
+make$9.loop = make$7;
 // Makes a default global loop that you access through these funcitons...
-const loop = make$6();
+const loop = make$7();
 
 var io = {
     __proto__: null,
@@ -2042,7 +2061,7 @@ var io = {
     onkeydown: onkeydown,
     makeMouseEvent: makeMouseEvent,
     Loop: Loop,
-    make: make$6,
+    make: make$7,
     loop: loop
 };
 
@@ -2741,21 +2760,21 @@ var events = {
     emit: emit
 };
 
-function make$5(v) {
+function make$6(v) {
     if (v === undefined)
         return () => 100;
     if (v === null)
         return () => 0;
-    if (typeof v === "number")
+    if (typeof v === 'number')
         return () => v;
-    if (typeof v === "function")
+    if (typeof v === 'function')
         return v;
     let base = {};
-    if (typeof v === "string") {
+    if (typeof v === 'string') {
         const parts = v.split(/[,|]/).map((t) => t.trim());
         base = {};
         parts.forEach((p) => {
-            let [level, weight] = p.split(":");
+            let [level, weight] = p.split(':');
             base[level] = Number.parseInt(weight) || 100;
         });
     }
@@ -2764,21 +2783,27 @@ function make$5(v) {
     }
     const parts = Object.entries(base);
     const funcs = parts.map(([levels, frequency]) => {
-        frequency = Number.parseInt(frequency);
-        if (levels.includes("-")) {
+        let value = 0;
+        if (typeof frequency === 'string') {
+            value = Number.parseInt(frequency);
+        }
+        else {
+            value = frequency;
+        }
+        if (levels.includes('-')) {
             let [start, end] = levels
-                .split("-")
+                .split('-')
                 .map((t) => t.trim())
                 .map((v) => Number.parseInt(v));
-            return (level) => level >= start && level <= end ? frequency : 0;
+            return (level) => level >= start && level <= end ? value : 0;
         }
-        else if (levels.endsWith("+")) {
+        else if (levels.endsWith('+')) {
             const found = Number.parseInt(levels);
-            return (level) => (level >= found ? frequency : 0);
+            return (level) => (level >= found ? value : 0);
         }
         else {
             const found = Number.parseInt(levels);
-            return (level) => (level === found ? frequency : 0);
+            return (level) => (level === found ? value : 0);
         }
     });
     if (funcs.length == 1)
@@ -2788,7 +2813,7 @@ function make$5(v) {
 
 var frequency = {
     __proto__: null,
-    make: make$5
+    make: make$6
 };
 
 class Scheduler {
@@ -3328,7 +3353,7 @@ class Color extends Int16Array {
         else if (typeof other === 'number') {
             return this.toInt() == other || this.toInt(true) == other;
         }
-        const O = from$2(other);
+        const O = from$3(other);
         if (this.isNull())
             return O.isNull();
         return this.every((v, i) => {
@@ -3342,7 +3367,7 @@ class Color extends Int16Array {
             }
         }
         else {
-            other = from$2(other);
+            other = from$3(other);
             this.dances = other.dances;
         }
         for (let i = 0; i < this.length; ++i) {
@@ -3411,6 +3436,9 @@ class Color extends Int16Array {
         const b = this._b + rand + blueRand;
         return toColorInt(r, g, b, base256);
     }
+    toLight() {
+        return [this._r, this._g, this._b];
+    }
     clamp() {
         if (this.isNull())
             return this;
@@ -3420,7 +3448,7 @@ class Color extends Int16Array {
         return this._changed();
     }
     mix(other, percent) {
-        const O = from$2(other);
+        const O = from$3(other);
         if (O.isNull())
             return this;
         if (this.isNull()) {
@@ -3484,7 +3512,7 @@ class Color extends Int16Array {
     }
     // Adds a color to this one
     add(other, percent = 100) {
-        const O = from$2(other);
+        const O = from$3(other);
         if (O.isNull())
             return this;
         if (this.isNull()) {
@@ -3601,7 +3629,7 @@ function fromNumber(val, base256 = false) {
     }
     return c;
 }
-function make$4(...args) {
+function make$5(...args) {
     let arg = args[0];
     let base256 = args[1];
     if (args.length == 0)
@@ -3629,8 +3657,7 @@ function make$4(...args) {
     }
     throw new Error('Failed to make color - unknown argument: ' + JSON.stringify(arg));
 }
-make$9.color = make$4;
-function from$2(...args) {
+function from$3(...args) {
     const arg = args[0];
     if (arg instanceof Color)
         return arg;
@@ -3641,7 +3668,7 @@ function from$2(...args) {
             return fromName(arg);
         }
     }
-    return make$4(arg, args[1]);
+    return make$5(arg, args[1]);
 }
 // adjusts the luminosity of 2 colors to ensure there is enough separation between them
 function separate(a, b) {
@@ -3691,12 +3718,12 @@ function distance(a, b) {
             (a.b - b.b) * (a.b - b.b) * 0.3333)) /
         65025);
 }
-function install$3(name, ...args) {
+function install$4(name, ...args) {
     let info = args;
     if (args.length == 1) {
         info = args[0];
     }
-    const c = info instanceof Color ? info : make$4(info);
+    const c = info instanceof Color ? info : make$5(info);
     colors[name] = c;
     c.name = name;
     return c;
@@ -3704,22 +3731,22 @@ function install$3(name, ...args) {
 function installSpread(name, ...args) {
     let c;
     if (args.length == 1) {
-        c = install$3(name, args[0]);
+        c = install$4(name, args[0]);
     }
     else {
-        c = install$3(name, ...args);
+        c = install$4(name, ...args);
     }
-    install$3('light_' + name, c.clone().lighten(25));
-    install$3('lighter_' + name, c.clone().lighten(50));
-    install$3('lightest_' + name, c.clone().lighten(75));
-    install$3('dark_' + name, c.clone().darken(25));
-    install$3('darker_' + name, c.clone().darken(50));
-    install$3('darkest_' + name, c.clone().darken(75));
+    install$4('light_' + name, c.clone().lighten(25));
+    install$4('lighter_' + name, c.clone().lighten(50));
+    install$4('lightest_' + name, c.clone().lighten(75));
+    install$4('dark_' + name, c.clone().darken(25));
+    install$4('darker_' + name, c.clone().darken(50));
+    install$4('darkest_' + name, c.clone().darken(75));
     return c;
 }
-const NONE = install$3('NONE', -1);
-const BLACK = install$3('black', 0x000);
-const WHITE = install$3('white', 0xfff);
+const NONE = install$4('NONE', -1);
+const BLACK = install$4('black', 0x000);
+const WHITE = install$4('white', 0xfff);
 installSpread('teal', [30, 100, 100]);
 installSpread('brown', [60, 40, 0]);
 installSpread('tan', [80, 70, 55]); // 80, 67,		15);
@@ -3757,13 +3784,13 @@ var color = {
     fromCss: fromCss,
     fromName: fromName,
     fromNumber: fromNumber,
-    make: make$4,
-    from: from$2,
+    make: make$5,
+    from: from$3,
     separate: separate,
     swap: swap,
     relativeLuminance: relativeLuminance,
     distance: distance,
-    install: install$3,
+    install: install$4,
     installSpread: installSpread,
     NONE: NONE
 };
@@ -3771,8 +3798,8 @@ var color = {
 class Mixer {
     constructor(base) {
         this.ch = first(base === null || base === void 0 ? void 0 : base.ch, -1);
-        this.fg = from$2(base === null || base === void 0 ? void 0 : base.fg);
-        this.bg = from$2(base === null || base === void 0 ? void 0 : base.bg);
+        this.fg = from$3(base === null || base === void 0 ? void 0 : base.fg);
+        this.bg = from$3(base === null || base === void 0 ? void 0 : base.bg);
     }
     _changed() {
         return this;
@@ -3813,11 +3840,11 @@ class Mixer {
             this.ch = ch;
         }
         if (fg !== -1 && fg !== null) {
-            fg = from$2(fg);
+            fg = from$3(fg);
             this.fg.copy(fg);
         }
         if (bg !== -1 && bg !== null) {
-            bg = from$2(bg);
+            bg = from$3(bg);
             this.bg.copy(bg);
         }
         return this._changed();
@@ -3845,7 +3872,7 @@ class Mixer {
         return this._changed();
     }
     multiply(color$1, fg = true, bg = true) {
-        color$1 = from$2(color$1);
+        color$1 = from$3(color$1);
         if (fg) {
             this.fg.multiply(color$1);
         }
@@ -3855,7 +3882,7 @@ class Mixer {
         return this._changed();
     }
     mix(color$1, fg = 50, bg = fg) {
-        color$1 = from$2(color$1);
+        color$1 = from$3(color$1);
         if (fg > 0) {
             this.fg.mix(color$1, fg);
         }
@@ -3865,7 +3892,7 @@ class Mixer {
         return this._changed();
     }
     add(color$1, fg = 100, bg = fg) {
-        color$1 = from$2(color$1);
+        color$1 = from$3(color$1);
         if (fg > 0) {
             this.fg.add(color$1, fg);
         }
@@ -4491,7 +4518,7 @@ function configure$1(opts = {}) {
     }
 }
 
-var index$2 = {
+var index$6 = {
     __proto__: null,
     compile: compile,
     apply: apply,
@@ -4558,10 +4585,10 @@ class DataBuffer {
             glyph = this.toGlyph(glyph);
         }
         if (typeof fg !== 'number') {
-            fg = from$2(fg).toInt();
+            fg = from$3(fg).toInt();
         }
         if (typeof bg !== 'number') {
-            bg = from$2(bg).toInt();
+            bg = from$3(bg).toInt();
         }
         glyph = glyph >= 0 ? glyph & 0xff : current >> 24;
         bg = bg >= 0 ? bg & 0xfff : (current >> 12) & 0xfff;
@@ -4600,9 +4627,9 @@ class DataBuffer {
     }
     drawText(x, y, text, fg = 0xfff, bg = -1) {
         if (typeof fg !== 'number')
-            fg = from$2(fg);
+            fg = from$3(fg);
         if (typeof bg !== 'number')
-            bg = from$2(bg);
+            bg = from$3(bg);
         eachChar(text, (ch, fg0, bg0, i) => {
             if (x + i >= this.width)
                 return;
@@ -4612,9 +4639,9 @@ class DataBuffer {
     }
     wrapText(x, y, width, text, fg = 0xfff, bg = -1, indent = 0) {
         if (typeof fg !== 'number')
-            fg = from$2(fg);
+            fg = from$3(fg);
         if (typeof bg !== 'number')
-            bg = from$2(bg);
+            bg = from$3(bg);
         width = Math.min(width, this.width - x);
         text = wordWrap(text, width, indent);
         let xi = x;
@@ -4640,9 +4667,9 @@ class DataBuffer {
         if (typeof ch !== 'number')
             ch = this.toGlyph(ch);
         if (typeof fg !== 'number')
-            fg = from$2(fg).toInt();
+            fg = from$3(fg).toInt();
         if (typeof bg !== 'number')
-            bg = from$2(bg).toInt();
+            bg = from$3(bg).toInt();
         for (let i = x; i < x + w; ++i) {
             for (let j = y; j < y + h; ++j) {
                 this.draw(i, j, ch, fg, bg);
@@ -4652,12 +4679,12 @@ class DataBuffer {
     }
     blackOutRect(x, y, w, h, bg = 0) {
         if (typeof bg !== 'number')
-            bg = from$2(bg);
+            bg = from$3(bg);
         return this.fillRect(x, y, w, h, 0, 0, bg);
     }
     highlight(x, y, color$1, strength) {
         if (typeof color$1 !== 'number') {
-            color$1 = from$2(color$1);
+            color$1 = from$3(color$1);
         }
         const mixer = new Mixer();
         const data = this.get(x, y);
@@ -4669,7 +4696,7 @@ class DataBuffer {
     }
     mix(color$1, percent) {
         if (typeof color$1 !== 'number')
-            color$1 = from$2(color$1);
+            color$1 = from$3(color$1);
         const mixer = new Mixer();
         for (let x = 0; x < this.width; ++x) {
             for (let y = 0; y < this.height; ++y) {
@@ -5108,7 +5135,7 @@ class Canvas2D extends BaseCanvas {
         this._ctx.putImageData(d, px, py);
     }
 }
-function make$3(...args) {
+function make$4(...args) {
     let width = args[0];
     let height = args[1];
     let opts = args[2];
@@ -5248,13 +5275,13 @@ function createGeometry(gl, attribs, width, height) {
     return { position, uv };
 }
 
-var index$1 = {
+var index$5 = {
     __proto__: null,
     NotSupportedError: NotSupportedError,
     BaseCanvas: BaseCanvas,
     Canvas: Canvas,
     Canvas2D: Canvas2D,
-    make: make$3,
+    make: make$4,
     Glyphs: Glyphs,
     DataBuffer: DataBuffer,
     Buffer: Buffer,
@@ -5266,8 +5293,8 @@ class Sprite {
         if (!ch)
             ch = null;
         this.ch = ch;
-        this.fg = from$2(fg);
-        this.bg = from$2(bg);
+        this.fg = from$3(fg);
+        this.bg = from$3(bg);
         this.opacity = opacity >= 0 ? opacity : 100;
     }
     clone() {
@@ -5275,7 +5302,7 @@ class Sprite {
     }
 }
 const sprites = {};
-function make$2(...args) {
+function make$3(...args) {
     let ch = null, fg = -1, bg = -1, opacity;
     if (args.length == 0) {
         return new Sprite(null, -1, -1);
@@ -5318,45 +5345,45 @@ function make$2(...args) {
         }
     }
     if (typeof fg === 'string')
-        fg = from$2(fg);
+        fg = from$3(fg);
     else if (Array.isArray(fg))
-        fg = make$4(fg);
+        fg = make$5(fg);
     else if (fg === undefined || fg === null)
         fg = -1;
     if (typeof bg === 'string')
-        bg = from$2(bg);
+        bg = from$3(bg);
     else if (Array.isArray(bg))
-        bg = make$4(bg);
+        bg = make$5(bg);
     else if (bg === undefined || bg === null)
         bg = -1;
     return new Sprite(ch, fg, bg, opacity);
 }
-make$9.sprite = make$2;
-function from$1(...args) {
+make$9.sprite = make$3;
+function from$2(...args) {
     if (args.length == 1 && typeof args[0] === 'string') {
         const sprite = sprites[args[0]];
         if (!sprite)
             throw new Error('Failed to find sprite: ' + args[0]);
         return sprite;
     }
-    return make$2(args);
+    return make$3(args);
 }
-function install$2(name, ...args) {
+function install$3(name, ...args) {
     let sprite;
     // @ts-ignore
-    sprite = make$2(...args);
+    sprite = make$3(...args);
     sprite.name = name;
     sprites[name] = sprite;
     return sprite;
 }
 
-var index = {
+var index$4 = {
     __proto__: null,
     Sprite: Sprite,
     sprites: sprites,
-    make: make$2,
-    from: from$1,
-    install: install$2,
+    make: make$3,
+    from: from$2,
+    install: install$3,
     Mixer: Mixer
 };
 
@@ -5365,13 +5392,13 @@ var types = {
 };
 
 const templates = {};
-config.message = config.message || {};
-function install$1(id, msg) {
+config$1.message = config$1.message || {};
+function install$2(id, msg) {
     const template = compile(msg);
     templates[id] = template;
 }
-function installAll$1(config) {
-    Object.entries(config).forEach(([id, msg]) => install$1(id, msg));
+function installAll$2(config) {
+    Object.entries(config).forEach(([id, msg]) => install$2(id, msg));
 }
 // messages
 const ARCHIVE = [];
@@ -5457,7 +5484,7 @@ function addMessage(msg) {
     //     }
     // }
     const lines = splitIntoLines(msg, MSG_WIDTH);
-    if ((_a = config.message) === null || _a === void 0 ? void 0 : _a.reverseMultiLine) {
+    if ((_a = config$1.message) === null || _a === void 0 ? void 0 : _a.reverseMultiLine) {
         lines.reverse();
     }
     lines.forEach((l) => addMessageLine(l));
@@ -5504,8 +5531,8 @@ function forEach(fn) {
 var message = {
     __proto__: null,
     templates: templates,
-    install: install$1,
-    installAll: installAll$1,
+    install: install$2,
+    installAll: installAll$2,
     needsUpdate: needsUpdate,
     configure: configure,
     add: add,
@@ -5567,7 +5594,7 @@ async function fire(effect, map, x, y, ctx_ = {}) {
         return false;
     if (typeof effect === 'string') {
         const name = effect;
-        effect = from(name);
+        effect = from$1(name);
         if (!effect)
             throw new Error('Failed to find effect: ' + name);
     }
@@ -5592,7 +5619,7 @@ async function fire(effect, map, x, y, ctx_ = {}) {
     if (effect.next &&
         (didSomething || effect.flags & Flags.E_NEXT_ALWAYS) &&
         !data.gameHasEnded) {
-        const nextInfo = typeof effect.next === 'string' ? from(effect.next) : effect.next;
+        const nextInfo = typeof effect.next === 'string' ? from$1(effect.next) : effect.next;
         if (effect.flags & Flags.E_NEXT_EVERYWHERE) {
             await grid$1.forEachAsync(async (v, i, j) => {
                 if (!v)
@@ -5616,7 +5643,7 @@ function resetAll() {
     Object.values(effects).forEach((e) => reset(e));
 }
 const effects = {};
-function make$1(opts) {
+function make$2(opts) {
     var _a;
     if (!opts)
         throw new Error('opts required to make effect.');
@@ -5628,7 +5655,7 @@ function make$1(opts) {
     }
     // now make base effect stuff
     const info = {
-        flags: from$3(Flags, opts.flags),
+        flags: from$4(Flags, opts.flags),
         chance: (_a = opts.chance) !== null && _a !== void 0 ? _a : 0,
         next: null,
         id: opts.id || 'n/a',
@@ -5638,14 +5665,14 @@ function make$1(opts) {
             info.next = opts.next;
         }
         else {
-            info.next = make$1(opts.next);
+            info.next = make$2(opts.next);
         }
     }
     // and all the handlers
     Object.values(effectTypes).forEach((v) => v.make(opts, info));
     return info;
 }
-function from(opts) {
+function from$1(opts) {
     if (!opts)
         throw new Error('Cannot make effect from null | undefined');
     if (typeof opts === 'string') {
@@ -5654,17 +5681,17 @@ function from(opts) {
             return effect;
         throw new Error('Unknown effect - ' + opts);
     }
-    return make$1(opts);
+    return make$2(opts);
 }
-function install(id, config) {
-    const effect = make$1(config);
+function install$1(id, config) {
+    const effect = make$2(config);
     effects[id] = effect;
     effect.id = id;
     return effect;
 }
-function installAll(effects) {
+function installAll$1(effects) {
     Object.entries(effects).forEach(([id, config]) => {
-        install(id, config);
+        install$1(id, config);
     });
 }
 const effectTypes = {};
@@ -5741,17 +5768,17 @@ class MessageEffect {
 }
 installType('message', new MessageEffect());
 
-var effect = {
+var index$3 = {
     __proto__: null,
     get Flags () { return Flags; },
     fire: fire,
     reset: reset,
     resetAll: resetAll,
     effects: effects,
-    make: make$1,
-    from: from,
-    install: install,
-    installAll: installAll,
+    make: make$2,
+    from: from$1,
+    install: install$1,
+    installAll: installAll$1,
     effectTypes: effectTypes,
     installType: installType
 };
@@ -5882,7 +5909,7 @@ function fillBlob(grid, opts = {}) {
     const blob = new Blob(opts);
     return blob.carve(grid.width, grid.height, (x, y) => (grid[x][y] = 1));
 }
-function make(opts = {}) {
+function make$1(opts = {}) {
     return new Blob(opts);
 }
 
@@ -5890,7 +5917,625 @@ var blob = {
     __proto__: null,
     Blob: Blob,
     fillBlob: fillBlob,
-    make: make
+    make: make$1
 };
 
-export { Random, blob, index$1 as canvas, color, colors, config, cosmetic, data, effect, events, flag, flags, fov, frequency, grid, io, loop, make$9 as make, message, path, random, range, scheduler, index as sprite, sprites, index$2 as text, types, utils };
+var GameObject;
+(function (GameObject) {
+    // L_DYNAMIC = Fl(0), // for movable things like actors or items
+    GameObject[GameObject["L_SUPERPRIORITY"] = fl(1)] = "L_SUPERPRIORITY";
+    GameObject[GameObject["L_SECRETLY_PASSABLE"] = fl(2)] = "L_SECRETLY_PASSABLE";
+    GameObject[GameObject["L_BLOCKS_MOVE"] = fl(3)] = "L_BLOCKS_MOVE";
+    GameObject[GameObject["L_BLOCKS_VISION"] = fl(4)] = "L_BLOCKS_VISION";
+    GameObject[GameObject["L_BLOCKS_SURFACE"] = fl(6)] = "L_BLOCKS_SURFACE";
+    GameObject[GameObject["L_BLOCKS_LIQUID"] = fl(8)] = "L_BLOCKS_LIQUID";
+    GameObject[GameObject["L_BLOCKS_GAS"] = fl(7)] = "L_BLOCKS_GAS";
+    GameObject[GameObject["L_BLOCKS_ITEMS"] = fl(5)] = "L_BLOCKS_ITEMS";
+    GameObject[GameObject["L_BLOCKS_ACTORS"] = fl(11)] = "L_BLOCKS_ACTORS";
+    GameObject[GameObject["L_BLOCKS_EFFECTS"] = fl(9)] = "L_BLOCKS_EFFECTS";
+    GameObject[GameObject["L_BLOCKS_DIAGONAL"] = fl(10)] = "L_BLOCKS_DIAGONAL";
+    GameObject[GameObject["L_INTERRUPT_WHEN_SEEN"] = fl(11)] = "L_INTERRUPT_WHEN_SEEN";
+    GameObject[GameObject["L_LIST_IN_SIDEBAR"] = fl(12)] = "L_LIST_IN_SIDEBAR";
+    GameObject[GameObject["L_VISUALLY_DISTINCT"] = fl(13)] = "L_VISUALLY_DISTINCT";
+    GameObject[GameObject["L_BRIGHT_MEMORY"] = fl(14)] = "L_BRIGHT_MEMORY";
+    GameObject[GameObject["L_INVERT_WHEN_HIGHLIGHTED"] = fl(15)] = "L_INVERT_WHEN_HIGHLIGHTED";
+    GameObject[GameObject["L_BLOCKED_BY_STAIRS"] = GameObject.L_BLOCKS_ITEMS |
+        GameObject.L_BLOCKS_SURFACE |
+        GameObject.L_BLOCKS_GAS |
+        GameObject.L_BLOCKS_LIQUID |
+        GameObject.L_BLOCKS_EFFECTS |
+        GameObject.L_BLOCKS_ACTORS] = "L_BLOCKED_BY_STAIRS";
+    GameObject[GameObject["L_BLOCKS_SCENT"] = GameObject.L_BLOCKS_MOVE | GameObject.L_BLOCKS_VISION] = "L_BLOCKS_SCENT";
+    GameObject[GameObject["L_DIVIDES_LEVEL"] = GameObject.L_BLOCKS_MOVE] = "L_DIVIDES_LEVEL";
+    GameObject[GameObject["L_WAYPOINT_BLOCKER"] = GameObject.L_BLOCKS_MOVE] = "L_WAYPOINT_BLOCKER";
+    GameObject[GameObject["L_IS_WALL"] = GameObject.L_BLOCKS_MOVE |
+        GameObject.L_BLOCKS_VISION |
+        GameObject.L_BLOCKS_LIQUID |
+        GameObject.L_BLOCKS_GAS |
+        GameObject.L_BLOCKS_EFFECTS |
+        GameObject.L_BLOCKS_DIAGONAL] = "L_IS_WALL";
+    GameObject[GameObject["L_BLOCKS_EVERYTHING"] = GameObject.L_IS_WALL |
+        GameObject.L_BLOCKS_ITEMS |
+        GameObject.L_BLOCKS_ACTORS |
+        GameObject.L_BLOCKS_SURFACE] = "L_BLOCKS_EVERYTHING";
+})(GameObject || (GameObject = {}));
+
+const flags$1 = { GameObject };
+
+var index$2 = {
+    __proto__: null,
+    flags: flags$1
+};
+
+// const LIGHT_SMOOTHING_THRESHOLD = 150;       // light components higher than this magnitude will be toned down a little
+const config = (config$1.light = { INTENSITY_DARK: 20 }); // less than 20% for highest color in rgb
+const LIGHT_COMPONENTS = make$5();
+class Light {
+    constructor(color$1, range$1, fadeTo, pass = false) {
+        this.fadeTo = 0;
+        this.passThroughActors = false;
+        this.id = null;
+        this.color = from$3(color$1) || null; /* color */
+        this.radius = make$a(range$1 || 1);
+        this.fadeTo = fadeTo || 0;
+        this.passThroughActors = pass; // generally no, but miner light does (TODO - string parameter?  'false' or 'true')
+    }
+    copy(other) {
+        this.color = other.color;
+        this.radius.copy(other.radius);
+        this.fadeTo = other.fadeTo;
+        this.passThroughActors = other.passThroughActors;
+    }
+    get intensity() {
+        return intensity(this.color);
+    }
+    // Returns true if any part of the light hit cells that are in the player's field of view.
+    paint(map, x, y, maintainShadows = false, isMinersLight = false) {
+        if (!map)
+            return false;
+        let k;
+        // let colorComponents = [0,0,0];
+        let lightMultiplier = 0;
+        let radius = this.radius.value();
+        let outerRadius = Math.ceil(radius);
+        if (outerRadius < 1)
+            return false;
+        // calcLightComponents(colorComponents, this);
+        LIGHT_COMPONENTS.copy(this.color).bake();
+        // console.log('paint', LIGHT_COMPONENTS.toString(true), x, y, outerRadius);
+        // the miner's light does not dispel IS_IN_SHADOW,
+        // so the player can be in shadow despite casting his own light.
+        const dispelShadows = !isMinersLight &&
+            !maintainShadows &&
+            !isDarkLight(LIGHT_COMPONENTS);
+        const fadeToPercent = this.fadeTo;
+        const grid$1 = alloc(map.width, map.height, 0);
+        map.calcFov(x, y, outerRadius, this.passThroughActors, (i, j) => {
+            grid$1[i][j] = 1;
+        });
+        // let overlappedFieldOfView = false;
+        const lightValue = [0, 0, 0];
+        grid$1.forCircle(x, y, outerRadius, (v, i, j) => {
+            if (!v)
+                return;
+            // const cell = map.cell(i, j);
+            lightMultiplier = Math.floor(100 -
+                (100 - fadeToPercent) *
+                    (distanceBetween(x, y, i, j) / radius));
+            for (k = 0; k < 3; ++k) {
+                lightValue[k] = Math.floor((LIGHT_COMPONENTS[k] * lightMultiplier) / 100);
+            }
+            map.addCellLight(i, j, lightValue, dispelShadows);
+            // if (dispelShadows) {
+            //     map.clearCellFlag(i, j, CellFlags.IS_IN_SHADOW);
+            // }
+            // if (map.isVisible(i, j)) {
+            //     overlappedFieldOfView = true;
+            // }
+            // console.log(i, j, lightMultiplier, cell.light);
+        });
+        // if (dispelShadows) {
+        //     map.clearCellFlag(x, y, CellFlags.IS_IN_SHADOW);
+        // }
+        free(grid$1);
+        // return overlappedFieldOfView;
+        return true;
+    }
+}
+function intensity(light) {
+    return Math.max(light[0], light[1], light[2]);
+}
+function isDarkLight(light, threshold) {
+    var _a;
+    threshold = threshold !== null && threshold !== void 0 ? threshold : (_a = config$1.light) === null || _a === void 0 ? void 0 : _a.INTENSITY_DARK;
+    return intensity(light) <= (threshold || 20);
+}
+function make(...args) {
+    if (args.length == 1) {
+        const config = args[0];
+        if (typeof config === 'string') {
+            const cached = lights[config];
+            if (cached)
+                return cached;
+            const [color$1, radius, fadeTo, pass] = config
+                .split(/[,|]/)
+                .map((t) => t.trim());
+            return new Light(from$3(color$1), from$5(radius || 1), Number.parseInt(fadeTo || '0'), !!pass && pass !== 'false');
+        }
+        else if (Array.isArray(config)) {
+            const [color, radius, fadeTo, pass] = config;
+            return new Light(color, radius, fadeTo, pass);
+        }
+        else if (config && config.color) {
+            return new Light(from$3(config.color), from$5(config.radius), Number.parseInt(config.fadeTo || '0'), config.pass);
+        }
+        else {
+            throw new Error('Unknown Light config - ' + config);
+        }
+    }
+    else {
+        const [color, radius, fadeTo, pass] = args;
+        return new Light(color, radius, fadeTo, pass);
+    }
+}
+const lights = {};
+function from(...args) {
+    if (args.length != 1)
+        ERROR('Unknown Light config: ' + JSON.stringify(args));
+    const arg = args[0];
+    if (typeof arg === 'string') {
+        const cached = lights[arg];
+        if (cached)
+            return cached;
+    }
+    if (arg && arg.paint)
+        return arg;
+    return make(arg);
+}
+function install(id, ...args) {
+    let source;
+    if (args.length == 1) {
+        source = make(args[0]);
+    }
+    else {
+        source = make(args[0], args[1], args[2], args[3]);
+    }
+    lights[id] = source;
+    if (source)
+        source.id = id;
+    return source;
+}
+function installAll(config = {}) {
+    const entries = Object.entries(config);
+    entries.forEach(([name, info]) => {
+        install(name, info);
+    });
+}
+// // TODO - Move?
+// export function playerInDarkness(
+//     map: Types.LightSite,
+//     PLAYER: Utils.XY,
+//     darkColor?: Color.Color
+// ) {
+//     const cell = map.cell(PLAYER.x, PLAYER.y);
+//     return cell.isDark(darkColor);
+//     // return (
+//     //   cell.light[0] + 10 < darkColor.r &&
+//     //   cell.light[1] + 10 < darkColor.g &&
+//     //   cell.light[2] + 10 < darkColor.b
+//     // );
+// }
+
+///////////////////////////////////////////////////////
+// CELL
+var Cell$1;
+(function (Cell) {
+    Cell[Cell["VISIBLE"] = fl(0)] = "VISIBLE";
+    Cell[Cell["WAS_VISIBLE"] = fl(1)] = "WAS_VISIBLE";
+    Cell[Cell["CLAIRVOYANT_VISIBLE"] = fl(2)] = "CLAIRVOYANT_VISIBLE";
+    Cell[Cell["WAS_CLAIRVOYANT_VISIBLE"] = fl(3)] = "WAS_CLAIRVOYANT_VISIBLE";
+    Cell[Cell["TELEPATHIC_VISIBLE"] = fl(4)] = "TELEPATHIC_VISIBLE";
+    Cell[Cell["WAS_TELEPATHIC_VISIBLE"] = fl(5)] = "WAS_TELEPATHIC_VISIBLE";
+    Cell[Cell["ITEM_DETECTED"] = fl(6)] = "ITEM_DETECTED";
+    Cell[Cell["WAS_ITEM_DETECTED"] = fl(7)] = "WAS_ITEM_DETECTED";
+    Cell[Cell["MONSTER_DETECTED"] = fl(8)] = "MONSTER_DETECTED";
+    Cell[Cell["WAS_MONSTER_DETECTED"] = fl(9)] = "WAS_MONSTER_DETECTED";
+    Cell[Cell["REVEALED"] = fl(10)] = "REVEALED";
+    Cell[Cell["MAGIC_MAPPED"] = fl(11)] = "MAGIC_MAPPED";
+    Cell[Cell["IN_FOV"] = fl(12)] = "IN_FOV";
+    Cell[Cell["WAS_IN_FOV"] = fl(13)] = "WAS_IN_FOV";
+    Cell[Cell["NEEDS_REDRAW"] = fl(14)] = "NEEDS_REDRAW";
+    Cell[Cell["CELL_CHANGED"] = fl(15)] = "CELL_CHANGED";
+    // These are to help memory
+    Cell[Cell["HAS_SURFACE"] = fl(16)] = "HAS_SURFACE";
+    Cell[Cell["HAS_LIQUID"] = fl(17)] = "HAS_LIQUID";
+    Cell[Cell["HAS_GAS"] = fl(18)] = "HAS_GAS";
+    Cell[Cell["HAS_PLAYER"] = fl(19)] = "HAS_PLAYER";
+    Cell[Cell["HAS_ACTOR"] = fl(20)] = "HAS_ACTOR";
+    Cell[Cell["HAS_DORMANT_MONSTER"] = fl(21)] = "HAS_DORMANT_MONSTER";
+    Cell[Cell["HAS_ITEM"] = fl(22)] = "HAS_ITEM";
+    Cell[Cell["IS_IN_PATH"] = fl(23)] = "IS_IN_PATH";
+    Cell[Cell["IS_CURSOR"] = fl(24)] = "IS_CURSOR";
+    Cell[Cell["STABLE_MEMORY"] = fl(25)] = "STABLE_MEMORY";
+    Cell[Cell["LIGHT_CHANGED"] = fl(26)] = "LIGHT_CHANGED";
+    Cell[Cell["CELL_LIT"] = fl(27)] = "CELL_LIT";
+    Cell[Cell["IS_IN_SHADOW"] = fl(28)] = "IS_IN_SHADOW";
+    Cell[Cell["CELL_DARK"] = fl(29)] = "CELL_DARK";
+    Cell[Cell["COLORS_DANCE"] = fl(30)] = "COLORS_DANCE";
+    Cell[Cell["PERMANENT_CELL_FLAGS"] = Cell.REVEALED |
+        Cell.MAGIC_MAPPED |
+        Cell.ITEM_DETECTED |
+        Cell.HAS_ITEM |
+        Cell.HAS_DORMANT_MONSTER |
+        Cell.STABLE_MEMORY] = "PERMANENT_CELL_FLAGS";
+    Cell[Cell["ANY_KIND_OF_VISIBLE"] = Cell.VISIBLE | Cell.CLAIRVOYANT_VISIBLE | Cell.TELEPATHIC_VISIBLE] = "ANY_KIND_OF_VISIBLE";
+    Cell[Cell["HAS_ANY_ACTOR"] = Cell.HAS_PLAYER | Cell.HAS_ACTOR] = "HAS_ANY_ACTOR";
+    Cell[Cell["IS_WAS_ANY_KIND_OF_VISIBLE"] = Cell.VISIBLE |
+        Cell.WAS_VISIBLE |
+        Cell.CLAIRVOYANT_VISIBLE |
+        Cell.WAS_CLAIRVOYANT_VISIBLE |
+        Cell.TELEPATHIC_VISIBLE |
+        Cell.WAS_TELEPATHIC_VISIBLE] = "IS_WAS_ANY_KIND_OF_VISIBLE";
+    Cell[Cell["WAS_ANY_KIND_OF_VISIBLE"] = Cell.WAS_VISIBLE |
+        Cell.WAS_CLAIRVOYANT_VISIBLE |
+        Cell.WAS_TELEPATHIC_VISIBLE] = "WAS_ANY_KIND_OF_VISIBLE";
+    Cell[Cell["CELL_DEFAULT"] = Cell.VISIBLE | Cell.IN_FOV | Cell.NEEDS_REDRAW | Cell.CELL_CHANGED] = "CELL_DEFAULT";
+})(Cell$1 || (Cell$1 = {}));
+///////////////////////////////////////////////////////
+// CELL MECH
+var CellMech;
+(function (CellMech) {
+    CellMech[CellMech["SEARCHED_FROM_HERE"] = fl(0)] = "SEARCHED_FROM_HERE";
+    CellMech[CellMech["PRESSURE_PLATE_DEPRESSED"] = fl(1)] = "PRESSURE_PLATE_DEPRESSED";
+    CellMech[CellMech["KNOWN_TO_BE_TRAP_FREE"] = fl(2)] = "KNOWN_TO_BE_TRAP_FREE";
+    CellMech[CellMech["CAUGHT_FIRE_THIS_TURN"] = fl(4)] = "CAUGHT_FIRE_THIS_TURN";
+    CellMech[CellMech["EVENT_FIRED_THIS_TURN"] = fl(5)] = "EVENT_FIRED_THIS_TURN";
+    CellMech[CellMech["EVENT_PROTECTED"] = fl(6)] = "EVENT_PROTECTED";
+    CellMech[CellMech["IS_IN_LOOP"] = fl(10)] = "IS_IN_LOOP";
+    CellMech[CellMech["IS_CHOKEPOINT"] = fl(11)] = "IS_CHOKEPOINT";
+    CellMech[CellMech["IS_GATE_SITE"] = fl(12)] = "IS_GATE_SITE";
+    CellMech[CellMech["IS_IN_ROOM_MACHINE"] = fl(13)] = "IS_IN_ROOM_MACHINE";
+    CellMech[CellMech["IS_IN_AREA_MACHINE"] = fl(14)] = "IS_IN_AREA_MACHINE";
+    CellMech[CellMech["IS_POWERED"] = fl(15)] = "IS_POWERED";
+    CellMech[CellMech["IMPREGNABLE"] = fl(20)] = "IMPREGNABLE";
+    CellMech[CellMech["DARKENED"] = fl(19)] = "DARKENED";
+    CellMech[CellMech["IS_IN_MACHINE"] = CellMech.IS_IN_ROOM_MACHINE | CellMech.IS_IN_AREA_MACHINE] = "IS_IN_MACHINE";
+    CellMech[CellMech["PERMANENT_MECH_FLAGS"] = CellMech.SEARCHED_FROM_HERE |
+        CellMech.PRESSURE_PLATE_DEPRESSED |
+        CellMech.KNOWN_TO_BE_TRAP_FREE |
+        CellMech.IS_IN_LOOP |
+        CellMech.IS_CHOKEPOINT |
+        CellMech.IS_GATE_SITE |
+        CellMech.IS_IN_MACHINE |
+        CellMech.IMPREGNABLE] = "PERMANENT_MECH_FLAGS";
+})(CellMech || (CellMech = {}));
+///////////////////////////////////////////////////////
+// MAP
+var Map$1;
+(function (Map) {
+    Map[Map["MAP_CHANGED"] = fl(0)] = "MAP_CHANGED";
+    Map[Map["MAP_STABLE_GLOW_LIGHTS"] = fl(1)] = "MAP_STABLE_GLOW_LIGHTS";
+    Map[Map["MAP_STABLE_LIGHTS"] = fl(2)] = "MAP_STABLE_LIGHTS";
+    Map[Map["MAP_ALWAYS_LIT"] = fl(3)] = "MAP_ALWAYS_LIT";
+    Map[Map["MAP_SAW_WELCOME"] = fl(4)] = "MAP_SAW_WELCOME";
+    Map[Map["MAP_NO_LIQUID"] = fl(5)] = "MAP_NO_LIQUID";
+    Map[Map["MAP_NO_GAS"] = fl(6)] = "MAP_NO_GAS";
+    Map[Map["MAP_CALC_FOV"] = fl(7)] = "MAP_CALC_FOV";
+    Map[Map["MAP_FOV_CHANGED"] = fl(8)] = "MAP_FOV_CHANGED";
+    Map[Map["MAP_DANCES"] = fl(9)] = "MAP_DANCES";
+    Map[Map["MAP_DEFAULT"] = Map.MAP_STABLE_LIGHTS | Map.MAP_STABLE_GLOW_LIGHTS] = "MAP_DEFAULT";
+})(Map$1 || (Map$1 = {}));
+
+class LightSystem {
+    constructor(map) {
+        this.staticLights = null;
+        this.ambient = [100, 100, 100];
+        this.site = map;
+        this.light = make$8(map.width, map.height, () => this.ambient.slice());
+        this.glowLight = make$8(map.width, map.height, () => this.ambient.slice());
+        this.oldLight = make$8(map.width, map.height, () => this.ambient.slice());
+    }
+    setAmbient(light) {
+        if (light instanceof Color) {
+            light = light.toLight();
+        }
+        for (let i = 0; i < 3; ++i) {
+            this.ambient[i] = light[i];
+        }
+        this.site.glowLightChanged = true;
+        this.site.anyLightChanged = true;
+    }
+    getLight(x, y) {
+        return this.light[x][y];
+    }
+    get width() {
+        return this.site.width;
+    }
+    get height() {
+        return this.site.height;
+    }
+    addStatic(x, y, light) {
+        const info = {
+            x,
+            y,
+            light: from(light),
+            next: this.staticLights,
+        };
+        this.staticLights = info;
+        this.site.glowLightChanged = true;
+        this.site.anyLightChanged = true;
+        return info;
+    }
+    removeStatic(x, y, light) {
+        let prev = this.staticLights;
+        if (!prev)
+            return;
+        function matches(info) {
+            if (info.x != x || info.y != y)
+                return false;
+            return !light || light === info.light;
+        }
+        this.site.glowLightChanged = true;
+        this.site.anyLightChanged = true;
+        while (prev && matches(prev)) {
+            prev = this.staticLights = prev.next;
+        }
+        if (!prev)
+            return;
+        let current = prev.next;
+        while (current) {
+            if (matches(current)) {
+                prev.next = current.next;
+            }
+            else {
+                prev = current;
+            }
+            current = current.next;
+        }
+    }
+    eachStaticLight(fn) {
+        eachChain(this.staticLights, (info) => fn(info.x, info.y, info.light));
+        this.site.eachGlowLight((x, y, light) => {
+            fn(x, y, light);
+        });
+    }
+    eachDynamicLight(fn) {
+        this.site.eachDynamicLight(fn);
+    }
+    update(force = false) {
+        if (!force && !this.site.anyLightChanged)
+            return false;
+        // Copy Light over oldLight
+        this.startLightUpdate();
+        if (!this.site.glowLightChanged) {
+            this.restoreGlowLights();
+        }
+        else {
+            // GW.debug.log('painting glow lights.');
+            // Paint all glowing tiles.
+            this.eachStaticLight((x, y, light) => {
+                light.paint(this, x, y);
+            });
+            this.recordGlowLights();
+            this.site.glowLightChanged = false;
+        }
+        // Cycle through monsters and paint their lights:
+        this.eachDynamicLight((x, y, light) => light.paint(this, x, y)
+        // if (monst.mutationIndex >= 0 && mutationCatalog[monst.mutationIndex].light != lights['NO_LIGHT']) {
+        //     paint(map, mutationCatalog[monst.mutationIndex].light, actor.x, actor.y, false, false);
+        // }
+        // if (actor.isBurning()) { // monst.status.burning && !(actor.kind.flags & Flags.Actor.AF_FIERY)) {
+        // 	paint(map, lights.BURNING_CREATURE, actor.x, actor.y, false, false);
+        // }
+        // if (actor.isTelepathicallyRevealed()) {
+        // 	paint(map, lights['TELEPATHY_LIGHT'], actor.x, actor.y, false, true);
+        // }
+        );
+        // Also paint telepathy lights for dormant monsters.
+        // for (monst of map.dormantMonsters) {
+        //     if (monsterTelepathicallyRevealed(monst)) {
+        //         paint(map, lights['TELEPATHY_LIGHT'], monst.xLoc, monst.yLoc, false, true);
+        //     }
+        // }
+        this.finishLightUpdate();
+        // Miner's light:
+        const PLAYER = data.player;
+        if (PLAYER) {
+            const PLAYERS_LIGHT = lights.PLAYERS_LIGHT;
+            if (PLAYERS_LIGHT && PLAYERS_LIGHT.radius) {
+                PLAYERS_LIGHT.paint(this, PLAYER.x, PLAYER.y, true, true);
+            }
+        }
+        this.site.anyLightChanged = false;
+        // if (PLAYER.status.invisible) {
+        //     PLAYER.info.foreColor = playerInvisibleColor;
+        // } else if (playerInDarkness()) {
+        // 	PLAYER.info.foreColor = playerInDarknessColor;
+        // } else if (pmap[PLAYER.xLoc][PLAYER.yLoc].flags & IS_IN_SHADOW) {
+        // 	PLAYER.info.foreColor = playerInShadowColor;
+        // } else {
+        // 	PLAYER.info.foreColor = playerInLightColor;
+        // }
+        return true;
+    }
+    startLightUpdate() {
+        // record Old Lights
+        // and then zero out Light.
+        let i = 0;
+        this.light.forEach((val, x, y) => {
+            for (i = 0; i < 3; ++i) {
+                this.oldLight[x][y][i] = val[i];
+                val[i] = this.ambient[i];
+            }
+            this.site.setCellFlag(x, y, Cell$1.IS_IN_SHADOW);
+        });
+    }
+    finishLightUpdate() {
+        forRect(this.width, this.height, (x, y) => {
+            // clear light flags
+            this.site.clearCellFlag(x, y, Cell$1.CELL_LIT | Cell$1.CELL_DARK);
+            const oldLight = this.oldLight[x][y];
+            const light = this.light[x][y];
+            if (light.some((v, i) => v !== oldLight[i])) {
+                this.site.setCellFlag(x, y, Cell$1.LIGHT_CHANGED);
+            }
+            if (isDarkLight(light)) {
+                this.site.setCellFlag(x, y, Cell$1.CELL_DARK);
+            }
+            else if (!this.site.hasCellFlag(x, y, Cell$1.IS_IN_SHADOW)) {
+                this.site.setCellFlag(x, y, Cell$1.CELL_LIT);
+            }
+        });
+    }
+    recordGlowLights() {
+        let i = 0;
+        this.light.forEach((val, x, y) => {
+            const glowLight = this.glowLight[x][y];
+            for (i = 0; i < 3; ++i) {
+                glowLight[i] = val[i];
+            }
+        });
+    }
+    restoreGlowLights() {
+        let i = 0;
+        this.light.forEach((val, x, y) => {
+            const glowLight = this.glowLight[x][y];
+            for (i = 0; i < 3; ++i) {
+                val[i] = glowLight[i];
+            }
+        });
+    }
+    // PaintSite
+    calcFov(x, y, radius, passThroughActors, cb) {
+        const map = this.site;
+        const fov = new FOV({
+            isBlocked(x, y) {
+                if (!passThroughActors && map.hasActor(x, y))
+                    return false;
+                return map.blocksVision(x, y);
+            },
+            setVisible: cb,
+            hasXY(x, y) {
+                return map.hasXY(x, y);
+            },
+        });
+        fov.calculate(x, y, radius);
+    }
+    addCellLight(x, y, light, dispelShadows) {
+        const val = this.light[x][y];
+        for (let i = 0; i < 3; ++i) {
+            val[i] += light[i];
+        }
+        if (dispelShadows) {
+            this.site.clearCellFlag(x, y, Cell$1.IS_IN_SHADOW);
+        }
+    }
+}
+
+var index$1 = {
+    __proto__: null,
+    config: config,
+    Light: Light,
+    intensity: intensity,
+    isDarkLight: isDarkLight,
+    make: make,
+    lights: lights,
+    from: from,
+    install: install,
+    installAll: installAll,
+    LightSystem: LightSystem
+};
+
+class Cell {
+    constructor() {
+        this.flags = { cell: 0, cellMech: 0, object: 0 };
+    }
+    isVisible() {
+        return !!(this.flags.cell & Cell$1.ANY_KIND_OF_VISIBLE);
+    }
+    hasActor() {
+        return !!(this.flags.cell & Cell$1.HAS_ANY_ACTOR);
+    }
+    blocksVision() {
+        return !!(this.flags.object & GameObject.L_BLOCKS_VISION);
+    }
+    setCellFlag(flag) {
+        this.flags.cell |= flag;
+    }
+    clearCellFlag(flag) {
+        this.flags.cell &= ~flag;
+    }
+}
+
+class Map {
+    constructor(width, height) {
+        this.width = width;
+        this.height = height;
+        this.flags = { map: 0 };
+        this.cells = make$8(width, height, () => new Cell());
+        this.light = new LightSystem(this);
+        this.ambientLight = [100, 100, 100];
+    }
+    hasXY(x, y) {
+        return this.cells.hasXY(x, y);
+    }
+    cell(x, y) {
+        return this.cells[x][y];
+    }
+    // Information
+    isVisible(x, y) {
+        return this.cell(x, y).isVisible();
+    }
+    hasActor(x, y) {
+        return this.cell(x, y).hasActor();
+    }
+    blocksVision(x, y) {
+        return this.cell(x, y).blocksVision();
+    }
+    // flags
+    setCellFlag(x, y, flag) {
+        this.cell(x, y).setCellFlag(flag);
+    }
+    clearCellFlag(x, y, flag) {
+        this.cell(x, y).clearCellFlag(flag);
+    }
+    hasCellFlag(x, y, flag) {
+        return !!(this.cell(x, y).flags.cell & flag);
+    }
+    // LightSystemSite
+    get anyLightChanged() {
+        return !(this.flags.map & Map$1.MAP_STABLE_LIGHTS);
+    }
+    set anyLightChanged(value) {
+        if (value) {
+            this.flags.map &= ~Map$1.MAP_STABLE_LIGHTS;
+        }
+        else {
+            this.flags.map |= Map$1.MAP_STABLE_LIGHTS;
+        }
+    }
+    get glowLightChanged() {
+        return !(this.flags.map & Map$1.MAP_STABLE_GLOW_LIGHTS);
+    }
+    set glowLightChanged(value) {
+        if (value) {
+            this.flags.map &= ~Map$1.MAP_STABLE_GLOW_LIGHTS;
+        }
+        else {
+            this.flags.map |= Map$1.MAP_STABLE_GLOW_LIGHTS;
+        }
+    }
+    eachGlowLight(_cb) { }
+    eachDynamicLight(_cb) { }
+}
+
+const flags = { Cell: Cell$1, CellMech, Map: Map$1 };
+
+var index = {
+    __proto__: null,
+    flags: flags,
+    Cell: Cell,
+    Map: Map
+};
+
+export { Random, blob, index$5 as canvas, color, colors, config$1 as config, cosmetic, data, index$3 as effect, events, flag, flags$2 as flags, fov, frequency, index$2 as gameObject, grid, io, index$1 as light, loop, make$9 as make, index as map, message, path, random, range, scheduler, index$4 as sprite, sprites, index$6 as text, types, index$7 as utils };

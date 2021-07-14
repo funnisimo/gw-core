@@ -3,9 +3,9 @@
  * @module utils
  */
 
-import { BasicObject, Loc, XY, Chainable } from '../types';
+import { Loc, XY, Chainable } from '../types';
 
-export { BasicObject, Loc, XY, Chainable };
+export { Loc, XY, Chainable };
 
 // DIRS are organized clockwise
 // - first 4 are arrow directions
@@ -509,7 +509,7 @@ export function first(...args: any[]) {
     return args.find((v) => v !== undefined);
 }
 
-export function getOpt(obj: BasicObject, member: string, _default: any) {
+export function getOpt(obj: any, member: string, _default: any) {
     const v = obj[member];
     if (v === undefined) return _default;
     return v;
@@ -768,6 +768,35 @@ export function forRect(...args: any[]) {
         for (let j = top; j < bottom; ++j) {
             fn(i, j);
         }
+    }
+}
+
+export function forBorder(width: number, height: number, fn: XYFunc): void;
+export function forBorder(
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    fn: XYFunc
+): void;
+export function forBorder(...args: any[]) {
+    let left = 0;
+    let top = 0;
+    if (arguments.length > 3) {
+        left = args.shift();
+        top = args.shift();
+    }
+    const right = left + args[0] - 1;
+    const bottom = top + args[1] - 1;
+    const fn = args[2];
+
+    for (let x = left; x <= right; ++x) {
+        fn(x, top);
+        fn(x, bottom);
+    }
+    for (let y = top; y <= bottom; ++y) {
+        fn(left, y);
+        fn(right, y);
     }
 }
 

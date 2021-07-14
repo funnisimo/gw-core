@@ -1,5 +1,4 @@
 import { random, Random } from './random';
-import { make as Make } from './gw';
 
 export type RangeBase = Range | string | number[] | number;
 
@@ -100,7 +99,6 @@ export function make(config: RangeBase | null, rng?: Random): Range {
     throw new Error('Not a valid range - ' + config);
 }
 
-Make.range = make;
 export const from = make;
 
 export function asFn(config: RangeBase | null, rng?: Random) {

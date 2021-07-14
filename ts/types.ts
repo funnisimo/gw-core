@@ -1,7 +1,5 @@
-import { Color, ColorBase } from './color';
-import { Range } from './range';
-
-export type BasicObject = { [key: string]: any };
+import { ColorBase } from './color';
+// import { LightType } from './light/types';
 
 export type Loc = [number, number];
 export interface XY {
@@ -20,27 +18,6 @@ export interface SpriteData {
     readonly opacity?: number;
 }
 
-export interface LightType {
-    color: Color;
-    radius: Range;
-    fadeTo: number;
-    passThroughActors: boolean;
-    paint(map: MapType, x: number, y: number): boolean;
-    paint(
-        map: MapType,
-        x: number,
-        y: number,
-        maintainShadows: boolean
-    ): boolean;
-    paint(
-        map: MapType,
-        x: number,
-        y: number,
-        maintainShadows: boolean,
-        isMinersLight: boolean
-    ): boolean;
-}
-
 export interface LayerFlags {
     readonly layer: number;
 }
@@ -49,7 +26,7 @@ export interface EntityType {
     readonly sprite: SpriteData;
     readonly priority: number;
     readonly layer: number;
-    readonly light: LightType | null;
+    // readonly light: LightType | null;
     readonly flags: LayerFlags;
 
     hasLayerFlag(flag: number): boolean;
@@ -121,9 +98,12 @@ export interface CellType {
     flags: CellFlags;
     tileFlags: () => number;
     tileMechFlags: () => number;
+
     actor: ActorType | null;
     item: ItemType | null;
+
     storeMemory: () => void;
+
     isAnyKindOfVisible: () => boolean;
     isVisible: () => boolean;
 }
