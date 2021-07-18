@@ -23,4 +23,5 @@ export { loop } from './io';
 export * as blob from './blob';
 export * as gameObject from './gameObject';
 export * as light from './light';
+export * as tile from './tile';
 export * as map from './map';

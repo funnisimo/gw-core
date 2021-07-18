@@ -44,3 +44,18 @@ export enum GameObject {
         L_BLOCKS_ACTORS |
         L_BLOCKS_SURFACE,
 }
+
+export enum Layer {
+    ALL_LAYERS = -1,
+    GROUND = 0,
+    LIQUID,
+    SURFACE,
+    GAS,
+    ITEM,
+    ACTOR,
+    PLAYER,
+    FX,
+    UI,
+}
+
+export type LayerString = keyof typeof Layer;

@@ -12,7 +12,6 @@ import * as Grid from '../grid';
 import * as Light from './light';
 import { data as DATA } from '../gw';
 import * as Utils from '../utils';
-import { Cell as CellFlags } from '../map/flags';
 import { Color } from '../color';
 
 export interface StaticLightInfo {
@@ -20,6 +19,14 @@ export interface StaticLightInfo {
     y: number;
     light: LightType;
     next: StaticLightInfo | null;
+}
+
+enum LightFlags {
+    LIT,
+    IN_SHADOW,
+    DARK,
+    MAGIC_DARK,
+    CHANGED,
 }
 
 export class LightSystem implements LightSystemType, PaintSite {
@@ -30,6 +37,7 @@ export class LightSystem implements LightSystemType, PaintSite {
     light: Grid.Grid<LightValue>;
     oldLight: Grid.Grid<LightValue>;
     glowLight: Grid.Grid<LightValue>;
+    flags: Grid.NumGrid;
 
     constructor(map: LightSystemSite) {
         this.site = map;
@@ -48,6 +56,7 @@ export class LightSystem implements LightSystemType, PaintSite {
             map.height,
             () => this.ambient.slice() as LightValue
         );
+        this.flags = Grid.make(map.width, map.height);
     }
 
     setAmbient(light: LightValue | Color) {
@@ -63,6 +72,30 @@ export class LightSystem implements LightSystemType, PaintSite {
 
     getLight(x: number, y: number): LightValue {
         return this.light[x][y];
+    }
+
+    isLit(x: number, y: number): boolean {
+        return !!(this.flags[x][y] & LightFlags.LIT);
+    }
+    isDark(x: number, y: number): boolean {
+        return !!(this.flags[x][y] & LightFlags.DARK);
+    }
+    isInShadow(x: number, y: number): boolean {
+        return !!(this.flags[x][y] & LightFlags.IN_SHADOW);
+    }
+    isMagicDark(x: number, y: number): boolean {
+        return !!(this.flags[x][y] & LightFlags.MAGIC_DARK);
+    }
+    lightChanged(x: number, y: number): boolean {
+        return !!(this.flags[x][y] & LightFlags.CHANGED);
+    }
+
+    setMagicDark(x: number, y: number, isDark = true) {
+        if (isDark) {
+            this.flags[x][y] |= LightFlags.MAGIC_DARK;
+        } else {
+            this.flags[x][y] &= ~LightFlags.MAGIC_DARK;
+        }
     }
 
     get width(): number {
@@ -201,27 +234,23 @@ export class LightSystem implements LightSystemType, PaintSite {
                 this.oldLight[x][y][i] = val[i];
                 val[i] = this.ambient[i];
             }
-            this.site.setCellFlag(x, y, CellFlags.IS_IN_SHADOW);
+            this.flags[x][y] = LightFlags.IN_SHADOW;
         });
     }
 
     finishLightUpdate(): void {
         Utils.forRect(this.width, this.height, (x, y) => {
             // clear light flags
-            this.site.clearCellFlag(
-                x,
-                y,
-                CellFlags.CELL_LIT | CellFlags.CELL_DARK
-            );
+            // this.flags[x][y] &= ~(LightFlags.LIT | LightFlags.DARK);
             const oldLight = this.oldLight[x][y];
             const light = this.light[x][y];
             if (light.some((v, i) => v !== oldLight[i])) {
-                this.site.setCellFlag(x, y, CellFlags.LIGHT_CHANGED);
+                this.flags[x][y] |= LightFlags.CHANGED;
             }
             if (Light.isDarkLight(light)) {
-                this.site.setCellFlag(x, y, CellFlags.CELL_DARK);
-            } else if (!this.site.hasCellFlag(x, y, CellFlags.IS_IN_SHADOW)) {
-                this.site.setCellFlag(x, y, CellFlags.CELL_LIT);
+                this.flags[x][y] |= LightFlags.DARK;
+            } else if (!this.isInShadow(x, y)) {
+                this.flags[x][y] |= LightFlags.LIT;
             }
         });
     }
@@ -261,12 +290,11 @@ export class LightSystem implements LightSystemType, PaintSite {
                 if (!passThroughActors && map.hasActor(x, y)) return false;
                 return map.blocksVision(x, y);
             },
-            setVisible: cb,
             hasXY(x: number, y: number) {
                 return map.hasXY(x, y);
             },
         });
-        fov.calculate(x, y, radius);
+        fov.calculate(x, y, radius, cb);
     }
 
     addCellLight(
@@ -280,7 +308,7 @@ export class LightSystem implements LightSystemType, PaintSite {
             val[i] += light[i];
         }
         if (dispelShadows) {
-            this.site.clearCellFlag(x, y, CellFlags.IS_IN_SHADOW);
+            this.flags[x][y] &= ~LightFlags.IN_SHADOW;
         }
     }
 }

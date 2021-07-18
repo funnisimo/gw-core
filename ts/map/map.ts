@@ -8,13 +8,15 @@ import {
 } from '../light';
 import { Map as Flags } from './flags';
 import { Cell } from './cell';
+import * as FOV from '../fov';
 
-export class Map implements LightSystemSite {
+export class Map implements LightSystemSite, FOV.FovSite {
     width: number;
     height: number;
     cells: Grid.Grid<Cell>;
     flags: { map: 0 };
     light: LightSystemType;
+    fov: FOV.FovSystemType;
     ambientLight: LightValue;
 
     constructor(width: number, height: number) {
@@ -24,6 +26,7 @@ export class Map implements LightSystemSite {
 
         this.cells = Grid.make(width, height, () => new Cell());
         this.light = new LightSystem(this);
+        this.fov = new FOV.FovSystem(this);
         this.ambientLight = [100, 100, 100];
     }
 
@@ -38,7 +41,7 @@ export class Map implements LightSystemSite {
     // Information
 
     isVisible(x: number, y: number): boolean {
-        return this.cell(x, y).isVisible();
+        return this.fov.isAnyKindOfVisible(x, y);
     }
     hasActor(x: number, y: number): boolean {
         return this.cell(x, y).hasActor();
@@ -85,4 +88,66 @@ export class Map implements LightSystemSite {
 
     eachGlowLight(_cb: LightCb): void {}
     eachDynamicLight(_cb: LightCb): void {}
+
+    // FOV System Site
+
+    fovChanged(): boolean {
+        return !!(this.flags.map & Flags.MAP_FOV_CHANGED);
+    }
+    eachViewport(_cb: FOV.ViewportCb): void {
+        throw new Error('Method not implemented.');
+    }
+    lightChanged(x: number, y: number): boolean {
+        return this.light.lightChanged(x, y);
+    }
+    hasVisibleLight(x: number, y: number): boolean {
+        return this.light.isLit(x, y);
+    }
+    cellRevealed(_x: number, _y: number): void {
+        // if (DATA.automationActive) {
+        // if (cell.item) {
+        //     const theItem: GW.types.ItemType = cell.item;
+        //     if (
+        //         theItem.hasLayerFlag(ObjectFlags.L_INTERRUPT_WHEN_SEEN)
+        //     ) {
+        //         GW.message.add(
+        //             '§you§ §see§ ΩitemMessageColorΩ§item§∆.',
+        //             {
+        //                 item: theItem,
+        //                 actor: DATA.player,
+        //             }
+        //         );
+        //     }
+        // }
+        // if (
+        //     !(this.fov.isMagicMapped(x, y)) &&
+        //     this.site.hasObjectFlag(
+        //         x,
+        //         y,
+        //         ObjectFlags.L_INTERRUPT_WHEN_SEEN
+        //     )
+        // ) {
+        //     const tile = cell.tileWithLayerFlag(
+        //         ObjectFlags.L_INTERRUPT_WHEN_SEEN
+        //     );
+        //     if (tile) {
+        //         GW.message.add(
+        //             '§you§ §see§ ΩbackgroundMessageColorΩ§item§∆.',
+        //             {
+        //                 actor: DATA.player,
+        //                 item: tile.name,
+        //             }
+        //         );
+        //     }
+        // }
+    }
+    redrawCell(x: number, y: number, clearMemory?: boolean): void {
+        if (clearMemory) {
+            this.cells[x][y].clearMemory();
+        }
+        this.cells[x][y].redraw();
+    }
+    storeMemory(x: number, y: number): void {
+        this.cells[x][y].storeMemory();
+    }
 }

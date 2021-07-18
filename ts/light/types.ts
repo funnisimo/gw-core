@@ -91,9 +91,9 @@ export interface LightSystemSite {
     eachGlowLight(cb: LightCb): void;
     eachDynamicLight(cb: LightCb): void;
 
-    setCellFlag(x: number, y: number, flag: number): void;
-    clearCellFlag(x: number, y: number, flag: number): void;
-    hasCellFlag(x: number, y: number, flag: number): boolean;
+    // setCellFlag(x: number, y: number, flag: number): void;
+    // clearCellFlag(x: number, y: number, flag: number): void;
+    // hasCellFlag(x: number, y: number, flag: number): boolean;
 }
 
 export interface LightSystemType {
@@ -104,4 +104,9 @@ export interface LightSystemType {
     removeStatic(x: number, y: number, light?: LightType): void;
 
     getLight(x: number, y: number): LightValue;
+    lightChanged(x: number, y: number): boolean;
+
+    isLit(x: number, y: number): boolean;
+    isDark(x: number, y: number): boolean;
+    isInShadow(x: number, y: number): boolean;
 }

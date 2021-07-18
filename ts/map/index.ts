@@ -1,6 +1,6 @@
-import { Cell, CellMech, Map } from './flags';
+import { Cell, Map } from './flags';
 
-export const flags = { Cell, CellMech, Map };
+export const flags = { Cell, Map };
 
 export * from './cell';
 export * from './map';

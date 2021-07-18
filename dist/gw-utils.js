@@ -691,7 +691,7 @@
         return Math.floor(arcCount / 2); // Since we added one when we entered a wall and another when we left.
     }
 
-    var index$7 = {
+    var index$9 = {
         __proto__: null,
         DIRS: DIRS$2,
         NO_DIRECTION: NO_DIRECTION,
@@ -1021,7 +1021,7 @@
             return `${this.lo}-${this.hi}`;
         }
     }
-    function make$a(config, rng) {
+    function make$b(config, rng) {
         if (!config)
             return new Range(0, 0, 0, rng);
         if (config instanceof Range)
@@ -1073,16 +1073,16 @@
         }
         throw new Error('Not a valid range - ' + config);
     }
-    const from$5 = make$a;
+    const from$5 = make$b;
     function asFn(config, rng) {
-        const range = make$a(config, rng);
+        const range = make$b(config, rng);
         return () => range.value();
     }
 
     var range = {
         __proto__: null,
         Range: Range,
-        make: make$a,
+        make: make$b,
         from: from$5,
         asFn: asFn
     };
@@ -1168,8 +1168,8 @@
 
     const data = {};
     const config$1 = {};
-    const make$9 = {};
-    const flags$2 = {};
+    const make$a = {};
+    const flags$3 = {};
 
     const DIRS$1 = DIRS$2;
     function makeArray(l, fn) {
@@ -1662,14 +1662,14 @@
     // Grid.fillBlob = fillBlob;
     const alloc = NumGrid.alloc.bind(NumGrid);
     const free = NumGrid.free.bind(NumGrid);
-    function make$8(w, h, v) {
+    function make$9(w, h, v) {
         if (v === undefined)
             return new NumGrid(w, h, 0);
         if (typeof v === 'number')
             return new NumGrid(w, h, v);
         return new Grid(w, h, v);
     }
-    make$9.grid = make$8;
+    make$a.grid = make$9;
     function offsetZip(destGrid, srcGrid, srcToDestX, srcToDestY, value) {
         const fn = typeof value === 'function'
             ? value
@@ -1704,7 +1704,7 @@
         NumGrid: NumGrid,
         alloc: alloc,
         free: free,
-        make: make$8,
+        make: make$9,
         offsetZip: offsetZip,
         intersection: intersection,
         unite: unite
@@ -2062,12 +2062,12 @@
             return this.pause(5 * 60 * 1000); // 5 min
         }
     }
-    function make$7() {
+    function make$8() {
         return new Loop();
     }
-    make$9.loop = make$7;
+    make$a.loop = make$8;
     // Makes a default global loop that you access through these funcitons...
-    const loop = make$7();
+    const loop = make$8();
 
     var io = {
         __proto__: null,
@@ -2087,23 +2087,61 @@
         onkeydown: onkeydown,
         makeMouseEvent: makeMouseEvent,
         Loop: Loop,
-        make: make$7,
+        make: make$8,
         loop: loop
     };
+
+    var FovFlags;
+    (function (FovFlags) {
+        FovFlags[FovFlags["VISIBLE"] = fl(0)] = "VISIBLE";
+        FovFlags[FovFlags["WAS_VISIBLE"] = fl(1)] = "WAS_VISIBLE";
+        FovFlags[FovFlags["CLAIRVOYANT_VISIBLE"] = fl(2)] = "CLAIRVOYANT_VISIBLE";
+        FovFlags[FovFlags["WAS_CLAIRVOYANT_VISIBLE"] = fl(3)] = "WAS_CLAIRVOYANT_VISIBLE";
+        FovFlags[FovFlags["TELEPATHIC_VISIBLE"] = fl(4)] = "TELEPATHIC_VISIBLE";
+        FovFlags[FovFlags["WAS_TELEPATHIC_VISIBLE"] = fl(5)] = "WAS_TELEPATHIC_VISIBLE";
+        FovFlags[FovFlags["ITEM_DETECTED"] = fl(6)] = "ITEM_DETECTED";
+        FovFlags[FovFlags["WAS_ITEM_DETECTED"] = fl(7)] = "WAS_ITEM_DETECTED";
+        FovFlags[FovFlags["MONSTER_DETECTED"] = fl(8)] = "MONSTER_DETECTED";
+        FovFlags[FovFlags["WAS_MONSTER_DETECTED"] = fl(9)] = "WAS_MONSTER_DETECTED";
+        FovFlags[FovFlags["REVEALED"] = fl(10)] = "REVEALED";
+        FovFlags[FovFlags["MAGIC_MAPPED"] = fl(11)] = "MAGIC_MAPPED";
+        FovFlags[FovFlags["IN_FOV"] = fl(12)] = "IN_FOV";
+        FovFlags[FovFlags["WAS_IN_FOV"] = fl(13)] = "WAS_IN_FOV";
+        FovFlags[FovFlags["ALWAYS_VISIBLE"] = fl(14)] = "ALWAYS_VISIBLE";
+        FovFlags[FovFlags["ANY_KIND_OF_VISIBLE"] = FovFlags.VISIBLE | FovFlags.CLAIRVOYANT_VISIBLE | FovFlags.TELEPATHIC_VISIBLE] = "ANY_KIND_OF_VISIBLE";
+        FovFlags[FovFlags["IS_WAS_ANY_KIND_OF_VISIBLE"] = FovFlags.VISIBLE |
+            FovFlags.WAS_VISIBLE |
+            FovFlags.CLAIRVOYANT_VISIBLE |
+            FovFlags.WAS_CLAIRVOYANT_VISIBLE |
+            FovFlags.TELEPATHIC_VISIBLE |
+            FovFlags.WAS_TELEPATHIC_VISIBLE] = "IS_WAS_ANY_KIND_OF_VISIBLE";
+        FovFlags[FovFlags["WAS_ANY_KIND_OF_VISIBLE"] = FovFlags.WAS_VISIBLE |
+            FovFlags.WAS_CLAIRVOYANT_VISIBLE |
+            FovFlags.WAS_TELEPATHIC_VISIBLE] = "WAS_ANY_KIND_OF_VISIBLE";
+        FovFlags[FovFlags["PLAYER"] = FovFlags.IN_FOV] = "PLAYER";
+        FovFlags[FovFlags["CLAIRVOYANT"] = FovFlags.CLAIRVOYANT_VISIBLE] = "CLAIRVOYANT";
+        FovFlags[FovFlags["TELEPATHIC"] = FovFlags.TELEPATHIC_VISIBLE] = "TELEPATHIC";
+        FovFlags[FovFlags["VIEWPORT_TYPES"] = FovFlags.PLAYER |
+            FovFlags.CLAIRVOYANT |
+            FovFlags.TELEPATHIC |
+            FovFlags.ITEM_DETECTED |
+            FovFlags.MONSTER_DETECTED] = "VIEWPORT_TYPES";
+    })(FovFlags || (FovFlags = {}));
 
     // CREDIT - This is adapted from: http://roguebasin.roguelikedevelopment.org/index.php?title=Improved_Shadowcasting_in_Java
     class FOV {
         constructor(strategy) {
+            this._setVisible = null;
             this._startX = -1;
             this._startY = -1;
             this._maxRadius = 100;
             this._isBlocked = strategy.isBlocked;
             this._calcRadius = strategy.calcRadius || calcRadius;
-            this._setVisible = strategy.setVisible;
             this._hasXY = strategy.hasXY || TRUE;
             this._debug = strategy.debug || NOOP;
         }
-        calculate(x, y, maxRadius = 10) {
+        calculate(x, y, maxRadius = 10, setVisible) {
+            this._setVisible = setVisible;
             this._setVisible(x, y, 1);
             this._startX = x;
             this._startY = y;
@@ -2186,9 +2224,267 @@
         }
     }
 
-    var fov = {
+    // import * as GW from 'gw-utils';
+    class FovSystem {
+        constructor(site) {
+            this.site = site;
+            this.flags = make$9(site.width, site.height, 0);
+            this.fov = new FOV({
+                isBlocked(x, y) {
+                    return site.blocksVision(x, y);
+                },
+                hasXY(x, y) {
+                    return x >= 0 && y >= 0 && x < site.width && y < site.height;
+                },
+            });
+        }
+        isAnyKindOfVisible(x, y) {
+            return !!(this.flags[x][y] & FovFlags.ANY_KIND_OF_VISIBLE);
+        }
+        isInFov(x, y) {
+            return !!(this.flags[x][y] & FovFlags.IN_FOV);
+        }
+        isDirectlyVisible(x, y) {
+            return !!(this.flags[x][y] & FovFlags.VISIBLE);
+        }
+        isMagicMapped(x, y) {
+            return !!(this.flags[x][y] & FovFlags.MAGIC_MAPPED);
+        }
+        isRevealed(x, y) {
+            return !!(this.flags[x][y] & FovFlags.REVEALED);
+        }
+        makeAlwaysVisible() {
+            this.flags.update((v) => v | (FovFlags.ALWAYS_VISIBLE | FovFlags.REVEALED));
+        }
+        makeCellAlwaysVisible(x, y) {
+            this.flags[x][y] |= FovFlags.ALWAYS_VISIBLE | FovFlags.REVEALED;
+        }
+        revealAll() {
+            this.flags.update((v) => v | FovFlags.REVEALED);
+        }
+        revealCell(x, y) {
+            const flag = FovFlags.REVEALED;
+            this.flags[x][y] |= flag;
+        }
+        hideCell(x, y) {
+            this.flags[x][y] &= ~(FovFlags.MAGIC_MAPPED | FovFlags.REVEALED);
+        }
+        magicMapCell(x, y) {
+            this.flags[x][y] |= FovFlags.MAGIC_MAPPED;
+        }
+        demoteCellVisibility(flag) {
+            flag &= ~(FovFlags.WAS_ANY_KIND_OF_VISIBLE | FovFlags.WAS_IN_FOV);
+            if (flag & FovFlags.IN_FOV) {
+                flag &= ~FovFlags.IN_FOV;
+                flag |= FovFlags.WAS_IN_FOV;
+            }
+            if (flag & FovFlags.VISIBLE) {
+                flag &= ~FovFlags.VISIBLE;
+                flag |= FovFlags.WAS_VISIBLE;
+            }
+            if (flag & FovFlags.CLAIRVOYANT_VISIBLE) {
+                flag &= ~FovFlags.CLAIRVOYANT_VISIBLE;
+                flag |= FovFlags.WAS_CLAIRVOYANT_VISIBLE;
+            }
+            if (flag & FovFlags.TELEPATHIC_VISIBLE) {
+                flag &= ~FovFlags.TELEPATHIC_VISIBLE;
+                flag |= FovFlags.WAS_TELEPATHIC_VISIBLE;
+            }
+            if (flag & FovFlags.ALWAYS_VISIBLE) {
+                flag |= FovFlags.VISIBLE;
+            }
+            return flag;
+        }
+        updateCellVisibility(flag, x, y) {
+            const isVisible = !!(flag & FovFlags.VISIBLE);
+            const wasVisible = !!(flag & FovFlags.WAS_VISIBLE);
+            if (isVisible && wasVisible) {
+                if (this.site.lightChanged(x, y)) {
+                    this.site.redrawCell(x, y);
+                }
+            }
+            else if (isVisible && !wasVisible) {
+                // if the cell became visible this move
+                if (!(flag & FovFlags.REVEALED) /* && DATA.automationActive */) {
+                    this.site.cellRevealed(x, y);
+                    // if (cell.item) {
+                    //     const theItem: GW.types.ItemType = cell.item;
+                    //     if (
+                    //         theItem.hasLayerFlag(ObjectFlags.L_INTERRUPT_WHEN_SEEN)
+                    //     ) {
+                    //         GW.message.add(
+                    //             '§you§ §see§ ΩitemMessageColorΩ§item§∆.',
+                    //             {
+                    //                 item: theItem,
+                    //                 actor: DATA.player,
+                    //             }
+                    //         );
+                    //     }
+                    // }
+                    // if (
+                    //     !(flag & FovFlags.MAGIC_MAPPED) &&
+                    //     this.site.hasObjectFlag(
+                    //         x,
+                    //         y,
+                    //         ObjectFlags.L_INTERRUPT_WHEN_SEEN
+                    //     )
+                    // ) {
+                    //     const tile = cell.tileWithLayerFlag(
+                    //         ObjectFlags.L_INTERRUPT_WHEN_SEEN
+                    //     );
+                    //     if (tile) {
+                    //         GW.message.add(
+                    //             '§you§ §see§ ΩbackgroundMessageColorΩ§item§∆.',
+                    //             {
+                    //                 actor: DATA.player,
+                    //                 item: tile.name,
+                    //             }
+                    //         );
+                    //     }
+                    // }
+                    this.flags[x][y] |= FovFlags.REVEALED;
+                }
+                this.site.redrawCell(x, y);
+            }
+            else if (!isVisible && wasVisible) {
+                // if the cell ceased being visible this move
+                this.site.storeMemory(x, y);
+                this.site.redrawCell(x, y);
+            }
+            return isVisible;
+        }
+        updateCellClairyvoyance(flag, x, y) {
+            const isClairy = !!(flag & FovFlags.CLAIRVOYANT_VISIBLE);
+            const wasClairy = !!(flag & FovFlags.WAS_CLAIRVOYANT_VISIBLE);
+            if (isClairy && wasClairy) {
+                if (this.site.lightChanged(x, y)) {
+                    this.site.redrawCell(x, y);
+                }
+            }
+            else if (!isClairy && wasClairy) {
+                // ceased being clairvoyantly visible
+                this.site.storeMemory(x, y);
+                this.site.redrawCell(x, y);
+            }
+            else if (!wasClairy && isClairy) {
+                // became clairvoyantly visible
+                this.site.redrawCell(x, y, true);
+            }
+            return isClairy;
+        }
+        updateCellTelepathy(flag, x, y) {
+            const isTele = !!(flag & FovFlags.TELEPATHIC_VISIBLE);
+            const wasTele = !!(flag & FovFlags.WAS_TELEPATHIC_VISIBLE);
+            if (isTele && wasTele) {
+                if (this.site.lightChanged(x, y)) {
+                    this.site.redrawCell(x, y);
+                }
+            }
+            else if (!isTele && wasTele) {
+                // ceased being telepathically visible
+                this.site.storeMemory(x, y);
+                this.site.redrawCell(x, y);
+            }
+            else if (!wasTele && isTele) {
+                // became telepathically visible
+                // if (
+                //     !(flag & FovFlags.REVEALED) &&
+                //     !cell.hasTileFlag(Flags.Tile.T_PATHING_BLOCKER)
+                // ) {
+                //     DATA.xpxpThisTurn++;
+                // }
+                this.site.redrawCell(x, y, true);
+            }
+            return isTele;
+        }
+        updateCellDetect(flag, x, y) {
+            const isMonst = !!(flag & FovFlags.MONSTER_DETECTED);
+            const wasMonst = !!(flag & FovFlags.WAS_MONSTER_DETECTED);
+            if (isMonst && wasMonst) {
+                if (this.site.lightChanged(x, y)) {
+                    this.site.redrawCell(x, y);
+                }
+            }
+            else if (!isMonst && wasMonst) {
+                // ceased being detected visible
+                this.site.redrawCell(x, y, true);
+                // cell.storeMemory();
+            }
+            else if (!wasMonst && isMonst) {
+                // became detected visible
+                this.site.redrawCell(x, y, true);
+                // cell.storeMemory();
+            }
+            return isMonst;
+        }
+        promoteCellVisibility(flag, x, y) {
+            if (flag & FovFlags.IN_FOV &&
+                this.site.hasVisibleLight(x, y) // &&
+            // !(cell.flags.cellMech & FovFlagsMech.DARKENED)
+            ) {
+                this.flags[x][y] |= FovFlags.VISIBLE;
+            }
+            if (this.updateCellVisibility(flag, x, y))
+                return;
+            if (this.updateCellClairyvoyance(flag, x, y))
+                return;
+            if (this.updateCellTelepathy(flag, x, y))
+                return;
+            if (this.updateCellDetect(flag, x, y))
+                return;
+        }
+        update() {
+            // if (!this.site.usesFov()) return false;
+            if (!this.site.fovChanged())
+                return false;
+            this.flags.update(this.demoteCellVisibility.bind(this));
+            this.site.eachViewport((x, y, radius, type) => {
+                const flag = type & FovFlags.VIEWPORT_TYPES;
+                if (!flag)
+                    throw new Error('Received invalid viewport type: ' + type);
+                if (radius == 0) {
+                    this.flags[x][y] |= flag;
+                    return;
+                }
+                this.fov.calculate(x, y, radius, (x, y, v) => {
+                    if (v) {
+                        this.flags[x][y] |= flag;
+                    }
+                });
+            });
+            // if (PLAYER.bonus.clairvoyance < 0) {
+            //   discoverCell(PLAYER.xLoc, PLAYER.yLoc);
+            // }
+            //
+            // if (PLAYER.bonus.clairvoyance != 0) {
+            // 	updateClairvoyance();
+            // }
+            //
+            // updateTelepathy();
+            // updateMonsterDetection();
+            // updateLighting();
+            this.flags.forEach(this.promoteCellVisibility.bind(this));
+            // if (PLAYER.status.hallucinating > 0) {
+            // 	for (theItem of DUNGEON.items) {
+            // 		if ((pmap[theItem.xLoc][theItem.yLoc].flags & DISCOVERED) && refreshDisplay) {
+            // 			refreshDungeonCell(theItem.xLoc, theItem.yLoc);
+            // 		}
+            // 	}
+            // 	for (monst of DUNGEON.monsters) {
+            // 		if ((pmap[monst.xLoc][monst.yLoc].flags & DISCOVERED) && refreshDisplay) {
+            // 			refreshDungeonCell(monst.xLoc, monst.yLoc);
+            // 		}
+            // 	}
+            // }
+            return true;
+        }
+    }
+
+    var index$8 = {
         __proto__: null,
-        FOV: FOV
+        get FovFlags () { return FovFlags; },
+        FOV: FOV,
+        FovSystem: FovSystem
     };
 
     // var PATH = {};
@@ -2786,7 +3082,7 @@
         emit: emit
     };
 
-    function make$6(v) {
+    function make$7(v) {
         if (v === undefined)
             return () => 100;
         if (v === null)
@@ -2839,7 +3135,7 @@
 
     var frequency = {
         __proto__: null,
-        make: make$6
+        make: make$7
     };
 
     class Scheduler {
@@ -3655,7 +3951,7 @@ void main() {
         }
         return c;
     }
-    function make$5(...args) {
+    function make$6(...args) {
         let arg = args[0];
         let base256 = args[1];
         if (args.length == 0)
@@ -3694,7 +3990,7 @@ void main() {
                 return fromName(arg);
             }
         }
-        return make$5(arg, args[1]);
+        return make$6(arg, args[1]);
     }
     // adjusts the luminosity of 2 colors to ensure there is enough separation between them
     function separate(a, b) {
@@ -3744,12 +4040,12 @@ void main() {
                 (a.b - b.b) * (a.b - b.b) * 0.3333)) /
             65025);
     }
-    function install$4(name, ...args) {
+    function install$5(name, ...args) {
         let info = args;
         if (args.length == 1) {
             info = args[0];
         }
-        const c = info instanceof Color ? info : make$5(info);
+        const c = info instanceof Color ? info : make$6(info);
         colors[name] = c;
         c.name = name;
         return c;
@@ -3757,22 +4053,22 @@ void main() {
     function installSpread(name, ...args) {
         let c;
         if (args.length == 1) {
-            c = install$4(name, args[0]);
+            c = install$5(name, args[0]);
         }
         else {
-            c = install$4(name, ...args);
+            c = install$5(name, ...args);
         }
-        install$4('light_' + name, c.clone().lighten(25));
-        install$4('lighter_' + name, c.clone().lighten(50));
-        install$4('lightest_' + name, c.clone().lighten(75));
-        install$4('dark_' + name, c.clone().darken(25));
-        install$4('darker_' + name, c.clone().darken(50));
-        install$4('darkest_' + name, c.clone().darken(75));
+        install$5('light_' + name, c.clone().lighten(25));
+        install$5('lighter_' + name, c.clone().lighten(50));
+        install$5('lightest_' + name, c.clone().lighten(75));
+        install$5('dark_' + name, c.clone().darken(25));
+        install$5('darker_' + name, c.clone().darken(50));
+        install$5('darkest_' + name, c.clone().darken(75));
         return c;
     }
-    const NONE = install$4('NONE', -1);
-    const BLACK = install$4('black', 0x000);
-    const WHITE = install$4('white', 0xfff);
+    const NONE = install$5('NONE', -1);
+    const BLACK = install$5('black', 0x000);
+    const WHITE = install$5('white', 0xfff);
     installSpread('teal', [30, 100, 100]);
     installSpread('brown', [60, 40, 0]);
     installSpread('tan', [80, 70, 55]); // 80, 67,		15);
@@ -3810,13 +4106,13 @@ void main() {
         fromCss: fromCss,
         fromName: fromName,
         fromNumber: fromNumber,
-        make: make$5,
+        make: make$6,
         from: from$3,
         separate: separate,
         swap: swap,
         relativeLuminance: relativeLuminance,
         distance: distance,
-        install: install$4,
+        install: install$5,
         installSpread: installSpread,
         NONE: NONE
     };
@@ -3946,7 +4242,7 @@ void main() {
             return `{ ch: ${this.ch}, fg: ${this.fg.toString(true)}, bg: ${this.bg.toString(true)} }`;
         }
     }
-    make$9.mixer = function (base) {
+    make$a.mixer = function (base) {
         return new Mixer(base);
     };
 
@@ -4544,7 +4840,7 @@ void main() {
         }
     }
 
-    var index$6 = {
+    var index$7 = {
         __proto__: null,
         compile: compile,
         apply: apply,
@@ -4759,7 +5055,7 @@ void main() {
             console.log(data.join('\n'));
         }
     }
-    make$9.dataBuffer = function (width, height) {
+    make$a.dataBuffer = function (width, height) {
         return new DataBuffer(width, height);
     };
     class Buffer extends DataBuffer {
@@ -5161,7 +5457,7 @@ void main() {
             this._ctx.putImageData(d, px, py);
         }
     }
-    function make$4(...args) {
+    function make$5(...args) {
         let width = args[0];
         let height = args[1];
         let opts = args[2];
@@ -5301,13 +5597,13 @@ void main() {
         return { position, uv };
     }
 
-    var index$5 = {
+    var index$6 = {
         __proto__: null,
         NotSupportedError: NotSupportedError,
         BaseCanvas: BaseCanvas,
         Canvas: Canvas,
         Canvas2D: Canvas2D,
-        make: make$4,
+        make: make$5,
         Glyphs: Glyphs,
         DataBuffer: DataBuffer,
         Buffer: Buffer,
@@ -5328,7 +5624,7 @@ void main() {
         }
     }
     const sprites = {};
-    function make$3(...args) {
+    function make$4(...args) {
         let ch = null, fg = -1, bg = -1, opacity;
         if (args.length == 0) {
             return new Sprite(null, -1, -1);
@@ -5373,18 +5669,18 @@ void main() {
         if (typeof fg === 'string')
             fg = from$3(fg);
         else if (Array.isArray(fg))
-            fg = make$5(fg);
+            fg = make$6(fg);
         else if (fg === undefined || fg === null)
             fg = -1;
         if (typeof bg === 'string')
             bg = from$3(bg);
         else if (Array.isArray(bg))
-            bg = make$5(bg);
+            bg = make$6(bg);
         else if (bg === undefined || bg === null)
             bg = -1;
         return new Sprite(ch, fg, bg, opacity);
     }
-    make$9.sprite = make$3;
+    make$a.sprite = make$4;
     function from$2(...args) {
         if (args.length == 1 && typeof args[0] === 'string') {
             const sprite = sprites[args[0]];
@@ -5392,24 +5688,24 @@ void main() {
                 throw new Error('Failed to find sprite: ' + args[0]);
             return sprite;
         }
-        return make$3(args);
+        return make$4(args);
     }
-    function install$3(name, ...args) {
+    function install$4(name, ...args) {
         let sprite;
         // @ts-ignore
-        sprite = make$3(...args);
+        sprite = make$4(...args);
         sprite.name = name;
         sprites[name] = sprite;
         return sprite;
     }
 
-    var index$4 = {
+    var index$5 = {
         __proto__: null,
         Sprite: Sprite,
         sprites: sprites,
-        make: make$3,
+        make: make$4,
         from: from$2,
-        install: install$3,
+        install: install$4,
         Mixer: Mixer
     };
 
@@ -5419,12 +5715,12 @@ void main() {
 
     const templates = {};
     config$1.message = config$1.message || {};
-    function install$2(id, msg) {
+    function install$3(id, msg) {
         const template = compile(msg);
         templates[id] = template;
     }
-    function installAll$2(config) {
-        Object.entries(config).forEach(([id, msg]) => install$2(id, msg));
+    function installAll$3(config) {
+        Object.entries(config).forEach(([id, msg]) => install$3(id, msg));
     }
     // messages
     const ARCHIVE = [];
@@ -5557,8 +5853,8 @@ void main() {
     var message = {
         __proto__: null,
         templates: templates,
-        install: install$2,
-        installAll: installAll$2,
+        install: install$3,
+        installAll: installAll$3,
         needsUpdate: needsUpdate,
         configure: configure,
         add: add,
@@ -5571,50 +5867,51 @@ void main() {
 
     ///////////////////////////////////////////////////////
     // TILE EVENT
-    var Flags;
-    (function (Flags) {
+    var Effect;
+    (function (Effect) {
         // E_ALWAYS_FIRE = Fl(10), // Fire even if the cell is marked as having fired this turn
-        Flags[Flags["E_NEXT_ALWAYS"] = fl(0)] = "E_NEXT_ALWAYS";
-        Flags[Flags["E_NEXT_EVERYWHERE"] = fl(1)] = "E_NEXT_EVERYWHERE";
+        Effect[Effect["E_NEXT_ALWAYS"] = fl(0)] = "E_NEXT_ALWAYS";
+        Effect[Effect["E_NEXT_EVERYWHERE"] = fl(1)] = "E_NEXT_EVERYWHERE";
         // E_NO_REDRAW_CELL = Fl(2),
-        Flags[Flags["E_TREAT_AS_BLOCKING"] = fl(3)] = "E_TREAT_AS_BLOCKING";
-        Flags[Flags["E_PERMIT_BLOCKING"] = fl(4)] = "E_PERMIT_BLOCKING";
-        Flags[Flags["E_ABORT_IF_BLOCKS_MAP"] = fl(5)] = "E_ABORT_IF_BLOCKS_MAP";
-        Flags[Flags["E_BLOCKED_BY_ITEMS"] = fl(6)] = "E_BLOCKED_BY_ITEMS";
-        Flags[Flags["E_BLOCKED_BY_ACTORS"] = fl(7)] = "E_BLOCKED_BY_ACTORS";
-        Flags[Flags["E_BLOCKED_BY_OTHER_LAYERS"] = fl(8)] = "E_BLOCKED_BY_OTHER_LAYERS";
-        Flags[Flags["E_SUPERPRIORITY"] = fl(9)] = "E_SUPERPRIORITY";
-        Flags[Flags["E_NO_MARK_FIRED"] = fl(11)] = "E_NO_MARK_FIRED";
+        Effect[Effect["E_TREAT_AS_BLOCKING"] = fl(3)] = "E_TREAT_AS_BLOCKING";
+        Effect[Effect["E_PERMIT_BLOCKING"] = fl(4)] = "E_PERMIT_BLOCKING";
+        Effect[Effect["E_ABORT_IF_BLOCKS_MAP"] = fl(5)] = "E_ABORT_IF_BLOCKS_MAP";
+        Effect[Effect["E_BLOCKED_BY_ITEMS"] = fl(6)] = "E_BLOCKED_BY_ITEMS";
+        Effect[Effect["E_BLOCKED_BY_ACTORS"] = fl(7)] = "E_BLOCKED_BY_ACTORS";
+        Effect[Effect["E_BLOCKED_BY_OTHER_LAYERS"] = fl(8)] = "E_BLOCKED_BY_OTHER_LAYERS";
+        Effect[Effect["E_SUPERPRIORITY"] = fl(9)] = "E_SUPERPRIORITY";
+        Effect[Effect["E_NO_MARK_FIRED"] = fl(11)] = "E_NO_MARK_FIRED";
         // MUST_REPLACE_LAYER
         // NEEDS_EMPTY_LAYER
-        Flags[Flags["E_PROTECTED"] = fl(12)] = "E_PROTECTED";
-        Flags[Flags["E_SPREAD_CIRCLE"] = fl(13)] = "E_SPREAD_CIRCLE";
-        Flags[Flags["E_SPREAD_LINE"] = fl(14)] = "E_SPREAD_LINE";
+        Effect[Effect["E_PROTECTED"] = fl(12)] = "E_PROTECTED";
+        Effect[Effect["E_SPREAD_CIRCLE"] = fl(13)] = "E_SPREAD_CIRCLE";
+        Effect[Effect["E_SPREAD_LINE"] = fl(14)] = "E_SPREAD_LINE";
         // E_NULL_SURFACE = Fl(15), // Clear the surface layer
         // E_NULL_LIQUID = Fl(16), // Clear liquid layer
         // E_NULL_GAS = Fl(17), // Clear gas layer
-        Flags[Flags["E_EVACUATE_CREATURES"] = fl(18)] = "E_EVACUATE_CREATURES";
-        Flags[Flags["E_EVACUATE_ITEMS"] = fl(19)] = "E_EVACUATE_ITEMS";
-        Flags[Flags["E_BUILD_IN_WALLS"] = fl(20)] = "E_BUILD_IN_WALLS";
-        Flags[Flags["E_MUST_TOUCH_WALLS"] = fl(21)] = "E_MUST_TOUCH_WALLS";
-        Flags[Flags["E_NO_TOUCH_WALLS"] = fl(22)] = "E_NO_TOUCH_WALLS";
-        Flags[Flags["E_FIRED"] = fl(23)] = "E_FIRED";
-        Flags[Flags["E_CLEAR_GROUND"] = fl(17)] = "E_CLEAR_GROUND";
-        Flags[Flags["E_CLEAR_SURFACE"] = fl(24)] = "E_CLEAR_SURFACE";
-        Flags[Flags["E_CLEAR_LIQUID"] = fl(25)] = "E_CLEAR_LIQUID";
-        Flags[Flags["E_CLEAR_GAS"] = fl(26)] = "E_CLEAR_GAS";
-        Flags[Flags["E_CLEAR_CELL"] = Flags.E_CLEAR_GROUND |
-            Flags.E_CLEAR_SURFACE |
-            Flags.E_CLEAR_LIQUID |
-            Flags.E_CLEAR_GAS] = "E_CLEAR_CELL";
-        Flags[Flags["E_ONLY_IF_EMPTY"] = Flags.E_BLOCKED_BY_ITEMS | Flags.E_BLOCKED_BY_ACTORS] = "E_ONLY_IF_EMPTY";
+        Effect[Effect["E_EVACUATE_CREATURES"] = fl(18)] = "E_EVACUATE_CREATURES";
+        Effect[Effect["E_EVACUATE_ITEMS"] = fl(19)] = "E_EVACUATE_ITEMS";
+        Effect[Effect["E_BUILD_IN_WALLS"] = fl(20)] = "E_BUILD_IN_WALLS";
+        Effect[Effect["E_MUST_TOUCH_WALLS"] = fl(21)] = "E_MUST_TOUCH_WALLS";
+        Effect[Effect["E_NO_TOUCH_WALLS"] = fl(22)] = "E_NO_TOUCH_WALLS";
+        Effect[Effect["E_FIRED"] = fl(23)] = "E_FIRED";
+        Effect[Effect["E_CLEAR_GROUND"] = fl(17)] = "E_CLEAR_GROUND";
+        Effect[Effect["E_CLEAR_SURFACE"] = fl(24)] = "E_CLEAR_SURFACE";
+        Effect[Effect["E_CLEAR_LIQUID"] = fl(25)] = "E_CLEAR_LIQUID";
+        Effect[Effect["E_CLEAR_GAS"] = fl(26)] = "E_CLEAR_GAS";
+        Effect[Effect["E_CLEAR_CELL"] = Effect.E_CLEAR_GROUND |
+            Effect.E_CLEAR_SURFACE |
+            Effect.E_CLEAR_LIQUID |
+            Effect.E_CLEAR_GAS] = "E_CLEAR_CELL";
+        Effect[Effect["E_ONLY_IF_EMPTY"] = Effect.E_BLOCKED_BY_ITEMS | Effect.E_BLOCKED_BY_ACTORS] = "E_ONLY_IF_EMPTY";
         // E_NULLIFY_CELL = E_NULL_SURFACE | E_NULL_LIQUID | E_NULL_GAS,
         // These should be effect types
-        Flags[Flags["E_ACTIVATE_DORMANT_MONSTER"] = fl(27)] = "E_ACTIVATE_DORMANT_MONSTER";
-        Flags[Flags["E_AGGRAVATES_MONSTERS"] = fl(28)] = "E_AGGRAVATES_MONSTERS";
-        Flags[Flags["E_RESURRECT_ALLY"] = fl(29)] = "E_RESURRECT_ALLY";
-        Flags[Flags["E_EMIT_EVENT"] = fl(30)] = "E_EMIT_EVENT";
-    })(Flags || (Flags = {}));
+        Effect[Effect["E_ACTIVATE_DORMANT_MONSTER"] = fl(27)] = "E_ACTIVATE_DORMANT_MONSTER";
+        Effect[Effect["E_AGGRAVATES_MONSTERS"] = fl(28)] = "E_AGGRAVATES_MONSTERS";
+        Effect[Effect["E_RESURRECT_ALLY"] = fl(29)] = "E_RESURRECT_ALLY";
+        Effect[Effect["E_EMIT_EVENT"] = fl(30)] = "E_EMIT_EVENT";
+    })(Effect || (Effect = {}));
+
     async function fire(effect, map, x, y, ctx_ = {}) {
         if (!effect)
             return false;
@@ -5638,15 +5935,15 @@ void main() {
         // bookkeeping
         if (didSomething &&
             map.isVisible(x, y) &&
-            !(effect.flags & Flags.E_NO_MARK_FIRED)) {
-            effect.flags |= Flags.E_FIRED;
+            !(effect.flags & Effect.E_NO_MARK_FIRED)) {
+            effect.flags |= Effect.E_FIRED;
         }
         // do the next effect - if applicable
         if (effect.next &&
-            (didSomething || effect.flags & Flags.E_NEXT_ALWAYS) &&
+            (didSomething || effect.flags & Effect.E_NEXT_ALWAYS) &&
             !data.gameHasEnded) {
             const nextInfo = typeof effect.next === 'string' ? from$1(effect.next) : effect.next;
-            if (effect.flags & Flags.E_NEXT_EVERYWHERE) {
+            if (effect.flags & Effect.E_NEXT_EVERYWHERE) {
                 await grid$1.forEachAsync(async (v, i, j) => {
                     if (!v)
                         return;
@@ -5663,13 +5960,13 @@ void main() {
     }
     // resetMessageDisplayed
     function reset(effect) {
-        effect.flags &= ~Flags.E_FIRED;
+        effect.flags &= ~Effect.E_FIRED;
     }
     function resetAll() {
         Object.values(effects).forEach((e) => reset(e));
     }
     const effects = {};
-    function make$2(opts) {
+    function make$3(opts) {
         var _a;
         if (!opts)
             throw new Error('opts required to make effect.');
@@ -5681,7 +5978,7 @@ void main() {
         }
         // now make base effect stuff
         const info = {
-            flags: from$4(Flags, opts.flags),
+            flags: from$4(Effect, opts.flags),
             chance: (_a = opts.chance) !== null && _a !== void 0 ? _a : 0,
             next: null,
             id: opts.id || 'n/a',
@@ -5691,7 +5988,7 @@ void main() {
                 info.next = opts.next;
             }
             else {
-                info.next = make$2(opts.next);
+                info.next = make$3(opts.next);
             }
         }
         // and all the handlers
@@ -5707,17 +6004,17 @@ void main() {
                 return effect;
             throw new Error('Unknown effect - ' + opts);
         }
-        return make$2(opts);
+        return make$3(opts);
     }
-    function install$1(id, config) {
-        const effect = make$2(config);
+    function install$2(id, config) {
+        const effect = make$3(config);
         effects[id] = effect;
         effect.id = id;
         return effect;
     }
-    function installAll$1(effects) {
+    function installAll$2(effects) {
         Object.entries(effects).forEach(([id, config]) => {
-            install$1(id, config);
+            install$2(id, config);
         });
     }
     const effectTypes = {};
@@ -5779,7 +6076,7 @@ void main() {
         async fire(config, map, x, y, ctx) {
             if (!config.message)
                 return false;
-            const fired = config.flags & Flags.E_FIRED ? true : false;
+            const fired = config.flags & Effect.E_FIRED ? true : false;
             ctx.actor = ctx.actor || (map === null || map === void 0 ? void 0 : map.actorAt(x, y));
             ctx.item = ctx.item || (map === null || map === void 0 ? void 0 : map.itemAt(x, y));
             if (config.message &&
@@ -5794,17 +6091,17 @@ void main() {
     }
     installType('message', new MessageEffect());
 
-    var index$3 = {
+    var index$4 = {
         __proto__: null,
-        get Flags () { return Flags; },
+        get Flags () { return Effect; },
         fire: fire,
         reset: reset,
         resetAll: resetAll,
         effects: effects,
-        make: make$2,
+        make: make$3,
         from: from$1,
-        install: install$1,
-        installAll: installAll$1,
+        install: install$2,
+        installAll: installAll$2,
         effectTypes: effectTypes,
         installType: installType
     };
@@ -5935,7 +6232,7 @@ void main() {
         const blob = new Blob(opts);
         return blob.carve(grid.width, grid.height, (x, y) => (grid[x][y] = 1));
     }
-    function make$1(opts = {}) {
+    function make$2(opts = {}) {
         return new Blob(opts);
     }
 
@@ -5943,7 +6240,7 @@ void main() {
         __proto__: null,
         Blob: Blob,
         fillBlob: fillBlob,
-        make: make$1
+        make: make$2
     };
 
     var GameObject;
@@ -5985,24 +6282,37 @@ void main() {
             GameObject.L_BLOCKS_ACTORS |
             GameObject.L_BLOCKS_SURFACE] = "L_BLOCKS_EVERYTHING";
     })(GameObject || (GameObject = {}));
+    var Layer;
+    (function (Layer) {
+        Layer[Layer["ALL_LAYERS"] = -1] = "ALL_LAYERS";
+        Layer[Layer["GROUND"] = 0] = "GROUND";
+        Layer[Layer["LIQUID"] = 1] = "LIQUID";
+        Layer[Layer["SURFACE"] = 2] = "SURFACE";
+        Layer[Layer["GAS"] = 3] = "GAS";
+        Layer[Layer["ITEM"] = 4] = "ITEM";
+        Layer[Layer["ACTOR"] = 5] = "ACTOR";
+        Layer[Layer["PLAYER"] = 6] = "PLAYER";
+        Layer[Layer["FX"] = 7] = "FX";
+        Layer[Layer["UI"] = 8] = "UI";
+    })(Layer || (Layer = {}));
 
-    const flags$1 = { GameObject };
+    const flags$2 = { GameObject };
 
-    var index$2 = {
+    var index$3 = {
         __proto__: null,
-        flags: flags$1
+        flags: flags$2
     };
 
     // const LIGHT_SMOOTHING_THRESHOLD = 150;       // light components higher than this magnitude will be toned down a little
     const config = (config$1.light = { INTENSITY_DARK: 20 }); // less than 20% for highest color in rgb
-    const LIGHT_COMPONENTS = make$5();
+    const LIGHT_COMPONENTS = make$6();
     class Light {
         constructor(color$1, range$1, fadeTo, pass = false) {
             this.fadeTo = 0;
             this.passThroughActors = false;
             this.id = null;
             this.color = from$3(color$1) || null; /* color */
-            this.radius = make$a(range$1 || 1);
+            this.radius = make$b(range$1 || 1);
             this.fadeTo = fadeTo || 0;
             this.passThroughActors = pass; // generally no, but miner light does (TODO - string parameter?  'false' or 'true')
         }
@@ -6076,7 +6386,7 @@ void main() {
         threshold = threshold !== null && threshold !== void 0 ? threshold : (_a = config$1.light) === null || _a === void 0 ? void 0 : _a.INTENSITY_DARK;
         return intensity(light) <= (threshold || 20);
     }
-    function make(...args) {
+    function make$1(...args) {
         if (args.length == 1) {
             const config = args[0];
             if (typeof config === 'string') {
@@ -6116,25 +6426,25 @@ void main() {
         }
         if (arg && arg.paint)
             return arg;
-        return make(arg);
+        return make$1(arg);
     }
-    function install(id, ...args) {
+    function install$1(id, ...args) {
         let source;
         if (args.length == 1) {
-            source = make(args[0]);
+            source = make$1(args[0]);
         }
         else {
-            source = make(args[0], args[1], args[2], args[3]);
+            source = make$1(args[0], args[1], args[2], args[3]);
         }
         lights[id] = source;
         if (source)
             source.id = id;
         return source;
     }
-    function installAll(config = {}) {
+    function installAll$1(config = {}) {
         const entries = Object.entries(config);
         entries.forEach(([name, info]) => {
-            install(name, info);
+            install$1(name, info);
         });
     }
     // // TODO - Move?
@@ -6152,114 +6462,23 @@ void main() {
     //     // );
     // }
 
-    ///////////////////////////////////////////////////////
-    // CELL
-    var Cell$1;
-    (function (Cell) {
-        Cell[Cell["VISIBLE"] = fl(0)] = "VISIBLE";
-        Cell[Cell["WAS_VISIBLE"] = fl(1)] = "WAS_VISIBLE";
-        Cell[Cell["CLAIRVOYANT_VISIBLE"] = fl(2)] = "CLAIRVOYANT_VISIBLE";
-        Cell[Cell["WAS_CLAIRVOYANT_VISIBLE"] = fl(3)] = "WAS_CLAIRVOYANT_VISIBLE";
-        Cell[Cell["TELEPATHIC_VISIBLE"] = fl(4)] = "TELEPATHIC_VISIBLE";
-        Cell[Cell["WAS_TELEPATHIC_VISIBLE"] = fl(5)] = "WAS_TELEPATHIC_VISIBLE";
-        Cell[Cell["ITEM_DETECTED"] = fl(6)] = "ITEM_DETECTED";
-        Cell[Cell["WAS_ITEM_DETECTED"] = fl(7)] = "WAS_ITEM_DETECTED";
-        Cell[Cell["MONSTER_DETECTED"] = fl(8)] = "MONSTER_DETECTED";
-        Cell[Cell["WAS_MONSTER_DETECTED"] = fl(9)] = "WAS_MONSTER_DETECTED";
-        Cell[Cell["REVEALED"] = fl(10)] = "REVEALED";
-        Cell[Cell["MAGIC_MAPPED"] = fl(11)] = "MAGIC_MAPPED";
-        Cell[Cell["IN_FOV"] = fl(12)] = "IN_FOV";
-        Cell[Cell["WAS_IN_FOV"] = fl(13)] = "WAS_IN_FOV";
-        Cell[Cell["NEEDS_REDRAW"] = fl(14)] = "NEEDS_REDRAW";
-        Cell[Cell["CELL_CHANGED"] = fl(15)] = "CELL_CHANGED";
-        // These are to help memory
-        Cell[Cell["HAS_SURFACE"] = fl(16)] = "HAS_SURFACE";
-        Cell[Cell["HAS_LIQUID"] = fl(17)] = "HAS_LIQUID";
-        Cell[Cell["HAS_GAS"] = fl(18)] = "HAS_GAS";
-        Cell[Cell["HAS_PLAYER"] = fl(19)] = "HAS_PLAYER";
-        Cell[Cell["HAS_ACTOR"] = fl(20)] = "HAS_ACTOR";
-        Cell[Cell["HAS_DORMANT_MONSTER"] = fl(21)] = "HAS_DORMANT_MONSTER";
-        Cell[Cell["HAS_ITEM"] = fl(22)] = "HAS_ITEM";
-        Cell[Cell["IS_IN_PATH"] = fl(23)] = "IS_IN_PATH";
-        Cell[Cell["IS_CURSOR"] = fl(24)] = "IS_CURSOR";
-        Cell[Cell["STABLE_MEMORY"] = fl(25)] = "STABLE_MEMORY";
-        Cell[Cell["LIGHT_CHANGED"] = fl(26)] = "LIGHT_CHANGED";
-        Cell[Cell["CELL_LIT"] = fl(27)] = "CELL_LIT";
-        Cell[Cell["IS_IN_SHADOW"] = fl(28)] = "IS_IN_SHADOW";
-        Cell[Cell["CELL_DARK"] = fl(29)] = "CELL_DARK";
-        Cell[Cell["COLORS_DANCE"] = fl(30)] = "COLORS_DANCE";
-        Cell[Cell["PERMANENT_CELL_FLAGS"] = Cell.REVEALED |
-            Cell.MAGIC_MAPPED |
-            Cell.ITEM_DETECTED |
-            Cell.HAS_ITEM |
-            Cell.HAS_DORMANT_MONSTER |
-            Cell.STABLE_MEMORY] = "PERMANENT_CELL_FLAGS";
-        Cell[Cell["ANY_KIND_OF_VISIBLE"] = Cell.VISIBLE | Cell.CLAIRVOYANT_VISIBLE | Cell.TELEPATHIC_VISIBLE] = "ANY_KIND_OF_VISIBLE";
-        Cell[Cell["HAS_ANY_ACTOR"] = Cell.HAS_PLAYER | Cell.HAS_ACTOR] = "HAS_ANY_ACTOR";
-        Cell[Cell["IS_WAS_ANY_KIND_OF_VISIBLE"] = Cell.VISIBLE |
-            Cell.WAS_VISIBLE |
-            Cell.CLAIRVOYANT_VISIBLE |
-            Cell.WAS_CLAIRVOYANT_VISIBLE |
-            Cell.TELEPATHIC_VISIBLE |
-            Cell.WAS_TELEPATHIC_VISIBLE] = "IS_WAS_ANY_KIND_OF_VISIBLE";
-        Cell[Cell["WAS_ANY_KIND_OF_VISIBLE"] = Cell.WAS_VISIBLE |
-            Cell.WAS_CLAIRVOYANT_VISIBLE |
-            Cell.WAS_TELEPATHIC_VISIBLE] = "WAS_ANY_KIND_OF_VISIBLE";
-        Cell[Cell["CELL_DEFAULT"] = Cell.VISIBLE | Cell.IN_FOV | Cell.NEEDS_REDRAW | Cell.CELL_CHANGED] = "CELL_DEFAULT";
-    })(Cell$1 || (Cell$1 = {}));
-    ///////////////////////////////////////////////////////
-    // CELL MECH
-    var CellMech;
-    (function (CellMech) {
-        CellMech[CellMech["SEARCHED_FROM_HERE"] = fl(0)] = "SEARCHED_FROM_HERE";
-        CellMech[CellMech["PRESSURE_PLATE_DEPRESSED"] = fl(1)] = "PRESSURE_PLATE_DEPRESSED";
-        CellMech[CellMech["KNOWN_TO_BE_TRAP_FREE"] = fl(2)] = "KNOWN_TO_BE_TRAP_FREE";
-        CellMech[CellMech["CAUGHT_FIRE_THIS_TURN"] = fl(4)] = "CAUGHT_FIRE_THIS_TURN";
-        CellMech[CellMech["EVENT_FIRED_THIS_TURN"] = fl(5)] = "EVENT_FIRED_THIS_TURN";
-        CellMech[CellMech["EVENT_PROTECTED"] = fl(6)] = "EVENT_PROTECTED";
-        CellMech[CellMech["IS_IN_LOOP"] = fl(10)] = "IS_IN_LOOP";
-        CellMech[CellMech["IS_CHOKEPOINT"] = fl(11)] = "IS_CHOKEPOINT";
-        CellMech[CellMech["IS_GATE_SITE"] = fl(12)] = "IS_GATE_SITE";
-        CellMech[CellMech["IS_IN_ROOM_MACHINE"] = fl(13)] = "IS_IN_ROOM_MACHINE";
-        CellMech[CellMech["IS_IN_AREA_MACHINE"] = fl(14)] = "IS_IN_AREA_MACHINE";
-        CellMech[CellMech["IS_POWERED"] = fl(15)] = "IS_POWERED";
-        CellMech[CellMech["IMPREGNABLE"] = fl(20)] = "IMPREGNABLE";
-        CellMech[CellMech["DARKENED"] = fl(19)] = "DARKENED";
-        CellMech[CellMech["IS_IN_MACHINE"] = CellMech.IS_IN_ROOM_MACHINE | CellMech.IS_IN_AREA_MACHINE] = "IS_IN_MACHINE";
-        CellMech[CellMech["PERMANENT_MECH_FLAGS"] = CellMech.SEARCHED_FROM_HERE |
-            CellMech.PRESSURE_PLATE_DEPRESSED |
-            CellMech.KNOWN_TO_BE_TRAP_FREE |
-            CellMech.IS_IN_LOOP |
-            CellMech.IS_CHOKEPOINT |
-            CellMech.IS_GATE_SITE |
-            CellMech.IS_IN_MACHINE |
-            CellMech.IMPREGNABLE] = "PERMANENT_MECH_FLAGS";
-    })(CellMech || (CellMech = {}));
-    ///////////////////////////////////////////////////////
-    // MAP
-    var Map$1;
-    (function (Map) {
-        Map[Map["MAP_CHANGED"] = fl(0)] = "MAP_CHANGED";
-        Map[Map["MAP_STABLE_GLOW_LIGHTS"] = fl(1)] = "MAP_STABLE_GLOW_LIGHTS";
-        Map[Map["MAP_STABLE_LIGHTS"] = fl(2)] = "MAP_STABLE_LIGHTS";
-        Map[Map["MAP_ALWAYS_LIT"] = fl(3)] = "MAP_ALWAYS_LIT";
-        Map[Map["MAP_SAW_WELCOME"] = fl(4)] = "MAP_SAW_WELCOME";
-        Map[Map["MAP_NO_LIQUID"] = fl(5)] = "MAP_NO_LIQUID";
-        Map[Map["MAP_NO_GAS"] = fl(6)] = "MAP_NO_GAS";
-        Map[Map["MAP_CALC_FOV"] = fl(7)] = "MAP_CALC_FOV";
-        Map[Map["MAP_FOV_CHANGED"] = fl(8)] = "MAP_FOV_CHANGED";
-        Map[Map["MAP_DANCES"] = fl(9)] = "MAP_DANCES";
-        Map[Map["MAP_DEFAULT"] = Map.MAP_STABLE_LIGHTS | Map.MAP_STABLE_GLOW_LIGHTS] = "MAP_DEFAULT";
-    })(Map$1 || (Map$1 = {}));
-
+    var LightFlags;
+    (function (LightFlags) {
+        LightFlags[LightFlags["LIT"] = 0] = "LIT";
+        LightFlags[LightFlags["IN_SHADOW"] = 1] = "IN_SHADOW";
+        LightFlags[LightFlags["DARK"] = 2] = "DARK";
+        LightFlags[LightFlags["MAGIC_DARK"] = 3] = "MAGIC_DARK";
+        LightFlags[LightFlags["CHANGED"] = 4] = "CHANGED";
+    })(LightFlags || (LightFlags = {}));
     class LightSystem {
         constructor(map) {
             this.staticLights = null;
             this.ambient = [100, 100, 100];
             this.site = map;
-            this.light = make$8(map.width, map.height, () => this.ambient.slice());
-            this.glowLight = make$8(map.width, map.height, () => this.ambient.slice());
-            this.oldLight = make$8(map.width, map.height, () => this.ambient.slice());
+            this.light = make$9(map.width, map.height, () => this.ambient.slice());
+            this.glowLight = make$9(map.width, map.height, () => this.ambient.slice());
+            this.oldLight = make$9(map.width, map.height, () => this.ambient.slice());
+            this.flags = make$9(map.width, map.height);
         }
         setAmbient(light) {
             if (light instanceof Color) {
@@ -6273,6 +6492,29 @@ void main() {
         }
         getLight(x, y) {
             return this.light[x][y];
+        }
+        isLit(x, y) {
+            return !!(this.flags[x][y] & LightFlags.LIT);
+        }
+        isDark(x, y) {
+            return !!(this.flags[x][y] & LightFlags.DARK);
+        }
+        isInShadow(x, y) {
+            return !!(this.flags[x][y] & LightFlags.IN_SHADOW);
+        }
+        isMagicDark(x, y) {
+            return !!(this.flags[x][y] & LightFlags.MAGIC_DARK);
+        }
+        lightChanged(x, y) {
+            return !!(this.flags[x][y] & LightFlags.CHANGED);
+        }
+        setMagicDark(x, y, isDark = true) {
+            if (isDark) {
+                this.flags[x][y] |= LightFlags.MAGIC_DARK;
+            }
+            else {
+                this.flags[x][y] &= ~LightFlags.MAGIC_DARK;
+            }
         }
         get width() {
             return this.site.width;
@@ -6393,23 +6635,23 @@ void main() {
                     this.oldLight[x][y][i] = val[i];
                     val[i] = this.ambient[i];
                 }
-                this.site.setCellFlag(x, y, Cell$1.IS_IN_SHADOW);
+                this.flags[x][y] = LightFlags.IN_SHADOW;
             });
         }
         finishLightUpdate() {
             forRect(this.width, this.height, (x, y) => {
                 // clear light flags
-                this.site.clearCellFlag(x, y, Cell$1.CELL_LIT | Cell$1.CELL_DARK);
+                // this.flags[x][y] &= ~(LightFlags.LIT | LightFlags.DARK);
                 const oldLight = this.oldLight[x][y];
                 const light = this.light[x][y];
                 if (light.some((v, i) => v !== oldLight[i])) {
-                    this.site.setCellFlag(x, y, Cell$1.LIGHT_CHANGED);
+                    this.flags[x][y] |= LightFlags.CHANGED;
                 }
                 if (isDarkLight(light)) {
-                    this.site.setCellFlag(x, y, Cell$1.CELL_DARK);
+                    this.flags[x][y] |= LightFlags.DARK;
                 }
-                else if (!this.site.hasCellFlag(x, y, Cell$1.IS_IN_SHADOW)) {
-                    this.site.setCellFlag(x, y, Cell$1.CELL_LIT);
+                else if (!this.isInShadow(x, y)) {
+                    this.flags[x][y] |= LightFlags.LIT;
                 }
             });
         }
@@ -6440,12 +6682,11 @@ void main() {
                         return false;
                     return map.blocksVision(x, y);
                 },
-                setVisible: cb,
                 hasXY(x, y) {
                     return map.hasXY(x, y);
                 },
             });
-            fov.calculate(x, y, radius);
+            fov.calculate(x, y, radius, cb);
         }
         addCellLight(x, y, light, dispelShadows) {
             const val = this.light[x][y];
@@ -6453,31 +6694,501 @@ void main() {
                 val[i] += light[i];
             }
             if (dispelShadows) {
-                this.site.clearCellFlag(x, y, Cell$1.IS_IN_SHADOW);
+                this.flags[x][y] &= ~LightFlags.IN_SHADOW;
             }
         }
     }
 
-    var index$1 = {
+    var index$2 = {
         __proto__: null,
         config: config,
         Light: Light,
         intensity: intensity,
         isDarkLight: isDarkLight,
-        make: make,
+        make: make$1,
         lights: lights,
         from: from,
-        install: install,
-        installAll: installAll,
+        install: install$1,
+        installAll: installAll$1,
         LightSystem: LightSystem
     };
 
+    ///////////////////////////////////////////////////////
+    // TILE
+    var Tile$1;
+    (function (Tile) {
+        Tile[Tile["T_BRIDGE"] = fl(0)] = "T_BRIDGE";
+        Tile[Tile["T_AUTO_DESCENT"] = fl(1)] = "T_AUTO_DESCENT";
+        Tile[Tile["T_LAVA"] = fl(2)] = "T_LAVA";
+        Tile[Tile["T_DEEP_WATER"] = fl(3)] = "T_DEEP_WATER";
+        Tile[Tile["T_IS_FLAMMABLE"] = fl(4)] = "T_IS_FLAMMABLE";
+        Tile[Tile["T_SPONTANEOUSLY_IGNITES"] = fl(5)] = "T_SPONTANEOUSLY_IGNITES";
+        Tile[Tile["T_IS_FIRE"] = fl(6)] = "T_IS_FIRE";
+        Tile[Tile["T_EXTINGUISHES_FIRE"] = fl(7)] = "T_EXTINGUISHES_FIRE";
+        Tile[Tile["T_IS_SECRET"] = fl(8)] = "T_IS_SECRET";
+        Tile[Tile["T_IS_TRAP"] = fl(9)] = "T_IS_TRAP";
+        Tile[Tile["T_SACRED"] = fl(10)] = "T_SACRED";
+        Tile[Tile["T_UP_STAIRS"] = fl(11)] = "T_UP_STAIRS";
+        Tile[Tile["T_DOWN_STAIRS"] = fl(12)] = "T_DOWN_STAIRS";
+        Tile[Tile["T_PORTAL"] = fl(13)] = "T_PORTAL";
+        Tile[Tile["T_IS_DOOR"] = fl(14)] = "T_IS_DOOR";
+        Tile[Tile["T_ALLOWS_SUBMERGING"] = fl(15)] = "T_ALLOWS_SUBMERGING";
+        Tile[Tile["T_ENTANGLES"] = fl(16)] = "T_ENTANGLES";
+        Tile[Tile["T_REFLECTS"] = fl(17)] = "T_REFLECTS";
+        Tile[Tile["T_STAND_IN_TILE"] = fl(18)] = "T_STAND_IN_TILE";
+        Tile[Tile["T_CONNECTS_LEVEL"] = fl(19)] = "T_CONNECTS_LEVEL";
+        Tile[Tile["T_HAS_STAIRS"] = Tile.T_UP_STAIRS | Tile.T_DOWN_STAIRS | Tile.T_PORTAL] = "T_HAS_STAIRS";
+        Tile[Tile["T_OBSTRUCTS_SCENT"] = Tile.T_AUTO_DESCENT |
+            Tile.T_LAVA |
+            Tile.T_DEEP_WATER |
+            Tile.T_SPONTANEOUSLY_IGNITES |
+            Tile.T_HAS_STAIRS] = "T_OBSTRUCTS_SCENT";
+        Tile[Tile["T_PATHING_BLOCKER"] = Tile.T_AUTO_DESCENT |
+            Tile.T_IS_TRAP |
+            Tile.T_LAVA |
+            Tile.T_DEEP_WATER |
+            Tile.T_IS_FIRE |
+            Tile.T_SPONTANEOUSLY_IGNITES |
+            Tile.T_ENTANGLES] = "T_PATHING_BLOCKER";
+        Tile[Tile["T_DIVIDES_LEVEL"] = Tile.T_AUTO_DESCENT | Tile.T_IS_TRAP | Tile.T_LAVA | Tile.T_DEEP_WATER] = "T_DIVIDES_LEVEL";
+        Tile[Tile["T_LAKE_PATHING_BLOCKER"] = Tile.T_AUTO_DESCENT |
+            Tile.T_LAVA |
+            Tile.T_DEEP_WATER |
+            Tile.T_SPONTANEOUSLY_IGNITES] = "T_LAKE_PATHING_BLOCKER";
+        Tile[Tile["T_WAYPOINT_BLOCKER"] = Tile.T_AUTO_DESCENT |
+            Tile.T_IS_TRAP |
+            Tile.T_LAVA |
+            Tile.T_DEEP_WATER |
+            Tile.T_SPONTANEOUSLY_IGNITES] = "T_WAYPOINT_BLOCKER";
+        Tile[Tile["T_MOVES_ITEMS"] = Tile.T_DEEP_WATER | Tile.T_LAVA] = "T_MOVES_ITEMS";
+        Tile[Tile["T_CAN_BE_BRIDGED"] = Tile.T_AUTO_DESCENT | Tile.T_LAVA | Tile.T_DEEP_WATER] = "T_CAN_BE_BRIDGED";
+        // T_HARMFUL_TERRAIN = T_CAUSES_POISON |
+        //   T_IS_FIRE |
+        //   T_CAUSES_DAMAGE |
+        //   T_CAUSES_PARALYSIS |
+        //   T_CAUSES_CONFUSION |
+        //   T_CAUSES_EXPLOSIVE_DAMAGE,
+        // T_RESPIRATION_IMMUNITIES = T_CAUSES_DAMAGE |
+        //   T_CAUSES_CONFUSION |
+        //   T_CAUSES_PARALYSIS |
+        //   T_CAUSES_NAUSEA,
+        Tile[Tile["T_IS_DEEP_LIQUID"] = Tile.T_LAVA | Tile.T_AUTO_DESCENT | Tile.T_DEEP_WATER] = "T_IS_DEEP_LIQUID";
+    })(Tile$1 || (Tile$1 = {}));
+    ///////////////////////////////////////////////////////
+    // TILE MECH
+    var TileMech;
+    (function (TileMech) {
+        // TM_PROMOTES_WITH_KEY = Fl(1), // promotes if the key is present on the tile (in your pack, carried by monster, or lying on the ground)
+        // TM_PROMOTES_WITHOUT_KEY = Fl(2), // promotes if the key is NOT present on the tile (in your pack, carried by monster, or lying on the ground)
+        // TM_PROMOTES_ON_STEP = Fl(3), // promotes when a creature, player or item is on the tile (whether or not levitating)
+        // TM_PROMOTES_ON_ITEM_REMOVE = Fl(4), // promotes when an item is lifted from the tile (primarily for altars)
+        // TM_PROMOTES_ON_PLAYER_ENTRY = Fl(5), // promotes when the player enters the tile (whether or not levitating)
+        // TM_PROMOTES_ON_SACRIFICE_ENTRY = Fl(6), // promotes when the sacrifice target enters the tile (whether or not levitating)
+        // TM_PROMOTES_ON_ELECTRICITY = Fl(7), // promotes when hit by a lightning bolt
+        // T_CAUSES_POISON = Fl(18), // any non-levitating creature gets 10 poison
+        // T_CAUSES_DAMAGE = Fl(19), // anything on the tile takes max(1-2, 10%) damage per turn
+        // T_CAUSES_NAUSEA = Fl(20), // any creature on the tile becomes nauseous
+        // T_CAUSES_PARALYSIS = Fl(21), // anything caught on this tile is paralyzed
+        // T_CAUSES_CONFUSION = Fl(22), // causes creatures on this tile to become confused
+        // T_CAUSES_HEALING = Fl(23), // heals 20% max HP per turn for any player or non-inanimate monsters
+        // T_CAUSES_EXPLOSIVE_DAMAGE = Fl(25), // is an explosion; deals higher of 15-20 or 50% damage instantly, but not again for five turns
+        TileMech[TileMech["TM_IS_WIRED"] = fl(9)] = "TM_IS_WIRED";
+        TileMech[TileMech["TM_IS_CIRCUIT_BREAKER"] = fl(10)] = "TM_IS_CIRCUIT_BREAKER";
+        TileMech[TileMech["TM_VANISHES_UPON_PROMOTION"] = fl(15)] = "TM_VANISHES_UPON_PROMOTION";
+        TileMech[TileMech["TM_EXPLOSIVE_PROMOTE"] = fl(21)] = "TM_EXPLOSIVE_PROMOTE";
+        TileMech[TileMech["TM_SWAP_ENCHANTS_ACTIVATION"] = fl(25)] = "TM_SWAP_ENCHANTS_ACTIVATION";
+        // TM_PROMOTES = TM_PROMOTES_WITH_KEY |
+        //   TM_PROMOTES_WITHOUT_KEY |
+        //   TM_PROMOTES_ON_STEP |
+        //   TM_PROMOTES_ON_ITEM_REMOVE |
+        //   TM_PROMOTES_ON_SACRIFICE_ENTRY |
+        //   TM_PROMOTES_ON_ELECTRICITY |
+        //   TM_PROMOTES_ON_PLAYER_ENTRY,
+    })(TileMech || (TileMech = {}));
+
+    class Tile {
+        constructor(config) {
+            var _a, _b, _c, _d;
+            this.index = -1;
+            this.dissipate = 20 * 100; // 0%
+            this.effects = {};
+            this.priority = 50;
+            this.layer = Layer.GROUND;
+            this.light = null;
+            this.id = config.id || 'n/a';
+            this.dissipate = (_a = config.dissipate) !== null && _a !== void 0 ? _a : this.dissipate;
+            this.priority = (_b = config.priority) !== null && _b !== void 0 ? _b : this.priority;
+            this.layer = (_c = config.layer) !== null && _c !== void 0 ? _c : this.layer;
+            this.light = config.light || null;
+            // this.groundTile = config.groundTile || null; // Huh?
+            this.sprite = make$4(config);
+            this.name = config.name || 'tile';
+            this.description = config.description || this.name;
+            this.flavor = config.flavor || this.name;
+            this.article = (_d = config.article) !== null && _d !== void 0 ? _d : null;
+            this.flags = config.flags || { object: 0, tile: 0, tileMech: 0 };
+            if (config.effects) {
+                Object.assign(this.effects, config.effects);
+            }
+        }
+        hasObjectFlag(flag) {
+            return !!(this.flags.object & flag);
+        }
+        hasTileFlag(flag) {
+            return !!(this.flags.tile & flag);
+        }
+        hasTileMechFlag(flag) {
+            return !!(this.flags.tileMech & flag);
+        }
+        hasAllObjectFlags(flag) {
+            return (this.flags.object & flag) === flag;
+        }
+        hasAllTileFlags(flag) {
+            return (this.flags.tile & flag) === flag;
+        }
+        hasAllTileMechFlags(flag) {
+            return (this.flags.tileMech & flag) === flag;
+        }
+        hasEffect(name) {
+            return name in this.effects;
+        }
+        getName(arg) {
+            let opts = {};
+            if (arg === true || arg === false) {
+                opts.article = arg;
+            }
+            else if (typeof arg === 'string') {
+                opts.article = arg;
+            }
+            else if (arg) {
+                opts = arg;
+            }
+            if (!opts.article && !opts.color)
+                return this.name;
+            let result = this.name;
+            if (opts.color) {
+                let color$1 = opts.color;
+                if (opts.color === true) {
+                    color$1 = this.sprite.fg || 'white';
+                }
+                if (typeof color$1 !== 'string') {
+                    color$1 = from$3(color$1).toString();
+                }
+                result = `Ω${color$1}Ω${this.name}∆`;
+            }
+            if (opts.article) {
+                let article = typeof opts.article === 'string'
+                    ? opts.article
+                    : this.article || 'a';
+                result = article + ' ' + result;
+            }
+            return result;
+        }
+        getDescription() {
+            return this.description || this.getName();
+        }
+        getFlavor() {
+            return this.flavor || this.getName();
+        }
+    }
+    function make(options) {
+        var _a, _b, _c, _d, _e, _f, _g;
+        let base = { effects: {}, flags: {}, sprite: {} };
+        if (options.extends) {
+            base = tiles[options.extends];
+            if (!base)
+                throw new Error('Failed to find base tile: ' + options.extends);
+        }
+        const effects = {};
+        Object.assign(effects, base.effects);
+        if (options.effects) {
+            Object.entries(options.effects).forEach(([key, value]) => {
+                if (value === null) {
+                    delete effects[key];
+                    return;
+                }
+                if (typeof value === 'string') {
+                    effects[key] = value;
+                    return;
+                }
+                effects[key] = make$3(value);
+            });
+        }
+        const flags = {
+            object: from$4(GameObject, base.flags.object, options.flags),
+            tile: from$4(Tile$1, base.flags.tile, options.flags),
+            tileMech: from$4(TileMech, base.flags.tileMech, options.flags),
+        };
+        let layer = base.layer || 0;
+        if (options.layer) {
+            if (typeof options.layer === 'string') {
+                layer = Layer[options.layer];
+            }
+            else {
+                layer = options.layer;
+            }
+        }
+        let light = base.light;
+        if (options.light) {
+            light = make$1(options.light);
+        }
+        else if (options.light === null) {
+            light = null;
+        }
+        const config = {
+            id: options.id,
+            flags,
+            dissipate: (_a = options.dissipate) !== null && _a !== void 0 ? _a : base.dissipate,
+            effects,
+            priority: (_b = options.priority) !== null && _b !== void 0 ? _b : base.priority,
+            layer,
+            light,
+            // groundTile: string | null;
+            ch: (_c = options.ch) !== null && _c !== void 0 ? _c : base.sprite.ch,
+            fg: (_d = options.fg) !== null && _d !== void 0 ? _d : base.sprite.fg,
+            bg: (_e = options.bg) !== null && _e !== void 0 ? _e : base.sprite.bg,
+            opacity: (_f = options.opacity) !== null && _f !== void 0 ? _f : base.sprite.opacity,
+            name: options.name || base.name,
+            description: options.description || base.description,
+            flavor: options.flavor || base.flavor,
+            article: (_g = options.article) !== null && _g !== void 0 ? _g : base.article,
+        };
+        const tile = new Tile(config);
+        return tile;
+    }
+    const tiles = {};
+    const all = [];
+    function get(id) {
+        if (typeof id === 'string')
+            return tiles[id];
+        return all[id];
+    }
+    function install(id, ...args) {
+        let options = args[0];
+        if (args.length == 2) {
+            options = args[1];
+            options.extends = args[0];
+        }
+        options.id = id;
+        const tile = make(options);
+        tile.index = all.length;
+        all.push(tile);
+        tiles[id] = tile;
+        return tile;
+    }
+    function installAll(tiles) {
+        Object.entries(tiles).forEach(([id, config]) => {
+            install(id, config);
+        });
+    }
+
+    // These are the minimal set of tiles to make the diggers work
+    install('NULL', {
+        ch: '\u2205',
+        fg: 'white',
+        bg: 'black',
+        flags: 'L_BLOCKS_MOVE',
+        name: 'eerie nothingness',
+        article: 'an',
+        priority: 0,
+    });
+    install('FLOOR', {
+        ch: '\u00b7',
+        fg: [30, 30, 30, 20, 0, 0, 0],
+        bg: [2, 2, 10, 0, 2, 2, 0],
+        priority: 10,
+        article: 'the',
+    });
+    install('DOOR', {
+        ch: '+',
+        fg: [100, 40, 40],
+        bg: [30, 60, 60],
+        priority: 30,
+        flags: 'T_IS_DOOR, L_BLOCKS_EFFECTS, L_BLOCKS_ITEMS, L_BLOCKS_VISION, L_VISUALLY_DISTINCT',
+        article: 'a',
+        effects: {
+            enter: { tile: 'DOOR_OPEN' },
+            open: { tile: 'DOOR_OPEN_ALWAYS' },
+        },
+    });
+    install('DOOR_OPEN', 'DOOR', {
+        ch: "'",
+        fg: [100, 40, 40],
+        bg: [30, 60, 60],
+        priority: 40,
+        flags: '!L_BLOCKS_ITEMS, !L_BLOCKS_VISION',
+        name: 'open door',
+        article: 'an',
+        effects: {
+            tick: {
+                chance: 100 * 100,
+                tile: 'DOOR',
+                flags: 'E_SUPERPRIORITY, E_ONLY_IF_EMPTY',
+            },
+            enter: null,
+            open: null,
+            close: { tile: 'DOOR', flags: 'E_SUPERPRIORITY, E_ONLY_IF_EMPTY' },
+        },
+    });
+    install('DOOR_OPEN_ALWAYS', 'DOOR_OPEN', {
+        effects: {
+            tick: null,
+            close: { tile: 'DOOR', flags: 'E_SUPERPRIORITY, E_ONLY_IF_EMPTY' },
+        },
+    });
+    install('UP_STAIRS', {
+        ch: '<',
+        fg: [100, 50, 50],
+        bg: [40, 20, 20],
+        priority: 200,
+        flags: 'T_UP_STAIRS, L_BLOCKED_BY_STAIRS, L_VISUALLY_DISTINCT, L_LIST_IN_SIDEBAR',
+        name: 'upward staircase',
+        article: 'an',
+        effects: {
+            player: { emit: 'UP_STAIRS' },
+        },
+    });
+    install('DOWN_STAIRS', {
+        ch: '>',
+        fg: [100, 50, 50],
+        bg: [40, 20, 20],
+        priority: 200,
+        flags: 'T_DOWN_STAIRS, L_BLOCKED_BY_STAIRS, L_VISUALLY_DISTINCT, L_LIST_IN_SIDEBAR',
+        name: 'downward staircase',
+        article: 'a',
+        effects: {
+            player: { emit: 'DOWN_STAIRS' },
+        },
+    });
+    install('WALL', {
+        ch: '#',
+        fg: [7, 7, 7, 0, 3, 3, 3],
+        bg: [40, 40, 40, 10, 10, 0, 5],
+        priority: 100,
+        flags: 'L_BLOCKS_EVERYTHING',
+        article: 'a',
+        name: 'stone wall',
+        description: 'A wall made from rough cut stone.',
+        flavor: 'a rough stone wall',
+    });
+    install('IMPREGNABLE', {
+        ch: '#',
+        fg: [7, 7, 7, 0, 3, 3, 3],
+        bg: [40, 40, 40, 10, 10, 0, 5],
+        priority: 100,
+        flags: 'L_BLOCKS_EVERYTHING, IMPREGNABLE',
+        article: 'a',
+        name: 'impregnable wall',
+        description: 'A wall made from very hard stone.',
+        flavor: 'an impregnable wall',
+    });
+    install('LAKE', {
+        ch: '~',
+        fg: [5, 8, 20, 10, 0, 4, 15, true],
+        bg: [10, 15, 41, 6, 5, 5, 5, true],
+        priority: 50,
+        flags: 'T_DEEP_WATER',
+        name: 'deep water',
+        article: 'the',
+    });
+    install('SHALLOW', {
+        ch: '\u00b7',
+        fg: [5, 8, 10, 10, 0, 4, 15, true],
+        bg: [10, 30, 30, 6, 0, 10, 10, true],
+        priority: 20,
+        name: 'shallow water',
+        article: 'the',
+    });
+    install('BRIDGE', {
+        ch: '=',
+        fg: [100, 40, 40],
+        priority: 40,
+        layer: 'SURFACE',
+        flags: 'T_BRIDGE, L_VISUALLY_DISTINCT',
+        article: 'a',
+    });
+
+    const flags$1 = { Tile: Tile$1, TileMech };
+
+    var index$1 = {
+        __proto__: null,
+        flags: flags$1,
+        Tile: Tile,
+        make: make,
+        tiles: tiles,
+        all: all,
+        get: get,
+        install: install,
+        installAll: installAll
+    };
+
+    ///////////////////////////////////////////////////////
+    // CELL
+    var Cell$1;
+    (function (Cell) {
+        Cell[Cell["SEARCHED_FROM_HERE"] = fl(0)] = "SEARCHED_FROM_HERE";
+        Cell[Cell["PRESSURE_PLATE_DEPRESSED"] = fl(1)] = "PRESSURE_PLATE_DEPRESSED";
+        Cell[Cell["KNOWN_TO_BE_TRAP_FREE"] = fl(2)] = "KNOWN_TO_BE_TRAP_FREE";
+        Cell[Cell["CAUGHT_FIRE_THIS_TURN"] = fl(3)] = "CAUGHT_FIRE_THIS_TURN";
+        Cell[Cell["EVENT_FIRED_THIS_TURN"] = fl(4)] = "EVENT_FIRED_THIS_TURN";
+        Cell[Cell["EVENT_PROTECTED"] = fl(5)] = "EVENT_PROTECTED";
+        Cell[Cell["IS_IN_LOOP"] = fl(6)] = "IS_IN_LOOP";
+        Cell[Cell["IS_CHOKEPOINT"] = fl(7)] = "IS_CHOKEPOINT";
+        Cell[Cell["IS_GATE_SITE"] = fl(8)] = "IS_GATE_SITE";
+        Cell[Cell["IS_IN_ROOM_MACHINE"] = fl(9)] = "IS_IN_ROOM_MACHINE";
+        Cell[Cell["IS_IN_AREA_MACHINE"] = fl(10)] = "IS_IN_AREA_MACHINE";
+        Cell[Cell["IS_POWERED"] = fl(11)] = "IS_POWERED";
+        Cell[Cell["IMPREGNABLE"] = fl(12)] = "IMPREGNABLE";
+        // DARKENED = Fl(13), // magical blindness?
+        Cell[Cell["NEEDS_REDRAW"] = fl(14)] = "NEEDS_REDRAW";
+        Cell[Cell["CELL_CHANGED"] = fl(15)] = "CELL_CHANGED";
+        // These are to help memory
+        Cell[Cell["HAS_SURFACE"] = fl(16)] = "HAS_SURFACE";
+        Cell[Cell["HAS_LIQUID"] = fl(17)] = "HAS_LIQUID";
+        Cell[Cell["HAS_GAS"] = fl(18)] = "HAS_GAS";
+        Cell[Cell["HAS_PLAYER"] = fl(19)] = "HAS_PLAYER";
+        Cell[Cell["HAS_ACTOR"] = fl(20)] = "HAS_ACTOR";
+        Cell[Cell["HAS_DORMANT_MONSTER"] = fl(21)] = "HAS_DORMANT_MONSTER";
+        Cell[Cell["HAS_ITEM"] = fl(22)] = "HAS_ITEM";
+        Cell[Cell["IS_IN_PATH"] = fl(23)] = "IS_IN_PATH";
+        Cell[Cell["IS_CURSOR"] = fl(24)] = "IS_CURSOR";
+        Cell[Cell["STABLE_MEMORY"] = fl(25)] = "STABLE_MEMORY";
+        Cell[Cell["COLORS_DANCE"] = fl(30)] = "COLORS_DANCE";
+        Cell[Cell["IS_IN_MACHINE"] = Cell.IS_IN_ROOM_MACHINE | Cell.IS_IN_AREA_MACHINE] = "IS_IN_MACHINE";
+        Cell[Cell["PERMANENT_CELL_FLAGS"] = Cell.HAS_ITEM |
+            Cell.HAS_DORMANT_MONSTER |
+            Cell.STABLE_MEMORY |
+            Cell.SEARCHED_FROM_HERE |
+            Cell.PRESSURE_PLATE_DEPRESSED |
+            Cell.KNOWN_TO_BE_TRAP_FREE |
+            Cell.IS_IN_LOOP |
+            Cell.IS_CHOKEPOINT |
+            Cell.IS_GATE_SITE |
+            Cell.IS_IN_MACHINE |
+            Cell.IMPREGNABLE] = "PERMANENT_CELL_FLAGS";
+        Cell[Cell["HAS_ANY_ACTOR"] = Cell.HAS_PLAYER | Cell.HAS_ACTOR] = "HAS_ANY_ACTOR";
+        Cell[Cell["CELL_DEFAULT"] = Cell.NEEDS_REDRAW | Cell.CELL_CHANGED] = "CELL_DEFAULT";
+    })(Cell$1 || (Cell$1 = {}));
+    ///////////////////////////////////////////////////////
+    // MAP
+    var Map$1;
+    (function (Map) {
+        Map[Map["MAP_CHANGED"] = fl(0)] = "MAP_CHANGED";
+        Map[Map["MAP_STABLE_GLOW_LIGHTS"] = fl(1)] = "MAP_STABLE_GLOW_LIGHTS";
+        Map[Map["MAP_STABLE_LIGHTS"] = fl(2)] = "MAP_STABLE_LIGHTS";
+        Map[Map["MAP_ALWAYS_LIT"] = fl(3)] = "MAP_ALWAYS_LIT";
+        Map[Map["MAP_SAW_WELCOME"] = fl(4)] = "MAP_SAW_WELCOME";
+        Map[Map["MAP_NO_LIQUID"] = fl(5)] = "MAP_NO_LIQUID";
+        Map[Map["MAP_NO_GAS"] = fl(6)] = "MAP_NO_GAS";
+        Map[Map["MAP_CALC_FOV"] = fl(7)] = "MAP_CALC_FOV";
+        Map[Map["MAP_FOV_CHANGED"] = fl(8)] = "MAP_FOV_CHANGED";
+        Map[Map["MAP_DANCES"] = fl(9)] = "MAP_DANCES";
+        Map[Map["MAP_DEFAULT"] = Map.MAP_STABLE_LIGHTS | Map.MAP_STABLE_GLOW_LIGHTS] = "MAP_DEFAULT";
+    })(Map$1 || (Map$1 = {}));
+
     class Cell {
         constructor() {
-            this.flags = { cell: 0, cellMech: 0, object: 0 };
-        }
-        isVisible() {
-            return !!(this.flags.cell & Cell$1.ANY_KIND_OF_VISIBLE);
+            this.flags = { cell: 0, object: 0 };
         }
         hasActor() {
             return !!(this.flags.cell & Cell$1.HAS_ANY_ACTOR);
@@ -6491,6 +7202,15 @@ void main() {
         clearCellFlag(flag) {
             this.flags.cell &= ~flag;
         }
+        redraw() {
+            this.flags.cell |= Cell$1.NEEDS_REDRAW;
+        }
+        clearMemory() {
+            // TODO
+        }
+        storeMemory() {
+            // TODO
+        }
     }
 
     class Map {
@@ -6498,8 +7218,9 @@ void main() {
             this.width = width;
             this.height = height;
             this.flags = { map: 0 };
-            this.cells = make$8(width, height, () => new Cell());
+            this.cells = make$9(width, height, () => new Cell());
             this.light = new LightSystem(this);
+            this.fov = new FovSystem(this);
             this.ambientLight = [100, 100, 100];
         }
         hasXY(x, y) {
@@ -6510,7 +7231,7 @@ void main() {
         }
         // Information
         isVisible(x, y) {
-            return this.cell(x, y).isVisible();
+            return this.fov.isAnyKindOfVisible(x, y);
         }
         hasActor(x, y) {
             return this.cell(x, y).hasActor();
@@ -6553,9 +7274,69 @@ void main() {
         }
         eachGlowLight(_cb) { }
         eachDynamicLight(_cb) { }
+        // FOV System Site
+        fovChanged() {
+            return !!(this.flags.map & Map$1.MAP_FOV_CHANGED);
+        }
+        eachViewport(_cb) {
+            throw new Error('Method not implemented.');
+        }
+        lightChanged(x, y) {
+            return this.light.lightChanged(x, y);
+        }
+        hasVisibleLight(x, y) {
+            return this.light.isLit(x, y);
+        }
+        cellRevealed(_x, _y) {
+            // if (DATA.automationActive) {
+            // if (cell.item) {
+            //     const theItem: GW.types.ItemType = cell.item;
+            //     if (
+            //         theItem.hasLayerFlag(ObjectFlags.L_INTERRUPT_WHEN_SEEN)
+            //     ) {
+            //         GW.message.add(
+            //             '§you§ §see§ ΩitemMessageColorΩ§item§∆.',
+            //             {
+            //                 item: theItem,
+            //                 actor: DATA.player,
+            //             }
+            //         );
+            //     }
+            // }
+            // if (
+            //     !(this.fov.isMagicMapped(x, y)) &&
+            //     this.site.hasObjectFlag(
+            //         x,
+            //         y,
+            //         ObjectFlags.L_INTERRUPT_WHEN_SEEN
+            //     )
+            // ) {
+            //     const tile = cell.tileWithLayerFlag(
+            //         ObjectFlags.L_INTERRUPT_WHEN_SEEN
+            //     );
+            //     if (tile) {
+            //         GW.message.add(
+            //             '§you§ §see§ ΩbackgroundMessageColorΩ§item§∆.',
+            //             {
+            //                 actor: DATA.player,
+            //                 item: tile.name,
+            //             }
+            //         );
+            //     }
+            // }
+        }
+        redrawCell(x, y, clearMemory) {
+            if (clearMemory) {
+                this.cells[x][y].clearMemory();
+            }
+            this.cells[x][y].redraw();
+        }
+        storeMemory(x, y) {
+            this.cells[x][y].storeMemory();
+        }
     }
 
-    const flags = { Cell: Cell$1, CellMech, Map: Map$1 };
+    const flags = { Cell: Cell$1, Map: Map$1 };
 
     var index = {
         __proto__: null,
@@ -6566,35 +7347,36 @@ void main() {
 
     exports.Random = Random;
     exports.blob = blob;
-    exports.canvas = index$5;
+    exports.canvas = index$6;
     exports.color = color;
     exports.colors = colors;
     exports.config = config$1;
     exports.cosmetic = cosmetic;
     exports.data = data;
-    exports.effect = index$3;
+    exports.effect = index$4;
     exports.events = events;
     exports.flag = flag;
-    exports.flags = flags$2;
-    exports.fov = fov;
+    exports.flags = flags$3;
+    exports.fov = index$8;
     exports.frequency = frequency;
-    exports.gameObject = index$2;
+    exports.gameObject = index$3;
     exports.grid = grid;
     exports.io = io;
-    exports.light = index$1;
+    exports.light = index$2;
     exports.loop = loop;
-    exports.make = make$9;
+    exports.make = make$a;
     exports.map = index;
     exports.message = message;
     exports.path = path;
     exports.random = random;
     exports.range = range;
     exports.scheduler = scheduler;
-    exports.sprite = index$4;
+    exports.sprite = index$5;
     exports.sprites = sprites;
-    exports.text = index$6;
+    exports.text = index$7;
+    exports.tile = index$1;
     exports.types = types;
-    exports.utils = index$7;
+    exports.utils = index$9;
 
     Object.defineProperty(exports, '__esModule', { value: true });
 

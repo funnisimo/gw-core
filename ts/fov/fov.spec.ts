@@ -1,14 +1,28 @@
-import * as GW from './index';
+import * as GW from '../index';
+import { SetVisibleFn } from './types';
 
 describe('FOV', () => {
     let fov: GW.fov.FOV;
     let tiles: GW.grid.NumGrid;
     let results: GW.grid.NumGrid;
     let msgs: string[] = [];
+    let setVisible: SetVisibleFn;
+
+    function setResults(
+        results: GW.grid.NumGrid,
+        x: number,
+        y: number,
+        _v: number
+    ) {
+        // console.log(x, y, v);
+        results[x][y] = 1;
+    }
 
     function setup(w: number, h: number, _captureDebug = false) {
         tiles = GW.grid.alloc(w, h, 0);
         results = GW.grid.alloc(w, h, 0);
+
+        setVisible = setResults.bind(undefined, results);
 
         // let debug = GW.utils.NOOP;
         // if (captureDebug) {
@@ -20,10 +34,6 @@ describe('FOV', () => {
         fov = new GW.fov.FOV({
             isBlocked(x: number, y: number) {
                 return !tiles.hasXY(x, y) || tiles[x][y] > 0;
-            },
-            setVisible(x: number, y: number, _v: number) {
-                // console.log(x, y, v);
-                results[x][y] = 1;
             },
             hasXY(x: number, y: number) {
                 return tiles.hasXY(x, y);
@@ -51,7 +61,7 @@ describe('FOV', () => {
         tiles[20][25] = 1;
         tiles[25][20] = 1;
 
-        fov.calculate(25, 25, 10);
+        fov.calculate(25, 25, 10, setVisible);
 
         expect(results[25][25]).toEqual(1); // center is always visible
         expect(results[20][25]).toEqual(1);
@@ -113,7 +123,7 @@ describe('FOV', () => {
                 }
             }
 
-            fov.calculate(x, y, opts.radius || 100);
+            fov.calculate(x, y, opts.radius || 100, setVisible);
 
             // tiles.dump();
             // results.dump();

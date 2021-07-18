@@ -1,7 +1,6 @@
 import 'jest-extended';
 import '../../test/matchers';
 
-import * as Map from '../map';
 import * as Light from '.';
 import * as Color from '../color';
 import * as Grid from '../grid';
@@ -69,15 +68,15 @@ describe('light', () => {
                     }
                 }),
 
-            setCellFlag(x: number, y: number, flag: number): void {
-                flags[x][y] |= flag;
-            },
-            clearCellFlag(x: number, y: number, flag: number): void {
-                flags[x][y] &= ~flag;
-            },
-            hasCellFlag(x: number, y: number, flag: number): boolean {
-                return !!(flags[x][y] & flag);
-            },
+            // setCellFlag(x: number, y: number, flag: number): void {
+            //     flags[x][y] |= flag;
+            // },
+            // clearCellFlag(x: number, y: number, flag: number): void {
+            //     flags[x][y] &= ~flag;
+            // },
+            // hasCellFlag(x: number, y: number, flag: number): boolean {
+            //     return !!(flags[x][y] & flag);
+            // },
         };
     }
 
@@ -109,14 +108,10 @@ describe('light', () => {
 
             Utils.forRect(site.width, site.height, (x, y) => {
                 expect(system.getLight(x, y)).toEqual([100, 100, 100]);
-                expect(
-                    site.flags[x][y] & Map.flags.Cell.IS_IN_SHADOW
-                ).toBeTruthy();
-                expect(site.flags[x][y] & Map.flags.Cell.CELL_LIT).toBeFalsy(); // Huh?
-                expect(site.flags[x][y] & Map.flags.Cell.CELL_DARK).toBeFalsy(); // Huh?
-                expect(
-                    site.flags[x][y] & Map.flags.Cell.LIGHT_CHANGED
-                ).toBeFalsy();
+                expect(system.isInShadow(x, y)).toBeTruthy();
+                expect(system.isLit(x, y)).toBeFalsy(); // Huh?
+                expect(system.isDark(x, y)).toBeFalsy(); // Huh?
+                expect(system.lightChanged(x, y)).toBeFalsy();
             });
         });
 

@@ -1,19 +1,13 @@
 // CREDIT - This is adapted from: http://roguebasin.roguelikedevelopment.org/index.php?title=Improved_Shadowcasting_in_Java
 
-import * as Utils from './utils';
+import * as Utils from '../utils';
 
-export interface FovStrategy {
-    isBlocked: (x: number, y: number) => boolean;
-    calcRadius?: (x: number, y: number) => number;
-    setVisible: (x: number, y: number, v: number) => void;
-    hasXY?: (x: number, y: number) => boolean;
-    debug?: (...args: any[]) => void;
-}
+import { FovStrategy, SetVisibleFn } from './types';
 
 export class FOV {
     protected _isBlocked: (x: number, y: number) => boolean;
     protected _calcRadius: (x: number, y: number) => number;
-    protected _setVisible: (x: number, y: number, v: number) => void;
+    protected _setVisible: SetVisibleFn | null = null;
     protected _hasXY: (x: number, y: number) => boolean;
     protected _debug: (...args: any[]) => void;
 
@@ -24,12 +18,12 @@ export class FOV {
     constructor(strategy: FovStrategy) {
         this._isBlocked = strategy.isBlocked;
         this._calcRadius = strategy.calcRadius || Utils.calcRadius;
-        this._setVisible = strategy.setVisible;
         this._hasXY = strategy.hasXY || Utils.TRUE;
         this._debug = strategy.debug || Utils.NOOP;
     }
 
-    calculate(x: number, y: number, maxRadius = 10) {
+    calculate(x: number, y: number, maxRadius = 10, setVisible: SetVisibleFn) {
+        this._setVisible = setVisible;
         this._setVisible(x, y, 1);
         this._startX = x;
         this._startY = y;
@@ -130,7 +124,7 @@ export class FOV {
             const radius = this._calcRadius(deltaX, deltaY);
             if (radius < this._maxRadius) {
                 const bright = 1 - radius / this._maxRadius;
-                this._setVisible(currentX, currentY, bright);
+                this._setVisible!(currentX, currentY, bright);
                 this._debug('       - visible');
             }
 
