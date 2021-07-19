@@ -1,7 +1,6 @@
 import { Mixer, DrawInfo } from '../sprite/mixer';
 import * as Color from '../color';
 import * as Text from '../text';
-import { make as Make } from '../gw';
 
 export interface DrawData {
     glyph: number;
@@ -278,9 +277,9 @@ export class DataBuffer {
     }
 }
 
-Make.dataBuffer = function (width: number, height: number) {
+export function makeDataBuffer(width: number, height: number) {
     return new DataBuffer(width, height);
-};
+}
 
 export class Buffer extends DataBuffer {
     private _target: BufferTarget;

@@ -24,8 +24,6 @@ describe('GW', () => {
         expect(GW.Random).toBeDefined();
         expect(GW.data).toBeObject();
         expect(GW.config).toBeObject();
-        expect(GW.make).toBeObject();
-        expect(GW.flags).toBeObject();
         expect(GW.colors).toBeObject();
         expect(GW.sprites).toBeObject();
     });

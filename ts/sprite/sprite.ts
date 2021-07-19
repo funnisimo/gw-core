@@ -1,6 +1,5 @@
 import * as Color from '../color';
 import { SpriteData } from '../types';
-import { make as Make } from '../gw';
 
 export interface SpriteConfig {
     ch: string | null;
@@ -100,8 +99,6 @@ export function make(...args: any[]) {
 
     return new Sprite(ch, fg, bg, opacity);
 }
-
-Make.sprite = make;
 
 export function from(name: string): Sprite;
 export function from(config: Partial<SpriteConfig>): Sprite;

@@ -1,7 +1,6 @@
 import * as Color from '../color';
 import { SpriteData } from '../types';
 import * as Utils from '../utils';
-import { make } from '../gw';
 
 export interface DrawInfo {
     ch: string | number;
@@ -158,6 +157,6 @@ export class Mixer implements DrawInfo {
     }
 }
 
-make.mixer = function (base?: Partial<DrawInfo>) {
+export function makeMixer(base?: Partial<DrawInfo>) {
     return new Mixer(base);
-};
+}

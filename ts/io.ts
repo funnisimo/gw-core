@@ -1,5 +1,4 @@
 import * as Utils from './utils';
-import { make as Make } from './gw';
 
 export interface Event {
     shiftKey: boolean;
@@ -428,8 +427,6 @@ export class Loop {
 export function make() {
     return new Loop();
 }
-
-Make.loop = make;
 
 // Makes a default global loop that you access through these funcitons...
 export const loop = make();

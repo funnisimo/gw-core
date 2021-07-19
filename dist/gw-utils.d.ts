@@ -36,8 +36,8 @@ declare class Range {
     copy(other: Range): this;
     toString(): string;
 }
-declare function make$c(config: RangeBase | null, rng?: Random): Range;
-declare const from$6: typeof make$c;
+declare function make$b(config: RangeBase | null, rng?: Random): Range;
+declare const from$6: typeof make$b;
 declare function asFn(config: RangeBase | null, rng?: Random): () => number;
 
 type range_RangeBase = RangeBase;
@@ -48,7 +48,7 @@ declare namespace range {
   export {
     range_RangeBase as RangeBase,
     range_Range as Range,
-    make$c as make,
+    make$b as make,
     from$6 as from,
     range_asFn as asFn,
   };
@@ -155,11 +155,11 @@ declare function fromArray(vals: ColorData, base256?: boolean): Color;
 declare function fromCss(css: string): Color;
 declare function fromName(name: string): Color;
 declare function fromNumber(val: number, base256?: boolean): Color;
-declare function make$b(): Color;
-declare function make$b(rgb: number, base256?: boolean): Color;
-declare function make$b(color?: ColorBase | null): Color;
-declare function make$b(arrayLike: ColorData, base256?: boolean): Color;
-declare function make$b(...rgb: number[]): Color;
+declare function make$a(): Color;
+declare function make$a(rgb: number, base256?: boolean): Color;
+declare function make$a(color?: ColorBase | null): Color;
+declare function make$a(arrayLike: ColorData, base256?: boolean): Color;
+declare function make$a(...rgb: number[]): Color;
 declare function from$5(): Color;
 declare function from$5(rgb: number, base256?: boolean): Color;
 declare function from$5(color?: ColorBase | null): Color;
@@ -198,7 +198,7 @@ declare namespace color {
     color_fromCss as fromCss,
     color_fromName as fromName,
     color_fromNumber as fromNumber,
-    make$b as make,
+    make$a as make,
     from$5 as from,
     color_separate as separate,
     color_swap as swap,
@@ -692,8 +692,8 @@ declare class NumGrid extends Grid<number> {
 }
 declare const alloc: typeof NumGrid.alloc;
 declare const free: typeof NumGrid.free;
-declare function make$a<T>(w: number, h: number, v?: number | GridInit<number>): NumGrid;
-declare function make$a<T>(w: number, h: number, v?: T | GridInit<T>): Grid<T>;
+declare function make$9<T>(w: number, h: number, v?: number | GridInit<number>): NumGrid;
+declare function make$9<T>(w: number, h: number, v?: T | GridInit<T>): Grid<T>;
 declare type GridZip<T, U> = (destVal: T, sourceVal: U, destX: number, destY: number, sourceX: number, sourceY: number, destGrid: Grid<T>, sourceGrid: Grid<U>) => void;
 declare function offsetZip<T, U>(destGrid: Grid<T>, srcGrid: Grid<U>, srcToDestX: number, srcToDestY: number, value: T | GridZip<T, U>): void;
 declare function intersection(onto: NumGrid, a: NumGrid, b?: NumGrid): void;
@@ -731,7 +731,7 @@ declare namespace grid {
     grid_NumGrid as NumGrid,
     grid_alloc as alloc,
     grid_free as free,
-    make$a as make,
+    make$9 as make,
     grid_GridZip as GridZip,
     grid_offsetZip as offsetZip,
     grid_intersection as intersection,
@@ -795,7 +795,7 @@ declare class Loop {
     pause(ms: number): Promise<boolean | null>;
     waitForAck(): Promise<boolean | null>;
 }
-declare function make$9(): Loop;
+declare function make$8(): Loop;
 declare const loop: Loop;
 
 type io_CommandFn = CommandFn;
@@ -841,7 +841,7 @@ declare namespace io {
     io_onkeydown as onkeydown,
     io_makeMouseEvent as makeMouseEvent,
     io_Loop as Loop,
-    make$9 as make,
+    make$8 as make,
     io_loop as loop,
   };
 }
@@ -1128,7 +1128,7 @@ declare namespace events {
 
 declare type FrequencyFn = (danger: number) => number;
 declare type FrequencyConfig = FrequencyFn | number | string | Record<string, number> | null;
-declare function make$8(v?: FrequencyConfig): FrequencyFn;
+declare function make$7(v?: FrequencyConfig): FrequencyFn;
 
 type frequency_FrequencyFn = FrequencyFn;
 type frequency_FrequencyConfig = FrequencyConfig;
@@ -1136,7 +1136,7 @@ declare namespace frequency {
   export {
     frequency_FrequencyFn as FrequencyFn,
     frequency_FrequencyConfig as FrequencyConfig,
-    make$8 as make,
+    make$7 as make,
   };
 }
 
@@ -1232,6 +1232,7 @@ declare class Mixer implements DrawInfo {
     };
     toString(): string;
 }
+declare function makeMixer(base?: Partial<DrawInfo>): Mixer;
 
 interface DrawData {
     glyph: number;
@@ -1270,6 +1271,7 @@ declare class DataBuffer {
     mix(color: ColorBase, percent: number): this;
     dump(): void;
 }
+declare function makeDataBuffer(width: number, height: number): DataBuffer;
 declare class Buffer extends DataBuffer {
     private _target;
     constructor(canvas: BufferTarget);
@@ -1358,8 +1360,8 @@ declare class Canvas2D extends BaseCanvas {
     render(): void;
     protected _renderCell(index: number): void;
 }
-declare function make$7(opts: Partial<CanvasOptions>): BaseCanvas;
-declare function make$7(width: number, height: number, opts?: Partial<CanvasOptions>): BaseCanvas;
+declare function make$6(opts: Partial<CanvasOptions>): BaseCanvas;
+declare function make$6(width: number, height: number, opts?: Partial<CanvasOptions>): BaseCanvas;
 
 type index$7_MouseEventFn = MouseEventFn;
 type index$7_CanvasOptions = CanvasOptions;
@@ -1378,6 +1380,7 @@ type index$7_DrawData = DrawData;
 type index$7_BufferTarget = BufferTarget;
 type index$7_DataBuffer = DataBuffer;
 declare const index$7_DataBuffer: typeof DataBuffer;
+declare const index$7_makeDataBuffer: typeof makeDataBuffer;
 type index$7_Buffer = Buffer;
 declare const index$7_Buffer: typeof Buffer;
 declare const index$7_makeBuffer: typeof makeBuffer;
@@ -1389,12 +1392,13 @@ declare namespace index$7 {
     index$7_BaseCanvas as BaseCanvas,
     index$7_Canvas as Canvas,
     index$7_Canvas2D as Canvas2D,
-    make$7 as make,
+    make$6 as make,
     index$7_GlyphOptions as GlyphOptions,
     index$7_Glyphs as Glyphs,
     index$7_DrawData as DrawData,
     index$7_BufferTarget as BufferTarget,
     index$7_DataBuffer as DataBuffer,
+    index$7_makeDataBuffer as makeDataBuffer,
     index$7_Buffer as Buffer,
     index$7_makeBuffer as makeBuffer,
   };
@@ -1416,11 +1420,11 @@ declare class Sprite implements SpriteData$1 {
     clone(): Sprite;
 }
 declare const sprites: Record<string, Sprite>;
-declare function make$6(): Sprite;
-declare function make$6(bg: ColorBase, opacity?: number): Sprite;
-declare function make$6(ch: string | null, fg: ColorBase | null, bg: ColorBase | null, opacity?: number): Sprite;
-declare function make$6(args: any[]): Sprite;
-declare function make$6(info: Partial<SpriteConfig>): Sprite;
+declare function make$5(): Sprite;
+declare function make$5(bg: ColorBase, opacity?: number): Sprite;
+declare function make$5(ch: string | null, fg: ColorBase | null, bg: ColorBase | null, opacity?: number): Sprite;
+declare function make$5(args: any[]): Sprite;
+declare function make$5(info: Partial<SpriteConfig>): Sprite;
 declare function from$3(name: string): Sprite;
 declare function from$3(config: Partial<SpriteConfig>): Sprite;
 declare function install$4(name: string, bg: ColorBase, opacity?: number): Sprite;
@@ -1442,17 +1446,19 @@ declare const index$6_sprites: typeof sprites;
 type index$6_DrawInfo = DrawInfo;
 type index$6_Mixer = Mixer;
 declare const index$6_Mixer: typeof Mixer;
+declare const index$6_makeMixer: typeof makeMixer;
 type index$6_SpriteData = SpriteData;
 declare namespace index$6 {
   export {
     index$6_SpriteConfig as SpriteConfig,
     index$6_Sprite as Sprite,
     index$6_sprites as sprites,
-    make$6 as make,
+    make$5 as make,
     from$3 as from,
     install$4 as install,
     index$6_DrawInfo as DrawInfo,
     index$6_Mixer as Mixer,
+    index$6_makeMixer as makeMixer,
     index$6_SpriteData as SpriteData,
   };
 }
@@ -1637,7 +1643,7 @@ declare function fire(effect: EffectInfo | string, map: MapType, x: number, y: n
 declare function reset(effect: EffectInfo): void;
 declare function resetAll(): void;
 declare const effects: Record<string, EffectInfo>;
-declare function make$5(opts: EffectBase): EffectInfo;
+declare function make$4(opts: EffectBase): EffectInfo;
 declare function from$2(opts: EffectBase | string): EffectInfo;
 declare function install$2(id: string, config: Partial<EffectConfig>): EffectInfo;
 declare function installAll$2(effects: Record<string, Partial<EffectConfig>>): void;
@@ -1667,7 +1673,7 @@ declare namespace index$4 {
     index$4_reset as reset,
     index$4_resetAll as resetAll,
     index$4_effects as effects,
-    make$5 as make,
+    make$4 as make,
     from$2 as from,
     install$2 as install,
     installAll$2 as installAll,
@@ -1678,8 +1684,6 @@ declare namespace index$4 {
 
 declare const data: any;
 declare const config$1: any;
-declare const make$4: any;
-declare const flags$3: any;
 
 interface BlobConfig {
     rounds: number;
@@ -2224,4 +2228,4 @@ declare namespace index {
   };
 }
 
-export { Random, blob, index$7 as canvas, color, colors, config$1 as config, cosmetic, data, index$4 as effect, events, flag, flags$3 as flags, index$8 as fov, frequency, index$3 as gameObject, grid, io, index$2 as light, loop, make$4 as make, index as map, message, path, random, range, scheduler, index$6 as sprite, sprites, index$5 as text, index$1 as tile, types, index$9 as utils };
+export { Random, blob, index$7 as canvas, color, colors, config$1 as config, cosmetic, data, index$4 as effect, events, flag, index$8 as fov, frequency, index$3 as gameObject, grid, io, index$2 as light, loop, index as map, message, path, random, range, scheduler, index$6 as sprite, sprites, index$5 as text, index$1 as tile, types, index$9 as utils };

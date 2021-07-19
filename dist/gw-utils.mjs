@@ -995,7 +995,7 @@ class Range {
         return `${this.lo}-${this.hi}`;
     }
 }
-function make$c(config, rng) {
+function make$b(config, rng) {
     if (!config)
         return new Range(0, 0, 0, rng);
     if (config instanceof Range)
@@ -1047,16 +1047,16 @@ function make$c(config, rng) {
     }
     throw new Error('Not a valid range - ' + config);
 }
-const from$6 = make$c;
+const from$6 = make$b;
 function asFn(config, rng) {
-    const range = make$c(config, rng);
+    const range = make$b(config, rng);
     return () => range.value();
 }
 
 var range = {
     __proto__: null,
     Range: Range,
-    make: make$c,
+    make: make$b,
     from: from$6,
     asFn: asFn
 };
@@ -1139,11 +1139,6 @@ var flag = {
     toString: toString,
     from: from$5
 };
-
-const data = {};
-const config$1 = {};
-const make$b = {};
-const flags$3 = {};
 
 const DIRS$1 = DIRS$2;
 function makeArray(l, fn) {
@@ -1643,7 +1638,6 @@ function make$a(w, h, v) {
         return new NumGrid(w, h, v);
     return new Grid(w, h, v);
 }
-make$b.grid = make$a;
 function offsetZip(destGrid, srcGrid, srcToDestX, srcToDestY, value) {
     const fn = typeof value === 'function'
         ? value
@@ -2039,7 +2033,6 @@ class Loop {
 function make$9() {
     return new Loop();
 }
-make$b.loop = make$9;
 // Makes a default global loop that you access through these funcitons...
 const loop = make$9();
 
@@ -4216,9 +4209,9 @@ class Mixer {
         return `{ ch: ${this.ch}, fg: ${this.fg.toString(true)}, bg: ${this.bg.toString(true)} }`;
     }
 }
-make$b.mixer = function (base) {
+function makeMixer(base) {
     return new Mixer(base);
-};
+}
 
 var options = {
     colorStart: 'Ω',
@@ -5029,9 +5022,9 @@ class DataBuffer {
         console.log(data.join('\n'));
     }
 }
-make$b.dataBuffer = function (width, height) {
+function makeDataBuffer(width, height) {
     return new DataBuffer(width, height);
-};
+}
 class Buffer extends DataBuffer {
     constructor(canvas) {
         super(canvas.width, canvas.height);
@@ -5580,6 +5573,7 @@ var index$6 = {
     make: make$6,
     Glyphs: Glyphs,
     DataBuffer: DataBuffer,
+    makeDataBuffer: makeDataBuffer,
     Buffer: Buffer,
     makeBuffer: makeBuffer
 };
@@ -5654,7 +5648,6 @@ function make$5(...args) {
         bg = -1;
     return new Sprite(ch, fg, bg, opacity);
 }
-make$b.sprite = make$5;
 function from$3(...args) {
     if (args.length == 1 && typeof args[0] === 'string') {
         const sprite = sprites[args[0]];
@@ -5680,12 +5673,18 @@ var index$5 = {
     make: make$5,
     from: from$3,
     install: install$4,
-    Mixer: Mixer
+    Mixer: Mixer,
+    makeMixer: makeMixer
 };
 
 var types = {
     __proto__: null
 };
+
+const data = {};
+const config$1 = {};
+// export const make: any = {};
+// export const flags: any = {};
 
 const templates = {};
 config$1.message = config$1.message || {};
@@ -6286,7 +6285,7 @@ class Light {
         this.passThroughActors = false;
         this.id = null;
         this.color = from$4(color$1) || null; /* color */
-        this.radius = make$c(range$1 || 1);
+        this.radius = make$b(range$1 || 1);
         this.fadeTo = fadeTo || 0;
         this.passThroughActors = pass; // generally no, but miner light does (TODO - string parameter?  'false' or 'true')
     }
@@ -7746,4 +7745,4 @@ var index = {
     cleanLoopiness: cleanLoopiness
 };
 
-export { Random, blob, index$6 as canvas, color, colors, config$1 as config, cosmetic, data, index$4 as effect, events, flag, flags$3 as flags, index$8 as fov, frequency, index$3 as gameObject, grid, io, index$2 as light, loop, make$b as make, index as map, message, path, random, range, scheduler, index$5 as sprite, sprites, index$7 as text, index$1 as tile, types, index$9 as utils };
+export { Random, blob, index$6 as canvas, color, colors, config$1 as config, cosmetic, data, index$4 as effect, events, flag, index$8 as fov, frequency, index$3 as gameObject, grid, io, index$2 as light, loop, index as map, message, path, random, range, scheduler, index$5 as sprite, sprites, index$7 as text, index$1 as tile, types, index$9 as utils };

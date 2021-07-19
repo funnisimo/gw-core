@@ -1,6 +1,5 @@
 import { random } from './random';
 import * as Utils from './utils';
-import { make as Make } from './gw';
 
 type Loc = Utils.Loc;
 const DIRS = Utils.DIRS;
@@ -685,8 +684,6 @@ export function make<T>(w: number, h: number, v?: T | GridInit<T>) {
     if (typeof v === 'number') return new NumGrid(w, h, v);
     return new Grid<T>(w, h, v);
 }
-
-Make.grid = make;
 
 export type GridZip<T, U> = (
     destVal: T,
