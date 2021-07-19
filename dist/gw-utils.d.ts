@@ -1761,7 +1761,7 @@ interface ObjectFlags {
 interface ObjectType {
     sprite: SpriteData;
     priority: number;
-    layer: number;
+    layer: Layer;
     light: LightType | null;
     flags: ObjectFlags;
 }
