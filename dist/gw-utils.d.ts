@@ -36,8 +36,8 @@ declare class Range {
     copy(other: Range): this;
     toString(): string;
 }
-declare function make$b(config: RangeBase | null, rng?: Random): Range;
-declare const from$5: typeof make$b;
+declare function make$c(config: RangeBase | null, rng?: Random): Range;
+declare const from$6: typeof make$c;
 declare function asFn(config: RangeBase | null, rng?: Random): () => number;
 
 type range_RangeBase = RangeBase;
@@ -48,8 +48,8 @@ declare namespace range {
   export {
     range_RangeBase as RangeBase,
     range_Range as Range,
-    make$b as make,
-    from$5 as from,
+    make$c as make,
+    from$6 as from,
     range_asFn as asFn,
   };
 }
@@ -155,16 +155,16 @@ declare function fromArray(vals: ColorData, base256?: boolean): Color;
 declare function fromCss(css: string): Color;
 declare function fromName(name: string): Color;
 declare function fromNumber(val: number, base256?: boolean): Color;
-declare function make$a(): Color;
-declare function make$a(rgb: number, base256?: boolean): Color;
-declare function make$a(color?: ColorBase | null): Color;
-declare function make$a(arrayLike: ColorData, base256?: boolean): Color;
-declare function make$a(...rgb: number[]): Color;
-declare function from$4(): Color;
-declare function from$4(rgb: number, base256?: boolean): Color;
-declare function from$4(color?: ColorBase | null): Color;
-declare function from$4(arrayLike: ColorData, base256?: boolean): Color;
-declare function from$4(...rgb: number[]): Color;
+declare function make$b(): Color;
+declare function make$b(rgb: number, base256?: boolean): Color;
+declare function make$b(color?: ColorBase | null): Color;
+declare function make$b(arrayLike: ColorData, base256?: boolean): Color;
+declare function make$b(...rgb: number[]): Color;
+declare function from$5(): Color;
+declare function from$5(rgb: number, base256?: boolean): Color;
+declare function from$5(color?: ColorBase | null): Color;
+declare function from$5(arrayLike: ColorData, base256?: boolean): Color;
+declare function from$5(...rgb: number[]): Color;
 declare function separate(a: Color, b: Color): void;
 declare function swap(a: Color, b: Color): void;
 declare function relativeLuminance(a: Color, b: Color): number;
@@ -198,8 +198,8 @@ declare namespace color {
     color_fromCss as fromCss,
     color_fromName as fromName,
     color_fromNumber as fromNumber,
-    make$a as make,
-    from$4 as from,
+    make$b as make,
+    from$5 as from,
     color_separate as separate,
     color_swap as swap,
     color_relativeLuminance as relativeLuminance,
@@ -234,13 +234,13 @@ interface EntityType {
     readonly flags: LayerFlags;
     hasLayerFlag(flag: number): boolean;
 }
-interface TileFlags$1 extends LayerFlags {
+interface TileFlags extends LayerFlags {
     readonly tile: number;
     readonly tileMech: number;
 }
 interface TileType$1 extends EntityType {
     readonly id: string;
-    readonly flags: TileFlags$1;
+    readonly flags: TileFlags;
 }
 interface ActorFlags extends LayerFlags {
     actor: number;
@@ -302,6 +302,7 @@ type types_XY = XY;
 type types_Chainable = Chainable;
 type types_LayerFlags = LayerFlags;
 type types_EntityType = EntityType;
+type types_TileFlags = TileFlags;
 type types_ActorFlags = ActorFlags;
 type types_ActorType = ActorType;
 type types_ItemFlags = ItemFlags;
@@ -318,7 +319,7 @@ declare namespace types {
     SpriteData$1 as SpriteData,
     types_LayerFlags as LayerFlags,
     types_EntityType as EntityType,
-    TileFlags$1 as TileFlags,
+    types_TileFlags as TileFlags,
     TileType$1 as TileType,
     types_ActorFlags as ActorFlags,
     types_ActorType as ActorType,
@@ -586,7 +587,7 @@ declare type FlagSource = number | string;
 declare type FlagBase = number | string | FlagSource[] | null;
 declare function fl(N: number): number;
 declare function toString(flagObj: any, value: number): string;
-declare function from$3(obj: any, ...args: (FlagBase | undefined)[]): number;
+declare function from$4(obj: any, ...args: (FlagBase | undefined)[]): number;
 
 type flag_FlagBase = FlagBase;
 declare const flag_fl: typeof fl;
@@ -596,7 +597,7 @@ declare namespace flag {
     flag_FlagBase as FlagBase,
     flag_fl as fl,
     flag_toString as toString,
-    from$3 as from,
+    from$4 as from,
   };
 }
 
@@ -691,8 +692,8 @@ declare class NumGrid extends Grid<number> {
 }
 declare const alloc: typeof NumGrid.alloc;
 declare const free: typeof NumGrid.free;
-declare function make$9<T>(w: number, h: number, v?: number | GridInit<number>): NumGrid;
-declare function make$9<T>(w: number, h: number, v?: T | GridInit<T>): Grid<T>;
+declare function make$a<T>(w: number, h: number, v?: number | GridInit<number>): NumGrid;
+declare function make$a<T>(w: number, h: number, v?: T | GridInit<T>): Grid<T>;
 declare type GridZip<T, U> = (destVal: T, sourceVal: U, destX: number, destY: number, sourceX: number, sourceY: number, destGrid: Grid<T>, sourceGrid: Grid<U>) => void;
 declare function offsetZip<T, U>(destGrid: Grid<T>, srcGrid: Grid<U>, srcToDestX: number, srcToDestY: number, value: T | GridZip<T, U>): void;
 declare function intersection(onto: NumGrid, a: NumGrid, b?: NumGrid): void;
@@ -730,7 +731,7 @@ declare namespace grid {
     grid_NumGrid as NumGrid,
     grid_alloc as alloc,
     grid_free as free,
-    make$9 as make,
+    make$a as make,
     grid_GridZip as GridZip,
     grid_offsetZip as offsetZip,
     grid_intersection as intersection,
@@ -794,7 +795,7 @@ declare class Loop {
     pause(ms: number): Promise<boolean | null>;
     waitForAck(): Promise<boolean | null>;
 }
-declare function make$8(): Loop;
+declare function make$9(): Loop;
 declare const loop: Loop;
 
 type io_CommandFn = CommandFn;
@@ -840,7 +841,7 @@ declare namespace io {
     io_onkeydown as onkeydown,
     io_makeMouseEvent as makeMouseEvent,
     io_Loop as Loop,
-    make$8 as make,
+    make$9 as make,
     io_loop as loop,
   };
 }
@@ -1127,7 +1128,7 @@ declare namespace events {
 
 declare type FrequencyFn = (danger: number) => number;
 declare type FrequencyConfig = FrequencyFn | number | string | Record<string, number> | null;
-declare function make$7(v?: FrequencyConfig): FrequencyFn;
+declare function make$8(v?: FrequencyConfig): FrequencyFn;
 
 type frequency_FrequencyFn = FrequencyFn;
 type frequency_FrequencyConfig = FrequencyConfig;
@@ -1135,7 +1136,7 @@ declare namespace frequency {
   export {
     frequency_FrequencyFn as FrequencyFn,
     frequency_FrequencyConfig as FrequencyConfig,
-    make$7 as make,
+    make$8 as make,
   };
 }
 
@@ -1357,8 +1358,8 @@ declare class Canvas2D extends BaseCanvas {
     render(): void;
     protected _renderCell(index: number): void;
 }
-declare function make$6(opts: Partial<CanvasOptions>): BaseCanvas;
-declare function make$6(width: number, height: number, opts?: Partial<CanvasOptions>): BaseCanvas;
+declare function make$7(opts: Partial<CanvasOptions>): BaseCanvas;
+declare function make$7(width: number, height: number, opts?: Partial<CanvasOptions>): BaseCanvas;
 
 type index$7_MouseEventFn = MouseEventFn;
 type index$7_CanvasOptions = CanvasOptions;
@@ -1388,7 +1389,7 @@ declare namespace index$7 {
     index$7_BaseCanvas as BaseCanvas,
     index$7_Canvas as Canvas,
     index$7_Canvas2D as Canvas2D,
-    make$6 as make,
+    make$7 as make,
     index$7_GlyphOptions as GlyphOptions,
     index$7_Glyphs as Glyphs,
     index$7_DrawData as DrawData,
@@ -1415,13 +1416,13 @@ declare class Sprite implements SpriteData$1 {
     clone(): Sprite;
 }
 declare const sprites: Record<string, Sprite>;
-declare function make$5(): Sprite;
-declare function make$5(bg: ColorBase, opacity?: number): Sprite;
-declare function make$5(ch: string | null, fg: ColorBase | null, bg: ColorBase | null, opacity?: number): Sprite;
-declare function make$5(args: any[]): Sprite;
-declare function make$5(info: Partial<SpriteConfig>): Sprite;
-declare function from$2(name: string): Sprite;
-declare function from$2(config: Partial<SpriteConfig>): Sprite;
+declare function make$6(): Sprite;
+declare function make$6(bg: ColorBase, opacity?: number): Sprite;
+declare function make$6(ch: string | null, fg: ColorBase | null, bg: ColorBase | null, opacity?: number): Sprite;
+declare function make$6(args: any[]): Sprite;
+declare function make$6(info: Partial<SpriteConfig>): Sprite;
+declare function from$3(name: string): Sprite;
+declare function from$3(config: Partial<SpriteConfig>): Sprite;
 declare function install$4(name: string, bg: ColorBase, opacity?: number): Sprite;
 declare function install$4(name: string, ch: string | null, fg: Color | number | string | number[] | null, bg: Color | number | string | number[] | null, opacity?: number): Sprite;
 declare function install$4(name: string, args: any[]): Sprite;
@@ -1447,8 +1448,8 @@ declare namespace index$6 {
     index$6_SpriteConfig as SpriteConfig,
     index$6_Sprite as Sprite,
     index$6_sprites as sprites,
-    make$5 as make,
-    from$2 as from,
+    make$6 as make,
+    from$3 as from,
     install$4 as install,
     index$6_DrawInfo as DrawInfo,
     index$6_Mixer as Mixer,
@@ -1636,8 +1637,8 @@ declare function fire(effect: EffectInfo | string, map: MapType, x: number, y: n
 declare function reset(effect: EffectInfo): void;
 declare function resetAll(): void;
 declare const effects: Record<string, EffectInfo>;
-declare function make$4(opts: EffectBase): EffectInfo;
-declare function from$1(opts: EffectBase | string): EffectInfo;
+declare function make$5(opts: EffectBase): EffectInfo;
+declare function from$2(opts: EffectBase | string): EffectInfo;
 declare function install$2(id: string, config: Partial<EffectConfig>): EffectInfo;
 declare function installAll$2(effects: Record<string, Partial<EffectConfig>>): void;
 declare const effectTypes: Record<string, EffectHandler>;
@@ -1666,8 +1667,8 @@ declare namespace index$4 {
     index$4_reset as reset,
     index$4_resetAll as resetAll,
     index$4_effects as effects,
-    make$4 as make,
-    from$1 as from,
+    make$5 as make,
+    from$2 as from,
     install$2 as install,
     installAll$2 as installAll,
     index$4_effectTypes as effectTypes,
@@ -1677,7 +1678,7 @@ declare namespace index$4 {
 
 declare const data: any;
 declare const config$1: any;
-declare const make$3: any;
+declare const make$4: any;
 declare const flags$3: any;
 
 interface BlobConfig {
@@ -1697,7 +1698,7 @@ declare class Blob {
     _cellularAutomataRound(grid: NumGrid): boolean;
 }
 declare function fillBlob(grid: NumGrid, opts?: Partial<BlobConfig>): Bounds;
-declare function make$2(opts?: Partial<BlobConfig>): Blob;
+declare function make$3(opts?: Partial<BlobConfig>): Blob;
 
 type blob_BlobConfig = BlobConfig;
 type blob_Blob = Blob;
@@ -1708,7 +1709,7 @@ declare namespace blob {
     blob_BlobConfig as BlobConfig,
     blob_Blob as Blob,
     blob_fillBlob as fillBlob,
-    make$2 as make,
+    make$3 as make,
   };
 }
 
@@ -1791,10 +1792,10 @@ declare class Light implements LightType {
 }
 declare function intensity(light: Color | LightValue): number;
 declare function isDarkLight(light: Color | LightValue, threshold?: number): boolean;
-declare function make$1(color: ColorBase, radius: RangeBase, fadeTo?: number, pass?: boolean): Light;
-declare function make$1(light: LightBase): Light;
+declare function make$2(color: ColorBase, radius: RangeBase, fadeTo?: number, pass?: boolean): Light;
+declare function make$2(light: LightBase): Light;
 declare const lights: Record<string, Light>;
-declare function from(light: LightBase | LightType): Light;
+declare function from$1(light: LightBase | LightType): Light;
 declare function install$1(id: string, color: ColorBase, radius: RangeBase, fadeTo?: number, pass?: boolean): Light;
 declare function install$1(id: string, base: LightBase): Light;
 declare function install$1(id: string, config: LightConfig): Light;
@@ -1852,7 +1853,6 @@ declare const index$2_Light: typeof Light;
 declare const index$2_intensity: typeof intensity;
 declare const index$2_isDarkLight: typeof isDarkLight;
 declare const index$2_lights: typeof lights;
-declare const index$2_from: typeof from;
 type index$2_StaticLightInfo = StaticLightInfo;
 type index$2_LightSystem = LightSystem;
 declare const index$2_LightSystem: typeof LightSystem;
@@ -1870,9 +1870,9 @@ declare namespace index$2 {
     index$2_Light as Light,
     index$2_intensity as intensity,
     index$2_isDarkLight as isDarkLight,
-    make$1 as make,
+    make$2 as make,
     index$2_lights as lights,
-    index$2_from as from,
+    from$1 as from,
     install$1 as install,
     installAll$1 as installAll,
     index$2_StaticLightInfo as StaticLightInfo,
@@ -1919,7 +1919,7 @@ declare enum TileMech {
     TM_SWAP_ENCHANTS_ACTIVATION
 }
 
-interface TileFlags extends ObjectFlags {
+interface TileFlagType extends ObjectFlags {
     readonly tile: number;
     readonly tileMech: number;
 }
@@ -1930,7 +1930,7 @@ interface NameConfig {
 interface TileType extends ObjectType {
     readonly id: string;
     readonly index: number;
-    readonly flags: TileFlags;
+    readonly flags: TileFlagType;
     readonly dissipate: number;
     readonly effects: Record<string, string | EffectInfo>;
     hasObjectFlag(flag: number): boolean;
@@ -1950,7 +1950,7 @@ interface TileType extends ObjectType {
 
 interface TileConfig extends SpriteConfig {
     id: string;
-    flags: TileFlags;
+    flags: TileFlagType;
     dissipate: number;
     effects: Record<string, EffectInfo | string>;
     priority: number;
@@ -1964,7 +1964,7 @@ interface TileConfig extends SpriteConfig {
 declare class Tile implements TileType {
     id: string;
     index: number;
-    flags: TileFlags;
+    flags: TileFlagType;
     dissipate: number;
     effects: Record<string, string | EffectInfo>;
     sprite: Sprite;
@@ -1982,6 +1982,9 @@ declare class Tile implements TileType {
     hasAllObjectFlags(flag: number): boolean;
     hasAllTileFlags(flag: number): boolean;
     hasAllTileMechFlags(flag: number): boolean;
+    blocksVision(): boolean;
+    blocksMove(): boolean;
+    blocksPathing(): boolean;
     hasEffect(name: string): boolean;
     getName(): string;
     getName(config: NameConfig): string;
@@ -2004,7 +2007,7 @@ interface TileOptions extends SpriteConfig {
     effects: Record<string, Partial<EffectConfig> | string | null>;
     light: LightBase | null;
 }
-declare function make(options: Partial<TileOptions>): Tile;
+declare function make$1(options: Partial<TileOptions>): Tile;
 declare const tiles: Record<string, Tile>;
 declare const all: Tile[];
 declare function get(id: string | number): Tile;
@@ -2017,14 +2020,13 @@ declare const flags$1: {
     TileMech: typeof TileMech;
 };
 
-type index$1_TileFlags = TileFlags;
+type index$1_TileFlagType = TileFlagType;
 type index$1_NameConfig = NameConfig;
 type index$1_TileType = TileType;
 type index$1_TileConfig = TileConfig;
 type index$1_Tile = Tile;
 declare const index$1_Tile: typeof Tile;
 type index$1_TileOptions = TileOptions;
-declare const index$1_make: typeof make;
 declare const index$1_tiles: typeof tiles;
 declare const index$1_all: typeof all;
 declare const index$1_get: typeof get;
@@ -2033,13 +2035,13 @@ declare const index$1_installAll: typeof installAll;
 declare namespace index$1 {
   export {
     flags$1 as flags,
-    index$1_TileFlags as TileFlags,
+    index$1_TileFlagType as TileFlagType,
     index$1_NameConfig as NameConfig,
     index$1_TileType as TileType,
     index$1_TileConfig as TileConfig,
     index$1_Tile as Tile,
     index$1_TileOptions as TileOptions,
-    index$1_make as make,
+    make$1 as make,
     index$1_tiles as tiles,
     index$1_all as all,
     index$1_get as get,
@@ -2097,18 +2099,34 @@ declare enum Map$1 {
 declare class Cell {
     flags: {
         cell: 0;
-        object: 0;
     };
+    chokeCount: number;
+    tile: Tile;
     constructor();
+    hasTileFlag(flag: number): boolean;
+    hasObjectFlag(flag: number): boolean;
     hasActor(): boolean;
     blocksVision(): boolean;
+    blocksPathing(): boolean;
+    blocksMove(): boolean;
+    hasCellFlag(flag: number): boolean;
     setCellFlag(flag: number): void;
     clearCellFlag(flag: number): void;
+    setTile(tile: string | number): void;
     redraw(): void;
     clearMemory(): void;
     storeMemory(): void;
+    dump(): string;
 }
 
+declare type EachCellCb = (cell: Cell, x: number, y: number, map: Map) => void;
+declare type MapTestFn = (cell: Cell, x: number, y: number, map: Map) => boolean;
+interface MapOptions {
+    tile: string | true;
+    boundary: string | true;
+    visible: boolean;
+    revealed: boolean;
+}
 declare class Map implements LightSystemSite, FovSite {
     width: number;
     height: number;
@@ -2118,16 +2136,22 @@ declare class Map implements LightSystemSite, FovSite {
     };
     light: LightSystemType;
     fov: FovSystemType;
-    ambientLight: LightValue;
-    constructor(width: number, height: number);
+    constructor(width: number, height: number, opts?: Partial<MapOptions>);
     hasXY(x: number, y: number): boolean;
+    isBoundaryXY(x: number, y: number): boolean;
     cell(x: number, y: number): Cell;
+    get(x: number, y: number): Cell | undefined;
+    eachCell(cb: EachCellCb): void;
     isVisible(x: number, y: number): boolean;
     hasActor(x: number, y: number): boolean;
     blocksVision(x: number, y: number): boolean;
+    count(cb: MapTestFn): number;
+    dump(fmt?: (cell: Cell) => string): void;
     setCellFlag(x: number, y: number, flag: number): void;
     clearCellFlag(x: number, y: number, flag: number): void;
     hasCellFlag(x: number, y: number, flag: number): boolean;
+    fill(tile: string, boundary?: string): void;
+    setTile(x: number, y: number, tile: string | number): void;
     get anyLightChanged(): boolean;
     set anyLightChanged(value: boolean);
     get glowLightChanged(): boolean;
@@ -2142,6 +2166,19 @@ declare class Map implements LightSystemSite, FovSite {
     redrawCell(x: number, y: number, clearMemory?: boolean): void;
     storeMemory(x: number, y: number): void;
 }
+declare function make(w: number, h: number, floor?: string, boundary?: string): Map;
+declare function make(w: number, h: number, floor: string): Map;
+declare function make(w: number, h: number, opts: Partial<MapOptions>): Map;
+declare function from(prefab: string | string[] | NumGrid, charToTile: Record<string, string | null>, opts?: Partial<MapOptions>): Map;
+
+declare function analyze(map: Map, updateChokeCounts?: boolean): void;
+declare function updateChokepoints(map: Map, updateCounts: boolean): void;
+declare function floodFillCount(map: Map, results: NumGrid, passMap: NumGrid, startX: number, startY: number): number;
+declare function updateLoopiness(map: Map): void;
+declare function resetLoopiness(cell: Cell, _x: number, _y: number, _map: Map): void;
+declare function checkLoopiness(cell: Cell, x: number, y: number, map: Map): boolean;
+declare function fillInnerLoopGrid(map: Map, grid: NumGrid): void;
+declare function cleanLoopiness(map: Map): void;
 
 declare const flags: {
     Cell: typeof Cell$1;
@@ -2151,14 +2188,40 @@ declare const flags: {
 declare const index_flags: typeof flags;
 type index_Cell = Cell;
 declare const index_Cell: typeof Cell;
+type index_EachCellCb = EachCellCb;
+type index_MapTestFn = MapTestFn;
+type index_MapOptions = MapOptions;
 type index_Map = Map;
 declare const index_Map: typeof Map;
+declare const index_make: typeof make;
+declare const index_from: typeof from;
+declare const index_analyze: typeof analyze;
+declare const index_updateChokepoints: typeof updateChokepoints;
+declare const index_floodFillCount: typeof floodFillCount;
+declare const index_updateLoopiness: typeof updateLoopiness;
+declare const index_resetLoopiness: typeof resetLoopiness;
+declare const index_checkLoopiness: typeof checkLoopiness;
+declare const index_fillInnerLoopGrid: typeof fillInnerLoopGrid;
+declare const index_cleanLoopiness: typeof cleanLoopiness;
 declare namespace index {
   export {
     index_flags as flags,
     index_Cell as Cell,
+    index_EachCellCb as EachCellCb,
+    index_MapTestFn as MapTestFn,
+    index_MapOptions as MapOptions,
     index_Map as Map,
+    index_make as make,
+    index_from as from,
+    index_analyze as analyze,
+    index_updateChokepoints as updateChokepoints,
+    index_floodFillCount as floodFillCount,
+    index_updateLoopiness as updateLoopiness,
+    index_resetLoopiness as resetLoopiness,
+    index_checkLoopiness as checkLoopiness,
+    index_fillInnerLoopGrid as fillInnerLoopGrid,
+    index_cleanLoopiness as cleanLoopiness,
   };
 }
 
-export { Random, blob, index$7 as canvas, color, colors, config$1 as config, cosmetic, data, index$4 as effect, events, flag, flags$3 as flags, index$8 as fov, frequency, index$3 as gameObject, grid, io, index$2 as light, loop, make$3 as make, index as map, message, path, random, range, scheduler, index$6 as sprite, sprites, index$5 as text, index$1 as tile, types, index$9 as utils };
+export { Random, blob, index$7 as canvas, color, colors, config$1 as config, cosmetic, data, index$4 as effect, events, flag, flags$3 as flags, index$8 as fov, frequency, index$3 as gameObject, grid, io, index$2 as light, loop, make$4 as make, index as map, message, path, random, range, scheduler, index$6 as sprite, sprites, index$5 as text, index$1 as tile, types, index$9 as utils };

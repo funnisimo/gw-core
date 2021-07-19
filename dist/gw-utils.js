@@ -1021,7 +1021,7 @@
             return `${this.lo}-${this.hi}`;
         }
     }
-    function make$b(config, rng) {
+    function make$c(config, rng) {
         if (!config)
             return new Range(0, 0, 0, rng);
         if (config instanceof Range)
@@ -1073,17 +1073,17 @@
         }
         throw new Error('Not a valid range - ' + config);
     }
-    const from$5 = make$b;
+    const from$6 = make$c;
     function asFn(config, rng) {
-        const range = make$b(config, rng);
+        const range = make$c(config, rng);
         return () => range.value();
     }
 
     var range = {
         __proto__: null,
         Range: Range,
-        make: make$b,
-        from: from$5,
+        make: make$c,
+        from: from$6,
         asFn: asFn
     };
 
@@ -1108,7 +1108,7 @@
         }
         return out.join(" | ");
     }
-    function from$4(obj, ...args) {
+    function from$5(obj, ...args) {
         let result = 0;
         for (let index = 0; index < args.length; ++index) {
             let value = args[index];
@@ -1163,12 +1163,12 @@
         __proto__: null,
         fl: fl,
         toString: toString,
-        from: from$4
+        from: from$5
     };
 
     const data = {};
     const config$1 = {};
-    const make$a = {};
+    const make$b = {};
     const flags$3 = {};
 
     const DIRS$1 = DIRS$2;
@@ -1662,14 +1662,14 @@
     // Grid.fillBlob = fillBlob;
     const alloc = NumGrid.alloc.bind(NumGrid);
     const free = NumGrid.free.bind(NumGrid);
-    function make$9(w, h, v) {
+    function make$a(w, h, v) {
         if (v === undefined)
             return new NumGrid(w, h, 0);
         if (typeof v === 'number')
             return new NumGrid(w, h, v);
         return new Grid(w, h, v);
     }
-    make$a.grid = make$9;
+    make$b.grid = make$a;
     function offsetZip(destGrid, srcGrid, srcToDestX, srcToDestY, value) {
         const fn = typeof value === 'function'
             ? value
@@ -1704,7 +1704,7 @@
         NumGrid: NumGrid,
         alloc: alloc,
         free: free,
-        make: make$9,
+        make: make$a,
         offsetZip: offsetZip,
         intersection: intersection,
         unite: unite
@@ -2062,12 +2062,12 @@
             return this.pause(5 * 60 * 1000); // 5 min
         }
     }
-    function make$8() {
+    function make$9() {
         return new Loop();
     }
-    make$a.loop = make$8;
+    make$b.loop = make$9;
     // Makes a default global loop that you access through these funcitons...
-    const loop = make$8();
+    const loop = make$9();
 
     var io = {
         __proto__: null,
@@ -2087,7 +2087,7 @@
         onkeydown: onkeydown,
         makeMouseEvent: makeMouseEvent,
         Loop: Loop,
-        make: make$8,
+        make: make$9,
         loop: loop
     };
 
@@ -2228,7 +2228,7 @@
     class FovSystem {
         constructor(site) {
             this.site = site;
-            this.flags = make$9(site.width, site.height, 0);
+            this.flags = make$a(site.width, site.height, 0);
             this.fov = new FOV({
                 isBlocked(x, y) {
                     return site.blocksVision(x, y);
@@ -3082,7 +3082,7 @@
         emit: emit
     };
 
-    function make$7(v) {
+    function make$8(v) {
         if (v === undefined)
             return () => 100;
         if (v === null)
@@ -3135,7 +3135,7 @@
 
     var frequency = {
         __proto__: null,
-        make: make$7
+        make: make$8
     };
 
     class Scheduler {
@@ -3675,7 +3675,7 @@ void main() {
             else if (typeof other === 'number') {
                 return this.toInt() == other || this.toInt(true) == other;
             }
-            const O = from$3(other);
+            const O = from$4(other);
             if (this.isNull())
                 return O.isNull();
             return this.every((v, i) => {
@@ -3689,7 +3689,7 @@ void main() {
                 }
             }
             else {
-                other = from$3(other);
+                other = from$4(other);
                 this.dances = other.dances;
             }
             for (let i = 0; i < this.length; ++i) {
@@ -3770,7 +3770,7 @@ void main() {
             return this._changed();
         }
         mix(other, percent) {
-            const O = from$3(other);
+            const O = from$4(other);
             if (O.isNull())
                 return this;
             if (this.isNull()) {
@@ -3834,7 +3834,7 @@ void main() {
         }
         // Adds a color to this one
         add(other, percent = 100) {
-            const O = from$3(other);
+            const O = from$4(other);
             if (O.isNull())
                 return this;
             if (this.isNull()) {
@@ -3951,7 +3951,7 @@ void main() {
         }
         return c;
     }
-    function make$6(...args) {
+    function make$7(...args) {
         let arg = args[0];
         let base256 = args[1];
         if (args.length == 0)
@@ -3979,7 +3979,7 @@ void main() {
         }
         throw new Error('Failed to make color - unknown argument: ' + JSON.stringify(arg));
     }
-    function from$3(...args) {
+    function from$4(...args) {
         const arg = args[0];
         if (arg instanceof Color)
             return arg;
@@ -3990,7 +3990,7 @@ void main() {
                 return fromName(arg);
             }
         }
-        return make$6(arg, args[1]);
+        return make$7(arg, args[1]);
     }
     // adjusts the luminosity of 2 colors to ensure there is enough separation between them
     function separate(a, b) {
@@ -4045,7 +4045,7 @@ void main() {
         if (args.length == 1) {
             info = args[0];
         }
-        const c = info instanceof Color ? info : make$6(info);
+        const c = info instanceof Color ? info : make$7(info);
         colors[name] = c;
         c.name = name;
         return c;
@@ -4106,8 +4106,8 @@ void main() {
         fromCss: fromCss,
         fromName: fromName,
         fromNumber: fromNumber,
-        make: make$6,
-        from: from$3,
+        make: make$7,
+        from: from$4,
         separate: separate,
         swap: swap,
         relativeLuminance: relativeLuminance,
@@ -4120,8 +4120,8 @@ void main() {
     class Mixer {
         constructor(base) {
             this.ch = first(base === null || base === void 0 ? void 0 : base.ch, -1);
-            this.fg = from$3(base === null || base === void 0 ? void 0 : base.fg);
-            this.bg = from$3(base === null || base === void 0 ? void 0 : base.bg);
+            this.fg = from$4(base === null || base === void 0 ? void 0 : base.fg);
+            this.bg = from$4(base === null || base === void 0 ? void 0 : base.bg);
         }
         _changed() {
             return this;
@@ -4162,11 +4162,11 @@ void main() {
                 this.ch = ch;
             }
             if (fg !== -1 && fg !== null) {
-                fg = from$3(fg);
+                fg = from$4(fg);
                 this.fg.copy(fg);
             }
             if (bg !== -1 && bg !== null) {
-                bg = from$3(bg);
+                bg = from$4(bg);
                 this.bg.copy(bg);
             }
             return this._changed();
@@ -4194,7 +4194,7 @@ void main() {
             return this._changed();
         }
         multiply(color$1, fg = true, bg = true) {
-            color$1 = from$3(color$1);
+            color$1 = from$4(color$1);
             if (fg) {
                 this.fg.multiply(color$1);
             }
@@ -4204,7 +4204,7 @@ void main() {
             return this._changed();
         }
         mix(color$1, fg = 50, bg = fg) {
-            color$1 = from$3(color$1);
+            color$1 = from$4(color$1);
             if (fg > 0) {
                 this.fg.mix(color$1, fg);
             }
@@ -4214,7 +4214,7 @@ void main() {
             return this._changed();
         }
         add(color$1, fg = 100, bg = fg) {
-            color$1 = from$3(color$1);
+            color$1 = from$4(color$1);
             if (fg > 0) {
                 this.fg.add(color$1, fg);
             }
@@ -4242,7 +4242,7 @@ void main() {
             return `{ ch: ${this.ch}, fg: ${this.fg.toString(true)}, bg: ${this.bg.toString(true)} }`;
         }
     }
-    make$a.mixer = function (base) {
+    make$b.mixer = function (base) {
         return new Mixer(base);
     };
 
@@ -4907,10 +4907,10 @@ void main() {
                 glyph = this.toGlyph(glyph);
             }
             if (typeof fg !== 'number') {
-                fg = from$3(fg).toInt();
+                fg = from$4(fg).toInt();
             }
             if (typeof bg !== 'number') {
-                bg = from$3(bg).toInt();
+                bg = from$4(bg).toInt();
             }
             glyph = glyph >= 0 ? glyph & 0xff : current >> 24;
             bg = bg >= 0 ? bg & 0xfff : (current >> 12) & 0xfff;
@@ -4949,9 +4949,9 @@ void main() {
         }
         drawText(x, y, text, fg = 0xfff, bg = -1) {
             if (typeof fg !== 'number')
-                fg = from$3(fg);
+                fg = from$4(fg);
             if (typeof bg !== 'number')
-                bg = from$3(bg);
+                bg = from$4(bg);
             eachChar(text, (ch, fg0, bg0, i) => {
                 if (x + i >= this.width)
                     return;
@@ -4961,9 +4961,9 @@ void main() {
         }
         wrapText(x, y, width, text, fg = 0xfff, bg = -1, indent = 0) {
             if (typeof fg !== 'number')
-                fg = from$3(fg);
+                fg = from$4(fg);
             if (typeof bg !== 'number')
-                bg = from$3(bg);
+                bg = from$4(bg);
             width = Math.min(width, this.width - x);
             text = wordWrap(text, width, indent);
             let xi = x;
@@ -4989,9 +4989,9 @@ void main() {
             if (typeof ch !== 'number')
                 ch = this.toGlyph(ch);
             if (typeof fg !== 'number')
-                fg = from$3(fg).toInt();
+                fg = from$4(fg).toInt();
             if (typeof bg !== 'number')
-                bg = from$3(bg).toInt();
+                bg = from$4(bg).toInt();
             for (let i = x; i < x + w; ++i) {
                 for (let j = y; j < y + h; ++j) {
                     this.draw(i, j, ch, fg, bg);
@@ -5001,12 +5001,12 @@ void main() {
         }
         blackOutRect(x, y, w, h, bg = 0) {
             if (typeof bg !== 'number')
-                bg = from$3(bg);
+                bg = from$4(bg);
             return this.fillRect(x, y, w, h, 0, 0, bg);
         }
         highlight(x, y, color$1, strength) {
             if (typeof color$1 !== 'number') {
-                color$1 = from$3(color$1);
+                color$1 = from$4(color$1);
             }
             const mixer = new Mixer();
             const data = this.get(x, y);
@@ -5018,7 +5018,7 @@ void main() {
         }
         mix(color$1, percent) {
             if (typeof color$1 !== 'number')
-                color$1 = from$3(color$1);
+                color$1 = from$4(color$1);
             const mixer = new Mixer();
             for (let x = 0; x < this.width; ++x) {
                 for (let y = 0; y < this.height; ++y) {
@@ -5055,7 +5055,7 @@ void main() {
             console.log(data.join('\n'));
         }
     }
-    make$a.dataBuffer = function (width, height) {
+    make$b.dataBuffer = function (width, height) {
         return new DataBuffer(width, height);
     };
     class Buffer extends DataBuffer {
@@ -5457,7 +5457,7 @@ void main() {
             this._ctx.putImageData(d, px, py);
         }
     }
-    function make$5(...args) {
+    function make$6(...args) {
         let width = args[0];
         let height = args[1];
         let opts = args[2];
@@ -5603,7 +5603,7 @@ void main() {
         BaseCanvas: BaseCanvas,
         Canvas: Canvas,
         Canvas2D: Canvas2D,
-        make: make$5,
+        make: make$6,
         Glyphs: Glyphs,
         DataBuffer: DataBuffer,
         Buffer: Buffer,
@@ -5615,8 +5615,8 @@ void main() {
             if (!ch)
                 ch = null;
             this.ch = ch;
-            this.fg = from$3(fg);
-            this.bg = from$3(bg);
+            this.fg = from$4(fg);
+            this.bg = from$4(bg);
             this.opacity = opacity >= 0 ? opacity : 100;
         }
         clone() {
@@ -5624,7 +5624,7 @@ void main() {
         }
     }
     const sprites = {};
-    function make$4(...args) {
+    function make$5(...args) {
         let ch = null, fg = -1, bg = -1, opacity;
         if (args.length == 0) {
             return new Sprite(null, -1, -1);
@@ -5667,33 +5667,33 @@ void main() {
             }
         }
         if (typeof fg === 'string')
-            fg = from$3(fg);
+            fg = from$4(fg);
         else if (Array.isArray(fg))
-            fg = make$6(fg);
+            fg = make$7(fg);
         else if (fg === undefined || fg === null)
             fg = -1;
         if (typeof bg === 'string')
-            bg = from$3(bg);
+            bg = from$4(bg);
         else if (Array.isArray(bg))
-            bg = make$6(bg);
+            bg = make$7(bg);
         else if (bg === undefined || bg === null)
             bg = -1;
         return new Sprite(ch, fg, bg, opacity);
     }
-    make$a.sprite = make$4;
-    function from$2(...args) {
+    make$b.sprite = make$5;
+    function from$3(...args) {
         if (args.length == 1 && typeof args[0] === 'string') {
             const sprite = sprites[args[0]];
             if (!sprite)
                 throw new Error('Failed to find sprite: ' + args[0]);
             return sprite;
         }
-        return make$4(args);
+        return make$5(args);
     }
     function install$4(name, ...args) {
         let sprite;
         // @ts-ignore
-        sprite = make$4(...args);
+        sprite = make$5(...args);
         sprite.name = name;
         sprites[name] = sprite;
         return sprite;
@@ -5703,8 +5703,8 @@ void main() {
         __proto__: null,
         Sprite: Sprite,
         sprites: sprites,
-        make: make$4,
-        from: from$2,
+        make: make$5,
+        from: from$3,
         install: install$4,
         Mixer: Mixer
     };
@@ -5917,7 +5917,7 @@ void main() {
             return false;
         if (typeof effect === 'string') {
             const name = effect;
-            effect = from$1(name);
+            effect = from$2(name);
             if (!effect)
                 throw new Error('Failed to find effect: ' + name);
         }
@@ -5942,7 +5942,7 @@ void main() {
         if (effect.next &&
             (didSomething || effect.flags & Effect.E_NEXT_ALWAYS) &&
             !data.gameHasEnded) {
-            const nextInfo = typeof effect.next === 'string' ? from$1(effect.next) : effect.next;
+            const nextInfo = typeof effect.next === 'string' ? from$2(effect.next) : effect.next;
             if (effect.flags & Effect.E_NEXT_EVERYWHERE) {
                 await grid$1.forEachAsync(async (v, i, j) => {
                     if (!v)
@@ -5966,7 +5966,7 @@ void main() {
         Object.values(effects).forEach((e) => reset(e));
     }
     const effects = {};
-    function make$3(opts) {
+    function make$4(opts) {
         var _a;
         if (!opts)
             throw new Error('opts required to make effect.');
@@ -5978,7 +5978,7 @@ void main() {
         }
         // now make base effect stuff
         const info = {
-            flags: from$4(Effect, opts.flags),
+            flags: from$5(Effect, opts.flags),
             chance: (_a = opts.chance) !== null && _a !== void 0 ? _a : 0,
             next: null,
             id: opts.id || 'n/a',
@@ -5988,14 +5988,14 @@ void main() {
                 info.next = opts.next;
             }
             else {
-                info.next = make$3(opts.next);
+                info.next = make$4(opts.next);
             }
         }
         // and all the handlers
         Object.values(effectTypes).forEach((v) => v.make(opts, info));
         return info;
     }
-    function from$1(opts) {
+    function from$2(opts) {
         if (!opts)
             throw new Error('Cannot make effect from null | undefined');
         if (typeof opts === 'string') {
@@ -6004,10 +6004,10 @@ void main() {
                 return effect;
             throw new Error('Unknown effect - ' + opts);
         }
-        return make$3(opts);
+        return make$4(opts);
     }
     function install$2(id, config) {
-        const effect = make$3(config);
+        const effect = make$4(config);
         effects[id] = effect;
         effect.id = id;
         return effect;
@@ -6098,8 +6098,8 @@ void main() {
         reset: reset,
         resetAll: resetAll,
         effects: effects,
-        make: make$3,
-        from: from$1,
+        make: make$4,
+        from: from$2,
         install: install$2,
         installAll: installAll$2,
         effectTypes: effectTypes,
@@ -6232,7 +6232,7 @@ void main() {
         const blob = new Blob(opts);
         return blob.carve(grid.width, grid.height, (x, y) => (grid[x][y] = 1));
     }
-    function make$2(opts = {}) {
+    function make$3(opts = {}) {
         return new Blob(opts);
     }
 
@@ -6240,7 +6240,7 @@ void main() {
         __proto__: null,
         Blob: Blob,
         fillBlob: fillBlob,
-        make: make$2
+        make: make$3
     };
 
     var GameObject;
@@ -6305,14 +6305,14 @@ void main() {
 
     // const LIGHT_SMOOTHING_THRESHOLD = 150;       // light components higher than this magnitude will be toned down a little
     const config = (config$1.light = { INTENSITY_DARK: 20 }); // less than 20% for highest color in rgb
-    const LIGHT_COMPONENTS = make$6();
+    const LIGHT_COMPONENTS = make$7();
     class Light {
         constructor(color$1, range$1, fadeTo, pass = false) {
             this.fadeTo = 0;
             this.passThroughActors = false;
             this.id = null;
-            this.color = from$3(color$1) || null; /* color */
-            this.radius = make$b(range$1 || 1);
+            this.color = from$4(color$1) || null; /* color */
+            this.radius = make$c(range$1 || 1);
             this.fadeTo = fadeTo || 0;
             this.passThroughActors = pass; // generally no, but miner light does (TODO - string parameter?  'false' or 'true')
         }
@@ -6386,7 +6386,7 @@ void main() {
         threshold = threshold !== null && threshold !== void 0 ? threshold : (_a = config$1.light) === null || _a === void 0 ? void 0 : _a.INTENSITY_DARK;
         return intensity(light) <= (threshold || 20);
     }
-    function make$1(...args) {
+    function make$2(...args) {
         if (args.length == 1) {
             const config = args[0];
             if (typeof config === 'string') {
@@ -6396,14 +6396,14 @@ void main() {
                 const [color$1, radius, fadeTo, pass] = config
                     .split(/[,|]/)
                     .map((t) => t.trim());
-                return new Light(from$3(color$1), from$5(radius || 1), Number.parseInt(fadeTo || '0'), !!pass && pass !== 'false');
+                return new Light(from$4(color$1), from$6(radius || 1), Number.parseInt(fadeTo || '0'), !!pass && pass !== 'false');
             }
             else if (Array.isArray(config)) {
                 const [color, radius, fadeTo, pass] = config;
                 return new Light(color, radius, fadeTo, pass);
             }
             else if (config && config.color) {
-                return new Light(from$3(config.color), from$5(config.radius), Number.parseInt(config.fadeTo || '0'), config.pass);
+                return new Light(from$4(config.color), from$6(config.radius), Number.parseInt(config.fadeTo || '0'), config.pass);
             }
             else {
                 throw new Error('Unknown Light config - ' + config);
@@ -6415,7 +6415,7 @@ void main() {
         }
     }
     const lights = {};
-    function from(...args) {
+    function from$1(...args) {
         if (args.length != 1)
             ERROR('Unknown Light config: ' + JSON.stringify(args));
         const arg = args[0];
@@ -6426,15 +6426,15 @@ void main() {
         }
         if (arg && arg.paint)
             return arg;
-        return make$1(arg);
+        return make$2(arg);
     }
     function install$1(id, ...args) {
         let source;
         if (args.length == 1) {
-            source = make$1(args[0]);
+            source = make$2(args[0]);
         }
         else {
-            source = make$1(args[0], args[1], args[2], args[3]);
+            source = make$2(args[0], args[1], args[2], args[3]);
         }
         lights[id] = source;
         if (source)
@@ -6475,10 +6475,10 @@ void main() {
             this.staticLights = null;
             this.ambient = [100, 100, 100];
             this.site = map;
-            this.light = make$9(map.width, map.height, () => this.ambient.slice());
-            this.glowLight = make$9(map.width, map.height, () => this.ambient.slice());
-            this.oldLight = make$9(map.width, map.height, () => this.ambient.slice());
-            this.flags = make$9(map.width, map.height);
+            this.light = make$a(map.width, map.height, () => this.ambient.slice());
+            this.glowLight = make$a(map.width, map.height, () => this.ambient.slice());
+            this.oldLight = make$a(map.width, map.height, () => this.ambient.slice());
+            this.flags = make$a(map.width, map.height);
         }
         setAmbient(light) {
             if (light instanceof Color) {
@@ -6526,7 +6526,7 @@ void main() {
             const info = {
                 x,
                 y,
-                light: from(light),
+                light: from$1(light),
                 next: this.staticLights,
             };
             this.staticLights = info;
@@ -6705,9 +6705,9 @@ void main() {
         Light: Light,
         intensity: intensity,
         isDarkLight: isDarkLight,
-        make: make$1,
+        make: make$2,
         lights: lights,
-        from: from,
+        from: from$1,
         install: install$1,
         installAll: installAll$1,
         LightSystem: LightSystem
@@ -6821,7 +6821,7 @@ void main() {
             this.layer = (_c = config.layer) !== null && _c !== void 0 ? _c : this.layer;
             this.light = config.light || null;
             // this.groundTile = config.groundTile || null; // Huh?
-            this.sprite = make$4(config);
+            this.sprite = make$5(config);
             this.name = config.name || 'tile';
             this.description = config.description || this.name;
             this.flavor = config.flavor || this.name;
@@ -6849,6 +6849,15 @@ void main() {
         hasAllTileMechFlags(flag) {
             return (this.flags.tileMech & flag) === flag;
         }
+        blocksVision() {
+            return !!(this.flags.object & GameObject.L_BLOCKS_VISION);
+        }
+        blocksMove() {
+            return !!(this.flags.object & GameObject.L_BLOCKS_MOVE);
+        }
+        blocksPathing() {
+            return (this.blocksMove() || this.hasTileFlag(Tile$1.T_PATHING_BLOCKER));
+        }
         hasEffect(name) {
             return name in this.effects;
         }
@@ -6872,7 +6881,7 @@ void main() {
                     color$1 = this.sprite.fg || 'white';
                 }
                 if (typeof color$1 !== 'string') {
-                    color$1 = from$3(color$1).toString();
+                    color$1 = from$4(color$1).toString();
                 }
                 result = `Ω${color$1}Ω${this.name}∆`;
             }
@@ -6891,7 +6900,7 @@ void main() {
             return this.flavor || this.getName();
         }
     }
-    function make(options) {
+    function make$1(options) {
         var _a, _b, _c, _d, _e, _f, _g;
         let base = { effects: {}, flags: {}, sprite: {} };
         if (options.extends) {
@@ -6911,13 +6920,13 @@ void main() {
                     effects[key] = value;
                     return;
                 }
-                effects[key] = make$3(value);
+                effects[key] = make$4(value);
             });
         }
         const flags = {
-            object: from$4(GameObject, base.flags.object, options.flags),
-            tile: from$4(Tile$1, base.flags.tile, options.flags),
-            tileMech: from$4(TileMech, base.flags.tileMech, options.flags),
+            object: from$5(GameObject, base.flags.object, options.flags),
+            tile: from$5(Tile$1, base.flags.tile, options.flags),
+            tileMech: from$5(TileMech, base.flags.tileMech, options.flags),
         };
         let layer = base.layer || 0;
         if (options.layer) {
@@ -6930,7 +6939,7 @@ void main() {
         }
         let light = base.light;
         if (options.light) {
-            light = make$1(options.light);
+            light = make$2(options.light);
         }
         else if (options.light === null) {
             light = null;
@@ -6970,7 +6979,7 @@ void main() {
             options.extends = args[0];
         }
         options.id = id;
-        const tile = make(options);
+        const tile = make$1(options);
         tile.index = all.length;
         all.push(tile);
         tiles[id] = tile;
@@ -7114,7 +7123,7 @@ void main() {
         __proto__: null,
         flags: flags$1,
         Tile: Tile,
-        make: make,
+        make: make$1,
         tiles: tiles,
         all: all,
         get: get,
@@ -7188,19 +7197,39 @@ void main() {
 
     class Cell {
         constructor() {
-            this.flags = { cell: 0, object: 0 };
+            this.chokeCount = 0;
+            this.flags = { cell: 0 };
+            this.tile = tiles.NULL;
+        }
+        hasTileFlag(flag) {
+            return !!(this.tile.flags.tile & flag);
+        }
+        hasObjectFlag(flag) {
+            return !!(this.tile.flags.object & flag);
         }
         hasActor() {
             return !!(this.flags.cell & Cell$1.HAS_ANY_ACTOR);
         }
         blocksVision() {
-            return !!(this.flags.object & GameObject.L_BLOCKS_VISION);
+            return this.tile.blocksVision();
+        }
+        blocksPathing() {
+            return this.tile.blocksPathing();
+        }
+        blocksMove() {
+            return this.tile.blocksMove();
+        }
+        hasCellFlag(flag) {
+            return !!(this.flags.cell & flag);
         }
         setCellFlag(flag) {
             this.flags.cell |= flag;
         }
         clearCellFlag(flag) {
             this.flags.cell &= ~flag;
+        }
+        setTile(tile) {
+            this.tile = get(tile);
         }
         redraw() {
             this.flags.cell |= Cell$1.NEEDS_REDRAW;
@@ -7211,23 +7240,49 @@ void main() {
         storeMemory() {
             // TODO
         }
+        dump() {
+            // if (this.actor) return this.actor.sprite.ch as string;
+            // if (this.item) return this.item.sprite.ch as string;
+            // for (let i = this._tiles.length - 1; i >= 0; --i) {
+            //     if (!this._tiles[i]) continue;
+            //     const tile = this._tiles[i] || TILES.NULL;
+            //     if (tile.sprite.ch) return tile.sprite.ch as string;
+            // }
+            // return TILES.NULL.sprite.ch as string;
+            return this.tile.sprite.ch || ' ';
+        }
     }
 
     class Map {
-        constructor(width, height) {
+        constructor(width, height, opts = {}) {
             this.width = width;
             this.height = height;
             this.flags = { map: 0 };
-            this.cells = make$9(width, height, () => new Cell());
+            this.cells = make$a(width, height, () => new Cell());
             this.light = new LightSystem(this);
+            this.light.setAmbient([100, 100, 100]);
             this.fov = new FovSystem(this);
-            this.ambientLight = [100, 100, 100];
+            if (opts.visible) {
+                this.fov.makeAlwaysVisible();
+            }
+            else if (opts.revealed) {
+                this.fov.revealAll();
+            }
         }
         hasXY(x, y) {
             return this.cells.hasXY(x, y);
         }
+        isBoundaryXY(x, y) {
+            return x == 0 || y == 0 || x == this.width - 1 || y == this.height - 1;
+        }
         cell(x, y) {
             return this.cells[x][y];
+        }
+        get(x, y) {
+            return this.cells.get(x, y);
+        }
+        eachCell(cb) {
+            this.cells.forEach((cell, x, y) => cb(cell, x, y, this));
         }
         // Information
         isVisible(x, y) {
@@ -7239,6 +7294,12 @@ void main() {
         blocksVision(x, y) {
             return this.cell(x, y).blocksVision();
         }
+        count(cb) {
+            return this.cells.count((cell, x, y) => cb(cell, x, y, this));
+        }
+        dump(fmt) {
+            this.cells.dump(fmt || ((c) => c.dump()));
+        }
         // flags
         setCellFlag(x, y, flag) {
             this.cell(x, y).setCellFlag(flag);
@@ -7248,6 +7309,23 @@ void main() {
         }
         hasCellFlag(x, y, flag) {
             return !!(this.cell(x, y).flags.cell & flag);
+        }
+        fill(tile, boundary) {
+            boundary = boundary || tile;
+            let i, j;
+            for (i = 0; i < this.width; ++i) {
+                for (j = 0; j < this.height; ++j) {
+                    if (this.isBoundaryXY(i, j)) {
+                        this.setTile(i, j, boundary);
+                    }
+                    else {
+                        this.setTile(i, j, tile);
+                    }
+                }
+            }
+        }
+        setTile(x, y, tile) {
+            this.cell(x, y).setTile(tile);
         }
         // LightSystemSite
         get anyLightChanged() {
@@ -7266,7 +7344,7 @@ void main() {
         }
         set glowLightChanged(value) {
             if (value) {
-                this.flags.map &= ~Map$1.MAP_STABLE_GLOW_LIGHTS;
+                this.flags.map &= ~(Map$1.MAP_STABLE_GLOW_LIGHTS | Map$1.MAP_STABLE_GLOW_LIGHTS);
             }
             else {
                 this.flags.map |= Map$1.MAP_STABLE_GLOW_LIGHTS;
@@ -7335,6 +7413,345 @@ void main() {
             this.cells[x][y].storeMemory();
         }
     }
+    function make(w, h, opts = {}, boundary) {
+        if (typeof opts === 'string') {
+            opts = { tile: opts };
+        }
+        if (boundary) {
+            opts.boundary = boundary;
+        }
+        const map = new Map(w, h, opts);
+        if (opts.tile === true) {
+            opts.tile = 'FLOOR';
+        }
+        if (opts.boundary === true) {
+            opts.boundary = 'WALL';
+        }
+        if (opts.tile) {
+            map.fill(opts.tile, opts.boundary);
+        }
+        // if (!DATA.map) {
+        //     DATA.map = map;
+        // }
+        return map;
+    }
+    function isString(value) {
+        return typeof value === 'string';
+    }
+    function isStringArray(value) {
+        return Array.isArray(value) && typeof value[0] === 'string';
+    }
+    function from(prefab, charToTile, opts = {}) {
+        let height = 0;
+        let width = 0;
+        let map;
+        if (isString(prefab)) {
+            prefab = prefab.split('\n');
+        }
+        if (isStringArray(prefab)) {
+            height = prefab.length;
+            width = prefab.reduce((len, line) => Math.max(len, line.length), 0);
+            map = make(width, height, opts);
+            prefab.forEach((line, y) => {
+                for (let x = 0; x < width; ++x) {
+                    const ch = line[x] || '.';
+                    const tile = charToTile[ch] || 'FLOOR';
+                    map.setTile(x, y, tile);
+                }
+            });
+        }
+        else {
+            height = prefab.height;
+            width = prefab.width;
+            map = make(width, height, opts);
+            prefab.forEach((v, x, y) => {
+                const tile = charToTile[v] || 'FLOOR';
+                map.setTile(x, y, tile);
+            });
+        }
+        return map;
+    }
+
+    function analyze(map, updateChokeCounts = true) {
+        updateLoopiness(map);
+        updateChokepoints(map, updateChokeCounts);
+    }
+    /////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////
+    // TODO - Move to Map?
+    function updateChokepoints(map, updateCounts) {
+        const passMap = alloc(map.width, map.height);
+        const grid$1 = alloc(map.width, map.height);
+        for (let i = 0; i < map.width; i++) {
+            for (let j = 0; j < map.height; j++) {
+                const cell = map.cell(i, j);
+                if ((cell.blocksPathing() || cell.blocksMove()) &&
+                    !cell.hasObjectFlag(GameObject.L_SECRETLY_PASSABLE)) {
+                    // cell.flags &= ~CellFlags.IS_IN_LOOP;
+                    passMap[i][j] = 0;
+                }
+                else {
+                    // cell.flags |= CellFlags.IS_IN_LOOP;
+                    passMap[i][j] = 1;
+                }
+            }
+        }
+        let passableArcCount;
+        // done finding loops; now flag chokepoints
+        for (let i = 1; i < passMap.width - 1; i++) {
+            for (let j = 1; j < passMap.height - 1; j++) {
+                map.cells[i][j].flags.cell &= ~Cell$1.IS_CHOKEPOINT;
+                if (passMap[i][j] &&
+                    !(map.cells[i][j].flags.cell & Cell$1.IS_IN_LOOP)) {
+                    passableArcCount = 0;
+                    for (let dir = 0; dir < 8; dir++) {
+                        const oldX = i + CLOCK_DIRS[(dir + 7) % 8][0];
+                        const oldY = j + CLOCK_DIRS[(dir + 7) % 8][1];
+                        const newX = i + CLOCK_DIRS[dir][0];
+                        const newY = j + CLOCK_DIRS[dir][1];
+                        if ((map.hasXY(newX, newY) && // RUT.Map.makeValidXy(map, newXy) &&
+                            passMap[newX][newY]) !=
+                            (map.hasXY(oldX, oldY) && // RUT.Map.makeValidXy(map, oldXy) &&
+                                passMap[oldX][oldY])) {
+                            if (++passableArcCount > 2) {
+                                if ((!passMap[i - 1][j] && !passMap[i + 1][j]) ||
+                                    (!passMap[i][j - 1] && !passMap[i][j + 1])) {
+                                    map.cells[i][j].flags.cell |=
+                                        Cell$1.IS_CHOKEPOINT;
+                                }
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        if (updateCounts) {
+            // Done finding chokepoints; now create a chokepoint map.
+            // The chokepoint map is a number for each passable tile. If the tile is a chokepoint,
+            // then the number indicates the number of tiles that would be rendered unreachable if the
+            // chokepoint were blocked. If the tile is not a chokepoint, then the number indicates
+            // the number of tiles that would be rendered unreachable if the nearest exit chokepoint
+            // were blocked.
+            // The cost of all of this is one depth-first flood-fill per open point that is adjacent to a chokepoint.
+            // Start by setting the chokepoint values really high, and roping off room machines.
+            for (let i = 0; i < map.width; i++) {
+                for (let j = 0; j < map.height; j++) {
+                    map.cells[i][j].chokeCount = 30000;
+                    if (map.cells[i][j].flags.cell & Cell$1.IS_IN_ROOM_MACHINE) {
+                        passMap[i][j] = 0;
+                    }
+                }
+            }
+            // Scan through and find a chokepoint next to an open point.
+            for (let i = 0; i < map.width; i++) {
+                for (let j = 0; j < map.height; j++) {
+                    const cell = map.cells[i][j];
+                    if (passMap[i][j] &&
+                        cell.flags.cell & Cell$1.IS_CHOKEPOINT) {
+                        for (let dir = 0; dir < 4; dir++) {
+                            const newX = i + DIRS$2[dir][0];
+                            const newY = j + DIRS$2[dir][1];
+                            if (map.hasXY(newX, newY) && // RUT.Map.makeValidXy(map, newXy) &&
+                                passMap[newX][newY] &&
+                                !(map.cells[newX][newY].flags.cell &
+                                    Cell$1.IS_CHOKEPOINT)) {
+                                // OK, (newX, newY) is an open point and (i, j) is a chokepoint.
+                                // Pretend (i, j) is blocked by changing passMap, and run a flood-fill cell count starting on (newX, newY).
+                                // Keep track of the flooded region in grid[][].
+                                grid$1.fill(0);
+                                passMap[i][j] = 0;
+                                let cellCount = floodFillCount(map, grid$1, passMap, newX, newY);
+                                passMap[i][j] = 1;
+                                // CellCount is the size of the region that would be obstructed if the chokepoint were blocked.
+                                // CellCounts less than 4 are not useful, so we skip those cases.
+                                if (cellCount >= 4) {
+                                    // Now, on the chokemap, all of those flooded cells should take the lesser of their current value or this resultant number.
+                                    for (let i2 = 0; i2 < grid$1.width; i2++) {
+                                        for (let j2 = 0; j2 < grid$1.height; j2++) {
+                                            if (grid$1[i2][j2] &&
+                                                cellCount <
+                                                    map.cells[i2][j2].chokeCount) {
+                                                map.cells[i2][j2].chokeCount = cellCount;
+                                                map.cells[i2][j2].flags.cell &= ~Cell$1.IS_GATE_SITE;
+                                            }
+                                        }
+                                    }
+                                    // The chokepoint itself should also take the lesser of its current value or the flood count.
+                                    if (cellCount < cell.chokeCount) {
+                                        cell.chokeCount = cellCount;
+                                        cell.flags.cell |= Cell$1.IS_GATE_SITE;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        free(passMap);
+        free(grid$1);
+    }
+    // Assumes it is called with respect to a passable (startX, startY), and that the same is not already included in results.
+    // Returns 10000 if the area included an area machine.
+    function floodFillCount(map, results, passMap, startX, startY) {
+        let count = passMap[startX][startY] == 2 ? 5000 : 1;
+        if (map.cells[startX][startY].flags.cell & Cell$1.IS_IN_AREA_MACHINE) {
+            count = 10000;
+        }
+        results[startX][startY] = 1;
+        for (let dir = 0; dir < 4; dir++) {
+            const newX = startX + DIRS$2[dir][0];
+            const newY = startY + DIRS$2[dir][1];
+            if (map.hasXY(newX, newY) && // RUT.Map.makeValidXy(map, newXy) &&
+                passMap[newX][newY] &&
+                !results[newX][newY]) {
+                count += floodFillCount(map, results, passMap, newX, newY);
+            }
+        }
+        return Math.min(count, 10000);
+    }
+    ////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////
+    // TODO = Move loopiness to Map
+    function updateLoopiness(map) {
+        map.eachCell(resetLoopiness);
+        map.eachCell(checkLoopiness);
+        cleanLoopiness(map);
+    }
+    function resetLoopiness(cell, _x, _y, _map) {
+        if ((cell.blocksPathing() || cell.blocksMove()) &&
+            !cell.hasObjectFlag(GameObject.L_SECRETLY_PASSABLE)) {
+            cell.flags.cell &= ~Cell$1.IS_IN_LOOP;
+            // passMap[i][j] = false;
+        }
+        else {
+            cell.flags.cell |= Cell$1.IS_IN_LOOP;
+            // passMap[i][j] = true;
+        }
+    }
+    function checkLoopiness(cell, x, y, map) {
+        let inString;
+        let newX, newY, dir, sdir;
+        let numStrings, maxStringLength, currentStringLength;
+        if (!cell || !(cell.flags.cell & Cell$1.IS_IN_LOOP)) {
+            return false;
+        }
+        // find an unloopy neighbor to start on
+        for (sdir = 0; sdir < 8; sdir++) {
+            newX = x + CLOCK_DIRS[sdir][0];
+            newY = y + CLOCK_DIRS[sdir][1];
+            if (!map.hasXY(newX, newY))
+                continue;
+            const cell = map.get(newX, newY);
+            if (!cell || !(cell.flags.cell & Cell$1.IS_IN_LOOP)) {
+                break;
+            }
+        }
+        if (sdir == 8) {
+            // no unloopy neighbors
+            return false; // leave cell loopy
+        }
+        // starting on this unloopy neighbor,
+        // work clockwise and count up:
+        // (a) the number of strings of loopy neighbors, and
+        // (b) the length of the longest such string.
+        numStrings = maxStringLength = currentStringLength = 0;
+        inString = false;
+        for (dir = sdir; dir < sdir + 8; dir++) {
+            newX = x + CLOCK_DIRS[dir % 8][0];
+            newY = y + CLOCK_DIRS[dir % 8][1];
+            if (!map.hasXY(newX, newY))
+                continue;
+            const newCell = map.get(newX, newY);
+            if (newCell && newCell.flags.cell & Cell$1.IS_IN_LOOP) {
+                currentStringLength++;
+                if (!inString) {
+                    if (numStrings > 0) {
+                        return false; // more than one string here; leave loopy
+                    }
+                    numStrings++;
+                    inString = true;
+                }
+            }
+            else if (inString) {
+                if (currentStringLength > maxStringLength) {
+                    maxStringLength = currentStringLength;
+                }
+                currentStringLength = 0;
+                inString = false;
+            }
+        }
+        if (inString && currentStringLength > maxStringLength) {
+            maxStringLength = currentStringLength;
+        }
+        if (numStrings == 1 && maxStringLength <= 4) {
+            cell.flags.cell &= ~Cell$1.IS_IN_LOOP;
+            for (dir = 0; dir < 8; dir++) {
+                const newX = x + CLOCK_DIRS[dir][0];
+                const newY = y + CLOCK_DIRS[dir][1];
+                if (map.hasXY(newX, newY)) {
+                    const newCell = map.cell(newX, newY);
+                    checkLoopiness(newCell, newX, newY, map);
+                }
+            }
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+    function fillInnerLoopGrid(map, grid) {
+        for (let x = 0; x < map.width; ++x) {
+            for (let y = 0; y < map.height; ++y) {
+                const cell = map.cells[x][y];
+                if (cell.flags.cell & Cell$1.IS_IN_LOOP) {
+                    grid[x][y] = 1;
+                }
+                else if (x > 0 && y > 0) {
+                    const up = map.cells[x][y - 1];
+                    const left = map.cells[x - 1][y];
+                    if (up.flags.cell & Cell$1.IS_IN_LOOP &&
+                        left.flags.cell & Cell$1.IS_IN_LOOP) {
+                        grid[x][y] = 1;
+                    }
+                }
+            }
+        }
+    }
+    function cleanLoopiness(map) {
+        // remove extraneous loop markings
+        const grid$1 = alloc(map.width, map.height);
+        fillInnerLoopGrid(map, grid$1);
+        // const xy = { x: 0, y: 0 };
+        let designationSurvives;
+        for (let i = 0; i < grid$1.width; i++) {
+            for (let j = 0; j < grid$1.height; j++) {
+                const cell = map.cell(i, j);
+                if (cell.flags.cell & Cell$1.IS_IN_LOOP) {
+                    designationSurvives = false;
+                    for (let dir = 0; dir < 8; dir++) {
+                        let newX = i + CLOCK_DIRS[dir][0];
+                        let newY = j + CLOCK_DIRS[dir][1];
+                        if (map.hasXY(newX, newY) && // RUT.Map.makeValidXy(map, xy, newX, newY) &&
+                            !grid$1[newX][newY] &&
+                            !(map.cells[newX][newY].flags.cell &
+                                Cell$1.IS_IN_LOOP)) {
+                            designationSurvives = true;
+                            break;
+                        }
+                    }
+                    if (!designationSurvives) {
+                        grid$1[i][j] = 1;
+                        map.cells[i][j].flags.cell &= ~Cell$1.IS_IN_LOOP;
+                    }
+                }
+            }
+        }
+        free(grid$1);
+    }
+    ////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////
 
     const flags = { Cell: Cell$1, Map: Map$1 };
 
@@ -7342,7 +7759,17 @@ void main() {
         __proto__: null,
         flags: flags,
         Cell: Cell,
-        Map: Map
+        Map: Map,
+        make: make,
+        from: from,
+        analyze: analyze,
+        updateChokepoints: updateChokepoints,
+        floodFillCount: floodFillCount,
+        updateLoopiness: updateLoopiness,
+        resetLoopiness: resetLoopiness,
+        checkLoopiness: checkLoopiness,
+        fillInnerLoopGrid: fillInnerLoopGrid,
+        cleanLoopiness: cleanLoopiness
     };
 
     exports.Random = Random;
@@ -7364,7 +7791,7 @@ void main() {
     exports.io = io;
     exports.light = index$2;
     exports.loop = loop;
-    exports.make = make$a;
+    exports.make = make$b;
     exports.map = index;
     exports.message = message;
     exports.path = path;

@@ -4,16 +4,17 @@ import {
     LayerString,
 } from '../gameObject/flags';
 import * as Light from '../light';
-import { TileFlags, TileType, NameConfig } from './types';
+import { TileFlagType, TileType, NameConfig } from './types';
 import * as Sprite from '../sprite';
 import * as Flag from '../flag';
 import * as Effect from '../effect';
 import * as Flags from './flags';
 import * as Color from '../color';
+import { Tile as TileFlags } from './flags';
 
 export interface TileConfig extends Sprite.SpriteConfig {
     id: string;
-    flags: TileFlags;
+    flags: TileFlagType;
     dissipate: number;
     effects: Record<string, Effect.EffectInfo | string>;
     priority: number;
@@ -30,7 +31,7 @@ export interface TileConfig extends Sprite.SpriteConfig {
 export class Tile implements TileType {
     id: string;
     index = -1;
-    flags: TileFlags;
+    flags: TileFlagType;
     dissipate = 20 * 100; // 0%
     effects: Record<string, string | Effect.EffectInfo> = {};
     sprite: Sprite.Sprite;
@@ -83,6 +84,18 @@ export class Tile implements TileType {
     }
     hasAllTileMechFlags(flag: number): boolean {
         return (this.flags.tileMech & flag) === flag;
+    }
+
+    blocksVision(): boolean {
+        return !!(this.flags.object & ObjectFlags.L_BLOCKS_VISION);
+    }
+    blocksMove(): boolean {
+        return !!(this.flags.object & ObjectFlags.L_BLOCKS_MOVE);
+    }
+    blocksPathing(): boolean {
+        return (
+            this.blocksMove() || this.hasTileFlag(TileFlags.T_PATHING_BLOCKER)
+        );
     }
 
     hasEffect(name: string): boolean {
@@ -180,7 +193,7 @@ export function make(options: Partial<TileOptions>) {
         });
     }
 
-    const flags: TileFlags = {
+    const flags: TileFlagType = {
         object: Flag.from(ObjectFlags, base.flags.object, options.flags),
         tile: Flag.from(Flags.Tile, base.flags.tile, options.flags),
         tileMech: Flag.from(Flags.TileMech, base.flags.tileMech, options.flags),
