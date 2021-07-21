@@ -1650,6 +1650,16 @@ declare function installAll$2(effects: Record<string, Partial<EffectConfig>>): v
 declare const effectTypes: Record<string, EffectHandler>;
 declare function installType(id: string, effectType: EffectHandler): void;
 
+declare class MessageEffect implements EffectHandler {
+    make(src: Partial<EffectConfig>, dest: EffectInfo): boolean;
+    fire(config: any, map: MapType, x: number, y: number, ctx: Partial<EffectCtx>): Promise<boolean>;
+}
+
+declare class EmitEffect implements EffectHandler {
+    make(src: Partial<EffectConfig>, dest: EffectInfo): boolean;
+    fire(config: any, _map: MapType, x: number, y: number, ctx: Partial<EffectCtx>): Promise<boolean>;
+}
+
 type index$4_EffectInfo = EffectInfo;
 type index$4_EffectCtx = EffectCtx;
 type index$4_EffectConfig = EffectConfig;
@@ -1661,6 +1671,10 @@ declare const index$4_resetAll: typeof resetAll;
 declare const index$4_effects: typeof effects;
 declare const index$4_effectTypes: typeof effectTypes;
 declare const index$4_installType: typeof installType;
+type index$4_MessageEffect = MessageEffect;
+declare const index$4_MessageEffect: typeof MessageEffect;
+type index$4_EmitEffect = EmitEffect;
+declare const index$4_EmitEffect: typeof EmitEffect;
 declare namespace index$4 {
   export {
     Effect as Flags,
@@ -1679,6 +1693,8 @@ declare namespace index$4 {
     installAll$2 as installAll,
     index$4_effectTypes as effectTypes,
     index$4_installType as installType,
+    index$4_MessageEffect as MessageEffect,
+    index$4_EmitEffect as EmitEffect,
   };
 }
 

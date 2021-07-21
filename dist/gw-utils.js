@@ -6020,46 +6020,7 @@ void main() {
     function installType(id, effectType) {
         effectTypes[id] = effectType;
     }
-    //////////////////////////////////////////////
-    // FN
-    class FnEffect {
-        make(src, dest) {
-            if (!src.fn)
-                return true;
-            if (typeof src.fn !== 'function') {
-                throw new Error('fn effects must be functions.');
-            }
-            dest.fn = src.fn;
-            return true;
-        }
-        async fire(config, map, x, y, ctx) {
-            if (config.fn) {
-                return await config.fn(config, map, x, y, ctx);
-            }
-            return false;
-        }
-    }
-    installType('fn', new FnEffect());
-    //////////////////////////////////////////////
-    // EMIT
-    class EmitEffect {
-        make(src, dest) {
-            if (!src.emit)
-                return true;
-            if (typeof src.emit !== 'string') {
-                throw new Error('emit effects must be string name to emit: { emit: "EVENT" }');
-            }
-            dest.emit = src.emit;
-            return true;
-        }
-        async fire(config, _map, x, y, ctx) {
-            if (config.emit) {
-                return await emit(config.emit, x, y, ctx);
-            }
-            return false;
-        }
-    }
-    installType('emit', new EmitEffect());
+
     //////////////////////////////////////////////
     // MESSAGE
     class MessageEffect {
@@ -6090,6 +6051,48 @@ void main() {
     }
     installType('message', new MessageEffect());
 
+    //////////////////////////////////////////////
+    // EMIT
+    class EmitEffect {
+        make(src, dest) {
+            if (!src.emit)
+                return true;
+            if (typeof src.emit !== 'string') {
+                throw new Error('emit effects must be string name to emit: { emit: "EVENT" }');
+            }
+            dest.emit = src.emit;
+            return true;
+        }
+        async fire(config, _map, x, y, ctx) {
+            if (config.emit) {
+                return await emit(config.emit, x, y, ctx);
+            }
+            return false;
+        }
+    }
+    installType('emit', new EmitEffect());
+
+    //////////////////////////////////////////////
+    // FN
+    class FnEffect {
+        make(src, dest) {
+            if (!src.fn)
+                return true;
+            if (typeof src.fn !== 'function') {
+                throw new Error('fn effects must be functions.');
+            }
+            dest.fn = src.fn;
+            return true;
+        }
+        async fire(config, map, x, y, ctx) {
+            if (config.fn) {
+                return await config.fn(config, map, x, y, ctx);
+            }
+            return false;
+        }
+    }
+    installType('fn', new FnEffect());
+
     var index$4 = {
         __proto__: null,
         get Flags () { return Effect; },
@@ -6102,7 +6105,9 @@ void main() {
         install: install$2,
         installAll: installAll$2,
         effectTypes: effectTypes,
-        installType: installType
+        installType: installType,
+        MessageEffect: MessageEffect,
+        EmitEffect: EmitEffect
     };
 
     class Blob {
