@@ -1,47 +1,21 @@
-import { from as fromFlag, FlagBase } from '../flag';
-import * as Types from '../types';
+import { from as fromFlag } from '../flag';
 import { data as DATA } from '../gw';
 import * as Grid from '../grid';
 import { random } from '../random';
+import { Map } from '../map';
 
-import { EffectInfo } from './types';
+import {
+    EffectInfo,
+    EffectCtx,
+    EffectBase,
+    EffectHandler,
+    EffectConfig,
+} from './types';
 import { Effect as Flags } from './flags';
-
-export interface EffectCtx {
-    // actor?: Types.ActorType | null;
-    // target?: Types.ActorType | null;
-    // item?: Types.ItemType | null;
-    layer?: number;
-    force?: boolean;
-    grid: Grid.NumGrid;
-
-    [id: string]: any; // other config from subtypes
-}
-
-export interface EffectConfig {
-    flags: FlagBase;
-    chance: number;
-    next: Partial<EffectConfig> | string | null;
-
-    [id: string]: any; // other config from subtypes
-}
-
-export type EffectBase = Partial<EffectConfig> | Function;
-
-export interface EffectHandler {
-    make: (src: Partial<EffectConfig>, dest: EffectInfo) => boolean;
-    fire: (
-        config: EffectInfo,
-        map: Types.MapType,
-        x: number,
-        y: number,
-        ctx: EffectCtx
-    ) => boolean | Promise<boolean>;
-}
 
 export async function fire(
     effect: EffectInfo | string,
-    map: Types.MapType,
+    map: Map,
     x: number,
     y: number,
     ctx_: Partial<EffectCtx> = {}

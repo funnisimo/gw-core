@@ -19,7 +19,7 @@ export interface FovSite {
     readonly height: number;
 
     // usesFov(): boolean;
-    fovChanged(): boolean;
+    // fovChanged(): boolean;
 
     // hasObjectFlag(x: number, y: number, flag: number): boolean;
 
@@ -29,7 +29,7 @@ export interface FovSite {
 
     eachViewport(cb: ViewportCb): void;
 
-    lightChanged(x: number, y: number): boolean;
+    lightingChanged(): boolean;
     hasVisibleLight(x: number, y: number): boolean;
 
     blocksVision(x: number, y: number): boolean;
@@ -45,6 +45,9 @@ export interface FovSystemType {
     isDirectlyVisible(x: number, y: number): boolean;
     isMagicMapped(x: number, y: number): boolean;
     isRevealed(x: number, y: number): boolean;
+
+    readonly changed: boolean;
+    viewportChanged: boolean;
 
     makeAlwaysVisible(): void;
     makeCellAlwaysVisible(x: number, y: number): void;

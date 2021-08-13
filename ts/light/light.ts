@@ -7,7 +7,10 @@ import * as Types from './types';
 
 // const LIGHT_SMOOTHING_THRESHOLD = 150;       // light components higher than this magnitude will be toned down a little
 
-export const config = (CONFIG.light = { INTENSITY_DARK: 20 }); // less than 20% for highest color in rgb
+export const config = (CONFIG.light = {
+    INTENSITY_DARK: 20,
+    INTENSITY_SHADOW: 50,
+}); // less than 20% for highest color in rgb
 
 const LIGHT_COMPONENTS = Color.make();
 
@@ -126,6 +129,14 @@ export function isDarkLight(
     threshold?: number
 ): boolean {
     threshold = threshold ?? CONFIG.light?.INTENSITY_DARK;
+    return intensity(light) <= (threshold || 20);
+}
+
+export function isShadowLight(
+    light: Color.Color | Types.LightValue,
+    threshold?: number
+): boolean {
+    threshold = threshold ?? CONFIG.light?.INTENSITY_SHADOW;
     return intensity(light) <= (threshold || 20);
 }
 

@@ -1,14 +1,14 @@
 import * as EFFECT from './effect';
-import { EffectInfo } from './types';
+import * as TYPES from './types';
 import { Effect as Flags } from './flags';
 import * as Msg from '../message';
-import * as Types from '../types';
+import * as Map from '../map';
 
 //////////////////////////////////////////////
 // MESSAGE
 
-export class MessageEffect implements EFFECT.EffectHandler {
-    make(src: Partial<EFFECT.EffectConfig>, dest: EffectInfo): boolean {
+export class MessageEffect implements TYPES.EffectHandler {
+    make(src: Partial<TYPES.EffectConfig>, dest: TYPES.EffectInfo): boolean {
         if (!src.message) return true;
 
         if (typeof src.message !== 'string') {
@@ -22,17 +22,15 @@ export class MessageEffect implements EFFECT.EffectHandler {
 
     async fire(
         config: any,
-        map: Types.MapType,
+        map: Map.Map,
         x: number,
         y: number,
-        ctx: Partial<EFFECT.EffectCtx>
+        ctx: TYPES.EffectCtx
     ) {
         if (!config.message) return false;
 
         const fired = config.flags & Flags.E_FIRED ? true : false;
 
-        ctx.actor = ctx.actor || map?.actorAt(x, y);
-        ctx.item = ctx.item || map?.itemAt(x, y);
         if (
             config.message &&
             config.message.length &&

@@ -30,6 +30,8 @@ export enum Tile {
     T_STAND_IN_TILE = Fl(18), // earthbound creatures will be said to stand "in" the tile, not on it
     T_CONNECTS_LEVEL = Fl(19), // will be treated as passable for purposes of calculating level connectedness, irrespective of other aspects of this terrain layer
 
+    T_BLOCKS_OTHER_LAYERS = Fl(20),
+
     T_HAS_STAIRS = T_UP_STAIRS | T_DOWN_STAIRS | T_PORTAL,
     T_OBSTRUCTS_SCENT = T_AUTO_DESCENT |
         T_LAVA |

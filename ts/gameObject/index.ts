@@ -1,5 +1,3 @@
-import { GameObject } from './flags';
-
-export const flags = { GameObject };
-
+export * as flags from './flags';
 export * from './types';
+export * from './gameObject';

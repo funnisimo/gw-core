@@ -1,5 +1,5 @@
 import * as Text from './text/index';
-import * as Types from './types';
+import { Actor } from './actor';
 import * as GW from './gw';
 
 export const templates: Record<string, Text.Template> = {};
@@ -60,18 +60,18 @@ export function add(msg: string, args?: any) {
     addMessage(msg);
 }
 
-export function fromActor(actor: Types.ActorType, msg: string, args?: any) {
+export function fromActor(actor: Actor, msg: string, args?: any) {
     if (actor.isPlayer() || actor.isVisible()) {
         add(msg, args);
     }
 }
 
-export function forPlayer(actor: Types.ActorType, msg: string, args?: any) {
+export function forPlayer(actor: Actor, msg: string, args?: any) {
     if (!actor.isPlayer()) return;
     add(msg, args);
 }
 
-export function addCombat(actor: Types.ActorType, msg: string, args?: any) {
+export function addCombat(actor: Actor, msg: string, args?: any) {
     if (actor.isPlayer() || actor.isVisible()) {
         const template = templates[msg];
         if (template) {

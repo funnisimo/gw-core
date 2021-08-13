@@ -190,6 +190,21 @@ export class Grid<T> extends Array<Array<T>> {
         return other;
     }
 
+    /**
+     * Returns whether or not an item in the grid matches the provided function.
+     * @param fn - The function that matches
+     * TODO - Do we need this???
+     * TODO - Should this only be in NumGrid?
+     * TODO - Should it alloc instead of using constructor?
+     * TSIGNORE
+     */
+    // @ts-ignore
+    some(fn: GridMatch<T>): boolean {
+        return super.some((col, x) =>
+            col.some((data, y) => fn(data, x, y, this))
+        );
+    }
+
     forCircle(x: number, y: number, radius: number, fn: GridEach<T>) {
         Utils.forCircle(x, y, radius, (i, j) => {
             if (this.hasXY(i, j)) fn(this[i][j], i, j, this);
@@ -387,7 +402,7 @@ export class Grid<T> extends Array<Array<T>> {
                 ? (x, y) => (v as GridMatch<T>)(this[x][y], x, y, this)
                 : (x, y) => this.get(x, y) === v;
 
-        return random.matchingXY(this.width, this.height, fn);
+        return random.matchingLoc(this.width, this.height, fn);
     }
 
     matchingLocNear(x: number, y: number, v: T | GridMatch<T>): Loc {
@@ -396,7 +411,7 @@ export class Grid<T> extends Array<Array<T>> {
                 ? (x, y) => (v as GridMatch<T>)(this[x][y], x, y, this)
                 : (x, y) => this.get(x, y) === v;
 
-        return random.matchingXYNear(x, y, fn);
+        return random.matchingLocNear(x, y, fn);
     }
 
     // Rotates around the cell, counting up the number of distinct strings of neighbors with the same test result in a single revolution.

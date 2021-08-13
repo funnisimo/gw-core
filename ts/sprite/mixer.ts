@@ -113,6 +113,12 @@ export class Mixer implements DrawInfo {
         return this._changed();
     }
 
+    scale(multiplier: number, fg = true, bg = true) {
+        if (fg) this.fg.scale(multiplier);
+        if (bg) this.bg.scale(multiplier);
+        return this._changed();
+    }
+
     mix(color: Color.ColorBase, fg = 50, bg = fg) {
         color = Color.from(color);
         if (fg > 0) {

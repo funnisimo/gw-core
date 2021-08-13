@@ -121,12 +121,12 @@ describe('Utils', () => {
             chain: null,
         };
 
-        const a = {} as Utils.Chainable;
-        const b = {} as Utils.Chainable;
-        const c = {} as Utils.Chainable;
-        const d = {} as Utils.Chainable;
-        const e = {} as Utils.Chainable;
-        const f = {} as Utils.Chainable;
+        const a = { next: null };
+        const b = { next: null };
+        const c = { next: null };
+        const d = { next: null };
+        const e = { next: null };
+        const f = { next: null };
 
         Utils.addToChain(obj, 'chain', a);
         Utils.addToChain(obj, 'chain', b);

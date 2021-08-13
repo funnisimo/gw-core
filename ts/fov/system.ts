@@ -8,14 +8,24 @@ import * as Grid from '../grid';
 import * as FOV from './fov';
 import * as TYPES from './types';
 
+export interface FovSystemOptions {
+    revealed: boolean;
+    visible: boolean;
+    fov: boolean;
+}
+
 export class FovSystem implements TYPES.FovSystemType {
     site: TYPES.FovSite;
     flags: Grid.NumGrid; // FovFlags
     fov: FOV.FOV;
+    protected _changed: boolean;
+    viewportChanged: boolean;
 
-    constructor(site: TYPES.FovSite) {
+    constructor(site: TYPES.FovSite, opts: Partial<FovSystemOptions> = {}) {
         this.site = site;
-        this.flags = Grid.make(site.width, site.height, 0);
+        this.flags = Grid.make(site.width, site.height, FovFlags.VISIBLE);
+        this._changed = true;
+        this.viewportChanged = false;
 
         this.fov = new FOV.FOV({
             isBlocked(x: number, y: number): boolean {
@@ -25,27 +35,50 @@ export class FovSystem implements TYPES.FovSystemType {
                 return x >= 0 && y >= 0 && x < site.width && y < site.height;
             },
         });
+
+        // we want fov, so do not reveal the map initially
+        if (opts.fov === true) {
+            this.flags.fill(0);
+        }
+
+        if (opts.visible) {
+            this.makeAlwaysVisible();
+        } else if (opts.visible === false) {
+            this.flags.fill(0);
+        } else if (opts.revealed) {
+            this.revealAll();
+        }
     }
 
+    get changed() {
+        return this._changed;
+    }
+
+    isVisible(x: number, y: number): boolean {
+        return !!((this.flags.get(x, y) || 0) & FovFlags.VISIBLE);
+    }
     isAnyKindOfVisible(x: number, y: number): boolean {
-        return !!(this.flags[x][y] & FovFlags.ANY_KIND_OF_VISIBLE);
+        return !!((this.flags.get(x, y) || 0) & FovFlags.ANY_KIND_OF_VISIBLE);
     }
     isInFov(x: number, y: number): boolean {
-        return !!(this.flags[x][y] & FovFlags.IN_FOV);
+        return !!((this.flags.get(x, y) || 0) & FovFlags.IN_FOV);
     }
     isDirectlyVisible(x: number, y: number): boolean {
-        return !!(this.flags[x][y] & FovFlags.VISIBLE);
+        const flags = FovFlags.VISIBLE | FovFlags.IN_FOV;
+        return ((this.flags.get(x, y) || 0) & flags) === flags;
     }
     isMagicMapped(x: number, y: number): boolean {
-        return !!(this.flags[x][y] & FovFlags.MAGIC_MAPPED);
+        return !!((this.flags.get(x, y) || 0) & FovFlags.MAGIC_MAPPED);
     }
     isRevealed(x: number, y: number): boolean {
-        return !!(this.flags[x][y] & FovFlags.REVEALED);
+        return !!((this.flags.get(x, y) || 0) & FovFlags.REVEALED);
     }
 
     makeAlwaysVisible() {
         this.flags.update(
-            (v) => v | (FovFlags.ALWAYS_VISIBLE | FovFlags.REVEALED)
+            (v) =>
+                v |
+                (FovFlags.ALWAYS_VISIBLE | FovFlags.REVEALED | FovFlags.VISIBLE)
         );
     }
     makeCellAlwaysVisible(x: number, y: number) {
@@ -98,12 +131,12 @@ export class FovSystem implements TYPES.FovSystemType {
         y: number
     ): boolean {
         const isVisible = !!(flag & FovFlags.VISIBLE);
-        const wasVisible = !!(flag & FovFlags.WAS_VISIBLE);
+        const wasVisible = !!(flag & FovFlags.WAS_ANY_KIND_OF_VISIBLE);
 
         if (isVisible && wasVisible) {
-            if (this.site.lightChanged(x, y)) {
-                this.site.redrawCell(x, y);
-            }
+            // if (this.site.lightChanged(x, y)) {
+            //     this.site.redrawCell(x, y);
+            // }
         } else if (isVisible && !wasVisible) {
             // if the cell became visible this move
             if (!(flag & FovFlags.REVEALED) /* && DATA.automationActive */) {
@@ -145,11 +178,11 @@ export class FovSystem implements TYPES.FovSystemType {
                 // }
                 this.flags[x][y] |= FovFlags.REVEALED;
             }
-            this.site.redrawCell(x, y);
+            // this.site.redrawCell(x, y);
         } else if (!isVisible && wasVisible) {
             // if the cell ceased being visible this move
-            this.site.storeMemory(x, y);
-            this.site.redrawCell(x, y);
+            // this.site.storeMemory(x, y);
+            // this.site.redrawCell(x, y);
         }
         return isVisible;
     }
@@ -163,9 +196,9 @@ export class FovSystem implements TYPES.FovSystemType {
         const wasClairy = !!(flag & FovFlags.WAS_CLAIRVOYANT_VISIBLE);
 
         if (isClairy && wasClairy) {
-            if (this.site.lightChanged(x, y)) {
-                this.site.redrawCell(x, y);
-            }
+            // if (this.site.lightChanged(x, y)) {
+            //     this.site.redrawCell(x, y);
+            // }
         } else if (!isClairy && wasClairy) {
             // ceased being clairvoyantly visible
             this.site.storeMemory(x, y);
@@ -183,9 +216,9 @@ export class FovSystem implements TYPES.FovSystemType {
         const wasTele = !!(flag & FovFlags.WAS_TELEPATHIC_VISIBLE);
 
         if (isTele && wasTele) {
-            if (this.site.lightChanged(x, y)) {
-                this.site.redrawCell(x, y);
-            }
+            // if (this.site.lightChanged(x, y)) {
+            //     this.site.redrawCell(x, y);
+            // }
         } else if (!isTele && wasTele) {
             // ceased being telepathically visible
             this.site.storeMemory(x, y);
@@ -208,9 +241,9 @@ export class FovSystem implements TYPES.FovSystemType {
         const wasMonst = !!(flag & FovFlags.WAS_MONSTER_DETECTED);
 
         if (isMonst && wasMonst) {
-            if (this.site.lightChanged(x, y)) {
-                this.site.redrawCell(x, y);
-            }
+            // if (this.site.lightChanged(x, y)) {
+            //     this.site.redrawCell(x, y);
+            // }
         } else if (!isMonst && wasMonst) {
             // ceased being detected visible
             this.site.redrawCell(x, y, true);
@@ -229,7 +262,7 @@ export class FovSystem implements TYPES.FovSystemType {
             this.site.hasVisibleLight(x, y) // &&
             // !(cell.flags.cellMech & FovFlagsMech.DARKENED)
         ) {
-            this.flags[x][y] |= FovFlags.VISIBLE;
+            flag = this.flags[x][y] |= FovFlags.VISIBLE;
         }
 
         if (this.updateCellVisibility(flag, x, y)) return;
@@ -238,9 +271,17 @@ export class FovSystem implements TYPES.FovSystemType {
         if (this.updateCellDetect(flag, x, y)) return;
     }
 
-    update(): boolean {
+    update(): boolean;
+    update(x: number, y: number, r: number): boolean;
+    update(cx?: number, cy?: number, cr?: number): boolean {
         // if (!this.site.usesFov()) return false;
-        if (!this.site.fovChanged()) return false;
+        if (
+            !this.viewportChanged &&
+            cx === undefined &&
+            !this.site.lightingChanged()
+        ) {
+            return false;
+        }
 
         this.flags.update(this.demoteCellVisibility.bind(this));
 
@@ -260,6 +301,14 @@ export class FovSystem implements TYPES.FovSystemType {
                 }
             });
         });
+
+        if (cx !== undefined && cy !== undefined) {
+            this.fov.calculate(cx, cy, cr, (x, y, v) => {
+                if (v) {
+                    this.flags[x][y] |= FovFlags.PLAYER;
+                }
+            });
+        }
 
         // if (PLAYER.bonus.clairvoyance < 0) {
         //   discoverCell(PLAYER.xLoc, PLAYER.yLoc);

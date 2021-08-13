@@ -44,14 +44,10 @@ describe('light', () => {
                 return grid.hasXY(x, y);
             },
 
-            isVisible: jest.fn().mockReturnValue(true),
             hasActor: jest.fn().mockReturnValue(false),
             blocksVision(x: number, y: number): boolean {
                 return grid[x][y] > 0;
             },
-
-            anyLightChanged: false,
-            glowLightChanged: false,
 
             eachGlowLight: jest.fn().mockImplementation((cb: Light.LightCb) => {
                 for (let i = 0; i < glowLights.length; ++i) {
@@ -100,16 +96,16 @@ describe('light', () => {
         });
 
         test('will return to default from stable glow lights', () => {
-            site.anyLightChanged = true;
+            system.glowLightChanged = true;
             system.update();
 
-            expect(site.anyLightChanged).toBeFalsy();
-            expect(site.glowLightChanged).toBeFalsy();
+            expect(system.glowLightChanged).toBeFalsy();
+            expect(system.dynamicLightChanged).toBeFalsy();
 
             Utils.forRect(site.width, site.height, (x, y) => {
                 expect(system.getLight(x, y)).toEqual([100, 100, 100]);
-                expect(system.isInShadow(x, y)).toBeTruthy();
-                expect(system.isLit(x, y)).toBeFalsy(); // Huh?
+                expect(system.isInShadow(x, y)).toBeFalsy();
+                expect(system.isLit(x, y)).toBeTruthy();
                 expect(system.isDark(x, y)).toBeFalsy(); // Huh?
                 expect(system.lightChanged(x, y)).toBeFalsy();
             });
@@ -119,7 +115,7 @@ describe('light', () => {
             expect(system.ambient).toEqual(Color.colors.white.toLight());
 
             system.setAmbient([0, 0, 100]);
-            site.anyLightChanged = false;
+            system.glowLightChanged = false;
 
             // stable glow lights will keep ambient light change from taking hold
             system.update();
@@ -128,7 +124,7 @@ describe('light', () => {
                 expect(system.getLight(x, y)).toEqual([100, 100, 100]);
             });
 
-            site.anyLightChanged = true;
+            system.glowLightChanged = true;
             system.update();
 
             Utils.forRect(site.width, site.height, (x, y) => {
@@ -144,8 +140,8 @@ describe('light', () => {
             });
 
             system.setAmbient(Color.colors.black);
-            expect(site.glowLightChanged).toBeTruthy();
-            expect(site.anyLightChanged).toBeTruthy();
+            expect(system.dynamicLightChanged).toBeFalsy();
+            expect(system.glowLightChanged).toBeTruthy();
 
             site.glowLights.push({
                 x: 10,
@@ -197,12 +193,9 @@ describe('light', () => {
 
             system.setAmbient(Color.make(0x202020, true));
 
-            site.anyLightChanged = false;
-            site.glowLightChanged = false;
+            system.glowLightChanged = false;
             system.addStatic(10, 10, Light.lights.TORCH);
-
-            expect(site.glowLightChanged).toBeTruthy();
-            expect(site.anyLightChanged).toBeTruthy();
+            expect(system.glowLightChanged).toBeTruthy();
 
             system.update();
 
@@ -228,8 +221,7 @@ describe('light', () => {
             light: Light.make('white, 3, 100'),
             next: null,
         });
-        site.anyLightChanged = true;
-        site.glowLightChanged = false;
+        system.dynamicLightChanged = true;
 
         system.update();
         expect(system.getLight(3, 3)).toEqual([100, 100, 100]);
@@ -244,7 +236,7 @@ describe('light', () => {
         expect(system.getLight(3, 3)).toEqual([0, 0, 0]);
         DATA.player = { x: 3, y: 3 };
 
-        site.anyLightChanged = true;
+        system.glowLightChanged = true;
         system.update();
 
         expect(system.getLight(3, 3)).toEqual([100, 100, 100]);

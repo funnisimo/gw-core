@@ -81,12 +81,12 @@ export interface LightSystemSite {
 
     hasXY(x: number, y: number): boolean;
 
-    isVisible(x: number, y: number): boolean;
+    // isVisible(x: number, y: number): boolean;
     hasActor(x: number, y: number): boolean;
     blocksVision(x: number, y: number): boolean;
 
-    anyLightChanged: boolean;
-    glowLightChanged: boolean;
+    // anyLightChanged: boolean;
+    // glowLightChanged: boolean;
 
     eachGlowLight(cb: LightCb): void;
     eachDynamicLight(cb: LightCb): void;
@@ -99,6 +99,11 @@ export interface LightSystemSite {
 export interface LightSystemType {
     update(force?: boolean): boolean; // didSomething
     setAmbient(light: LightValue | Color): void;
+
+    readonly changed: boolean;
+
+    glowLightChanged: boolean;
+    dynamicLightChanged: boolean;
 
     addStatic(x: number, y: number, light: LightType): void;
     removeStatic(x: number, y: number, light?: LightType): void;

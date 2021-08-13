@@ -3,9 +3,11 @@
  * @module utils
  */
 
-import { Loc, XY, Chainable } from '../types';
+import { Loc, XY } from '../types';
 
-export { Loc, XY, Chainable };
+export { Loc, XY };
+
+export * from './chain';
 
 // DIRS are organized clockwise
 // - first 4 are arrow directions
@@ -535,75 +537,6 @@ export function sum(arr: number[]) {
     return arr.reduce((a, b) => a + b);
 }
 
-// CHAIN
-
-export function chainLength<T extends Chainable>(root: T | null) {
-    let count = 0;
-    while (root) {
-        count += 1;
-        root = root.next;
-    }
-    return count;
-}
-
-export function chainIncludes<T extends Chainable>(chain: T | null, entry: T) {
-    while (chain && chain !== entry) {
-        chain = chain.next;
-    }
-    return chain === entry;
-}
-
-export function eachChain<T extends Chainable>(
-    item: T | null,
-    fn: (item: T, index: number) => any
-) {
-    let index = 0;
-    while (item) {
-        const next = item.next;
-        fn(item, index++);
-        item = next;
-    }
-    return index; // really count
-}
-
-export function addToChain<T extends Chainable>(
-    obj: any,
-    name: string,
-    entry: T
-) {
-    entry.next = obj[name] || null;
-    obj[name] = entry;
-    return true;
-}
-
-export function removeFromChain<T extends Chainable>(
-    obj: any,
-    name: string,
-    entry: T
-) {
-    const root = obj[name];
-    if (root === entry) {
-        obj[name] = entry.next || null;
-        entry.next = null;
-        return true;
-    } else if (!root) {
-        return false;
-    } else {
-        let prev = root;
-        let current = prev.next;
-        while (current && current !== entry) {
-            prev = current;
-            current = prev.next;
-        }
-        if (current === entry) {
-            prev.next = current.next || null;
-            entry.next = null;
-            return true;
-        }
-    }
-    return false;
-}
-
 // LINES
 
 const FP_BASE = 16;
@@ -830,4 +763,15 @@ export function arcCount(x: number, y: number, testFn: XYMatchFunc) {
     }
     if (arcCount == 0 && matchCount) return 1;
     return Math.floor(arcCount / 2); // Since we added one when we entered a wall and another when we left.
+}
+
+// ALGOS
+
+export async function asyncForEach<T>(
+    iterable: Iterable<T>,
+    fn: (t: T) => Promise<any> | any
+) {
+    for (let t of iterable) {
+        await fn(t);
+    }
 }

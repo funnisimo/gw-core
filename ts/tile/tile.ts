@@ -1,26 +1,25 @@
 import {
-    Layer,
+    Depth,
     GameObject as ObjectFlags,
-    LayerString,
+    DepthString,
 } from '../gameObject/flags';
 import * as Light from '../light';
-import { TileFlagType, TileType, NameConfig } from './types';
+import { TileFlags, TileType, NameConfig } from './types';
 import * as Sprite from '../sprite';
 import * as Flag from '../flag';
 import * as Effect from '../effect';
 import * as Flags from './flags';
 import * as Color from '../color';
-import { Tile as TileFlags } from './flags';
 
 export interface TileConfig extends Sprite.SpriteConfig {
     id: string;
-    flags: TileFlagType;
+    flags: TileFlags;
     dissipate: number;
     effects: Record<string, Effect.EffectInfo | string>;
     priority: number;
-    layer: number;
+    depth: number;
     light: Light.LightType | null;
-    // groundTile: string | null;
+    groundTile: string | null;
 
     name: string;
     description: string;
@@ -31,12 +30,12 @@ export interface TileConfig extends Sprite.SpriteConfig {
 export class Tile implements TileType {
     id: string;
     index = -1;
-    flags: TileFlagType;
+    flags: TileFlags;
     dissipate = 20 * 100; // 0%
     effects: Record<string, string | Effect.EffectInfo> = {};
     sprite: Sprite.Sprite;
     priority = 50;
-    layer = Layer.GROUND;
+    depth = 0;
     light: Light.LightType | null = null;
     // groundTile: string | null;
 
@@ -49,7 +48,7 @@ export class Tile implements TileType {
         this.id = config.id || 'n/a';
         this.dissipate = config.dissipate ?? this.dissipate;
         this.priority = config.priority ?? this.priority;
-        this.layer = config.layer ?? this.layer;
+        this.depth = config.depth ?? this.depth;
         this.light = config.light || null;
         // this.groundTile = config.groundTile || null; // Huh?
 
@@ -94,8 +93,11 @@ export class Tile implements TileType {
     }
     blocksPathing(): boolean {
         return (
-            this.blocksMove() || this.hasTileFlag(TileFlags.T_PATHING_BLOCKER)
+            this.blocksMove() || this.hasTileFlag(Flags.Tile.T_PATHING_BLOCKER)
         );
+    }
+    blocksEffects(): boolean {
+        return !!(this.flags.object & ObjectFlags.L_BLOCKS_EFFECTS);
     }
 
     hasEffect(name: string): boolean {
@@ -159,10 +161,10 @@ export interface TileOptions extends Sprite.SpriteConfig {
     flags: Flag.FlagBase;
     priority: number;
     dissipate: number;
-    layer: Layer | LayerString;
+    depth: Depth | DepthString;
 
     effects: Record<string, Partial<Effect.EffectConfig> | string | null>;
-    // groundTile: string;
+    groundTile: string;
 
     light: Light.LightBase | null;
 }
@@ -193,18 +195,18 @@ export function make(options: Partial<TileOptions>) {
         });
     }
 
-    const flags: TileFlagType = {
+    const flags: TileFlags = {
         object: Flag.from(ObjectFlags, base.flags.object, options.flags),
         tile: Flag.from(Flags.Tile, base.flags.tile, options.flags),
         tileMech: Flag.from(Flags.TileMech, base.flags.tileMech, options.flags),
     };
 
-    let layer: Layer = base.layer || 0;
-    if (options.layer) {
-        if (typeof options.layer === 'string') {
-            layer = Layer[options.layer];
+    let depth: number = base.depth || 0;
+    if (options.depth) {
+        if (typeof options.depth === 'string') {
+            depth = Depth[options.depth];
         } else {
-            layer = options.layer;
+            depth = options.depth;
         }
     }
     let light = base.light;
@@ -220,9 +222,9 @@ export function make(options: Partial<TileOptions>) {
         dissipate: options.dissipate ?? base.dissipate,
         effects,
         priority: options.priority ?? base.priority,
-        layer,
+        depth: depth,
         light,
-        // groundTile: string | null;
+        groundTile: null,
 
         ch: options.ch ?? base.sprite.ch,
         fg: options.fg ?? base.sprite.fg,

@@ -12,7 +12,8 @@ import * as Grid from '../grid';
 import * as Light from './light';
 import { data as DATA } from '../gw';
 import * as Utils from '../utils';
-import { Color } from '../color';
+import * as Color from '../color';
+import { fl as Fl } from '../flag';
 
 export interface StaticLightInfo {
     x: number;
@@ -22,25 +23,38 @@ export interface StaticLightInfo {
 }
 
 enum LightFlags {
-    LIT,
-    IN_SHADOW,
-    DARK,
-    MAGIC_DARK,
-    CHANGED,
+    LIT = Fl(0),
+    IN_SHADOW = Fl(1),
+    DARK = Fl(2),
+    // MAGIC_DARK = Fl(3),
+    CHANGED = Fl(4),
+}
+
+export interface LightSystemOptions {
+    ambient: Color.ColorBase | LightValue;
 }
 
 export class LightSystem implements LightSystemType, PaintSite {
     site: LightSystemSite;
     staticLights: StaticLightInfo | null = null;
-    ambient: LightValue = [100, 100, 100];
+    ambient: LightValue;
+    glowLightChanged: boolean;
+    dynamicLightChanged: boolean;
+    protected _changed: boolean;
 
     light: Grid.Grid<LightValue>;
     oldLight: Grid.Grid<LightValue>;
     glowLight: Grid.Grid<LightValue>;
     flags: Grid.NumGrid;
 
-    constructor(map: LightSystemSite) {
+    constructor(map: LightSystemSite, opts: Partial<LightSystemOptions> = {}) {
         this.site = map;
+        this.ambient = Color.from(opts.ambient || 'white').toLight();
+        this._changed = false;
+
+        this.glowLightChanged = false;
+        this.dynamicLightChanged = false;
+
         this.light = Grid.make(
             map.width,
             map.height,
@@ -57,17 +71,26 @@ export class LightSystem implements LightSystemType, PaintSite {
             () => this.ambient.slice() as LightValue
         );
         this.flags = Grid.make(map.width, map.height);
+
+        this.finishLightUpdate();
     }
 
-    setAmbient(light: LightValue | Color) {
-        if (light instanceof Color) {
+    setAmbient(light: LightValue | Color.Color) {
+        if (light instanceof Color.Color) {
             light = light.toLight();
         }
         for (let i = 0; i < 3; ++i) {
             this.ambient[i] = light[i];
         }
-        this.site.glowLightChanged = true;
-        this.site.anyLightChanged = true;
+        this.glowLightChanged = true;
+    }
+
+    get anyLightChanged() {
+        return this.glowLightChanged || this.dynamicLightChanged;
+    }
+
+    get changed() {
+        return this._changed;
     }
 
     getLight(x: number, y: number): LightValue {
@@ -83,20 +106,20 @@ export class LightSystem implements LightSystemType, PaintSite {
     isInShadow(x: number, y: number): boolean {
         return !!(this.flags[x][y] & LightFlags.IN_SHADOW);
     }
-    isMagicDark(x: number, y: number): boolean {
-        return !!(this.flags[x][y] & LightFlags.MAGIC_DARK);
-    }
+    // isMagicDark(x: number, y: number): boolean {
+    //     return !!(this.flags[x][y] & LightFlags.MAGIC_DARK);
+    // }
     lightChanged(x: number, y: number): boolean {
         return !!(this.flags[x][y] & LightFlags.CHANGED);
     }
 
-    setMagicDark(x: number, y: number, isDark = true) {
-        if (isDark) {
-            this.flags[x][y] |= LightFlags.MAGIC_DARK;
-        } else {
-            this.flags[x][y] &= ~LightFlags.MAGIC_DARK;
-        }
-    }
+    // setMagicDark(x: number, y: number, isDark = true) {
+    //     if (isDark) {
+    //         this.flags[x][y] |= LightFlags.MAGIC_DARK;
+    //     } else {
+    //         this.flags[x][y] &= ~LightFlags.MAGIC_DARK;
+    //     }
+    // }
 
     get width(): number {
         return this.site.width;
@@ -113,8 +136,7 @@ export class LightSystem implements LightSystemType, PaintSite {
             next: this.staticLights,
         };
         this.staticLights = info;
-        this.site.glowLightChanged = true;
-        this.site.anyLightChanged = true;
+        this.glowLightChanged = true;
         return info;
     }
 
@@ -127,8 +149,7 @@ export class LightSystem implements LightSystemType, PaintSite {
             return !light || light === info.light;
         }
 
-        this.site.glowLightChanged = true;
-        this.site.anyLightChanged = true;
+        this.glowLightChanged = true;
 
         while (prev && matches(prev)) {
             prev = this.staticLights = prev.next;
@@ -161,11 +182,12 @@ export class LightSystem implements LightSystemType, PaintSite {
     }
 
     update(force = false): boolean {
-        if (!force && !this.site.anyLightChanged) return false;
+        this._changed = false;
+        if (!force && !this.anyLightChanged) return false;
         // Copy Light over oldLight
         this.startLightUpdate();
 
-        if (!this.site.glowLightChanged) {
+        if (!this.glowLightChanged) {
             this.restoreGlowLights();
         } else {
             // GW.debug.log('painting glow lights.');
@@ -175,7 +197,7 @@ export class LightSystem implements LightSystemType, PaintSite {
             });
 
             this.recordGlowLights();
-            this.site.glowLightChanged = false;
+            this.glowLightChanged = false;
         }
 
         // Cycle through monsters and paint their lights:
@@ -210,7 +232,8 @@ export class LightSystem implements LightSystemType, PaintSite {
             }
         }
 
-        this.site.anyLightChanged = false;
+        this.dynamicLightChanged = false;
+        this._changed = true;
 
         // if (PLAYER.status.invisible) {
         //     PLAYER.info.foreColor = playerInvisibleColor;
@@ -229,12 +252,15 @@ export class LightSystem implements LightSystemType, PaintSite {
         // record Old Lights
         // and then zero out Light.
         let i = 0;
+        const flag = Light.isShadowLight(this.ambient)
+            ? LightFlags.IN_SHADOW
+            : 0;
         this.light.forEach((val, x, y) => {
             for (i = 0; i < 3; ++i) {
                 this.oldLight[x][y][i] = val[i];
                 val[i] = this.ambient[i];
             }
-            this.flags[x][y] = LightFlags.IN_SHADOW;
+            this.flags[x][y] = flag;
         });
     }
 
@@ -249,7 +275,7 @@ export class LightSystem implements LightSystemType, PaintSite {
             }
             if (Light.isDarkLight(light)) {
                 this.flags[x][y] |= LightFlags.DARK;
-            } else if (!this.isInShadow(x, y)) {
+            } else if (!Light.isShadowLight(light)) {
                 this.flags[x][y] |= LightFlags.LIT;
             }
         });
@@ -307,7 +333,7 @@ export class LightSystem implements LightSystemType, PaintSite {
         for (let i = 0; i < 3; ++i) {
             val[i] += light[i];
         }
-        if (dispelShadows) {
+        if (dispelShadows && !Light.isShadowLight(light)) {
             this.flags[x][y] &= ~LightFlags.IN_SHADOW;
         }
     }

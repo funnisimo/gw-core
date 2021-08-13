@@ -128,14 +128,15 @@ Tile.install('SHALLOW', {
     priority: 20,
     name: 'shallow water',
     article: 'the',
+    depth: 'SURFACE', // 'LIQUID'?
 });
 
 Tile.install('BRIDGE', {
     ch: '=',
     fg: [100, 40, 40],
     priority: 40,
-    layer: 'SURFACE',
+    depth: 'SURFACE',
     flags: 'T_BRIDGE, L_VISUALLY_DISTINCT',
     article: 'a',
-    // ground: 'LAKE',
+    groundTile: 'LAKE',
 });

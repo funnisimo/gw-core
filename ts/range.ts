@@ -6,10 +6,10 @@ export class Range {
     public lo: number;
     public hi: number;
     public clumps: number;
-    private _rng: Random;
+    private _rng: Random | null;
 
     constructor(lower: number, upper = 0, clumps = 1, rng?: Random) {
-        this._rng = rng || random;
+        this._rng = rng || null;
         if (Array.isArray(lower)) {
             clumps = lower[2];
             upper = lower[1];
@@ -25,7 +25,8 @@ export class Range {
     }
 
     value() {
-        return this._rng.clumped(this.lo, this.hi, this.clumps);
+        const rng = this._rng || random;
+        return rng.clumped(this.lo, this.hi, this.clumps);
     }
 
     copy(other: Range) {

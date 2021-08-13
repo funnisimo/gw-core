@@ -1,5 +1,8 @@
 import { fl as Fl } from '../flag';
 
+export { GameObject, Depth } from '../gameObject/flags';
+export { Tile } from '../tile/flags';
+
 ///////////////////////////////////////////////////////
 // CELL
 
@@ -56,6 +59,7 @@ export enum Cell {
         IMPREGNABLE,
 
     HAS_ANY_ACTOR = HAS_PLAYER | HAS_ACTOR,
+    HAS_ANY_OBJECT = HAS_ITEM | HAS_ANY_ACTOR,
 
     CELL_DEFAULT = NEEDS_REDRAW | CELL_CHANGED,
 }
@@ -65,9 +69,6 @@ export enum Cell {
 
 export enum Map {
     MAP_CHANGED = Fl(0),
-
-    MAP_STABLE_GLOW_LIGHTS = Fl(1),
-    MAP_STABLE_LIGHTS = Fl(2),
 
     MAP_ALWAYS_LIT = Fl(3),
     MAP_SAW_WELCOME = Fl(4),
@@ -80,5 +81,5 @@ export enum Map {
 
     MAP_DANCES = Fl(9),
 
-    MAP_DEFAULT = MAP_STABLE_LIGHTS | MAP_STABLE_GLOW_LIGHTS,
+    MAP_DEFAULT = 0,
 }

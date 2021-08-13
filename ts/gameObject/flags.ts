@@ -45,17 +45,16 @@ export enum GameObject {
         L_BLOCKS_SURFACE,
 }
 
-export enum Layer {
+export enum Depth {
     ALL_LAYERS = -1,
     GROUND = 0,
-    LIQUID,
     SURFACE,
-    GAS,
     ITEM,
     ACTOR,
-    PLAYER,
+    LIQUID,
+    GAS,
     FX,
     UI,
 }
 
-export type LayerString = keyof typeof Layer;
+export type DepthString = keyof typeof Depth;

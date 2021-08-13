@@ -1,43 +1,43 @@
-import * as Utils from "./utils";
+import * as Utils from './utils';
 
 export type EventFn = (...args: any[]) => Promise<any>;
 
 /**
  * Data for an event listener.
  */
-export class Listener implements Utils.Chainable {
-  public fn: EventFn;
-  public context: any;
-  public once: boolean;
-  public next: Listener | null;
+export class Listener implements Utils.Chainable<Listener> {
+    public fn: EventFn;
+    public context: any;
+    public once: boolean;
+    public next: Listener | null;
 
-  /**
-   * Creates a Listener.
-   * @param {Function} fn The listener function.
-   * @param {Object} [context=null] The context to invoke the listener with.
-   * @param {Boolean} [once=false] Specify if the listener is a one-time listener.
-   */
-  constructor(fn: EventFn, context?: any, once = false) {
-    this.fn = fn;
-    this.context = context || null;
-    this.once = once || false;
-    this.next = null;
-  }
+    /**
+     * Creates a Listener.
+     * @param {Function} fn The listener function.
+     * @param {Object} [context=null] The context to invoke the listener with.
+     * @param {Boolean} [once=false] Specify if the listener is a one-time listener.
+     */
+    constructor(fn: EventFn, context?: any, once = false) {
+        this.fn = fn;
+        this.context = context || null;
+        this.once = once || false;
+        this.next = null;
+    }
 
-  /**
-   * Compares this Listener to the parameters.
-   * @param {Function} fn - The function
-   * @param {Object} [context] - The context Object.
-   * @param {Boolean} [once] - Whether or not it is a one time handler.
-   * @returns Whether or not this Listener matches the parameters.
-   */
-  matches(fn: EventFn, context?: any, once?: boolean) {
-    return (
-      this.fn === fn &&
-      (once === undefined || once == this.once) &&
-      (!context || this.context === context)
-    );
-  }
+    /**
+     * Compares this Listener to the parameters.
+     * @param {Function} fn - The function
+     * @param {Object} [context] - The context Object.
+     * @param {Boolean} [once] - Whether or not it is a one time handler.
+     * @returns Whether or not this Listener matches the parameters.
+     */
+    matches(fn: EventFn, context?: any, once?: boolean) {
+        return (
+            this.fn === fn &&
+            (once === undefined || once == this.once) &&
+            (!context || this.context === context)
+        );
+    }
 }
 
 var EVENTS: Record<string, Listener | null> = {};
@@ -52,18 +52,18 @@ var EVENTS: Record<string, Listener | null> = {};
  * @returns {Listener}
  */
 export function addListener(
-  event: string,
-  fn: EventFn,
-  context?: any,
-  once = false
+    event: string,
+    fn: EventFn,
+    context?: any,
+    once = false
 ) {
-  if (typeof fn !== "function") {
-    throw new TypeError("The listener must be a function");
-  }
+    if (typeof fn !== 'function') {
+        throw new TypeError('The listener must be a function');
+    }
 
-  const listener = new Listener(fn, context || null, once);
-  Utils.addToChain(EVENTS, event, listener);
-  return listener;
+    const listener = new Listener(fn, context || null, once);
+    Utils.addToChain(EVENTS, event, listener);
+    return listener;
 }
 
 /**
@@ -76,7 +76,7 @@ export function addListener(
  * @returns {Listener}
  */
 export function on(event: string, fn: EventFn, context?: any, once = false) {
-  return addListener(event, fn, context, once);
+    return addListener(event, fn, context, once);
 }
 
 /**
@@ -89,7 +89,7 @@ export function on(event: string, fn: EventFn, context?: any, once = false) {
  * @public
  */
 export function once(event: string, fn: EventFn, context?: any) {
-  return addListener(event, fn, context, true);
+    return addListener(event, fn, context, true);
 }
 
 /**
@@ -103,22 +103,22 @@ export function once(event: string, fn: EventFn, context?: any) {
  * @public
  */
 export function removeListener(
-  event: string,
-  fn: EventFn,
-  context?: any,
-  once = false
+    event: string,
+    fn: EventFn,
+    context?: any,
+    once = false
 ) {
-  if (!EVENTS[event]) return false;
-  if (!fn) return false;
+    if (!EVENTS[event]) return false;
+    if (!fn) return false;
 
-  let success = false;
-  Utils.eachChain(EVENTS[event], (obj: Listener) => {
-    if (obj.matches(fn, context, once)) {
-      Utils.removeFromChain(EVENTS, event, obj);
-      success = true;
-    }
-  });
-  return success;
+    let success = false;
+    Utils.eachChain(EVENTS[event], (obj: Listener) => {
+        if (obj.matches(fn, context, once)) {
+            Utils.removeFromChain(EVENTS, event, obj);
+            success = true;
+        }
+    });
+    return success;
 }
 
 /**
@@ -132,7 +132,7 @@ export function removeListener(
  * @public
  */
 export function off(event: string, fn: EventFn, context?: any, once = false) {
-  return removeListener(event, fn, context, once);
+    return removeListener(event, fn, context, once);
 }
 
 /**
@@ -141,9 +141,9 @@ export function off(event: string, fn: EventFn, context?: any, once = false) {
  * @param {String} evt The Event name.
  */
 export function clearEvent(event: string) {
-  if (EVENTS[event]) {
-    EVENTS[event] = null;
-  }
+    if (EVENTS[event]) {
+        EVENTS[event] = null;
+    }
 }
 
 /**
@@ -154,11 +154,11 @@ export function clearEvent(event: string) {
  * @public
  */
 export function removeAllListeners(event?: string) {
-  if (event) {
-    clearEvent(event);
-  } else {
-    EVENTS = {};
-  }
+    if (event) {
+        clearEvent(event);
+    } else {
+        EVENTS = {};
+    }
 }
 
 /**
@@ -170,15 +170,15 @@ export function removeAllListeners(event?: string) {
  * @public
  */
 export async function emit(...args: any[]) {
-  const event = args[0];
-  if (!EVENTS[event]) return false; // no events to send
-  let listener = EVENTS[event];
+    const event = args[0];
+    if (!EVENTS[event]) return false; // no events to send
+    let listener = EVENTS[event];
 
-  while (listener) {
-    let next = listener.next;
-    if (listener.once) Utils.removeFromChain(EVENTS, event, listener);
-    await listener.fn.apply(listener.context, args);
-    listener = next;
-  }
-  return true;
+    while (listener) {
+        let next = listener.next;
+        if (listener.once) Utils.removeFromChain(EVENTS, event, listener);
+        await listener.fn.apply(listener.context, args);
+        listener = next;
+    }
+    return true;
 }

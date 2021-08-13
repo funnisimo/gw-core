@@ -18,8 +18,15 @@ const blob = GW.blob.make({
     minHeight: 5,
     maxHeight: 20,
 });
-blob.carve(50, 30, (x, y) => {
-    buffer.draw(x, y, ' ', 0, 0xf00);
-});
-buffer.render();
+
+function carve() {
+    buffer.blackOut();
+    blob.carve(50, 30, (x, y) => {
+        buffer.draw(x, y, ' ', 0, 0xf00);
+    });
+    buffer.render();
+}
+
+canvas.onclick = carve;
+carve();
 ```

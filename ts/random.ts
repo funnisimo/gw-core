@@ -202,7 +202,7 @@ export class Random {
         return total + lo;
     }
 
-    matchingXY(
+    matchingLoc(
         width: number,
         height: number,
         matchFn: Utils.XYMatchFunc
@@ -236,7 +236,7 @@ export class Random {
         return [-1, -1];
     }
 
-    matchingXYNear(
+    matchingLocNear(
         x: number,
         y: number,
         matchFn: Utils.XYMatchFunc

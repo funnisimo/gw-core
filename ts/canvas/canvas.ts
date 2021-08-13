@@ -158,7 +158,7 @@ export abstract class BaseCanvas implements BufferTarget {
     protected _requestRender() {
         if (this._renderRequested) return;
         this._renderRequested = true;
-        requestAnimationFrame(() => this.render());
+        requestAnimationFrame(() => this._render());
     }
 
     // protected _set(x: number, y: number, style: number) {
@@ -181,7 +181,11 @@ export abstract class BaseCanvas implements BufferTarget {
         data.set(this._data);
     }
 
-    abstract render(): void;
+    render(): void {
+        this.buffer.render();
+    }
+
+    abstract _render(): void;
 
     hasXY(x: number, y: number) {
         return x >= 0 && y >= 0 && x < this.width && y < this.height;
@@ -392,7 +396,7 @@ export class Canvas extends BaseCanvas {
         }
     }
 
-    render() {
+    _render() {
         const gl = this._gl;
 
         if (this._glyphs.needsUpdate) {
@@ -453,7 +457,7 @@ export class Canvas2D extends BaseCanvas {
         this._requestRender();
     }
 
-    render() {
+    _render() {
         this._renderRequested = false;
         for (let i = 0; i < this._changed.length; ++i) {
             if (this._changed[i]) this._renderCell(i);

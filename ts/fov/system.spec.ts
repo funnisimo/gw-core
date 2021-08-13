@@ -24,8 +24,8 @@ describe('FOV System', () => {
 
             viewports,
 
-            usesFov: jest.fn().mockReturnValue(true),
-            fovChanged: jest.fn().mockReturnValue(true),
+            // usesFov: jest.fn().mockReturnValue(true),
+            // fovChanged: jest.fn().mockReturnValue(true),
 
             eachViewport: jest.fn().mockImplementation((cb: FOV.ViewportCb) => {
                 viewports.forEach((info) =>
@@ -33,7 +33,7 @@ describe('FOV System', () => {
                 );
             }),
 
-            lightChanged: jest.fn().mockReturnValue(false),
+            lightingChanged: jest.fn().mockReturnValue(false),
             hasVisibleLight: jest.fn().mockReturnValue(true),
 
             blocksVision: jest.fn().mockReturnValue(false),
@@ -52,6 +52,7 @@ describe('FOV System', () => {
             radius: 5,
             type: FOV.FovFlags.PLAYER,
         });
+        system.viewportChanged = true;
 
         expect(system.isDirectlyVisible(10, 10)).toBeFalsy();
         expect(system.update()).toBeTruthy();

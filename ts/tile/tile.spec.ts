@@ -1,7 +1,7 @@
 import 'jest-extended';
 import * as Tile from './index';
 import { colors as COLORS } from '../color';
-import { GameObject as ObjectFlags, Layer } from '../gameObject/flags';
+import { GameObject as ObjectFlags, Depth } from '../gameObject/flags';
 
 const NONE = COLORS.NONE;
 
@@ -42,7 +42,7 @@ describe('Tile', () => {
             fg: COLORS.light_gray,
             bg: COLORS.dark_gray,
         });
-        expect(tile.layer).toEqual(Layer.GROUND);
+        expect(tile.depth).toEqual(Depth.GROUND);
         expect(tile.effects).toEqual({});
         expect(tile.priority).toEqual(90);
         expect(tile.name).toEqual('Stone Wall');
@@ -187,10 +187,10 @@ describe('Tile', () => {
             fg: 'dark_red',
             bg: 'dark_teal',
             priority: 10,
-            layer: 'SURFACE',
+            depth: 'SURFACE',
         });
 
-        expect(carpet.layer).toEqual(Layer.SURFACE);
+        expect(carpet.depth).toEqual(Depth.SURFACE);
     });
 
     test('can use objects for activations', async () => {
@@ -201,7 +201,7 @@ describe('Tile', () => {
             effects: {
                 tick: { chance: 0, log: 'testing' },
             },
-            layer: 'SURFACE',
+            depth: 'SURFACE',
         });
 
         expect(Tile.tiles.CARPET).toBe(carpet);

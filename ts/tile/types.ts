@@ -2,7 +2,7 @@ import * as ObjectTypes from '../gameObject/types';
 import { EffectInfo } from '../effect/types';
 import { ColorBase } from '../color';
 
-export interface TileFlagType extends ObjectTypes.ObjectFlags {
+export interface TileFlags extends ObjectTypes.ObjectFlags {
     readonly tile: number;
     readonly tileMech: number;
 }
@@ -12,10 +12,10 @@ export interface NameConfig {
     color?: boolean | string | ColorBase;
 }
 
-export interface TileType extends ObjectTypes.ObjectType {
+export interface TileType {
     readonly id: string;
     readonly index: number;
-    readonly flags: TileFlagType;
+    readonly flags: TileFlags;
 
     readonly dissipate: number;
     readonly effects: Record<string, string | EffectInfo>;

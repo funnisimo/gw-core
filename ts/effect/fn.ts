@@ -1,12 +1,12 @@
 import * as EFFECT from './effect';
-import { EffectInfo } from './types';
-import * as Types from '../types';
+import * as TYPES from './types';
+import * as Map from '../map';
 
 //////////////////////////////////////////////
 // FN
 
-class FnEffect implements EFFECT.EffectHandler {
-    make(src: Partial<EFFECT.EffectConfig>, dest: EffectInfo): boolean {
+class FnEffect implements TYPES.EffectHandler {
+    make(src: Partial<TYPES.EffectConfig>, dest: TYPES.EffectInfo): boolean {
         if (!src.fn) return true;
 
         if (typeof src.fn !== 'function') {
@@ -18,10 +18,10 @@ class FnEffect implements EFFECT.EffectHandler {
 
     async fire(
         config: any,
-        map: Types.MapType,
+        map: Map.Map,
         x: number,
         y: number,
-        ctx: Partial<EFFECT.EffectCtx>
+        ctx: Partial<TYPES.EffectCtx>
     ) {
         if (config.fn) {
             return await config.fn(config, map, x, y, ctx);
