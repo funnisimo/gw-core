@@ -1,3 +1,106 @@
+import * as ROT from 'rot-js';
+
+// CHAIN
+function chainLength(root) {
+    let count = 0;
+    while (root) {
+        count += 1;
+        root = root.next;
+    }
+    return count;
+}
+function chainIncludes(chain, entry) {
+    while (chain && chain !== entry) {
+        chain = chain.next;
+    }
+    return chain === entry;
+}
+function eachChain(item, fn) {
+    let index = 0;
+    while (item) {
+        const next = item.next;
+        fn(item, index++);
+        item = next;
+    }
+    return index; // really count
+}
+function addToChain(obj, name, entry) {
+    entry.next = obj[name] || null;
+    obj[name] = entry;
+    return true;
+}
+function removeFromChain(obj, name, entry) {
+    const root = obj[name];
+    if (root === entry) {
+        obj[name] = entry.next || null;
+        entry.next = null;
+        return true;
+    }
+    else if (!root) {
+        return false;
+    }
+    else {
+        let prev = root;
+        let current = prev.next;
+        while (current && current !== entry) {
+            prev = current;
+            current = prev.next;
+        }
+        if (current === entry) {
+            prev.next = current.next || null;
+            entry.next = null;
+            return true;
+        }
+    }
+    return false;
+}
+function findInChain(root, cb) {
+    while (root && !cb(root)) {
+        root = root.next;
+    }
+    return root;
+}
+class Chain {
+    constructor(sort, onchange) {
+        this.data = null;
+        this.sort = sort || (() => -1);
+        this.onchange = onchange || (() => { });
+    }
+    add(obj) {
+        if (!this.data || this.sort(this.data, obj) < 0) {
+            obj.next = this.data;
+            this.data = obj;
+            return true;
+        }
+        let prev = this.data;
+        let current = this.data.next;
+        while (current && this.sort(current, obj) < 0) {
+            prev = current;
+            current = current.next;
+        }
+        obj.next = current;
+        prev.next = obj;
+        this.onchange();
+        return true;
+    }
+    has(obj) {
+        return this.find((o) => o === obj) !== null;
+    }
+    remove(obj) {
+        if (!removeFromChain(this, 'data', obj)) {
+            return false;
+        }
+        this.onchange();
+        return true;
+    }
+    find(cb) {
+        return findInChain(this.data, cb);
+    }
+    forEach(cb) {
+        return eachChain(this.data, cb);
+    }
+}
+
 /**
  * GW.utils
  * @module utils
@@ -9,7 +112,7 @@
 // - last 4 are diagonals
 //   >> rotate 90 degrees clockwise ==>> newIndex = 4 + (oldIndex + 1) % 4;
 //   >> opposite diagonal ==>> newIndex = 4 + (index + 2) % 4;
-const DIRS = [
+const DIRS$2 = [
     [0, -1],
     [1, 0],
     [0, 1],
@@ -86,6 +189,38 @@ function y(src) {
     // @ts-ignore
     return src.y || src[1] || 0;
 }
+class Bounds {
+    constructor(x, y, w, h) {
+        this.x = x;
+        this.y = y;
+        this.width = w;
+        this.height = h;
+    }
+    get left() {
+        return this.x;
+    }
+    get right() {
+        return this.x + this.width - 1;
+    }
+    get top() {
+        return this.y;
+    }
+    get bottom() {
+        return this.y + this.height - 1;
+    }
+    contains(...args) {
+        let x = args[0];
+        let y = args[1];
+        if (typeof x !== 'number') {
+            y = y(x);
+            x = x(x);
+        }
+        return (this.x <= x &&
+            this.y <= y &&
+            this.x + this.width > x &&
+            this.y + this.height > y);
+    }
+}
 function copyXY(dest, src) {
     dest.x = x(src);
     dest.y = y(src);
@@ -95,7 +230,11 @@ function addXY(dest, src) {
     dest.y += y(src);
 }
 function equalsXY(dest, src) {
-    return dest.x == x(src) && dest.y == y(src);
+    if (!dest && !src)
+        return true;
+    if (!dest || !src)
+        return false;
+    return x(dest) == x(src) && y(dest) == y(src);
 }
 function lerpXY(a, b, pct) {
     if (pct > 1) {
@@ -107,6 +246,26 @@ function lerpXY(a, b, pct) {
     const x2 = x(a) + Math.floor(dx * pct);
     const y2 = y(a) + Math.floor(dy * pct);
     return [x2, y2];
+}
+function eachNeighbor(x, y, fn, only4dirs = false) {
+    const max = only4dirs ? 4 : 8;
+    for (let i = 0; i < max; ++i) {
+        const dir = DIRS$2[i];
+        const x1 = x + dir[0];
+        const y1 = y + dir[1];
+        fn(x1, y1);
+    }
+}
+function matchingNeighbor(x, y, matchFn, only4dirs = false) {
+    const maxIndex = only4dirs ? 4 : 8;
+    for (let d = 0; d < maxIndex; ++d) {
+        const dir = DIRS$2[d];
+        const i = x + dir[0];
+        const j = y + dir[1];
+        if (matchFn(i, j))
+            return [i, j];
+    }
+    return [-1, -1];
 }
 function distanceBetween(x1, y1, x2, y2) {
     const x = Math.abs(x1 - x2);
@@ -141,7 +300,7 @@ function dirFromTo(a, b) {
 function dirIndex(dir) {
     const x0 = x(dir);
     const y0 = y(dir);
-    return DIRS.findIndex((a) => a[0] == x0 && a[1] == y0);
+    return DIRS$2.findIndex((a) => a[0] == x0 && a[1] == y0);
 }
 function isOppositeDir(a, b) {
     if (a[0] + b[0] != 0)
@@ -191,6 +350,31 @@ function stepFromTo(a, b, fn) {
 function smoothHiliteGradient(currentXValue, maxXValue) {
     return Math.floor(100 * Math.sin((Math.PI * currentXValue) / maxXValue));
 }
+// export function extend(obj, name, fn) {
+//   const base = obj[name] || NOOP;
+//   const newFn = fn.bind(obj, base.bind(obj));
+//   newFn.fn = fn;
+//   newFn.base = base;
+//   obj[name] = newFn;
+// }
+// export function rebase(obj, name, newBase) {
+//   const fns = [];
+//   let fn = obj[name];
+//   while(fn && fn.fn) {
+//     fns.push(fn.fn);
+//     fn = fn.base;
+//   }
+//   obj[name] = newBase;
+//   while(fns.length) {
+//     fn = fns.pop();
+//     extend(obj, name, fn);
+//   }
+// }
+// export function cloneObject(obj:object) {
+//   const other = Object.create(obj.__proto__);
+//   assignObject(other, obj);
+//   return other;
+// }
 function assignField(dest, src, key) {
     const current = dest[key];
     const updated = src[key];
@@ -243,6 +427,8 @@ function setDefault(obj, field, val) {
 }
 function setDefaults(obj, def, custom = null) {
     let dest;
+    if (!def)
+        return;
     Object.keys(def).forEach((key) => {
         const origKey = key;
         let defValue = def[key];
@@ -280,6 +466,23 @@ function setDefaults(obj, def, custom = null) {
                 dest[key] = defValue;
             }
         }
+    });
+}
+function setOptions(obj, opts) {
+    setDefaults(obj, opts, (dest, key, _current, opt) => {
+        if (opt === null) {
+            dest[key] = null;
+        }
+        else if (Array.isArray(opt)) {
+            dest[key] = opt.slice();
+        }
+        else if (typeof opt === 'object') {
+            dest[key] = opt; // Object.assign({}, opt); -- this breaks assigning a Color object as a default...
+        }
+        else {
+            dest[key] = opt;
+        }
+        return true;
     });
 }
 function kindDefaults(obj, def) {
@@ -351,59 +554,6 @@ function arraysIntersect(a, b) {
 }
 function sum(arr) {
     return arr.reduce((a, b) => a + b);
-}
-function chainLength(root) {
-    let count = 0;
-    while (root) {
-        count += 1;
-        root = root.next;
-    }
-    return count;
-}
-function chainIncludes(chain, entry) {
-    while (chain && chain !== entry) {
-        chain = chain.next;
-    }
-    return chain === entry;
-}
-function eachChain(item, fn) {
-    let index = 0;
-    while (item) {
-        const next = item.next;
-        fn(item, index++);
-        item = next;
-    }
-    return index; // really count
-}
-function addToChain(obj, name, entry) {
-    entry.next = obj[name] || null;
-    obj[name] = entry;
-    return true;
-}
-function removeFromChain(obj, name, entry) {
-    const root = obj[name];
-    if (root === entry) {
-        obj[name] = entry.next || null;
-        entry.next = null;
-        return true;
-    }
-    else if (!root) {
-        return false;
-    }
-    else {
-        let prev = root;
-        let current = prev.next;
-        while (current && current !== entry) {
-            prev = current;
-            current = prev.next;
-        }
-        if (current === entry) {
-            prev.next = current.next || null;
-            entry.next = null;
-            return true;
-        }
-    }
-    return false;
 }
 // LINES
 const FP_BASE = 16;
@@ -482,10 +632,95 @@ function getLineThru(fromX, fromY, toX, toY, width, height) {
     });
     return line;
 }
+// CIRCLE
+function forCircle(x, y, radius, fn) {
+    let i, j;
+    for (i = x - radius - 1; i < x + radius + 1; i++) {
+        for (j = y - radius - 1; j < y + radius + 1; j++) {
+            if ((i - x) * (i - x) + (j - y) * (j - y) <
+                radius * radius + radius) {
+                // + radius softens the circle
+                fn(i, j);
+            }
+        }
+    }
+}
+function forRect(...args) {
+    let left = 0;
+    let top = 0;
+    if (arguments.length > 3) {
+        left = args.shift();
+        top = args.shift();
+    }
+    const right = left + args[0];
+    const bottom = top + args[1];
+    const fn = args[2];
+    for (let i = left; i < right; ++i) {
+        for (let j = top; j < bottom; ++j) {
+            fn(i, j);
+        }
+    }
+}
+function forBorder(...args) {
+    let left = 0;
+    let top = 0;
+    if (arguments.length > 3) {
+        left = args.shift();
+        top = args.shift();
+    }
+    const right = left + args[0] - 1;
+    const bottom = top + args[1] - 1;
+    const fn = args[2];
+    for (let x = left; x <= right; ++x) {
+        fn(x, top);
+        fn(x, bottom);
+    }
+    for (let y = top; y <= bottom; ++y) {
+        fn(left, y);
+        fn(right, y);
+    }
+}
+// ARC COUNT
+// Rotates around the cell, counting up the number of distinct strings of neighbors with the same test result in a single revolution.
+//		Zero means there are no impassable tiles adjacent.
+//		One means it is adjacent to a wall.
+//		Two means it is in a hallway or something similar.
+//		Three means it is the center of a T-intersection or something similar.
+//		Four means it is in the intersection of two hallways.
+//		Five or more means there is a bug.
+function arcCount(x, y, testFn) {
+    let oldX, oldY, newX, newY;
+    // brogueAssert(grid.hasXY(x, y));
+    let arcCount = 0;
+    let matchCount = 0;
+    for (let dir = 0; dir < CLOCK_DIRS.length; dir++) {
+        oldX = x + CLOCK_DIRS[(dir + 7) % 8][0];
+        oldY = y + CLOCK_DIRS[(dir + 7) % 8][1];
+        newX = x + CLOCK_DIRS[dir][0];
+        newY = y + CLOCK_DIRS[dir][1];
+        // Counts every transition from passable to impassable or vice-versa on the way around the cell:
+        const newOk = testFn(newX, newY);
+        const oldOk = testFn(oldX, oldY);
+        if (newOk)
+            ++matchCount;
+        if (newOk != oldOk) {
+            arcCount++;
+        }
+    }
+    if (arcCount == 0 && matchCount)
+        return 1;
+    return Math.floor(arcCount / 2); // Since we added one when we entered a wall and another when we left.
+}
+// ALGOS
+async function asyncForEach(iterable, fn) {
+    for (let t of iterable) {
+        await fn(t);
+    }
+}
 
-var utils = {
+var index$9 = {
     __proto__: null,
-    DIRS: DIRS,
+    DIRS: DIRS$2,
     NO_DIRECTION: NO_DIRECTION,
     UP: UP,
     RIGHT: RIGHT,
@@ -507,10 +742,13 @@ var utils = {
     clamp: clamp,
     x: x,
     y: y,
+    Bounds: Bounds,
     copyXY: copyXY,
     addXY: addXY,
     equalsXY: equalsXY,
     lerpXY: lerpXY,
+    eachNeighbor: eachNeighbor,
+    matchingNeighbor: matchingNeighbor,
     distanceBetween: distanceBetween,
     distanceFromTo: distanceFromTo,
     calcRadius: calcRadius,
@@ -527,6 +765,7 @@ var utils = {
     assignOmitting: assignOmitting,
     setDefault: setDefault,
     setDefaults: setDefaults,
+    setOptions: setOptions,
     kindDefaults: kindDefaults,
     pick: pick,
     clearObject: clearObject,
@@ -537,21 +776,23 @@ var utils = {
     firstOpt: firstOpt,
     arraysIntersect: arraysIntersect,
     sum: sum,
+    forLine: forLine,
+    getLine: getLine,
+    getLineThru: getLineThru,
+    forCircle: forCircle,
+    forRect: forRect,
+    forBorder: forBorder,
+    arcCount: arcCount,
+    asyncForEach: asyncForEach,
     chainLength: chainLength,
     chainIncludes: chainIncludes,
     eachChain: eachChain,
     addToChain: addToChain,
     removeFromChain: removeFromChain,
-    forLine: forLine,
-    getLine: getLine,
-    getLineThru: getLineThru
+    findInChain: findInChain,
+    Chain: Chain
 };
 
-const RANDOM_CONFIG = {
-    make: () => {
-        return Math.random.bind(Math);
-    },
-};
 function lotteryDrawArray(rand, frequencies) {
     let i, maxFreq, randIndex;
     maxFreq = 0;
@@ -585,25 +826,27 @@ function lotteryDrawObject(rand, weights) {
     return entries[index][0];
 }
 class Random {
+    // static configure(opts: Partial<RandomConfig>) {
+    //     if (opts.make) {
+    //         if (typeof opts.make !== 'function')
+    //             throw new Error('Random make parameter must be a function.');
+    //         if (typeof opts.make(12345) !== 'function')
+    //             throw new Error(
+    //                 'Random make function must accept a numeric seed and return a random function.'
+    //             );
+    //         RANDOM_CONFIG.make = opts.make;
+    //         random.seed();
+    //         cosmetic.seed();
+    //     }
+    // }
     constructor() {
-        this._fn = RANDOM_CONFIG.make();
-    }
-    static configure(opts) {
-        if (opts.make) {
-            if (typeof opts.make !== 'function')
-                throw new Error('Random make parameter must be a function.');
-            if (typeof opts.make(12345) !== 'function')
-                throw new Error('Random make function must accept a numeric seed and return a random function.');
-            RANDOM_CONFIG.make = opts.make;
-            random.seed();
-            cosmetic.seed();
-        }
+        this._fn = ROT.RNG.clone();
     }
     seed(val) {
-        this._fn = RANDOM_CONFIG.make(val);
+        this._fn.setSeed(val);
     }
     value() {
-        return this._fn();
+        return this._fn.getUniform();
     }
     float() {
         return this.value();
@@ -613,7 +856,7 @@ class Random {
         if (max <= 0)
             return 0;
         max = max || Number.MAX_SAFE_INTEGER;
-        return Math.floor(this._fn() * max);
+        return Math.floor(this.value() * max);
     }
     int(max = 0) {
         return this.number(max);
@@ -703,18 +946,82 @@ class Random {
         }
         return total + lo;
     }
+    matchingLoc(width, height, matchFn) {
+        let locationCount = 0;
+        let i, j, index;
+        locationCount = 0;
+        forRect(width, height, (i, j) => {
+            if (matchFn(i, j)) {
+                locationCount++;
+            }
+        });
+        if (locationCount == 0) {
+            return [-1, -1];
+        }
+        else {
+            index = this.range(0, locationCount - 1);
+        }
+        for (i = 0; i < width && index >= 0; i++) {
+            for (j = 0; j < height && index >= 0; j++) {
+                if (matchFn(i, j)) {
+                    if (index == 0) {
+                        return [i, j];
+                    }
+                    index--;
+                }
+            }
+        }
+        return [-1, -1];
+    }
+    matchingLocNear(x, y, matchFn) {
+        let loc = [-1, -1];
+        let i, j, k, candidateLocs, randIndex;
+        candidateLocs = 0;
+        // count up the number of candidate locations
+        for (k = 0; k < 50 && !candidateLocs; k++) {
+            for (i = x - k; i <= x + k; i++) {
+                for (j = y - k; j <= y + k; j++) {
+                    if ((i == x - k ||
+                        i == x + k ||
+                        j == y - k ||
+                        j == y + k) &&
+                        matchFn(i, j)) {
+                        candidateLocs++;
+                    }
+                }
+            }
+        }
+        if (candidateLocs == 0) {
+            return [-1, -1];
+        }
+        // and pick one
+        randIndex = 1 + this.number(candidateLocs);
+        for (k = 0; k < 50; k++) {
+            for (i = x - k; i <= x + k; i++) {
+                for (j = y - k; j <= y + k; j++) {
+                    if ((i == x - k ||
+                        i == x + k ||
+                        j == y - k ||
+                        j == y + k) &&
+                        matchFn(i, j)) {
+                        if (--randIndex == 0) {
+                            loc[0] = i;
+                            loc[1] = j;
+                            return loc;
+                        }
+                    }
+                }
+            }
+        }
+        return [-1, -1]; // should never reach this point
+    }
 }
 const random = new Random();
 const cosmetic = new Random();
 
-const data = {};
-const config = {};
-const make = {};
-const flags = {};
-
 class Range {
     constructor(lower, upper = 0, clumps = 1, rng) {
-        this._rng = rng || random;
+        this._rng = rng || null;
         if (Array.isArray(lower)) {
             clumps = lower[2];
             upper = lower[1];
@@ -728,7 +1035,8 @@ class Range {
         this.clumps = clumps || 1;
     }
     value() {
-        return this._rng.clumped(this.lo, this.hi, this.clumps);
+        const rng = this._rng || random;
+        return rng.clumped(this.lo, this.hi, this.clumps);
     }
     copy(other) {
         this.lo = other.lo;
@@ -744,7 +1052,7 @@ class Range {
         return `${this.lo}-${this.hi}`;
     }
 }
-function make$1(config, rng) {
+function make$b(config, rng) {
     if (!config)
         return new Range(0, 0, 0, rng);
     if (config instanceof Range)
@@ -796,18 +1104,17 @@ function make$1(config, rng) {
     }
     throw new Error('Not a valid range - ' + config);
 }
-make.range = make$1;
-const from = make$1;
+const from$6 = make$b;
 function asFn(config, rng) {
-    const range = make$1(config, rng);
+    const range = make$b(config, rng);
     return () => range.value();
 }
 
 var range = {
     __proto__: null,
     Range: Range,
-    make: make$1,
-    from: from,
+    make: make$b,
+    from: from$6,
     asFn: asFn
 };
 
@@ -819,8 +1126,14 @@ function fl(N) {
 function toString(flagObj, value) {
     const inverse = Object.entries(flagObj).reduce((out, entry) => {
         const [key, value] = entry;
-        if (typeof value === "number")
-            out[value] = key;
+        if (typeof value === 'number') {
+            if (out[value]) {
+                out[value] += ' | ' + key;
+            }
+            else {
+                out[value] = key;
+            }
+        }
         return out;
     }, []);
     const out = [];
@@ -830,19 +1143,19 @@ function toString(flagObj, value) {
             out.push(inverse[fl]);
         }
     }
-    return out.join(" | ");
+    return out.join(' | ');
 }
-function from$1(obj, ...args) {
+function from$5(obj, ...args) {
     let result = 0;
     for (let index = 0; index < args.length; ++index) {
         let value = args[index];
         if (value === undefined)
             continue;
-        if (typeof value == "number") {
+        if (typeof value == 'number') {
             result |= value;
             continue; // next
         }
-        else if (typeof value === "string") {
+        else if (typeof value === 'string') {
             value = value
                 .split(/[,|]/)
                 .map((t) => t.trim())
@@ -855,9 +1168,9 @@ function from$1(obj, ...args) {
         }
         if (Array.isArray(value)) {
             value.forEach((v) => {
-                if (typeof v == "string") {
+                if (typeof v == 'string') {
                     v = v.trim();
-                    if (v.startsWith("!")) {
+                    if (v.startsWith('!')) {
                         // @ts-ignore
                         const f = obj[v.substring(1)];
                         result &= ~f;
@@ -887,37 +1200,10 @@ var flag = {
     __proto__: null,
     fl: fl,
     toString: toString,
-    from: from$1
+    from: from$5
 };
 
-class Bounds {
-    constructor(x, y, w, h) {
-        this.x = x;
-        this.y = y;
-        this.width = w;
-        this.height = h;
-    }
-    contains(...args) {
-        let x$1 = args[0];
-        let y$1 = args[1];
-        if (typeof x$1 !== 'number') {
-            y$1 = y(x$1);
-            x$1 = x(x$1);
-        }
-        return (this.x <= x$1 &&
-            this.y <= y$1 &&
-            this.x + this.width > x$1 &&
-            this.y + this.height > y$1);
-    }
-}
-
-var types = {
-    __proto__: null,
-    Bounds: Bounds
-};
-
-const DIRS$1 = DIRS;
-const CDIRS = CLOCK_DIRS;
+const DIRS$1 = DIRS$2;
 function makeArray(l, fn) {
     if (fn === undefined)
         return new Array(l).fill(0);
@@ -1007,15 +1293,11 @@ class Grid extends Array {
         }
     }
     eachNeighbor(x, y, fn, only4dirs = false) {
-        const maxIndex = only4dirs ? 4 : 8;
-        for (let d = 0; d < maxIndex; ++d) {
-            const dir = DIRS$1[d];
-            const i = x + dir[0];
-            const j = y + dir[1];
+        eachNeighbor(x, y, (i, j) => {
             if (this.hasXY(i, j)) {
                 fn(this[i][j], i, j, this);
             }
-        }
+        }, only4dirs);
     }
     async eachNeighborAsync(x, y, fn, only4dirs = false) {
         const maxIndex = only4dirs ? 4 : 8;
@@ -1029,13 +1311,11 @@ class Grid extends Array {
         }
     }
     forRect(x, y, w, h, fn) {
-        w = Math.min(this.width - x, w);
-        h = Math.min(this.height - y, h);
-        for (let i = x; i < x + w; ++i) {
-            for (let j = y; j < y + h; ++j) {
+        forRect(x, y, w, h, (i, j) => {
+            if (this.hasXY(i, j)) {
                 fn(this[i][j], i, j, this);
             }
-        }
+        });
     }
     randomEach(fn) {
         const sequence = random.sequence(this.width * this.height);
@@ -1061,18 +1341,23 @@ class Grid extends Array {
         other.update(fn);
         return other;
     }
+    /**
+     * Returns whether or not an item in the grid matches the provided function.
+     * @param fn - The function that matches
+     * TODO - Do we need this???
+     * TODO - Should this only be in NumGrid?
+     * TODO - Should it alloc instead of using constructor?
+     * TSIGNORE
+     */
+    // @ts-ignore
+    some(fn) {
+        return super.some((col, x) => col.some((data, y) => fn(data, x, y, this)));
+    }
     forCircle(x, y, radius, fn) {
-        let i, j;
-        for (i = Math.max(0, x - radius - 1); i < Math.min(this.width, x + radius + 1); i++) {
-            for (j = Math.max(0, y - radius - 1); j < Math.min(this.height, y + radius + 1); j++) {
-                if (this.hasXY(i, j) &&
-                    (i - x) * (i - x) + (j - y) * (j - y) <
-                        radius * radius + radius) {
-                    // + radius softens the circle
-                    fn(this[i][j], i, j, this);
-                }
-            }
-        }
+        forCircle(x, y, radius, (i, j) => {
+            if (this.hasXY(i, j))
+                fn(this[i][j], i, j, this);
+        });
     }
     hasXY(x, y) {
         return x >= 0 && y >= 0 && x < this.width && y < this.height;
@@ -1103,35 +1388,23 @@ class Grid extends Array {
         return bounds;
     }
     update(fn) {
-        let i, j;
-        for (i = 0; i < this.width; i++) {
-            for (j = 0; j < this.height; j++) {
+        forRect(this.width, this.height, (i, j) => {
+            if (this.hasXY(i, j))
                 this[i][j] = fn(this[i][j], i, j, this);
-            }
-        }
+        });
     }
     updateRect(x, y, width, height, fn) {
-        let i, j;
-        for (i = x; i < x + width; i++) {
-            for (j = y; j < y + height; j++) {
-                if (this.hasXY(i, j)) {
-                    this[i][j] = fn(this[i][j], i, j, this);
-                }
-            }
-        }
+        forRect(x, y, width, height, (i, j) => {
+            if (this.hasXY(i, j))
+                this[i][j] = fn(this[i][j], i, j, this);
+        });
     }
     updateCircle(x, y, radius, fn) {
-        let i, j;
-        for (i = Math.max(0, x - radius - 1); i < Math.min(this.width, x + radius + 1); i++) {
-            for (j = Math.max(0, y - radius - 1); j < Math.min(this.height, y + radius + 1); j++) {
-                if (this.hasXY(i, j) &&
-                    (i - x) * (i - x) + (j - y) * (j - y) <
-                        radius * radius + radius) {
-                    // + radius softens the circle
-                    this[i][j] = fn(this[i][j], i, j, this);
-                }
+        forCircle(x, y, radius, (i, j) => {
+            if (this.hasXY(i, j)) {
+                this[i][j] = fn(this[i][j], i, j, this);
             }
-        }
+        });
     }
     /**
      * Fills the entire grid with the supplied value
@@ -1232,91 +1505,17 @@ class Grid extends Array {
         }
         return [-1, -1];
     }
-    randomMatchingLoc(v, deterministic = false) {
-        let locationCount = 0;
-        let i, j, index;
+    randomMatchingLoc(v) {
         const fn = typeof v === 'function'
-            ? v
-            : (val) => val == v;
-        locationCount = 0;
-        this.forEach((v, i, j) => {
-            if (fn(v, i, j, this)) {
-                locationCount++;
-            }
-        });
-        if (locationCount == 0) {
-            return [-1, -1];
-        }
-        else if (deterministic) {
-            index = Math.floor(locationCount / 2);
-        }
-        else {
-            index = random.range(0, locationCount - 1);
-        }
-        for (i = 0; i < this.width && index >= 0; i++) {
-            for (j = 0; j < this.height && index >= 0; j++) {
-                if (fn(this[i][j], i, j, this)) {
-                    if (index == 0) {
-                        return [i, j];
-                    }
-                    index--;
-                }
-            }
-        }
-        return [-1, -1];
+            ? (x, y) => v(this[x][y], x, y, this)
+            : (x, y) => this.get(x, y) === v;
+        return random.matchingLoc(this.width, this.height, fn);
     }
-    matchingLocNear(x, y, v, deterministic = false) {
-        let loc = [-1, -1];
-        let i, j, k, candidateLocs, randIndex;
+    matchingLocNear(x, y, v) {
         const fn = typeof v === 'function'
-            ? v
-            : (val) => val == v;
-        candidateLocs = 0;
-        // count up the number of candidate locations
-        for (k = 0; k < Math.max(this.width, this.height) && !candidateLocs; k++) {
-            for (i = x - k; i <= x + k; i++) {
-                for (j = y - k; j <= y + k; j++) {
-                    if (this.hasXY(i, j) &&
-                        (i == x - k ||
-                            i == x + k ||
-                            j == y - k ||
-                            j == y + k) &&
-                        fn(this[i][j], i, j, this)) {
-                        candidateLocs++;
-                    }
-                }
-            }
-        }
-        if (candidateLocs == 0) {
-            return [-1, -1];
-        }
-        // and pick one
-        if (deterministic) {
-            randIndex = 1 + Math.floor(candidateLocs / 2);
-        }
-        else {
-            randIndex = 1 + random.number(candidateLocs);
-        }
-        for (k = 0; k < Math.max(this.width, this.height); k++) {
-            for (i = x - k; i <= x + k; i++) {
-                for (j = y - k; j <= y + k; j++) {
-                    if (this.hasXY(i, j) &&
-                        (i == x - k ||
-                            i == x + k ||
-                            j == y - k ||
-                            j == y + k) &&
-                        fn(this[i][j], i, j, this)) {
-                        if (--randIndex == 0) {
-                            loc[0] = i;
-                            loc[1] = j;
-                            return loc;
-                        }
-                    }
-                }
-            }
-        }
-        // brogueAssert(false);
-        return [-1, -1]; // should never reach this point
+            ? (x, y) => v(this[x][y], x, y, this)
+            : (x, y) => this.get(x, y) === v;
+        return random.matchingLocNear(x, y, fn);
     }
     // Rotates around the cell, counting up the number of distinct strings of neighbors with the same test result in a single revolution.
     //		Zero means there are no impassable tiles adjacent.
@@ -1326,30 +1525,9 @@ class Grid extends Array {
     //		Four means it is in the intersection of two hallways.
     //		Five or more means there is a bug.
     arcCount(x, y, testFn) {
-        let oldX, oldY, newX, newY;
-        // brogueAssert(grid.hasXY(x, y));
-        testFn = testFn || IS_NONZERO;
-        let arcCount = 0;
-        let matchCount = 0;
-        for (let dir = 0; dir < CDIRS.length; dir++) {
-            oldX = x + CDIRS[(dir + 7) % 8][0];
-            oldY = y + CDIRS[(dir + 7) % 8][1];
-            newX = x + CDIRS[dir][0];
-            newY = y + CDIRS[dir][1];
-            // Counts every transition from passable to impassable or vice-versa on the way around the cell:
-            const newOk = this.hasXY(newX, newY) &&
-                testFn(this[newX][newY], newX, newY, this);
-            const oldOk = this.hasXY(oldX, oldY) &&
-                testFn(this[oldX][oldY], oldX, oldY, this);
-            if (newOk)
-                ++matchCount;
-            if (newOk != oldOk) {
-                arcCount++;
-            }
-        }
-        if (arcCount == 0 && matchCount)
-            return 1;
-        return Math.floor(arcCount / 2); // Since we added one when we entered a wall and another when we left.
+        return arcCount(x, y, (i, j) => {
+            return this.hasXY(i, j) && testFn(this[i][j], i, j, this);
+        });
     }
 }
 const GRID_CACHE = [];
@@ -1357,7 +1535,16 @@ class NumGrid extends Grid {
     constructor(w, h, v = 0) {
         super(w, h, v);
     }
-    static alloc(w, h, v = 0) {
+    static alloc(...args) {
+        let w = args[0] || 0;
+        let h = args[1] || 0;
+        let v = args[2] || 0;
+        if (args.length == 1) {
+            // clone from NumGrid
+            w = args[0].width;
+            h = args[0].height;
+            v = args[0].get.bind(args[0]);
+        }
         if (!w || !h)
             throw new Error('Grid alloc requires width and height parameters.');
         let grid = GRID_CACHE.pop();
@@ -1440,11 +1627,11 @@ class NumGrid extends Grid {
         });
         return least;
     }
-    randomLeastPositiveLoc(deterministic = false) {
+    randomLeastPositiveLoc() {
         const targetValue = this.leastPositiveValue();
-        return this.randomMatchingLoc(targetValue, deterministic);
+        return this.randomMatchingLoc(targetValue);
     }
-    valueBounds(value) {
+    valueBounds(value, bounds) {
         let foundValueAtThisLine = false;
         let i, j;
         let left = this.width - 1, right = 0, top = this.height - 1, bottom = 0;
@@ -1485,7 +1672,12 @@ class NumGrid extends Grid {
                 }
             }
         }
-        return new Bounds(left, top, right - left + 1, bottom - top + 1);
+        bounds = bounds || new Bounds(0, 0, 0, 0);
+        bounds.x = left;
+        bounds.y = top;
+        bounds.width = right - left + 1;
+        bounds.height = bottom - top + 1;
+        return bounds;
     }
     // Marks a cell as being a member of blobNumber, then recursively iterates through the rest of the blob
     floodFill(x, y, matchValue, fillValue) {
@@ -1510,126 +1702,17 @@ class NumGrid extends Grid {
         }
         return numberOfCells;
     }
-    _cellularAutomataRound(birthParameters /* char[9] */, survivalParameters /* char[9] */) {
-        let i, j, nbCount, newX, newY;
-        let dir;
-        let buffer2;
-        buffer2 = NumGrid.alloc(this.width, this.height);
-        buffer2.copy(this); // Make a backup of this in buffer2, so that each generation is isolated.
-        let didSomething = false;
-        for (i = 0; i < this.width; i++) {
-            for (j = 0; j < this.height; j++) {
-                nbCount = 0;
-                for (dir = 0; dir < DIRS$1.length; dir++) {
-                    newX = i + DIRS$1[dir][0];
-                    newY = j + DIRS$1[dir][1];
-                    if (this.hasXY(newX, newY) && buffer2[newX][newY]) {
-                        nbCount++;
-                    }
-                }
-                if (!buffer2[i][j] && birthParameters[nbCount] == 't') {
-                    this[i][j] = 1; // birth
-                    didSomething = true;
-                }
-                else if (buffer2[i][j] &&
-                    survivalParameters[nbCount] == 't') ;
-                else {
-                    this[i][j] = 0; // death
-                    didSomething = true;
-                }
-            }
-        }
-        NumGrid.free(buffer2);
-        return didSomething;
-    }
-    // Loads up **grid with the results of a cellular automata simulation.
-    fillBlob(roundCount, minBlobWidth, minBlobHeight, maxBlobWidth, maxBlobHeight, percentSeeded = 50, birthParameters = 'ffffffttt', survivalParameters = 'ffffttttt') {
-        let i, j, k;
-        let blobNumber, blobSize, topBlobNumber, topBlobSize;
-        let bounds;
-        birthParameters = birthParameters.toLowerCase();
-        survivalParameters = survivalParameters.toLowerCase();
-        if (minBlobWidth >= maxBlobWidth) {
-            minBlobWidth = Math.round(0.75 * maxBlobWidth);
-            maxBlobWidth = Math.round(1.25 * maxBlobWidth);
-        }
-        if (minBlobHeight >= maxBlobHeight) {
-            minBlobHeight = Math.round(0.75 * maxBlobHeight);
-            maxBlobHeight = Math.round(1.25 * maxBlobHeight);
-        }
-        const left = Math.floor((this.width - maxBlobWidth) / 2);
-        const top = Math.floor((this.height - maxBlobHeight) / 2);
-        let tries = 10;
-        // Generate blobs until they satisfy the minBlobWidth and minBlobHeight restraints
-        do {
-            // Clear buffer.
-            this.fill(0);
-            // Fill relevant portion with noise based on the percentSeeded argument.
-            for (i = 0; i < maxBlobWidth; i++) {
-                for (j = 0; j < maxBlobHeight; j++) {
-                    this[i + left][j + top] = random.chance(percentSeeded)
-                        ? 1
-                        : 0;
-                }
-            }
-            // Some iterations of cellular automata
-            for (k = 0; k < roundCount; k++) {
-                if (!this._cellularAutomataRound(birthParameters, survivalParameters)) {
-                    k = roundCount; // cellularAutomataRound did not make any changes
-                }
-            }
-            // Now to measure the result. These are best-of variables; start them out at worst-case values.
-            topBlobSize = 0;
-            topBlobNumber = 0;
-            // Fill each blob with its own number, starting with 2 (since 1 means floor), and keeping track of the biggest:
-            blobNumber = 2;
-            for (i = 0; i < this.width; i++) {
-                for (j = 0; j < this.height; j++) {
-                    if (this[i][j] == 1) {
-                        // an unmarked blob
-                        // Mark all the cells and returns the total size:
-                        blobSize = this.floodFill(i, j, 1, blobNumber);
-                        if (blobSize > topBlobSize) {
-                            // if this blob is a new record
-                            topBlobSize = blobSize;
-                            topBlobNumber = blobNumber;
-                        }
-                        blobNumber++;
-                    }
-                }
-            }
-            // Figure out the top blob's height and width:
-            bounds = this.valueBounds(topBlobNumber);
-        } while ((bounds.width < minBlobWidth ||
-            bounds.height < minBlobHeight ||
-            topBlobNumber == 0) &&
-            --tries);
-        // Replace the winning blob with 1's, and everything else with 0's:
-        for (i = 0; i < this.width; i++) {
-            for (j = 0; j < this.height; j++) {
-                if (this[i][j] == topBlobNumber) {
-                    this[i][j] = 1;
-                }
-                else {
-                    this[i][j] = 0;
-                }
-            }
-        }
-        // Populate the returned variables.
-        return bounds;
-    }
 }
 // Grid.fillBlob = fillBlob;
 const alloc = NumGrid.alloc.bind(NumGrid);
 const free = NumGrid.free.bind(NumGrid);
-function make$2(w, h, v) {
+function make$a(w, h, v) {
     if (v === undefined)
         return new NumGrid(w, h, 0);
     if (typeof v === 'number')
         return new NumGrid(w, h, v);
     return new Grid(w, h, v);
 }
-make.grid = make$2;
 function offsetZip(destGrid, srcGrid, srcToDestX, srcToDestY, value) {
     const fn = typeof value === 'function'
         ? value
@@ -1664,7 +1747,7 @@ var grid = {
     NumGrid: NumGrid,
     alloc: alloc,
     free: free,
-    make: make$2,
+    make: make$a,
     offsetZip: offsetZip,
     intersection: intersection,
     unite: unite
@@ -1800,6 +1883,16 @@ function keyCodeDirection(key) {
 }
 function ignoreKeyEvent(e) {
     return CONTROL_CODES.includes(e.code);
+}
+function onkeydown(e) {
+    if (ignoreKeyEvent(e))
+        return;
+    if (e.code === 'Escape') {
+        loop.clearEvents(); // clear all current events, then push on the escape
+    }
+    const ev = makeKeyEvent(e);
+    loop.pushEvent(ev);
+    e.preventDefault();
 }
 // MOUSE
 function makeMouseEvent(e, x, y) {
@@ -2012,12 +2105,11 @@ class Loop {
         return this.pause(5 * 60 * 1000); // 5 min
     }
 }
-function make$3() {
+function make$9() {
     return new Loop();
 }
-make.loop = make$3;
 // Makes a default global loop that you access through these funcitons...
-const loop = make$3();
+const loop = make$9();
 
 var io = {
     __proto__: null,
@@ -2034,31 +2126,71 @@ var io = {
     makeKeyEvent: makeKeyEvent,
     keyCodeDirection: keyCodeDirection,
     ignoreKeyEvent: ignoreKeyEvent,
+    onkeydown: onkeydown,
     makeMouseEvent: makeMouseEvent,
     Loop: Loop,
-    make: make$3,
+    make: make$9,
     loop: loop
 };
+
+var FovFlags;
+(function (FovFlags) {
+    FovFlags[FovFlags["VISIBLE"] = fl(0)] = "VISIBLE";
+    FovFlags[FovFlags["WAS_VISIBLE"] = fl(1)] = "WAS_VISIBLE";
+    FovFlags[FovFlags["CLAIRVOYANT_VISIBLE"] = fl(2)] = "CLAIRVOYANT_VISIBLE";
+    FovFlags[FovFlags["WAS_CLAIRVOYANT_VISIBLE"] = fl(3)] = "WAS_CLAIRVOYANT_VISIBLE";
+    FovFlags[FovFlags["TELEPATHIC_VISIBLE"] = fl(4)] = "TELEPATHIC_VISIBLE";
+    FovFlags[FovFlags["WAS_TELEPATHIC_VISIBLE"] = fl(5)] = "WAS_TELEPATHIC_VISIBLE";
+    FovFlags[FovFlags["ITEM_DETECTED"] = fl(6)] = "ITEM_DETECTED";
+    FovFlags[FovFlags["WAS_ITEM_DETECTED"] = fl(7)] = "WAS_ITEM_DETECTED";
+    FovFlags[FovFlags["MONSTER_DETECTED"] = fl(8)] = "MONSTER_DETECTED";
+    FovFlags[FovFlags["WAS_MONSTER_DETECTED"] = fl(9)] = "WAS_MONSTER_DETECTED";
+    FovFlags[FovFlags["REVEALED"] = fl(10)] = "REVEALED";
+    FovFlags[FovFlags["MAGIC_MAPPED"] = fl(11)] = "MAGIC_MAPPED";
+    FovFlags[FovFlags["IN_FOV"] = fl(12)] = "IN_FOV";
+    FovFlags[FovFlags["WAS_IN_FOV"] = fl(13)] = "WAS_IN_FOV";
+    FovFlags[FovFlags["ALWAYS_VISIBLE"] = fl(14)] = "ALWAYS_VISIBLE";
+    FovFlags[FovFlags["ANY_KIND_OF_VISIBLE"] = FovFlags.VISIBLE | FovFlags.CLAIRVOYANT_VISIBLE | FovFlags.TELEPATHIC_VISIBLE] = "ANY_KIND_OF_VISIBLE";
+    FovFlags[FovFlags["IS_WAS_ANY_KIND_OF_VISIBLE"] = FovFlags.VISIBLE |
+        FovFlags.WAS_VISIBLE |
+        FovFlags.CLAIRVOYANT_VISIBLE |
+        FovFlags.WAS_CLAIRVOYANT_VISIBLE |
+        FovFlags.TELEPATHIC_VISIBLE |
+        FovFlags.WAS_TELEPATHIC_VISIBLE] = "IS_WAS_ANY_KIND_OF_VISIBLE";
+    FovFlags[FovFlags["WAS_ANY_KIND_OF_VISIBLE"] = FovFlags.WAS_VISIBLE |
+        FovFlags.WAS_CLAIRVOYANT_VISIBLE |
+        FovFlags.WAS_TELEPATHIC_VISIBLE] = "WAS_ANY_KIND_OF_VISIBLE";
+    FovFlags[FovFlags["PLAYER"] = FovFlags.IN_FOV] = "PLAYER";
+    FovFlags[FovFlags["CLAIRVOYANT"] = FovFlags.CLAIRVOYANT_VISIBLE] = "CLAIRVOYANT";
+    FovFlags[FovFlags["TELEPATHIC"] = FovFlags.TELEPATHIC_VISIBLE] = "TELEPATHIC";
+    FovFlags[FovFlags["VIEWPORT_TYPES"] = FovFlags.PLAYER |
+        FovFlags.CLAIRVOYANT |
+        FovFlags.TELEPATHIC |
+        FovFlags.ITEM_DETECTED |
+        FovFlags.MONSTER_DETECTED] = "VIEWPORT_TYPES";
+})(FovFlags || (FovFlags = {}));
 
 // CREDIT - This is adapted from: http://roguebasin.roguelikedevelopment.org/index.php?title=Improved_Shadowcasting_in_Java
 class FOV {
     constructor(strategy) {
+        this._setVisible = null;
         this._startX = -1;
         this._startY = -1;
         this._maxRadius = 100;
         this._isBlocked = strategy.isBlocked;
         this._calcRadius = strategy.calcRadius || calcRadius;
-        this._setVisible = strategy.setVisible;
         this._hasXY = strategy.hasXY || TRUE;
+        this._debug = strategy.debug || NOOP;
     }
-    calculate(x, y, maxRadius) {
+    calculate(x, y, maxRadius = 10, setVisible) {
+        this._setVisible = setVisible;
         this._setVisible(x, y, 1);
         this._startX = x;
         this._startY = y;
         this._maxRadius = maxRadius + 1;
         // uses the diagonals
         for (let i = 4; i < 8; ++i) {
-            const d = DIRS[i];
+            const d = DIRS$2[i];
             this.castLight(1, 1.0, 0.0, 0, d[0], d[1], 0);
             this.castLight(1, 1.0, 0.0, d[0], 0, 0, d[1]);
         }
@@ -2066,14 +2198,14 @@ class FOV {
     // NOTE: slope starts a 1 and ends at 0.
     castLight(row, startSlope, endSlope, xx, xy, yx, yy) {
         if (row >= this._maxRadius) {
-            // fov.debug('CAST: row=%d, start=%d, end=%d, row >= maxRadius => cancel', row, startSlope.toFixed(2), endSlope.toFixed(2));
+            this._debug('CAST: row=%d, start=%d, end=%d, row >= maxRadius => cancel', row, startSlope.toFixed(2), endSlope.toFixed(2));
             return;
         }
         if (startSlope < endSlope) {
-            // fov.debug('CAST: row=%d, start=%d, end=%d, start < end => cancel', row, startSlope.toFixed(2), endSlope.toFixed(2));
+            this._debug('CAST: row=%d, start=%d, end=%d, start < end => cancel', row, startSlope.toFixed(2), endSlope.toFixed(2));
             return;
         }
-        // fov.debug('CAST: row=%d, start=%d, end=%d, x=%d,%d, y=%d,%d', row, startSlope.toFixed(2), endSlope.toFixed(2), xx, xy, yx, yy);
+        this._debug('CAST: row=%d, start=%d, end=%d, x=%d,%d, y=%d,%d', row, startSlope.toFixed(2), endSlope.toFixed(2), xx, xy, yx, yy);
         let nextStart = startSlope;
         let blocked = false;
         let deltaY = -row;
@@ -2090,7 +2222,7 @@ class FOV {
                 // nextStart = innerSlope;
                 continue;
             }
-            // fov.debug('- test %d,%d ... start=%d, min=%d, max=%d, end=%d, dx=%d, dy=%d', currentX, currentY, startSlope.toFixed(2), maxSlope.toFixed(2), minSlope.toFixed(2), endSlope.toFixed(2), deltaX, deltaY);
+            this._debug('- test %d,%d ... start=%d, min=%d, max=%d, end=%d, dx=%d, dy=%d', currentX, currentY, startSlope.toFixed(2), maxSlope.toFixed(2), minSlope.toFixed(2), endSlope.toFixed(2), deltaX, deltaY);
             if (startSlope < minSlope) {
                 blocked = this._isBlocked(currentX, currentY);
                 continue;
@@ -2103,13 +2235,13 @@ class FOV {
             if (radius < this._maxRadius) {
                 const bright = 1 - radius / this._maxRadius;
                 this._setVisible(currentX, currentY, bright);
-                // fov.debug('       - visible');
+                this._debug('       - visible');
             }
             if (blocked) {
                 //previous cell was a blocking one
                 if (this._isBlocked(currentX, currentY)) {
                     //hit a wall
-                    // fov.debug('       - blocked ... nextStart: %d', innerSlope.toFixed(2));
+                    this._debug('       - blocked ... nextStart: %d', innerSlope.toFixed(2));
                     nextStart = innerSlope;
                     continue;
                 }
@@ -2118,9 +2250,10 @@ class FOV {
                 }
             }
             else {
-                if (this._isBlocked(currentX, currentY) && row < this._maxRadius) {
+                if (this._isBlocked(currentX, currentY) &&
+                    row < this._maxRadius) {
                     //hit a wall within sight line
-                    // fov.debug('       - blocked ... start:%d, end:%d, nextStart: %d', nextStart.toFixed(2), outerSlope.toFixed(2), innerSlope.toFixed(2));
+                    this._debug('       - blocked ... start:%d, end:%d, nextStart: %d', nextStart.toFixed(2), outerSlope.toFixed(2), innerSlope.toFixed(2));
                     blocked = true;
                     this.castLight(row + 1, nextStart, outerSlope, xx, xy, yx, yy);
                     nextStart = innerSlope;
@@ -2133,9 +2266,280 @@ class FOV {
     }
 }
 
-var fov = {
+// import * as GW from 'gw-utils';
+class FovSystem {
+    constructor(site, opts = {}) {
+        this.site = site;
+        this.flags = make$a(site.width, site.height, FovFlags.VISIBLE);
+        this._changed = true;
+        this.viewportChanged = false;
+        this.fov = new FOV({
+            isBlocked(x, y) {
+                return site.blocksVision(x, y);
+            },
+            hasXY(x, y) {
+                return x >= 0 && y >= 0 && x < site.width && y < site.height;
+            },
+        });
+        // we want fov, so do not reveal the map initially
+        if (opts.fov === true) {
+            this.flags.fill(0);
+        }
+        if (opts.visible) {
+            this.makeAlwaysVisible();
+        }
+        else if (opts.visible === false) {
+            this.flags.fill(0);
+        }
+        else if (opts.revealed) {
+            this.revealAll();
+        }
+    }
+    get changed() {
+        return this._changed;
+    }
+    isVisible(x, y) {
+        return !!((this.flags.get(x, y) || 0) & FovFlags.VISIBLE);
+    }
+    isAnyKindOfVisible(x, y) {
+        return !!((this.flags.get(x, y) || 0) & FovFlags.ANY_KIND_OF_VISIBLE);
+    }
+    isInFov(x, y) {
+        return !!((this.flags.get(x, y) || 0) & FovFlags.IN_FOV);
+    }
+    isDirectlyVisible(x, y) {
+        const flags = FovFlags.VISIBLE | FovFlags.IN_FOV;
+        return ((this.flags.get(x, y) || 0) & flags) === flags;
+    }
+    isMagicMapped(x, y) {
+        return !!((this.flags.get(x, y) || 0) & FovFlags.MAGIC_MAPPED);
+    }
+    isRevealed(x, y) {
+        return !!((this.flags.get(x, y) || 0) & FovFlags.REVEALED);
+    }
+    makeAlwaysVisible() {
+        this.flags.update((v) => v |
+            (FovFlags.ALWAYS_VISIBLE | FovFlags.REVEALED | FovFlags.VISIBLE));
+    }
+    makeCellAlwaysVisible(x, y) {
+        this.flags[x][y] |= FovFlags.ALWAYS_VISIBLE | FovFlags.REVEALED;
+    }
+    revealAll() {
+        this.flags.update((v) => v | FovFlags.REVEALED);
+    }
+    revealCell(x, y) {
+        const flag = FovFlags.REVEALED;
+        this.flags[x][y] |= flag;
+    }
+    hideCell(x, y) {
+        this.flags[x][y] &= ~(FovFlags.MAGIC_MAPPED | FovFlags.REVEALED);
+    }
+    magicMapCell(x, y) {
+        this.flags[x][y] |= FovFlags.MAGIC_MAPPED;
+    }
+    demoteCellVisibility(flag) {
+        flag &= ~(FovFlags.WAS_ANY_KIND_OF_VISIBLE | FovFlags.WAS_IN_FOV);
+        if (flag & FovFlags.IN_FOV) {
+            flag &= ~FovFlags.IN_FOV;
+            flag |= FovFlags.WAS_IN_FOV;
+        }
+        if (flag & FovFlags.VISIBLE) {
+            flag &= ~FovFlags.VISIBLE;
+            flag |= FovFlags.WAS_VISIBLE;
+        }
+        if (flag & FovFlags.CLAIRVOYANT_VISIBLE) {
+            flag &= ~FovFlags.CLAIRVOYANT_VISIBLE;
+            flag |= FovFlags.WAS_CLAIRVOYANT_VISIBLE;
+        }
+        if (flag & FovFlags.TELEPATHIC_VISIBLE) {
+            flag &= ~FovFlags.TELEPATHIC_VISIBLE;
+            flag |= FovFlags.WAS_TELEPATHIC_VISIBLE;
+        }
+        if (flag & FovFlags.ALWAYS_VISIBLE) {
+            flag |= FovFlags.VISIBLE;
+        }
+        return flag;
+    }
+    updateCellVisibility(flag, x, y) {
+        const isVisible = !!(flag & FovFlags.VISIBLE);
+        const wasVisible = !!(flag & FovFlags.WAS_ANY_KIND_OF_VISIBLE);
+        if (isVisible && wasVisible) ;
+        else if (isVisible && !wasVisible) {
+            // if the cell became visible this move
+            if (!(flag & FovFlags.REVEALED) /* && DATA.automationActive */) {
+                this.site.cellRevealed(x, y);
+                // if (cell.item) {
+                //     const theItem: GW.types.ItemType = cell.item;
+                //     if (
+                //         theItem.hasLayerFlag(ObjectFlags.L_INTERRUPT_WHEN_SEEN)
+                //     ) {
+                //         GW.message.add(
+                //             '§you§ §see§ ΩitemMessageColorΩ§item§∆.',
+                //             {
+                //                 item: theItem,
+                //                 actor: DATA.player,
+                //             }
+                //         );
+                //     }
+                // }
+                // if (
+                //     !(flag & FovFlags.MAGIC_MAPPED) &&
+                //     this.site.hasObjectFlag(
+                //         x,
+                //         y,
+                //         ObjectFlags.L_INTERRUPT_WHEN_SEEN
+                //     )
+                // ) {
+                //     const tile = cell.tileWithLayerFlag(
+                //         ObjectFlags.L_INTERRUPT_WHEN_SEEN
+                //     );
+                //     if (tile) {
+                //         GW.message.add(
+                //             '§you§ §see§ ΩbackgroundMessageColorΩ§item§∆.',
+                //             {
+                //                 actor: DATA.player,
+                //                 item: tile.name,
+                //             }
+                //         );
+                //     }
+                // }
+                this.flags[x][y] |= FovFlags.REVEALED;
+            }
+            // this.site.redrawCell(x, y);
+        }
+        else ;
+        return isVisible;
+    }
+    updateCellClairyvoyance(flag, x, y) {
+        const isClairy = !!(flag & FovFlags.CLAIRVOYANT_VISIBLE);
+        const wasClairy = !!(flag & FovFlags.WAS_CLAIRVOYANT_VISIBLE);
+        if (isClairy && wasClairy) ;
+        else if (!isClairy && wasClairy) {
+            // ceased being clairvoyantly visible
+            this.site.storeMemory(x, y);
+            this.site.redrawCell(x, y);
+        }
+        else if (!wasClairy && isClairy) {
+            // became clairvoyantly visible
+            this.site.redrawCell(x, y, true);
+        }
+        return isClairy;
+    }
+    updateCellTelepathy(flag, x, y) {
+        const isTele = !!(flag & FovFlags.TELEPATHIC_VISIBLE);
+        const wasTele = !!(flag & FovFlags.WAS_TELEPATHIC_VISIBLE);
+        if (isTele && wasTele) ;
+        else if (!isTele && wasTele) {
+            // ceased being telepathically visible
+            this.site.storeMemory(x, y);
+            this.site.redrawCell(x, y);
+        }
+        else if (!wasTele && isTele) {
+            // became telepathically visible
+            // if (
+            //     !(flag & FovFlags.REVEALED) &&
+            //     !cell.hasTileFlag(Flags.Tile.T_PATHING_BLOCKER)
+            // ) {
+            //     DATA.xpxpThisTurn++;
+            // }
+            this.site.redrawCell(x, y, true);
+        }
+        return isTele;
+    }
+    updateCellDetect(flag, x, y) {
+        const isMonst = !!(flag & FovFlags.MONSTER_DETECTED);
+        const wasMonst = !!(flag & FovFlags.WAS_MONSTER_DETECTED);
+        if (isMonst && wasMonst) ;
+        else if (!isMonst && wasMonst) {
+            // ceased being detected visible
+            this.site.redrawCell(x, y, true);
+            // cell.storeMemory();
+        }
+        else if (!wasMonst && isMonst) {
+            // became detected visible
+            this.site.redrawCell(x, y, true);
+            // cell.storeMemory();
+        }
+        return isMonst;
+    }
+    promoteCellVisibility(flag, x, y) {
+        if (flag & FovFlags.IN_FOV &&
+            this.site.hasVisibleLight(x, y) // &&
+        // !(cell.flags.cellMech & FovFlagsMech.DARKENED)
+        ) {
+            flag = this.flags[x][y] |= FovFlags.VISIBLE;
+        }
+        if (this.updateCellVisibility(flag, x, y))
+            return;
+        if (this.updateCellClairyvoyance(flag, x, y))
+            return;
+        if (this.updateCellTelepathy(flag, x, y))
+            return;
+        if (this.updateCellDetect(flag, x, y))
+            return;
+    }
+    update(cx, cy, cr) {
+        // if (!this.site.usesFov()) return false;
+        if (!this.viewportChanged &&
+            cx === undefined &&
+            !this.site.lightingChanged()) {
+            return false;
+        }
+        this.flags.update(this.demoteCellVisibility.bind(this));
+        this.site.eachViewport((x, y, radius, type) => {
+            const flag = type & FovFlags.VIEWPORT_TYPES;
+            if (!flag)
+                throw new Error('Received invalid viewport type: ' + type);
+            if (radius == 0) {
+                this.flags[x][y] |= flag;
+                return;
+            }
+            this.fov.calculate(x, y, radius, (x, y, v) => {
+                if (v) {
+                    this.flags[x][y] |= flag;
+                }
+            });
+        });
+        if (cx !== undefined && cy !== undefined) {
+            this.fov.calculate(cx, cy, cr, (x, y, v) => {
+                if (v) {
+                    this.flags[x][y] |= FovFlags.PLAYER;
+                }
+            });
+        }
+        // if (PLAYER.bonus.clairvoyance < 0) {
+        //   discoverCell(PLAYER.xLoc, PLAYER.yLoc);
+        // }
+        //
+        // if (PLAYER.bonus.clairvoyance != 0) {
+        // 	updateClairvoyance();
+        // }
+        //
+        // updateTelepathy();
+        // updateMonsterDetection();
+        // updateLighting();
+        this.flags.forEach(this.promoteCellVisibility.bind(this));
+        // if (PLAYER.status.hallucinating > 0) {
+        // 	for (theItem of DUNGEON.items) {
+        // 		if ((pmap[theItem.xLoc][theItem.yLoc].flags & DISCOVERED) && refreshDisplay) {
+        // 			refreshDungeonCell(theItem.xLoc, theItem.yLoc);
+        // 		}
+        // 	}
+        // 	for (monst of DUNGEON.monsters) {
+        // 		if ((pmap[monst.xLoc][monst.yLoc].flags & DISCOVERED) && refreshDisplay) {
+        // 			refreshDungeonCell(monst.xLoc, monst.yLoc);
+        // 		}
+        // 	}
+        // }
+        return true;
+    }
+}
+
+var index$8 = {
     __proto__: null,
-    FOV: FOV
+    get FovFlags () { return FovFlags; },
+    FOV: FOV,
+    FovSystem: FovSystem
 };
 
 // var PATH = {};
@@ -2165,7 +2569,7 @@ function makeDijkstraMap(w, h) {
 function getLink(map, x, y) {
     return map.links[x + map.width * y];
 }
-const DIRS$2 = DIRS;
+const DIRS = DIRS$2;
 function update(map) {
     let dir, dirs;
     let linkIndex;
@@ -2175,7 +2579,7 @@ function update(map) {
     map.front.right = null;
     while (head != null) {
         for (dir = 0; dir < dirs; dir++) {
-            linkIndex = head.index + (DIRS$2[dir][0] + map.width * DIRS$2[dir][1]);
+            linkIndex = head.index + (DIRS[dir][0] + map.width * DIRS[dir][1]);
             if (linkIndex < 0 || linkIndex >= map.width * map.height)
                 continue;
             link = map.links[linkIndex];
@@ -2186,10 +2590,10 @@ function update(map) {
             if (dir >= 4) {
                 diagCost = 0.4142;
                 let way1, way1index, way2, way2index;
-                way1index = head.index + DIRS$2[dir][0];
+                way1index = head.index + DIRS[dir][0];
                 if (way1index < 0 || way1index >= map.width * map.height)
                     continue;
-                way2index = head.index + map.width * DIRS$2[dir][1];
+                way2index = head.index + map.width * DIRS[dir][1];
                 if (way2index < 0 || way2index >= map.width * map.height)
                     continue;
                 way1 = map.links[way1index];
@@ -2422,9 +2826,11 @@ var DIJKSTRA_MAP;
 // GW.path.costFn = baseCostFunction;
 // GW.path.simpleCost = baseCostFunction.bind(undefined, 0, null, false);
 // GW.path.costForActor = ((actor) => baseCostFunction.bind(undefined, GW.actor.forbiddenFlags(actor), actor, actor !== GW.PLAYER));
-function calculateDistances(distanceMap, destinationX, destinationY, costMap, eightWays = false) {
+function calculateDistances(distanceMap, destinationX, destinationY, costMap, eightWays = false, maxDistance = NO_PATH) {
     const width = distanceMap.length;
     const height = distanceMap[0].length;
+    if (maxDistance <= 0)
+        maxDistance = NO_PATH;
     if (!DIJKSTRA_MAP ||
         DIJKSTRA_MAP.width < width ||
         DIJKSTRA_MAP.height < height) {
@@ -2440,7 +2846,7 @@ function calculateDistances(distanceMap, destinationX, destinationY, costMap, ei
                 : costMap[i][j];
         }
     }
-    clear(DIJKSTRA_MAP, NO_PATH, eightWays);
+    clear(DIJKSTRA_MAP, maxDistance, eightWays);
     setDistance(DIJKSTRA_MAP, destinationX, destinationY, 0);
     batchOutput(DIJKSTRA_MAP, distanceMap);
     // TODO - Add this where called!
@@ -2481,15 +2887,16 @@ function nextStep(distanceMap, x, y, isBlocked, useDiagonals = false) {
     bestScore = 0;
     bestDir = NO_DIRECTION;
     for (dir = 0; dir < (useDiagonals ? 8 : 4); ++dir) {
-        newX = x + DIRS[dir][0];
-        newY = y + DIRS[dir][1];
+        newX = x + DIRS$2[dir][0];
+        newY = y + DIRS$2[dir][1];
         blocked = isBlocked(newX, newY, x, y, distanceMap);
-        if (!blocked && distanceMap[x][y] - distanceMap[newX][newY] > bestScore) {
+        if (!blocked &&
+            distanceMap[x][y] - distanceMap[newX][newY] > bestScore) {
             bestDir = dir;
             bestScore = distanceMap[x][y] - distanceMap[newX][newY];
         }
     }
-    return DIRS[bestDir] || null;
+    return DIRS$2[bestDir] || null;
 }
 function getClosestValidLocationOnMap(distanceMap, x, y) {
     let i, j, dist, closestDistance, lowestMapScore;
@@ -2504,7 +2911,8 @@ function getClosestValidLocationOnMap(distanceMap, x, y) {
             if (distanceMap[i][j] >= 0 && distanceMap[i][j] < NO_PATH) {
                 dist = (i - x) * (i - x) + (j - y) * (j - y);
                 if (dist < closestDistance ||
-                    (dist == closestDistance && distanceMap[i][j] < lowestMapScore)) {
+                    (dist == closestDistance &&
+                        distanceMap[i][j] < lowestMapScore)) {
                     locX = i;
                     locY = j;
                     closestDistance = dist;
@@ -2600,8 +3008,8 @@ var EVENTS = {};
  * @returns {Listener}
  */
 function addListener(event, fn, context, once = false) {
-    if (typeof fn !== "function") {
-        throw new TypeError("The listener must be a function");
+    if (typeof fn !== 'function') {
+        throw new TypeError('The listener must be a function');
     }
     const listener = new Listener(fn, context || null, once);
     addToChain(EVENTS, event, listener);
@@ -2729,21 +3137,21 @@ var events = {
     emit: emit
 };
 
-function make$4(v) {
+function make$8(v) {
     if (v === undefined)
         return () => 100;
     if (v === null)
         return () => 0;
-    if (typeof v === "number")
+    if (typeof v === 'number')
         return () => v;
-    if (typeof v === "function")
+    if (typeof v === 'function')
         return v;
     let base = {};
-    if (typeof v === "string") {
+    if (typeof v === 'string') {
         const parts = v.split(/[,|]/).map((t) => t.trim());
         base = {};
         parts.forEach((p) => {
-            let [level, weight] = p.split(":");
+            let [level, weight] = p.split(':');
             base[level] = Number.parseInt(weight) || 100;
         });
     }
@@ -2752,21 +3160,27 @@ function make$4(v) {
     }
     const parts = Object.entries(base);
     const funcs = parts.map(([levels, frequency]) => {
-        frequency = Number.parseInt(frequency);
-        if (levels.includes("-")) {
+        let value = 0;
+        if (typeof frequency === 'string') {
+            value = Number.parseInt(frequency);
+        }
+        else {
+            value = frequency;
+        }
+        if (levels.includes('-')) {
             let [start, end] = levels
-                .split("-")
+                .split('-')
                 .map((t) => t.trim())
                 .map((v) => Number.parseInt(v));
-            return (level) => level >= start && level <= end ? frequency : 0;
+            return (level) => level >= start && level <= end ? value : 0;
         }
-        else if (levels.endsWith("+")) {
+        else if (levels.endsWith('+')) {
             const found = Number.parseInt(levels);
-            return (level) => (level >= found ? frequency : 0);
+            return (level) => (level >= found ? value : 0);
         }
         else {
             const found = Number.parseInt(levels);
-            return (level) => (level === found ? frequency : 0);
+            return (level) => (level === found ? value : 0);
         }
     });
     if (funcs.length == 1)
@@ -2776,7 +3190,7 @@ function make$4(v) {
 
 var frequency = {
     __proto__: null,
-    make: make$4
+    make: make$8
 };
 
 class Scheduler {
@@ -2912,18 +3326,18 @@ class Glyphs {
         this._tileHeight = 16;
         this.needsUpdate = true;
         this._map = {};
-        opts.font = opts.font || "monospace";
-        this._node = document.createElement("canvas");
-        this._ctx = this.node.getContext("2d");
+        opts.font = opts.font || 'monospace';
+        this._node = document.createElement('canvas');
+        this._ctx = this.node.getContext('2d');
         this._configure(opts);
     }
     static fromImage(src) {
-        if (typeof src === "string") {
-            if (src.startsWith("data:"))
-                throw new Error("Glyph: You must load a data string into an image element and use that.");
+        if (typeof src === 'string') {
+            if (src.startsWith('data:'))
+                throw new Error('Glyph: You must load a data string into an image element and use that.');
             const el = document.getElementById(src);
             if (!el)
-                throw new Error("Glyph: Failed to find image element with id:" + src);
+                throw new Error('Glyph: Failed to find image element with id:' + src);
             src = el;
         }
         const glyph = new this({
@@ -2934,7 +3348,7 @@ class Glyphs {
         return glyph;
     }
     static fromFont(src) {
-        if (typeof src === "string") {
+        if (typeof src === 'string') {
             src = { font: src };
         }
         const glyphs = new this(src);
@@ -2970,17 +3384,19 @@ class Glyphs {
         this._tileHeight = opts.tileHeight || this.tileHeight;
         this.node.width = 16 * this.tileWidth;
         this.node.height = 16 * this.tileHeight;
-        this._ctx.fillStyle = "black";
+        this._ctx.fillStyle = 'black';
         this._ctx.fillRect(0, 0, this.pxWidth, this.pxHeight);
-        const size = opts.fontSize || opts.size || Math.max(this.tileWidth, this.tileHeight);
-        this._ctx.font = "" + size + "px " + opts.font;
-        this._ctx.textAlign = "center";
-        this._ctx.textBaseline = "middle";
-        this._ctx.fillStyle = "white";
+        const size = opts.fontSize ||
+            opts.size ||
+            Math.max(this.tileWidth, this.tileHeight);
+        this._ctx.font = '' + size + 'px ' + opts.font;
+        this._ctx.textAlign = 'center';
+        this._ctx.textBaseline = 'middle';
+        this._ctx.fillStyle = 'white';
     }
     draw(n, ch) {
         if (n > 256)
-            throw new Error("Cannot draw more than 256 glyphs.");
+            throw new Error('Cannot draw more than 256 glyphs.');
         const x = (n % 16) * this.tileWidth;
         const y = Math.floor(n / 16) * this.tileHeight;
         const cx = x + Math.floor(this.tileWidth / 2);
@@ -2989,7 +3405,10 @@ class Glyphs {
         this._ctx.beginPath();
         this._ctx.rect(x, y, this.tileWidth, this.tileHeight);
         this._ctx.clip();
-        if (typeof ch === "function") {
+        this._ctx.fillStyle = 'black';
+        this._ctx.fillRect(x, y, this.tileWidth, this.tileHeight);
+        this._ctx.fillStyle = 'white';
+        if (typeof ch === 'function') {
             ch(this._ctx, x, y, this.tileWidth, this.tileHeight);
         }
         else {
@@ -3004,43 +3423,43 @@ class Glyphs {
         for (let i = 32; i < 127; ++i) {
             this.draw(i, String.fromCharCode(i));
         }
+        [
+            ' ',
+            '\u263a',
+            '\u263b',
+            '\u2665',
+            '\u2666',
+            '\u2663',
+            '\u2660',
+            '\u263c',
+            '\u2600',
+            '\u2605',
+            '\u2606',
+            '\u2642',
+            '\u2640',
+            '\u266a',
+            '\u266b',
+            '\u2638',
+            '\u25b6',
+            '\u25c0',
+            '\u2195',
+            '\u203c',
+            '\u204b',
+            '\u262f',
+            '\u2318',
+            '\u2616',
+            '\u2191',
+            '\u2193',
+            '\u2192',
+            '\u2190',
+            '\u2126',
+            '\u2194',
+            '\u25b2',
+            '\u25bc',
+        ].forEach((ch, i) => {
+            this.draw(i, ch);
+        });
         if (!basicOnly) {
-            [
-                " ",
-                "\u263a",
-                "\u263b",
-                "\u2665",
-                "\u2666",
-                "\u2663",
-                "\u2660",
-                "\u263c",
-                "\u2600",
-                "\u2605",
-                "\u2606",
-                "\u2642",
-                "\u2640",
-                "\u266a",
-                "\u266b",
-                "\u2638",
-                "\u25b6",
-                "\u25c0",
-                "\u2195",
-                "\u203c",
-                "\u204b",
-                "\u262f",
-                "\u2318",
-                "\u2616",
-                "\u2191",
-                "\u2193",
-                "\u2192",
-                "\u2190",
-                "\u2126",
-                "\u2194",
-                "\u25b2",
-                "\u25bc",
-            ].forEach((ch, i) => {
-                this.draw(i, ch);
-            });
             // [
             // '\u2302',
             // '\u2b09', '\u272a', '\u2718', '\u2610', '\u2611', '\u25ef', '\u25ce', '\u2690',
@@ -3063,626 +3482,140 @@ class Glyphs {
             //   this.draw(i + 127, ch);
             // });
             [
-                "\u2302",
-                "\u00C7",
-                "\u00FC",
-                "\u00E9",
-                "\u00E2",
-                "\u00E4",
-                "\u00E0",
-                "\u00E5",
-                "\u00E7",
-                "\u00EA",
-                "\u00EB",
-                "\u00E8",
-                "\u00EF",
-                "\u00EE",
-                "\u00EC",
-                "\u00C4",
-                "\u00C5",
-                "\u00C9",
-                "\u00E6",
-                "\u00C6",
-                "\u00F4",
-                "\u00F6",
-                "\u00F2",
-                "\u00FB",
-                "\u00F9",
-                "\u00FF",
-                "\u00D6",
-                "\u00DC",
-                "\u00A2",
-                "\u00A3",
-                "\u00A5",
-                "\u20A7",
-                "\u0192",
-                "\u00E1",
-                "\u00ED",
-                "\u00F3",
-                "\u00FA",
-                "\u00F1",
-                "\u00D1",
-                "\u00AA",
-                "\u00BA",
-                "\u00BF",
-                "\u2310",
-                "\u00AC",
-                "\u00BD",
-                "\u00BC",
-                "\u00A1",
-                "\u00AB",
-                "\u00BB",
-                "\u2591",
-                "\u2592",
-                "\u2593",
-                "\u2502",
-                "\u2524",
-                "\u2561",
-                "\u2562",
-                "\u2556",
-                "\u2555",
-                "\u2563",
-                "\u2551",
-                "\u2557",
-                "\u255D",
-                "\u255C",
-                "\u255B",
-                "\u2510",
-                "\u2514",
-                "\u2534",
-                "\u252C",
-                "\u251C",
-                "\u2500",
-                "\u253C",
-                "\u255E",
-                "\u255F",
-                "\u255A",
-                "\u2554",
-                "\u2569",
-                "\u2566",
-                "\u2560",
-                "\u2550",
-                "\u256C",
-                "\u2567",
-                "\u2568",
-                "\u2564",
-                "\u2565",
-                "\u2559",
-                "\u2558",
-                "\u2552",
-                "\u2553",
-                "\u256B",
-                "\u256A",
-                "\u2518",
-                "\u250C",
-                "\u2588",
-                "\u2584",
-                "\u258C",
-                "\u2590",
-                "\u2580",
-                "\u03B1",
-                "\u00DF",
-                "\u0393",
-                "\u03C0",
-                "\u03A3",
-                "\u03C3",
-                "\u00B5",
-                "\u03C4",
-                "\u03A6",
-                "\u0398",
-                "\u03A9",
-                "\u03B4",
-                "\u221E",
-                "\u03C6",
-                "\u03B5",
-                "\u2229",
-                "\u2261",
-                "\u00B1",
-                "\u2265",
-                "\u2264",
-                "\u2320",
-                "\u2321",
-                "\u00F7",
-                "\u2248",
-                "\u00B0",
-                "\u2219",
-                "\u00B7",
-                "\u221A",
-                "\u207F",
-                "\u00B2",
-                "\u25A0",
-                "\u00A0",
+                '\u2302',
+                '\u00C7',
+                '\u00FC',
+                '\u00E9',
+                '\u00E2',
+                '\u00E4',
+                '\u00E0',
+                '\u00E5',
+                '\u00E7',
+                '\u00EA',
+                '\u00EB',
+                '\u00E8',
+                '\u00EF',
+                '\u00EE',
+                '\u00EC',
+                '\u00C4',
+                '\u00C5',
+                '\u00C9',
+                '\u00E6',
+                '\u00C6',
+                '\u00F4',
+                '\u00F6',
+                '\u00F2',
+                '\u00FB',
+                '\u00F9',
+                '\u00FF',
+                '\u00D6',
+                '\u00DC',
+                '\u00A2',
+                '\u00A3',
+                '\u00A5',
+                '\u20A7',
+                '\u0192',
+                '\u00E1',
+                '\u00ED',
+                '\u00F3',
+                '\u00FA',
+                '\u00F1',
+                '\u00D1',
+                '\u00AA',
+                '\u00BA',
+                '\u00BF',
+                '\u2310',
+                '\u00AC',
+                '\u00BD',
+                '\u00BC',
+                '\u00A1',
+                '\u00AB',
+                '\u00BB',
+                '\u2591',
+                '\u2592',
+                '\u2593',
+                '\u2502',
+                '\u2524',
+                '\u2561',
+                '\u2562',
+                '\u2556',
+                '\u2555',
+                '\u2563',
+                '\u2551',
+                '\u2557',
+                '\u255D',
+                '\u255C',
+                '\u255B',
+                '\u2510',
+                '\u2514',
+                '\u2534',
+                '\u252C',
+                '\u251C',
+                '\u2500',
+                '\u253C',
+                '\u255E',
+                '\u255F',
+                '\u255A',
+                '\u2554',
+                '\u2569',
+                '\u2566',
+                '\u2560',
+                '\u2550',
+                '\u256C',
+                '\u2567',
+                '\u2568',
+                '\u2564',
+                '\u2565',
+                '\u2559',
+                '\u2558',
+                '\u2552',
+                '\u2553',
+                '\u256B',
+                '\u256A',
+                '\u2518',
+                '\u250C',
+                '\u2588',
+                '\u2584',
+                '\u258C',
+                '\u2590',
+                '\u2580',
+                '\u03B1',
+                '\u00DF',
+                '\u0393',
+                '\u03C0',
+                '\u03A3',
+                '\u03C3',
+                '\u00B5',
+                '\u03C4',
+                '\u03A6',
+                '\u0398',
+                '\u03A9',
+                '\u03B4',
+                '\u221E',
+                '\u03C6',
+                '\u03B5',
+                '\u2229',
+                '\u2261',
+                '\u00B1',
+                '\u2265',
+                '\u2264',
+                '\u2320',
+                '\u2321',
+                '\u00F7',
+                '\u2248',
+                '\u00B0',
+                '\u2219',
+                '\u00B7',
+                '\u221A',
+                '\u207F',
+                '\u00B2',
+                '\u25A0',
+                '\u00A0',
             ].forEach((ch, i) => {
                 this.draw(i + 127, ch);
             });
         }
     }
-}
-
-const VERTICES_PER_TILE = 6;
-class NotSupportedError extends Error {
-    constructor(...params) {
-        // Pass remaining arguments (including vendor specific ones) to parent constructor
-        super(...params);
-        // Maintains proper stack trace for where our error was thrown (only available on V8)
-        // @ts-ignore
-        if (Error.captureStackTrace) {
-            // @ts-ignore
-            Error.captureStackTrace(this, NotSupportedError);
-        }
-        this.name = 'NotSupportedError';
-    }
-}
-class BaseCanvas {
-    constructor(options) {
-        this.mouse = { x: -1, y: -1 };
-        this._renderRequested = false;
-        this._autoRender = true;
-        this._width = 50;
-        this._height = 25;
-        if (!options.glyphs)
-            throw new Error('You must supply glyphs for the canvas.');
-        this._node = this._createNode();
-        this._createContext();
-        this._configure(options);
-        const io = options.io || options.loop;
-        if (io) {
-            this.onclick = (e) => io.pushEvent(e);
-            this.onmousemove = (e) => io.pushEvent(e);
-            this.onmouseup = (e) => io.pushEvent(e);
-        }
-    }
-    get node() {
-        return this._node;
-    }
-    get width() {
-        return this._width;
-    }
-    get height() {
-        return this._height;
-    }
-    get tileWidth() {
-        return this._glyphs.tileWidth;
-    }
-    get tileHeight() {
-        return this._glyphs.tileHeight;
-    }
-    get pxWidth() {
-        return this.node.clientWidth;
-    }
-    get pxHeight() {
-        return this.node.clientHeight;
-    }
-    get glyphs() {
-        return this._glyphs;
-    }
-    set glyphs(glyphs) {
-        this._setGlyphs(glyphs);
-    }
-    toGlyph(ch) {
-        if (typeof ch === 'number')
-            return ch;
-        return this._glyphs.forChar(ch);
-    }
-    _createNode() {
-        return document.createElement('canvas');
-    }
-    _configure(options) {
-        this._width = options.width || this._width;
-        this._height = options.height || this._height;
-        this._autoRender = options.render !== false;
-        this._setGlyphs(options.glyphs);
-        if (options.div) {
-            let el;
-            if (typeof options.div === 'string') {
-                el = document.getElementById(options.div);
-                if (!el) {
-                    console.warn('Failed to find parent element by ID: ' + options.div);
-                }
-            }
-            else {
-                el = options.div;
-            }
-            if (el && el.appendChild) {
-                el.appendChild(this.node);
-            }
-        }
-    }
-    _setGlyphs(glyphs) {
-        if (glyphs === this._glyphs)
-            return false;
-        this._glyphs = glyphs;
-        this.resize(this._width, this._height);
-        return true;
-    }
-    resize(width, height) {
-        this._width = width;
-        this._height = height;
-        const node = this.node;
-        node.width = this._width * this.tileWidth;
-        node.height = this._height * this.tileHeight;
-    }
-    draw(x, y, glyph, fg, bg) {
-        glyph = glyph & 0xff;
-        bg = bg & 0xfff;
-        fg = fg & 0xfff;
-        const style = glyph * (1 << 24) + bg * (1 << 12) + fg;
-        this._set(x, y, style);
-        return this;
-    }
-    fill(...args) {
-        let g = 0, fg = 0, bg = 0;
-        if (args.length == 1) {
-            bg = args[0];
-        }
-        else if (args.length == 3) {
-            [g, fg, bg] = args;
-        }
-        for (let x = 0; x < this._width; ++x) {
-            for (let y = 0; y < this._height; ++y) {
-                this.draw(x, y, g, fg, bg);
-            }
-        }
-        return this;
-    }
-    _requestRender() {
-        if (this._renderRequested)
-            return;
-        this._renderRequested = true;
-        if (!this._autoRender)
-            return;
-        requestAnimationFrame(() => this.render());
-    }
-    _set(x, y, style) {
-        let index = y * this.width + x;
-        const current = this._data[index];
-        if (current !== style) {
-            this._data[index] = style;
-            this._requestRender();
-            return true;
-        }
-        return false;
-    }
-    copy(data) {
-        this._data.set(data);
-        this._requestRender();
-    }
-    copyTo(data) {
-        data.set(this._data);
-    }
-    hasXY(x, y) {
-        return x >= 0 && y >= 0 && x < this.width && y < this.height;
-    }
-    set onclick(fn) {
-        if (fn) {
-            this.node.onclick = (e) => {
-                const x = this.toX(e.offsetX);
-                const y = this.toY(e.offsetY);
-                const ev = makeMouseEvent(e, x, y);
-                fn(ev);
-            };
-        }
-        else {
-            this.node.onclick = null;
-        }
-    }
-    set onmousemove(fn) {
-        if (fn) {
-            this.node.onmousemove = (e) => {
-                const x = this.toX(e.offsetX);
-                const y = this.toY(e.offsetY);
-                if (x == this.mouse.x && y == this.mouse.y)
-                    return;
-                this.mouse.x = x;
-                this.mouse.y = y;
-                const ev = makeMouseEvent(e, x, y);
-                fn(ev);
-            };
-        }
-        else {
-            this.node.onmousemove = null;
-        }
-    }
-    set onmouseup(fn) {
-        if (fn) {
-            this.node.onmouseup = (e) => {
-                const x = this.toX(e.offsetX);
-                const y = this.toY(e.offsetY);
-                const ev = makeMouseEvent(e, x, y);
-                fn(ev);
-            };
-        }
-        else {
-            this.node.onmousemove = null;
-        }
-    }
-    toX(offsetX) {
-        return clamp(Math.floor(this.width * (offsetX / this.node.clientWidth)), 0, this.width - 1);
-    }
-    toY(offsetY) {
-        return clamp(Math.floor(this.height * (offsetY / this.node.clientHeight)), 0, this.height - 1);
-    }
-}
-// Based on: https://github.com/ondras/fastiles/blob/master/ts/scene.ts (v2.1.0)
-class Canvas extends BaseCanvas {
-    constructor(options) {
-        super(options);
-    }
-    _createContext() {
-        let gl = this.node.getContext('webgl2');
-        if (!gl) {
-            throw new NotSupportedError('WebGL 2 not supported');
-        }
-        this._gl = gl;
-        this._buffers = {};
-        this._attribs = {};
-        this._uniforms = {};
-        const p = createProgram(gl, VS, FS);
-        gl.useProgram(p);
-        const attributeCount = gl.getProgramParameter(p, gl.ACTIVE_ATTRIBUTES);
-        for (let i = 0; i < attributeCount; i++) {
-            gl.enableVertexAttribArray(i);
-            let info = gl.getActiveAttrib(p, i);
-            this._attribs[info.name] = i;
-        }
-        const uniformCount = gl.getProgramParameter(p, gl.ACTIVE_UNIFORMS);
-        for (let i = 0; i < uniformCount; i++) {
-            let info = gl.getActiveUniform(p, i);
-            this._uniforms[info.name] = gl.getUniformLocation(p, info.name);
-        }
-        gl.uniform1i(this._uniforms['font'], 0);
-        this._texture = createTexture(gl);
-    }
-    _createGeometry() {
-        const gl = this._gl;
-        this._buffers.position && gl.deleteBuffer(this._buffers.position);
-        this._buffers.uv && gl.deleteBuffer(this._buffers.uv);
-        let buffers = createGeometry(gl, this._attribs, this.width, this.height);
-        Object.assign(this._buffers, buffers);
-    }
-    _createData() {
-        const gl = this._gl;
-        const attribs = this._attribs;
-        const tileCount = this.width * this.height;
-        this._buffers.style && gl.deleteBuffer(this._buffers.style);
-        this._data = new Uint32Array(tileCount * VERTICES_PER_TILE);
-        const style = gl.createBuffer();
-        gl.bindBuffer(gl.ARRAY_BUFFER, style);
-        gl.vertexAttribIPointer(attribs['style'], 1, gl.UNSIGNED_INT, 0, 0);
-        Object.assign(this._buffers, { style });
-    }
-    _setGlyphs(glyphs) {
-        if (!super._setGlyphs(glyphs))
-            return false;
-        const gl = this._gl;
-        const uniforms = this._uniforms;
-        gl.uniform2uiv(uniforms['tileSize'], [this.tileWidth, this.tileHeight]);
-        this._uploadGlyphs();
-        return true;
-    }
-    _uploadGlyphs() {
-        if (!this._glyphs.needsUpdate)
-            return;
-        const gl = this._gl;
-        gl.activeTexture(gl.TEXTURE0);
-        gl.bindTexture(gl.TEXTURE_2D, this._texture);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, this._glyphs.node);
-        this._requestRender();
-        this._glyphs.needsUpdate = false;
-    }
-    resize(width, height) {
-        super.resize(width, height);
-        const gl = this._gl;
-        const uniforms = this._uniforms;
-        gl.viewport(0, 0, this.node.width, this.node.height);
-        gl.uniform2ui(uniforms['viewportSize'], this.node.width, this.node.height);
-        this._createGeometry();
-        this._createData();
-    }
-    _set(x, y, style) {
-        let index = y * this.width + x;
-        index *= VERTICES_PER_TILE;
-        const current = this._data[index + 2];
-        if (current !== style) {
-            this._data[index + 2] = style;
-            this._data[index + 5] = style;
-            this._requestRender();
-            return true;
-        }
-        return false;
-    }
-    copy(data) {
-        data.forEach((style, i) => {
-            const index = i * VERTICES_PER_TILE;
-            this._data[index + 2] = style;
-            this._data[index + 5] = style;
-        });
-        this._requestRender();
-    }
-    copyTo(data) {
-        const n = this.width * this.height;
-        for (let i = 0; i < n; ++i) {
-            const index = i * VERTICES_PER_TILE;
-            data[i] = this._data[index + 2];
-        }
-    }
-    render() {
-        const gl = this._gl;
-        if (this._glyphs.needsUpdate) {
-            // auto keep glyphs up to date
-            this._uploadGlyphs();
-        }
-        else if (!this._renderRequested) {
-            return;
-        }
-        this._renderRequested = false;
-        gl.bindBuffer(gl.ARRAY_BUFFER, this._buffers.style);
-        gl.bufferData(gl.ARRAY_BUFFER, this._data, gl.DYNAMIC_DRAW);
-        gl.drawArrays(gl.TRIANGLES, 0, this._width * this._height * VERTICES_PER_TILE);
-    }
-}
-class Canvas2D extends BaseCanvas {
-    constructor(options) {
-        super(options);
-    }
-    _createContext() {
-        const ctx = this.node.getContext('2d');
-        if (!ctx) {
-            throw new NotSupportedError('2d context not supported!');
-        }
-        this._ctx = ctx;
-    }
-    _set(x, y, style) {
-        const result = super._set(x, y, style);
-        if (result) {
-            this._changed[y * this.width + x] = 1;
-        }
-        return result;
-    }
-    resize(width, height) {
-        super.resize(width, height);
-        this._data = new Uint32Array(width * height);
-        this._changed = new Int8Array(width * height);
-    }
-    copy(data) {
-        for (let i = 0; i < this._data.length; ++i) {
-            if (this._data[i] !== data[i]) {
-                this._data[i] = data[i];
-                this._changed[i] = 1;
-            }
-        }
-        this._requestRender();
-    }
-    render() {
-        this._renderRequested = false;
-        for (let i = 0; i < this._changed.length; ++i) {
-            if (this._changed[i])
-                this._renderCell(i);
-            this._changed[i] = 0;
-        }
-    }
-    _renderCell(index) {
-        const x = index % this.width;
-        const y = Math.floor(index / this.width);
-        const style = this._data[index];
-        const glyph = (style / (1 << 24)) >> 0;
-        const bg = (style >> 12) & 0xfff;
-        const fg = style & 0xfff;
-        const px = x * this.tileWidth;
-        const py = y * this.tileHeight;
-        const gx = (glyph % 16) * this.tileWidth;
-        const gy = Math.floor(glyph / 16) * this.tileHeight;
-        const d = this.glyphs.ctx.getImageData(gx, gy, this.tileWidth, this.tileHeight);
-        for (let di = 0; di < d.width * d.height; ++di) {
-            const pct = d.data[di * 4] / 255;
-            const inv = 1.0 - pct;
-            d.data[di * 4 + 0] =
-                pct * (((fg & 0xf00) >> 8) * 17) +
-                    inv * (((bg & 0xf00) >> 8) * 17);
-            d.data[di * 4 + 1] =
-                pct * (((fg & 0xf0) >> 4) * 17) +
-                    inv * (((bg & 0xf0) >> 4) * 17);
-            d.data[di * 4 + 2] =
-                pct * ((fg & 0xf) * 17) + inv * ((bg & 0xf) * 17);
-            d.data[di * 4 + 3] = 255; // not transparent anymore
-        }
-        this._ctx.putImageData(d, px, py);
-    }
-}
-function withImage(image) {
-    let opts = {};
-    if (typeof image === 'string') {
-        opts.glyphs = Glyphs.fromImage(image);
-    }
-    else if (image instanceof HTMLImageElement) {
-        opts.glyphs = Glyphs.fromImage(image);
-    }
-    else {
-        if (!image.image)
-            throw new Error('You must supply the image.');
-        Object.assign(opts, image);
-        opts.glyphs = Glyphs.fromImage(image.image);
-    }
-    let canvas;
-    try {
-        canvas = new Canvas(opts);
-    }
-    catch (e) {
-        if (!(e instanceof NotSupportedError))
-            throw e;
-    }
-    if (!canvas) {
-        canvas = new Canvas2D(opts);
-    }
-    return canvas;
-}
-function withFont(src) {
-    if (typeof src === 'string') {
-        src = { font: src };
-    }
-    src.glyphs = Glyphs.fromFont(src);
-    let canvas;
-    try {
-        canvas = new Canvas(src);
-    }
-    catch (e) {
-        if (!(e instanceof NotSupportedError))
-            throw e;
-    }
-    if (!canvas) {
-        canvas = new Canvas2D(src);
-    }
-    return canvas;
-}
-// Copy of: https://github.com/ondras/fastiles/blob/master/ts/utils.ts (v2.1.0)
-const QUAD = [0, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 1];
-function createProgram(gl, ...sources) {
-    const p = gl.createProgram();
-    [gl.VERTEX_SHADER, gl.FRAGMENT_SHADER].forEach((type, index) => {
-        const shader = gl.createShader(type);
-        gl.shaderSource(shader, sources[index]);
-        gl.compileShader(shader);
-        if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-            throw new Error(gl.getShaderInfoLog(shader));
-        }
-        gl.attachShader(p, shader);
-    });
-    gl.linkProgram(p);
-    if (!gl.getProgramParameter(p, gl.LINK_STATUS)) {
-        throw new Error(gl.getProgramInfoLog(p));
-    }
-    return p;
-}
-function createTexture(gl) {
-    let t = gl.createTexture();
-    gl.bindTexture(gl.TEXTURE_2D, t);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-    return t;
-}
-function createGeometry(gl, attribs, width, height) {
-    let tileCount = width * height;
-    let positionData = new Uint16Array(tileCount * QUAD.length);
-    let uvData = new Uint8Array(tileCount * QUAD.length);
-    let i = 0;
-    for (let y = 0; y < height; y++) {
-        for (let x = 0; x < width; x++) {
-            QUAD.forEach((value) => {
-                positionData[i] = (i % 2 ? y : x) + value;
-                uvData[i] = value;
-                i++;
-            });
-        }
-    }
-    const position = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, position);
-    gl.vertexAttribIPointer(attribs['position'], 2, gl.UNSIGNED_SHORT, 0, 0);
-    gl.bufferData(gl.ARRAY_BUFFER, positionData, gl.STATIC_DRAW);
-    const uv = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, uv);
-    gl.vertexAttribIPointer(attribs['uv'], 2, gl.UNSIGNED_BYTE, 0, 0);
-    gl.bufferData(gl.ARRAY_BUFFER, uvData, gl.STATIC_DRAW);
-    return { position, uv };
 }
 
 function toColorInt(r, g, b, base256) {
@@ -3797,7 +3730,7 @@ class Color extends Int16Array {
         else if (typeof other === 'number') {
             return this.toInt() == other || this.toInt(true) == other;
         }
-        const O = from$2(other);
+        const O = from$4(other);
         if (this.isNull())
             return O.isNull();
         return this.every((v, i) => {
@@ -3811,7 +3744,7 @@ class Color extends Int16Array {
             }
         }
         else {
-            other = from$2(other);
+            other = from$4(other);
             this.dances = other.dances;
         }
         for (let i = 0; i < this.length; ++i) {
@@ -3880,6 +3813,9 @@ class Color extends Int16Array {
         const b = this._b + rand + blueRand;
         return toColorInt(r, g, b, base256);
     }
+    toLight() {
+        return [this._r, this._g, this._b];
+    }
     clamp() {
         if (this.isNull())
             return this;
@@ -3889,7 +3825,7 @@ class Color extends Int16Array {
         return this._changed();
     }
     mix(other, percent) {
-        const O = from$2(other);
+        const O = from$4(other);
         if (O.isNull())
             return this;
         if (this.isNull()) {
@@ -3953,7 +3889,7 @@ class Color extends Int16Array {
     }
     // Adds a color to this one
     add(other, percent = 100) {
-        const O = from$2(other);
+        const O = from$4(other);
         if (O.isNull())
             return this;
         if (this.isNull()) {
@@ -4070,7 +4006,7 @@ function fromNumber(val, base256 = false) {
     }
     return c;
 }
-function make$5(...args) {
+function make$7(...args) {
     let arg = args[0];
     let base256 = args[1];
     if (args.length == 0)
@@ -4098,8 +4034,7 @@ function make$5(...args) {
     }
     throw new Error('Failed to make color - unknown argument: ' + JSON.stringify(arg));
 }
-make.color = make$5;
-function from$2(...args) {
+function from$4(...args) {
     const arg = args[0];
     if (arg instanceof Color)
         return arg;
@@ -4110,7 +4045,7 @@ function from$2(...args) {
             return fromName(arg);
         }
     }
-    return make$5(arg, args[1]);
+    return make$7(arg, args[1]);
 }
 // adjusts the luminosity of 2 colors to ensure there is enough separation between them
 function separate(a, b) {
@@ -4160,12 +4095,12 @@ function distance(a, b) {
             (a.b - b.b) * (a.b - b.b) * 0.3333)) /
         65025);
 }
-function install(name, ...args) {
+function install$5(name, ...args) {
     let info = args;
     if (args.length == 1) {
         info = args[0];
     }
-    const c = info instanceof Color ? info : make$5(info);
+    const c = info instanceof Color ? info : make$7(info);
     colors[name] = c;
     c.name = name;
     return c;
@@ -4173,21 +4108,22 @@ function install(name, ...args) {
 function installSpread(name, ...args) {
     let c;
     if (args.length == 1) {
-        c = install(name, args[0]);
+        c = install$5(name, args[0]);
     }
     else {
-        c = install(name, ...args);
+        c = install$5(name, ...args);
     }
-    install('light_' + name, c.clone().lighten(25));
-    install('lighter_' + name, c.clone().lighten(50));
-    install('lightest_' + name, c.clone().lighten(75));
-    install('dark_' + name, c.clone().darken(25));
-    install('darker_' + name, c.clone().darken(50));
-    install('darkest_' + name, c.clone().darken(75));
+    install$5('light_' + name, c.clone().lighten(25));
+    install$5('lighter_' + name, c.clone().lighten(50));
+    install$5('lightest_' + name, c.clone().lighten(75));
+    install$5('dark_' + name, c.clone().darken(25));
+    install$5('darker_' + name, c.clone().darken(50));
+    install$5('darkest_' + name, c.clone().darken(75));
     return c;
 }
-const BLACK = install('black', 0x000);
-const WHITE = install('white', 0xfff);
+const NONE = install$5('NONE', -1);
+const BLACK = install$5('black', 0x000);
+const WHITE = install$5('white', 0xfff);
 installSpread('teal', [30, 100, 100]);
 installSpread('brown', [60, 40, 0]);
 installSpread('tan', [80, 70, 55]); // 80, 67,		15);
@@ -4225,21 +4161,22 @@ var color = {
     fromCss: fromCss,
     fromName: fromName,
     fromNumber: fromNumber,
-    make: make$5,
-    from: from$2,
+    make: make$7,
+    from: from$4,
     separate: separate,
     swap: swap,
     relativeLuminance: relativeLuminance,
     distance: distance,
-    install: install,
-    installSpread: installSpread
+    install: install$5,
+    installSpread: installSpread,
+    NONE: NONE
 };
 
 class Mixer {
     constructor(base) {
         this.ch = first(base === null || base === void 0 ? void 0 : base.ch, -1);
-        this.fg = from$2(base === null || base === void 0 ? void 0 : base.fg);
-        this.bg = from$2(base === null || base === void 0 ? void 0 : base.bg);
+        this.fg = from$4(base === null || base === void 0 ? void 0 : base.fg);
+        this.bg = from$4(base === null || base === void 0 ? void 0 : base.bg);
     }
     _changed() {
         return this;
@@ -4260,6 +4197,9 @@ class Mixer {
             this.fg.equals(other.fg) &&
             this.bg.equals(other.bg));
     }
+    get dances() {
+        return this.fg.dances || this.bg.dances;
+    }
     nullify() {
         this.ch = -1;
         this.fg.nullify();
@@ -4277,28 +4217,31 @@ class Mixer {
             this.ch = ch;
         }
         if (fg !== -1 && fg !== null) {
-            fg = from$2(fg);
+            fg = from$4(fg);
             this.fg.copy(fg);
         }
         if (bg !== -1 && bg !== null) {
-            bg = from$2(bg);
+            bg = from$4(bg);
             this.bg.copy(bg);
         }
         return this._changed();
     }
-    drawSprite(info, opacity) {
+    drawSprite(src, opacity) {
+        if (src === this)
+            return this;
+        // @ts-ignore
         if (opacity === undefined)
-            opacity = info.opacity;
+            opacity = src.opacity;
         if (opacity === undefined)
             opacity = 100;
         if (opacity <= 0)
             return;
-        if (info.ch)
-            this.ch = info.ch;
-        if ((info.fg && info.fg !== -1) || info.fg === 0)
-            this.fg.mix(info.fg, opacity);
-        if ((info.bg && info.bg !== -1) || info.bg === 0)
-            this.bg.mix(info.bg, opacity);
+        if (src.ch)
+            this.ch = src.ch;
+        if ((src.fg && src.fg !== -1) || src.fg === 0)
+            this.fg.mix(src.fg, opacity);
+        if ((src.bg && src.bg !== -1) || src.bg === 0)
+            this.bg.mix(src.bg, opacity);
         return this._changed();
     }
     invert() {
@@ -4306,7 +4249,7 @@ class Mixer {
         return this._changed();
     }
     multiply(color$1, fg = true, bg = true) {
-        color$1 = from$2(color$1);
+        color$1 = from$4(color$1);
         if (fg) {
             this.fg.multiply(color$1);
         }
@@ -4315,8 +4258,15 @@ class Mixer {
         }
         return this._changed();
     }
+    scale(multiplier, fg = true, bg = true) {
+        if (fg)
+            this.fg.scale(multiplier);
+        if (bg)
+            this.bg.scale(multiplier);
+        return this._changed();
+    }
     mix(color$1, fg = 50, bg = fg) {
-        color$1 = from$2(color$1);
+        color$1 = from$4(color$1);
         if (fg > 0) {
             this.fg.mix(color$1, fg);
         }
@@ -4326,7 +4276,7 @@ class Mixer {
         return this._changed();
     }
     add(color$1, fg = 100, bg = fg) {
-        color$1 = from$2(color$1);
+        color$1 = from$4(color$1);
         if (fg > 0) {
             this.fg.add(color$1, fg);
         }
@@ -4354,9 +4304,9 @@ class Mixer {
         return `{ ch: ${this.ch}, fg: ${this.fg.toString(true)}, bg: ${this.bg.toString(true)} }`;
     }
 }
-make.mixer = function (base) {
+function makeMixer(base) {
     return new Mixer(base);
-};
+}
 
 var options = {
     colorStart: 'Ω',
@@ -4934,7 +4884,7 @@ function splitIntoLines(source, width, indent = 0) {
     return output;
 }
 
-function configure(opts = {}) {
+function configure$1(opts = {}) {
     if (opts.fg !== undefined) {
         options.defaultFg = opts.fg;
     }
@@ -4952,7 +4902,7 @@ function configure(opts = {}) {
     }
 }
 
-var index = {
+var index$7 = {
     __proto__: null,
     compile: compile,
     apply: apply,
@@ -4966,7 +4916,7 @@ var index = {
     removeColors: removeColors,
     wordWrap: wordWrap,
     splitIntoLines: splitIntoLines,
-    configure: configure,
+    configure: configure$1,
     addHelper: addHelper,
     options: options
 };
@@ -4982,6 +4932,18 @@ class DataBuffer {
     }
     get height() {
         return this._height;
+    }
+    resize(width, height) {
+        const orig = this._data;
+        this._width = width;
+        this._height = height;
+        if (orig.length < width * height) {
+            this._data = new Uint32Array(width * height);
+            this._data.set(orig, 0);
+        }
+        else {
+            this._data = orig.slice(width * height);
+        }
     }
     get(x, y) {
         let index = y * this.width + x;
@@ -5007,10 +4969,10 @@ class DataBuffer {
             glyph = this.toGlyph(glyph);
         }
         if (typeof fg !== 'number') {
-            fg = from$2(fg).toInt();
+            fg = from$4(fg).toInt();
         }
         if (typeof bg !== 'number') {
-            bg = from$2(bg).toInt();
+            bg = from$4(bg).toInt();
         }
         glyph = glyph >= 0 ? glyph & 0xff : current >> 24;
         bg = bg >= 0 ? bg & 0xfff : (current >> 12) & 0xfff;
@@ -5049,9 +5011,9 @@ class DataBuffer {
     }
     drawText(x, y, text, fg = 0xfff, bg = -1) {
         if (typeof fg !== 'number')
-            fg = from$2(fg);
+            fg = from$4(fg);
         if (typeof bg !== 'number')
-            bg = from$2(bg);
+            bg = from$4(bg);
         eachChar(text, (ch, fg0, bg0, i) => {
             if (x + i >= this.width)
                 return;
@@ -5061,9 +5023,9 @@ class DataBuffer {
     }
     wrapText(x, y, width, text, fg = 0xfff, bg = -1, indent = 0) {
         if (typeof fg !== 'number')
-            fg = from$2(fg);
+            fg = from$4(fg);
         if (typeof bg !== 'number')
-            bg = from$2(bg);
+            bg = from$4(bg);
         width = Math.min(width, this.width - x);
         text = wordWrap(text, width, indent);
         let xi = x;
@@ -5089,9 +5051,9 @@ class DataBuffer {
         if (typeof ch !== 'number')
             ch = this.toGlyph(ch);
         if (typeof fg !== 'number')
-            fg = from$2(fg).toInt();
+            fg = from$4(fg).toInt();
         if (typeof bg !== 'number')
-            bg = from$2(bg).toInt();
+            bg = from$4(bg).toInt();
         for (let i = x; i < x + w; ++i) {
             for (let j = y; j < y + h; ++j) {
                 this.draw(i, j, ch, fg, bg);
@@ -5101,12 +5063,12 @@ class DataBuffer {
     }
     blackOutRect(x, y, w, h, bg = 0) {
         if (typeof bg !== 'number')
-            bg = from$2(bg);
+            bg = from$4(bg);
         return this.fillRect(x, y, w, h, 0, 0, bg);
     }
     highlight(x, y, color$1, strength) {
         if (typeof color$1 !== 'number') {
-            color$1 = from$2(color$1);
+            color$1 = from$4(color$1);
         }
         const mixer = new Mixer();
         const data = this.get(x, y);
@@ -5118,7 +5080,7 @@ class DataBuffer {
     }
     mix(color$1, percent) {
         if (typeof color$1 !== 'number')
-            color$1 = from$2(color$1);
+            color$1 = from$4(color$1);
         const mixer = new Mixer();
         for (let x = 0; x < this.width; ++x) {
             for (let y = 0; y < this.height; ++y) {
@@ -5155,9 +5117,9 @@ class DataBuffer {
         console.log(data.join('\n'));
     }
 }
-make.dataBuffer = function (width, height) {
+function makeDataBuffer(width, height) {
     return new DataBuffer(width, height);
-};
+}
 class Buffer extends DataBuffer {
     constructor(canvas) {
         super(canvas.width, canvas.height);
@@ -5177,22 +5139,40 @@ class Buffer extends DataBuffer {
         return this;
     }
 }
-make.buffer = function (canvas) {
-    return new Buffer(canvas);
-};
-function make$6(...args) {
+function makeBuffer(...args) {
     if (args.length == 1) {
         return new Buffer(args[0]);
     }
     return new DataBuffer(args[0], args[1]);
 }
 
-class DancingData {
-    constructor(width, height) {
-        this._data = [];
-        this._width = width;
-        this._height = height;
-        this._data = new Array(width * height).fill(0).map(() => { return { glyph: 0, fg: 0, bg: 0 }; });
+const VERTICES_PER_TILE = 6;
+class NotSupportedError extends Error {
+    constructor(...params) {
+        // Pass remaining arguments (including vendor specific ones) to parent constructor
+        super(...params);
+        // Maintains proper stack trace for where our error was thrown (only available on V8)
+        // @ts-ignore
+        if (Error.captureStackTrace) {
+            // @ts-ignore
+            Error.captureStackTrace(this, NotSupportedError);
+        }
+        this.name = 'NotSupportedError';
+    }
+}
+class BaseCanvas {
+    constructor(width, height, glyphs) {
+        this.mouse = { x: -1, y: -1 };
+        this._renderRequested = false;
+        this._width = 50;
+        this._height = 25;
+        this._node = this._createNode();
+        this._createContext();
+        this._configure(width, height, glyphs);
+        this._buffer = new Buffer(this);
+    }
+    get node() {
+        return this._node;
     }
     get width() {
         return this._width;
@@ -5200,241 +5180,517 @@ class DancingData {
     get height() {
         return this._height;
     }
-    get(x, y) {
-        let index = y * this.width + x;
-        const style = this._data[index];
-        return style;
+    get tileWidth() {
+        return this._glyphs.tileWidth;
+    }
+    get tileHeight() {
+        return this._glyphs.tileHeight;
+    }
+    get pxWidth() {
+        return this.node.clientWidth;
+    }
+    get pxHeight() {
+        return this.node.clientHeight;
+    }
+    get glyphs() {
+        return this._glyphs;
+    }
+    set glyphs(glyphs) {
+        this._setGlyphs(glyphs);
     }
     toGlyph(ch) {
         if (typeof ch === 'number')
             return ch;
-        if (!ch || !ch.length)
-            return -1; // 0 handled elsewhere
-        return ch.charCodeAt(0);
+        return this._glyphs.forChar(ch);
     }
-    draw(x, y, glyph = -1, fg = -1, // TODO - White?
-    bg = -1 // TODO - Black?
-    ) {
-        let index = y * this.width + x;
-        const current = this._data[index];
-        if (!current)
+    get buffer() {
+        return this._buffer;
+    }
+    _createNode() {
+        return document.createElement('canvas');
+    }
+    _configure(width, height, glyphs) {
+        this._width = width;
+        this._height = height;
+        this._setGlyphs(glyphs);
+    }
+    _setGlyphs(glyphs) {
+        if (glyphs === this._glyphs)
+            return false;
+        this._glyphs = glyphs;
+        this.resize(this._width, this._height);
+        return true;
+    }
+    resize(width, height) {
+        this._width = width;
+        this._height = height;
+        if (this._buffer) {
+            this._buffer.resize(width, height);
+        }
+        const node = this.node;
+        node.width = this._width * this.tileWidth;
+        node.height = this._height * this.tileHeight;
+    }
+    // draw(x: number, y: number, glyph: number, fg: number, bg: number) {
+    //     glyph = glyph & 0xff;
+    //     bg = bg & 0xfff;
+    //     fg = fg & 0xfff;
+    //     const style = glyph * (1 << 24) + bg * (1 << 12) + fg;
+    //     this._set(x, y, style);
+    //     return this;
+    // }
+    // fill(bg: number): this;
+    // fill(glyph: number, fg: number, bg: number): this;
+    // fill(...args: number[]): this {
+    //     let g = 0,
+    //         fg = 0,
+    //         bg = 0;
+    //     if (args.length == 1) {
+    //         bg = args[0];
+    //     } else if (args.length == 3) {
+    //         [g, fg, bg] = args;
+    //     }
+    //     for (let x = 0; x < this._width; ++x) {
+    //         for (let y = 0; y < this._height; ++y) {
+    //             this.draw(x, y, g, fg, bg);
+    //         }
+    //     }
+    //     return this;
+    // }
+    _requestRender() {
+        if (this._renderRequested)
             return;
-        if (typeof glyph !== 'number')
-            glyph = this.toGlyph(glyph);
-        if (glyph !== -1)
-            current.glyph = glyph;
-        if (typeof fg !== 'number')
-            fg = from$2(fg).toInt();
-        if (typeof bg !== 'number')
-            bg = from$2(bg).toInt();
-        if (fg !== -1)
-            current.fg = fg;
-        if (bg !== -1)
-            current.bg = bg;
-        return this;
+        this._renderRequested = true;
+        requestAnimationFrame(() => this._render());
     }
-    // This is without opacity - opacity must be done in Mixer
-    drawSprite(x, y, sprite) {
-        return this.draw(x, y, sprite.ch || -1, sprite.fg || -1, sprite.bg || -1);
+    // protected _set(x: number, y: number, style: number) {
+    //     let index = y * this.width + x;
+    //     const current = this._data[index];
+    //     if (current !== style) {
+    //         this._data[index] = style;
+    //         this._requestRender();
+    //         return true;
+    //     }
+    //     return false;
+    // }
+    copy(data) {
+        this._data.set(data);
+        this._requestRender();
     }
-    blackOut(...args) {
-        if (args.length == 0) {
-            return this.fill(0, 0, 0);
-        }
-        return this.draw(args[0], args[1], 0, 0, 0);
-    }
-    fill(glyph = 0, fg = 0xfff, bg = 0) {
-        if (typeof glyph !== 'number') {
-            glyph = this.toGlyph(glyph);
-        }
-        this._data.forEach((m) => {
-            // @ts-ignore
-            m.glyph = glyph;
-            m.fg = fg;
-            m.bg = bg;
-        });
-        return this;
-    }
-    copy(other) {
-        if (other instanceof DataBuffer) {
-            this._data.forEach((m, i) => {
-                const x = i % this.width;
-                const y = Math.floor(i / this.width);
-                Object.assign(m, other.get(x, y));
-            });
-        }
-        else {
-            this._data.forEach((m, i) => {
-                Object.assign(m, other._data[i]);
-            });
-        }
-        return this;
-    }
-    drawText(x, y, text, fg = 0xfff, bg = -1) {
-        if (typeof fg !== 'number')
-            fg = from$2(fg);
-        if (typeof bg !== 'number')
-            bg = from$2(bg);
-        eachChar(text, (ch, fg0, bg0, i) => {
-            if (x + i >= this.width)
-                return;
-            this.draw(i + x, y, ch, fg0, bg0);
-        }, fg, bg);
-        return ++y;
-    }
-    wrapText(x, y, width, text, fg = 0xfff, bg = -1, indent = 0) {
-        if (typeof fg !== 'number')
-            fg = from$2(fg);
-        if (typeof bg !== 'number')
-            bg = from$2(bg);
-        width = Math.min(width, this.width - x);
-        text = wordWrap(text, width, indent);
-        let xi = x;
-        eachChar(text, (ch, fg0, bg0) => {
-            if (ch == '\n') {
-                while (xi < x + width) {
-                    this.draw(xi++, y, 0, 0x000, bg0);
-                }
-                ++y;
-                xi = x + indent;
-                return;
-            }
-            this.draw(xi++, y, ch, fg0, bg0);
-        }, fg, bg);
-        while (xi < x + width) {
-            this.draw(xi++, y, 0, 0x000, bg);
-        }
-        return ++y;
-    }
-    fillRect(x, y, w, h, ch = -1, fg = -1, bg = -1) {
-        if (ch === null)
-            ch = -1;
-        if (typeof ch !== 'number')
-            ch = this.toGlyph(ch);
-        if (typeof fg !== 'number')
-            fg = from$2(fg).toInt();
-        if (typeof bg !== 'number')
-            bg = from$2(bg).toInt();
-        for (let i = x; i < x + w; ++i) {
-            for (let j = y; j < y + h; ++j) {
-                this.draw(i, j, ch, fg, bg);
-            }
-        }
-        return this;
-    }
-    blackOutRect(x, y, w, h, bg = 0) {
-        if (typeof bg !== 'number')
-            bg = from$2(bg);
-        return this.fillRect(x, y, w, h, 0, 0, bg);
-    }
-    highlight(x, y, color$1, strength) {
-        if (typeof color$1 !== 'number') {
-            color$1 = from$2(color$1);
-        }
-        const mixer = this.get(x, y);
-        mixer.fg = from$2(mixer.fg).add(color$1, strength).toInt();
-        mixer.bg = from$2(mixer.bg).add(color$1, strength).toInt();
-        return this;
-    }
-    mix(color$1, percent) {
-        if (typeof color$1 !== 'number')
-            color$1 = from$2(color$1);
-        for (let x = 0; x < this.width; ++x) {
-            for (let y = 0; y < this.height; ++y) {
-                const mixer = this.get(x, y);
-                mixer.fg = from$2(mixer.fg).mix(color$1, percent).toInt();
-                mixer.bg = from$2(mixer.bg).mix(color$1, percent).toInt();
-            }
-        }
-        return this;
-    }
-    dump() {
-        const data = [];
-        let header = '    ';
-        for (let x = 0; x < this.width; ++x) {
-            if (x % 10 == 0)
-                header += ' ';
-            header += x % 10;
-        }
-        data.push(header);
-        data.push('');
-        for (let y = 0; y < this.height; ++y) {
-            let line = `${('' + y).padStart(2)}] `;
-            for (let x = 0; x < this.width; ++x) {
-                if (x % 10 == 0)
-                    line += ' ';
-                const mixer = this.get(x, y);
-                const ch = String.fromCharCode(mixer.glyph || 32);
-                line += ch[0];
-            }
-            data.push(line);
-        }
-        console.log(data.join('\n'));
-    }
-}
-class DancingBuffer extends DancingData {
-    constructor(canvas) {
-        super(canvas.width, canvas.height);
-        this._target = canvas;
-        this.load();
-    }
-    // get canvas() { return this._target; }
-    toGlyph(ch) {
-        return this._target.toGlyph(ch);
+    copyTo(data) {
+        data.set(this._data);
     }
     render() {
-        this._data.forEach((m, i) => {
-            const x = i % this.width;
-            const y = Math.floor(i / this.width);
-            this._target.draw(x, y, m.glyph, m.fg, m.bg);
-        });
-        return this;
+        this.buffer.render();
     }
-    load() {
-        const data = new Uint32Array(this.width * this.height);
-        this._target.copyTo(data);
-        data.forEach((style, index) => {
-            const data = this._data[index] || 0;
-            data.glyph = style >> 24;
-            data.bg = (style >> 12) & 0xfff;
-            data.fg = style & 0xfff;
-        });
-        return this;
+    hasXY(x, y) {
+        return x >= 0 && y >= 0 && x < this.width && y < this.height;
+    }
+    set onclick(fn) {
+        if (fn) {
+            this.node.onclick = (e) => {
+                const x = this._toX(e.offsetX);
+                const y = this._toY(e.offsetY);
+                const ev = makeMouseEvent(e, x, y);
+                fn(ev);
+            };
+        }
+        else {
+            this.node.onclick = null;
+        }
+    }
+    set onmousemove(fn) {
+        if (fn) {
+            this.node.onmousemove = (e) => {
+                const x = this._toX(e.offsetX);
+                const y = this._toY(e.offsetY);
+                if (x == this.mouse.x && y == this.mouse.y)
+                    return;
+                this.mouse.x = x;
+                this.mouse.y = y;
+                const ev = makeMouseEvent(e, x, y);
+                fn(ev);
+            };
+        }
+        else {
+            this.node.onmousemove = null;
+        }
+    }
+    set onmouseup(fn) {
+        if (fn) {
+            this.node.onmouseup = (e) => {
+                const x = this._toX(e.offsetX);
+                const y = this._toY(e.offsetY);
+                const ev = makeMouseEvent(e, x, y);
+                fn(ev);
+            };
+        }
+        else {
+            this.node.onmousemove = null;
+        }
+    }
+    _toX(offsetX) {
+        return clamp(Math.floor(this.width * (offsetX / this.node.clientWidth)), 0, this.width - 1);
+    }
+    _toY(offsetY) {
+        return clamp(Math.floor(this.height * (offsetY / this.node.clientHeight)), 0, this.height - 1);
     }
 }
+// Based on: https://github.com/ondras/fastiles/blob/master/ts/scene.ts (v2.1.0)
+class Canvas extends BaseCanvas {
+    constructor(width, height, glyphs) {
+        super(width, height, glyphs);
+    }
+    _createContext() {
+        let gl = this.node.getContext('webgl2');
+        if (!gl) {
+            throw new NotSupportedError('WebGL 2 not supported');
+        }
+        this._gl = gl;
+        this._buffers = {};
+        this._attribs = {};
+        this._uniforms = {};
+        const p = createProgram(gl, VS, FS);
+        gl.useProgram(p);
+        const attributeCount = gl.getProgramParameter(p, gl.ACTIVE_ATTRIBUTES);
+        for (let i = 0; i < attributeCount; i++) {
+            gl.enableVertexAttribArray(i);
+            let info = gl.getActiveAttrib(p, i);
+            this._attribs[info.name] = i;
+        }
+        const uniformCount = gl.getProgramParameter(p, gl.ACTIVE_UNIFORMS);
+        for (let i = 0; i < uniformCount; i++) {
+            let info = gl.getActiveUniform(p, i);
+            this._uniforms[info.name] = gl.getUniformLocation(p, info.name);
+        }
+        gl.uniform1i(this._uniforms['font'], 0);
+        this._texture = createTexture(gl);
+    }
+    _createGeometry() {
+        const gl = this._gl;
+        this._buffers.position && gl.deleteBuffer(this._buffers.position);
+        this._buffers.uv && gl.deleteBuffer(this._buffers.uv);
+        let buffers = createGeometry(gl, this._attribs, this.width, this.height);
+        Object.assign(this._buffers, buffers);
+    }
+    _createData() {
+        const gl = this._gl;
+        const attribs = this._attribs;
+        const tileCount = this.width * this.height;
+        this._buffers.style && gl.deleteBuffer(this._buffers.style);
+        this._data = new Uint32Array(tileCount * VERTICES_PER_TILE);
+        const style = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, style);
+        gl.vertexAttribIPointer(attribs['style'], 1, gl.UNSIGNED_INT, 0, 0);
+        Object.assign(this._buffers, { style });
+    }
+    _setGlyphs(glyphs) {
+        if (!super._setGlyphs(glyphs))
+            return false;
+        const gl = this._gl;
+        const uniforms = this._uniforms;
+        gl.uniform2uiv(uniforms['tileSize'], [this.tileWidth, this.tileHeight]);
+        this._uploadGlyphs();
+        return true;
+    }
+    _uploadGlyphs() {
+        if (!this._glyphs.needsUpdate)
+            return;
+        const gl = this._gl;
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, this._texture);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, this._glyphs.node);
+        this._requestRender();
+        this._glyphs.needsUpdate = false;
+    }
+    resize(width, height) {
+        super.resize(width, height);
+        const gl = this._gl;
+        const uniforms = this._uniforms;
+        gl.viewport(0, 0, this.node.width, this.node.height);
+        gl.uniform2ui(uniforms['viewportSize'], this.node.width, this.node.height);
+        this._createGeometry();
+        this._createData();
+    }
+    // protected _set(x: number, y: number, style: number) {
+    //     let index = y * this.width + x;
+    //     index *= VERTICES_PER_TILE;
+    //     const current = this._data[index + 2];
+    //     if (current !== style) {
+    //         this._data[index + 2] = style;
+    //         this._data[index + 5] = style;
+    //         this._requestRender();
+    //         return true;
+    //     }
+    //     return false;
+    // }
+    copy(data) {
+        data.forEach((style, i) => {
+            const index = i * VERTICES_PER_TILE;
+            this._data[index + 2] = style;
+            this._data[index + 5] = style;
+        });
+        this._requestRender();
+    }
+    copyTo(data) {
+        const n = this.width * this.height;
+        for (let i = 0; i < n; ++i) {
+            const index = i * VERTICES_PER_TILE;
+            data[i] = this._data[index + 2];
+        }
+    }
+    _render() {
+        const gl = this._gl;
+        if (this._glyphs.needsUpdate) {
+            // auto keep glyphs up to date
+            this._uploadGlyphs();
+        }
+        else if (!this._renderRequested) {
+            return;
+        }
+        this._renderRequested = false;
+        gl.bindBuffer(gl.ARRAY_BUFFER, this._buffers.style);
+        gl.bufferData(gl.ARRAY_BUFFER, this._data, gl.DYNAMIC_DRAW);
+        gl.drawArrays(gl.TRIANGLES, 0, this._width * this._height * VERTICES_PER_TILE);
+    }
+}
+class Canvas2D extends BaseCanvas {
+    constructor(width, height, glyphs) {
+        super(width, height, glyphs);
+    }
+    _createContext() {
+        const ctx = this.node.getContext('2d');
+        if (!ctx) {
+            throw new NotSupportedError('2d context not supported!');
+        }
+        this._ctx = ctx;
+    }
+    // protected _set(x: number, y: number, style: number) {
+    //     const result = super._set(x, y, style);
+    //     if (result) {
+    //         this._changed[y * this.width + x] = 1;
+    //     }
+    //     return result;
+    // }
+    resize(width, height) {
+        super.resize(width, height);
+        this._data = new Uint32Array(width * height);
+        this._changed = new Int8Array(width * height);
+    }
+    copy(data) {
+        for (let i = 0; i < this._data.length; ++i) {
+            if (this._data[i] !== data[i]) {
+                this._data[i] = data[i];
+                this._changed[i] = 1;
+            }
+        }
+        this._requestRender();
+    }
+    _render() {
+        this._renderRequested = false;
+        for (let i = 0; i < this._changed.length; ++i) {
+            if (this._changed[i])
+                this._renderCell(i);
+            this._changed[i] = 0;
+        }
+    }
+    _renderCell(index) {
+        const x = index % this.width;
+        const y = Math.floor(index / this.width);
+        const style = this._data[index];
+        const glyph = (style / (1 << 24)) >> 0;
+        const bg = (style >> 12) & 0xfff;
+        const fg = style & 0xfff;
+        const px = x * this.tileWidth;
+        const py = y * this.tileHeight;
+        const gx = (glyph % 16) * this.tileWidth;
+        const gy = Math.floor(glyph / 16) * this.tileHeight;
+        const d = this.glyphs.ctx.getImageData(gx, gy, this.tileWidth, this.tileHeight);
+        for (let di = 0; di < d.width * d.height; ++di) {
+            const pct = d.data[di * 4] / 255;
+            const inv = 1.0 - pct;
+            d.data[di * 4 + 0] =
+                pct * (((fg & 0xf00) >> 8) * 17) +
+                    inv * (((bg & 0xf00) >> 8) * 17);
+            d.data[di * 4 + 1] =
+                pct * (((fg & 0xf0) >> 4) * 17) +
+                    inv * (((bg & 0xf0) >> 4) * 17);
+            d.data[di * 4 + 2] =
+                pct * ((fg & 0xf) * 17) + inv * ((bg & 0xf) * 17);
+            d.data[di * 4 + 3] = 255; // not transparent anymore
+        }
+        this._ctx.putImageData(d, px, py);
+    }
+}
+function make$6(...args) {
+    let width = args[0];
+    let height = args[1];
+    let opts = args[2];
+    if (args.length == 1) {
+        opts = args[0];
+        height = opts.height || 34;
+        width = opts.width || 80;
+    }
+    opts = opts || { font: 'monospace' };
+    let glyphs;
+    if (opts.image) {
+        glyphs = Glyphs.fromImage(opts.image);
+    }
+    else {
+        glyphs = Glyphs.fromFont(opts);
+    }
+    let canvas;
+    try {
+        canvas = new Canvas(width, height, glyphs);
+    }
+    catch (e) {
+        if (!(e instanceof NotSupportedError))
+            throw e;
+    }
+    if (!canvas) {
+        canvas = new Canvas2D(width, height, glyphs);
+    }
+    if (opts.div) {
+        let el;
+        if (typeof opts.div === 'string') {
+            el = document.getElementById(opts.div);
+            if (!el) {
+                console.warn('Failed to find parent element by ID: ' + opts.div);
+            }
+        }
+        else {
+            el = opts.div;
+        }
+        if (el && el.appendChild) {
+            el.appendChild(canvas.node);
+        }
+    }
+    if (opts.io || opts.loop) {
+        let loop$1 = opts.loop || loop;
+        canvas.onclick = (e) => loop$1.pushEvent(e);
+        canvas.onmousemove = (e) => loop$1.pushEvent(e);
+        canvas.onmouseup = (e) => loop$1.pushEvent(e);
+    }
+    return canvas;
+}
+// export function withImage(image: ImageOptions | HTMLImageElement | string) {
+//     let opts = {} as CanvasOptions;
+//     if (typeof image === 'string') {
+//         opts.glyphs = Glyphs.fromImage(image);
+//     } else if (image instanceof HTMLImageElement) {
+//         opts.glyphs = Glyphs.fromImage(image);
+//     } else {
+//         if (!image.image) throw new Error('You must supply the image.');
+//         Object.assign(opts, image);
+//         opts.glyphs = Glyphs.fromImage(image.image);
+//     }
+//     let canvas;
+//     try {
+//         canvas = new Canvas(opts);
+//     } catch (e) {
+//         if (!(e instanceof NotSupportedError)) throw e;
+//     }
+//     if (!canvas) {
+//         canvas = new Canvas2D(opts);
+//     }
+//     return canvas;
+// }
+// export function withFont(src: FontOptions | string) {
+//     if (typeof src === 'string') {
+//         src = { font: src } as FontOptions;
+//     }
+//     src.glyphs = Glyphs.fromFont(src);
+//     let canvas;
+//     try {
+//         canvas = new Canvas(src);
+//     } catch (e) {
+//         if (!(e instanceof NotSupportedError)) throw e;
+//     }
+//     if (!canvas) {
+//         canvas = new Canvas2D(src);
+//     }
+//     return canvas;
+// }
+// Copy of: https://github.com/ondras/fastiles/blob/master/ts/utils.ts (v2.1.0)
+const QUAD = [0, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 1];
+function createProgram(gl, ...sources) {
+    const p = gl.createProgram();
+    [gl.VERTEX_SHADER, gl.FRAGMENT_SHADER].forEach((type, index) => {
+        const shader = gl.createShader(type);
+        gl.shaderSource(shader, sources[index]);
+        gl.compileShader(shader);
+        if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+            throw new Error(gl.getShaderInfoLog(shader));
+        }
+        gl.attachShader(p, shader);
+    });
+    gl.linkProgram(p);
+    if (!gl.getProgramParameter(p, gl.LINK_STATUS)) {
+        throw new Error(gl.getProgramInfoLog(p));
+    }
+    return p;
+}
+function createTexture(gl) {
+    let t = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, t);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    return t;
+}
+function createGeometry(gl, attribs, width, height) {
+    let tileCount = width * height;
+    let positionData = new Uint16Array(tileCount * QUAD.length);
+    let uvData = new Uint8Array(tileCount * QUAD.length);
+    let i = 0;
+    for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+            QUAD.forEach((value) => {
+                positionData[i] = (i % 2 ? y : x) + value;
+                uvData[i] = value;
+                i++;
+            });
+        }
+    }
+    const position = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, position);
+    gl.vertexAttribIPointer(attribs['position'], 2, gl.UNSIGNED_SHORT, 0, 0);
+    gl.bufferData(gl.ARRAY_BUFFER, positionData, gl.STATIC_DRAW);
+    const uv = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, uv);
+    gl.vertexAttribIPointer(attribs['uv'], 2, gl.UNSIGNED_BYTE, 0, 0);
+    gl.bufferData(gl.ARRAY_BUFFER, uvData, gl.STATIC_DRAW);
+    return { position, uv };
+}
 
-var index$1 = {
+var index$6 = {
     __proto__: null,
     NotSupportedError: NotSupportedError,
     BaseCanvas: BaseCanvas,
     Canvas: Canvas,
     Canvas2D: Canvas2D,
-    withImage: withImage,
-    withFont: withFont,
+    make: make$6,
     Glyphs: Glyphs,
     DataBuffer: DataBuffer,
+    makeDataBuffer: makeDataBuffer,
     Buffer: Buffer,
-    make: make$6,
-    DancingData: DancingData,
-    DancingBuffer: DancingBuffer
+    makeBuffer: makeBuffer
 };
 
 class Sprite {
     constructor(ch, fg, bg, opacity = 100) {
         if (!ch)
             ch = null;
-        if (typeof fg !== 'number')
-            fg = from$2(fg);
-        if (typeof bg !== 'number')
-            bg = from$2(bg);
         this.ch = ch;
-        this.fg = fg;
-        this.bg = bg;
+        this.fg = from$4(fg);
+        this.bg = from$4(bg);
         this.opacity = opacity >= 0 ? opacity : 100;
+    }
+    clone() {
+        return new Sprite(this.ch, this.fg, this.bg, this.opacity);
     }
 }
 const sprites = {};
-function make$7(...args) {
+function make$5(...args) {
     let ch = null, fg = -1, bg = -1, opacity;
     if (args.length == 0) {
         return new Sprite(null, -1, -1);
@@ -5477,52 +5733,136 @@ function make$7(...args) {
         }
     }
     if (typeof fg === 'string')
-        fg = from$2(fg);
+        fg = from$4(fg);
     else if (Array.isArray(fg))
-        fg = make$5(fg);
+        fg = make$7(fg);
     else if (fg === undefined || fg === null)
         fg = -1;
     if (typeof bg === 'string')
-        bg = from$2(bg);
+        bg = from$4(bg);
     else if (Array.isArray(bg))
-        bg = make$5(bg);
+        bg = make$7(bg);
     else if (bg === undefined || bg === null)
         bg = -1;
     return new Sprite(ch, fg, bg, opacity);
 }
-make.sprite = make$7;
-function install$1(name, ...args) {
+function from$3(...args) {
+    if (args.length == 1 && typeof args[0] === 'string') {
+        const sprite = sprites[args[0]];
+        if (!sprite)
+            throw new Error('Failed to find sprite: ' + args[0]);
+        return sprite;
+    }
+    return make$5(args);
+}
+function install$4(name, ...args) {
     let sprite;
     // @ts-ignore
-    sprite = make$7(...args);
+    sprite = make$5(...args);
     sprite.name = name;
     sprites[name] = sprite;
     return sprite;
 }
 
-var index$2 = {
+var index$5 = {
     __proto__: null,
     Sprite: Sprite,
     sprites: sprites,
-    make: make$7,
-    install: install$1,
-    Mixer: Mixer
+    make: make$5,
+    from: from$3,
+    install: install$4,
+    Mixer: Mixer,
+    makeMixer: makeMixer
 };
 
+// export interface ObjectFlags {
+//     readonly object: number;
+// }
+// export interface GameObjectType {
+//     readonly sprite: SpriteData;
+//     readonly priority: number;
+//     readonly depth: number;
+//     // readonly light: LightType | null;
+//     readonly flags: ObjectFlags;
+//     hasObjectFlag(flag: number): boolean;
+// }
+// export interface TileFlags extends ObjectFlags {
+//     readonly tile: number;
+//     readonly tileMech: number;
+// }
+// export interface TileType extends GameObjectType {
+//     readonly id: string;
+//     readonly flags: TileFlags;
+// }
+// export interface ActorFlags extends ObjectFlags {
+//     actor: number;
+// }
+// export interface ActorType
+//     extends XY,
+//         Chainable<GameObjectType>,
+//         GameObjectType {
+//     isPlayer: () => boolean;
+//     isVisible: () => boolean;
+//     isDetected: () => boolean;
+//     blocksVision: () => boolean; // kind.flags & Flags.ActorKind.AK_BLOCKS_VISION
+//     layerFlags: () => number;
+//     avoidsCell: (cell: CellType) => boolean;
+//     // if (cell.flags & Flags.Cell.HAS_ACTOR) return false;
+//     // return !cell.hasTileFlag(forbidTileFlags);
+//     forbidsCell: (cell: CellType) => boolean;
+//     delete: () => void;
+//     rememberedInCell: CellType | null;
+//     readonly flags: ActorFlags;
+//     next: GameObjectType | null;
+// }
+// export interface ItemFlags extends ObjectFlags {
+//     item: number;
+// }
+// export interface ItemType
+//     extends XY,
+//         Chainable<GameObjectType>,
+//         GameObjectType {
+//     quantity: number;
+//     readonly flags: ItemFlags;
+//     layerFlags: () => number;
+//     blocksMove: () => boolean;
+//     avoidsCell: (cell: CellType) => boolean;
+//     forbidsCell: (cell: CellType) => boolean;
+//     // if (cell.flags & Flags.Cell.HAS_ITEM) return false;
+//     // return !cell.hasTileFlag(theItem.kind.forbiddenTileFlags());
+//     isDetected: () => boolean; // flags & Flags.Item.ITEM_MAGIC_DETECTED && GW.item.magicChar(theItem)
+//     delete: () => void;
+//     clone: () => this;
+//     next: GameObjectType | null;
+// }
+// export interface FxType extends XY, Chainable<GameObjectType>, GameObjectType {
+//     next: GameObjectType | null;
+// }
+
+var types = {
+    __proto__: null
+};
+
+const data = {};
+const config$1 = {};
+// export const make: any = {};
+// export const flags: any = {};
+
 const templates = {};
-function install$2(id, msg) {
+config$1.message = config$1.message || {};
+function install$3(id, msg) {
     const template = compile(msg);
     templates[id] = template;
 }
-function installAll(config) {
-    Object.entries(config).forEach(([id, msg]) => install$2(id, msg));
+function installAll$3(config) {
+    Object.entries(config).forEach(([id, msg]) => install$3(id, msg));
 }
 // messages
 const ARCHIVE = [];
 const CONFIRMED = [];
 var ARCHIVE_LINES = 30;
 var MSG_WIDTH = 80;
-var CURRENT_ARCHIVE_POS = 0;
+var NEXT_WRITE_INDEX = 0;
 var NEEDS_UPDATE = false;
 let COMBAT_MESSAGE = null;
 function needsUpdate(needs) {
@@ -5531,7 +5871,7 @@ function needsUpdate(needs) {
     }
     return NEEDS_UPDATE;
 }
-function configure$1(opts) {
+function configure(opts) {
     if (!opts)
         opts = {};
     ARCHIVE_LINES = opts.length || 30;
@@ -5559,6 +5899,11 @@ function fromActor(actor, msg, args) {
         add(msg, args);
     }
 }
+function forPlayer(actor, msg, args) {
+    if (!actor.isPlayer())
+        return;
+    add(msg, args);
+}
 function addCombat(actor, msg, args) {
     if (actor.isPlayer() || actor.isVisible()) {
         const template = templates[msg];
@@ -5577,11 +5922,12 @@ function addMessageLine(msg) {
         return;
     }
     // Add the message to the archive.
-    ARCHIVE[CURRENT_ARCHIVE_POS] = msg;
-    CONFIRMED[CURRENT_ARCHIVE_POS] = false;
-    CURRENT_ARCHIVE_POS = (CURRENT_ARCHIVE_POS + 1) % ARCHIVE_LINES;
+    ARCHIVE[NEXT_WRITE_INDEX] = msg;
+    CONFIRMED[NEXT_WRITE_INDEX] = false;
+    NEXT_WRITE_INDEX = (NEXT_WRITE_INDEX + 1) % ARCHIVE_LINES;
 }
 function addMessage(msg) {
+    var _a;
     msg = capitalize(msg);
     // // Implement the American quotation mark/period/comma ordering rule.
     // for (i=0; text.text[i] && text.text[i+1]; i++) {
@@ -5595,6 +5941,9 @@ function addMessage(msg) {
     //     }
     // }
     const lines = splitIntoLines(msg, MSG_WIDTH);
+    if ((_a = config$1.message) === null || _a === void 0 ? void 0 : _a.reverseMultiLine) {
+        lines.reverse();
+    }
     lines.forEach((l) => addMessageLine(l));
     // display the message:
     NEEDS_UPDATE = true;
@@ -5607,14 +5956,14 @@ function addCombatMessage(msg) {
         COMBAT_MESSAGE = msg;
     }
     else {
-        COMBAT_MESSAGE += ", " + capitalize(msg);
+        COMBAT_MESSAGE += ', ' + capitalize(msg);
     }
     NEEDS_UPDATE = true;
 }
 function commitCombatMessage() {
     if (!COMBAT_MESSAGE)
         return false;
-    addMessage(COMBAT_MESSAGE + ".");
+    addMessage(COMBAT_MESSAGE + '.');
     COMBAT_MESSAGE = null;
     return true;
 }
@@ -5625,8 +5974,9 @@ function confirmAll() {
     NEEDS_UPDATE = true;
 }
 function forEach(fn) {
+    commitCombatMessage();
     for (let i = 0; i < ARCHIVE_LINES; ++i) {
-        const n = (i + CURRENT_ARCHIVE_POS - 1) % ARCHIVE_LINES;
+        const n = (ARCHIVE_LINES - i + NEXT_WRITE_INDEX - 1) % ARCHIVE_LINES;
         const msg = ARCHIVE[n];
         if (!msg)
             return;
@@ -5638,12 +5988,13 @@ function forEach(fn) {
 var message = {
     __proto__: null,
     templates: templates,
-    install: install$2,
-    installAll: installAll,
+    install: install$3,
+    installAll: installAll$3,
     needsUpdate: needsUpdate,
-    configure: configure$1,
+    configure: configure,
     add: add,
     fromActor: fromActor,
+    forPlayer: forPlayer,
     addCombat: addCombat,
     confirmAll: confirmAll,
     forEach: forEach
@@ -5651,291 +6002,3090 @@ var message = {
 
 ///////////////////////////////////////////////////////
 // TILE EVENT
-var Flags;
-(function (Flags) {
+var Effect;
+(function (Effect) {
     // E_ALWAYS_FIRE = Fl(10), // Fire even if the cell is marked as having fired this turn
-    Flags[Flags["E_NEXT_ALWAYS"] = fl(0)] = "E_NEXT_ALWAYS";
-    Flags[Flags["E_NEXT_EVERYWHERE"] = fl(1)] = "E_NEXT_EVERYWHERE";
+    Effect[Effect["E_NEXT_ALWAYS"] = fl(0)] = "E_NEXT_ALWAYS";
+    Effect[Effect["E_NEXT_EVERYWHERE"] = fl(1)] = "E_NEXT_EVERYWHERE";
     // E_NO_REDRAW_CELL = Fl(2),
-    Flags[Flags["E_TREAT_AS_BLOCKING"] = fl(3)] = "E_TREAT_AS_BLOCKING";
-    Flags[Flags["E_PERMIT_BLOCKING"] = fl(4)] = "E_PERMIT_BLOCKING";
-    Flags[Flags["E_ABORT_IF_BLOCKS_MAP"] = fl(5)] = "E_ABORT_IF_BLOCKS_MAP";
-    Flags[Flags["E_BLOCKED_BY_ITEMS"] = fl(6)] = "E_BLOCKED_BY_ITEMS";
-    Flags[Flags["E_BLOCKED_BY_ACTORS"] = fl(7)] = "E_BLOCKED_BY_ACTORS";
-    Flags[Flags["E_BLOCKED_BY_OTHER_LAYERS"] = fl(8)] = "E_BLOCKED_BY_OTHER_LAYERS";
-    Flags[Flags["E_SUPERPRIORITY"] = fl(9)] = "E_SUPERPRIORITY";
-    Flags[Flags["E_NO_MARK_FIRED"] = fl(11)] = "E_NO_MARK_FIRED";
+    Effect[Effect["E_TREAT_AS_BLOCKING"] = fl(3)] = "E_TREAT_AS_BLOCKING";
+    Effect[Effect["E_PERMIT_BLOCKING"] = fl(4)] = "E_PERMIT_BLOCKING";
+    Effect[Effect["E_ABORT_IF_BLOCKS_MAP"] = fl(5)] = "E_ABORT_IF_BLOCKS_MAP";
+    Effect[Effect["E_BLOCKED_BY_ITEMS"] = fl(6)] = "E_BLOCKED_BY_ITEMS";
+    Effect[Effect["E_BLOCKED_BY_ACTORS"] = fl(7)] = "E_BLOCKED_BY_ACTORS";
+    Effect[Effect["E_BLOCKED_BY_OTHER_LAYERS"] = fl(8)] = "E_BLOCKED_BY_OTHER_LAYERS";
+    Effect[Effect["E_SUPERPRIORITY"] = fl(9)] = "E_SUPERPRIORITY";
+    Effect[Effect["E_NO_MARK_FIRED"] = fl(11)] = "E_NO_MARK_FIRED";
     // MUST_REPLACE_LAYER
     // NEEDS_EMPTY_LAYER
-    // E_PROTECTED = Fl(12),
-    Flags[Flags["E_SPREAD_CIRCLE"] = fl(13)] = "E_SPREAD_CIRCLE";
-    Flags[Flags["E_SPREAD_LINE"] = fl(14)] = "E_SPREAD_LINE";
+    Effect[Effect["E_PROTECTED"] = fl(12)] = "E_PROTECTED";
+    Effect[Effect["E_SPREAD_CIRCLE"] = fl(13)] = "E_SPREAD_CIRCLE";
+    Effect[Effect["E_SPREAD_LINE"] = fl(14)] = "E_SPREAD_LINE";
     // E_NULL_SURFACE = Fl(15), // Clear the surface layer
     // E_NULL_LIQUID = Fl(16), // Clear liquid layer
     // E_NULL_GAS = Fl(17), // Clear gas layer
-    Flags[Flags["E_CLEAR_CELL"] = fl(17)] = "E_CLEAR_CELL";
-    Flags[Flags["E_EVACUATE_CREATURES"] = fl(18)] = "E_EVACUATE_CREATURES";
-    Flags[Flags["E_EVACUATE_ITEMS"] = fl(19)] = "E_EVACUATE_ITEMS";
-    Flags[Flags["E_BUILD_IN_WALLS"] = fl(20)] = "E_BUILD_IN_WALLS";
-    Flags[Flags["E_MUST_TOUCH_WALLS"] = fl(21)] = "E_MUST_TOUCH_WALLS";
-    Flags[Flags["E_NO_TOUCH_WALLS"] = fl(22)] = "E_NO_TOUCH_WALLS";
-    Flags[Flags["E_FIRED"] = fl(23)] = "E_FIRED";
-    Flags[Flags["E_ONLY_IF_EMPTY"] = Flags.E_BLOCKED_BY_ITEMS | Flags.E_BLOCKED_BY_ACTORS] = "E_ONLY_IF_EMPTY";
+    Effect[Effect["E_EVACUATE_CREATURES"] = fl(18)] = "E_EVACUATE_CREATURES";
+    Effect[Effect["E_EVACUATE_ITEMS"] = fl(19)] = "E_EVACUATE_ITEMS";
+    Effect[Effect["E_BUILD_IN_WALLS"] = fl(20)] = "E_BUILD_IN_WALLS";
+    Effect[Effect["E_MUST_TOUCH_WALLS"] = fl(21)] = "E_MUST_TOUCH_WALLS";
+    Effect[Effect["E_NO_TOUCH_WALLS"] = fl(22)] = "E_NO_TOUCH_WALLS";
+    Effect[Effect["E_FIRED"] = fl(23)] = "E_FIRED";
+    Effect[Effect["E_CLEAR_GROUND"] = fl(17)] = "E_CLEAR_GROUND";
+    Effect[Effect["E_CLEAR_SURFACE"] = fl(24)] = "E_CLEAR_SURFACE";
+    Effect[Effect["E_CLEAR_LIQUID"] = fl(25)] = "E_CLEAR_LIQUID";
+    Effect[Effect["E_CLEAR_GAS"] = fl(26)] = "E_CLEAR_GAS";
+    Effect[Effect["E_CLEAR_CELL"] = Effect.E_CLEAR_GROUND |
+        Effect.E_CLEAR_SURFACE |
+        Effect.E_CLEAR_LIQUID |
+        Effect.E_CLEAR_GAS] = "E_CLEAR_CELL";
+    Effect[Effect["E_ONLY_IF_EMPTY"] = Effect.E_BLOCKED_BY_ITEMS | Effect.E_BLOCKED_BY_ACTORS] = "E_ONLY_IF_EMPTY";
     // E_NULLIFY_CELL = E_NULL_SURFACE | E_NULL_LIQUID | E_NULL_GAS,
     // These should be effect types
-    Flags[Flags["E_ACTIVATE_DORMANT_MONSTER"] = fl(23)] = "E_ACTIVATE_DORMANT_MONSTER";
-    Flags[Flags["E_AGGRAVATES_MONSTERS"] = fl(24)] = "E_AGGRAVATES_MONSTERS";
-    Flags[Flags["E_RESURRECT_ALLY"] = fl(25)] = "E_RESURRECT_ALLY";
-    Flags[Flags["E_EMIT_EVENT"] = fl(26)] = "E_EMIT_EVENT";
-})(Flags || (Flags = {}));
-class Effect {
-    constructor(effects, next = null) {
-        // if (typeof opts === 'function') {
-        //     opts = {
-        //         fn: opts,
-        //     };
-        // }
-        // public tile: string | null;
-        // public fn: Function | null;
-        // public item: string | null;
-        // public message: string | null;
-        // public lightFlare: string | null;
-        // public flashColor: Color.Color | null;
-        // public fired: boolean;
-        // public emit: string | null;
-        this.map = null;
-        this.ctx = {};
-        this.effects = [];
-        this.flags = 0;
-        this.chance = 0;
-        // public chance: number;
-        // public volume: number;
-        // public spread: number;
-        // public radius: number;
-        // public decrement: number;
-        // public flags: number;
-        // public matchTile: string | null;
-        this.next = null;
-        this.id = null;
-        this._grid = null;
-        // this.tile = opts.tile || null;
-        // this.fn = opts.fn || null;
-        // this.item = opts.item || null;
-        // this.chance = opts.chance || 0;
-        // this.volume = opts.volume || 0;
-        // // spawning pattern:
-        // this.spread = opts.spread || 0;
-        // this.radius = opts.radius || 0;
-        // this.decrement = opts.decrement || 0;
-        // this.flags = Flag.from(Flags, opts.flags);
-        // this.matchTile = opts.matchTile || opts.needs || 0; /* ENUM tileType */
-        // this.next = opts.next || null; /* ENUM makeEventTypes */
-        // this.message = opts.message || null;
-        // this.lightFlare = opts.flare || null;
-        // this.flashColor = opts.flash ? Color.from(opts.flash) : null;
-        // // this.effectRadius = radius || 0;
-        // this.fired = false;
-        // this.emit = opts.emit || null; // name of the effect to emit when activated
-        // this.id = opts.id || null;
-        if (!Array.isArray(effects))
-            effects = [effects];
-        this.effects = effects.slice();
-        this.next = next;
+    Effect[Effect["E_ACTIVATE_DORMANT_MONSTER"] = fl(27)] = "E_ACTIVATE_DORMANT_MONSTER";
+    Effect[Effect["E_AGGRAVATES_MONSTERS"] = fl(28)] = "E_AGGRAVATES_MONSTERS";
+    Effect[Effect["E_RESURRECT_ALLY"] = fl(29)] = "E_RESURRECT_ALLY";
+    Effect[Effect["E_EMIT_EVENT"] = fl(30)] = "E_EMIT_EVENT";
+})(Effect || (Effect = {}));
+
+async function fire(effect, map, x, y, ctx_ = {}) {
+    if (!effect)
+        return false;
+    if (typeof effect === 'string') {
+        const name = effect;
+        effect = from$2(name);
+        if (!effect)
+            throw new Error('Failed to find effect: ' + name);
     }
-    get grid() {
-        if (!this._grid) {
-            this._grid = alloc(this.map.width, this.map.height);
+    const ctx = ctx_;
+    if (!ctx.force && effect.chance && !random.chance(effect.chance, 10000))
+        return false;
+    const grid$1 = (ctx.grid = alloc(map.width, map.height));
+    let didSomething = true;
+    const handlers = Object.values(effectTypes);
+    for (let h of handlers) {
+        if (await h.fire(effect, map, x, y, ctx)) {
+            didSomething = true;
         }
-        return this._grid;
     }
-    async fire(map, x, y, ctx = {}) {
-        let didSomething = false;
-        this.map = map;
-        this.ctx = ctx;
-        // fire all of my functions
-        for (let i = 0; i < this.effects.length; ++i) {
-            const eff = this.effects[i];
-            didSomething = (await eff(this, x, y)) || didSomething;
-        }
-        // bookkeeping
-        if (didSomething &&
-            map.isVisible(x, y) &&
-            !(this.flags & Flags.E_NO_MARK_FIRED)) {
-            this.flags |= Flags.E_FIRED;
-        }
-        // do the next effect - if applicable
-        if (this.next &&
-            (didSomething || this.flags & Flags.E_NEXT_ALWAYS) &&
-            !data.gameHasEnded) {
-            let next = this.next;
-            if (typeof next === 'string') {
-                next = effects[next] || null;
-            }
-            if (!next) {
-                ERROR('Unknown next effect - ' + this.next);
-            }
-            else if (this._grid && this.flags & Flags.E_NEXT_EVERYWHERE) {
-                await this.grid.forEachAsync(async (v, i, j) => {
-                    if (!v)
-                        return;
-                    // @ts-ignore
-                    didSomething = (await next.fire(map, i, j)) || didSomething;
-                });
-            }
-            else {
-                didSomething = (await next.fire(map, x, y)) || didSomething;
-            }
-        }
-        if (this._grid) {
-            free(this._grid);
-            this._grid = null;
-        }
-        return didSomething;
+    // bookkeeping
+    if (didSomething &&
+        map.isVisible(x, y) &&
+        !(effect.flags & Effect.E_NO_MARK_FIRED)) {
+        effect.flags |= Effect.E_FIRED;
     }
-    // resetMessageDisplayed
-    reset() {
-        this.flags &= ~Flags.E_FIRED;
-    }
-}
-function makeEffects(opts) {
-    const results = [];
-    Object.entries(opts).forEach(([key, value]) => {
-        if (key === 'fn') {
-            results.push(value);
+    // do the next effect - if applicable
+    if (effect.next &&
+        (didSomething || effect.flags & Effect.E_NEXT_ALWAYS) &&
+        !data.gameHasEnded) {
+        const nextInfo = typeof effect.next === 'string' ? from$2(effect.next) : effect.next;
+        if (effect.flags & Effect.E_NEXT_EVERYWHERE) {
+            await grid$1.forEachAsync(async (v, i, j) => {
+                if (!v)
+                    return;
+                // @ts-ignore
+                await fire(nextInfo, map, i, j, ctx);
+            });
         }
         else {
-            const setup = effectTypes[key];
-            if (!setup)
-                return;
-            const effect = setup(value);
-            if (effect) {
-                results.push(effect);
-            }
+            await fire(nextInfo, map, x, y, ctx);
         }
-    });
-    return results;
+    }
+    free(grid$1);
+    return didSomething;
+}
+// resetMessageDisplayed
+function reset(effect) {
+    effect.flags &= ~Effect.E_FIRED;
+}
+function resetAll() {
+    Object.values(effects).forEach((e) => reset(e));
 }
 const effects = {};
-function make$8(opts) {
+function make$4(opts) {
+    var _a;
     if (!opts)
-        ERROR('opts required to make effect.');
+        throw new Error('opts required to make effect.');
     if (typeof opts === 'string') {
-        const cached = effects[opts];
-        if (cached)
-            return cached;
-        ERROR('string effect config must be id of installed effect.');
+        throw new Error('Cannot make effect from string: ' + opts);
     }
-    else if (typeof opts === 'function') {
+    if (typeof opts === 'function') {
         opts = { fn: opts };
     }
-    // now make effects
-    const fns = makeEffects(opts);
-    let next = opts.next;
-    if (next && typeof next !== 'string') {
-        next = from$3(next);
+    // now make base effect stuff
+    const info = {
+        flags: from$5(Effect, opts.flags),
+        chance: (_a = opts.chance) !== null && _a !== void 0 ? _a : 0,
+        next: null,
+        id: opts.id || 'n/a',
+    };
+    if (opts.next) {
+        if (typeof opts.next === 'string') {
+            info.next = opts.next;
+        }
+        else {
+            info.next = make$4(opts.next);
+        }
     }
-    const te = new Effect(fns, next);
-    te.flags = from$1(Flags, opts.flags);
-    te.chance = opts.chance || 0;
-    return te;
+    // and all the handlers
+    Object.values(effectTypes).forEach((v) => v.make(opts, info));
+    return info;
 }
-make.tileEvent = make$8;
-function from$3(opts) {
+function from$2(opts) {
     if (!opts)
-        return null;
+        throw new Error('Cannot make effect from null | undefined');
     if (typeof opts === 'string') {
         const effect = effects[opts];
         if (effect)
             return effect;
-        ERROR('Unknown effect - ' + opts);
+        throw new Error('Unknown effect - ' + opts);
     }
-    else if (opts instanceof Effect) {
-        return opts;
-    }
-    return make$8(opts);
+    return make$4(opts);
 }
-function install$3(id, effect) {
-    if (!(effect instanceof Effect)) {
-        effect = make$8(effect);
-    }
+function install$2(id, config) {
+    const effect = make$4(config);
     effects[id] = effect;
     effect.id = id;
     return effect;
 }
-function installAll$1(effects) {
+function installAll$2(effects) {
     Object.entries(effects).forEach(([id, config]) => {
-        install$3(id, config);
+        install$2(id, config);
     });
 }
-function resetAll() {
-    Object.values(effects).forEach((e) => e.reset());
-}
 const effectTypes = {};
-function installType(id, fn) {
-    effectTypes[id] = fn;
+function installType(id, effectType) {
+    effectTypes[id] = effectType;
 }
-function fire(effect, map, x, y, ctx = {}) {
-    const e = from$3(effect);
-    if (!e)
-        return false;
-    return e.fire(map, x, y, ctx);
-}
-//////////////////////////////////////////////
-// EMIT
-async function effectEmit(effect, x, y) {
-    if (this.emit) {
-        await emit(this.emit, x, y, effect);
-        return true;
-    }
-    return false;
-}
-function makeEmit(config) {
-    if (typeof config !== 'string') {
-        ERROR('Emit must be configured with name of event to emit');
-    }
-    return effectEmit.bind({ emit: config });
-}
-installType('emit', makeEmit);
+
 //////////////////////////////////////////////
 // MESSAGE
-async function effectMessage(effect, x, y) {
-    const map = effect.map;
-    const fired = effect.flags & Flags.E_FIRED ? true : false;
-    const ctx = effect.ctx;
-    ctx.actor = ctx.actor || map.actorAt(x, y);
-    ctx.item = ctx.item || map.itemAt(x, y);
-    if (this.message && this.message.length && !fired && map.isVisible(x, y)) {
-        add(this.message, effect.ctx);
+class MessageEffect {
+    make(src, dest) {
+        if (!src.message)
+            return true;
+        if (typeof src.message !== 'string') {
+            throw new Error('Emit must be configured with name of event to emit');
+        }
+        dest.message = src.message;
         return true;
     }
-    return false;
-}
-function makeMessage(config) {
-    if (typeof config !== 'string') {
-        ERROR('Emit must be configured with name of event to emit');
+    async fire(config, map, x, y, ctx) {
+        if (!config.message)
+            return false;
+        const fired = config.flags & Effect.E_FIRED ? true : false;
+        if (config.message &&
+            config.message.length &&
+            !fired &&
+            map.isVisible(x, y)) {
+            add(config.message, ctx);
+            return true;
+        }
+        return false;
     }
-    return effectMessage.bind({ message: config });
 }
-installType('message', makeMessage);
+installType('message', new MessageEffect());
 
-var effect = {
+//////////////////////////////////////////////
+// EMIT
+class EmitEffect {
+    make(src, dest) {
+        if (!src.emit)
+            return true;
+        if (typeof src.emit !== 'string') {
+            throw new Error('emit effects must be string name to emit: { emit: "EVENT" }');
+        }
+        dest.emit = src.emit;
+        return true;
+    }
+    async fire(config, _map, x, y, ctx) {
+        if (config.emit) {
+            return await emit(config.emit, x, y, ctx);
+        }
+        return false;
+    }
+}
+installType('emit', new EmitEffect());
+
+//////////////////////////////////////////////
+// FN
+class FnEffect {
+    make(src, dest) {
+        if (!src.fn)
+            return true;
+        if (typeof src.fn !== 'function') {
+            throw new Error('fn effects must be functions.');
+        }
+        dest.fn = src.fn;
+        return true;
+    }
+    async fire(config, map, x, y, ctx) {
+        if (config.fn) {
+            return await config.fn(config, map, x, y, ctx);
+        }
+        return false;
+    }
+}
+installType('fn', new FnEffect());
+
+var index$4 = {
     __proto__: null,
-    get Flags () { return Flags; },
-    Effect: Effect,
-    makeEffects: makeEffects,
-    effects: effects,
-    make: make$8,
-    from: from$3,
-    install: install$3,
-    installAll: installAll$1,
+    get Flags () { return Effect; },
+    fire: fire,
+    reset: reset,
     resetAll: resetAll,
+    effects: effects,
+    make: make$4,
+    from: from$2,
+    install: install$2,
+    installAll: installAll$2,
     effectTypes: effectTypes,
     installType: installType,
-    fire: fire,
-    effectEmit: effectEmit,
-    makeEmit: makeEmit,
-    effectMessage: effectMessage,
-    makeMessage: makeMessage
+    MessageEffect: MessageEffect,
+    EmitEffect: EmitEffect
 };
 
-export { Random, index$1 as canvas, color, colors, config, cosmetic, data, effect, events, flag, flags, fov, frequency, grid, io, loop, make, message, path, random, range, scheduler, index$2 as sprite, sprites, index as text, types, utils };
+class Blob {
+    constructor(opts = {}) {
+        this.options = {
+            rounds: 5,
+            minWidth: 10,
+            minHeight: 10,
+            maxWidth: 40,
+            maxHeight: 20,
+            percentSeeded: 50,
+            birthParameters: 'ffffffttt',
+            survivalParameters: 'ffffttttt',
+        };
+        Object.assign(this.options, opts);
+        this.options.birthParameters = this.options.birthParameters.toLowerCase();
+        this.options.survivalParameters = this.options.survivalParameters.toLowerCase();
+        if (this.options.minWidth >= this.options.maxWidth) {
+            this.options.minWidth = Math.round(0.75 * this.options.maxWidth);
+            this.options.maxWidth = Math.round(1.25 * this.options.maxWidth);
+        }
+        if (this.options.minHeight >= this.options.maxHeight) {
+            this.options.minHeight = Math.round(0.75 * this.options.maxHeight);
+            this.options.maxHeight = Math.round(1.25 * this.options.maxHeight);
+        }
+    }
+    carve(width, height, setFn) {
+        let i, j, k;
+        let blobNumber, blobSize, topBlobNumber, topBlobSize;
+        let bounds = new Bounds(0, 0, 0, 0);
+        const dest = alloc(width, height);
+        const left = Math.floor((dest.width - this.options.maxWidth) / 2);
+        const top = Math.floor((dest.height - this.options.maxHeight) / 2);
+        let tries = 10;
+        // Generate blobs until they satisfy the minBlobWidth and minBlobHeight restraints
+        do {
+            // Clear buffer.
+            dest.fill(0);
+            // Fill relevant portion with noise based on the percentSeeded argument.
+            for (i = 0; i < this.options.maxWidth; i++) {
+                for (j = 0; j < this.options.maxHeight; j++) {
+                    dest[i + left][j + top] = random.chance(this.options.percentSeeded)
+                        ? 1
+                        : 0;
+                }
+            }
+            // Some iterations of cellular automata
+            for (k = 0; k < this.options.rounds; k++) {
+                if (!this._cellularAutomataRound(dest)) {
+                    k = this.options.rounds; // cellularAutomataRound did not make any changes
+                }
+            }
+            // Now to measure the result. These are best-of variables; start them out at worst-case values.
+            topBlobSize = 0;
+            topBlobNumber = 0;
+            // Fill each blob with its own number, starting with 2 (since 1 means floor), and keeping track of the biggest:
+            blobNumber = 2;
+            for (i = 0; i < dest.width; i++) {
+                for (j = 0; j < dest.height; j++) {
+                    if (dest[i][j] == 1) {
+                        // an unmarked blob
+                        // Mark all the cells and returns the total size:
+                        blobSize = dest.floodFill(i, j, 1, blobNumber);
+                        if (blobSize > topBlobSize) {
+                            // if this blob is a new record
+                            topBlobSize = blobSize;
+                            topBlobNumber = blobNumber;
+                        }
+                        blobNumber++;
+                    }
+                }
+            }
+            // Figure out the top blob's height and width:
+            dest.valueBounds(topBlobNumber, bounds);
+        } while ((bounds.width < this.options.minWidth ||
+            bounds.height < this.options.minHeight ||
+            topBlobNumber == 0) &&
+            --tries);
+        // Replace the winning blob with 1's, and everything else with 0's:
+        for (i = 0; i < dest.width; i++) {
+            for (j = 0; j < dest.height; j++) {
+                if (dest[i][j] == topBlobNumber) {
+                    setFn(i, j);
+                }
+            }
+        }
+        free(dest);
+        // Populate the returned variables.
+        return bounds;
+    }
+    _cellularAutomataRound(grid$1) {
+        let i, j, nbCount, newX, newY;
+        let dir;
+        let buffer2;
+        buffer2 = alloc(grid$1.width, grid$1.height);
+        buffer2.copy(grid$1); // Make a backup of this in buffer2, so that each generation is isolated.
+        let didSomething = false;
+        for (i = 0; i < grid$1.width; i++) {
+            for (j = 0; j < grid$1.height; j++) {
+                nbCount = 0;
+                for (dir = 0; dir < DIRS$2.length; dir++) {
+                    newX = i + DIRS$2[dir][0];
+                    newY = j + DIRS$2[dir][1];
+                    if (grid$1.hasXY(newX, newY) && buffer2[newX][newY]) {
+                        nbCount++;
+                    }
+                }
+                if (!buffer2[i][j] &&
+                    this.options.birthParameters[nbCount] == 't') {
+                    grid$1[i][j] = 1; // birth
+                    didSomething = true;
+                }
+                else if (buffer2[i][j] &&
+                    this.options.survivalParameters[nbCount] == 't') ;
+                else {
+                    grid$1[i][j] = 0; // death
+                    didSomething = true;
+                }
+            }
+        }
+        free(buffer2);
+        return didSomething;
+    }
+}
+function fillBlob(grid, opts = {}) {
+    const blob = new Blob(opts);
+    return blob.carve(grid.width, grid.height, (x, y) => (grid[x][y] = 1));
+}
+function make$3(opts = {}) {
+    return new Blob(opts);
+}
+
+var blob = {
+    __proto__: null,
+    Blob: Blob,
+    fillBlob: fillBlob,
+    make: make$3
+};
+
+var GameObject$1;
+(function (GameObject) {
+    // L_DYNAMIC = Fl(0), // for movable things like actors or items
+    GameObject[GameObject["L_SUPERPRIORITY"] = fl(1)] = "L_SUPERPRIORITY";
+    GameObject[GameObject["L_SECRETLY_PASSABLE"] = fl(2)] = "L_SECRETLY_PASSABLE";
+    GameObject[GameObject["L_BLOCKS_MOVE"] = fl(3)] = "L_BLOCKS_MOVE";
+    GameObject[GameObject["L_BLOCKS_VISION"] = fl(4)] = "L_BLOCKS_VISION";
+    GameObject[GameObject["L_BLOCKS_SURFACE"] = fl(6)] = "L_BLOCKS_SURFACE";
+    GameObject[GameObject["L_BLOCKS_LIQUID"] = fl(8)] = "L_BLOCKS_LIQUID";
+    GameObject[GameObject["L_BLOCKS_GAS"] = fl(7)] = "L_BLOCKS_GAS";
+    GameObject[GameObject["L_BLOCKS_ITEMS"] = fl(5)] = "L_BLOCKS_ITEMS";
+    GameObject[GameObject["L_BLOCKS_ACTORS"] = fl(11)] = "L_BLOCKS_ACTORS";
+    GameObject[GameObject["L_BLOCKS_EFFECTS"] = fl(9)] = "L_BLOCKS_EFFECTS";
+    GameObject[GameObject["L_BLOCKS_DIAGONAL"] = fl(10)] = "L_BLOCKS_DIAGONAL";
+    GameObject[GameObject["L_INTERRUPT_WHEN_SEEN"] = fl(11)] = "L_INTERRUPT_WHEN_SEEN";
+    GameObject[GameObject["L_LIST_IN_SIDEBAR"] = fl(12)] = "L_LIST_IN_SIDEBAR";
+    GameObject[GameObject["L_VISUALLY_DISTINCT"] = fl(13)] = "L_VISUALLY_DISTINCT";
+    GameObject[GameObject["L_BRIGHT_MEMORY"] = fl(14)] = "L_BRIGHT_MEMORY";
+    GameObject[GameObject["L_INVERT_WHEN_HIGHLIGHTED"] = fl(15)] = "L_INVERT_WHEN_HIGHLIGHTED";
+    GameObject[GameObject["L_BLOCKED_BY_STAIRS"] = GameObject.L_BLOCKS_ITEMS |
+        GameObject.L_BLOCKS_SURFACE |
+        GameObject.L_BLOCKS_GAS |
+        GameObject.L_BLOCKS_LIQUID |
+        GameObject.L_BLOCKS_EFFECTS |
+        GameObject.L_BLOCKS_ACTORS] = "L_BLOCKED_BY_STAIRS";
+    GameObject[GameObject["L_BLOCKS_SCENT"] = GameObject.L_BLOCKS_MOVE | GameObject.L_BLOCKS_VISION] = "L_BLOCKS_SCENT";
+    GameObject[GameObject["L_DIVIDES_LEVEL"] = GameObject.L_BLOCKS_MOVE] = "L_DIVIDES_LEVEL";
+    GameObject[GameObject["L_WAYPOINT_BLOCKER"] = GameObject.L_BLOCKS_MOVE] = "L_WAYPOINT_BLOCKER";
+    GameObject[GameObject["L_IS_WALL"] = GameObject.L_BLOCKS_MOVE |
+        GameObject.L_BLOCKS_VISION |
+        GameObject.L_BLOCKS_LIQUID |
+        GameObject.L_BLOCKS_GAS |
+        GameObject.L_BLOCKS_EFFECTS |
+        GameObject.L_BLOCKS_DIAGONAL] = "L_IS_WALL";
+    GameObject[GameObject["L_BLOCKS_EVERYTHING"] = GameObject.L_IS_WALL |
+        GameObject.L_BLOCKS_ITEMS |
+        GameObject.L_BLOCKS_ACTORS |
+        GameObject.L_BLOCKS_SURFACE] = "L_BLOCKS_EVERYTHING";
+})(GameObject$1 || (GameObject$1 = {}));
+var Depth;
+(function (Depth) {
+    Depth[Depth["ALL_LAYERS"] = -1] = "ALL_LAYERS";
+    Depth[Depth["GROUND"] = 0] = "GROUND";
+    Depth[Depth["SURFACE"] = 1] = "SURFACE";
+    Depth[Depth["ITEM"] = 2] = "ITEM";
+    Depth[Depth["ACTOR"] = 3] = "ACTOR";
+    Depth[Depth["LIQUID"] = 4] = "LIQUID";
+    Depth[Depth["GAS"] = 5] = "GAS";
+    Depth[Depth["FX"] = 6] = "FX";
+    Depth[Depth["UI"] = 7] = "UI";
+})(Depth || (Depth = {}));
+
+var flags$2 = {
+    __proto__: null,
+    get GameObject () { return GameObject$1; },
+    get Depth () { return Depth; }
+};
+
+class GameObject {
+    constructor() {
+        this.sprite = new Sprite();
+        this.depth = 1; // default - TODO - enum/const
+        this.light = null;
+        this.flags = { object: 0 };
+        this.next = null;
+        this.x = -1;
+        this.y = -1;
+    }
+    hasObjectFlag(flag) {
+        return !!(this.flags.object & flag);
+    }
+    hasAllObjectFlags(flags) {
+        return (this.flags.object & flags) === flags;
+    }
+}
+
+var index$3 = {
+    __proto__: null,
+    flags: flags$2,
+    GameObject: GameObject
+};
+
+// const LIGHT_SMOOTHING_THRESHOLD = 150;       // light components higher than this magnitude will be toned down a little
+const config = (config$1.light = {
+    INTENSITY_DARK: 20,
+    INTENSITY_SHADOW: 50,
+}); // less than 20% for highest color in rgb
+const LIGHT_COMPONENTS = make$7();
+class Light {
+    constructor(color$1, range$1, fadeTo, pass = false) {
+        this.fadeTo = 0;
+        this.passThroughActors = false;
+        this.id = null;
+        this.color = from$4(color$1) || null; /* color */
+        this.radius = make$b(range$1 || 1);
+        this.fadeTo = fadeTo || 0;
+        this.passThroughActors = pass; // generally no, but miner light does (TODO - string parameter?  'false' or 'true')
+    }
+    copy(other) {
+        this.color = other.color;
+        this.radius.copy(other.radius);
+        this.fadeTo = other.fadeTo;
+        this.passThroughActors = other.passThroughActors;
+    }
+    get intensity() {
+        return intensity(this.color);
+    }
+    // Returns true if any part of the light hit cells that are in the player's field of view.
+    paint(map, x, y, maintainShadows = false, isMinersLight = false) {
+        if (!map)
+            return false;
+        let k;
+        // let colorComponents = [0,0,0];
+        let lightMultiplier = 0;
+        let radius = this.radius.value();
+        let outerRadius = Math.ceil(radius);
+        if (outerRadius < 1)
+            return false;
+        // calcLightComponents(colorComponents, this);
+        LIGHT_COMPONENTS.copy(this.color).bake();
+        // console.log('paint', LIGHT_COMPONENTS.toString(true), x, y, outerRadius);
+        // the miner's light does not dispel IS_IN_SHADOW,
+        // so the player can be in shadow despite casting his own light.
+        const dispelShadows = !isMinersLight &&
+            !maintainShadows &&
+            !isDarkLight(LIGHT_COMPONENTS);
+        const fadeToPercent = this.fadeTo;
+        const grid$1 = alloc(map.width, map.height, 0);
+        map.calcFov(x, y, outerRadius, this.passThroughActors, (i, j) => {
+            grid$1[i][j] = 1;
+        });
+        // let overlappedFieldOfView = false;
+        const lightValue = [0, 0, 0];
+        grid$1.forCircle(x, y, outerRadius, (v, i, j) => {
+            if (!v)
+                return;
+            // const cell = map.cell(i, j);
+            lightMultiplier = Math.floor(100 -
+                (100 - fadeToPercent) *
+                    (distanceBetween(x, y, i, j) / radius));
+            for (k = 0; k < 3; ++k) {
+                lightValue[k] = Math.floor((LIGHT_COMPONENTS[k] * lightMultiplier) / 100);
+            }
+            map.addCellLight(i, j, lightValue, dispelShadows);
+            // if (dispelShadows) {
+            //     map.clearCellFlag(i, j, CellFlags.IS_IN_SHADOW);
+            // }
+            // if (map.isVisible(i, j)) {
+            //     overlappedFieldOfView = true;
+            // }
+            // console.log(i, j, lightMultiplier, cell.light);
+        });
+        // if (dispelShadows) {
+        //     map.clearCellFlag(x, y, CellFlags.IS_IN_SHADOW);
+        // }
+        free(grid$1);
+        // return overlappedFieldOfView;
+        return true;
+    }
+}
+function intensity(light) {
+    return Math.max(light[0], light[1], light[2]);
+}
+function isDarkLight(light, threshold) {
+    var _a;
+    threshold = threshold !== null && threshold !== void 0 ? threshold : (_a = config$1.light) === null || _a === void 0 ? void 0 : _a.INTENSITY_DARK;
+    return intensity(light) <= (threshold || 20);
+}
+function isShadowLight(light, threshold) {
+    var _a;
+    threshold = threshold !== null && threshold !== void 0 ? threshold : (_a = config$1.light) === null || _a === void 0 ? void 0 : _a.INTENSITY_SHADOW;
+    return intensity(light) <= (threshold || 20);
+}
+function make$2(...args) {
+    if (args.length == 1) {
+        const config = args[0];
+        if (typeof config === 'string') {
+            const cached = lights[config];
+            if (cached)
+                return cached;
+            const [color$1, radius, fadeTo, pass] = config
+                .split(/[,|]/)
+                .map((t) => t.trim());
+            return new Light(from$4(color$1), from$6(radius || 1), Number.parseInt(fadeTo || '0'), !!pass && pass !== 'false');
+        }
+        else if (Array.isArray(config)) {
+            const [color, radius, fadeTo, pass] = config;
+            return new Light(color, radius, fadeTo, pass);
+        }
+        else if (config && config.color) {
+            return new Light(from$4(config.color), from$6(config.radius), Number.parseInt(config.fadeTo || '0'), config.pass);
+        }
+        else {
+            throw new Error('Unknown Light config - ' + config);
+        }
+    }
+    else {
+        const [color, radius, fadeTo, pass] = args;
+        return new Light(color, radius, fadeTo, pass);
+    }
+}
+const lights = {};
+function from$1(...args) {
+    if (args.length != 1)
+        ERROR('Unknown Light config: ' + JSON.stringify(args));
+    const arg = args[0];
+    if (typeof arg === 'string') {
+        const cached = lights[arg];
+        if (cached)
+            return cached;
+    }
+    if (arg && arg.paint)
+        return arg;
+    return make$2(arg);
+}
+function install$1(id, ...args) {
+    let source;
+    if (args.length == 1) {
+        source = make$2(args[0]);
+    }
+    else {
+        source = make$2(args[0], args[1], args[2], args[3]);
+    }
+    lights[id] = source;
+    if (source)
+        source.id = id;
+    return source;
+}
+function installAll$1(config = {}) {
+    const entries = Object.entries(config);
+    entries.forEach(([name, info]) => {
+        install$1(name, info);
+    });
+}
+// // TODO - Move?
+// export function playerInDarkness(
+//     map: Types.LightSite,
+//     PLAYER: Utils.XY,
+//     darkColor?: Color.Color
+// ) {
+//     const cell = map.cell(PLAYER.x, PLAYER.y);
+//     return cell.isDark(darkColor);
+//     // return (
+//     //   cell.light[0] + 10 < darkColor.r &&
+//     //   cell.light[1] + 10 < darkColor.g &&
+//     //   cell.light[2] + 10 < darkColor.b
+//     // );
+// }
+
+var LightFlags;
+(function (LightFlags) {
+    LightFlags[LightFlags["LIT"] = fl(0)] = "LIT";
+    LightFlags[LightFlags["IN_SHADOW"] = fl(1)] = "IN_SHADOW";
+    LightFlags[LightFlags["DARK"] = fl(2)] = "DARK";
+    // MAGIC_DARK = Fl(3),
+    LightFlags[LightFlags["CHANGED"] = fl(4)] = "CHANGED";
+})(LightFlags || (LightFlags = {}));
+class LightSystem {
+    constructor(map, opts = {}) {
+        this.staticLights = null;
+        this.site = map;
+        this.ambient = from$4(opts.ambient || 'white').toLight();
+        this._changed = false;
+        this.glowLightChanged = false;
+        this.dynamicLightChanged = false;
+        this.light = make$a(map.width, map.height, () => this.ambient.slice());
+        this.glowLight = make$a(map.width, map.height, () => this.ambient.slice());
+        this.oldLight = make$a(map.width, map.height, () => this.ambient.slice());
+        this.flags = make$a(map.width, map.height);
+        this.finishLightUpdate();
+    }
+    setAmbient(light) {
+        if (light instanceof Color) {
+            light = light.toLight();
+        }
+        for (let i = 0; i < 3; ++i) {
+            this.ambient[i] = light[i];
+        }
+        this.glowLightChanged = true;
+    }
+    get anyLightChanged() {
+        return this.glowLightChanged || this.dynamicLightChanged;
+    }
+    get changed() {
+        return this._changed;
+    }
+    getLight(x, y) {
+        return this.light[x][y];
+    }
+    isLit(x, y) {
+        return !!(this.flags[x][y] & LightFlags.LIT);
+    }
+    isDark(x, y) {
+        return !!(this.flags[x][y] & LightFlags.DARK);
+    }
+    isInShadow(x, y) {
+        return !!(this.flags[x][y] & LightFlags.IN_SHADOW);
+    }
+    // isMagicDark(x: number, y: number): boolean {
+    //     return !!(this.flags[x][y] & LightFlags.MAGIC_DARK);
+    // }
+    lightChanged(x, y) {
+        return !!(this.flags[x][y] & LightFlags.CHANGED);
+    }
+    // setMagicDark(x: number, y: number, isDark = true) {
+    //     if (isDark) {
+    //         this.flags[x][y] |= LightFlags.MAGIC_DARK;
+    //     } else {
+    //         this.flags[x][y] &= ~LightFlags.MAGIC_DARK;
+    //     }
+    // }
+    get width() {
+        return this.site.width;
+    }
+    get height() {
+        return this.site.height;
+    }
+    addStatic(x, y, light) {
+        const info = {
+            x,
+            y,
+            light: from$1(light),
+            next: this.staticLights,
+        };
+        this.staticLights = info;
+        this.glowLightChanged = true;
+        return info;
+    }
+    removeStatic(x, y, light) {
+        let prev = this.staticLights;
+        if (!prev)
+            return;
+        function matches(info) {
+            if (info.x != x || info.y != y)
+                return false;
+            return !light || light === info.light;
+        }
+        this.glowLightChanged = true;
+        while (prev && matches(prev)) {
+            prev = this.staticLights = prev.next;
+        }
+        if (!prev)
+            return;
+        let current = prev.next;
+        while (current) {
+            if (matches(current)) {
+                prev.next = current.next;
+            }
+            else {
+                prev = current;
+            }
+            current = current.next;
+        }
+    }
+    eachStaticLight(fn) {
+        eachChain(this.staticLights, (info) => fn(info.x, info.y, info.light));
+        this.site.eachGlowLight((x, y, light) => {
+            fn(x, y, light);
+        });
+    }
+    eachDynamicLight(fn) {
+        this.site.eachDynamicLight(fn);
+    }
+    update(force = false) {
+        this._changed = false;
+        if (!force && !this.anyLightChanged)
+            return false;
+        // Copy Light over oldLight
+        this.startLightUpdate();
+        if (!this.glowLightChanged) {
+            this.restoreGlowLights();
+        }
+        else {
+            // GW.debug.log('painting glow lights.');
+            // Paint all glowing tiles.
+            this.eachStaticLight((x, y, light) => {
+                light.paint(this, x, y);
+            });
+            this.recordGlowLights();
+            this.glowLightChanged = false;
+        }
+        // Cycle through monsters and paint their lights:
+        this.eachDynamicLight((x, y, light) => light.paint(this, x, y)
+        // if (monst.mutationIndex >= 0 && mutationCatalog[monst.mutationIndex].light != lights['NO_LIGHT']) {
+        //     paint(map, mutationCatalog[monst.mutationIndex].light, actor.x, actor.y, false, false);
+        // }
+        // if (actor.isBurning()) { // monst.status.burning && !(actor.kind.flags & Flags.Actor.AF_FIERY)) {
+        // 	paint(map, lights.BURNING_CREATURE, actor.x, actor.y, false, false);
+        // }
+        // if (actor.isTelepathicallyRevealed()) {
+        // 	paint(map, lights['TELEPATHY_LIGHT'], actor.x, actor.y, false, true);
+        // }
+        );
+        // Also paint telepathy lights for dormant monsters.
+        // for (monst of map.dormantMonsters) {
+        //     if (monsterTelepathicallyRevealed(monst)) {
+        //         paint(map, lights['TELEPATHY_LIGHT'], monst.xLoc, monst.yLoc, false, true);
+        //     }
+        // }
+        this.finishLightUpdate();
+        // Miner's light:
+        const PLAYER = data.player;
+        if (PLAYER) {
+            const PLAYERS_LIGHT = lights.PLAYERS_LIGHT;
+            if (PLAYERS_LIGHT && PLAYERS_LIGHT.radius) {
+                PLAYERS_LIGHT.paint(this, PLAYER.x, PLAYER.y, true, true);
+            }
+        }
+        this.dynamicLightChanged = false;
+        this._changed = true;
+        // if (PLAYER.status.invisible) {
+        //     PLAYER.info.foreColor = playerInvisibleColor;
+        // } else if (playerInDarkness()) {
+        // 	PLAYER.info.foreColor = playerInDarknessColor;
+        // } else if (pmap[PLAYER.xLoc][PLAYER.yLoc].flags & IS_IN_SHADOW) {
+        // 	PLAYER.info.foreColor = playerInShadowColor;
+        // } else {
+        // 	PLAYER.info.foreColor = playerInLightColor;
+        // }
+        return true;
+    }
+    startLightUpdate() {
+        // record Old Lights
+        // and then zero out Light.
+        let i = 0;
+        const flag = isShadowLight(this.ambient)
+            ? LightFlags.IN_SHADOW
+            : 0;
+        this.light.forEach((val, x, y) => {
+            for (i = 0; i < 3; ++i) {
+                this.oldLight[x][y][i] = val[i];
+                val[i] = this.ambient[i];
+            }
+            this.flags[x][y] = flag;
+        });
+    }
+    finishLightUpdate() {
+        forRect(this.width, this.height, (x, y) => {
+            // clear light flags
+            // this.flags[x][y] &= ~(LightFlags.LIT | LightFlags.DARK);
+            const oldLight = this.oldLight[x][y];
+            const light = this.light[x][y];
+            if (light.some((v, i) => v !== oldLight[i])) {
+                this.flags[x][y] |= LightFlags.CHANGED;
+            }
+            if (isDarkLight(light)) {
+                this.flags[x][y] |= LightFlags.DARK;
+            }
+            else if (!isShadowLight(light)) {
+                this.flags[x][y] |= LightFlags.LIT;
+            }
+        });
+    }
+    recordGlowLights() {
+        let i = 0;
+        this.light.forEach((val, x, y) => {
+            const glowLight = this.glowLight[x][y];
+            for (i = 0; i < 3; ++i) {
+                glowLight[i] = val[i];
+            }
+        });
+    }
+    restoreGlowLights() {
+        let i = 0;
+        this.light.forEach((val, x, y) => {
+            const glowLight = this.glowLight[x][y];
+            for (i = 0; i < 3; ++i) {
+                val[i] = glowLight[i];
+            }
+        });
+    }
+    // PaintSite
+    calcFov(x, y, radius, passThroughActors, cb) {
+        const map = this.site;
+        const fov = new FOV({
+            isBlocked(x, y) {
+                if (!passThroughActors && map.hasActor(x, y))
+                    return false;
+                return map.blocksVision(x, y);
+            },
+            hasXY(x, y) {
+                return map.hasXY(x, y);
+            },
+        });
+        fov.calculate(x, y, radius, cb);
+    }
+    addCellLight(x, y, light, dispelShadows) {
+        const val = this.light[x][y];
+        for (let i = 0; i < 3; ++i) {
+            val[i] += light[i];
+        }
+        if (dispelShadows && !isShadowLight(light)) {
+            this.flags[x][y] &= ~LightFlags.IN_SHADOW;
+        }
+    }
+}
+
+var index$2 = {
+    __proto__: null,
+    config: config,
+    Light: Light,
+    intensity: intensity,
+    isDarkLight: isDarkLight,
+    isShadowLight: isShadowLight,
+    make: make$2,
+    lights: lights,
+    from: from$1,
+    install: install$1,
+    installAll: installAll$1,
+    LightSystem: LightSystem
+};
+
+///////////////////////////////////////////////////////
+// TILE
+var Tile$1;
+(function (Tile) {
+    Tile[Tile["T_BRIDGE"] = fl(0)] = "T_BRIDGE";
+    Tile[Tile["T_AUTO_DESCENT"] = fl(1)] = "T_AUTO_DESCENT";
+    Tile[Tile["T_LAVA"] = fl(2)] = "T_LAVA";
+    Tile[Tile["T_DEEP_WATER"] = fl(3)] = "T_DEEP_WATER";
+    Tile[Tile["T_IS_FLAMMABLE"] = fl(4)] = "T_IS_FLAMMABLE";
+    Tile[Tile["T_SPONTANEOUSLY_IGNITES"] = fl(5)] = "T_SPONTANEOUSLY_IGNITES";
+    Tile[Tile["T_IS_FIRE"] = fl(6)] = "T_IS_FIRE";
+    Tile[Tile["T_EXTINGUISHES_FIRE"] = fl(7)] = "T_EXTINGUISHES_FIRE";
+    Tile[Tile["T_IS_SECRET"] = fl(8)] = "T_IS_SECRET";
+    Tile[Tile["T_IS_TRAP"] = fl(9)] = "T_IS_TRAP";
+    Tile[Tile["T_SACRED"] = fl(10)] = "T_SACRED";
+    Tile[Tile["T_UP_STAIRS"] = fl(11)] = "T_UP_STAIRS";
+    Tile[Tile["T_DOWN_STAIRS"] = fl(12)] = "T_DOWN_STAIRS";
+    Tile[Tile["T_PORTAL"] = fl(13)] = "T_PORTAL";
+    Tile[Tile["T_IS_DOOR"] = fl(14)] = "T_IS_DOOR";
+    Tile[Tile["T_ALLOWS_SUBMERGING"] = fl(15)] = "T_ALLOWS_SUBMERGING";
+    Tile[Tile["T_ENTANGLES"] = fl(16)] = "T_ENTANGLES";
+    Tile[Tile["T_REFLECTS"] = fl(17)] = "T_REFLECTS";
+    Tile[Tile["T_STAND_IN_TILE"] = fl(18)] = "T_STAND_IN_TILE";
+    Tile[Tile["T_CONNECTS_LEVEL"] = fl(19)] = "T_CONNECTS_LEVEL";
+    Tile[Tile["T_BLOCKS_OTHER_LAYERS"] = fl(20)] = "T_BLOCKS_OTHER_LAYERS";
+    Tile[Tile["T_HAS_STAIRS"] = Tile.T_UP_STAIRS | Tile.T_DOWN_STAIRS | Tile.T_PORTAL] = "T_HAS_STAIRS";
+    Tile[Tile["T_OBSTRUCTS_SCENT"] = Tile.T_AUTO_DESCENT |
+        Tile.T_LAVA |
+        Tile.T_DEEP_WATER |
+        Tile.T_SPONTANEOUSLY_IGNITES |
+        Tile.T_HAS_STAIRS] = "T_OBSTRUCTS_SCENT";
+    Tile[Tile["T_PATHING_BLOCKER"] = Tile.T_AUTO_DESCENT |
+        Tile.T_IS_TRAP |
+        Tile.T_LAVA |
+        Tile.T_DEEP_WATER |
+        Tile.T_IS_FIRE |
+        Tile.T_SPONTANEOUSLY_IGNITES |
+        Tile.T_ENTANGLES] = "T_PATHING_BLOCKER";
+    Tile[Tile["T_DIVIDES_LEVEL"] = Tile.T_AUTO_DESCENT | Tile.T_IS_TRAP | Tile.T_LAVA | Tile.T_DEEP_WATER] = "T_DIVIDES_LEVEL";
+    Tile[Tile["T_LAKE_PATHING_BLOCKER"] = Tile.T_AUTO_DESCENT |
+        Tile.T_LAVA |
+        Tile.T_DEEP_WATER |
+        Tile.T_SPONTANEOUSLY_IGNITES] = "T_LAKE_PATHING_BLOCKER";
+    Tile[Tile["T_WAYPOINT_BLOCKER"] = Tile.T_AUTO_DESCENT |
+        Tile.T_IS_TRAP |
+        Tile.T_LAVA |
+        Tile.T_DEEP_WATER |
+        Tile.T_SPONTANEOUSLY_IGNITES] = "T_WAYPOINT_BLOCKER";
+    Tile[Tile["T_MOVES_ITEMS"] = Tile.T_DEEP_WATER | Tile.T_LAVA] = "T_MOVES_ITEMS";
+    Tile[Tile["T_CAN_BE_BRIDGED"] = Tile.T_AUTO_DESCENT | Tile.T_LAVA | Tile.T_DEEP_WATER] = "T_CAN_BE_BRIDGED";
+    // T_HARMFUL_TERRAIN = T_CAUSES_POISON |
+    //   T_IS_FIRE |
+    //   T_CAUSES_DAMAGE |
+    //   T_CAUSES_PARALYSIS |
+    //   T_CAUSES_CONFUSION |
+    //   T_CAUSES_EXPLOSIVE_DAMAGE,
+    // T_RESPIRATION_IMMUNITIES = T_CAUSES_DAMAGE |
+    //   T_CAUSES_CONFUSION |
+    //   T_CAUSES_PARALYSIS |
+    //   T_CAUSES_NAUSEA,
+    Tile[Tile["T_IS_DEEP_LIQUID"] = Tile.T_LAVA | Tile.T_AUTO_DESCENT | Tile.T_DEEP_WATER] = "T_IS_DEEP_LIQUID";
+})(Tile$1 || (Tile$1 = {}));
+///////////////////////////////////////////////////////
+// TILE MECH
+var TileMech;
+(function (TileMech) {
+    // TM_PROMOTES_WITH_KEY = Fl(1), // promotes if the key is present on the tile (in your pack, carried by monster, or lying on the ground)
+    // TM_PROMOTES_WITHOUT_KEY = Fl(2), // promotes if the key is NOT present on the tile (in your pack, carried by monster, or lying on the ground)
+    // TM_PROMOTES_ON_STEP = Fl(3), // promotes when a creature, player or item is on the tile (whether or not levitating)
+    // TM_PROMOTES_ON_ITEM_REMOVE = Fl(4), // promotes when an item is lifted from the tile (primarily for altars)
+    // TM_PROMOTES_ON_PLAYER_ENTRY = Fl(5), // promotes when the player enters the tile (whether or not levitating)
+    // TM_PROMOTES_ON_SACRIFICE_ENTRY = Fl(6), // promotes when the sacrifice target enters the tile (whether or not levitating)
+    // TM_PROMOTES_ON_ELECTRICITY = Fl(7), // promotes when hit by a lightning bolt
+    // T_CAUSES_POISON = Fl(18), // any non-levitating creature gets 10 poison
+    // T_CAUSES_DAMAGE = Fl(19), // anything on the tile takes max(1-2, 10%) damage per turn
+    // T_CAUSES_NAUSEA = Fl(20), // any creature on the tile becomes nauseous
+    // T_CAUSES_PARALYSIS = Fl(21), // anything caught on this tile is paralyzed
+    // T_CAUSES_CONFUSION = Fl(22), // causes creatures on this tile to become confused
+    // T_CAUSES_HEALING = Fl(23), // heals 20% max HP per turn for any player or non-inanimate monsters
+    // T_CAUSES_EXPLOSIVE_DAMAGE = Fl(25), // is an explosion; deals higher of 15-20 or 50% damage instantly, but not again for five turns
+    TileMech[TileMech["TM_IS_WIRED"] = fl(9)] = "TM_IS_WIRED";
+    TileMech[TileMech["TM_IS_CIRCUIT_BREAKER"] = fl(10)] = "TM_IS_CIRCUIT_BREAKER";
+    TileMech[TileMech["TM_VANISHES_UPON_PROMOTION"] = fl(15)] = "TM_VANISHES_UPON_PROMOTION";
+    TileMech[TileMech["TM_EXPLOSIVE_PROMOTE"] = fl(21)] = "TM_EXPLOSIVE_PROMOTE";
+    TileMech[TileMech["TM_SWAP_ENCHANTS_ACTIVATION"] = fl(25)] = "TM_SWAP_ENCHANTS_ACTIVATION";
+    // TM_PROMOTES = TM_PROMOTES_WITH_KEY |
+    //   TM_PROMOTES_WITHOUT_KEY |
+    //   TM_PROMOTES_ON_STEP |
+    //   TM_PROMOTES_ON_ITEM_REMOVE |
+    //   TM_PROMOTES_ON_SACRIFICE_ENTRY |
+    //   TM_PROMOTES_ON_ELECTRICITY |
+    //   TM_PROMOTES_ON_PLAYER_ENTRY,
+})(TileMech || (TileMech = {}));
+
+class Tile {
+    constructor(config) {
+        var _a, _b, _c, _d;
+        this.index = -1;
+        this.dissipate = 20 * 100; // 0%
+        this.effects = {};
+        this.priority = 50;
+        this.depth = 0;
+        this.light = null;
+        this.id = config.id || 'n/a';
+        this.dissipate = (_a = config.dissipate) !== null && _a !== void 0 ? _a : this.dissipate;
+        this.priority = (_b = config.priority) !== null && _b !== void 0 ? _b : this.priority;
+        this.depth = (_c = config.depth) !== null && _c !== void 0 ? _c : this.depth;
+        this.light = config.light || null;
+        // this.groundTile = config.groundTile || null; // Huh?
+        this.sprite = make$5(config);
+        this.name = config.name || 'tile';
+        this.description = config.description || this.name;
+        this.flavor = config.flavor || this.name;
+        this.article = (_d = config.article) !== null && _d !== void 0 ? _d : null;
+        this.flags = config.flags || { object: 0, tile: 0, tileMech: 0 };
+        if (config.effects) {
+            Object.assign(this.effects, config.effects);
+        }
+    }
+    hasObjectFlag(flag) {
+        return !!(this.flags.object & flag);
+    }
+    hasTileFlag(flag) {
+        return !!(this.flags.tile & flag);
+    }
+    hasTileMechFlag(flag) {
+        return !!(this.flags.tileMech & flag);
+    }
+    hasAllObjectFlags(flag) {
+        return (this.flags.object & flag) === flag;
+    }
+    hasAllTileFlags(flag) {
+        return (this.flags.tile & flag) === flag;
+    }
+    hasAllTileMechFlags(flag) {
+        return (this.flags.tileMech & flag) === flag;
+    }
+    blocksVision() {
+        return !!(this.flags.object & GameObject$1.L_BLOCKS_VISION);
+    }
+    blocksMove() {
+        return !!(this.flags.object & GameObject$1.L_BLOCKS_MOVE);
+    }
+    blocksPathing() {
+        return (this.blocksMove() || this.hasTileFlag(Tile$1.T_PATHING_BLOCKER));
+    }
+    blocksEffects() {
+        return !!(this.flags.object & GameObject$1.L_BLOCKS_EFFECTS);
+    }
+    hasEffect(name) {
+        return name in this.effects;
+    }
+    getName(arg) {
+        let opts = {};
+        if (arg === true || arg === false) {
+            opts.article = arg;
+        }
+        else if (typeof arg === 'string') {
+            opts.article = arg;
+        }
+        else if (arg) {
+            opts = arg;
+        }
+        if (!opts.article && !opts.color)
+            return this.name;
+        let result = this.name;
+        if (opts.color) {
+            let color$1 = opts.color;
+            if (opts.color === true) {
+                color$1 = this.sprite.fg || 'white';
+            }
+            if (typeof color$1 !== 'string') {
+                color$1 = from$4(color$1).toString();
+            }
+            result = `Ω${color$1}Ω${this.name}∆`;
+        }
+        if (opts.article) {
+            let article = typeof opts.article === 'string'
+                ? opts.article
+                : this.article || 'a';
+            result = article + ' ' + result;
+        }
+        return result;
+    }
+    getDescription() {
+        return this.description || this.getName();
+    }
+    getFlavor() {
+        return this.flavor || this.getName();
+    }
+}
+function make$1(options) {
+    var _a, _b, _c, _d, _e, _f, _g;
+    let base = { effects: {}, flags: {}, sprite: {} };
+    if (options.extends) {
+        base = tiles[options.extends];
+        if (!base)
+            throw new Error('Failed to find base tile: ' + options.extends);
+    }
+    const effects = {};
+    Object.assign(effects, base.effects);
+    if (options.effects) {
+        Object.entries(options.effects).forEach(([key, value]) => {
+            if (value === null) {
+                delete effects[key];
+                return;
+            }
+            if (typeof value === 'string') {
+                effects[key] = value;
+                return;
+            }
+            effects[key] = make$4(value);
+        });
+    }
+    const flags = {
+        object: from$5(GameObject$1, base.flags.object, options.flags),
+        tile: from$5(Tile$1, base.flags.tile, options.flags),
+        tileMech: from$5(TileMech, base.flags.tileMech, options.flags),
+    };
+    let depth = base.depth || 0;
+    if (options.depth) {
+        if (typeof options.depth === 'string') {
+            depth = Depth[options.depth];
+        }
+        else {
+            depth = options.depth;
+        }
+    }
+    let light = base.light;
+    if (options.light) {
+        light = make$2(options.light);
+    }
+    else if (options.light === null) {
+        light = null;
+    }
+    const config = {
+        id: options.id,
+        flags,
+        dissipate: (_a = options.dissipate) !== null && _a !== void 0 ? _a : base.dissipate,
+        effects,
+        priority: (_b = options.priority) !== null && _b !== void 0 ? _b : base.priority,
+        depth: depth,
+        light,
+        groundTile: null,
+        ch: (_c = options.ch) !== null && _c !== void 0 ? _c : base.sprite.ch,
+        fg: (_d = options.fg) !== null && _d !== void 0 ? _d : base.sprite.fg,
+        bg: (_e = options.bg) !== null && _e !== void 0 ? _e : base.sprite.bg,
+        opacity: (_f = options.opacity) !== null && _f !== void 0 ? _f : base.sprite.opacity,
+        name: options.name || base.name,
+        description: options.description || base.description,
+        flavor: options.flavor || base.flavor,
+        article: (_g = options.article) !== null && _g !== void 0 ? _g : base.article,
+    };
+    const tile = new Tile(config);
+    return tile;
+}
+const tiles = {};
+const all = [];
+function get(id) {
+    if (typeof id === 'string')
+        return tiles[id];
+    return all[id];
+}
+function install(id, ...args) {
+    let options = args[0];
+    if (args.length == 2) {
+        options = args[1];
+        options.extends = args[0];
+    }
+    options.id = id;
+    const tile = make$1(options);
+    tile.index = all.length;
+    all.push(tile);
+    tiles[id] = tile;
+    return tile;
+}
+function installAll(tiles) {
+    Object.entries(tiles).forEach(([id, config]) => {
+        install(id, config);
+    });
+}
+
+// These are the minimal set of tiles to make the diggers work
+install('NULL', {
+    ch: '\u2205',
+    fg: 'white',
+    bg: 'black',
+    flags: 'L_BLOCKS_MOVE',
+    name: 'eerie nothingness',
+    article: 'an',
+    priority: 0,
+});
+install('FLOOR', {
+    ch: '\u00b7',
+    fg: [30, 30, 30, 20, 0, 0, 0],
+    bg: [2, 2, 10, 0, 2, 2, 0],
+    priority: 10,
+    article: 'the',
+});
+install('DOOR', {
+    ch: '+',
+    fg: [100, 40, 40],
+    bg: [30, 60, 60],
+    priority: 30,
+    flags: 'T_IS_DOOR, L_BLOCKS_EFFECTS, L_BLOCKS_ITEMS, L_BLOCKS_VISION, L_VISUALLY_DISTINCT',
+    article: 'a',
+    effects: {
+        enter: { tile: 'DOOR_OPEN' },
+        open: { tile: 'DOOR_OPEN_ALWAYS' },
+    },
+});
+install('DOOR_OPEN', 'DOOR', {
+    ch: "'",
+    fg: [100, 40, 40],
+    bg: [30, 60, 60],
+    priority: 40,
+    flags: '!L_BLOCKS_ITEMS, !L_BLOCKS_VISION',
+    name: 'open door',
+    article: 'an',
+    effects: {
+        tick: {
+            chance: 100 * 100,
+            tile: 'DOOR',
+            flags: 'E_SUPERPRIORITY, E_ONLY_IF_EMPTY',
+        },
+        enter: null,
+        open: null,
+        close: { tile: 'DOOR', flags: 'E_SUPERPRIORITY, E_ONLY_IF_EMPTY' },
+    },
+});
+install('DOOR_OPEN_ALWAYS', 'DOOR_OPEN', {
+    effects: {
+        tick: null,
+        close: { tile: 'DOOR', flags: 'E_SUPERPRIORITY, E_ONLY_IF_EMPTY' },
+    },
+});
+install('UP_STAIRS', {
+    ch: '<',
+    fg: [100, 50, 50],
+    bg: [40, 20, 20],
+    priority: 200,
+    flags: 'T_UP_STAIRS, L_BLOCKED_BY_STAIRS, L_VISUALLY_DISTINCT, L_LIST_IN_SIDEBAR',
+    name: 'upward staircase',
+    article: 'an',
+    effects: {
+        player: { emit: 'UP_STAIRS' },
+    },
+});
+install('DOWN_STAIRS', {
+    ch: '>',
+    fg: [100, 50, 50],
+    bg: [40, 20, 20],
+    priority: 200,
+    flags: 'T_DOWN_STAIRS, L_BLOCKED_BY_STAIRS, L_VISUALLY_DISTINCT, L_LIST_IN_SIDEBAR',
+    name: 'downward staircase',
+    article: 'a',
+    effects: {
+        player: { emit: 'DOWN_STAIRS' },
+    },
+});
+install('WALL', {
+    ch: '#',
+    fg: [7, 7, 7, 0, 3, 3, 3],
+    bg: [40, 40, 40, 10, 10, 0, 5],
+    priority: 100,
+    flags: 'L_BLOCKS_EVERYTHING',
+    article: 'a',
+    name: 'stone wall',
+    description: 'A wall made from rough cut stone.',
+    flavor: 'a rough stone wall',
+});
+install('IMPREGNABLE', {
+    ch: '#',
+    fg: [7, 7, 7, 0, 3, 3, 3],
+    bg: [40, 40, 40, 10, 10, 0, 5],
+    priority: 100,
+    flags: 'L_BLOCKS_EVERYTHING, IMPREGNABLE',
+    article: 'a',
+    name: 'impregnable wall',
+    description: 'A wall made from very hard stone.',
+    flavor: 'an impregnable wall',
+});
+install('LAKE', {
+    ch: '~',
+    fg: [5, 8, 20, 10, 0, 4, 15, true],
+    bg: [10, 15, 41, 6, 5, 5, 5, true],
+    priority: 50,
+    flags: 'T_DEEP_WATER',
+    name: 'deep water',
+    article: 'the',
+});
+install('SHALLOW', {
+    ch: '\u00b7',
+    fg: [5, 8, 10, 10, 0, 4, 15, true],
+    bg: [10, 30, 30, 6, 0, 10, 10, true],
+    priority: 20,
+    name: 'shallow water',
+    article: 'the',
+    depth: 'SURFACE',
+});
+install('BRIDGE', {
+    ch: '=',
+    fg: [100, 40, 40],
+    priority: 40,
+    depth: 'SURFACE',
+    flags: 'T_BRIDGE, L_VISUALLY_DISTINCT',
+    article: 'a',
+    groundTile: 'LAKE',
+});
+
+const flags$1 = { Tile: Tile$1, TileMech };
+
+var index$1 = {
+    __proto__: null,
+    flags: flags$1,
+    Tile: Tile,
+    make: make$1,
+    tiles: tiles,
+    all: all,
+    get: get,
+    install: install,
+    installAll: installAll
+};
+
+///////////////////////////////////////////////////////
+// CELL
+var Cell$1;
+(function (Cell) {
+    Cell[Cell["SEARCHED_FROM_HERE"] = fl(0)] = "SEARCHED_FROM_HERE";
+    Cell[Cell["PRESSURE_PLATE_DEPRESSED"] = fl(1)] = "PRESSURE_PLATE_DEPRESSED";
+    Cell[Cell["KNOWN_TO_BE_TRAP_FREE"] = fl(2)] = "KNOWN_TO_BE_TRAP_FREE";
+    Cell[Cell["CAUGHT_FIRE_THIS_TURN"] = fl(3)] = "CAUGHT_FIRE_THIS_TURN";
+    Cell[Cell["EVENT_FIRED_THIS_TURN"] = fl(4)] = "EVENT_FIRED_THIS_TURN";
+    Cell[Cell["EVENT_PROTECTED"] = fl(5)] = "EVENT_PROTECTED";
+    Cell[Cell["IS_IN_LOOP"] = fl(6)] = "IS_IN_LOOP";
+    Cell[Cell["IS_CHOKEPOINT"] = fl(7)] = "IS_CHOKEPOINT";
+    Cell[Cell["IS_GATE_SITE"] = fl(8)] = "IS_GATE_SITE";
+    Cell[Cell["IS_IN_ROOM_MACHINE"] = fl(9)] = "IS_IN_ROOM_MACHINE";
+    Cell[Cell["IS_IN_AREA_MACHINE"] = fl(10)] = "IS_IN_AREA_MACHINE";
+    Cell[Cell["IS_POWERED"] = fl(11)] = "IS_POWERED";
+    Cell[Cell["IMPREGNABLE"] = fl(12)] = "IMPREGNABLE";
+    // DARKENED = Fl(13), // magical blindness?
+    Cell[Cell["NEEDS_REDRAW"] = fl(14)] = "NEEDS_REDRAW";
+    Cell[Cell["CELL_CHANGED"] = fl(15)] = "CELL_CHANGED";
+    // These are to help memory
+    Cell[Cell["HAS_SURFACE"] = fl(16)] = "HAS_SURFACE";
+    Cell[Cell["HAS_LIQUID"] = fl(17)] = "HAS_LIQUID";
+    Cell[Cell["HAS_GAS"] = fl(18)] = "HAS_GAS";
+    Cell[Cell["HAS_PLAYER"] = fl(19)] = "HAS_PLAYER";
+    Cell[Cell["HAS_ACTOR"] = fl(20)] = "HAS_ACTOR";
+    Cell[Cell["HAS_DORMANT_MONSTER"] = fl(21)] = "HAS_DORMANT_MONSTER";
+    Cell[Cell["HAS_ITEM"] = fl(22)] = "HAS_ITEM";
+    Cell[Cell["IS_IN_PATH"] = fl(23)] = "IS_IN_PATH";
+    Cell[Cell["IS_CURSOR"] = fl(24)] = "IS_CURSOR";
+    Cell[Cell["STABLE_MEMORY"] = fl(25)] = "STABLE_MEMORY";
+    Cell[Cell["COLORS_DANCE"] = fl(30)] = "COLORS_DANCE";
+    Cell[Cell["IS_IN_MACHINE"] = Cell.IS_IN_ROOM_MACHINE | Cell.IS_IN_AREA_MACHINE] = "IS_IN_MACHINE";
+    Cell[Cell["PERMANENT_CELL_FLAGS"] = Cell.HAS_ITEM |
+        Cell.HAS_DORMANT_MONSTER |
+        Cell.STABLE_MEMORY |
+        Cell.SEARCHED_FROM_HERE |
+        Cell.PRESSURE_PLATE_DEPRESSED |
+        Cell.KNOWN_TO_BE_TRAP_FREE |
+        Cell.IS_IN_LOOP |
+        Cell.IS_CHOKEPOINT |
+        Cell.IS_GATE_SITE |
+        Cell.IS_IN_MACHINE |
+        Cell.IMPREGNABLE] = "PERMANENT_CELL_FLAGS";
+    Cell[Cell["HAS_ANY_ACTOR"] = Cell.HAS_PLAYER | Cell.HAS_ACTOR] = "HAS_ANY_ACTOR";
+    Cell[Cell["HAS_ANY_OBJECT"] = Cell.HAS_ITEM | Cell.HAS_ANY_ACTOR] = "HAS_ANY_OBJECT";
+    Cell[Cell["CELL_DEFAULT"] = Cell.NEEDS_REDRAW | Cell.CELL_CHANGED] = "CELL_DEFAULT";
+})(Cell$1 || (Cell$1 = {}));
+///////////////////////////////////////////////////////
+// MAP
+var Map$1;
+(function (Map) {
+    Map[Map["MAP_CHANGED"] = fl(0)] = "MAP_CHANGED";
+    Map[Map["MAP_ALWAYS_LIT"] = fl(3)] = "MAP_ALWAYS_LIT";
+    Map[Map["MAP_SAW_WELCOME"] = fl(4)] = "MAP_SAW_WELCOME";
+    Map[Map["MAP_NO_LIQUID"] = fl(5)] = "MAP_NO_LIQUID";
+    Map[Map["MAP_NO_GAS"] = fl(6)] = "MAP_NO_GAS";
+    Map[Map["MAP_CALC_FOV"] = fl(7)] = "MAP_CALC_FOV";
+    Map[Map["MAP_FOV_CHANGED"] = fl(8)] = "MAP_FOV_CHANGED";
+    Map[Map["MAP_DANCES"] = fl(9)] = "MAP_DANCES";
+    Map[Map["MAP_DEFAULT"] = 0] = "MAP_DEFAULT";
+})(Map$1 || (Map$1 = {}));
+
+class CellMemory {
+    constructor() {
+        this.snapshot = new Mixer();
+        this.flags = {
+            cell: 0,
+            tile: 0,
+            actor: 0,
+            item: 0,
+            object: 0,
+            tileMech: 0,
+        };
+    }
+}
+class Cell {
+    constructor() {
+        this.chokeCount = 0;
+        this.gasVolume = 0;
+        this.liquidVolume = 0;
+        this.flags = { cell: 0 };
+        this.tiles = [tiles.NULL];
+        this.objects = new Chain((a, b) => a.depth - b.depth, () => {
+            this.needsRedraw = true;
+        });
+        this.memory = new CellMemory();
+    }
+    hasTileFlag(flag) {
+        return this.tiles.some((t) => t && t.flags.tile & flag);
+    }
+    hasObjectFlag(flag) {
+        return this.tiles.some((t) => t && t.flags.object & flag);
+    }
+    tileFlags() {
+        return this.tiles.reduce((out, t) => out | (t ? t.flags.tile : 0), 0);
+    }
+    tileMechFlags() {
+        return this.tiles.reduce((out, t) => out | (t ? t.flags.tileMech : 0), 0);
+    }
+    get needsRedraw() {
+        return !!(this.flags.cell & Cell$1.NEEDS_REDRAW);
+    }
+    set needsRedraw(v) {
+        if (v) {
+            this.flags.cell |= Cell$1.NEEDS_REDRAW;
+        }
+        else {
+            this.flags.cell &= ~Cell$1.NEEDS_REDRAW;
+        }
+    }
+    depthPriority(depth) {
+        const tile = this.tiles[depth];
+        return tile ? tile.priority : tiles.NULL.priority;
+    }
+    highestPriority() {
+        return this.tiles.reduce((out, t) => Math.max(out, t ? t.priority : 0), tiles.NULL.priority);
+    }
+    depthTile(depth) {
+        return this.tiles[depth] || tiles.NULL;
+    }
+    hasTile(tile) {
+        if (!tile)
+            return this.tiles.some((t) => t);
+        if (!(tile instanceof Tile)) {
+            tile = get(tile);
+        }
+        return this.tiles.includes(tile);
+    }
+    blocksVision() {
+        return this.tiles.some((t) => t && t.blocksVision());
+    }
+    blocksPathing() {
+        return this.tiles.some((t) => t && t.blocksPathing());
+    }
+    blocksMove() {
+        return this.tiles.some((t) => t && t.blocksMove());
+    }
+    blocksEffects() {
+        return this.tiles.some((t) => t && t.blocksEffects());
+    }
+    blocksLayer(depth) {
+        return this.tiles.some((t) => t &&
+            !!(t.flags.tile & flags$1.Tile.T_BLOCKS_OTHER_LAYERS) &&
+            t.depth != depth);
+    }
+    hasCellFlag(flag) {
+        return !!(this.flags.cell & flag);
+    }
+    setCellFlag(flag) {
+        this.flags.cell |= flag;
+    }
+    clearCellFlag(flag) {
+        this.flags.cell &= ~flag;
+    }
+    // @returns - whether or not the change results in a change to the cell lighting.
+    setTile(tile) {
+        // if (!(tile instanceof TILE.Tile)) {
+        //     tile = TILE.get(tile);
+        //     if (!tile) return false;
+        // }
+        // const current = this.tiles[tile.depth] || TILE.tiles.NULL;
+        // if (current !== tile) {
+        //     this.gasVolume = 0;
+        //     this.liquidVolume = 0;
+        // }
+        // Check priority, etc...
+        this.tiles[tile.depth] = tile;
+        this.needsRedraw = true;
+        // if (volume) {
+        //     if (tile.depth === Depth.GAS) {
+        //         this.gasVolume = volume;
+        //     }
+        //     if (tile.depth === Depth.LIQUID) {
+        //         this.liquidVolume = volume;
+        //     }
+        // }
+        return true;
+    }
+    clear() {
+        this.tiles = [tiles.NULL];
+        this.needsRedraw = true;
+    }
+    clearLayer(depth) {
+        if (depth == 0) {
+            this.tiles[0] = tiles.NULL;
+            this.needsRedraw = true;
+            return true;
+        }
+        else if (this.tiles[depth] !== null) {
+            this.tiles[depth] = null;
+            this.needsRedraw = true;
+            return true;
+        }
+        return false;
+    }
+    // Lights
+    eachGlowLight(cb) {
+        this.tiles.forEach((tile) => {
+            if (tile && tile.light)
+                cb(tile.light);
+        });
+    }
+    // Effects
+    async activate(event, map, x, y, ctx = {}) {
+        ctx.cell = this;
+        let didSomething = false;
+        if (ctx.depth !== undefined) {
+            const tile = this.depthTile(ctx.depth);
+            if (tile && tile.effects) {
+                const ev = tile.effects[event];
+                let effect;
+                if (typeof ev === 'string') {
+                    effect = effects[ev];
+                }
+                else {
+                    effect = ev;
+                }
+                if (effect) {
+                    // console.log(' - has event');
+                    // if (
+                    //     ctx.force ||
+                    //     !effect.chance ||
+                    //     random.chance(effect.chance, 10000)
+                    // ) {
+                    ctx.tile = tile;
+                    // console.log(' - spawn event @%d,%d - %s', x, y, event);
+                    didSomething = await fire(effect, map, x, y, ctx);
+                    // cell.debug(" - spawned");
+                    // }
+                }
+            }
+        }
+        else {
+            // console.log('fire event - %s', event);
+            for (let tile of this.tiles) {
+                if (!tile || !tile.effects)
+                    continue;
+                const ev = tile.effects[event];
+                // console.log(' - ', ev);
+                let effect;
+                if (typeof ev === 'string') {
+                    effect = effects[ev];
+                }
+                else {
+                    effect = ev;
+                }
+                if (effect) {
+                    // cell.debug(" - has event");
+                    // if (
+                    //     ctx.force ||
+                    //     !effect.chance ||
+                    //     random.chance(effect.chance, 10000)
+                    // ) {
+                    ctx.tile = tile;
+                    // console.log(' - spawn event @%d,%d - %s', x, y, name);
+                    didSomething =
+                        (await fire(effect, map, x, y, ctx)) ||
+                            didSomething;
+                    // cell.debug(" - spawned");
+                    if (didSomething) {
+                        break;
+                    }
+                    // }
+                }
+            }
+        }
+        return didSomething;
+    }
+    hasEffect(name) {
+        for (let tile of this.tiles) {
+            if (tile && tile.hasEffect(name))
+                return true;
+        }
+        return false;
+    }
+    // // Items
+    hasItem() {
+        return this.hasCellFlag(Cell$1.HAS_ITEM);
+    }
+    // addItem(item: ItemType): boolean {
+    //     if (this.item) {
+    //         return false;
+    //     }
+    //     this.item = item;
+    //     return true;
+    // }
+    // removeItem(item: ItemType): boolean {
+    //     const current = this.item;
+    //     if (current !== item) return false;
+    //     this.item = null;
+    //     return true;
+    // }
+    // // Actors
+    hasActor() {
+        return this.hasCellFlag(Cell$1.HAS_ANY_ACTOR);
+    }
+    // addActor(actor: ActorType): boolean {
+    //     if (this.actor) {
+    //         return false;
+    //     }
+    //     this.actor = actor;
+    //     return true;
+    // }
+    // removeActor(actor: ActorType): boolean {
+    //     const current = this.actor;
+    //     if (current !== actor) return false;
+    //     this.actor = null;
+    //     return true;
+    // }
+    redraw() {
+        this.flags.cell |= Cell$1.NEEDS_REDRAW;
+    }
+    clearMemory() {
+        // TODO
+    }
+    storeMemory() {
+        // TODO
+    }
+    getSnapshot(dest) {
+        dest.copy(this.memory.snapshot);
+    }
+    putSnapshot(src) {
+        this.memory.snapshot.copy(src);
+    }
+    dump() {
+        // if (this.actor) return this.actor.sprite.ch as string;
+        // if (this.item) return this.item.sprite.ch as string;
+        // for (let i = this._tiles.length - 1; i >= 0; --i) {
+        //     if (!this._tiles[i]) continue;
+        //     const tile = this._tiles[i] || TILES.NULL;
+        //     if (tile.sprite.ch) return tile.sprite.ch as string;
+        // }
+        // return TILES.NULL.sprite.ch as string;
+        return this.tiles[0].sprite.ch || ' ';
+    }
+}
+
+var Actor$1;
+(function (Actor) {
+    Actor[Actor["IS_PLAYER"] = fl(0)] = "IS_PLAYER";
+})(Actor$1 || (Actor$1 = {}));
+
+class Actor extends GameObject {
+    constructor() {
+        super();
+        // @ts-ignore
+        this.flags = this.flags || {};
+        this.flags.actor = 0;
+        this.depth = Depth.ACTOR;
+    }
+    hasActorFlag(flag) {
+        return !!(this.flags.actor & flag);
+    }
+    hasAllActorFlags(flags) {
+        return (this.flags.actor & flags) === flags;
+    }
+    isPlayer() {
+        return this.hasActorFlag(Actor$1.IS_PLAYER);
+    }
+    isVisible() {
+        return true;
+    }
+    forbidsCell(_cell) {
+        return false;
+    }
+}
+
+class Item extends GameObject {
+    constructor() {
+        super();
+        this.quantity = 1;
+        // @ts-ignore
+        this.flags = this.flags || {};
+        this.flags.item = 0;
+        this.depth = Depth.ITEM;
+    }
+    hasItemFlag(flag) {
+        return !!(this.flags.item & flag);
+    }
+    hasAllItemFlags(flags) {
+        return (this.flags.item & flags) === flags;
+    }
+    forbidsCell(_cell) {
+        return false;
+    }
+}
+
+class MapLayer {
+    constructor(map, name = 'layer') {
+        this.map = map;
+        this.depth = -1;
+        this.properties = {};
+        this.name = name;
+    }
+}
+class ObjectLayer extends MapLayer {
+    constructor(map, name = 'object') {
+        super(map, name);
+    }
+    putAppearance(dest, x, y) {
+        const cell = this.map.cell(x, y);
+        const obj = cell.objects.find((o) => o.depth == this.depth);
+        if (obj) {
+            dest.drawSprite(obj.sprite);
+        }
+    }
+    update(_dt) { }
+}
+class ActorLayer extends ObjectLayer {
+    constructor(map, name = 'actor') {
+        super(map, name);
+    }
+    add(x, y, obj, _opts) {
+        const cell = this.map.cell(x, y);
+        const actor = obj;
+        if (actor.forbidsCell(cell))
+            return false;
+        cell.objects.add(obj);
+        let flag = actor.isPlayer()
+            ? Cell$1.HAS_PLAYER
+            : Cell$1.HAS_ACTOR;
+        cell.setCellFlag(flag);
+        obj.x = x;
+        obj.y = y;
+        return true;
+    }
+    remove(obj) {
+        const cell = this.map.cell(obj.x, obj.y);
+        cell.objects.remove(obj);
+        let flag = 0;
+        cell.objects.forEach((o) => {
+            if (!o)
+                return;
+            if (o instanceof Actor) {
+                flag |= o.isPlayer()
+                    ? Cell$1.HAS_PLAYER
+                    : Cell$1.HAS_ACTOR;
+            }
+        });
+        cell.clearCellFlag(Cell$1.HAS_ANY_ACTOR);
+        cell.setCellFlag(flag);
+        return true;
+    }
+    putAppearance(dest, x, y) {
+        const cell = this.map.cell(x, y);
+        const obj = cell.objects.find((o) => o.depth == this.depth);
+        if (obj) {
+            dest.drawSprite(obj.sprite);
+        }
+    }
+    update(_dt) { }
+}
+class ItemLayer extends ObjectLayer {
+    constructor(map, name = 'item') {
+        super(map, name);
+    }
+    add(x, y, obj, _opts) {
+        const cell = this.map.cell(x, y);
+        const item = obj;
+        if (item.forbidsCell(cell))
+            return false;
+        cell.objects.add(obj);
+        let flag = Cell$1.HAS_ITEM;
+        cell.setCellFlag(flag);
+        obj.x = x;
+        obj.y = y;
+        return true;
+    }
+    remove(obj) {
+        const cell = this.map.cell(obj.x, obj.y);
+        cell.objects.remove(obj);
+        let flag = 0;
+        cell.objects.forEach((o) => {
+            if (!o)
+                return;
+            if (o instanceof Item) {
+                flag |= Cell$1.HAS_ITEM;
+            }
+        });
+        cell.clearCellFlag(Cell$1.HAS_ITEM);
+        cell.setCellFlag(flag);
+        return true;
+    }
+    putAppearance(dest, x, y) {
+        const cell = this.map.cell(x, y);
+        const obj = cell.objects.find((o) => o.depth == this.depth);
+        if (obj) {
+            dest.drawSprite(obj.sprite);
+        }
+    }
+    update(_dt) { }
+}
+class TileLayer extends MapLayer {
+    constructor(map, name = 'tile') {
+        super(map, name);
+    }
+    set(x, y, tile, opts = {}) {
+        const cell = this.map.cell(x, y);
+        const current = cell.tiles[tile.depth] || tiles.NULL;
+        if (!opts.force) {
+            // if (current !== tile) {
+            //     this.gasVolume = 0;
+            //     this.liquidVolume = 0;
+            // }
+            // Check priority, etc...
+            if (current.priority > tile.priority) {
+                return false;
+            }
+        }
+        if (!cell.setTile(tile))
+            return false;
+        if (current.light !== tile.light) {
+            this.map.light.glowLightChanged = true;
+        }
+        // if (volume) {
+        //     if (tile.depth === Depth.GAS) {
+        //         this.gasVolume = volume;
+        //     }
+        //     if (tile.depth === Depth.LIQUID) {
+        //         this.liquidVolume = volume;
+        //     }
+        // }
+        return true;
+    }
+    async update(_dt) {
+        // Run any tick effects
+    }
+    putAppearance(dest, x, y) {
+        const cell = this.map.cell(x, y);
+        const tile = cell.tiles[this.depth];
+        if (tile) {
+            dest.drawSprite(tile.sprite);
+        }
+    }
+}
+// class GasLayer extends TileLayer {
+//     constructor(map: TileMap) {
+//         super(map);
+//     }
+//     async update(dt: number) {
+//         // do dissipation...
+//     }
+// }
+// class LiquidLayer extends TileLayer {
+//     constructor(map: TileMap) {
+//         super(map);
+//     }
+//     async update(dt: number) {
+//         // do dissipation...
+//     }
+// }
+
+class ObjectList {
+    constructor(map) {
+        this.map = map;
+    }
+    at(x, y, cb) {
+        return this.map.cell(x, y).objects.find((item) => !cb || cb(item));
+    }
+    has(obj) {
+        return this.map.cells.some((c) => c.objects.has(obj));
+    }
+    add(x, y, obj) {
+        const depth = obj.depth;
+        const layer = this.map.getLayer(depth);
+        return layer.add(x, y, obj);
+    }
+    remove(obj) {
+        const depth = obj.depth;
+        const layer = this.map.getLayer(depth);
+        return layer.remove(obj);
+    }
+    move(obj, x, y) {
+        this.remove(obj);
+        return this.add(x, y, obj);
+    }
+    forEach(cb) {
+        return this.map.cells.forEach((cell) => cell.objects.forEach(cb));
+    }
+    forEachAt(x, y, cb) {
+        return this.map.cell(x, y).objects.forEach(cb);
+    }
+}
+
+class Map {
+    constructor(width, height, opts = {}) {
+        this.width = width;
+        this.height = height;
+        this.flags = { map: 0 };
+        this.layers = [];
+        this.cells = make$a(width, height, () => new Cell());
+        this._objects = new ObjectList(this);
+        this.light = new LightSystem(this, opts);
+        this.fov = new FovSystem(this, opts);
+        this.properties = {};
+        this.initLayers();
+    }
+    // LAYERS
+    initLayers() {
+        this.addLayer(Depth.GROUND, new TileLayer(this, 'ground'));
+        this.addLayer(Depth.SURFACE, new TileLayer(this, 'surface'));
+        this.addLayer(Depth.ITEM, new ItemLayer(this, 'item'));
+        this.addLayer(Depth.ACTOR, new ActorLayer(this, 'actor'));
+    }
+    addLayer(depth, layer) {
+        layer.depth = depth;
+        this.layers[depth] = layer;
+    }
+    removeLayer(depth) {
+        if (!depth)
+            throw new Error('Cannot remove layer with depth=0.');
+        delete this.layers[depth];
+    }
+    getLayer(depth) {
+        return this.layers[depth] || null;
+    }
+    hasXY(x, y) {
+        return this.cells.hasXY(x, y);
+    }
+    isBoundaryXY(x, y) {
+        return x == 0 || y == 0 || x == this.width - 1 || y == this.height - 1;
+    }
+    cell(x, y) {
+        return this.cells[x][y];
+    }
+    get(x, y) {
+        return this.cells.get(x, y);
+    }
+    eachCell(cb) {
+        this.cells.forEach((cell, x, y) => cb(cell, x, y, this));
+    }
+    // DRAW
+    drawInto(dest, opts = {}) {
+        const buffer = dest instanceof Canvas ? dest.buffer : dest;
+        if (typeof opts === 'boolean')
+            opts = { force: opts };
+        const mixer = new Mixer();
+        for (let x = 0; x < buffer.width; ++x) {
+            for (let y = 0; y < buffer.height; ++y) {
+                const cell = this.cell(x, y);
+                this.getAppearanceAt(x, y, mixer);
+                const glyph = typeof mixer.ch === 'number'
+                    ? mixer.ch
+                    : buffer.toGlyph(mixer.ch);
+                buffer.draw(x, y, glyph, mixer.fg.toInt(), mixer.bg.toInt());
+                cell.needsRedraw = false;
+            }
+        }
+    }
+    // items
+    hasItem(x, y) {
+        return this.hasCellFlag(x, y, Cell$1.HAS_ITEM);
+    }
+    // addItem(x: number, y: number, item: TYPES.ItemType) {
+    //     if (!this.hasXY(x, y)) return false;
+    //     const cell = this.cell(x, y);
+    //     return cell.objects.add(item);
+    // }
+    // removeItem(item: TYPES.ItemType) {
+    //     const cell = this.cell(item.x, item.y);
+    //     cell.objects.remove(item);
+    // }
+    // moveItem(x: number, y: number, item: TYPES.ItemType) {
+    //     if (!this.hasXY(x, y)) return false;
+    //     const newCell = this.cell(x, y);
+    //     const oldCell = this.cell(item.x, item.y);
+    //     return oldCell.removeItem(item) && newCell.addItem(item);
+    // }
+    // Actors
+    hasActor(x, y) {
+        return this.hasCellFlag(x, y, Cell$1.HAS_ANY_ACTOR);
+    }
+    // addActor(x: number, y: number, actor: TYPES.ActorType): boolean {
+    //     if (!this.hasXY(x, y)) return false;
+    //     const cell = this.cell(x, y);
+    //     return cell.objects.add(actor);
+    // }
+    // removeActor(actor: TYPES.ActorType): boolean {
+    //     const cell = this.cell(actor.x, actor.y);
+    //     return cell.objects.remove(actor);
+    // }
+    // moveActor(x: number, y: number, actor: TYPES.ActorType): boolean {
+    //     if (!this.hasXY(x, y)) return false;
+    //     const newCell = this.cell(x, y);
+    //     const oldCell = this.cell(actor.x, actor.y);
+    //     return oldCell.removeActor(actor) && newCell.addActor(actor);
+    // }
+    // Information
+    isVisible(x, y) {
+        return this.fov.isAnyKindOfVisible(x, y);
+    }
+    blocksVision(x, y) {
+        return this.cell(x, y).blocksVision();
+    }
+    blocksMove(x, y) {
+        return this.cell(x, y).blocksMove();
+    }
+    isStairs(x, y) {
+        return this.cell(x, y).hasTileFlag(flags$1.Tile.T_HAS_STAIRS);
+    }
+    count(cb) {
+        return this.cells.count((cell, x, y) => cb(cell, x, y, this));
+    }
+    dump(fmt) {
+        this.cells.dump(fmt || ((c) => c.dump()));
+    }
+    // flags
+    hasMapFlag(flag) {
+        return !!(this.flags.map & flag);
+    }
+    setMapFlag(flag) {
+        this.flags.map |= flag;
+    }
+    clearMapFlag(flag) {
+        this.flags.map &= ~flag;
+    }
+    setCellFlag(x, y, flag) {
+        this.cell(x, y).setCellFlag(flag);
+    }
+    clearCellFlag(x, y, flag) {
+        this.cell(x, y).clearCellFlag(flag);
+    }
+    hasCellFlag(x, y, flag) {
+        return !!(this.cell(x, y).flags.cell & flag);
+    }
+    hasObjectFlag(x, y, flag) {
+        return this.cell(x, y).hasObjectFlag(flag);
+    }
+    hasTileFlag(x, y, flag) {
+        return this.cell(x, y).hasTileFlag(flag);
+    }
+    fill(tile, boundary) {
+        boundary = boundary || tile;
+        let i, j;
+        for (i = 0; i < this.width; ++i) {
+            for (j = 0; j < this.height; ++j) {
+                if (this.isBoundaryXY(i, j)) {
+                    this.setTile(i, j, boundary);
+                }
+                else {
+                    this.setTile(i, j, tile);
+                }
+            }
+        }
+    }
+    setTile(x, y, tile, opts) {
+        if (!(tile instanceof Tile)) {
+            tile = get(tile);
+            if (!tile)
+                return false;
+        }
+        if (opts === true) {
+            opts = { force: true };
+        }
+        const depth = tile.depth || 0;
+        const layer = this.layers[depth] || this.layers[0];
+        if (!(layer instanceof TileLayer))
+            return false;
+        return layer.set(x, y, tile, opts);
+    }
+    hasTile(x, y, tile) {
+        var _a;
+        return (_a = this.cell(x, y)) === null || _a === void 0 ? void 0 : _a.hasTile(tile);
+    }
+    get objects() {
+        return this._objects;
+    }
+    async update(dt) {
+        await asyncForEach(this.layers, (l) => l.update(dt));
+    }
+    copy(_src) { }
+    clone() { }
+    getAppearanceAt(x, y, dest) {
+        dest.blackOut();
+        const cell = this.cell(x, y);
+        if (cell.needsRedraw) {
+            this.layers.forEach((layer) => layer.putAppearance(dest, x, y));
+            cell.putSnapshot(dest);
+        }
+        else {
+            cell.getSnapshot(dest);
+        }
+        if (this.fov.isAnyKindOfVisible(x, y)) {
+            const light = this.light.getLight(x, y);
+            dest.multiply(light);
+        }
+        else if (this.fov.isRevealed(x, y)) {
+            dest.scale(50);
+        }
+        else {
+            dest.blackOut();
+        }
+    }
+    // // LightSystemSite
+    // get anyLightChanged(): boolean {
+    //     return !(this.flags.map & Flags.Map.MAP_STABLE_LIGHTS);
+    // }
+    // set anyLightChanged(value: boolean) {
+    //     if (value) {
+    //         this.flags.map &= ~Flags.Map.MAP_STABLE_LIGHTS;
+    //     } else {
+    //         this.flags.map |= Flags.Map.MAP_STABLE_LIGHTS;
+    //     }
+    // }
+    // get glowLightChanged(): boolean {
+    //     return !(this.flags.map & Flags.Map.MAP_STABLE_GLOW_LIGHTS);
+    // }
+    // set glowLightChanged(value: boolean) {
+    //     if (value) {
+    //         this.flags.map &= ~(
+    //             Flags.Map.MAP_STABLE_GLOW_LIGHTS |
+    //             Flags.Map.MAP_STABLE_GLOW_LIGHTS
+    //         );
+    //     } else {
+    //         this.flags.map |= Flags.Map.MAP_STABLE_GLOW_LIGHTS;
+    //     }
+    // }
+    eachGlowLight(cb) {
+        this.cells.forEach((cell, x, y) => {
+            cell.eachGlowLight((light) => cb(x, y, light));
+        });
+    }
+    eachDynamicLight(_cb) { }
+    // FOV System Site
+    eachViewport(_cb) {
+        // TODO !!
+    }
+    lightingChanged() {
+        return this.light.changed;
+    }
+    hasVisibleLight(x, y) {
+        return !this.light.isDark(x, y);
+    }
+    cellRevealed(_x, _y) {
+        // if (DATA.automationActive) {
+        // if (cell.item) {
+        //     const theItem: GW.types.ItemType = cell.item;
+        //     if (
+        //         theItem.hasLayerFlag(ObjectFlags.L_INTERRUPT_WHEN_SEEN)
+        //     ) {
+        //         GW.message.add(
+        //             '§you§ §see§ ΩitemMessageColorΩ§item§∆.',
+        //             {
+        //                 item: theItem,
+        //                 actor: DATA.player,
+        //             }
+        //         );
+        //     }
+        // }
+        // if (
+        //     !(this.fov.isMagicMapped(x, y)) &&
+        //     this.site.hasObjectFlag(
+        //         x,
+        //         y,
+        //         ObjectFlags.L_INTERRUPT_WHEN_SEEN
+        //     )
+        // ) {
+        //     const tile = cell.tileWithLayerFlag(
+        //         ObjectFlags.L_INTERRUPT_WHEN_SEEN
+        //     );
+        //     if (tile) {
+        //         GW.message.add(
+        //             '§you§ §see§ ΩbackgroundMessageColorΩ§item§∆.',
+        //             {
+        //                 actor: DATA.player,
+        //                 item: tile.name,
+        //             }
+        //         );
+        //     }
+        // }
+    }
+    redrawCell(x, y, clearMemory) {
+        if (clearMemory) {
+            this.cells[x][y].clearMemory();
+        }
+        this.cells[x][y].redraw();
+    }
+    storeMemory(x, y) {
+        this.cells[x][y].storeMemory();
+    }
+    // DigSite
+    isWall(x, y) {
+        if (!this.hasXY(x, y))
+            return true;
+        const cell = this.cell(x, y);
+        return cell.blocksMove() && cell.blocksVision();
+    }
+}
+function make(w, h, opts = {}, boundary) {
+    if (typeof opts === 'string') {
+        opts = { tile: opts };
+    }
+    if (boundary) {
+        opts.boundary = boundary;
+    }
+    if (opts.tile === true) {
+        opts.tile = 'FLOOR';
+    }
+    if (opts.boundary === true) {
+        opts.boundary = 'WALL';
+    }
+    const map = new Map(w, h, opts);
+    if (opts.tile) {
+        map.fill(opts.tile, opts.boundary);
+    }
+    map.light.update();
+    // if (!DATA.map) {
+    //     DATA.map = map;
+    // }
+    return map;
+}
+function isString(value) {
+    return typeof value === 'string';
+}
+function isStringArray(value) {
+    return Array.isArray(value) && typeof value[0] === 'string';
+}
+function from(prefab, charToTile, opts = {}) {
+    let height = 0;
+    let width = 0;
+    let map;
+    if (isString(prefab)) {
+        prefab = prefab.split('\n');
+    }
+    if (isStringArray(prefab)) {
+        height = prefab.length;
+        width = prefab.reduce((len, line) => Math.max(len, line.length), 0);
+        map = make(width, height, opts);
+        prefab.forEach((line, y) => {
+            for (let x = 0; x < width; ++x) {
+                const ch = line[x] || '.';
+                const tile = charToTile[ch] || 'FLOOR';
+                map.setTile(x, y, tile);
+            }
+        });
+    }
+    else {
+        height = prefab.height;
+        width = prefab.width;
+        map = make(width, height, opts);
+        prefab.forEach((v, x, y) => {
+            const tile = charToTile[v] || 'FLOOR';
+            map.setTile(x, y, tile);
+        });
+    }
+    map.light.update();
+    return map;
+}
+
+function analyze(map, updateChokeCounts = true) {
+    updateLoopiness(map);
+    updateChokepoints(map, updateChokeCounts);
+}
+/////////////////////////////////////////////////////
+/////////////////////////////////////////////////////
+// TODO - Move to Map?
+function updateChokepoints(map, updateCounts) {
+    const passMap = alloc(map.width, map.height);
+    const grid$1 = alloc(map.width, map.height);
+    for (let i = 0; i < map.width; i++) {
+        for (let j = 0; j < map.height; j++) {
+            const cell = map.cell(i, j);
+            if ((cell.blocksPathing() || cell.blocksMove()) &&
+                !cell.hasObjectFlag(GameObject$1.L_SECRETLY_PASSABLE)) {
+                // cell.flags &= ~CellFlags.IS_IN_LOOP;
+                passMap[i][j] = 0;
+            }
+            else {
+                // cell.flags |= CellFlags.IS_IN_LOOP;
+                passMap[i][j] = 1;
+            }
+        }
+    }
+    let passableArcCount;
+    // done finding loops; now flag chokepoints
+    for (let i = 1; i < passMap.width - 1; i++) {
+        for (let j = 1; j < passMap.height - 1; j++) {
+            map.cells[i][j].flags.cell &= ~Cell$1.IS_CHOKEPOINT;
+            if (passMap[i][j] &&
+                !(map.cells[i][j].flags.cell & Cell$1.IS_IN_LOOP)) {
+                passableArcCount = 0;
+                for (let dir = 0; dir < 8; dir++) {
+                    const oldX = i + CLOCK_DIRS[(dir + 7) % 8][0];
+                    const oldY = j + CLOCK_DIRS[(dir + 7) % 8][1];
+                    const newX = i + CLOCK_DIRS[dir][0];
+                    const newY = j + CLOCK_DIRS[dir][1];
+                    if ((map.hasXY(newX, newY) && // RUT.Map.makeValidXy(map, newXy) &&
+                        passMap[newX][newY]) !=
+                        (map.hasXY(oldX, oldY) && // RUT.Map.makeValidXy(map, oldXy) &&
+                            passMap[oldX][oldY])) {
+                        if (++passableArcCount > 2) {
+                            if ((!passMap[i - 1][j] && !passMap[i + 1][j]) ||
+                                (!passMap[i][j - 1] && !passMap[i][j + 1])) {
+                                map.cells[i][j].flags.cell |=
+                                    Cell$1.IS_CHOKEPOINT;
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    if (updateCounts) {
+        // Done finding chokepoints; now create a chokepoint map.
+        // The chokepoint map is a number for each passable tile. If the tile is a chokepoint,
+        // then the number indicates the number of tiles that would be rendered unreachable if the
+        // chokepoint were blocked. If the tile is not a chokepoint, then the number indicates
+        // the number of tiles that would be rendered unreachable if the nearest exit chokepoint
+        // were blocked.
+        // The cost of all of this is one depth-first flood-fill per open point that is adjacent to a chokepoint.
+        // Start by setting the chokepoint values really high, and roping off room machines.
+        for (let i = 0; i < map.width; i++) {
+            for (let j = 0; j < map.height; j++) {
+                map.cells[i][j].chokeCount = 30000;
+                if (map.cells[i][j].flags.cell & Cell$1.IS_IN_ROOM_MACHINE) {
+                    passMap[i][j] = 0;
+                }
+            }
+        }
+        // Scan through and find a chokepoint next to an open point.
+        for (let i = 0; i < map.width; i++) {
+            for (let j = 0; j < map.height; j++) {
+                const cell = map.cells[i][j];
+                if (passMap[i][j] &&
+                    cell.flags.cell & Cell$1.IS_CHOKEPOINT) {
+                    for (let dir = 0; dir < 4; dir++) {
+                        const newX = i + DIRS$2[dir][0];
+                        const newY = j + DIRS$2[dir][1];
+                        if (map.hasXY(newX, newY) && // RUT.Map.makeValidXy(map, newXy) &&
+                            passMap[newX][newY] &&
+                            !(map.cells[newX][newY].flags.cell &
+                                Cell$1.IS_CHOKEPOINT)) {
+                            // OK, (newX, newY) is an open point and (i, j) is a chokepoint.
+                            // Pretend (i, j) is blocked by changing passMap, and run a flood-fill cell count starting on (newX, newY).
+                            // Keep track of the flooded region in grid[][].
+                            grid$1.fill(0);
+                            passMap[i][j] = 0;
+                            let cellCount = floodFillCount(map, grid$1, passMap, newX, newY);
+                            passMap[i][j] = 1;
+                            // CellCount is the size of the region that would be obstructed if the chokepoint were blocked.
+                            // CellCounts less than 4 are not useful, so we skip those cases.
+                            if (cellCount >= 4) {
+                                // Now, on the chokemap, all of those flooded cells should take the lesser of their current value or this resultant number.
+                                for (let i2 = 0; i2 < grid$1.width; i2++) {
+                                    for (let j2 = 0; j2 < grid$1.height; j2++) {
+                                        if (grid$1[i2][j2] &&
+                                            cellCount <
+                                                map.cells[i2][j2].chokeCount) {
+                                            map.cells[i2][j2].chokeCount = cellCount;
+                                            map.cells[i2][j2].flags.cell &= ~Cell$1.IS_GATE_SITE;
+                                        }
+                                    }
+                                }
+                                // The chokepoint itself should also take the lesser of its current value or the flood count.
+                                if (cellCount < cell.chokeCount) {
+                                    cell.chokeCount = cellCount;
+                                    cell.flags.cell |= Cell$1.IS_GATE_SITE;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    free(passMap);
+    free(grid$1);
+}
+// Assumes it is called with respect to a passable (startX, startY), and that the same is not already included in results.
+// Returns 10000 if the area included an area machine.
+function floodFillCount(map, results, passMap, startX, startY) {
+    let count = passMap[startX][startY] == 2 ? 5000 : 1;
+    if (map.cells[startX][startY].flags.cell & Cell$1.IS_IN_AREA_MACHINE) {
+        count = 10000;
+    }
+    results[startX][startY] = 1;
+    for (let dir = 0; dir < 4; dir++) {
+        const newX = startX + DIRS$2[dir][0];
+        const newY = startY + DIRS$2[dir][1];
+        if (map.hasXY(newX, newY) && // RUT.Map.makeValidXy(map, newXy) &&
+            passMap[newX][newY] &&
+            !results[newX][newY]) {
+            count += floodFillCount(map, results, passMap, newX, newY);
+        }
+    }
+    return Math.min(count, 10000);
+}
+////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////
+// TODO = Move loopiness to Map
+function updateLoopiness(map) {
+    map.eachCell(resetLoopiness);
+    map.eachCell(checkLoopiness);
+    cleanLoopiness(map);
+}
+function resetLoopiness(cell, _x, _y, _map) {
+    if ((cell.blocksPathing() || cell.blocksMove()) &&
+        !cell.hasObjectFlag(GameObject$1.L_SECRETLY_PASSABLE)) {
+        cell.flags.cell &= ~Cell$1.IS_IN_LOOP;
+        // passMap[i][j] = false;
+    }
+    else {
+        cell.flags.cell |= Cell$1.IS_IN_LOOP;
+        // passMap[i][j] = true;
+    }
+}
+function checkLoopiness(cell, x, y, map) {
+    let inString;
+    let newX, newY, dir, sdir;
+    let numStrings, maxStringLength, currentStringLength;
+    if (!cell || !(cell.flags.cell & Cell$1.IS_IN_LOOP)) {
+        return false;
+    }
+    // find an unloopy neighbor to start on
+    for (sdir = 0; sdir < 8; sdir++) {
+        newX = x + CLOCK_DIRS[sdir][0];
+        newY = y + CLOCK_DIRS[sdir][1];
+        if (!map.hasXY(newX, newY))
+            continue;
+        const cell = map.get(newX, newY);
+        if (!cell || !(cell.flags.cell & Cell$1.IS_IN_LOOP)) {
+            break;
+        }
+    }
+    if (sdir == 8) {
+        // no unloopy neighbors
+        return false; // leave cell loopy
+    }
+    // starting on this unloopy neighbor,
+    // work clockwise and count up:
+    // (a) the number of strings of loopy neighbors, and
+    // (b) the length of the longest such string.
+    numStrings = maxStringLength = currentStringLength = 0;
+    inString = false;
+    for (dir = sdir; dir < sdir + 8; dir++) {
+        newX = x + CLOCK_DIRS[dir % 8][0];
+        newY = y + CLOCK_DIRS[dir % 8][1];
+        if (!map.hasXY(newX, newY))
+            continue;
+        const newCell = map.get(newX, newY);
+        if (newCell && newCell.flags.cell & Cell$1.IS_IN_LOOP) {
+            currentStringLength++;
+            if (!inString) {
+                if (numStrings > 0) {
+                    return false; // more than one string here; leave loopy
+                }
+                numStrings++;
+                inString = true;
+            }
+        }
+        else if (inString) {
+            if (currentStringLength > maxStringLength) {
+                maxStringLength = currentStringLength;
+            }
+            currentStringLength = 0;
+            inString = false;
+        }
+    }
+    if (inString && currentStringLength > maxStringLength) {
+        maxStringLength = currentStringLength;
+    }
+    if (numStrings == 1 && maxStringLength <= 4) {
+        cell.flags.cell &= ~Cell$1.IS_IN_LOOP;
+        for (dir = 0; dir < 8; dir++) {
+            const newX = x + CLOCK_DIRS[dir][0];
+            const newY = y + CLOCK_DIRS[dir][1];
+            if (map.hasXY(newX, newY)) {
+                const newCell = map.cell(newX, newY);
+                checkLoopiness(newCell, newX, newY, map);
+            }
+        }
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+function fillInnerLoopGrid(map, grid) {
+    for (let x = 0; x < map.width; ++x) {
+        for (let y = 0; y < map.height; ++y) {
+            const cell = map.cells[x][y];
+            if (cell.flags.cell & Cell$1.IS_IN_LOOP) {
+                grid[x][y] = 1;
+            }
+            else if (x > 0 && y > 0) {
+                const up = map.cells[x][y - 1];
+                const left = map.cells[x - 1][y];
+                if (up.flags.cell & Cell$1.IS_IN_LOOP &&
+                    left.flags.cell & Cell$1.IS_IN_LOOP) {
+                    grid[x][y] = 1;
+                }
+            }
+        }
+    }
+}
+function cleanLoopiness(map) {
+    // remove extraneous loop markings
+    const grid$1 = alloc(map.width, map.height);
+    fillInnerLoopGrid(map, grid$1);
+    // const xy = { x: 0, y: 0 };
+    let designationSurvives;
+    for (let i = 0; i < grid$1.width; i++) {
+        for (let j = 0; j < grid$1.height; j++) {
+            const cell = map.cell(i, j);
+            if (cell.flags.cell & Cell$1.IS_IN_LOOP) {
+                designationSurvives = false;
+                for (let dir = 0; dir < 8; dir++) {
+                    let newX = i + CLOCK_DIRS[dir][0];
+                    let newY = j + CLOCK_DIRS[dir][1];
+                    if (map.hasXY(newX, newY) && // RUT.Map.makeValidXy(map, xy, newX, newY) &&
+                        !grid$1[newX][newY] &&
+                        !(map.cells[newX][newY].flags.cell &
+                            Cell$1.IS_IN_LOOP)) {
+                        designationSurvives = true;
+                        break;
+                    }
+                }
+                if (!designationSurvives) {
+                    grid$1[i][j] = 1;
+                    map.cells[i][j].flags.cell &= ~Cell$1.IS_IN_LOOP;
+                }
+            }
+        }
+    }
+    free(grid$1);
+}
+////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////
+
+class SpawnEffect {
+    make(src, dest) {
+        var _a, _b, _c, _d, _e, _f, _g;
+        if (!src.tile)
+            return true; // no error
+        let config = src.tile;
+        if (typeof config === 'string') {
+            const parts = config.split(/[,|]/).map((p) => p.trim());
+            config = {
+                tile: parts[0],
+                grow: Number.parseInt(parts[1] || '0'),
+                decrement: Number.parseInt(parts[2] || '0'),
+            };
+        }
+        const info = {
+            grow: (_b = (_a = config.grow) !== null && _a !== void 0 ? _a : config.spread) !== null && _b !== void 0 ? _b : 0,
+            decrement: (_c = config.decrement) !== null && _c !== void 0 ? _c : 0,
+            flags: from$5(Effect, config.flags),
+            volume: (_d = config.volume) !== null && _d !== void 0 ? _d : 0,
+            next: (_e = config.next) !== null && _e !== void 0 ? _e : null,
+        };
+        const id = (_f = config.tile) !== null && _f !== void 0 ? _f : config.id;
+        if (typeof id === 'string') {
+            info.tile = id;
+        }
+        else {
+            throw new Error('Invalid tile spawn config: ' + id);
+        }
+        if (!info.tile) {
+            throw new Error('Must have tile.');
+        }
+        const match = (_g = config.matchTile) !== null && _g !== void 0 ? _g : config.match;
+        if (typeof match === 'string') {
+            info.matchTile = match;
+        }
+        else if (match) {
+            throw new Error('Invalid tile spawn match tile: ' + config.matchTile);
+        }
+        dest.tile = info;
+        return true;
+    }
+    async fire(effect, map, x, y, ctx) {
+        if (!effect.tile)
+            return false; // did nothing
+        const id = effect.tile.tile;
+        const tile = tiles[id] || null;
+        if (!tile) {
+            throw new Error('Failed to find tile for effect: ' + id);
+        }
+        const abortIfBlocking = !!(effect.flags & Effect.E_ABORT_IF_BLOCKS_MAP);
+        const isBlocking = !!(abortIfBlocking &&
+            !(effect.flags & Effect.E_PERMIT_BLOCKING) &&
+            (tile.blocksPathing() ||
+                effect.flags & Effect.E_TREAT_AS_BLOCKING));
+        let didSomething = false;
+        didSomething = computeSpawnMap(effect, map, x, y, ctx);
+        if (!didSomething) {
+            return false;
+        }
+        if (abortIfBlocking &&
+            isBlocking &&
+            this.mapDisruptedBy(map, effect.grid)) {
+            // Grid.free(spawnMap);
+            return false;
+        }
+        if (effect.flags & Effect.E_EVACUATE_CREATURES) {
+            // first, evacuate creatures, so that they do not re-trigger the tile.
+            if (evacuateCreatures(map, ctx.grid)) {
+                didSomething = true;
+            }
+        }
+        if (effect.flags & Effect.E_EVACUATE_ITEMS) {
+            // first, evacuate items, so that they do not re-trigger the tile.
+            if (evacuateItems(map, ctx.grid)) {
+                didSomething = true;
+            }
+        }
+        if (effect.flags & Effect.E_CLEAR_CELL) {
+            // first, clear other tiles (not base/ground)
+            if (clearCells(map, ctx.grid, effect.flags)) {
+                didSomething = true;
+            }
+        }
+        const spawned = spawnTiles(effect.flags, ctx.grid, map, tile, effect.tile.volume);
+        if (spawned) {
+            didSomething = true;
+            // await spawnMap.forEachAsync( (v, x, y) => {
+            //     if (!v) return;
+            //     await map.applyInstantEffects(x, y);
+            // });
+            // if (applyEffects) {
+            // if (PLAYER.xLoc == i && PLAYER.yLoc == j && !PLAYER.status.levitating && refresh) {
+            // 	flavorMessage(tileFlavor(PLAYER.xLoc, PLAYER.yLoc));
+            // }
+            // if (cell.actor || cell.item) {
+            // 	for(let t of cell.tiles()) {
+            // 		await t.applyInstantEffects(map, i, j, cell);
+            // 		if (Data.gameHasEnded) {
+            // 			return true;
+            // 		}
+            // 	}
+            // }
+            // if (tile.flags & TileFlags.T_IS_FIRE) {
+            // 	if (cell.flags & CellFlags.HAS_ITEM) {
+            // 		theItem = map.itemAt(i, j);
+            // 		if (theItem.flags & Flags.Item.ITEM_FLAMMABLE) {
+            // 			await burnItem(theItem);
+            // 		}
+            // 	}
+            // }
+            // }
+        }
+        // Grid.free(spawnMap);
+        return didSomething;
+    }
+    mapDisruptedBy(map, blockingGrid, blockingToMapX = 0, blockingToMapY = 0) {
+        const walkableGrid = alloc(map.width, map.height);
+        let disrupts = false;
+        // Get all walkable locations after lake added
+        forRect(map.width, map.height, (i, j) => {
+            const lakeX = i + blockingToMapX;
+            const lakeY = j + blockingToMapY;
+            if (blockingGrid.get(lakeX, lakeY)) {
+                if (map.isStairs(i, j)) {
+                    disrupts = true;
+                }
+            }
+            else if (!map.blocksMove(i, j)) {
+                walkableGrid[i][j] = 1;
+            }
+        });
+        let first = true;
+        for (let i = 0; i < walkableGrid.width && !disrupts; ++i) {
+            for (let j = 0; j < walkableGrid.height && !disrupts; ++j) {
+                if (walkableGrid[i][j] == 1) {
+                    if (first) {
+                        walkableGrid.floodFill(i, j, 1, 2);
+                        first = false;
+                    }
+                    else {
+                        disrupts = true;
+                    }
+                }
+            }
+        }
+        // console.log('WALKABLE GRID');
+        // walkableGrid.dump();
+        free(walkableGrid);
+        return disrupts;
+    }
+}
+installType('tile', new SpawnEffect());
+// tick
+// Spawn
+function spawnTiles(flags, spawnMap, map, tile, volume = 0) {
+    let i, j;
+    let accomplishedSomething;
+    accomplishedSomething = false;
+    const blockedByOtherLayers = flags & Effect.E_BLOCKED_BY_OTHER_LAYERS;
+    const superpriority = flags & Effect.E_SUPERPRIORITY;
+    // const applyEffects = ctx.refreshCell;
+    volume = volume || 0; // (tile ? tile.volume : 0);
+    for (i = 0; i < spawnMap.width; i++) {
+        for (j = 0; j < spawnMap.height; j++) {
+            if (!spawnMap[i][j])
+                continue; // If it's not flagged for building in the spawn map,
+            // const isRoot = spawnMap[i][j] === 1;
+            spawnMap[i][j] = 0; // so that the spawnmap reflects what actually got built
+            const cell = map.cell(i, j);
+            if (cell.hasTile(tile)) {
+                // If the new cell already contains the fill terrain,
+                if (tile.depth == Depth.GAS) {
+                    spawnMap[i][j] = 1;
+                    cell.gasVolume += volume;
+                }
+                else if (tile.depth == Depth.LIQUID) {
+                    spawnMap[i][j] = 1;
+                    cell.liquidVolume += volume;
+                }
+            }
+            else if ((superpriority ||
+                cell.depthPriority(tile.depth) < tile.priority) && // If the terrain in the layer to be overwritten has a higher priority number (unless superpriority),
+                !cell.blocksLayer(tile.depth) && // If we will be painting into the surface layer when that cell forbids it,
+                (!cell.hasItem() ||
+                    !(flags & Effect.E_BLOCKED_BY_ITEMS)) &&
+                (!cell.hasActor() ||
+                    !(flags & Effect.E_BLOCKED_BY_ACTORS)) &&
+                (!blockedByOtherLayers ||
+                    cell.highestPriority() < tile.priority) // TODO - highestPriorityTile()
+            ) {
+                if (map.setTile(i, j, tile, volume)) {
+                    // if the fill won't violate the priority of the most important terrain in this cell:
+                    spawnMap[i][j] = 1; // so that the spawnmap reflects what actually got built
+                    // map.redrawCell(cell);
+                    // if (volume && cell.gas) {
+                    //     cell.volume += (feat.volume || 0);
+                    // }
+                    cell.flags.cell |= Cell$1.EVENT_FIRED_THIS_TURN;
+                    if (flags & Effect.E_PROTECTED) {
+                        cell.flags.cell |= Cell$1.EVENT_PROTECTED;
+                    }
+                    accomplishedSomething = true;
+                    // debug('- tile', i, j, 'tile=', tile.id);
+                }
+            }
+        }
+    }
+    if (accomplishedSomething) {
+        map.setMapFlag(Map$1.MAP_CHANGED);
+    }
+    return accomplishedSomething;
+}
+// Spread
+function cellIsOk(effect, map, x, y, isStart) {
+    if (!map.hasXY(x, y))
+        return false;
+    const cell = map.cell(x, y);
+    if (cell.hasCellFlag(Cell$1.EVENT_PROTECTED))
+        return false;
+    if (cell.blocksEffects() && !effect.tile.matchTile && !isStart) {
+        return false;
+    }
+    if (effect.flags & Effect.E_BUILD_IN_WALLS) {
+        if (!map.isWall(x, y))
+            return false;
+    }
+    else if (effect.flags & Effect.E_MUST_TOUCH_WALLS) {
+        let ok = false;
+        eachNeighbor(x, y, (i, j) => {
+            if (map.isWall(i, j)) {
+                ok = true;
+            }
+        }, true);
+        if (!ok)
+            return false;
+    }
+    else if (effect.flags & Effect.E_NO_TOUCH_WALLS) {
+        let ok = true;
+        if (map.isWall(x, y))
+            return false; // or on wall
+        eachNeighbor(x, y, (i, j) => {
+            if (map.isWall(i, j)) {
+                ok = false;
+            }
+        }, true);
+        if (!ok)
+            return false;
+    }
+    // if (ctx.bounds && !ctx.bounds.containsXY(x, y)) return false;
+    if (effect.tile.matchTile &&
+        !isStart &&
+        !cell.hasTile(effect.tile.matchTile)) {
+        return false;
+    }
+    return true;
+}
+function computeSpawnMap(effect, map, x, y, ctx) {
+    let i, j, dir, t, x2, y2;
+    let madeChange;
+    // const bounds = ctx.bounds || null;
+    // if (bounds) {
+    //   // Activation.debug('- bounds', bounds);
+    // }
+    const config = effect.tile;
+    let startProb = config.grow || 0;
+    let probDec = config.decrement || 0;
+    const spawnMap = ctx.grid;
+    spawnMap.fill(0);
+    if (!cellIsOk(effect, map, x, y, true)) {
+        return false;
+    }
+    spawnMap[x][y] = t = 1; // incremented before anything else happens
+    let count = 1;
+    if (startProb) {
+        madeChange = true;
+        if (startProb >= 100) {
+            probDec = probDec || 100;
+        }
+        if (probDec <= 0) {
+            probDec = startProb;
+        }
+        while (madeChange && startProb > 0) {
+            madeChange = false;
+            t++;
+            for (i = 0; i < map.width; i++) {
+                for (j = 0; j < map.height; j++) {
+                    if (spawnMap[i][j] == t - 1) {
+                        for (dir = 0; dir < 4; dir++) {
+                            x2 = i + DIRS$2[dir][0];
+                            y2 = j + DIRS$2[dir][1];
+                            if (spawnMap.hasXY(x2, y2) &&
+                                !spawnMap[x2][y2] &&
+                                random.chance(startProb) &&
+                                cellIsOk(effect, map, x2, y2, false)) {
+                                spawnMap[x2][y2] = t;
+                                madeChange = true;
+                                ++count;
+                            }
+                        }
+                    }
+                }
+            }
+            startProb -= probDec;
+        }
+    }
+    return count > 0;
+}
+// export function spreadCircle(
+//     this: any,
+//     ctx: Effect.EffectCtx,
+//     spawnMap: Grid.NumGrid
+// ) {
+//     const x = ctx.x;
+//     const y = ctx.y;
+//     let startProb = this.spread || 0;
+//     let probDec = this.decrement || 0;
+//     spawnMap.fill(0);
+//     spawnMap[x][y] = 1; // incremented before anything else happens
+//     let radius = 0;
+//     startProb = startProb || 100;
+//     if (startProb >= 100) {
+//         probDec = probDec || 100;
+//     }
+//     while (GW.random.chance(startProb)) {
+//         startProb -= probDec;
+//         ++radius;
+//     }
+//     // startProb = 100;
+//     // probDec = 0;
+//     spawnMap.updateCircle(x, y, radius, (_v, i, j) => {
+//         if (!cellIsOk(this, i, j, ctx)) return 0;
+//         // const dist = Math.floor(Utils.distanceBetween(x, y, i, j));
+//         // const prob = startProb - dist * probDec;
+//         // if (!random.chance(prob)) return 0;
+//         return 1;
+//     });
+//     // spawnMap[x][y] = 1;
+//     // if (!isOk(flags, x, y, ctx)) {
+//     //     spawnMap[x][y] = 0;
+//     // }
+//     return true;
+// }
+// export function spreadLine(
+//     this: any,
+//     ctx: Effect.EffectCtx,
+//     spawnMap: Grid.NumGrid
+// ) {
+//     let x2, y2;
+//     let madeChange;
+//     const x = ctx.x;
+//     const y = ctx.y;
+//     let startProb = this.spread || 0;
+//     let probDec = this.decrement || 0;
+//     spawnMap.fill(0);
+//     spawnMap[x][y] = 1; // incremented before anything else happens
+//     if (startProb) {
+//         madeChange = true;
+//         if (startProb >= 100) {
+//             probDec = probDec || 100;
+//         }
+//         x2 = x;
+//         y2 = y;
+//         const dir = Utils.DIRS[GW.random.number(4)];
+//         while (madeChange) {
+//             madeChange = false;
+//             x2 = x2 + dir[0];
+//             y2 = y2 + dir[1];
+//             if (
+//                 spawnMap.hasXY(x2, y2) &&
+//                 !spawnMap[x2][y2] &&
+//                 cellIsOk(this, x2, y2, ctx) &&
+//                 GW.random.chance(startProb)
+//             ) {
+//                 spawnMap[x2][y2] = 1;
+//                 madeChange = true;
+//                 startProb -= probDec;
+//             }
+//         }
+//     }
+//     if (!cellIsOk(this, x, y, ctx)) {
+//         spawnMap[x][y] = 0;
+//     }
+//     return true;
+// }
+function clearCells(map, spawnMap, flags = 0) {
+    let didSomething = false;
+    const clearAll = (flags & Effect.E_CLEAR_CELL) === Effect.E_CLEAR_CELL;
+    spawnMap.forEach((v, i, j) => {
+        if (!v)
+            return;
+        const cell = map.cell(i, j);
+        if (clearAll) {
+            cell.clear();
+        }
+        else {
+            if (flags & Effect.E_CLEAR_GAS) {
+                cell.clearLayer(Depth.GAS);
+            }
+            if (flags & Effect.E_CLEAR_LIQUID) {
+                cell.clearLayer(Depth.LIQUID);
+            }
+            if (flags & Effect.E_CLEAR_SURFACE) {
+                cell.clearLayer(Depth.SURFACE);
+            }
+            if (flags & Effect.E_CLEAR_GROUND) {
+                cell.clearLayer(Depth.GROUND);
+            }
+        }
+        didSomething = true;
+    });
+    return didSomething;
+}
+function evacuateCreatures(map, blockingMap) {
+    let i = 0, j = 0;
+    let didSomething = false;
+    for (i = 0; i < map.width; i++) {
+        for (j = 0; j < map.height; j++) {
+            if (!blockingMap[i][j])
+                continue;
+            const cell = map.cell(i, j);
+            if (!cell.hasActor())
+                continue;
+            cell.objects.forEach((obj) => {
+                if (!(obj instanceof Actor))
+                    return;
+                const monst = obj;
+                const loc = random.matchingLocNear(i, j, (x, y) => {
+                    if (!map.hasXY(x, y))
+                        return false;
+                    if (blockingMap[x][y])
+                        return false;
+                    const c = map.cell(x, y);
+                    return !monst.forbidsCell(c);
+                });
+                if (loc && loc[0] >= 0 && loc[1] >= 0) {
+                    map.objects.move(monst, loc[0], loc[1]);
+                    // map.redrawXY(loc[0], loc[1]);
+                    didSomething = true;
+                }
+            });
+        }
+    }
+    return didSomething;
+}
+function evacuateItems(map, blockingMap) {
+    let didSomething = false;
+    blockingMap.forEach((v, i, j) => {
+        if (!v)
+            return;
+        const cell = map.cell(i, j);
+        if (!cell.hasItem())
+            return;
+        cell.objects.forEach((obj) => {
+            if (!(obj instanceof Item))
+                return;
+            const item = obj;
+            const loc = random.matchingLocNear(i, j, (x, y) => {
+                if (!map.hasXY(x, y))
+                    return false;
+                if (blockingMap[x][y])
+                    return false;
+                const dest = map.cell(x, y);
+                return !item.forbidsCell(dest);
+            });
+            if (loc && loc[0] >= 0 && loc[1] >= 0) {
+                map.objects.move(item, loc[0], loc[1]);
+                // map.redrawXY(loc[0], loc[1]);
+                didSomething = true;
+            }
+        });
+    });
+    return didSomething;
+}
+class ClearTileEffect {
+    make(src, dest) {
+        if (!src.clear)
+            return true;
+        let config = src.clear;
+        let layers = 0;
+        if (typeof config === 'string') {
+            config = config.split(/[,|]/).map((t) => t.trim());
+        }
+        if (config === true) {
+            layers = Depth.ALL_LAYERS;
+        }
+        else if (typeof config === 'number') {
+            layers = config;
+        }
+        else if (Array.isArray(config)) {
+            layers = config.reduce((out, v) => {
+                if (typeof v === 'number')
+                    return out | v;
+                const depth = Depth[v] ||
+                    0;
+                return out | depth;
+            }, 0);
+        }
+        else {
+            throw new Error('clear effect must have number or string config.');
+        }
+        dest.clear = layers;
+        return layers > 0;
+    }
+    fire(config, map, x, y, _ctx) {
+        if (!config.clear)
+            return false;
+        if (!map)
+            return false;
+        const cell = map.cell(x, y);
+        return cell.clearLayer(config.clear);
+    }
+}
+installType('clear', new ClearTileEffect());
+
+const flags = { Cell: Cell$1, Map: Map$1, GameObject: GameObject$1 };
+
+var index = {
+    __proto__: null,
+    flags: flags,
+    CellMemory: CellMemory,
+    Cell: Cell,
+    Map: Map,
+    make: make,
+    from: from,
+    analyze: analyze,
+    updateChokepoints: updateChokepoints,
+    floodFillCount: floodFillCount,
+    updateLoopiness: updateLoopiness,
+    resetLoopiness: resetLoopiness,
+    checkLoopiness: checkLoopiness,
+    fillInnerLoopGrid: fillInnerLoopGrid,
+    cleanLoopiness: cleanLoopiness,
+    SpawnEffect: SpawnEffect,
+    spawnTiles: spawnTiles,
+    computeSpawnMap: computeSpawnMap,
+    clearCells: clearCells,
+    evacuateCreatures: evacuateCreatures,
+    evacuateItems: evacuateItems
+};
+
+export { Random, blob, index$6 as canvas, color, colors, config$1 as config, cosmetic, data, index$4 as effect, events, flag, index$8 as fov, frequency, index$3 as gameObject, grid, io, index$2 as light, loop, index as map, message, path, random, range, scheduler, index$5 as sprite, sprites, index$7 as text, index$1 as tile, types, index$9 as utils };

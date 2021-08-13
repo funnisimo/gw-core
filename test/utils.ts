@@ -1,5 +1,5 @@
-import { Random } from '../ts/random';
-import * as Types from '../ts/types';
+// import { Random } from '../ts/random';
+import * as Map from '../ts/map';
 
 export function extractText(buffer: any, x: any, y: any, width: any) {
     let output = '';
@@ -11,53 +11,36 @@ export function extractText(buffer: any, x: any, y: any, width: any) {
     return output.trim();
 }
 
-export const rnd = jest.fn();
+// export const rnd = jest.fn();
 
-export var seed = 0;
+// export var seed = 0;
 
-export function mockRandom(s?: number) {
-    seed = s || 0;
-    rnd.mockImplementation(() => {
-        seed = (seed + 17) % 100;
-        return seed / 100;
-    });
-    const make = jest.fn().mockImplementation((s?: number) => {
-        if (typeof s === 'number') {
-            seed = s % 100;
-        }
-        return rnd;
-    });
-    Random.configure({ make });
-    make.mockClear();
+// export function mockRandom(s?: number) {
+//     seed = s || 0;
+//     rnd.mockImplementation(() => {
+//         seed = (seed + 17) % 100;
+//         return seed / 100;
+//     });
+//     const make = jest.fn().mockImplementation((s?: number) => {
+//         if (typeof s === 'number') {
+//             seed = s % 100;
+//         }
+//         return rnd;
+//     });
+//     Random.configure({ make });
+//     make.mockClear();
+// }
+
+export function mockCell(): Map.Cell {
+    const cell = new Map.Cell();
+    jest.spyOn(cell, 'tileFlags').mockReturnValue(0);
+    jest.spyOn(cell, 'tileMechFlags').mockReturnValue(0);
+    jest.spyOn(cell, 'storeMemory');
+    return cell;
 }
 
-export function mockCell(): Types.CellType {
-    return {
-        flags: 0,
-        mechFlags: 0,
-        tileFlags: jest.fn().mockReturnValue(0),
-        tileMechFlags: jest.fn().mockReturnValue(0),
-        actor: null,
-        item: null,
-        storeMemory: jest.fn(),
-
-        // isWall: jest.fn().mockReturnValue(false),
-        // blocksEffects: jest.fn().mockReturnValue(false),
-        // hasTile: jest.fn().mockReturnValue(false),
-    };
-}
-
-export function mockMap(w = 10, h = 10): Types.MapType {
-    return {
-        width: w,
-        height: h,
-        // hasXY(x, y) {
-        //     return x >= 0 && x < w && y >= 0 && y < h;
-        // },
-        // cell: jest.fn().mockImplementation(mockCell),
-        // eachNeighbor: jest.fn(),
-        isVisible: jest.fn().mockReturnValue(true),
-        actorAt: jest.fn().mockReturnValue(null),
-        itemAt: jest.fn().mockReturnValue(null),
-    };
+export function mockMap(w = 10, h = 10): Map.Map {
+    const map = Map.make(w, h);
+    jest.spyOn(map, 'isVisible').mockReturnValue(true);
+    return map;
 }

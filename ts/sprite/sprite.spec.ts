@@ -2,9 +2,11 @@ import * as Sprite from './sprite';
 import { colors } from '../color';
 
 describe('Sprite', () => {
+    const NONE = colors.NONE;
+
     test('make', () => {
         const a = Sprite.make();
-        expect(a).toEqual({ ch: null, fg: -1, bg: -1, opacity: 100 });
+        expect(a).toEqual({ ch: null, fg: NONE, bg: NONE, opacity: 100 });
 
         const b = Sprite.make('@', 'green', 'blue', 50);
         expect(b.ch).toEqual('@');
@@ -22,30 +24,30 @@ describe('Sprite', () => {
 
         const e = Sprite.make(null, null, 'green', 50);
         expect(e.ch).toEqual(null);
-        expect(e.fg).toEqual(-1);
+        expect(e.fg).toEqual(NONE);
         expect(e.bg).toBe(colors.green);
         expect(e.opacity).toEqual(50);
 
         const f = Sprite.make('@', null, null, 50);
         expect(f.ch).toEqual('@');
-        expect(f.fg).toEqual(-1);
-        expect(f.bg).toEqual(-1);
+        expect(f.fg).toEqual(NONE);
+        expect(f.bg).toEqual(NONE);
         expect(f.opacity).toEqual(50);
 
         const g = Sprite.make({ ch: '@', fg: 'green' });
         expect(g.ch).toEqual('@');
         expect(g.fg).toBe(colors.green);
-        expect(g.bg).toEqual(-1);
+        expect(g.bg).toEqual(NONE);
         expect(g.opacity).toEqual(100);
 
         const h = Sprite.make({});
         expect(h.ch).toEqual(null);
-        expect(h.fg).toEqual(-1);
-        expect(h.bg).toEqual(-1);
+        expect(h.fg).toEqual(NONE);
+        expect(h.bg).toEqual(NONE);
         expect(h.opacity).toEqual(100);
 
         const i = Sprite.make(null, null, null);
-        expect(i).toEqual({ ch: null, fg: -1, bg: -1, opacity: 100 });
+        expect(i).toEqual({ ch: null, fg: NONE, bg: NONE, opacity: 100 });
 
         // const j = Sprite.make(undefined);
         // expect(j).toEqual({});
@@ -53,25 +55,25 @@ describe('Sprite', () => {
         const k = Sprite.make(['$', 'blue']);
         expect(k.ch).toEqual('$');
         expect(k.fg).toBe(colors.blue);
-        expect(k.bg).toEqual(-1);
+        expect(k.bg).toEqual(NONE);
         expect(k.opacity).toEqual(100);
 
         const l = Sprite.make(['blue']);
         expect(l.ch).toEqual(null);
-        expect(l.fg).toEqual(-1);
+        expect(l.fg).toEqual(NONE);
         expect(l.bg).toBe(colors.blue);
         expect(l.opacity).toEqual(100);
 
         const m = Sprite.make('@', 'blue', -1);
         expect(m.ch).toEqual('@');
         expect(m.fg).toBe(colors.blue);
-        expect(m.bg).toEqual(-1);
+        expect(m.bg).toEqual(NONE);
         expect(m.opacity).toEqual(100);
 
         const n = Sprite.make('@');
         expect(n.ch).toEqual('@');
         expect(n.fg).toBe(colors.white);
-        expect(n.bg).toEqual(-1);
+        expect(n.bg).toEqual(NONE);
         expect(n.opacity).toEqual(100);
     });
 
@@ -88,25 +90,25 @@ describe('Sprite', () => {
         const d = Sprite.install('TEST', '@', [100, 0, 0], null, 50);
         expect(d.ch).toEqual('@');
         expect(d.fg).toEqual(colors.red);
-        expect(d.bg).toEqual(-1);
+        expect(d.bg).toEqual(NONE);
         expect(d.opacity).toEqual(50);
 
         const e = Sprite.install('TEST', null, null, 'green', 50);
         expect(e.ch).toEqual(null);
-        expect(e.fg).toEqual(-1);
+        expect(e.fg).toEqual(NONE);
         expect(e.bg).toBe(colors.green);
         expect(e.opacity).toEqual(50);
 
         const f = Sprite.install('TEST', '@', null, null, 50);
         expect(f.ch).toEqual('@');
-        expect(f.fg).toEqual(-1);
-        expect(f.bg).toEqual(-1);
+        expect(f.fg).toEqual(NONE);
+        expect(f.bg).toEqual(NONE);
         expect(f.opacity).toEqual(50);
 
         const g = Sprite.install('TEST', { ch: '@', fg: 'green' });
         expect(g.ch).toEqual('@');
         expect(g.fg).toBe(colors.green);
-        expect(g.bg).toEqual(-1);
+        expect(g.bg).toEqual(NONE);
         expect(g.opacity).toEqual(100);
 
         // const h = Sprite.install("TEST", colors.white);
@@ -116,7 +118,13 @@ describe('Sprite', () => {
         // expect(h.opacity).toEqual(100);
 
         const i = Sprite.install('TEST', null, null, null);
-        expect(i).toEqual({ ch: null, fg: -1, bg: -1, name: 'TEST', opacity: 100 });
+        expect(i).toEqual({
+            ch: null,
+            fg: NONE,
+            bg: NONE,
+            name: 'TEST',
+            opacity: 100,
+        });
 
         // const j = Sprite.install("TEST", undefined);
         // expect(j).toEqual({});
@@ -124,24 +132,24 @@ describe('Sprite', () => {
         const k = Sprite.install('TEST', ['$', 'blue']);
         expect(k.ch).toEqual('$');
         expect(k.fg).toBe(colors.blue);
-        expect(k.bg).toEqual(-1);
+        expect(k.bg).toEqual(NONE);
         expect(k.opacity).toEqual(100);
 
         const l = Sprite.install('TEST', ['blue']);
         expect(l.ch).toEqual(null);
-        expect(l.fg).toEqual(-1);
+        expect(l.fg).toEqual(NONE);
         expect(l.bg).toBe(colors.blue);
         expect(l.opacity).toEqual(100);
 
         const m = Sprite.install('miss', 'green', 50);
         expect(m.ch).toEqual(null);
-        expect(m.fg).toEqual(-1);
+        expect(m.fg).toEqual(NONE);
         expect(m.bg).toBe(colors.green);
         expect(m.opacity).toEqual(50);
 
         const w = Sprite.install('hilite', colors.white);
         expect(w.ch).toEqual(null);
-        expect(w.fg).toEqual(-1);
+        expect(w.fg).toEqual(NONE);
         expect(w.bg).toBe(colors.white);
         expect(w.opacity).toEqual(100);
     });

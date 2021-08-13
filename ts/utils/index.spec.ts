@@ -1,4 +1,4 @@
-import * as Utils from './utils';
+import * as Utils from '.';
 
 describe('Utils', () => {
     test('basics', () => {
@@ -121,12 +121,12 @@ describe('Utils', () => {
             chain: null,
         };
 
-        const a = {} as Utils.Chainable;
-        const b = {} as Utils.Chainable;
-        const c = {} as Utils.Chainable;
-        const d = {} as Utils.Chainable;
-        const e = {} as Utils.Chainable;
-        const f = {} as Utils.Chainable;
+        const a = { next: null };
+        const b = { next: null };
+        const c = { next: null };
+        const d = { next: null };
+        const e = { next: null };
+        const f = { next: null };
 
         Utils.addToChain(obj, 'chain', a);
         Utils.addToChain(obj, 'chain', b);
@@ -151,7 +151,7 @@ describe('Utils', () => {
 
     describe('setDefaults', () => {
         test('null', () => {
-            const dest = {} as Utils.BasicObject;
+            const dest = {} as any;
             Utils.setDefaults(dest, {
                 test: null,
             });
@@ -160,9 +160,27 @@ describe('Utils', () => {
         });
     });
 
+    describe('setOptions', () => {
+        test('basic', () => {
+            const dest: any = { a: 1, d: { e: 1 } };
+            Utils.setOptions(dest, {
+                test: null,
+                a: 2,
+                'b.c': 3,
+                d: { f: 1 },
+            });
+
+            expect(dest.test).toBeNull();
+            expect(dest.a).toEqual(2);
+            expect(dest.b.c).toEqual(3);
+            expect(dest.d.e).toBeUndefined();
+            expect(dest.d.f).toEqual(1);
+        });
+    });
+
     describe('kindDefaults', () => {
         test('sets basic values', () => {
-            const dest = {} as Utils.BasicObject;
+            const dest = {} as any;
             Utils.kindDefaults(dest, {
                 a: 1,
                 b: 2,
@@ -181,7 +199,7 @@ describe('Utils', () => {
                 b: 3,
                 c: { h: 2 },
                 e: { f: { g: 5 } },
-            } as Utils.BasicObject;
+            } as any;
             Utils.kindDefaults(dest, {
                 a: 1,
                 b: 2,
@@ -196,7 +214,7 @@ describe('Utils', () => {
         });
 
         test('treats flags as an array', () => {
-            const dest = {} as Utils.BasicObject;
+            const dest = {} as any;
             Utils.kindDefaults(dest, {
                 flags: 'TEST',
             });
@@ -206,7 +224,7 @@ describe('Utils', () => {
         test('concats default value first', () => {
             const dest = {
                 flags: 'VALUE',
-            } as Utils.BasicObject;
+            } as any;
             Utils.kindDefaults(dest, {
                 flags: 'TEST',
             });

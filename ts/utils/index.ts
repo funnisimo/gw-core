@@ -3,11 +3,11 @@
  * @module utils
  */
 
-export type Loc = [number, number];
-export interface XY {
-    x: number;
-    y: number;
-}
+import { Loc, XY } from '../types';
+
+export { Loc, XY };
+
+export * from './chain';
 
 // DIRS are organized clockwise
 // - first 4 are arrow directions
@@ -88,11 +88,6 @@ export function clamp(v: number, min: number, max: number) {
     return v;
 }
 
-export interface XY {
-    x: number;
-    y: number;
-}
-
 export function x(src: XY | Loc) {
     // @ts-ignore
     return src.x || src[0] || 0;
@@ -101,6 +96,50 @@ export function x(src: XY | Loc) {
 export function y(src: XY | Loc) {
     // @ts-ignore
     return src.y || src[1] || 0;
+}
+
+export class Bounds {
+    public x: number;
+    public y: number;
+    public width: number;
+    public height: number;
+
+    constructor(x: number, y: number, w: number, h: number) {
+        this.x = x;
+        this.y = y;
+        this.width = w;
+        this.height = h;
+    }
+
+    get left() {
+        return this.x;
+    }
+    get right() {
+        return this.x + this.width - 1;
+    }
+    get top() {
+        return this.y;
+    }
+    get bottom() {
+        return this.y + this.height - 1;
+    }
+
+    contains(x: number, y: number): boolean;
+    contains(loc: Loc | XY): boolean;
+    contains(...args: any[]) {
+        let x = args[0];
+        let y = args[1];
+        if (typeof x !== 'number') {
+            y = y(x);
+            x = x(x);
+        }
+        return (
+            this.x <= x &&
+            this.y <= y &&
+            this.x + this.width > x &&
+            this.y + this.height > y
+        );
+    }
 }
 
 export function copyXY(dest: XY, src: XY | Loc) {
@@ -113,8 +152,13 @@ export function addXY(dest: XY, src: XY | Loc) {
     dest.y += y(src);
 }
 
-export function equalsXY(dest: XY, src: XY | Loc) {
-    return dest.x == x(src) && dest.y == y(src);
+export function equalsXY(
+    dest: XY | Loc | null | undefined,
+    src: XY | Loc | null | undefined
+) {
+    if (!dest && !src) return true;
+    if (!dest || !src) return false;
+    return x(dest) == x(src) && y(dest) == y(src);
 }
 
 export function lerpXY(a: XY | Loc, b: XY | Loc, pct: number) {
@@ -127,6 +171,41 @@ export function lerpXY(a: XY | Loc, b: XY | Loc, pct: number) {
     const x2 = x(a) + Math.floor(dx * pct);
     const y2 = y(a) + Math.floor(dy * pct);
     return [x2, y2];
+}
+
+export type XYFunc = (x: number, y: number) => any;
+
+export function eachNeighbor(
+    x: number,
+    y: number,
+    fn: XYFunc,
+    only4dirs = false
+) {
+    const max = only4dirs ? 4 : 8;
+    for (let i = 0; i < max; ++i) {
+        const dir = DIRS[i];
+        const x1 = x + dir[0];
+        const y1 = y + dir[1];
+        fn(x1, y1);
+    }
+}
+
+export type XYMatchFunc = (x: number, y: number) => boolean;
+
+export function matchingNeighbor(
+    x: number,
+    y: number,
+    matchFn: XYMatchFunc,
+    only4dirs = false
+): Loc {
+    const maxIndex = only4dirs ? 4 : 8;
+    for (let d = 0; d < maxIndex; ++d) {
+        const dir = DIRS[d];
+        const i = x + dir[0];
+        const j = y + dir[1];
+        if (matchFn(i, j)) return [i, j];
+    }
+    return [-1, -1];
 }
 
 export function distanceBetween(
@@ -259,8 +338,6 @@ export function smoothHiliteGradient(currentXValue: number, maxXValue: number) {
 //   return other;
 // }
 
-export type BasicObject = { [key: string]: any };
-
 function assignField(dest: any, src: any, key: string) {
     const current = dest[key];
     const updated = src[key];
@@ -322,6 +399,7 @@ export function setDefaults(
     custom: AssignCallback | null = null
 ) {
     let dest;
+    if (!def) return;
     Object.keys(def).forEach((key) => {
         const origKey = key;
         let defValue = def[key];
@@ -361,6 +439,21 @@ export function setDefaults(
                 dest[key] = defValue;
             }
         }
+    });
+}
+
+export function setOptions(obj: any, opts: any) {
+    setDefaults(obj, opts, (dest, key, _current, opt) => {
+        if (opt === null) {
+            dest[key] = null;
+        } else if (Array.isArray(opt)) {
+            dest[key] = opt.slice();
+        } else if (typeof opt === 'object') {
+            dest[key] = opt; // Object.assign({}, opt); -- this breaks assigning a Color object as a default...
+        } else {
+            dest[key] = opt;
+        }
+        return true;
     });
 }
 
@@ -418,7 +511,7 @@ export function first(...args: any[]) {
     return args.find((v) => v !== undefined);
 }
 
-export function getOpt(obj: BasicObject, member: string, _default: any) {
+export function getOpt(obj: any, member: string, _default: any) {
     const v = obj[member];
     if (v === undefined) return _default;
     return v;
@@ -442,79 +535,6 @@ export function arraysIntersect(a: any[], b: any[]) {
 
 export function sum(arr: number[]) {
     return arr.reduce((a, b) => a + b);
-}
-
-// CHAIN
-
-export interface Chainable {
-    next: any | null;
-}
-
-export function chainLength<T extends Chainable>(root: T | null) {
-    let count = 0;
-    while (root) {
-        count += 1;
-        root = root.next;
-    }
-    return count;
-}
-
-export function chainIncludes<T extends Chainable>(chain: T | null, entry: T) {
-    while (chain && chain !== entry) {
-        chain = chain.next;
-    }
-    return chain === entry;
-}
-
-export function eachChain<T extends Chainable>(
-    item: T | null,
-    fn: (item: T, index: number) => any
-) {
-    let index = 0;
-    while (item) {
-        const next = item.next;
-        fn(item, index++);
-        item = next;
-    }
-    return index; // really count
-}
-
-export function addToChain<T extends Chainable>(
-    obj: any,
-    name: string,
-    entry: T
-) {
-    entry.next = obj[name] || null;
-    obj[name] = entry;
-    return true;
-}
-
-export function removeFromChain<T extends Chainable>(
-    obj: any,
-    name: string,
-    entry: T
-) {
-    const root = obj[name];
-    if (root === entry) {
-        obj[name] = entry.next || null;
-        entry.next = null;
-        return true;
-    } else if (!root) {
-        return false;
-    } else {
-        let prev = root;
-        let current = prev.next;
-        while (current && current !== entry) {
-            prev = current;
-            current = prev.next;
-        }
-        if (current === entry) {
-            prev.next = current.next || null;
-            entry.next = null;
-            return true;
-        }
-    }
-    return false;
 }
 
 // LINES
@@ -637,4 +657,121 @@ export function getLineThru(
     });
 
     return line;
+}
+
+// CIRCLE
+
+export function forCircle(x: number, y: number, radius: number, fn: XYFunc) {
+    let i, j;
+
+    for (i = x - radius - 1; i < x + radius + 1; i++) {
+        for (j = y - radius - 1; j < y + radius + 1; j++) {
+            if (
+                (i - x) * (i - x) + (j - y) * (j - y) <
+                radius * radius + radius
+            ) {
+                // + radius softens the circle
+                fn(i, j);
+            }
+        }
+    }
+}
+
+// RECT
+export function forRect(width: number, height: number, fn: XYFunc): void;
+export function forRect(
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    fn: XYFunc
+): void;
+export function forRect(...args: any[]) {
+    let left = 0;
+    let top = 0;
+    if (arguments.length > 3) {
+        left = args.shift();
+        top = args.shift();
+    }
+    const right = left + args[0];
+    const bottom = top + args[1];
+    const fn = args[2];
+
+    for (let i = left; i < right; ++i) {
+        for (let j = top; j < bottom; ++j) {
+            fn(i, j);
+        }
+    }
+}
+
+export function forBorder(width: number, height: number, fn: XYFunc): void;
+export function forBorder(
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    fn: XYFunc
+): void;
+export function forBorder(...args: any[]) {
+    let left = 0;
+    let top = 0;
+    if (arguments.length > 3) {
+        left = args.shift();
+        top = args.shift();
+    }
+    const right = left + args[0] - 1;
+    const bottom = top + args[1] - 1;
+    const fn = args[2];
+
+    for (let x = left; x <= right; ++x) {
+        fn(x, top);
+        fn(x, bottom);
+    }
+    for (let y = top; y <= bottom; ++y) {
+        fn(left, y);
+        fn(right, y);
+    }
+}
+
+// ARC COUNT
+// Rotates around the cell, counting up the number of distinct strings of neighbors with the same test result in a single revolution.
+//		Zero means there are no impassable tiles adjacent.
+//		One means it is adjacent to a wall.
+//		Two means it is in a hallway or something similar.
+//		Three means it is the center of a T-intersection or something similar.
+//		Four means it is in the intersection of two hallways.
+//		Five or more means there is a bug.
+export function arcCount(x: number, y: number, testFn: XYMatchFunc) {
+    let oldX, oldY, newX, newY;
+
+    // brogueAssert(grid.hasXY(x, y));
+
+    let arcCount = 0;
+    let matchCount = 0;
+    for (let dir = 0; dir < CLOCK_DIRS.length; dir++) {
+        oldX = x + CLOCK_DIRS[(dir + 7) % 8][0];
+        oldY = y + CLOCK_DIRS[(dir + 7) % 8][1];
+        newX = x + CLOCK_DIRS[dir][0];
+        newY = y + CLOCK_DIRS[dir][1];
+        // Counts every transition from passable to impassable or vice-versa on the way around the cell:
+        const newOk = testFn(newX, newY);
+        const oldOk = testFn(oldX, oldY);
+        if (newOk) ++matchCount;
+        if (newOk != oldOk) {
+            arcCount++;
+        }
+    }
+    if (arcCount == 0 && matchCount) return 1;
+    return Math.floor(arcCount / 2); // Since we added one when we entered a wall and another when we left.
+}
+
+// ALGOS
+
+export async function asyncForEach<T>(
+    iterable: Iterable<T>,
+    fn: (t: T) => Promise<any> | any
+) {
+    for (let t of iterable) {
+        await fn(t);
+    }
 }

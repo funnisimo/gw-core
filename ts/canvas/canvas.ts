@@ -1,6 +1,6 @@
 import * as shaders from './shaders';
 import { Glyphs, GlyphOptions } from './glyphs';
-import { BufferTarget } from './buffer';
+import { BufferTarget, Buffer } from './buffer';
 import * as IO from '../io';
 import * as Utils from '../utils';
 
@@ -9,21 +9,17 @@ const VERTICES_PER_TILE = 6;
 
 export type MouseEventFn = (ev: IO.Event) => void;
 
-export interface CanvasOptions {
-    width?: number;
-    height?: number;
+interface BaseOptions {
+    width: number;
+    height: number;
     glyphs: Glyphs;
-    div?: HTMLElement | string;
-    render?: boolean;
-    io?: IO.Loop;
-    loop?: IO.Loop;
-}
-
-export interface ImageOptions extends CanvasOptions {
+    div: HTMLElement | string;
+    io: boolean; // if true, hookup events to standard IO loop.
+    loop: IO.Loop; // if provided, hookup events to this loop.
     image: HTMLImageElement | string;
 }
 
-export type FontOptions = CanvasOptions & GlyphOptions;
+export type CanvasOptions = BaseOptions & GlyphOptions;
 
 export class NotSupportedError extends Error {
     constructor(...params: any[]) {
@@ -46,25 +42,18 @@ export abstract class BaseCanvas implements BufferTarget {
     protected _data!: Uint32Array;
     protected _renderRequested: boolean = false;
     protected _glyphs!: Glyphs;
-    protected _autoRender: boolean = true;
     protected _node: HTMLCanvasElement;
 
     protected _width: number = 50;
     protected _height: number = 25;
+    protected _buffer: Buffer;
 
-    constructor(options: CanvasOptions) {
-        if (!options.glyphs)
-            throw new Error('You must supply glyphs for the canvas.');
+    constructor(width: number, height: number, glyphs: Glyphs) {
         this._node = this._createNode();
         this._createContext();
-        this._configure(options);
+        this._configure(width, height, glyphs);
 
-        const io = options.io || options.loop;
-        if (io) {
-            this.onclick = (e) => io.pushEvent(e);
-            this.onmousemove = (e) => io.pushEvent(e);
-            this.onmouseup = (e) => io.pushEvent(e);
-        }
+        this._buffer = new Buffer(this);
     }
 
     get node(): HTMLCanvasElement {
@@ -101,34 +90,20 @@ export abstract class BaseCanvas implements BufferTarget {
         return this._glyphs.forChar(ch);
     }
 
+    get buffer() {
+        return this._buffer;
+    }
+
     protected _createNode() {
         return document.createElement('canvas');
     }
 
     protected abstract _createContext(): void;
 
-    private _configure(options: CanvasOptions) {
-        this._width = options.width || this._width;
-        this._height = options.height || this._height;
-        this._autoRender = options.render !== false;
-        this._setGlyphs(options.glyphs);
-
-        if (options.div) {
-            let el;
-            if (typeof options.div === 'string') {
-                el = document.getElementById(options.div);
-                if (!el) {
-                    console.warn(
-                        'Failed to find parent element by ID: ' + options.div
-                    );
-                }
-            } else {
-                el = options.div;
-            }
-            if (el && el.appendChild) {
-                el.appendChild(this.node);
-            }
-        }
+    private _configure(width: number, height: number, glyphs: Glyphs) {
+        this._width = width;
+        this._height = height;
+        this._setGlyphs(glyphs);
     }
 
     protected _setGlyphs(glyphs: Glyphs) {
@@ -143,56 +118,59 @@ export abstract class BaseCanvas implements BufferTarget {
         this._width = width;
         this._height = height;
 
+        if (this._buffer) {
+            this._buffer.resize(width, height);
+        }
+
         const node = this.node;
         node.width = this._width * this.tileWidth;
         node.height = this._height * this.tileHeight;
     }
 
-    draw(x: number, y: number, glyph: number, fg: number, bg: number) {
-        glyph = glyph & 0xff;
-        bg = bg & 0xfff;
-        fg = fg & 0xfff;
-        const style = glyph * (1 << 24) + bg * (1 << 12) + fg;
-        this._set(x, y, style);
-        return this;
-    }
+    // draw(x: number, y: number, glyph: number, fg: number, bg: number) {
+    //     glyph = glyph & 0xff;
+    //     bg = bg & 0xfff;
+    //     fg = fg & 0xfff;
+    //     const style = glyph * (1 << 24) + bg * (1 << 12) + fg;
+    //     this._set(x, y, style);
+    //     return this;
+    // }
 
-    fill(bg: number): this;
-    fill(glyph: number, fg: number, bg: number): this;
-    fill(...args: number[]): this {
-        let g = 0,
-            fg = 0,
-            bg = 0;
-        if (args.length == 1) {
-            bg = args[0];
-        } else if (args.length == 3) {
-            [g, fg, bg] = args;
-        }
-        for (let x = 0; x < this._width; ++x) {
-            for (let y = 0; y < this._height; ++y) {
-                this.draw(x, y, g, fg, bg);
-            }
-        }
-        return this;
-    }
+    // fill(bg: number): this;
+    // fill(glyph: number, fg: number, bg: number): this;
+    // fill(...args: number[]): this {
+    //     let g = 0,
+    //         fg = 0,
+    //         bg = 0;
+    //     if (args.length == 1) {
+    //         bg = args[0];
+    //     } else if (args.length == 3) {
+    //         [g, fg, bg] = args;
+    //     }
+    //     for (let x = 0; x < this._width; ++x) {
+    //         for (let y = 0; y < this._height; ++y) {
+    //             this.draw(x, y, g, fg, bg);
+    //         }
+    //     }
+    //     return this;
+    // }
 
     protected _requestRender() {
         if (this._renderRequested) return;
         this._renderRequested = true;
-        if (!this._autoRender) return;
-        requestAnimationFrame(() => this.render());
+        requestAnimationFrame(() => this._render());
     }
 
-    protected _set(x: number, y: number, style: number) {
-        let index = y * this.width + x;
-        const current = this._data[index];
-        if (current !== style) {
-            this._data[index] = style;
-            this._requestRender();
-            return true;
-        }
-        return false;
-    }
+    // protected _set(x: number, y: number, style: number) {
+    //     let index = y * this.width + x;
+    //     const current = this._data[index];
+    //     if (current !== style) {
+    //         this._data[index] = style;
+    //         this._requestRender();
+    //         return true;
+    //     }
+    //     return false;
+    // }
 
     copy(data: Uint32Array) {
         this._data.set(data);
@@ -203,7 +181,11 @@ export abstract class BaseCanvas implements BufferTarget {
         data.set(this._data);
     }
 
-    abstract render(): void;
+    render(): void {
+        this.buffer.render();
+    }
+
+    abstract _render(): void;
 
     hasXY(x: number, y: number) {
         return x >= 0 && y >= 0 && x < this.width && y < this.height;
@@ -212,8 +194,8 @@ export abstract class BaseCanvas implements BufferTarget {
     set onclick(fn: MouseEventFn | null) {
         if (fn) {
             this.node.onclick = (e: MouseEvent) => {
-                const x = this.toX(e.offsetX);
-                const y = this.toY(e.offsetY);
+                const x = this._toX(e.offsetX);
+                const y = this._toY(e.offsetY);
                 const ev = IO.makeMouseEvent(e, x, y);
                 fn(ev);
             };
@@ -225,8 +207,8 @@ export abstract class BaseCanvas implements BufferTarget {
     set onmousemove(fn: MouseEventFn | null) {
         if (fn) {
             this.node.onmousemove = (e: MouseEvent) => {
-                const x = this.toX(e.offsetX);
-                const y = this.toY(e.offsetY);
+                const x = this._toX(e.offsetX);
+                const y = this._toY(e.offsetY);
                 if (x == this.mouse.x && y == this.mouse.y) return;
                 this.mouse.x = x;
                 this.mouse.y = y;
@@ -241,8 +223,8 @@ export abstract class BaseCanvas implements BufferTarget {
     set onmouseup(fn: MouseEventFn | null) {
         if (fn) {
             this.node.onmouseup = (e: MouseEvent) => {
-                const x = this.toX(e.offsetX);
-                const y = this.toY(e.offsetY);
+                const x = this._toX(e.offsetX);
+                const y = this._toY(e.offsetY);
                 const ev = IO.makeMouseEvent(e, x, y);
                 fn(ev);
             };
@@ -251,7 +233,7 @@ export abstract class BaseCanvas implements BufferTarget {
         }
     }
 
-    toX(offsetX: number) {
+    protected _toX(offsetX: number) {
         return Utils.clamp(
             Math.floor(this.width * (offsetX / this.node.clientWidth)),
             0,
@@ -259,7 +241,7 @@ export abstract class BaseCanvas implements BufferTarget {
         );
     }
 
-    toY(offsetY: number) {
+    protected _toY(offsetY: number) {
         return Utils.clamp(
             Math.floor(this.height * (offsetY / this.node.clientHeight)),
             0,
@@ -281,8 +263,8 @@ export class Canvas extends BaseCanvas {
     private _uniforms!: Record<string, WebGLUniformLocation>;
     private _texture!: WebGLTexture;
 
-    constructor(options: CanvasOptions) {
-        super(options);
+    constructor(width: number, height: number, glyphs: Glyphs) {
+        super(width, height, glyphs);
     }
 
     protected _createContext() {
@@ -383,19 +365,19 @@ export class Canvas extends BaseCanvas {
         this._createData();
     }
 
-    protected _set(x: number, y: number, style: number) {
-        let index = y * this.width + x;
-        index *= VERTICES_PER_TILE;
+    // protected _set(x: number, y: number, style: number) {
+    //     let index = y * this.width + x;
+    //     index *= VERTICES_PER_TILE;
 
-        const current = this._data[index + 2];
-        if (current !== style) {
-            this._data[index + 2] = style;
-            this._data[index + 5] = style;
-            this._requestRender();
-            return true;
-        }
-        return false;
-    }
+    //     const current = this._data[index + 2];
+    //     if (current !== style) {
+    //         this._data[index + 2] = style;
+    //         this._data[index + 5] = style;
+    //         this._requestRender();
+    //         return true;
+    //     }
+    //     return false;
+    // }
 
     copy(data: Uint32Array) {
         data.forEach((style, i) => {
@@ -414,7 +396,7 @@ export class Canvas extends BaseCanvas {
         }
     }
 
-    render() {
+    _render() {
         const gl = this._gl;
 
         if (this._glyphs.needsUpdate) {
@@ -439,8 +421,8 @@ export class Canvas2D extends BaseCanvas {
     private _ctx!: CanvasRenderingContext2D;
     private _changed!: Int8Array;
 
-    constructor(options: CanvasOptions) {
-        super(options);
+    constructor(width: number, height: number, glyphs: Glyphs) {
+        super(width, height, glyphs);
     }
 
     protected _createContext() {
@@ -451,13 +433,13 @@ export class Canvas2D extends BaseCanvas {
         this._ctx = ctx;
     }
 
-    protected _set(x: number, y: number, style: number) {
-        const result = super._set(x, y, style);
-        if (result) {
-            this._changed[y * this.width + x] = 1;
-        }
-        return result;
-    }
+    // protected _set(x: number, y: number, style: number) {
+    //     const result = super._set(x, y, style);
+    //     if (result) {
+    //         this._changed[y * this.width + x] = 1;
+    //     }
+    //     return result;
+    // }
 
     resize(width: number, height: number) {
         super.resize(width, height);
@@ -475,7 +457,7 @@ export class Canvas2D extends BaseCanvas {
         this._requestRender();
     }
 
-    render() {
+    _render() {
         this._renderRequested = false;
         for (let i = 0; i < this._changed.length; ++i) {
             if (this._changed[i]) this._renderCell(i);
@@ -521,50 +503,111 @@ export class Canvas2D extends BaseCanvas {
     }
 }
 
-export function withImage(image: ImageOptions | HTMLImageElement | string) {
-    let opts = {} as CanvasOptions;
-    if (typeof image === 'string') {
-        opts.glyphs = Glyphs.fromImage(image);
-    } else if (image instanceof HTMLImageElement) {
-        opts.glyphs = Glyphs.fromImage(image);
+export function make(opts: Partial<CanvasOptions>): BaseCanvas;
+export function make(
+    width: number,
+    height: number,
+    opts?: Partial<CanvasOptions>
+): BaseCanvas;
+export function make(...args: any[]): BaseCanvas {
+    let width: number = args[0];
+    let height: number = args[1];
+    let opts: Partial<CanvasOptions> = args[2];
+    if (args.length == 1) {
+        opts = args[0];
+        height = opts.height || 34;
+        width = opts.width || 80;
+    }
+    opts = opts || { font: 'monospace' };
+    let glyphs: Glyphs;
+    if (opts.image) {
+        glyphs = Glyphs.fromImage(opts.image);
     } else {
-        if (!image.image) throw new Error('You must supply the image.');
-        Object.assign(opts, image);
-        opts.glyphs = Glyphs.fromImage(image.image);
+        glyphs = Glyphs.fromFont(opts);
     }
 
     let canvas;
     try {
-        canvas = new Canvas(opts);
+        canvas = new Canvas(width, height, glyphs);
     } catch (e) {
         if (!(e instanceof NotSupportedError)) throw e;
     }
 
     if (!canvas) {
-        canvas = new Canvas2D(opts);
+        canvas = new Canvas2D(width, height, glyphs);
+    }
+
+    if (opts.div) {
+        let el;
+        if (typeof opts.div === 'string') {
+            el = document.getElementById(opts.div);
+            if (!el) {
+                console.warn(
+                    'Failed to find parent element by ID: ' + opts.div
+                );
+            }
+        } else {
+            el = opts.div;
+        }
+        if (el && el.appendChild) {
+            el.appendChild(canvas.node);
+        }
+    }
+
+    if (opts.io || opts.loop) {
+        let loop = opts.loop || IO.loop;
+        canvas.onclick = (e) => loop.pushEvent(e);
+        canvas.onmousemove = (e) => loop.pushEvent(e);
+        canvas.onmouseup = (e) => loop.pushEvent(e);
     }
 
     return canvas;
 }
 
-export function withFont(src: FontOptions | string) {
-    if (typeof src === 'string') {
-        src = { font: src } as FontOptions;
-    }
-    src.glyphs = Glyphs.fromFont(src);
-    let canvas;
-    try {
-        canvas = new Canvas(src);
-    } catch (e) {
-        if (!(e instanceof NotSupportedError)) throw e;
-    }
+// export function withImage(image: ImageOptions | HTMLImageElement | string) {
+//     let opts = {} as CanvasOptions;
+//     if (typeof image === 'string') {
+//         opts.glyphs = Glyphs.fromImage(image);
+//     } else if (image instanceof HTMLImageElement) {
+//         opts.glyphs = Glyphs.fromImage(image);
+//     } else {
+//         if (!image.image) throw new Error('You must supply the image.');
+//         Object.assign(opts, image);
+//         opts.glyphs = Glyphs.fromImage(image.image);
+//     }
 
-    if (!canvas) {
-        canvas = new Canvas2D(src);
-    }
+//     let canvas;
+//     try {
+//         canvas = new Canvas(opts);
+//     } catch (e) {
+//         if (!(e instanceof NotSupportedError)) throw e;
+//     }
 
-    return canvas;
-}
+//     if (!canvas) {
+//         canvas = new Canvas2D(opts);
+//     }
+
+//     return canvas;
+// }
+
+// export function withFont(src: FontOptions | string) {
+//     if (typeof src === 'string') {
+//         src = { font: src } as FontOptions;
+//     }
+//     src.glyphs = Glyphs.fromFont(src);
+//     let canvas;
+//     try {
+//         canvas = new Canvas(src);
+//     } catch (e) {
+//         if (!(e instanceof NotSupportedError)) throw e;
+//     }
+
+//     if (!canvas) {
+//         canvas = new Canvas2D(src);
+//     }
+
+//     return canvas;
+// }
 
 // Copy of: https://github.com/ondras/fastiles/blob/master/ts/utils.ts (v2.1.0)
 

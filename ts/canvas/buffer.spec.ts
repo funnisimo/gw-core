@@ -278,7 +278,7 @@ describe('buffer', () => {
             target = {
                 width: 10,
                 height: 8,
-                draw: jest.fn(),
+                // draw: jest.fn(),
                 copyTo: jest.fn(),
                 copy: jest.fn(),
                 toGlyph: jest.fn().mockImplementation((ch) => ch.charCodeAt(0)),

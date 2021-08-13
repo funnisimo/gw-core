@@ -1,10 +1,14 @@
 import * as Grid from './grid';
 import * as GW from './index';
-import * as UTILS from '../test/utils';
+// import * as UTILS from '../test/utils';
 import { random } from './random';
 
 describe('GW.grid', () => {
     let a: Grid.NumGrid;
+
+    // beforeEach(() => {
+    //     UTILS.mockRandom();
+    // });
 
     afterEach(() => {
         GW.grid.free(a);
@@ -17,6 +21,17 @@ describe('GW.grid', () => {
         expect(a.height).toEqual(10);
         expect(a[9][9]).toEqual(0);
         expect(a.hasXY(0, 0)).toBeTruthy();
+
+        GW.grid.free(a);
+        GW.grid.free(a); // Can free multiple times
+
+        const b = GW.grid.alloc(10, 10, 0);
+        expect(b).toBe(a);
+        const c = GW.grid.alloc(10, 10, 0);
+        expect(c).not.toBe(a);
+
+        GW.grid.free(c);
+        GW.grid.free(b);
 
         expect(() => GW.grid.alloc(0, 4)).toThrow();
         expect(() => GW.grid.alloc(4, 0)).toThrow();
@@ -43,6 +58,18 @@ describe('GW.grid', () => {
         expect(b[0][0]).toEqual(0);
         expect(b.x).toBeUndefined();
         expect(b.y).toBeUndefined();
+        GW.grid.free(b);
+    });
+
+    test('alloc a clone', () => {
+        a = GW.grid.alloc(10, 10);
+        a.update(() => GW.random.number(100) + 1);
+        expect(a[0][0]).toBeGreaterThan(0);
+
+        const b = GW.grid.alloc(a);
+        b.forEach((v, x, y) => expect(a.get(x, y)).toEqual(v));
+
+        GW.grid.free(a);
         GW.grid.free(b);
     });
 
@@ -254,23 +281,6 @@ describe('GW.grid', () => {
         );
     });
 
-    test('fillBlob', () => {
-        a = GW.grid.alloc(80, 30, 0);
-        expect(a.count(1)).toEqual(0);
-
-        a.fillBlob(5, 4, 4, 30, 15, 55, 'ffffftttt', 'ffffttttt');
-        expect(a.count(1)).toBeGreaterThan(10);
-    });
-
-    test('fillBlob - can handle min >= max', () => {
-        GW.random.seed(123456);
-        a = GW.grid.alloc(50, 30, 0);
-        expect(a.count(1)).toEqual(0);
-
-        a.fillBlob(5, 12, 12, 10, 10, 55, 'ffffftttt', 'ffffttttt');
-        expect(a.count(1)).toBeGreaterThan(10);
-    });
-
     test('floodFill', () => {
         a = GW.grid.alloc(20, 20, 0);
         a.fill(1);
@@ -280,7 +290,7 @@ describe('GW.grid', () => {
     });
 
     test('closestMatchingLoc', () => {
-        UTILS.mockRandom();
+        // UTILS.mockRandom();
         random.seed(5);
 
         a = GW.grid.alloc(10, 10, 0);
@@ -312,7 +322,7 @@ describe('GW.grid', () => {
     });
 
     test('randomMatchingLoc', () => {
-        UTILS.mockRandom();
+        // UTILS.mockRandom();
         random.seed(5);
 
         a = GW.grid.alloc(10, 10, 0);
@@ -322,20 +332,27 @@ describe('GW.grid', () => {
         function one(v: number) {
             return v == 1;
         }
-        expect(a.randomMatchingLoc(one)).toEqual([2, 3]);
 
-        random.seed(50);
-        expect(a.randomMatchingLoc(one)).toEqual([4, 1]);
+        const results: Record<number, number> = {};
+        for (let i = 0; i < 1000; ++i) {
+            const xy = a.randomMatchingLoc(one);
+            const v = xy[0] * 10 + xy[1];
+            results[v] = (results[v] || 0) + 1;
+        }
+
+        expect(results[23]).toBeGreaterThan(0);
+        expect(results[41]).toBeGreaterThan(0);
+        expect(Object.keys(results)).toEqual(['23', '41']);
 
         function two(v: number) {
             return v == 2;
         }
         expect(a.randomMatchingLoc(two)).toEqual([-1, -1]);
 
-        random.seed(5);
-        expect(a.randomMatchingLoc(one, true)).toEqual([4, 1]);
-        random.seed(50);
-        expect(a.randomMatchingLoc(one, true)).toEqual([4, 1]);
+        // random.seed(5);
+        // expect(a.randomMatchingLoc(one)).toEqual([4, 1]);
+        // random.seed(50);
+        // expect(a.randomMatchingLoc(one)).toEqual([4, 1]);
 
         // some kind of error!
         let ok = false;
@@ -351,6 +368,8 @@ describe('GW.grid', () => {
     });
 
     test('matchingLocNear', () => {
+        random.seed(12345);
+
         a = GW.grid.alloc(10, 10, 0);
         a[4][1] = 1;
         a[2][3] = 1;
@@ -366,19 +385,19 @@ describe('GW.grid', () => {
 
         a[4][3] = 1;
         expect(a.matchingLocNear(4, 2, 1)).toEqual([4, 1]);
-        expect(a.matchingLocNear(4, 2, 1, true)).toEqual([4, 3]);
+        // expect(a.matchingLocNear(4, 2, 1, true)).toEqual([4, 3]);
 
-        // This is an error condition...
-        let normal = true;
-        const match = jest
-            .fn()
-            .mockImplementation((v: number, x: number, y: number) => {
-                if (!normal) return false;
-                if (x == 4 && y == 3) normal = false;
-                return v == 1;
-            });
+        // // This is an error condition...
+        // let normal = true;
+        // const match = jest
+        //     .fn()
+        //     .mockImplementation((v: number, x: number, y: number) => {
+        //         if (!normal) return false;
+        //         if (x == 4 && y == 3) normal = false;
+        //         return v == 1;
+        //     });
 
-        expect(a.matchingLocNear(4, 2, match)).toEqual([-1, -1]);
+        // expect(a.matchingLocNear(4, 2, match)).toEqual([-1, -1]);
     });
 
     test('arcCount', () => {
@@ -490,42 +509,17 @@ describe('GW.grid', () => {
     });
 
     test('randomLeastPositiveLoc', () => {
+        GW.random.seed(12345);
         a = GW.grid.alloc(10, 10);
         a.fillRect(0, 0, 4, 4, -1);
         a.fillRect(7, 7, 3, 3, 2);
         a.fillRect(2, 4, 4, 4, 3);
         a.fillRect(6, 2, 4, 4, -4);
         a.fillRect(4, 5, 3, 3, 6);
-        expect(a.randomLeastPositiveLoc()).toEqual([9, 7]);
-        expect(a.randomLeastPositiveLoc(true)).toEqual([8, 8]);
-    });
-
-    test('fillBlob', () => {
-        UTILS.mockRandom(12345);
-        a = GW.grid.alloc(50, 50);
-        let results = a.fillBlob(5, 5, 5, 20, 20, 55);
-
-        expect(results).toEqual({
-            x: 17,
-            y: 25,
-            width: 16,
-            height: 9,
-        });
-
-        // force an odd return from '_cellularAutomataRound'
-
-        // @ts-ignore
-        jest.spyOn(a, '_cellularAutomataRound').mockReturnValueOnce(false);
-
-        a.fill(0);
-        results = a.fillBlob(5, 5, 5, 20, 20, 55);
-
-        expect(results).toEqual({
-            x: 18,
-            y: 15,
-            width: 10,
-            height: 20,
-        });
+        // a.dump();
+        expect(a.randomLeastPositiveLoc()).toEqual([7, 7]);
+        expect(a.randomLeastPositiveLoc()).toEqual([9, 8]);
+        expect(a.randomLeastPositiveLoc()).toEqual([8, 9]);
     });
 
     test('make', () => {

@@ -1,17 +1,23 @@
-import { BasicObject } from './utils';
+import * as Utils from './utils';
+import * as ROT from 'rot-js';
 
-export type RandomFunction = () => number;
-export type SeedFunction = (seed?: number) => RandomFunction;
+// export type RandomFunction = () => number;
+// export type SeedFunction = (seed?: number) => RandomFunction;
 
-export interface RandomConfig {
-    make: SeedFunction;
-}
+// export interface RandomConfig {
+//     make: SeedFunction;
+// }
 
-const RANDOM_CONFIG: RandomConfig = {
-    make: () => {
-        return Math.random.bind(Math);
-    },
-};
+// const RANDOM_CONFIG: RandomConfig = {
+//     make: (seed?: number) => {
+//         let rng = ROT.RNG;
+//         if (seed) {
+//             rng = ROT.RNG.clone();
+//             rng.setSeed(seed);
+//         }
+//         return rng.getUniform.bind(ROT.RNG);
+//     },
+// };
 
 export type WeightedArray = number[];
 
@@ -54,32 +60,32 @@ function lotteryDrawObject(rand: Random, weights: WeightedObject) {
 }
 
 export class Random {
-    private _fn: RandomFunction;
+    private _fn: typeof ROT.RNG;
 
-    static configure(opts: Partial<RandomConfig>) {
-        if (opts.make) {
-            if (typeof opts.make !== 'function')
-                throw new Error('Random make parameter must be a function.');
-            if (typeof opts.make(12345) !== 'function')
-                throw new Error(
-                    'Random make function must accept a numeric seed and return a random function.'
-                );
-            RANDOM_CONFIG.make = opts.make;
-            random.seed();
-            cosmetic.seed();
-        }
-    }
+    // static configure(opts: Partial<RandomConfig>) {
+    //     if (opts.make) {
+    //         if (typeof opts.make !== 'function')
+    //             throw new Error('Random make parameter must be a function.');
+    //         if (typeof opts.make(12345) !== 'function')
+    //             throw new Error(
+    //                 'Random make function must accept a numeric seed and return a random function.'
+    //             );
+    //         RANDOM_CONFIG.make = opts.make;
+    //         random.seed();
+    //         cosmetic.seed();
+    //     }
+    // }
 
     constructor() {
-        this._fn = RANDOM_CONFIG.make();
+        this._fn = ROT.RNG.clone();
     }
 
-    seed(val?: number) {
-        this._fn = RANDOM_CONFIG.make(val);
+    seed(val: number) {
+        this._fn.setSeed(val);
     }
 
     value() {
-        return this._fn();
+        return this._fn.getUniform();
     }
 
     float() {
@@ -90,7 +96,7 @@ export class Random {
         // @ts-ignore
         if (max <= 0) return 0;
         max = max || Number.MAX_SAFE_INTEGER;
-        return Math.floor(this._fn() * max);
+        return Math.floor(this.value() * max);
     }
 
     int(max: number = 0) {
@@ -132,7 +138,7 @@ export class Random {
         return list[this.range(0, list.length - 1)];
     }
 
-    key(obj: BasicObject) {
+    key(obj: object) {
         return this.item(Object.keys(obj));
     }
 
@@ -194,6 +200,97 @@ export class Random {
         }
 
         return total + lo;
+    }
+
+    matchingLoc(
+        width: number,
+        height: number,
+        matchFn: Utils.XYMatchFunc
+    ): Utils.Loc {
+        let locationCount = 0;
+        let i, j, index;
+
+        locationCount = 0;
+        Utils.forRect(width, height, (i, j) => {
+            if (matchFn(i, j)) {
+                locationCount++;
+            }
+        });
+
+        if (locationCount == 0) {
+            return [-1, -1];
+        } else {
+            index = this.range(0, locationCount - 1);
+        }
+
+        for (i = 0; i < width && index >= 0; i++) {
+            for (j = 0; j < height && index >= 0; j++) {
+                if (matchFn(i, j)) {
+                    if (index == 0) {
+                        return [i, j];
+                    }
+                    index--;
+                }
+            }
+        }
+        return [-1, -1];
+    }
+
+    matchingLocNear(
+        x: number,
+        y: number,
+        matchFn: Utils.XYMatchFunc
+    ): Utils.Loc {
+        let loc: Utils.Loc = [-1, -1];
+        let i, j, k, candidateLocs, randIndex;
+
+        candidateLocs = 0;
+
+        // count up the number of candidate locations
+        for (k = 0; k < 50 && !candidateLocs; k++) {
+            for (i = x - k; i <= x + k; i++) {
+                for (j = y - k; j <= y + k; j++) {
+                    if (
+                        (i == x - k ||
+                            i == x + k ||
+                            j == y - k ||
+                            j == y + k) &&
+                        matchFn(i, j)
+                    ) {
+                        candidateLocs++;
+                    }
+                }
+            }
+        }
+
+        if (candidateLocs == 0) {
+            return [-1, -1];
+        }
+
+        // and pick one
+        randIndex = 1 + this.number(candidateLocs);
+
+        for (k = 0; k < 50; k++) {
+            for (i = x - k; i <= x + k; i++) {
+                for (j = y - k; j <= y + k; j++) {
+                    if (
+                        (i == x - k ||
+                            i == x + k ||
+                            j == y - k ||
+                            j == y + k) &&
+                        matchFn(i, j)
+                    ) {
+                        if (--randIndex == 0) {
+                            loc[0] = i;
+                            loc[1] = j;
+                            return loc;
+                        }
+                    }
+                }
+            }
+        }
+
+        return [-1, -1]; // should never reach this point
     }
 }
 

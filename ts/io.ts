@@ -1,5 +1,4 @@
 import * as Utils from './utils';
-import { make as Make } from './gw';
 
 export interface Event {
     shiftKey: boolean;
@@ -174,6 +173,19 @@ export function keyCodeDirection(key: string): Utils.Loc | null {
 
 export function ignoreKeyEvent(e: KeyboardEvent) {
     return CONTROL_CODES.includes(e.code);
+}
+
+export function onkeydown(e: KeyboardEvent) {
+    if (ignoreKeyEvent(e)) return;
+
+    if (e.code === 'Escape') {
+        loop.clearEvents(); // clear all current events, then push on the escape
+    }
+
+    const ev = makeKeyEvent(e);
+    loop.pushEvent(ev);
+
+    e.preventDefault();
 }
 
 // MOUSE
@@ -415,8 +427,6 @@ export class Loop {
 export function make() {
     return new Loop();
 }
-
-Make.loop = make;
 
 // Makes a default global loop that you access through these funcitons...
 export const loop = make();

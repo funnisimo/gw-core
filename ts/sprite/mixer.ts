@@ -1,7 +1,6 @@
-import * as Color from "../color";
-import { SpriteType } from "../types";
-import * as Utils from "../utils";
-import { make } from "../gw";
+import * as Color from '../color';
+import { SpriteData } from '../types';
+import * as Utils from '../utils';
 
 export interface DrawInfo {
     ch: string | number;
@@ -45,6 +44,10 @@ export class Mixer implements DrawInfo {
         );
     }
 
+    get dances(): boolean {
+        return this.fg.dances || this.bg.dances;
+    }
+
     nullify() {
         this.ch = -1;
         this.fg.nullify();
@@ -78,16 +81,19 @@ export class Mixer implements DrawInfo {
         return this._changed();
     }
 
-    drawSprite(info: SpriteType, opacity?: number) {
-        if (opacity === undefined) opacity = info.opacity;
+    drawSprite(src: SpriteData | Mixer, opacity?: number) {
+        if (src === this) return this;
+
+        // @ts-ignore
+        if (opacity === undefined) opacity = src.opacity;
         if (opacity === undefined) opacity = 100;
         if (opacity <= 0) return;
 
-        if (info.ch) this.ch = info.ch;
-        if ((info.fg && info.fg !== -1) || info.fg === 0)
-            this.fg.mix(info.fg, opacity);
-        if ((info.bg && info.bg !== -1) || info.bg === 0)
-            this.bg.mix(info.bg, opacity);
+        if (src.ch) this.ch = src.ch;
+        if ((src.fg && src.fg !== -1) || src.fg === 0)
+            this.fg.mix(src.fg, opacity);
+        if ((src.bg && src.bg !== -1) || src.bg === 0)
+            this.bg.mix(src.bg, opacity);
         return this._changed();
     }
 
@@ -104,6 +110,12 @@ export class Mixer implements DrawInfo {
         if (bg) {
             this.bg.multiply(color);
         }
+        return this._changed();
+    }
+
+    scale(multiplier: number, fg = true, bg = true) {
+        if (fg) this.fg.scale(multiplier);
+        if (bg) this.bg.scale(multiplier);
         return this._changed();
     }
 
@@ -151,6 +163,6 @@ export class Mixer implements DrawInfo {
     }
 }
 
-make.mixer = function (base?: Partial<DrawInfo>) {
+export function makeMixer(base?: Partial<DrawInfo>) {
     return new Mixer(base);
-};
+}
