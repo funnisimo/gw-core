@@ -17,9 +17,7 @@ import { Mixer } from '../sprite';
 import { asyncForEach } from '../utils';
 import * as Canvas from '../canvas';
 import { Depth } from '../gameObject/flags';
-
-export type EachCellCb = (cell: Cell, x: number, y: number, map: Map) => void;
-export type MapTestFn = (cell: Cell, x: number, y: number, map: Map) => boolean;
+import { MapType, EachCellCb, MapTestFn, CellType } from './types';
 
 export interface MapOptions extends LightSystemOptions, FOV.FovSystemOptions {
     tile: string | true;
@@ -38,7 +36,7 @@ export interface MapDrawOptions {
     force: boolean;
 }
 
-export class Map implements LightSystemSite, FOV.FovSite {
+export class Map implements LightSystemSite, FOV.FovSite, MapType {
     width: number;
     height: number;
     cells: Grid.Grid<Cell>;
@@ -190,10 +188,10 @@ export class Map implements LightSystemSite, FOV.FovSite {
         return this.cell(x, y).hasTileFlag(TILE.flags.Tile.T_HAS_STAIRS);
     }
 
-    count(cb: MapTestFn) {
+    count(cb: MapTestFn): number {
         return this.cells.count((cell, x, y) => cb(cell, x, y, this));
     }
-    dump(fmt?: (cell: Cell) => string) {
+    dump(fmt?: (cell: CellType) => string) {
         this.cells.dump(fmt || ((c: Cell) => c.dump()));
     }
 
@@ -264,11 +262,11 @@ export class Map implements LightSystemSite, FOV.FovSite {
         return this._objects;
     }
 
-    async update(dt: number) {
+    async update(dt: number): Promise<void> {
         await asyncForEach(this.layers, (l) => l.update(dt));
     }
 
-    copy(_src: Map) {}
+    copy(_src: Map): void {}
 
     clone() {}
 

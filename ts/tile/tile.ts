@@ -7,7 +7,8 @@ import * as Light from '../light';
 import { TileFlags, TileType, NameConfig } from './types';
 import * as Sprite from '../sprite';
 import * as Flag from '../flag';
-import * as Effect from '../effect';
+import * as Effect from '../effect/types';
+import { make as makeEffect } from '../effect/make';
 import * as Flags from './flags';
 import * as Color from '../color';
 
@@ -191,7 +192,7 @@ export function make(options: Partial<TileOptions>) {
                 return;
             }
 
-            effects[key] = Effect.make(value);
+            effects[key] = makeEffect(value);
         });
     }
 

@@ -1,12 +1,13 @@
-import { cosmetic } from './random';
+import { cosmetic } from '../random';
 // import { make as Make } from './gw';
-import { LightValue } from './light/types';
 
-type ColorData =
+export type ColorData =
     | [number, number, number]
     | [number, number, number, number, number, number, number]
     | [number, number, number, number, number, number, number, boolean];
-export type ColorBase = string | number | Color | ColorData;
+export type ColorBase = string | number | ColorData | Color;
+
+export type LightValue = [number, number, number];
 
 function toColorInt(r: number, g: number, b: number, base256: boolean) {
     if (base256) {
@@ -129,7 +130,7 @@ export class Color extends Int16Array {
         return this._r < 0;
     }
 
-    equals(other: ColorBase) {
+    equals(other: Color | ColorBase) {
         if (typeof other === 'string') {
             if (!other.startsWith('#')) return this.name == other;
             return this.css(other.length > 4) == other;
@@ -143,8 +144,10 @@ export class Color extends Int16Array {
         });
     }
 
-    copy(other: ColorBase) {
-        if (Array.isArray(other)) {
+    copy(other: Color | ColorBase) {
+        if (other instanceof Color) {
+            this.dances = other.dances;
+        } else if (Array.isArray(other)) {
             if (other.length === 8) {
                 this.dances = other[7];
             }

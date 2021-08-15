@@ -744,7 +744,7 @@
         }
     }
 
-    var index$9 = {
+    var index$c = {
         __proto__: null,
         DIRS: DIRS$2,
         NO_DIRECTION: NO_DIRECTION,
@@ -2561,7 +2561,7 @@
         }
     }
 
-    var index$8 = {
+    var index$b = {
         __proto__: null,
         get FovFlags () { return FovFlags; },
         FOV: FOV,
@@ -3764,7 +3764,10 @@ void main() {
             });
         }
         copy(other) {
-            if (Array.isArray(other)) {
+            if (other instanceof Color) {
+                this.dances = other.dances;
+            }
+            else if (Array.isArray(other)) {
                 if (other.length === 8) {
                     this.dances = other[7];
                 }
@@ -4179,7 +4182,7 @@ void main() {
     installSpread('silver', [75, 75, 75]);
     installSpread('gold', [100, 85, 0]);
 
-    var color = {
+    var index$a = {
         __proto__: null,
         colors: colors,
         Color: Color,
@@ -4274,13 +4277,13 @@ void main() {
             [this.bg, this.fg] = [this.fg, this.bg];
             return this._changed();
         }
-        multiply(color$1, fg = true, bg = true) {
-            color$1 = from$4(color$1);
+        multiply(color, fg = true, bg = true) {
+            color = from$4(color);
             if (fg) {
-                this.fg.multiply(color$1);
+                this.fg.multiply(color);
             }
             if (bg) {
-                this.bg.multiply(color$1);
+                this.bg.multiply(color);
             }
             return this._changed();
         }
@@ -4291,23 +4294,23 @@ void main() {
                 this.bg.scale(multiplier);
             return this._changed();
         }
-        mix(color$1, fg = 50, bg = fg) {
-            color$1 = from$4(color$1);
+        mix(color, fg = 50, bg = fg) {
+            color = from$4(color);
             if (fg > 0) {
-                this.fg.mix(color$1, fg);
+                this.fg.mix(color, fg);
             }
             if (bg > 0) {
-                this.bg.mix(color$1, bg);
+                this.bg.mix(color, bg);
             }
             return this._changed();
         }
-        add(color$1, fg = 100, bg = fg) {
-            color$1 = from$4(color$1);
+        add(color, fg = 100, bg = fg) {
+            color = from$4(color);
             if (fg > 0) {
-                this.fg.add(color$1, fg);
+                this.fg.add(color, fg);
             }
             if (bg > 0) {
-                this.bg.add(color$1, bg);
+                this.bg.add(color, bg);
             }
             return this._changed();
         }
@@ -4928,7 +4931,7 @@ void main() {
         }
     }
 
-    var index$7 = {
+    var index$9 = {
         __proto__: null,
         compile: compile,
         apply: apply,
@@ -5092,28 +5095,28 @@ void main() {
                 bg = from$4(bg);
             return this.fillRect(x, y, w, h, 0, 0, bg);
         }
-        highlight(x, y, color$1, strength) {
-            if (typeof color$1 !== 'number') {
-                color$1 = from$4(color$1);
+        highlight(x, y, color, strength) {
+            if (typeof color !== 'number') {
+                color = from$4(color);
             }
             const mixer = new Mixer();
             const data = this.get(x, y);
             mixer.drawSprite(data);
-            mixer.fg.add(color$1, strength);
-            mixer.bg.add(color$1, strength);
+            mixer.fg.add(color, strength);
+            mixer.bg.add(color, strength);
             this.drawSprite(x, y, mixer);
             return this;
         }
-        mix(color$1, percent) {
-            if (typeof color$1 !== 'number')
-                color$1 = from$4(color$1);
+        mix(color, percent) {
+            if (typeof color !== 'number')
+                color = from$4(color);
             const mixer = new Mixer();
             for (let x = 0; x < this.width; ++x) {
                 for (let y = 0; y < this.height; ++y) {
                     const data = this.get(x, y);
                     mixer.drawSprite(data);
-                    mixer.fg.mix(color$1, percent);
-                    mixer.bg.mix(color$1, percent);
+                    mixer.fg.mix(color, percent);
+                    mixer.bg.mix(color, percent);
                     this.drawSprite(x, y, mixer);
                 }
             }
@@ -5688,7 +5691,7 @@ void main() {
         return { position, uv };
     }
 
-    var index$6 = {
+    var index$8 = {
         __proto__: null,
         NotSupportedError: NotSupportedError,
         BaseCanvas: BaseCanvas,
@@ -5790,7 +5793,7 @@ void main() {
         return sprite;
     }
 
-    var index$5 = {
+    var index$7 = {
         __proto__: null,
         Sprite: Sprite,
         sprites: sprites,
@@ -6073,6 +6076,71 @@ void main() {
         Effect[Effect["E_EMIT_EVENT"] = fl(30)] = "E_EMIT_EVENT";
     })(Effect || (Effect = {}));
 
+    function make$4(opts) {
+        var _a;
+        if (!opts)
+            throw new Error('opts required to make effect.');
+        if (typeof opts === 'string') {
+            throw new Error('Cannot make effect from string: ' + opts);
+        }
+        if (typeof opts === 'function') {
+            opts = { fn: opts };
+        }
+        // now make base effect stuff
+        const info = {
+            flags: from$5(Effect, opts.flags),
+            chance: (_a = opts.chance) !== null && _a !== void 0 ? _a : 0,
+            next: null,
+            id: opts.id || 'n/a',
+        };
+        if (opts.next) {
+            if (typeof opts.next === 'string') {
+                info.next = opts.next;
+            }
+            else {
+                info.next = make$4(opts.next);
+            }
+        }
+        // and all the handlers
+        Object.values(effectTypes).forEach((v) => v.make(opts, info));
+        return info;
+    }
+    function from$2(opts) {
+        if (!opts)
+            throw new Error('Cannot make effect from null | undefined');
+        if (typeof opts === 'string') {
+            const effect = effects[opts];
+            if (effect)
+                return effect;
+            throw new Error('Unknown effect - ' + opts);
+        }
+        return make$4(opts);
+    }
+
+    // resetMessageDisplayed
+    function reset(effect) {
+        effect.flags &= ~Effect.E_FIRED;
+    }
+    function resetAll() {
+        Object.values(effects).forEach((e) => reset(e));
+    }
+    const effects = {};
+    function install$2(id, config) {
+        const effect = make$4(config);
+        effects[id] = effect;
+        effect.id = id;
+        return effect;
+    }
+    function installAll$2(effects) {
+        Object.entries(effects).forEach(([id, config]) => {
+            install$2(id, config);
+        });
+    }
+    const effectTypes = {};
+    function installType(id, effectType) {
+        effectTypes[id] = effectType;
+    }
+
     async function fire(effect, map, x, y, ctx_ = {}) {
         if (!effect)
             return false;
@@ -6118,69 +6186,6 @@ void main() {
         }
         free(grid$1);
         return didSomething;
-    }
-    // resetMessageDisplayed
-    function reset(effect) {
-        effect.flags &= ~Effect.E_FIRED;
-    }
-    function resetAll() {
-        Object.values(effects).forEach((e) => reset(e));
-    }
-    const effects = {};
-    function make$4(opts) {
-        var _a;
-        if (!opts)
-            throw new Error('opts required to make effect.');
-        if (typeof opts === 'string') {
-            throw new Error('Cannot make effect from string: ' + opts);
-        }
-        if (typeof opts === 'function') {
-            opts = { fn: opts };
-        }
-        // now make base effect stuff
-        const info = {
-            flags: from$5(Effect, opts.flags),
-            chance: (_a = opts.chance) !== null && _a !== void 0 ? _a : 0,
-            next: null,
-            id: opts.id || 'n/a',
-        };
-        if (opts.next) {
-            if (typeof opts.next === 'string') {
-                info.next = opts.next;
-            }
-            else {
-                info.next = make$4(opts.next);
-            }
-        }
-        // and all the handlers
-        Object.values(effectTypes).forEach((v) => v.make(opts, info));
-        return info;
-    }
-    function from$2(opts) {
-        if (!opts)
-            throw new Error('Cannot make effect from null | undefined');
-        if (typeof opts === 'string') {
-            const effect = effects[opts];
-            if (effect)
-                return effect;
-            throw new Error('Unknown effect - ' + opts);
-        }
-        return make$4(opts);
-    }
-    function install$2(id, config) {
-        const effect = make$4(config);
-        effects[id] = effect;
-        effect.id = id;
-        return effect;
-    }
-    function installAll$2(effects) {
-        Object.entries(effects).forEach(([id, config]) => {
-            install$2(id, config);
-        });
-    }
-    const effectTypes = {};
-    function installType(id, effectType) {
-        effectTypes[id] = effectType;
     }
 
     //////////////////////////////////////////////
@@ -6253,19 +6258,19 @@ void main() {
     }
     installType('fn', new FnEffect());
 
-    var index$4 = {
+    var index$6 = {
         __proto__: null,
         get Flags () { return Effect; },
-        fire: fire,
         reset: reset,
         resetAll: resetAll,
         effects: effects,
-        make: make$4,
-        from: from$2,
         install: install$2,
         installAll: installAll$2,
         effectTypes: effectTypes,
         installType: installType,
+        make: make$4,
+        from: from$2,
+        fire: fire,
         MessageEffect: MessageEffect,
         EmitEffect: EmitEffect
     };
@@ -6407,88 +6412,6 @@ void main() {
         make: make$3
     };
 
-    var GameObject$1;
-    (function (GameObject) {
-        // L_DYNAMIC = Fl(0), // for movable things like actors or items
-        GameObject[GameObject["L_SUPERPRIORITY"] = fl(1)] = "L_SUPERPRIORITY";
-        GameObject[GameObject["L_SECRETLY_PASSABLE"] = fl(2)] = "L_SECRETLY_PASSABLE";
-        GameObject[GameObject["L_BLOCKS_MOVE"] = fl(3)] = "L_BLOCKS_MOVE";
-        GameObject[GameObject["L_BLOCKS_VISION"] = fl(4)] = "L_BLOCKS_VISION";
-        GameObject[GameObject["L_BLOCKS_SURFACE"] = fl(6)] = "L_BLOCKS_SURFACE";
-        GameObject[GameObject["L_BLOCKS_LIQUID"] = fl(8)] = "L_BLOCKS_LIQUID";
-        GameObject[GameObject["L_BLOCKS_GAS"] = fl(7)] = "L_BLOCKS_GAS";
-        GameObject[GameObject["L_BLOCKS_ITEMS"] = fl(5)] = "L_BLOCKS_ITEMS";
-        GameObject[GameObject["L_BLOCKS_ACTORS"] = fl(11)] = "L_BLOCKS_ACTORS";
-        GameObject[GameObject["L_BLOCKS_EFFECTS"] = fl(9)] = "L_BLOCKS_EFFECTS";
-        GameObject[GameObject["L_BLOCKS_DIAGONAL"] = fl(10)] = "L_BLOCKS_DIAGONAL";
-        GameObject[GameObject["L_INTERRUPT_WHEN_SEEN"] = fl(11)] = "L_INTERRUPT_WHEN_SEEN";
-        GameObject[GameObject["L_LIST_IN_SIDEBAR"] = fl(12)] = "L_LIST_IN_SIDEBAR";
-        GameObject[GameObject["L_VISUALLY_DISTINCT"] = fl(13)] = "L_VISUALLY_DISTINCT";
-        GameObject[GameObject["L_BRIGHT_MEMORY"] = fl(14)] = "L_BRIGHT_MEMORY";
-        GameObject[GameObject["L_INVERT_WHEN_HIGHLIGHTED"] = fl(15)] = "L_INVERT_WHEN_HIGHLIGHTED";
-        GameObject[GameObject["L_BLOCKED_BY_STAIRS"] = GameObject.L_BLOCKS_ITEMS |
-            GameObject.L_BLOCKS_SURFACE |
-            GameObject.L_BLOCKS_GAS |
-            GameObject.L_BLOCKS_LIQUID |
-            GameObject.L_BLOCKS_EFFECTS |
-            GameObject.L_BLOCKS_ACTORS] = "L_BLOCKED_BY_STAIRS";
-        GameObject[GameObject["L_BLOCKS_SCENT"] = GameObject.L_BLOCKS_MOVE | GameObject.L_BLOCKS_VISION] = "L_BLOCKS_SCENT";
-        GameObject[GameObject["L_DIVIDES_LEVEL"] = GameObject.L_BLOCKS_MOVE] = "L_DIVIDES_LEVEL";
-        GameObject[GameObject["L_WAYPOINT_BLOCKER"] = GameObject.L_BLOCKS_MOVE] = "L_WAYPOINT_BLOCKER";
-        GameObject[GameObject["L_IS_WALL"] = GameObject.L_BLOCKS_MOVE |
-            GameObject.L_BLOCKS_VISION |
-            GameObject.L_BLOCKS_LIQUID |
-            GameObject.L_BLOCKS_GAS |
-            GameObject.L_BLOCKS_EFFECTS |
-            GameObject.L_BLOCKS_DIAGONAL] = "L_IS_WALL";
-        GameObject[GameObject["L_BLOCKS_EVERYTHING"] = GameObject.L_IS_WALL |
-            GameObject.L_BLOCKS_ITEMS |
-            GameObject.L_BLOCKS_ACTORS |
-            GameObject.L_BLOCKS_SURFACE] = "L_BLOCKS_EVERYTHING";
-    })(GameObject$1 || (GameObject$1 = {}));
-    var Depth;
-    (function (Depth) {
-        Depth[Depth["ALL_LAYERS"] = -1] = "ALL_LAYERS";
-        Depth[Depth["GROUND"] = 0] = "GROUND";
-        Depth[Depth["SURFACE"] = 1] = "SURFACE";
-        Depth[Depth["ITEM"] = 2] = "ITEM";
-        Depth[Depth["ACTOR"] = 3] = "ACTOR";
-        Depth[Depth["LIQUID"] = 4] = "LIQUID";
-        Depth[Depth["GAS"] = 5] = "GAS";
-        Depth[Depth["FX"] = 6] = "FX";
-        Depth[Depth["UI"] = 7] = "UI";
-    })(Depth || (Depth = {}));
-
-    var flags$2 = {
-        __proto__: null,
-        get GameObject () { return GameObject$1; },
-        get Depth () { return Depth; }
-    };
-
-    class GameObject {
-        constructor() {
-            this.sprite = new Sprite();
-            this.depth = 1; // default - TODO - enum/const
-            this.light = null;
-            this.flags = { object: 0 };
-            this.next = null;
-            this.x = -1;
-            this.y = -1;
-        }
-        hasObjectFlag(flag) {
-            return !!(this.flags.object & flag);
-        }
-        hasAllObjectFlags(flags) {
-            return (this.flags.object & flags) === flags;
-        }
-    }
-
-    var index$3 = {
-        __proto__: null,
-        flags: flags$2,
-        GameObject: GameObject
-    };
-
     // const LIGHT_SMOOTHING_THRESHOLD = 150;       // light components higher than this magnitude will be toned down a little
     const config = (config$1.light = {
         INTENSITY_DARK: 20,
@@ -6496,11 +6419,11 @@ void main() {
     }); // less than 20% for highest color in rgb
     const LIGHT_COMPONENTS = make$7();
     class Light {
-        constructor(color$1, range$1, fadeTo, pass = false) {
+        constructor(color, range$1, fadeTo, pass = false) {
             this.fadeTo = 0;
             this.passThroughActors = false;
             this.id = null;
-            this.color = from$4(color$1) || null; /* color */
+            this.color = from$4(color) || null; /* color */
             this.radius = make$b(range$1 || 1);
             this.fadeTo = fadeTo || 0;
             this.passThroughActors = pass; // generally no, but miner light does (TODO - string parameter?  'false' or 'true')
@@ -6587,10 +6510,10 @@ void main() {
                 const cached = lights[config];
                 if (cached)
                     return cached;
-                const [color$1, radius, fadeTo, pass] = config
+                const [color, radius, fadeTo, pass] = config
                     .split(/[,|]/)
                     .map((t) => t.trim());
-                return new Light(from$4(color$1), from$6(radius || 1), Number.parseInt(fadeTo || '0'), !!pass && pass !== 'false');
+                return new Light(from$4(color), from$6(radius || 1), Number.parseInt(fadeTo || '0'), !!pass && pass !== 'false');
             }
             else if (Array.isArray(config)) {
                 const [color, radius, fadeTo, pass] = config;
@@ -6904,7 +6827,7 @@ void main() {
         }
     }
 
-    var index$2 = {
+    var index$5 = {
         __proto__: null,
         config: config,
         Light: Light,
@@ -6917,6 +6840,156 @@ void main() {
         install: install$1,
         installAll: installAll$1,
         LightSystem: LightSystem
+    };
+
+    var GameObject$1;
+    (function (GameObject) {
+        // L_DYNAMIC = Fl(0), // for movable things like actors or items
+        GameObject[GameObject["L_SUPERPRIORITY"] = fl(1)] = "L_SUPERPRIORITY";
+        GameObject[GameObject["L_SECRETLY_PASSABLE"] = fl(2)] = "L_SECRETLY_PASSABLE";
+        GameObject[GameObject["L_BLOCKS_MOVE"] = fl(3)] = "L_BLOCKS_MOVE";
+        GameObject[GameObject["L_BLOCKS_VISION"] = fl(4)] = "L_BLOCKS_VISION";
+        GameObject[GameObject["L_BLOCKS_SURFACE"] = fl(6)] = "L_BLOCKS_SURFACE";
+        GameObject[GameObject["L_BLOCKS_LIQUID"] = fl(8)] = "L_BLOCKS_LIQUID";
+        GameObject[GameObject["L_BLOCKS_GAS"] = fl(7)] = "L_BLOCKS_GAS";
+        GameObject[GameObject["L_BLOCKS_ITEMS"] = fl(5)] = "L_BLOCKS_ITEMS";
+        GameObject[GameObject["L_BLOCKS_ACTORS"] = fl(11)] = "L_BLOCKS_ACTORS";
+        GameObject[GameObject["L_BLOCKS_EFFECTS"] = fl(9)] = "L_BLOCKS_EFFECTS";
+        GameObject[GameObject["L_BLOCKS_DIAGONAL"] = fl(10)] = "L_BLOCKS_DIAGONAL";
+        GameObject[GameObject["L_INTERRUPT_WHEN_SEEN"] = fl(11)] = "L_INTERRUPT_WHEN_SEEN";
+        GameObject[GameObject["L_LIST_IN_SIDEBAR"] = fl(12)] = "L_LIST_IN_SIDEBAR";
+        GameObject[GameObject["L_VISUALLY_DISTINCT"] = fl(13)] = "L_VISUALLY_DISTINCT";
+        GameObject[GameObject["L_BRIGHT_MEMORY"] = fl(14)] = "L_BRIGHT_MEMORY";
+        GameObject[GameObject["L_INVERT_WHEN_HIGHLIGHTED"] = fl(15)] = "L_INVERT_WHEN_HIGHLIGHTED";
+        GameObject[GameObject["L_BLOCKED_BY_STAIRS"] = GameObject.L_BLOCKS_ITEMS |
+            GameObject.L_BLOCKS_SURFACE |
+            GameObject.L_BLOCKS_GAS |
+            GameObject.L_BLOCKS_LIQUID |
+            GameObject.L_BLOCKS_EFFECTS |
+            GameObject.L_BLOCKS_ACTORS] = "L_BLOCKED_BY_STAIRS";
+        GameObject[GameObject["L_BLOCKS_SCENT"] = GameObject.L_BLOCKS_MOVE | GameObject.L_BLOCKS_VISION] = "L_BLOCKS_SCENT";
+        GameObject[GameObject["L_DIVIDES_LEVEL"] = GameObject.L_BLOCKS_MOVE] = "L_DIVIDES_LEVEL";
+        GameObject[GameObject["L_WAYPOINT_BLOCKER"] = GameObject.L_BLOCKS_MOVE] = "L_WAYPOINT_BLOCKER";
+        GameObject[GameObject["L_WALL_FLAGS"] = GameObject.L_BLOCKS_MOVE |
+            GameObject.L_BLOCKS_VISION |
+            GameObject.L_BLOCKS_LIQUID |
+            GameObject.L_BLOCKS_GAS |
+            GameObject.L_BLOCKS_EFFECTS |
+            GameObject.L_BLOCKS_DIAGONAL] = "L_WALL_FLAGS";
+        GameObject[GameObject["L_BLOCKS_EVERYTHING"] = GameObject.L_WALL_FLAGS |
+            GameObject.L_BLOCKS_ITEMS |
+            GameObject.L_BLOCKS_ACTORS |
+            GameObject.L_BLOCKS_SURFACE] = "L_BLOCKS_EVERYTHING";
+    })(GameObject$1 || (GameObject$1 = {}));
+    var Depth;
+    (function (Depth) {
+        Depth[Depth["ALL_LAYERS"] = -1] = "ALL_LAYERS";
+        Depth[Depth["GROUND"] = 0] = "GROUND";
+        Depth[Depth["SURFACE"] = 1] = "SURFACE";
+        Depth[Depth["ITEM"] = 2] = "ITEM";
+        Depth[Depth["ACTOR"] = 3] = "ACTOR";
+        Depth[Depth["LIQUID"] = 4] = "LIQUID";
+        Depth[Depth["GAS"] = 5] = "GAS";
+        Depth[Depth["FX"] = 6] = "FX";
+        Depth[Depth["UI"] = 7] = "UI";
+    })(Depth || (Depth = {}));
+
+    var flags$3 = {
+        __proto__: null,
+        get GameObject () { return GameObject$1; },
+        get Depth () { return Depth; }
+    };
+
+    class GameObject {
+        constructor() {
+            this.sprite = new Sprite();
+            this.depth = 1; // default - TODO - enum/const
+            this.light = null;
+            this.flags = { object: 0 };
+            this.next = null;
+            this.x = -1;
+            this.y = -1;
+        }
+        hasObjectFlag(flag) {
+            return !!(this.flags.object & flag);
+        }
+        hasAllObjectFlags(flags) {
+            return (this.flags.object & flags) === flags;
+        }
+    }
+
+    var index$4 = {
+        __proto__: null,
+        flags: flags$3,
+        GameObject: GameObject
+    };
+
+    class Item extends GameObject {
+        constructor() {
+            super();
+            this.quantity = 1;
+            // @ts-ignore
+            this.flags = this.flags || {};
+            this.flags.item = 0;
+            this.depth = Depth.ITEM;
+        }
+        hasItemFlag(flag) {
+            return !!(this.flags.item & flag);
+        }
+        hasAllItemFlags(flags) {
+            return (this.flags.item & flags) === flags;
+        }
+        forbidsCell(_cell) {
+            return false;
+        }
+    }
+
+    var index$3 = {
+        __proto__: null,
+        Item: Item
+    };
+
+    var Actor$1;
+    (function (Actor) {
+        Actor[Actor["IS_PLAYER"] = fl(0)] = "IS_PLAYER";
+    })(Actor$1 || (Actor$1 = {}));
+
+    var flags$2 = {
+        __proto__: null,
+        get Actor () { return Actor$1; },
+        get GameObject () { return GameObject$1; },
+        get Depth () { return Depth; }
+    };
+
+    class Actor extends GameObject {
+        constructor() {
+            super();
+            // @ts-ignore
+            this.flags = this.flags || {};
+            this.flags.actor = 0;
+            this.depth = Depth.ACTOR;
+        }
+        hasActorFlag(flag) {
+            return !!(this.flags.actor & flag);
+        }
+        hasAllActorFlags(flags) {
+            return (this.flags.actor & flags) === flags;
+        }
+        isPlayer() {
+            return this.hasActorFlag(Actor$1.IS_PLAYER);
+        }
+        isVisible() {
+            return true;
+        }
+        forbidsCell(_cell) {
+            return false;
+        }
+    }
+
+    var index$2 = {
+        __proto__: null,
+        flags: flags$2,
+        Actor: Actor
     };
 
     ///////////////////////////////////////////////////////
@@ -7086,14 +7159,14 @@ void main() {
                 return this.name;
             let result = this.name;
             if (opts.color) {
-                let color$1 = opts.color;
+                let color = opts.color;
                 if (opts.color === true) {
-                    color$1 = this.sprite.fg || 'white';
+                    color = this.sprite.fg || 'white';
                 }
-                if (typeof color$1 !== 'string') {
-                    color$1 = from$4(color$1).toString();
+                if (typeof color !== 'string') {
+                    color = from$4(color).toString();
                 }
-                result = `Ω${color$1}Ω${this.name}∆`;
+                result = `Ω${color}Ω${this.name}∆`;
             }
             if (opts.article) {
                 let article = typeof opts.article === 'string'
@@ -7434,8 +7507,17 @@ void main() {
         hasTileFlag(flag) {
             return this.tiles.some((t) => t && t.flags.tile & flag);
         }
+        hasAllTileFlags(flags) {
+            return (this.tileFlags() & flags) == flags;
+        }
         hasObjectFlag(flag) {
             return this.tiles.some((t) => t && t.flags.object & flag);
+        }
+        hasAllObjectFlags(flags) {
+            return (this.objectFlags() & flags) == flags;
+        }
+        objectFlags() {
+            return this.tiles.reduce((out, t) => out | (t ? t.flags.object : 0), 0);
         }
         tileFlags() {
             return this.tiles.reduce((out, t) => out | (t ? t.flags.tile : 0), 0);
@@ -7488,6 +7570,9 @@ void main() {
             return this.tiles.some((t) => t &&
                 !!(t.flags.tile & flags$1.Tile.T_BLOCKS_OTHER_LAYERS) &&
                 t.depth != depth);
+        }
+        isWall() {
+            return this.hasAllObjectFlags(GameObject$1.L_WALL_FLAGS);
         }
         hasCellFlag(flag) {
             return !!(this.flags.cell & flag);
@@ -7678,56 +7763,6 @@ void main() {
             // }
             // return TILES.NULL.sprite.ch as string;
             return this.tiles[0].sprite.ch || ' ';
-        }
-    }
-
-    var Actor$1;
-    (function (Actor) {
-        Actor[Actor["IS_PLAYER"] = fl(0)] = "IS_PLAYER";
-    })(Actor$1 || (Actor$1 = {}));
-
-    class Actor extends GameObject {
-        constructor() {
-            super();
-            // @ts-ignore
-            this.flags = this.flags || {};
-            this.flags.actor = 0;
-            this.depth = Depth.ACTOR;
-        }
-        hasActorFlag(flag) {
-            return !!(this.flags.actor & flag);
-        }
-        hasAllActorFlags(flags) {
-            return (this.flags.actor & flags) === flags;
-        }
-        isPlayer() {
-            return this.hasActorFlag(Actor$1.IS_PLAYER);
-        }
-        isVisible() {
-            return true;
-        }
-        forbidsCell(_cell) {
-            return false;
-        }
-    }
-
-    class Item extends GameObject {
-        constructor() {
-            super();
-            this.quantity = 1;
-            // @ts-ignore
-            this.flags = this.flags || {};
-            this.flags.item = 0;
-            this.depth = Depth.ITEM;
-        }
-        hasItemFlag(flag) {
-            return !!(this.flags.item & flag);
-        }
-        hasAllItemFlags(flags) {
-            return (this.flags.item & flags) === flags;
-        }
-        forbidsCell(_cell) {
-            return false;
         }
     }
 
@@ -8321,9 +8356,9 @@ void main() {
         // done finding loops; now flag chokepoints
         for (let i = 1; i < passMap.width - 1; i++) {
             for (let j = 1; j < passMap.height - 1; j++) {
-                map.cells[i][j].flags.cell &= ~Cell$1.IS_CHOKEPOINT;
+                map.cell(i, j).flags.cell &= ~Cell$1.IS_CHOKEPOINT;
                 if (passMap[i][j] &&
-                    !(map.cells[i][j].flags.cell & Cell$1.IS_IN_LOOP)) {
+                    !(map.cell(i, j).flags.cell & Cell$1.IS_IN_LOOP)) {
                     passableArcCount = 0;
                     for (let dir = 0; dir < 8; dir++) {
                         const oldX = i + CLOCK_DIRS[(dir + 7) % 8][0];
@@ -8337,7 +8372,7 @@ void main() {
                             if (++passableArcCount > 2) {
                                 if ((!passMap[i - 1][j] && !passMap[i + 1][j]) ||
                                     (!passMap[i][j - 1] && !passMap[i][j + 1])) {
-                                    map.cells[i][j].flags.cell |=
+                                    map.cell(i, j).flags.cell |=
                                         Cell$1.IS_CHOKEPOINT;
                                 }
                                 break;
@@ -8358,8 +8393,8 @@ void main() {
             // Start by setting the chokepoint values really high, and roping off room machines.
             for (let i = 0; i < map.width; i++) {
                 for (let j = 0; j < map.height; j++) {
-                    map.cells[i][j].chokeCount = 30000;
-                    if (map.cells[i][j].flags.cell & Cell$1.IS_IN_ROOM_MACHINE) {
+                    map.cell(i, j).chokeCount = 30000;
+                    if (map.cell(i, j).flags.cell & Cell$1.IS_IN_ROOM_MACHINE) {
                         passMap[i][j] = 0;
                     }
                 }
@@ -8367,7 +8402,7 @@ void main() {
             // Scan through and find a chokepoint next to an open point.
             for (let i = 0; i < map.width; i++) {
                 for (let j = 0; j < map.height; j++) {
-                    const cell = map.cells[i][j];
+                    const cell = map.cell(i, j);
                     if (passMap[i][j] &&
                         cell.flags.cell & Cell$1.IS_CHOKEPOINT) {
                         for (let dir = 0; dir < 4; dir++) {
@@ -8375,7 +8410,7 @@ void main() {
                             const newY = j + DIRS$2[dir][1];
                             if (map.hasXY(newX, newY) && // RUT.Map.makeValidXy(map, newXy) &&
                                 passMap[newX][newY] &&
-                                !(map.cells[newX][newY].flags.cell &
+                                !(map.cell(newX, newY).flags.cell &
                                     Cell$1.IS_CHOKEPOINT)) {
                                 // OK, (newX, newY) is an open point and (i, j) is a chokepoint.
                                 // Pretend (i, j) is blocked by changing passMap, and run a flood-fill cell count starting on (newX, newY).
@@ -8392,9 +8427,9 @@ void main() {
                                         for (let j2 = 0; j2 < grid$1.height; j2++) {
                                             if (grid$1[i2][j2] &&
                                                 cellCount <
-                                                    map.cells[i2][j2].chokeCount) {
-                                                map.cells[i2][j2].chokeCount = cellCount;
-                                                map.cells[i2][j2].flags.cell &= ~Cell$1.IS_GATE_SITE;
+                                                    map.cell(i2, j2).chokeCount) {
+                                                map.cell(i2, j2).chokeCount = cellCount;
+                                                map.cell(i2, j2).flags.cell &= ~Cell$1.IS_GATE_SITE;
                                             }
                                         }
                                     }
@@ -8417,7 +8452,7 @@ void main() {
     // Returns 10000 if the area included an area machine.
     function floodFillCount(map, results, passMap, startX, startY) {
         let count = passMap[startX][startY] == 2 ? 5000 : 1;
-        if (map.cells[startX][startY].flags.cell & Cell$1.IS_IN_AREA_MACHINE) {
+        if (map.cell(startX, startY).flags.cell & Cell$1.IS_IN_AREA_MACHINE) {
             count = 10000;
         }
         results[startX][startY] = 1;
@@ -8525,13 +8560,13 @@ void main() {
     function fillInnerLoopGrid(map, grid) {
         for (let x = 0; x < map.width; ++x) {
             for (let y = 0; y < map.height; ++y) {
-                const cell = map.cells[x][y];
+                const cell = map.cell(x, y);
                 if (cell.flags.cell & Cell$1.IS_IN_LOOP) {
                     grid[x][y] = 1;
                 }
                 else if (x > 0 && y > 0) {
-                    const up = map.cells[x][y - 1];
-                    const left = map.cells[x - 1][y];
+                    const up = map.cell(x, y - 1);
+                    const left = map.cell(x - 1, y);
                     if (up.flags.cell & Cell$1.IS_IN_LOOP &&
                         left.flags.cell & Cell$1.IS_IN_LOOP) {
                         grid[x][y] = 1;
@@ -8556,7 +8591,7 @@ void main() {
                         let newY = j + CLOCK_DIRS[dir][1];
                         if (map.hasXY(newX, newY) && // RUT.Map.makeValidXy(map, xy, newX, newY) &&
                             !grid$1[newX][newY] &&
-                            !(map.cells[newX][newY].flags.cell &
+                            !(map.cell(newX, newY).flags.cell &
                                 Cell$1.IS_IN_LOOP)) {
                             designationSurvives = true;
                             break;
@@ -8564,7 +8599,7 @@ void main() {
                     }
                     if (!designationSurvives) {
                         grid$1[i][j] = 1;
-                        map.cells[i][j].flags.cell &= ~Cell$1.IS_IN_LOOP;
+                        map.cell(i, j).flags.cell &= ~Cell$1.IS_IN_LOOP;
                     }
                 }
             }
@@ -8743,17 +8778,7 @@ void main() {
                 // const isRoot = spawnMap[i][j] === 1;
                 spawnMap[i][j] = 0; // so that the spawnmap reflects what actually got built
                 const cell = map.cell(i, j);
-                if (cell.hasTile(tile)) {
-                    // If the new cell already contains the fill terrain,
-                    if (tile.depth == Depth.GAS) {
-                        spawnMap[i][j] = 1;
-                        cell.gasVolume += volume;
-                    }
-                    else if (tile.depth == Depth.LIQUID) {
-                        spawnMap[i][j] = 1;
-                        cell.liquidVolume += volume;
-                    }
-                }
+                if (cell.hasTile(tile)) ;
                 else if ((superpriority ||
                     cell.depthPriority(tile.depth) < tile.priority) && // If the terrain in the layer to be overwritten has a higher priority number (unless superpriority),
                     !cell.blocksLayer(tile.depth) && // If we will be painting into the surface layer when that cell forbids it,
@@ -9115,22 +9140,24 @@ void main() {
     };
 
     exports.Random = Random;
+    exports.actor = index$2;
     exports.blob = blob;
-    exports.canvas = index$6;
-    exports.color = color;
+    exports.canvas = index$8;
+    exports.color = index$a;
     exports.colors = colors;
     exports.config = config$1;
     exports.cosmetic = cosmetic;
     exports.data = data;
-    exports.effect = index$4;
+    exports.effect = index$6;
     exports.events = events;
     exports.flag = flag;
-    exports.fov = index$8;
+    exports.fov = index$b;
     exports.frequency = frequency;
-    exports.gameObject = index$3;
+    exports.gameObject = index$4;
     exports.grid = grid;
     exports.io = io;
-    exports.light = index$2;
+    exports.item = index$3;
+    exports.light = index$5;
     exports.loop = loop;
     exports.map = index;
     exports.message = message;
@@ -9138,12 +9165,12 @@ void main() {
     exports.random = random;
     exports.range = range;
     exports.scheduler = scheduler;
-    exports.sprite = index$5;
+    exports.sprite = index$7;
     exports.sprites = sprites;
-    exports.text = index$7;
+    exports.text = index$9;
     exports.tile = index$1;
     exports.types = types;
-    exports.utils = index$9;
+    exports.utils = index$c;
 
     Object.defineProperty(exports, '__esModule', { value: true });
 

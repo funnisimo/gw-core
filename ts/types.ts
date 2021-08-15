@@ -1,9 +1,9 @@
-import { ColorBase } from './color';
+import { Color, ColorBase } from './color';
 // import { LightType } from './light/types';
 // import { Chainable } from './utils/chain';
 
-import { CellType, MapType } from './map/types';
-export { CellType, MapType };
+// import { CellType, MapType } from './map/types';
+// export { CellType, MapType };
 
 export type Loc = [number, number];
 export interface XY {
@@ -13,8 +13,8 @@ export interface XY {
 
 export interface SpriteData {
     readonly ch?: string | null;
-    readonly fg?: ColorBase;
-    readonly bg?: ColorBase;
+    readonly fg?: Color | ColorBase;
+    readonly bg?: Color | ColorBase;
     readonly opacity?: number;
 }
 

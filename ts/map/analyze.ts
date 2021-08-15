@@ -1,11 +1,10 @@
-import { Map } from './map';
-import { Cell } from './cell';
+import { MapType, CellType } from './types';
 import * as Grid from '../grid';
 import * as Utils from '../utils';
 import { GameObject as ObjectFlags } from '../gameObject/flags';
 import { Cell as CellFlags } from './flags';
 
-export function analyze(map: Map, updateChokeCounts = true) {
+export function analyze(map: MapType, updateChokeCounts = true) {
     updateLoopiness(map);
     updateChokepoints(map, updateChokeCounts);
 }
@@ -14,7 +13,7 @@ export function analyze(map: Map, updateChokeCounts = true) {
 /////////////////////////////////////////////////////
 // TODO - Move to Map?
 
-export function updateChokepoints(map: Map, updateCounts: boolean) {
+export function updateChokepoints(map: MapType, updateCounts: boolean) {
     const passMap = Grid.alloc(map.width, map.height);
     const grid = Grid.alloc(map.width, map.height);
 
@@ -39,10 +38,10 @@ export function updateChokepoints(map: Map, updateCounts: boolean) {
     // done finding loops; now flag chokepoints
     for (let i = 1; i < passMap.width - 1; i++) {
         for (let j = 1; j < passMap.height - 1; j++) {
-            map.cells[i][j].flags.cell &= ~CellFlags.IS_CHOKEPOINT;
+            map.cell(i, j).flags.cell &= ~CellFlags.IS_CHOKEPOINT;
             if (
                 passMap[i][j] &&
-                !(map.cells[i][j].flags.cell & CellFlags.IS_IN_LOOP)
+                !(map.cell(i, j).flags.cell & CellFlags.IS_IN_LOOP)
             ) {
                 passableArcCount = 0;
                 for (let dir = 0; dir < 8; dir++) {
@@ -61,7 +60,7 @@ export function updateChokepoints(map: Map, updateCounts: boolean) {
                                 (!passMap[i - 1][j] && !passMap[i + 1][j]) ||
                                 (!passMap[i][j - 1] && !passMap[i][j + 1])
                             ) {
-                                map.cells[i][j].flags.cell |=
+                                map.cell(i, j).flags.cell |=
                                     CellFlags.IS_CHOKEPOINT;
                             }
                             break;
@@ -85,8 +84,8 @@ export function updateChokepoints(map: Map, updateCounts: boolean) {
         // Start by setting the chokepoint values really high, and roping off room machines.
         for (let i = 0; i < map.width; i++) {
             for (let j = 0; j < map.height; j++) {
-                map.cells[i][j].chokeCount = 30000;
-                if (map.cells[i][j].flags.cell & CellFlags.IS_IN_ROOM_MACHINE) {
+                map.cell(i, j).chokeCount = 30000;
+                if (map.cell(i, j).flags.cell & CellFlags.IS_IN_ROOM_MACHINE) {
                     passMap[i][j] = 0;
                 }
             }
@@ -96,7 +95,7 @@ export function updateChokepoints(map: Map, updateCounts: boolean) {
 
         for (let i = 0; i < map.width; i++) {
             for (let j = 0; j < map.height; j++) {
-                const cell = map.cells[i][j];
+                const cell = map.cell(i, j);
 
                 if (
                     passMap[i][j] &&
@@ -109,7 +108,7 @@ export function updateChokepoints(map: Map, updateCounts: boolean) {
                             map.hasXY(newX, newY) && // RUT.Map.makeValidXy(map, newXy) &&
                             passMap[newX][newY] &&
                             !(
-                                map.cells[newX][newY].flags.cell &
+                                map.cell(newX, newY).flags.cell &
                                 CellFlags.IS_CHOKEPOINT
                             )
                         ) {
@@ -137,14 +136,16 @@ export function updateChokepoints(map: Map, updateCounts: boolean) {
                                         if (
                                             grid[i2][j2] &&
                                             cellCount <
-                                                map.cells[i2][j2].chokeCount
+                                                map.cell(i2, j2).chokeCount
                                         ) {
-                                            map.cells[i2][
+                                            map.cell(
+                                                i2,
                                                 j2
-                                            ].chokeCount = cellCount;
-                                            map.cells[i2][
+                                            ).chokeCount = cellCount;
+                                            map.cell(
+                                                i2,
                                                 j2
-                                            ].flags.cell &= ~CellFlags.IS_GATE_SITE;
+                                            ).flags.cell &= ~CellFlags.IS_GATE_SITE;
                                         }
                                     }
                                 }
@@ -169,7 +170,7 @@ export function updateChokepoints(map: Map, updateCounts: boolean) {
 // Assumes it is called with respect to a passable (startX, startY), and that the same is not already included in results.
 // Returns 10000 if the area included an area machine.
 export function floodFillCount(
-    map: Map,
+    map: MapType,
     results: Grid.NumGrid,
     passMap: Grid.NumGrid,
     startX: number,
@@ -177,7 +178,7 @@ export function floodFillCount(
 ) {
     let count = passMap[startX][startY] == 2 ? 5000 : 1;
 
-    if (map.cells[startX][startY].flags.cell & CellFlags.IS_IN_AREA_MACHINE) {
+    if (map.cell(startX, startY).flags.cell & CellFlags.IS_IN_AREA_MACHINE) {
         count = 10000;
     }
 
@@ -202,13 +203,18 @@ export function floodFillCount(
 ////////////////////////////////////////////////////////
 // TODO = Move loopiness to Map
 
-export function updateLoopiness(map: Map) {
+export function updateLoopiness(map: MapType) {
     map.eachCell(resetLoopiness);
     map.eachCell(checkLoopiness);
     cleanLoopiness(map);
 }
 
-export function resetLoopiness(cell: Cell, _x: number, _y: number, _map: Map) {
+export function resetLoopiness(
+    cell: CellType,
+    _x: number,
+    _y: number,
+    _map: MapType
+) {
     if (
         (cell.blocksPathing() || cell.blocksMove()) &&
         !cell.hasObjectFlag(ObjectFlags.L_SECRETLY_PASSABLE)
@@ -221,7 +227,12 @@ export function resetLoopiness(cell: Cell, _x: number, _y: number, _map: Map) {
     }
 }
 
-export function checkLoopiness(cell: Cell, x: number, y: number, map: Map) {
+export function checkLoopiness(
+    cell: CellType,
+    x: number,
+    y: number,
+    map: MapType
+) {
     let inString;
     let newX, newY, dir, sdir;
     let numStrings, maxStringLength, currentStringLength;
@@ -297,15 +308,15 @@ export function checkLoopiness(cell: Cell, x: number, y: number, map: Map) {
     }
 }
 
-export function fillInnerLoopGrid(map: Map, grid: Grid.NumGrid) {
+export function fillInnerLoopGrid(map: MapType, grid: Grid.NumGrid) {
     for (let x = 0; x < map.width; ++x) {
         for (let y = 0; y < map.height; ++y) {
-            const cell = map.cells[x][y];
+            const cell = map.cell(x, y);
             if (cell.flags.cell & CellFlags.IS_IN_LOOP) {
                 grid[x][y] = 1;
             } else if (x > 0 && y > 0) {
-                const up = map.cells[x][y - 1];
-                const left = map.cells[x - 1][y];
+                const up = map.cell(x, y - 1);
+                const left = map.cell(x - 1, y);
                 if (
                     up.flags.cell & CellFlags.IS_IN_LOOP &&
                     left.flags.cell & CellFlags.IS_IN_LOOP
@@ -317,7 +328,7 @@ export function fillInnerLoopGrid(map: Map, grid: Grid.NumGrid) {
     }
 }
 
-export function cleanLoopiness(map: Map) {
+export function cleanLoopiness(map: MapType) {
     // remove extraneous loop markings
     const grid = Grid.alloc(map.width, map.height);
     fillInnerLoopGrid(map, grid);
@@ -338,7 +349,7 @@ export function cleanLoopiness(map: Map) {
                         map.hasXY(newX, newY) && // RUT.Map.makeValidXy(map, xy, newX, newY) &&
                         !grid[newX][newY] &&
                         !(
-                            map.cells[newX][newY].flags.cell &
+                            map.cell(newX, newY).flags.cell &
                             CellFlags.IS_IN_LOOP
                         )
                     ) {
@@ -348,7 +359,7 @@ export function cleanLoopiness(map: Map) {
                 }
                 if (!designationSurvives) {
                     grid[i][j] = 1;
-                    map.cells[i][j].flags.cell &= ~CellFlags.IS_IN_LOOP;
+                    map.cell(i, j).flags.cell &= ~CellFlags.IS_IN_LOOP;
                 }
             }
         }

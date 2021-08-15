@@ -82,7 +82,7 @@ export class Light implements Types.LightType {
         });
 
         // let overlappedFieldOfView = false;
-        const lightValue: Types.LightValue = [0, 0, 0];
+        const lightValue: Color.LightValue = [0, 0, 0];
 
         grid.forCircle(x, y, outerRadius, (v, i, j) => {
             if (!v) return;
@@ -120,12 +120,12 @@ export class Light implements Types.LightType {
     }
 }
 
-export function intensity(light: Color.Color | Types.LightValue) {
+export function intensity(light: Color.Color | Color.LightValue) {
     return Math.max(light[0], light[1], light[2]);
 }
 
 export function isDarkLight(
-    light: Color.Color | Types.LightValue,
+    light: Color.Color | Color.LightValue,
     threshold?: number
 ): boolean {
     threshold = threshold ?? CONFIG.light?.INTENSITY_DARK;
@@ -133,7 +133,7 @@ export function isDarkLight(
 }
 
 export function isShadowLight(
-    light: Color.Color | Types.LightValue,
+    light: Color.Color | Color.LightValue,
     threshold?: number
 ): boolean {
     threshold = threshold ?? CONFIG.light?.INTENSITY_SHADOW;

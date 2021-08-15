@@ -4,7 +4,6 @@ import {
     LightSystemSite,
     PaintSite,
     LightType,
-    LightValue,
     LightCb,
     LightBase,
 } from './types';
@@ -31,20 +30,20 @@ enum LightFlags {
 }
 
 export interface LightSystemOptions {
-    ambient: Color.ColorBase | LightValue;
+    ambient: Color.ColorBase | Color.LightValue;
 }
 
 export class LightSystem implements LightSystemType, PaintSite {
     site: LightSystemSite;
     staticLights: StaticLightInfo | null = null;
-    ambient: LightValue;
+    ambient: Color.LightValue;
     glowLightChanged: boolean;
     dynamicLightChanged: boolean;
     protected _changed: boolean;
 
-    light: Grid.Grid<LightValue>;
-    oldLight: Grid.Grid<LightValue>;
-    glowLight: Grid.Grid<LightValue>;
+    light: Grid.Grid<Color.LightValue>;
+    oldLight: Grid.Grid<Color.LightValue>;
+    glowLight: Grid.Grid<Color.LightValue>;
     flags: Grid.NumGrid;
 
     constructor(map: LightSystemSite, opts: Partial<LightSystemOptions> = {}) {
@@ -58,24 +57,24 @@ export class LightSystem implements LightSystemType, PaintSite {
         this.light = Grid.make(
             map.width,
             map.height,
-            () => this.ambient.slice() as LightValue
+            () => this.ambient.slice() as Color.LightValue
         );
         this.glowLight = Grid.make(
             map.width,
             map.height,
-            () => this.ambient.slice() as LightValue
+            () => this.ambient.slice() as Color.LightValue
         );
         this.oldLight = Grid.make(
             map.width,
             map.height,
-            () => this.ambient.slice() as LightValue
+            () => this.ambient.slice() as Color.LightValue
         );
         this.flags = Grid.make(map.width, map.height);
 
         this.finishLightUpdate();
     }
 
-    setAmbient(light: LightValue | Color.Color) {
+    setAmbient(light: Color.LightValue | Color.Color) {
         if (light instanceof Color.Color) {
             light = light.toLight();
         }
@@ -93,7 +92,7 @@ export class LightSystem implements LightSystemType, PaintSite {
         return this._changed;
     }
 
-    getLight(x: number, y: number): LightValue {
+    getLight(x: number, y: number): Color.LightValue {
         return this.light[x][y];
     }
 
@@ -326,7 +325,7 @@ export class LightSystem implements LightSystemType, PaintSite {
     addCellLight(
         x: number,
         y: number,
-        light: LightValue,
+        light: Color.LightValue,
         dispelShadows: boolean
     ) {
         const val = this.light[x][y];

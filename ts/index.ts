@@ -21,7 +21,13 @@ export { sprites } from './sprite';
 export * from './gw';
 export { loop } from './io';
 export * as blob from './blob';
-export * as gameObject from './gameObject';
+
 export * as light from './light';
+
+export * as gameObject from './gameObject';
+
+export * as item from './item';
+export * as actor from './actor';
+
 export * as tile from './tile';
 export * as map from './map';

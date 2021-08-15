@@ -1,6 +1,5 @@
 import * as Grid from '../grid';
 import * as Flag from '../flag';
-import * as Map from '../map';
 
 export interface EffectInfo {
     flags: number;
@@ -31,14 +30,3 @@ export interface EffectConfig {
 }
 
 export type EffectBase = Partial<EffectConfig> | Function;
-
-export interface EffectHandler {
-    make: (src: Partial<EffectConfig>, dest: EffectInfo) => boolean;
-    fire: (
-        config: EffectInfo,
-        map: Map.Map,
-        x: number,
-        y: number,
-        ctx: EffectCtx
-    ) => boolean | Promise<boolean>;
-}

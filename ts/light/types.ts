@@ -1,4 +1,4 @@
-import { Color, ColorBase } from '../color';
+import { Color, ColorBase, LightValue } from '../color';
 import { Range } from '../range';
 
 export interface LightConfig {
@@ -26,7 +26,6 @@ export interface LightType {
     ): boolean;
 }
 
-export type LightValue = [number, number, number];
 export type LightCb = (x: number, y: number, light: LightType) => void;
 
 // export interface LightSite {

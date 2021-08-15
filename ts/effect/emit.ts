@@ -1,12 +1,13 @@
 import * as EFFECT from './effect';
 import * as TYPES from './types';
-import * as Map from '../map';
+import { EffectHandler } from './handler';
+import { MapType } from '../map/types';
 import * as Events from '../events';
 
 //////////////////////////////////////////////
 // EMIT
 
-export class EmitEffect implements TYPES.EffectHandler {
+export class EmitEffect implements EffectHandler {
     make(src: Partial<TYPES.EffectConfig>, dest: TYPES.EffectInfo): boolean {
         if (!src.emit) return true;
 
@@ -21,7 +22,7 @@ export class EmitEffect implements TYPES.EffectHandler {
 
     async fire(
         config: any,
-        _map: Map.Map,
+        _map: MapType,
         x: number,
         y: number,
         ctx: TYPES.EffectCtx

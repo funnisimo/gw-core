@@ -1,11 +1,9 @@
 import { GameObject } from '../gameObject';
 import { Map } from './map';
 import * as Layers from './layers';
+import { ObjectListType, ObjectMatchFn, ObjectFn } from './types';
 
-export type ObjectMatchFn = (obj: GameObject) => boolean;
-export type ObjectFn = (obj: GameObject) => any;
-
-export class ObjectList {
+export class ObjectList implements ObjectListType {
     map: Map;
 
     constructor(map: Map) {

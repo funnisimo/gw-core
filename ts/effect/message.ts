@@ -1,13 +1,14 @@
 import * as EFFECT from './effect';
 import * as TYPES from './types';
+import { EffectHandler } from './handler';
 import { Effect as Flags } from './flags';
 import * as Msg from '../message';
-import * as Map from '../map';
+import { MapType } from '../map/types';
 
 //////////////////////////////////////////////
 // MESSAGE
 
-export class MessageEffect implements TYPES.EffectHandler {
+export class MessageEffect implements EffectHandler {
     make(src: Partial<TYPES.EffectConfig>, dest: TYPES.EffectInfo): boolean {
         if (!src.message) return true;
 
@@ -22,7 +23,7 @@ export class MessageEffect implements TYPES.EffectHandler {
 
     async fire(
         config: any,
-        map: Map.Map,
+        map: MapType,
         x: number,
         y: number,
         ctx: TYPES.EffectCtx

@@ -1,12 +1,10 @@
-import { GameObject, ObjectFlags } from '../gameObject';
-import { Cell } from '../map/cell';
+import { GameObject } from '../gameObject';
+import { CellType } from '../map/types';
 import * as Flags from './flags';
+import { ActorFlags } from './types';
 
 export * as flags from './flags';
-
-export interface ActorFlags extends ObjectFlags {
-    actor: number;
-}
+export { ActorFlags } from './types';
 
 export class Actor extends GameObject {
     flags: ActorFlags;
@@ -33,7 +31,7 @@ export class Actor extends GameObject {
         return true;
     }
 
-    forbidsCell(_cell: Cell): boolean {
+    forbidsCell(_cell: CellType): boolean {
         return false;
     }
 }

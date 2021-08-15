@@ -2,14 +2,15 @@ import { Cell as Flags } from './flags';
 import * as TILE from '../tile';
 import { Depth } from '../gameObject/flags';
 import { GameObject } from '../gameObject/gameObject';
-import { Map } from './map';
+import { GameObject as ObjectFlags } from '../gameObject/flags';
+import { MapType } from './types';
 import * as Effect from '../effect';
 import { Chain } from '../utils';
 import { CellType, CellFlags } from './types';
 import * as Light from '../light';
 import { Mixer } from '../sprite';
-import { ActorFlags } from '../actor';
-import { ItemFlags } from '../item';
+import { ActorFlags } from '../actor/types';
+import { ItemFlags } from '../item/types';
 
 type TileData = TILE.Tile | null;
 type TileArray = [TILE.Tile, ...TileData[]];
@@ -61,10 +62,19 @@ export class Cell implements CellType {
     hasTileFlag(flag: number): boolean {
         return this.tiles.some((t) => t && t.flags.tile & flag);
     }
+    hasAllTileFlags(flags: number): boolean {
+        return (this.tileFlags() & flags) == flags;
+    }
     hasObjectFlag(flag: number): boolean {
         return this.tiles.some((t) => t && t.flags.object & flag);
     }
+    hasAllObjectFlags(flags: number): boolean {
+        return (this.objectFlags() & flags) == flags;
+    }
 
+    objectFlags(): number {
+        return this.tiles.reduce((out, t) => out | (t ? t.flags.object : 0), 0);
+    }
     tileFlags(): number {
         return this.tiles.reduce((out, t) => out | (t ? t.flags.tile : 0), 0);
     }
@@ -127,6 +137,9 @@ export class Cell implements CellType {
                 !!(t.flags.tile & TILE.flags.Tile.T_BLOCKS_OTHER_LAYERS) &&
                 t.depth != depth
         );
+    }
+    isWall(): boolean {
+        return this.hasAllObjectFlags(ObjectFlags.L_WALL_FLAGS);
     }
 
     hasCellFlag(flag: number): boolean {
@@ -198,7 +211,7 @@ export class Cell implements CellType {
 
     async activate(
         event: string,
-        map: Map,
+        map: MapType,
         x: number,
         y: number,
         ctx: Partial<Effect.EffectCtx> = {}

@@ -1,4 +1,4 @@
-import * as Map from './map';
+import { MapType } from './types';
 import * as Flags from './flags';
 import * as Tile from '../tile';
 import * as Entity from '../gameObject';
@@ -81,7 +81,7 @@ export class SpawnEffect implements Effect.EffectHandler {
 
     async fire(
         effect: Effect.EffectInfo,
-        map: Map.Map,
+        map: MapType,
         x: number,
         y: number,
         ctx: Effect.EffectCtx
@@ -145,7 +145,7 @@ export class SpawnEffect implements Effect.EffectHandler {
         const spawned = spawnTiles(
             effect.flags,
             ctx.grid,
-            map as Map.Map,
+            map as MapType,
             tile,
             effect.tile.volume
         );
@@ -186,7 +186,7 @@ export class SpawnEffect implements Effect.EffectHandler {
     }
 
     mapDisruptedBy(
-        map: Map.Map,
+        map: MapType,
         blockingGrid: Grid.NumGrid,
         blockingToMapX = 0,
         blockingToMapY = 0
@@ -238,7 +238,7 @@ Effect.installType('tile', new SpawnEffect());
 export function spawnTiles(
     flags: number,
     spawnMap: Grid.NumGrid,
-    map: Map.Map,
+    map: MapType,
     tile: Tile.Tile,
     volume = 0
 ) {
@@ -262,13 +262,13 @@ export function spawnTiles(
 
             if (cell.hasTile(tile)) {
                 // If the new cell already contains the fill terrain,
-                if (tile.depth == Entity.flags.Depth.GAS) {
-                    spawnMap[i][j] = 1;
-                    cell.gasVolume += volume;
-                } else if (tile.depth == Entity.flags.Depth.LIQUID) {
-                    spawnMap[i][j] = 1;
-                    cell.liquidVolume += volume;
-                }
+                // if (tile.depth == Entity.flags.Depth.GAS) {
+                //     spawnMap[i][j] = 1;
+                //     cell.gasVolume += volume;
+                // } else if (tile.depth == Entity.flags.Depth.LIQUID) {
+                //     spawnMap[i][j] = 1;
+                //     cell.liquidVolume += volume;
+                // }
             } else if (
                 (superpriority ||
                     cell.depthPriority(tile.depth) < tile.priority) && // If the terrain in the layer to be overwritten has a higher priority number (unless superpriority),
@@ -307,7 +307,7 @@ export function spawnTiles(
 
 function cellIsOk(
     effect: Effect.EffectInfo,
-    map: Map.Map,
+    map: MapType,
     x: number,
     y: number,
     isStart: boolean
@@ -366,7 +366,7 @@ function cellIsOk(
 
 export function computeSpawnMap(
     effect: Effect.EffectInfo,
-    map: Map.Map,
+    map: MapType,
     x: number,
     y: number,
     ctx: Effect.EffectCtx
@@ -525,7 +525,7 @@ export function computeSpawnMap(
 //     return true;
 // }
 
-export function clearCells(map: Map.Map, spawnMap: Grid.NumGrid, flags = 0) {
+export function clearCells(map: MapType, spawnMap: Grid.NumGrid, flags = 0) {
     let didSomething = false;
     const clearAll =
         (flags & Effect.Flags.E_CLEAR_CELL) === Effect.Flags.E_CLEAR_CELL;
@@ -554,7 +554,7 @@ export function clearCells(map: Map.Map, spawnMap: Grid.NumGrid, flags = 0) {
     return didSomething;
 }
 
-export function evacuateCreatures(map: Map.Map, blockingMap: Grid.NumGrid) {
+export function evacuateCreatures(map: MapType, blockingMap: Grid.NumGrid) {
     let i = 0,
         j = 0;
 
@@ -585,7 +585,7 @@ export function evacuateCreatures(map: Map.Map, blockingMap: Grid.NumGrid) {
     return didSomething;
 }
 
-export function evacuateItems(map: Map.Map, blockingMap: Grid.NumGrid) {
+export function evacuateItems(map: MapType, blockingMap: Grid.NumGrid) {
     let didSomething = false;
     blockingMap.forEach((v: number, i: number, j: number) => {
         if (!v) return;
@@ -644,7 +644,7 @@ class ClearTileEffect implements Effect.EffectHandler {
 
     fire(
         config: Effect.EffectInfo,
-        map: Map.Map,
+        map: MapType,
         x: number,
         y: number,
         _ctx: Effect.EffectCtx
