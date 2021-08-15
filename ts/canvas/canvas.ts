@@ -229,7 +229,7 @@ export abstract class BaseCanvas implements BufferTarget {
                 fn(ev);
             };
         } else {
-            this.node.onmousemove = null;
+            this.node.onmouseup = null;
         }
     }
 

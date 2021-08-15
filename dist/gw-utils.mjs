@@ -5326,7 +5326,7 @@ class BaseCanvas {
             };
         }
         else {
-            this.node.onmousemove = null;
+            this.node.onmouseup = null;
         }
     }
     _toX(offsetX) {
