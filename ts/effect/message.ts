@@ -22,7 +22,7 @@ export class MessageEffect implements EffectHandler {
     }
 
     async fire(
-        config: any,
+        config: TYPES.EffectInfo,
         map: MapType,
         x: number,
         y: number,
@@ -42,6 +42,18 @@ export class MessageEffect implements EffectHandler {
             return true;
         }
         return false;
+    }
+
+    fireSync(
+        config: TYPES.EffectInfo,
+        _map: MapType,
+        _x: number,
+        _y: number,
+        _ctx: TYPES.EffectCtx
+    ): boolean {
+        if (!config.message) return false;
+
+        throw new Error('Cannot use "message" effects in build steps.');
     }
 }
 

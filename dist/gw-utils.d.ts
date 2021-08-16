@@ -1722,9 +1722,9 @@ declare enum Tile$1 {
     T_HAS_STAIRS,
     T_OBSTRUCTS_SCENT,
     T_PATHING_BLOCKER,
-    T_DIVIDES_LEVEL,
     T_LAKE_PATHING_BLOCKER,
     T_WAYPOINT_BLOCKER,
+    T_DIVIDES_LEVEL,
     T_MOVES_ITEMS,
     T_CAN_BE_BRIDGED,
     T_IS_DEEP_LIQUID
@@ -1852,7 +1852,7 @@ interface TileOptions extends SpriteConfig {
 declare function make$3(options: Partial<TileOptions>): Tile;
 declare const tiles: Record<string, Tile>;
 declare const all: Tile[];
-declare function get(id: string | number): Tile;
+declare function get(id: string | number | Tile): Tile;
 declare function install$2(id: string, options: Partial<TileOptions>): Tile;
 declare function install$2(id: string, base: string, options: Partial<TileOptions>): Tile;
 declare function installAll$2(tiles: Record<string, Partial<TileOptions>>): void;
@@ -1896,6 +1896,14 @@ interface CellFlags {
 interface MapFlags {
     map: number;
 }
+interface SetOptions {
+    superpriority: boolean;
+    blockedByOtherLayers: boolean;
+    blockedByActors: boolean;
+    blockedByItems: boolean;
+    volume: number;
+}
+declare type SetTileOptions = Partial<SetOptions>;
 interface CellType {
     flags: CellFlags;
     tileFlags(): number;
@@ -1912,19 +1920,23 @@ interface CellType {
     depthPriority(depth: number): number;
     highestPriority(): number;
     depthTile(depth: number): Tile;
-    hasTile(tile?: string | number | Tile): boolean;
-    isWall(): boolean;
     blocksVision(): boolean;
     blocksPathing(): boolean;
     blocksMove(): boolean;
     blocksEffects(): boolean;
     blocksLayer(depth: number): boolean;
+    isPassable(): boolean;
     hasCellFlag(flag: number): boolean;
     setCellFlag(flag: number): void;
     clearCellFlag(flag: number): void;
     setTile(tile: Tile): boolean;
     clear(): void;
     clearLayer(depth: number): boolean;
+    hasTile(tile?: string | number | Tile): boolean;
+    hasDepthTile(depth: number): boolean;
+    highestPriorityTile(): Tile;
+    isEmpty(): boolean;
+    isWall(): boolean;
     eachGlowLight(cb: (light: LightType) => any): void;
     activate(event: string, map: MapType, x: number, y: number, ctx: Partial<EffectCtx>): Promise<boolean> | boolean;
     hasEffect(name: string): boolean;
@@ -1969,6 +1981,7 @@ interface MapType {
     blocksMove(x: number, y: number): boolean;
     isStairs(x: number, y: number): boolean;
     isWall(x: number, y: number): boolean;
+    isPassable(x: number, y: number): boolean;
     count(cb: MapTestFn): number;
     dump(fmt?: (cell: CellType) => string): void;
     hasMapFlag(flag: number): boolean;
@@ -1980,7 +1993,7 @@ interface MapType {
     hasObjectFlag(x: number, y: number, flag: number): boolean;
     hasTileFlag(x: number, y: number, flag: number): boolean;
     fill(tile: string, boundary?: string): void;
-    setTile(x: number, y: number, tile: string | number | Tile, opts?: any): boolean;
+    setTile(x: number, y: number, tile: string | number | Tile, opts?: SetTileOptions): boolean;
     hasTile(x: number, y: number, tile: string | number | Tile): boolean;
     update(dt: number): Promise<void>;
     getAppearanceAt(x: number, y: number, dest: Mixer): void;
@@ -2106,6 +2119,7 @@ declare enum Effect {
 interface EffectHandler {
     make: (src: Partial<EffectConfig>, dest: EffectInfo) => boolean;
     fire: (config: EffectInfo, map: MapType, x: number, y: number, ctx: EffectCtx) => boolean | Promise<boolean>;
+    fireSync: (config: EffectInfo, map: MapType, x: number, y: number, ctx: EffectCtx) => boolean;
 }
 
 declare function reset(effect: EffectInfo): void;
@@ -2120,15 +2134,18 @@ declare function make$2(opts: EffectBase): EffectInfo;
 declare function from$1(opts: EffectBase | string): EffectInfo;
 
 declare function fire(effect: EffectInfo | string, map: MapType, x: number, y: number, ctx_?: Partial<EffectCtx>): Promise<boolean>;
+declare function fireSync(effect: EffectInfo | string, map: MapType, x: number, y: number, ctx_?: Partial<EffectCtx>): boolean;
 
 declare class MessageEffect implements EffectHandler {
     make(src: Partial<EffectConfig>, dest: EffectInfo): boolean;
-    fire(config: any, map: MapType, x: number, y: number, ctx: EffectCtx): Promise<boolean>;
+    fire(config: EffectInfo, map: MapType, x: number, y: number, ctx: EffectCtx): Promise<boolean>;
+    fireSync(config: EffectInfo, _map: MapType, _x: number, _y: number, _ctx: EffectCtx): boolean;
 }
 
 declare class EmitEffect implements EffectHandler {
     make(src: Partial<EffectConfig>, dest: EffectInfo): boolean;
     fire(config: any, _map: MapType, x: number, y: number, ctx: EffectCtx): Promise<boolean>;
+    fireSync(config: EffectInfo, _map: MapType, _x: number, _y: number, _ctx: EffectCtx): boolean;
 }
 
 type index$2_EffectInfo = EffectInfo;
@@ -2144,6 +2161,7 @@ declare const index$2_installAll: typeof installAll;
 declare const index$2_effectTypes: typeof effectTypes;
 declare const index$2_installType: typeof installType;
 declare const index$2_fire: typeof fire;
+declare const index$2_fireSync: typeof fireSync;
 type index$2_MessageEffect = MessageEffect;
 declare const index$2_MessageEffect: typeof MessageEffect;
 type index$2_EmitEffect = EmitEffect;
@@ -2166,6 +2184,7 @@ declare namespace index$2 {
     make$2 as make,
     from$1 as from,
     index$2_fire as fire,
+    index$2_fireSync as fireSync,
     index$2_MessageEffect as MessageEffect,
     index$2_EmitEffect as EmitEffect,
   };
@@ -2255,6 +2274,8 @@ declare enum Cell$1 {
     IS_IN_PATH,
     IS_CURSOR,
     STABLE_MEMORY,
+    IS_WIRED,
+    IS_CIRCUIT_BREAKER,
     COLORS_DANCE,
     IS_IN_MACHINE,
     PERMANENT_CELL_FLAGS,
@@ -2304,12 +2325,16 @@ declare class Cell implements CellType {
     depthPriority(depth: number): number;
     highestPriority(): number;
     depthTile(depth: number): Tile;
+    isEmpty(): boolean;
     hasTile(tile?: string | number | Tile): boolean;
+    hasDepthTile(depth: number): boolean;
+    highestPriorityTile(): Tile;
     blocksVision(): boolean;
     blocksPathing(): boolean;
     blocksMove(): boolean;
     blocksEffects(): boolean;
     blocksLayer(depth: number): boolean;
+    isPassable(): boolean;
     isWall(): boolean;
     hasCellFlag(flag: number): boolean;
     setCellFlag(flag: number): void;
@@ -2358,12 +2383,9 @@ declare class ItemLayer extends ObjectLayer {
     putAppearance(dest: Mixer, x: number, y: number): void;
     update(_dt: number): void;
 }
-interface TileSetOptions {
-    force?: boolean;
-}
 declare class TileLayer extends MapLayer {
     constructor(map: Map, name?: string);
-    set(x: number, y: number, tile: Tile, opts?: TileSetOptions): boolean;
+    set(x: number, y: number, tile: Tile, opts?: SetTileOptions): boolean;
     update(_dt: number): Promise<void>;
     putAppearance(dest: Mixer, x: number, y: number): void;
 }
@@ -2413,7 +2435,7 @@ declare class Map implements LightSystemSite, FovSite, MapType {
     getLayer(depth: number): LayerType | null;
     hasXY(x: number, y: number): boolean;
     isBoundaryXY(x: number, y: number): boolean;
-    cell(x: number, y: number): Cell;
+    cell(x: number, y: number): CellType;
     get(x: number, y: number): Cell | undefined;
     eachCell(cb: EachCellCb): void;
     drawInto(dest: Canvas | DataBuffer, opts?: Partial<MapDrawOptions> | boolean): void;
@@ -2422,6 +2444,7 @@ declare class Map implements LightSystemSite, FovSite, MapType {
     isVisible(x: number, y: number): boolean;
     blocksVision(x: number, y: number): boolean;
     blocksMove(x: number, y: number): boolean;
+    isPassable(x: number, y: number): boolean;
     isStairs(x: number, y: number): boolean;
     count(cb: MapTestFn): number;
     dump(fmt?: (cell: CellType) => string): void;
@@ -2433,8 +2456,8 @@ declare class Map implements LightSystemSite, FovSite, MapType {
     hasCellFlag(x: number, y: number, flag: number): boolean;
     hasObjectFlag(x: number, y: number, flag: number): boolean;
     hasTileFlag(x: number, y: number, flag: number): boolean;
-    fill(tile: string, boundary?: string): void;
-    setTile(x: number, y: number, tile: string | number | Tile, opts?: any): boolean;
+    fill(tile: string | number | Tile, boundary?: string | number | Tile): void;
+    setTile(x: number, y: number, tile: string | number | Tile, opts?: SetTileOptions): boolean;
     hasTile(x: number, y: number, tile: string | number | Tile): boolean;
     get objects(): ObjectList;
     update(dt: number): Promise<void>;
@@ -2486,6 +2509,7 @@ interface SpawnInfo {
 declare class SpawnEffect implements EffectHandler {
     make(src: Partial<EffectConfig>, dest: EffectInfo): boolean;
     fire(effect: EffectInfo, map: MapType, x: number, y: number, ctx: EffectCtx): Promise<boolean>;
+    fireSync(effect: EffectInfo, map: MapType, x: number, y: number, ctx: EffectCtx): boolean;
     mapDisruptedBy(map: MapType, blockingGrid: NumGrid, blockingToMapX?: number, blockingToMapY?: number): boolean;
 }
 declare function spawnTiles(flags: number, spawnMap: NumGrid, map: MapType, tile: Tile, volume?: number): boolean;
@@ -2503,6 +2527,8 @@ declare const flags: {
 declare const index_flags: typeof flags;
 type index_CellFlags = CellFlags;
 type index_MapFlags = MapFlags;
+type index_SetOptions = SetOptions;
+type index_SetTileOptions = SetTileOptions;
 type index_CellType = CellType;
 type index_ObjectMatchFn = ObjectMatchFn;
 type index_ObjectFn = ObjectFn;
@@ -2544,6 +2570,8 @@ declare namespace index {
     index_flags as flags,
     index_CellFlags as CellFlags,
     index_MapFlags as MapFlags,
+    index_SetOptions as SetOptions,
+    index_SetTileOptions as SetTileOptions,
     index_CellType as CellType,
     index_ObjectMatchFn as ObjectMatchFn,
     index_ObjectFn as ObjectFn,

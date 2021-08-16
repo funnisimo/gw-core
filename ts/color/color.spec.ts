@@ -1,6 +1,6 @@
 import 'jest-extended';
 import * as Color from './color';
-import { cosmetic } from './random';
+import { cosmetic } from '../random';
 
 describe('Color', () => {
     beforeEach(() => {

@@ -15,6 +15,16 @@ export interface MapFlags {
     map: number;
 }
 
+export interface SetOptions {
+    superpriority: boolean;
+    blockedByOtherLayers: boolean;
+    blockedByActors: boolean;
+    blockedByItems: boolean;
+    volume: number;
+}
+
+export type SetTileOptions = Partial<SetOptions>;
+
 export interface CellType {
     flags: CellFlags;
     tileFlags(): number;
@@ -37,14 +47,12 @@ export interface CellType {
     highestPriority(): number;
     depthTile(depth: number): Tile;
 
-    hasTile(tile?: string | number | Tile): boolean;
-    isWall(): boolean;
-
     blocksVision(): boolean;
     blocksPathing(): boolean;
     blocksMove(): boolean;
     blocksEffects(): boolean;
     blocksLayer(depth: number): boolean;
+    isPassable(): boolean;
 
     hasCellFlag(flag: number): boolean;
     setCellFlag(flag: number): void;
@@ -54,6 +62,13 @@ export interface CellType {
     setTile(tile: Tile): boolean;
     clear(): void;
     clearLayer(depth: number): boolean;
+
+    hasTile(tile?: string | number | Tile): boolean;
+    hasDepthTile(depth: number): boolean;
+    highestPriorityTile(): Tile;
+
+    isEmpty(): boolean;
+    isWall(): boolean;
 
     // Lights
 
@@ -150,6 +165,7 @@ export interface MapType {
 
     isStairs(x: number, y: number): boolean;
     isWall(x: number, y: number): boolean;
+    isPassable(x: number, y: number): boolean;
 
     count(cb: MapTestFn): number;
     dump(fmt?: (cell: CellType) => string): void;
@@ -173,7 +189,7 @@ export interface MapType {
         x: number,
         y: number,
         tile: string | number | Tile,
-        opts?: any
+        opts?: SetTileOptions
     ): boolean;
 
     hasTile(x: number, y: number, tile: string | number | Tile): boolean;

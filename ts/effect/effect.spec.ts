@@ -4,7 +4,7 @@ import * as UTILS from '../../test/utils';
 import * as Effect from '.';
 import * as Events from '../events';
 import * as MSG from '../message';
-import * as TYPES from '../types';
+import { MapType } from '../map/types';
 import { data as DATA } from '../gw';
 
 describe('Effect', () => {
@@ -65,6 +65,7 @@ describe('Effect', () => {
             const handler = {
                 make: jest.fn().mockReturnValue(false),
                 fire: jest.fn(),
+                fireSync: jest.fn(),
             };
 
             Effect.installType('TEST', handler);
@@ -158,7 +159,7 @@ describe('Effect', () => {
                 .mockImplementation(
                     (
                         _eff: Effect.EffectInfo,
-                        _map: TYPES.MapType,
+                        _map: MapType,
                         x: number,
                         y: number,
                         ctx: Effect.EffectCtx
@@ -197,7 +198,7 @@ describe('Effect', () => {
                 .mockImplementation(
                     (
                         _eff: Effect.EffectInfo,
-                        _map: TYPES.MapType,
+                        _map: MapType,
                         x: number,
                         y: number,
                         ctx: Effect.EffectCtx

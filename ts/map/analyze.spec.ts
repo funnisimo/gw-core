@@ -32,12 +32,12 @@ describe('analyze', () => {
             MAP.updateLoopiness(map);
 
             // map.dump((c) =>
-            //     c.flags.cell & MAP.flags.Cell.IS_IN_LOOP ? '*' : ' '
+            //     c.hasCellFlag(MAP.flags.Cell.IS_IN_LOOP) ? '*' : ' '
             // );
 
             expect(
                 map.count((c) =>
-                    c.flags.cell & MAP.flags.Cell.IS_IN_LOOP ? true : false
+                    c.hasCellFlag(MAP.flags.Cell.IS_IN_LOOP) ? true : false
                 )
             ).toEqual(16);
         });
@@ -102,7 +102,7 @@ describe('analyze', () => {
             MAP.updateChokepoints(map, true);
 
             // map.dump((c) =>
-            //     c.flags.cell & MAP.flags.Cell.IS_GATE_SITE ? '*' : ' '
+            //     c.hasCellFlag(MAP.flags.Cell.IS_GATE_SITE) ? '*' : ' '
             // );
             expect(
                 map.count((c) => c.hasCellFlag(MAP.flags.Cell.IS_GATE_SITE))

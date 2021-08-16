@@ -110,12 +110,26 @@ export class Cell implements CellType {
         return this.tiles[depth] || TILE.tiles.NULL;
     }
 
+    isEmpty(): boolean {
+        return this.tiles.every((t) => !t || t === TILE.tiles.NULL);
+    }
     hasTile(tile?: string | number | TILE.Tile): boolean {
         if (!tile) return this.tiles.some((t) => t);
         if (!(tile instanceof TILE.Tile)) {
             tile = TILE.get(tile);
         }
         return this.tiles.includes(tile);
+    }
+    hasDepthTile(depth: number): boolean {
+        const t = this.tiles[depth];
+        return !!t && t !== TILE.tiles.NULL;
+    }
+    highestPriorityTile(): TILE.Tile {
+        return this.tiles.reduce((out, tile) => {
+            if (!tile) return out;
+            if (tile.priority >= out!.priority) return tile; // higher depth will get picked with >=
+            return out;
+        }, TILE.tiles.NULL)!;
     }
 
     blocksVision(): boolean {
@@ -137,6 +151,9 @@ export class Cell implements CellType {
                 !!(t.flags.tile & TILE.flags.Tile.T_BLOCKS_OTHER_LAYERS) &&
                 t.depth != depth
         );
+    }
+    isPassable() {
+        return !this.blocksMove();
     }
     isWall(): boolean {
         return this.hasAllObjectFlags(ObjectFlags.L_WALL_FLAGS);
@@ -344,13 +361,6 @@ export class Cell implements CellType {
     dump(): string {
         // if (this.actor) return this.actor.sprite.ch as string;
         // if (this.item) return this.item.sprite.ch as string;
-
-        // for (let i = this._tiles.length - 1; i >= 0; --i) {
-        //     if (!this._tiles[i]) continue;
-        //     const tile = this._tiles[i] || TILES.NULL;
-        //     if (tile.sprite.ch) return tile.sprite.ch as string;
-        // }
-        // return TILES.NULL.sprite.ch as string;
-        return this.tiles[0].sprite.ch || ' ';
+        return this.highestPriorityTile().sprite.ch || ' ';
     }
 }

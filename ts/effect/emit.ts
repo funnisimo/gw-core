@@ -32,6 +32,17 @@ export class EmitEffect implements EffectHandler {
         }
         return false;
     }
+
+    fireSync(
+        config: TYPES.EffectInfo,
+        _map: MapType,
+        _x: number,
+        _y: number,
+        _ctx: TYPES.EffectCtx
+    ) {
+        if (!config.emit) return false;
+        throw new Error('Cannot use "emit" effects in build steps.');
+    }
 }
 
 EFFECT.installType('emit', new EmitEffect());

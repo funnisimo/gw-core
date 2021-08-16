@@ -5,6 +5,7 @@ import * as Map from './map';
 import * as Flags from './flags';
 import { Actor } from '../actor';
 import { Item } from '../item';
+import { SetTileOptions } from './types';
 
 export class MapLayer {
     map: Map.Map;
@@ -133,21 +134,17 @@ export class ItemLayer extends ObjectLayer {
     update(_dt: number) {}
 }
 
-export interface TileSetOptions {
-    force?: boolean;
-}
-
 export class TileLayer extends MapLayer {
     constructor(map: Map.Map, name = 'tile') {
         super(map, name);
     }
 
-    set(x: number, y: number, tile: Tile.Tile, opts: TileSetOptions = {}) {
+    set(x: number, y: number, tile: Tile.Tile, opts: SetTileOptions = {}) {
         const cell = this.map.cell(x, y);
 
-        const current = cell.tiles[tile.depth] || Tile.tiles.NULL;
+        const current = cell.depthTile(tile.depth) || Tile.tiles.NULL;
 
-        if (!opts.force) {
+        if (!opts.superpriority) {
             // if (current !== tile) {
             //     this.gasVolume = 0;
             //     this.liquidVolume = 0;
@@ -158,6 +155,11 @@ export class TileLayer extends MapLayer {
                 return false;
             }
         }
+        if (cell.blocksLayer(tile.depth)) return false;
+        if (opts.blockedByItems && cell.hasItem()) return false;
+        if (opts.blockedByActors && cell.hasActor()) return false;
+        if (opts.blockedByOtherLayers && cell.highestPriority() > tile.priority)
+            return false;
 
         if (!cell.setTile(tile)) return false;
 
@@ -183,7 +185,7 @@ export class TileLayer extends MapLayer {
 
     putAppearance(dest: Mixer, x: number, y: number) {
         const cell = this.map.cell(x, y);
-        const tile = cell.tiles[this.depth];
+        const tile = cell.depthTile(this.depth);
         if (tile) {
             dest.drawSprite(tile.sprite);
         }

@@ -6187,6 +6187,51 @@ void main() {
         free(grid$1);
         return didSomething;
     }
+    function fireSync(effect, map, x, y, ctx_ = {}) {
+        if (!effect)
+            return false;
+        if (typeof effect === 'string') {
+            const name = effect;
+            effect = from$2(name);
+            if (!effect)
+                throw new Error('Failed to find effect: ' + name);
+        }
+        const ctx = ctx_;
+        if (!ctx.force && effect.chance && !random.chance(effect.chance, 10000))
+            return false;
+        const grid$1 = (ctx.grid = alloc(map.width, map.height));
+        let didSomething = true;
+        const handlers = Object.values(effectTypes);
+        for (let h of handlers) {
+            if (h.fireSync(effect, map, x, y, ctx)) {
+                didSomething = true;
+            }
+        }
+        // bookkeeping
+        if (didSomething &&
+            map.isVisible(x, y) &&
+            !(effect.flags & Effect.E_NO_MARK_FIRED)) {
+            effect.flags |= Effect.E_FIRED;
+        }
+        // do the next effect - if applicable
+        if (effect.next &&
+            (didSomething || effect.flags & Effect.E_NEXT_ALWAYS) &&
+            !data.gameHasEnded) {
+            const nextInfo = typeof effect.next === 'string' ? from$2(effect.next) : effect.next;
+            if (effect.flags & Effect.E_NEXT_EVERYWHERE) {
+                grid$1.forEach(async (v, i, j) => {
+                    if (!v)
+                        return;
+                    fireSync(nextInfo, map, i, j, ctx);
+                });
+            }
+            else {
+                fireSync(nextInfo, map, x, y, ctx);
+            }
+        }
+        free(grid$1);
+        return didSomething;
+    }
 
     //////////////////////////////////////////////
     // MESSAGE
@@ -6213,6 +6258,11 @@ void main() {
             }
             return false;
         }
+        fireSync(config, _map, _x, _y, _ctx) {
+            if (!config.message)
+                return false;
+            throw new Error('Cannot use "message" effects in build steps.');
+        }
     }
     installType('message', new MessageEffect());
 
@@ -6233,6 +6283,11 @@ void main() {
                 return await emit(config.emit, x, y, ctx);
             }
             return false;
+        }
+        fireSync(config, _map, _x, _y, _ctx) {
+            if (!config.emit)
+                return false;
+            throw new Error('Cannot use "emit" effects in build steps.');
         }
     }
     installType('emit', new EmitEffect());
@@ -6255,6 +6310,16 @@ void main() {
             }
             return false;
         }
+        fireSync(config, map, x, y, ctx) {
+            if (config.fn) {
+                const result = config.fn(config, map, x, y, ctx);
+                if (result === true || result === false) {
+                    return result;
+                }
+                throw new Error('Cannot use async function effects in build steps.');
+            }
+            return false;
+        }
     }
     installType('fn', new FnEffect());
 
@@ -6271,6 +6336,7 @@ void main() {
         make: make$4,
         from: from$2,
         fire: fire,
+        fireSync: fireSync,
         MessageEffect: MessageEffect,
         EmitEffect: EmitEffect
     };
@@ -6856,11 +6922,11 @@ void main() {
         GameObject[GameObject["L_BLOCKS_ACTORS"] = fl(11)] = "L_BLOCKS_ACTORS";
         GameObject[GameObject["L_BLOCKS_EFFECTS"] = fl(9)] = "L_BLOCKS_EFFECTS";
         GameObject[GameObject["L_BLOCKS_DIAGONAL"] = fl(10)] = "L_BLOCKS_DIAGONAL";
-        GameObject[GameObject["L_INTERRUPT_WHEN_SEEN"] = fl(11)] = "L_INTERRUPT_WHEN_SEEN";
-        GameObject[GameObject["L_LIST_IN_SIDEBAR"] = fl(12)] = "L_LIST_IN_SIDEBAR";
-        GameObject[GameObject["L_VISUALLY_DISTINCT"] = fl(13)] = "L_VISUALLY_DISTINCT";
-        GameObject[GameObject["L_BRIGHT_MEMORY"] = fl(14)] = "L_BRIGHT_MEMORY";
-        GameObject[GameObject["L_INVERT_WHEN_HIGHLIGHTED"] = fl(15)] = "L_INVERT_WHEN_HIGHLIGHTED";
+        GameObject[GameObject["L_INTERRUPT_WHEN_SEEN"] = fl(12)] = "L_INTERRUPT_WHEN_SEEN";
+        GameObject[GameObject["L_LIST_IN_SIDEBAR"] = fl(13)] = "L_LIST_IN_SIDEBAR";
+        GameObject[GameObject["L_VISUALLY_DISTINCT"] = fl(14)] = "L_VISUALLY_DISTINCT";
+        GameObject[GameObject["L_BRIGHT_MEMORY"] = fl(15)] = "L_BRIGHT_MEMORY";
+        GameObject[GameObject["L_INVERT_WHEN_HIGHLIGHTED"] = fl(16)] = "L_INVERT_WHEN_HIGHLIGHTED";
         GameObject[GameObject["L_BLOCKED_BY_STAIRS"] = GameObject.L_BLOCKS_ITEMS |
             GameObject.L_BLOCKS_SURFACE |
             GameObject.L_BLOCKS_GAS |
@@ -7000,23 +7066,23 @@ void main() {
         Tile[Tile["T_AUTO_DESCENT"] = fl(1)] = "T_AUTO_DESCENT";
         Tile[Tile["T_LAVA"] = fl(2)] = "T_LAVA";
         Tile[Tile["T_DEEP_WATER"] = fl(3)] = "T_DEEP_WATER";
-        Tile[Tile["T_IS_FLAMMABLE"] = fl(4)] = "T_IS_FLAMMABLE";
-        Tile[Tile["T_SPONTANEOUSLY_IGNITES"] = fl(5)] = "T_SPONTANEOUSLY_IGNITES";
-        Tile[Tile["T_IS_FIRE"] = fl(6)] = "T_IS_FIRE";
-        Tile[Tile["T_EXTINGUISHES_FIRE"] = fl(7)] = "T_EXTINGUISHES_FIRE";
-        Tile[Tile["T_IS_SECRET"] = fl(8)] = "T_IS_SECRET";
-        Tile[Tile["T_IS_TRAP"] = fl(9)] = "T_IS_TRAP";
-        Tile[Tile["T_SACRED"] = fl(10)] = "T_SACRED";
-        Tile[Tile["T_UP_STAIRS"] = fl(11)] = "T_UP_STAIRS";
-        Tile[Tile["T_DOWN_STAIRS"] = fl(12)] = "T_DOWN_STAIRS";
-        Tile[Tile["T_PORTAL"] = fl(13)] = "T_PORTAL";
-        Tile[Tile["T_IS_DOOR"] = fl(14)] = "T_IS_DOOR";
-        Tile[Tile["T_ALLOWS_SUBMERGING"] = fl(15)] = "T_ALLOWS_SUBMERGING";
-        Tile[Tile["T_ENTANGLES"] = fl(16)] = "T_ENTANGLES";
-        Tile[Tile["T_REFLECTS"] = fl(17)] = "T_REFLECTS";
-        Tile[Tile["T_STAND_IN_TILE"] = fl(18)] = "T_STAND_IN_TILE";
-        Tile[Tile["T_CONNECTS_LEVEL"] = fl(19)] = "T_CONNECTS_LEVEL";
-        Tile[Tile["T_BLOCKS_OTHER_LAYERS"] = fl(20)] = "T_BLOCKS_OTHER_LAYERS";
+        Tile[Tile["T_IS_FLAMMABLE"] = fl(5)] = "T_IS_FLAMMABLE";
+        Tile[Tile["T_SPONTANEOUSLY_IGNITES"] = fl(6)] = "T_SPONTANEOUSLY_IGNITES";
+        Tile[Tile["T_IS_FIRE"] = fl(7)] = "T_IS_FIRE";
+        Tile[Tile["T_EXTINGUISHES_FIRE"] = fl(8)] = "T_EXTINGUISHES_FIRE";
+        Tile[Tile["T_IS_SECRET"] = fl(9)] = "T_IS_SECRET";
+        Tile[Tile["T_IS_TRAP"] = fl(10)] = "T_IS_TRAP";
+        Tile[Tile["T_SACRED"] = fl(11)] = "T_SACRED";
+        Tile[Tile["T_UP_STAIRS"] = fl(12)] = "T_UP_STAIRS";
+        Tile[Tile["T_DOWN_STAIRS"] = fl(13)] = "T_DOWN_STAIRS";
+        Tile[Tile["T_PORTAL"] = fl(14)] = "T_PORTAL";
+        Tile[Tile["T_IS_DOOR"] = fl(15)] = "T_IS_DOOR";
+        Tile[Tile["T_ALLOWS_SUBMERGING"] = fl(16)] = "T_ALLOWS_SUBMERGING";
+        Tile[Tile["T_ENTANGLES"] = fl(17)] = "T_ENTANGLES";
+        Tile[Tile["T_REFLECTS"] = fl(18)] = "T_REFLECTS";
+        Tile[Tile["T_STAND_IN_TILE"] = fl(19)] = "T_STAND_IN_TILE";
+        Tile[Tile["T_CONNECTS_LEVEL"] = fl(20)] = "T_CONNECTS_LEVEL";
+        Tile[Tile["T_BLOCKS_OTHER_LAYERS"] = fl(21)] = "T_BLOCKS_OTHER_LAYERS";
         Tile[Tile["T_HAS_STAIRS"] = Tile.T_UP_STAIRS | Tile.T_DOWN_STAIRS | Tile.T_PORTAL] = "T_HAS_STAIRS";
         Tile[Tile["T_OBSTRUCTS_SCENT"] = Tile.T_AUTO_DESCENT |
             Tile.T_LAVA |
@@ -7030,7 +7096,6 @@ void main() {
             Tile.T_IS_FIRE |
             Tile.T_SPONTANEOUSLY_IGNITES |
             Tile.T_ENTANGLES] = "T_PATHING_BLOCKER";
-        Tile[Tile["T_DIVIDES_LEVEL"] = Tile.T_AUTO_DESCENT | Tile.T_IS_TRAP | Tile.T_LAVA | Tile.T_DEEP_WATER] = "T_DIVIDES_LEVEL";
         Tile[Tile["T_LAKE_PATHING_BLOCKER"] = Tile.T_AUTO_DESCENT |
             Tile.T_LAVA |
             Tile.T_DEEP_WATER |
@@ -7040,6 +7105,7 @@ void main() {
             Tile.T_LAVA |
             Tile.T_DEEP_WATER |
             Tile.T_SPONTANEOUSLY_IGNITES] = "T_WAYPOINT_BLOCKER";
+        Tile[Tile["T_DIVIDES_LEVEL"] = Tile.T_AUTO_DESCENT | Tile.T_IS_TRAP | Tile.T_LAVA | Tile.T_DEEP_WATER] = "T_DIVIDES_LEVEL";
         Tile[Tile["T_MOVES_ITEMS"] = Tile.T_DEEP_WATER | Tile.T_LAVA] = "T_MOVES_ITEMS";
         Tile[Tile["T_CAN_BE_BRIDGED"] = Tile.T_AUTO_DESCENT | Tile.T_LAVA | Tile.T_DEEP_WATER] = "T_CAN_BE_BRIDGED";
         // T_HARMFUL_TERRAIN = T_CAUSES_POISON |
@@ -7251,9 +7317,11 @@ void main() {
     const tiles = {};
     const all = [];
     function get(id) {
+        if (id instanceof Tile)
+            return id;
         if (typeof id === 'string')
-            return tiles[id];
-        return all[id];
+            return tiles[id] || tiles.NULL;
+        return all[id] || tiles.NULL;
     }
     function install(id, ...args) {
         let options = args[0];
@@ -7447,6 +7515,8 @@ void main() {
         Cell[Cell["IS_IN_PATH"] = fl(23)] = "IS_IN_PATH";
         Cell[Cell["IS_CURSOR"] = fl(24)] = "IS_CURSOR";
         Cell[Cell["STABLE_MEMORY"] = fl(25)] = "STABLE_MEMORY";
+        Cell[Cell["IS_WIRED"] = fl(26)] = "IS_WIRED";
+        Cell[Cell["IS_CIRCUIT_BREAKER"] = fl(27)] = "IS_CIRCUIT_BREAKER";
         Cell[Cell["COLORS_DANCE"] = fl(30)] = "COLORS_DANCE";
         Cell[Cell["IS_IN_MACHINE"] = Cell.IS_IN_ROOM_MACHINE | Cell.IS_IN_AREA_MACHINE] = "IS_IN_MACHINE";
         Cell[Cell["PERMANENT_CELL_FLAGS"] = Cell.HAS_ITEM |
@@ -7546,6 +7616,9 @@ void main() {
         depthTile(depth) {
             return this.tiles[depth] || tiles.NULL;
         }
+        isEmpty() {
+            return this.tiles.every((t) => !t || t === tiles.NULL);
+        }
         hasTile(tile) {
             if (!tile)
                 return this.tiles.some((t) => t);
@@ -7553,6 +7626,19 @@ void main() {
                 tile = get(tile);
             }
             return this.tiles.includes(tile);
+        }
+        hasDepthTile(depth) {
+            const t = this.tiles[depth];
+            return !!t && t !== tiles.NULL;
+        }
+        highestPriorityTile() {
+            return this.tiles.reduce((out, tile) => {
+                if (!tile)
+                    return out;
+                if (tile.priority >= out.priority)
+                    return tile; // higher depth will get picked with >=
+                return out;
+            }, tiles.NULL);
         }
         blocksVision() {
             return this.tiles.some((t) => t && t.blocksVision());
@@ -7570,6 +7656,9 @@ void main() {
             return this.tiles.some((t) => t &&
                 !!(t.flags.tile & flags$1.Tile.T_BLOCKS_OTHER_LAYERS) &&
                 t.depth != depth);
+        }
+        isPassable() {
+            return !this.blocksMove();
         }
         isWall() {
             return this.hasAllObjectFlags(GameObject$1.L_WALL_FLAGS);
@@ -7756,13 +7845,7 @@ void main() {
         dump() {
             // if (this.actor) return this.actor.sprite.ch as string;
             // if (this.item) return this.item.sprite.ch as string;
-            // for (let i = this._tiles.length - 1; i >= 0; --i) {
-            //     if (!this._tiles[i]) continue;
-            //     const tile = this._tiles[i] || TILES.NULL;
-            //     if (tile.sprite.ch) return tile.sprite.ch as string;
-            // }
-            // return TILES.NULL.sprite.ch as string;
-            return this.tiles[0].sprite.ch || ' ';
+            return this.highestPriorityTile().sprite.ch || ' ';
         }
     }
 
@@ -7877,8 +7960,8 @@ void main() {
         }
         set(x, y, tile, opts = {}) {
             const cell = this.map.cell(x, y);
-            const current = cell.tiles[tile.depth] || tiles.NULL;
-            if (!opts.force) {
+            const current = cell.depthTile(tile.depth) || tiles.NULL;
+            if (!opts.superpriority) {
                 // if (current !== tile) {
                 //     this.gasVolume = 0;
                 //     this.liquidVolume = 0;
@@ -7888,6 +7971,14 @@ void main() {
                     return false;
                 }
             }
+            if (cell.blocksLayer(tile.depth))
+                return false;
+            if (opts.blockedByItems && cell.hasItem())
+                return false;
+            if (opts.blockedByActors && cell.hasActor())
+                return false;
+            if (opts.blockedByOtherLayers && cell.highestPriority() > tile.priority)
+                return false;
             if (!cell.setTile(tile))
                 return false;
             if (current.light !== tile.light) {
@@ -7908,7 +7999,7 @@ void main() {
         }
         putAppearance(dest, x, y) {
             const cell = this.map.cell(x, y);
-            const tile = cell.tiles[this.depth];
+            const tile = cell.depthTile(this.depth);
             if (tile) {
                 dest.drawSprite(tile.sprite);
             }
@@ -8076,6 +8167,9 @@ void main() {
         blocksMove(x, y) {
             return this.cell(x, y).blocksMove();
         }
+        isPassable(x, y) {
+            return this.hasXY(x, y) && !this.blocksMove(x, y);
+        }
         isStairs(x, y) {
             return this.cell(x, y).hasTileFlag(flags$1.Tile.T_HAS_STAIRS);
         }
@@ -8110,17 +8204,16 @@ void main() {
         hasTileFlag(x, y, flag) {
             return this.cell(x, y).hasTileFlag(flag);
         }
+        // Skips all the logic checks and just forces a clean cell with the given tile
         fill(tile, boundary) {
-            boundary = boundary || tile;
+            tile = get(tile);
+            boundary = get(boundary || tile);
             let i, j;
             for (i = 0; i < this.width; ++i) {
                 for (j = 0; j < this.height; ++j) {
-                    if (this.isBoundaryXY(i, j)) {
-                        this.setTile(i, j, boundary);
-                    }
-                    else {
-                        this.setTile(i, j, tile);
-                    }
+                    const cell = this.cell(i, j);
+                    cell.clear();
+                    cell.setTile(this.isBoundaryXY(i, j) ? boundary : tile);
                 }
             }
         }
@@ -8131,7 +8224,7 @@ void main() {
                     return false;
             }
             if (opts === true) {
-                opts = { force: true };
+                opts = { superpriority: true };
             }
             const depth = tile.depth || 0;
             const layer = this.layers[depth] || this.layers[0];
@@ -8651,6 +8744,40 @@ void main() {
             return true;
         }
         async fire(effect, map, x, y, ctx) {
+            let didSomething = false;
+            const spawned = this.fireSync(effect, map, x, y, ctx);
+            if (spawned) {
+                didSomething = true;
+                // await spawnMap.forEachAsync( (v, x, y) => {
+                //     if (!v) return;
+                //     await map.applyInstantEffects(x, y);
+                // });
+                // if (applyEffects) {
+                // if (PLAYER.xLoc == i && PLAYER.yLoc == j && !PLAYER.status.levitating && refresh) {
+                // 	flavorMessage(tileFlavor(PLAYER.xLoc, PLAYER.yLoc));
+                // }
+                // if (cell.actor || cell.item) {
+                // 	for(let t of cell.tiles()) {
+                // 		await t.applyInstantEffects(map, i, j, cell);
+                // 		if (Data.gameHasEnded) {
+                // 			return true;
+                // 		}
+                // 	}
+                // }
+                // if (tile.flags & TileFlags.T_IS_FIRE) {
+                // 	if (cell.flags & CellFlags.HAS_ITEM) {
+                // 		theItem = map.itemAt(i, j);
+                // 		if (theItem.flags & Flags.Item.ITEM_FLAMMABLE) {
+                // 			await burnItem(theItem);
+                // 		}
+                // 	}
+                // }
+                // }
+            }
+            // Grid.free(spawnMap);
+            return didSomething;
+        }
+        fireSync(effect, map, x, y, ctx) {
             if (!effect.tile)
                 return false; // did nothing
             const id = effect.tile.tile;
@@ -8693,36 +8820,7 @@ void main() {
                 }
             }
             const spawned = spawnTiles(effect.flags, ctx.grid, map, tile, effect.tile.volume);
-            if (spawned) {
-                didSomething = true;
-                // await spawnMap.forEachAsync( (v, x, y) => {
-                //     if (!v) return;
-                //     await map.applyInstantEffects(x, y);
-                // });
-                // if (applyEffects) {
-                // if (PLAYER.xLoc == i && PLAYER.yLoc == j && !PLAYER.status.levitating && refresh) {
-                // 	flavorMessage(tileFlavor(PLAYER.xLoc, PLAYER.yLoc));
-                // }
-                // if (cell.actor || cell.item) {
-                // 	for(let t of cell.tiles()) {
-                // 		await t.applyInstantEffects(map, i, j, cell);
-                // 		if (Data.gameHasEnded) {
-                // 			return true;
-                // 		}
-                // 	}
-                // }
-                // if (tile.flags & TileFlags.T_IS_FIRE) {
-                // 	if (cell.flags & CellFlags.HAS_ITEM) {
-                // 		theItem = map.itemAt(i, j);
-                // 		if (theItem.flags & Flags.Item.ITEM_FLAMMABLE) {
-                // 			await burnItem(theItem);
-                // 		}
-                // 	}
-                // }
-                // }
-            }
-            // Grid.free(spawnMap);
-            return didSomething;
+            return spawned;
         }
         mapDisruptedBy(map, blockingGrid, blockingToMapX = 0, blockingToMapY = 0) {
             const walkableGrid = alloc(map.width, map.height);
@@ -8767,8 +8865,10 @@ void main() {
         let i, j;
         let accomplishedSomething;
         accomplishedSomething = false;
-        const blockedByOtherLayers = flags & Effect.E_BLOCKED_BY_OTHER_LAYERS;
-        const superpriority = flags & Effect.E_SUPERPRIORITY;
+        const blockedByOtherLayers = !!(flags & Effect.E_BLOCKED_BY_OTHER_LAYERS);
+        const superpriority = !!(flags & Effect.E_SUPERPRIORITY);
+        const blockedByActors = !!(flags & Effect.E_BLOCKED_BY_ACTORS);
+        const blockedByItems = !!(flags & Effect.E_BLOCKED_BY_ITEMS);
         // const applyEffects = ctx.refreshCell;
         volume = volume || 0; // (tile ? tile.volume : 0);
         for (i = 0; i < spawnMap.width; i++) {
@@ -8779,30 +8879,25 @@ void main() {
                 spawnMap[i][j] = 0; // so that the spawnmap reflects what actually got built
                 const cell = map.cell(i, j);
                 if (cell.hasTile(tile)) ;
-                else if ((superpriority ||
-                    cell.depthPriority(tile.depth) < tile.priority) && // If the terrain in the layer to be overwritten has a higher priority number (unless superpriority),
-                    !cell.blocksLayer(tile.depth) && // If we will be painting into the surface layer when that cell forbids it,
-                    (!cell.hasItem() ||
-                        !(flags & Effect.E_BLOCKED_BY_ITEMS)) &&
-                    (!cell.hasActor() ||
-                        !(flags & Effect.E_BLOCKED_BY_ACTORS)) &&
-                    (!blockedByOtherLayers ||
-                        cell.highestPriority() < tile.priority) // TODO - highestPriorityTile()
-                ) {
-                    if (map.setTile(i, j, tile, volume)) {
-                        // if the fill won't violate the priority of the most important terrain in this cell:
-                        spawnMap[i][j] = 1; // so that the spawnmap reflects what actually got built
-                        // map.redrawCell(cell);
-                        // if (volume && cell.gas) {
-                        //     cell.volume += (feat.volume || 0);
-                        // }
-                        cell.flags.cell |= Cell$1.EVENT_FIRED_THIS_TURN;
-                        if (flags & Effect.E_PROTECTED) {
-                            cell.flags.cell |= Cell$1.EVENT_PROTECTED;
-                        }
-                        accomplishedSomething = true;
-                        // debug('- tile', i, j, 'tile=', tile.id);
+                else if (map.setTile(i, j, tile, {
+                    volume,
+                    superpriority,
+                    blockedByOtherLayers,
+                    blockedByActors,
+                    blockedByItems,
+                })) {
+                    // if the fill won't violate the priority of the most important terrain in this cell:
+                    spawnMap[i][j] = 1; // so that the spawnmap reflects what actually got built
+                    // map.redrawCell(cell);
+                    // if (volume && cell.gas) {
+                    //     cell.volume += (feat.volume || 0);
+                    // }
+                    cell.flags.cell |= Cell$1.EVENT_FIRED_THIS_TURN;
+                    if (flags & Effect.E_PROTECTED) {
+                        cell.flags.cell |= Cell$1.EVENT_PROTECTED;
                     }
+                    accomplishedSomething = true;
+                    // debug('- tile', i, j, 'tile=', tile.id);
                 }
             }
         }
@@ -9102,7 +9197,10 @@ void main() {
             dest.clear = layers;
             return layers > 0;
         }
-        fire(config, map, x, y, _ctx) {
+        fire(config, map, x, y, ctx) {
+            return this.fireSync(config, map, x, y, ctx);
+        }
+        fireSync(config, map, x, y, _ctx) {
             if (!config.clear)
                 return false;
             if (!map)

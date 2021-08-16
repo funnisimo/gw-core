@@ -42,6 +42,9 @@ export enum Cell {
 
     STABLE_MEMORY = Fl(25), // redraws will simply be pulled from the memory array, not recalculated
 
+    IS_WIRED = Fl(26),
+    IS_CIRCUIT_BREAKER = Fl(27),
+
     COLORS_DANCE = Fl(30),
 
     IS_IN_MACHINE = IS_IN_ROOM_MACHINE | IS_IN_AREA_MACHINE, // sacred ground; don't generate items here, or teleport randomly to it

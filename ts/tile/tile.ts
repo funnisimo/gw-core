@@ -245,9 +245,10 @@ export function make(options: Partial<TileOptions>) {
 export const tiles: Record<string, Tile> = {};
 export const all: Tile[] = [];
 
-export function get(id: string | number): Tile {
-    if (typeof id === 'string') return tiles[id];
-    return all[id];
+export function get(id: string | number | Tile): Tile {
+    if (id instanceof Tile) return id;
+    if (typeof id === 'string') return tiles[id] || tiles.NULL;
+    return all[id] || tiles.NULL;
 }
 
 export function install(id: string, options: Partial<TileOptions>): Tile;

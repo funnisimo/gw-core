@@ -17,7 +17,13 @@ import { Mixer } from '../sprite';
 import { asyncForEach } from '../utils';
 import * as Canvas from '../canvas';
 import { Depth } from '../gameObject/flags';
-import { MapType, EachCellCb, MapTestFn, CellType } from './types';
+import {
+    MapType,
+    EachCellCb,
+    MapTestFn,
+    CellType,
+    SetTileOptions,
+} from './types';
 
 export interface MapOptions extends LightSystemOptions, FOV.FovSystemOptions {
     tile: string | true;
@@ -93,7 +99,7 @@ export class Map implements LightSystemSite, FOV.FovSite, MapType {
         return x == 0 || y == 0 || x == this.width - 1 || y == this.height - 1;
     }
 
-    cell(x: number, y: number): Cell {
+    cell(x: number, y: number): CellType {
         return this.cells[x][y];
     }
     get(x: number, y: number): Cell | undefined {
@@ -184,6 +190,9 @@ export class Map implements LightSystemSite, FOV.FovSite, MapType {
         return this.cell(x, y).blocksMove();
     }
 
+    isPassable(x: number, y: number) {
+        return this.hasXY(x, y) && !this.blocksMove(x, y);
+    }
     isStairs(x: number, y: number): boolean {
         return this.cell(x, y).hasTileFlag(TILE.flags.Tile.T_HAS_STAIRS);
     }
@@ -225,27 +234,33 @@ export class Map implements LightSystemSite, FOV.FovSite, MapType {
         return this.cell(x, y).hasTileFlag(flag);
     }
 
-    fill(tile: string, boundary?: string) {
-        boundary = boundary || tile;
+    // Skips all the logic checks and just forces a clean cell with the given tile
+    fill(tile: string | number | Tile, boundary?: string | number | Tile) {
+        tile = TILE.get(tile);
+        boundary = TILE.get(boundary || tile);
+
         let i, j;
         for (i = 0; i < this.width; ++i) {
             for (j = 0; j < this.height; ++j) {
-                if (this.isBoundaryXY(i, j)) {
-                    this.setTile(i, j, boundary);
-                } else {
-                    this.setTile(i, j, tile);
-                }
+                const cell = this.cell(i, j);
+                cell.clear();
+                cell.setTile(this.isBoundaryXY(i, j) ? boundary : tile);
             }
         }
     }
 
-    setTile(x: number, y: number, tile: string | number | Tile, opts?: any) {
+    setTile(
+        x: number,
+        y: number,
+        tile: string | number | Tile,
+        opts?: SetTileOptions
+    ) {
         if (!(tile instanceof TILE.Tile)) {
             tile = TILE.get(tile);
             if (!tile) return false;
         }
         if (opts === true) {
-            opts = { force: true };
+            opts = { superpriority: true };
         }
 
         const depth = tile.depth || 0;

@@ -10,4 +10,12 @@ export interface EffectHandler {
         y: number,
         ctx: EffectCtx
     ) => boolean | Promise<boolean>;
+
+    fireSync: (
+        config: EffectInfo,
+        map: MapType,
+        x: number,
+        y: number,
+        ctx: EffectCtx
+    ) => boolean;
 }

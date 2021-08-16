@@ -86,6 +86,52 @@ export class SpawnEffect implements Effect.EffectHandler {
         y: number,
         ctx: Effect.EffectCtx
     ): Promise<boolean> {
+        let didSomething = false;
+
+        const spawned = this.fireSync(effect, map, x, y, ctx);
+
+        if (spawned) {
+            didSomething = true;
+            // await spawnMap.forEachAsync( (v, x, y) => {
+            //     if (!v) return;
+            //     await map.applyInstantEffects(x, y);
+            // });
+
+            // if (applyEffects) {
+            // if (PLAYER.xLoc == i && PLAYER.yLoc == j && !PLAYER.status.levitating && refresh) {
+            // 	flavorMessage(tileFlavor(PLAYER.xLoc, PLAYER.yLoc));
+            // }
+            // if (cell.actor || cell.item) {
+            // 	for(let t of cell.tiles()) {
+            // 		await t.applyInstantEffects(map, i, j, cell);
+            // 		if (Data.gameHasEnded) {
+            // 			return true;
+            // 		}
+            // 	}
+            // }
+            // if (tile.flags & TileFlags.T_IS_FIRE) {
+            // 	if (cell.flags & CellFlags.HAS_ITEM) {
+            // 		theItem = map.itemAt(i, j);
+            // 		if (theItem.flags & Flags.Item.ITEM_FLAMMABLE) {
+            // 			await burnItem(theItem);
+            // 		}
+            // 	}
+            // }
+            // }
+        }
+
+        // Grid.free(spawnMap);
+
+        return didSomething;
+    }
+
+    fireSync(
+        effect: Effect.EffectInfo,
+        map: MapType,
+        x: number,
+        y: number,
+        ctx: Effect.EffectCtx
+    ) {
         if (!effect.tile) return false; // did nothing
 
         const id = effect.tile.tile;
@@ -150,39 +196,7 @@ export class SpawnEffect implements Effect.EffectHandler {
             effect.tile.volume
         );
 
-        if (spawned) {
-            didSomething = true;
-            // await spawnMap.forEachAsync( (v, x, y) => {
-            //     if (!v) return;
-            //     await map.applyInstantEffects(x, y);
-            // });
-
-            // if (applyEffects) {
-            // if (PLAYER.xLoc == i && PLAYER.yLoc == j && !PLAYER.status.levitating && refresh) {
-            // 	flavorMessage(tileFlavor(PLAYER.xLoc, PLAYER.yLoc));
-            // }
-            // if (cell.actor || cell.item) {
-            // 	for(let t of cell.tiles()) {
-            // 		await t.applyInstantEffects(map, i, j, cell);
-            // 		if (Data.gameHasEnded) {
-            // 			return true;
-            // 		}
-            // 	}
-            // }
-            // if (tile.flags & TileFlags.T_IS_FIRE) {
-            // 	if (cell.flags & CellFlags.HAS_ITEM) {
-            // 		theItem = map.itemAt(i, j);
-            // 		if (theItem.flags & Flags.Item.ITEM_FLAMMABLE) {
-            // 			await burnItem(theItem);
-            // 		}
-            // 	}
-            // }
-            // }
-        }
-
-        // Grid.free(spawnMap);
-
-        return didSomething;
+        return spawned;
     }
 
     mapDisruptedBy(
@@ -247,8 +261,12 @@ export function spawnTiles(
 
     accomplishedSomething = false;
 
-    const blockedByOtherLayers = flags & Effect.Flags.E_BLOCKED_BY_OTHER_LAYERS;
-    const superpriority = flags & Effect.Flags.E_SUPERPRIORITY;
+    const blockedByOtherLayers = !!(
+        flags & Effect.Flags.E_BLOCKED_BY_OTHER_LAYERS
+    );
+    const superpriority = !!(flags & Effect.Flags.E_SUPERPRIORITY);
+    const blockedByActors = !!(flags & Effect.Flags.E_BLOCKED_BY_ACTORS);
+    const blockedByItems = !!(flags & Effect.Flags.E_BLOCKED_BY_ITEMS);
     // const applyEffects = ctx.refreshCell;
     volume = volume || 0; // (tile ? tile.volume : 0);
 
@@ -270,30 +288,26 @@ export function spawnTiles(
                 //     cell.liquidVolume += volume;
                 // }
             } else if (
-                (superpriority ||
-                    cell.depthPriority(tile.depth) < tile.priority) && // If the terrain in the layer to be overwritten has a higher priority number (unless superpriority),
-                !cell.blocksLayer(tile.depth) && // If we will be painting into the surface layer when that cell forbids it,
-                (!cell.hasItem() ||
-                    !(flags & Effect.Flags.E_BLOCKED_BY_ITEMS)) &&
-                (!cell.hasActor() ||
-                    !(flags & Effect.Flags.E_BLOCKED_BY_ACTORS)) &&
-                (!blockedByOtherLayers ||
-                    cell.highestPriority() < tile.priority) // TODO - highestPriorityTile()
+                map.setTile(i, j, tile, {
+                    volume,
+                    superpriority,
+                    blockedByOtherLayers,
+                    blockedByActors,
+                    blockedByItems,
+                })
             ) {
-                if (map.setTile(i, j, tile, volume)) {
-                    // if the fill won't violate the priority of the most important terrain in this cell:
-                    spawnMap[i][j] = 1; // so that the spawnmap reflects what actually got built
-                    // map.redrawCell(cell);
-                    // if (volume && cell.gas) {
-                    //     cell.volume += (feat.volume || 0);
-                    // }
-                    cell.flags.cell |= Flags.Cell.EVENT_FIRED_THIS_TURN;
-                    if (flags & Effect.Flags.E_PROTECTED) {
-                        cell.flags.cell |= Flags.Cell.EVENT_PROTECTED;
-                    }
-                    accomplishedSomething = true;
-                    // debug('- tile', i, j, 'tile=', tile.id);
+                // if the fill won't violate the priority of the most important terrain in this cell:
+                spawnMap[i][j] = 1; // so that the spawnmap reflects what actually got built
+                // map.redrawCell(cell);
+                // if (volume && cell.gas) {
+                //     cell.volume += (feat.volume || 0);
+                // }
+                cell.flags.cell |= Flags.Cell.EVENT_FIRED_THIS_TURN;
+                if (flags & Effect.Flags.E_PROTECTED) {
+                    cell.flags.cell |= Flags.Cell.EVENT_PROTECTED;
                 }
+                accomplishedSomething = true;
+                // debug('- tile', i, j, 'tile=', tile.id);
             }
         }
     }
@@ -644,6 +658,16 @@ class ClearTileEffect implements Effect.EffectHandler {
 
     fire(
         config: Effect.EffectInfo,
+        map: MapType,
+        x: number,
+        y: number,
+        ctx: Effect.EffectCtx
+    ): boolean {
+        return this.fireSync(config, map, x, y, ctx);
+    }
+
+    fireSync(
+        config: any,
         map: MapType,
         x: number,
         y: number,
