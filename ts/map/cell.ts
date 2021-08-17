@@ -1,40 +1,79 @@
-import { Cell as Flags } from './flags';
+import {
+    Cell as Flags,
+    GameObject as ObjectFlags,
+    Tile as TileFlags,
+} from './flags';
 import * as TILE from '../tile';
 import { Depth } from '../gameObject/flags';
-import { GameObject } from '../gameObject/gameObject';
-import { GameObject as ObjectFlags } from '../gameObject/flags';
 import { MapType } from './types';
 import * as Effect from '../effect';
-import { Chain } from '../utils';
 import { CellType, CellFlags } from './types';
 import * as Light from '../light';
-import { Mixer } from '../sprite';
-import { ActorFlags } from '../actor/types';
-import { ItemFlags } from '../item/types';
+import { GameObject } from '../gameObject';
+import { Actor } from '../actor';
+import { Item } from '../item';
 
 type TileData = TILE.Tile | null;
 type TileArray = [TILE.Tile, ...TileData[]];
 
-export interface AllCellFlags
-    extends CellFlags,
-        ActorFlags,
-        ItemFlags,
-        TILE.TileFlags {}
+type EachCb<T> = (t: T) => any;
+type MatchCb<T> = (t: T) => boolean;
+type ReduceCb<T> = (out: any, t: T) => any;
 
-export class CellMemory {
-    snapshot: Mixer;
-    flags: AllCellFlags;
+class CellObjects {
+    cell: Cell;
 
-    constructor() {
-        this.snapshot = new Mixer();
-        this.flags = {
-            cell: 0,
-            tile: 0,
-            actor: 0,
-            item: 0,
-            object: 0,
-            tileMech: 0,
-        };
+    constructor(cell: Cell) {
+        this.cell = cell;
+    }
+
+    forEach(cb: EachCb<GameObject>): void {
+        let object: GameObject | null = this.cell._item;
+        while (object) {
+            cb(object);
+            object = object.next;
+        }
+        object = this.cell._actor;
+        while (object) {
+            cb(object);
+            object = object.next;
+        }
+    }
+
+    some(cb: MatchCb<GameObject>): boolean {
+        let object: GameObject | null = this.cell._item;
+        while (object) {
+            if (cb(object)) return true;
+            object = object.next;
+        }
+        object = this.cell._actor;
+        while (object) {
+            if (cb(object)) return true;
+            object = object.next;
+        }
+        return false;
+    }
+
+    reduce(cb: ReduceCb<GameObject>, start?: any): any {
+        let object: GameObject | null = this.cell._item;
+        while (object) {
+            if (start === undefined) {
+                start = object;
+            } else {
+                start = cb(start, object);
+            }
+            object = object.next;
+        }
+        object = this.cell._actor;
+        while (object) {
+            if (start === undefined) {
+                start = object;
+            } else {
+                start = cb(start, object);
+            }
+            object = object.next;
+        }
+        return start;
     }
 }
 
@@ -42,38 +81,71 @@ export class Cell implements CellType {
     flags: CellFlags;
     chokeCount = 0;
     tiles: TileArray;
-    objects: Chain<GameObject>;
-    gasVolume: number = 0;
-    liquidVolume: number = 0;
-    memory: CellMemory;
+    // gasVolume: number = 0;
+    // liquidVolume: number = 0;
+    _actor: Actor | null = null;
+    _item: Item | null = null;
+    _objects: CellObjects;
 
-    constructor() {
+    constructor(groundTile?: number | string | TILE.Tile) {
+        this._objects = new CellObjects(this);
         this.flags = { cell: 0 };
         this.tiles = [TILE.tiles.NULL];
-        this.objects = new Chain<GameObject>(
-            (a, b) => a.depth - b.depth,
-            () => {
-                this.needsRedraw = true;
-            }
-        );
-        this.memory = new CellMemory();
+
+        if (groundTile) {
+            const tile = TILE.get(groundTile);
+            this.setTile(tile);
+        }
     }
 
+    copy(other: Cell) {
+        Object.assign(this.flags, other.flags);
+        this.chokeCount = other.chokeCount;
+        this.tiles = other.tiles.slice() as TileArray;
+        this._actor = other._actor;
+        this._item = other._item;
+    }
+
+    hasCellFlag(flag: number): boolean {
+        return !!(this.flags.cell & flag);
+    }
+    setCellFlag(flag: number) {
+        this.flags.cell |= flag;
+    }
+    clearCellFlag(flag: number) {
+        this.flags.cell &= ~flag;
+    }
+
+    hasObjectFlag(flag: number): boolean {
+        return (
+            this.tiles.some((t) => t && t.flags.object & flag) ||
+            this._objects.some((o) => !!(o.flags.object & flag))
+        );
+    }
+    hasAllObjectFlags(flags: number): boolean {
+        return (this.objectFlags() & flags) == flags;
+    }
     hasTileFlag(flag: number): boolean {
         return this.tiles.some((t) => t && t.flags.tile & flag);
     }
     hasAllTileFlags(flags: number): boolean {
         return (this.tileFlags() & flags) == flags;
     }
-    hasObjectFlag(flag: number): boolean {
-        return this.tiles.some((t) => t && t.flags.object & flag);
+    hasTileMechFlag(flag: number): boolean {
+        return this.tiles.some((t) => t && t.flags.tileMech & flag);
     }
-    hasAllObjectFlags(flags: number): boolean {
-        return (this.objectFlags() & flags) == flags;
+    hasAllTileMechFlags(flags: number): boolean {
+        return (this.tileMechFlags() & flags) == flags;
     }
 
+    cellFlags(): number {
+        return this.flags.cell;
+    }
     objectFlags(): number {
-        return this.tiles.reduce((out, t) => out | (t ? t.flags.object : 0), 0);
+        return (
+            this.tiles.reduce((out, t) => out | (t ? t.flags.object : 0), 0) |
+            this._objects.reduce((out, o) => out | o.flags.object, 0)
+        );
     }
     tileFlags(): number {
         return this.tiles.reduce((out, t) => out | (t ? t.flags.tile : 0), 0);
@@ -83,6 +155,12 @@ export class Cell implements CellType {
             (out, t) => out | (t ? t.flags.tileMech : 0),
             0
         );
+    }
+    itemFlags(): number {
+        return this._objects.reduce((out, o) => out | o.itemFlags(), 0);
+    }
+    actorFlags(): number {
+        return this._objects.reduce((out, o) => out | o.actorFlags(), 0);
     }
 
     get needsRedraw() {
@@ -110,9 +188,6 @@ export class Cell implements CellType {
         return this.tiles[depth] || TILE.tiles.NULL;
     }
 
-    isEmpty(): boolean {
-        return this.tiles.every((t) => !t || t === TILE.tiles.NULL);
-    }
     hasTile(tile?: string | number | TILE.Tile): boolean {
         if (!tile) return this.tiles.some((t) => t);
         if (!(tile instanceof TILE.Tile)) {
@@ -131,18 +206,45 @@ export class Cell implements CellType {
             return out;
         }, TILE.tiles.NULL)!;
     }
+    get tile(): TILE.Tile {
+        return this.highestPriorityTile();
+    }
+
+    tileWithObjectFlag(flag: number) {
+        return this.tiles.find((t) => t && t.flags.object & flag) || null;
+    }
+
+    tileWithFlag(flag: number) {
+        return this.tiles.find((t) => t && t.flags.tile & flag) || null;
+    }
+
+    tileWithMechFlag(flag: number) {
+        return this.tiles.find((t) => t && t.flags.tileMech & flag) || null;
+    }
 
     blocksVision(): boolean {
-        return this.tiles.some((t) => t && t.blocksVision());
+        return (
+            this.tiles.some((t) => t && t.blocksVision()) ||
+            this._objects.some((o) => o.blocksVision())
+        );
     }
     blocksPathing(): boolean {
-        return this.tiles.some((t) => t && t.blocksPathing());
+        return (
+            this.tiles.some((t) => t && t.blocksPathing()) ||
+            this._objects.some((o) => o.blocksPathing())
+        );
     }
     blocksMove(): boolean {
-        return this.tiles.some((t) => t && t.blocksMove());
+        return (
+            this.tiles.some((t) => t && t.blocksMove()) ||
+            this._objects.some((o) => o.blocksMove())
+        );
     }
     blocksEffects(): boolean {
-        return this.tiles.some((t) => t && t.blocksEffects());
+        return (
+            this.tiles.some((t) => t && t.blocksEffects()) ||
+            this._objects.some((o) => o.blocksEffects())
+        );
     }
     blocksLayer(depth: number): boolean {
         return this.tiles.some(
@@ -152,29 +254,32 @@ export class Cell implements CellType {
                 t.depth != depth
         );
     }
+
+    // Tests
+
+    isEmpty(): boolean {
+        return (
+            this.tiles.every((t) => !t || t === TILE.tiles.NULL) &&
+            this._actor == null &&
+            this._item == null
+        );
+    }
     isPassable() {
         return !this.blocksMove();
     }
     isWall(): boolean {
         return this.hasAllObjectFlags(ObjectFlags.L_WALL_FLAGS);
     }
-
-    hasCellFlag(flag: number): boolean {
-        return !!(this.flags.cell & flag);
-    }
-    setCellFlag(flag: number) {
-        this.flags.cell |= flag;
-    }
-    clearCellFlag(flag: number) {
-        this.flags.cell &= ~flag;
+    isStairs(): boolean {
+        return this.hasTileFlag(TileFlags.T_HAS_STAIRS);
     }
 
     // @returns - whether or not the change results in a change to the cell lighting.
-    setTile(tile: TILE.Tile): boolean {
-        // if (!(tile instanceof TILE.Tile)) {
-        //     tile = TILE.get(tile);
-        //     if (!tile) return false;
-        // }
+    setTile(tile: string | number | TILE.Tile): boolean {
+        if (!(tile instanceof TILE.Tile)) {
+            tile = TILE.get(tile);
+            if (!tile) return false;
+        }
 
         // const current = this.tiles[tile.depth] || TILE.tiles.NULL;
 
@@ -203,7 +308,7 @@ export class Cell implements CellType {
         this.tiles = [TILE.tiles.NULL];
         this.needsRedraw = true;
     }
-    clearLayer(depth: Depth): boolean {
+    clearDepth(depth: Depth): boolean {
         if (depth == 0) {
             this.tiles[0] = TILE.tiles.NULL;
             this.needsRedraw = true;
@@ -214,6 +319,15 @@ export class Cell implements CellType {
             return true;
         }
         return false;
+    }
+    clearDepthsWithFlags(tileFlag: number, tileMechFlag = 0): void {
+        for (let i = 0; i < this.tiles.length; ++i) {
+            const tile = this.tiles[i];
+            if (!tile) continue;
+            if (!tile.hasTileFlag(tileFlag)) continue;
+            if (tileMechFlag && !tile.hasTileMechFlag(tileMechFlag)) continue;
+            this.clearDepth(i);
+        }
     }
 
     // Lights
@@ -308,59 +422,55 @@ export class Cell implements CellType {
     hasItem(): boolean {
         return this.hasCellFlag(Flags.HAS_ITEM);
     }
-    // addItem(item: ItemType): boolean {
-    //     if (this.item) {
-    //         return false;
-    //     }
-    //     this.item = item;
-    //     return true;
-    // }
-    // removeItem(item: ItemType): boolean {
-    //     const current = this.item;
-    //     if (current !== item) return false;
-    //     this.item = null;
-    //     return true;
-    // }
+    get item(): Item | null {
+        return this._item;
+    }
+    set item(val: Item | null) {
+        this._item = val;
+        if (val) {
+            this.setCellFlag(Flags.HAS_ITEM);
+        } else {
+            this.clearCellFlag(Flags.HAS_ITEM);
+        }
+        this.needsRedraw = true;
+    }
 
     // // Actors
 
     hasActor(): boolean {
-        return this.hasCellFlag(Flags.HAS_ANY_ACTOR);
+        return this.hasCellFlag(Flags.HAS_ACTOR);
     }
-    // addActor(actor: ActorType): boolean {
-    //     if (this.actor) {
-    //         return false;
-    //     }
-    //     this.actor = actor;
-    //     return true;
-    // }
-    // removeActor(actor: ActorType): boolean {
-    //     const current = this.actor;
-    //     if (current !== actor) return false;
-    //     this.actor = null;
-    //     return true;
-    // }
-
-    redraw() {
-        this.flags.cell |= Flags.NEEDS_REDRAW;
+    hasPlayer(): boolean {
+        return this.hasCellFlag(Flags.HAS_PLAYER);
     }
-    clearMemory() {
-        // TODO
+    get actor(): Actor | null {
+        return this._actor;
     }
-    storeMemory() {
-        // TODO
+    set actor(val: Actor | null) {
+        this._actor = val;
+        if (val) {
+            this.setCellFlag(Flags.HAS_ACTOR);
+        } else {
+            this.clearCellFlag(Flags.HAS_ACTOR);
+        }
+        this.needsRedraw = true;
     }
 
-    getSnapshot(dest: Mixer) {
-        dest.copy(this.memory.snapshot);
+    getDescription() {
+        return this.highestPriorityTile().description;
     }
-    putSnapshot(src: Mixer) {
-        this.memory.snapshot.copy(src);
+
+    getFlavor() {
+        return this.highestPriorityTile().flavor;
+    }
+
+    getName(opts = {}) {
+        return this.highestPriorityTile().getName(opts);
     }
 
     dump(): string {
-        // if (this.actor) return this.actor.sprite.ch as string;
-        // if (this.item) return this.item.sprite.ch as string;
+        if (this._actor?.sprite?.ch) return this._actor.sprite.ch as string;
+        if (this._item?.sprite?.ch) return this._item.sprite.ch as string;
         return this.highestPriorityTile().sprite.ch || ' ';
     }
 }

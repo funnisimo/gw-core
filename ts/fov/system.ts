@@ -140,7 +140,7 @@ export class FovSystem implements TYPES.FovSystemType {
         } else if (isVisible && !wasVisible) {
             // if the cell became visible this move
             if (!(flag & FovFlags.REVEALED) /* && DATA.automationActive */) {
-                this.site.cellRevealed(x, y);
+                this.site.onCellRevealed(x, y);
                 // if (cell.item) {
                 //     const theItem: GW.types.ItemType = cell.item;
                 //     if (

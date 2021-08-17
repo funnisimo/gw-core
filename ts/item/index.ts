@@ -9,6 +9,7 @@ export { ItemFlags } from './types';
 export class Item extends GameObject {
     flags: ItemFlags;
     quantity = 1;
+    next: Item | null = null;
 
     constructor() {
         super();
@@ -18,6 +19,9 @@ export class Item extends GameObject {
         this.depth = Depth.ITEM;
     }
 
+    itemFlags(): number {
+        return this.flags.item;
+    }
     hasItemFlag(flag: number) {
         return !!(this.flags.item & flag);
     }

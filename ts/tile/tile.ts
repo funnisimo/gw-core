@@ -38,7 +38,7 @@ export class Tile implements TileType {
     priority = 50;
     depth = 0;
     light: Light.LightType | null = null;
-    // groundTile: string | null;
+    groundTile: string | null = null;
 
     name: string;
     description: string;
@@ -51,7 +51,7 @@ export class Tile implements TileType {
         this.priority = config.priority ?? this.priority;
         this.depth = config.depth ?? this.depth;
         this.light = config.light || null;
-        // this.groundTile = config.groundTile || null; // Huh?
+        this.groundTile = config.groundTile || null;
 
         this.sprite = Sprite.make(config);
         this.name = config.name || 'tile';
@@ -247,8 +247,8 @@ export const all: Tile[] = [];
 
 export function get(id: string | number | Tile): Tile {
     if (id instanceof Tile) return id;
-    if (typeof id === 'string') return tiles[id] || tiles.NULL;
-    return all[id] || tiles.NULL;
+    if (typeof id === 'string') return tiles[id] || null;
+    return all[id] || null;
 }
 
 export function install(id: string, options: Partial<TileOptions>): Tile;

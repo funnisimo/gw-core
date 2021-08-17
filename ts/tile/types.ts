@@ -3,8 +3,8 @@ import { EffectInfo } from '../effect/types';
 import { ColorBase } from '../color';
 
 export interface TileFlags extends ObjectTypes.ObjectFlags {
-    readonly tile: number;
-    readonly tileMech: number;
+    tile: number;
+    tileMech: number;
 }
 
 export interface NameConfig {
@@ -19,6 +19,7 @@ export interface TileType {
 
     readonly dissipate: number;
     readonly effects: Record<string, string | EffectInfo>;
+    readonly groundTile: string | null;
 
     hasObjectFlag(flag: number): boolean;
     hasTileFlag(flag: number): boolean;

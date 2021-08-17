@@ -123,6 +123,7 @@ interface SpriteData$1 {
     readonly bg?: Color | ColorBase;
     readonly opacity?: number;
 }
+declare type EachCb$1<T> = (t: T) => any;
 
 type types_XY = XY;
 declare namespace types {
@@ -130,6 +131,7 @@ declare namespace types {
     Loc$1 as Loc,
     types_XY as XY,
     SpriteData$1 as SpriteData,
+    EachCb$1 as EachCb,
   };
 }
 
@@ -146,16 +148,22 @@ declare function addToChain<T extends Chainable<T>>(obj: any, name: string, entr
 declare function removeFromChain<T extends Chainable<T>>(obj: any, name: string, entry: T): boolean;
 declare function findInChain<T extends Chainable<T>>(root: T | null, cb: ChainMatch<T>): T | null;
 declare type ChainChangeFn = () => any;
+declare type ChainReduceFn<T> = (out: any, t: T) => any;
 declare class Chain<T extends Chainable<T>> {
     data: T | null;
     sort: ChainSort<T>;
     onchange: ChainChangeFn;
     constructor(sort?: ChainSort<T>, onchange?: ChainChangeFn);
+    copy(other: Chain<T>): void;
+    get length(): number;
     add(obj: T): boolean;
     has(obj: T): boolean;
     remove(obj: T): boolean;
     find(cb: ChainMatch<T>): T | null;
     forEach(cb: ChainFn<T>): number;
+    reduce(cb: ChainReduceFn<T>, out?: any): any;
+    some(cb: ChainMatch<T>): boolean;
+    every(cb: ChainMatch<T>): boolean;
 }
 
 /**
@@ -332,6 +340,7 @@ declare const index$b_addToChain: typeof addToChain;
 declare const index$b_removeFromChain: typeof removeFromChain;
 declare const index$b_findInChain: typeof findInChain;
 type index$b_ChainChangeFn = ChainChangeFn;
+type index$b_ChainReduceFn<_0> = ChainReduceFn<_0>;
 type index$b_Chain<_0> = Chain<_0>;
 declare const index$b_Chain: typeof Chain;
 declare namespace index$b {
@@ -416,6 +425,7 @@ declare namespace index$b {
     index$b_removeFromChain as removeFromChain,
     index$b_findInChain as findInChain,
     index$b_ChainChangeFn as ChainChangeFn,
+    index$b_ChainReduceFn as ChainReduceFn,
     index$b_Chain as Chain,
   };
 }
@@ -789,7 +799,7 @@ interface FovSite {
     lightingChanged(): boolean;
     hasVisibleLight(x: number, y: number): boolean;
     blocksVision(x: number, y: number): boolean;
-    cellRevealed(x: number, y: number): void;
+    onCellRevealed(x: number, y: number): void;
     redrawCell(x: number, y: number, clearMemory?: boolean): void;
     storeMemory(x: number, y: number): void;
 }
@@ -1682,6 +1692,12 @@ declare class GameObject implements ObjectType {
     constructor();
     hasObjectFlag(flag: number): boolean;
     hasAllObjectFlags(flags: number): boolean;
+    blocksMove(): boolean;
+    blocksVision(): boolean;
+    blocksPathing(): boolean;
+    blocksEffects(): boolean;
+    itemFlags(): number;
+    actorFlags(): number;
 }
 
 type index$5_ObjectFlags = ObjectFlags;
@@ -1694,6 +1710,31 @@ declare namespace index$5 {
     index$5_ObjectFlags as ObjectFlags,
     index$5_ObjectType as ObjectType,
     index$5_GameObject as GameObject,
+  };
+}
+
+interface ItemFlags extends ObjectFlags {
+    item: number;
+}
+
+declare class Item extends GameObject {
+    flags: ItemFlags;
+    quantity: number;
+    next: Item | null;
+    constructor();
+    itemFlags(): number;
+    hasItemFlag(flag: number): boolean;
+    hasAllItemFlags(flags: number): boolean;
+    forbidsCell(_cell: CellType): boolean;
+}
+
+type index$4_Item = Item;
+declare const index$4_Item: typeof Item;
+type index$4_ItemFlags = ItemFlags;
+declare namespace index$4 {
+  export {
+    index$4_Item as Item,
+    index$4_ItemFlags as ItemFlags,
   };
 }
 
@@ -1759,8 +1800,8 @@ interface EffectConfig {
 declare type EffectBase = Partial<EffectConfig> | Function;
 
 interface TileFlags extends ObjectFlags {
-    readonly tile: number;
-    readonly tileMech: number;
+    tile: number;
+    tileMech: number;
 }
 interface NameConfig {
     article?: boolean | string;
@@ -1772,6 +1813,7 @@ interface TileType {
     readonly flags: TileFlags;
     readonly dissipate: number;
     readonly effects: Record<string, string | EffectInfo>;
+    readonly groundTile: string | null;
     hasObjectFlag(flag: number): boolean;
     hasTileFlag(flag: number): boolean;
     hasTileMechFlag(flag: number): boolean;
@@ -1811,6 +1853,7 @@ declare class Tile implements TileType {
     priority: number;
     depth: number;
     light: LightType | null;
+    groundTile: string | null;
     name: string;
     description: string;
     flavor: string;
@@ -1862,29 +1905,29 @@ declare const flags$2: {
     TileMech: typeof TileMech;
 };
 
-type index$4_TileFlags = TileFlags;
-type index$4_NameConfig = NameConfig;
-type index$4_TileType = TileType;
-type index$4_TileConfig = TileConfig;
-type index$4_Tile = Tile;
-declare const index$4_Tile: typeof Tile;
-type index$4_TileOptions = TileOptions;
-declare const index$4_tiles: typeof tiles;
-declare const index$4_all: typeof all;
-declare const index$4_get: typeof get;
-declare namespace index$4 {
+type index$3_TileFlags = TileFlags;
+type index$3_NameConfig = NameConfig;
+type index$3_TileType = TileType;
+type index$3_TileConfig = TileConfig;
+type index$3_Tile = Tile;
+declare const index$3_Tile: typeof Tile;
+type index$3_TileOptions = TileOptions;
+declare const index$3_tiles: typeof tiles;
+declare const index$3_all: typeof all;
+declare const index$3_get: typeof get;
+declare namespace index$3 {
   export {
     flags$2 as flags,
-    index$4_TileFlags as TileFlags,
-    index$4_NameConfig as NameConfig,
-    index$4_TileType as TileType,
-    index$4_TileConfig as TileConfig,
-    index$4_Tile as Tile,
-    index$4_TileOptions as TileOptions,
+    index$3_TileFlags as TileFlags,
+    index$3_NameConfig as NameConfig,
+    index$3_TileType as TileType,
+    index$3_TileConfig as TileConfig,
+    index$3_Tile as Tile,
+    index$3_TileOptions as TileOptions,
     make$3 as make,
-    index$4_tiles as tiles,
-    index$4_all as all,
-    index$4_get as get,
+    index$3_tiles as tiles,
+    index$3_all as all,
+    index$3_get as get,
     install$2 as install,
     installAll$2 as installAll,
   };
@@ -1904,98 +1947,94 @@ interface SetOptions {
     volume: number;
 }
 declare type SetTileOptions = Partial<SetOptions>;
-interface CellType {
-    flags: CellFlags;
-    tileFlags(): number;
-    tileMechFlags(): number;
-    objects: Chain<GameObject>;
+interface CellInfoType {
     chokeCount: number;
+    hasCellFlag(flag: number): boolean;
     hasTileFlag(flag: number): boolean;
     hasAllTileFlags(flags: number): boolean;
     hasObjectFlag(flag: number): boolean;
     hasAllObjectFlags(flags: number): boolean;
+    cellFlags(): number;
     objectFlags(): number;
     tileFlags(): number;
     tileMechFlags(): number;
-    depthPriority(depth: number): number;
-    highestPriority(): number;
-    depthTile(depth: number): Tile;
+    itemFlags(): number;
+    actorFlags(): number;
     blocksVision(): boolean;
     blocksPathing(): boolean;
     blocksMove(): boolean;
     blocksEffects(): boolean;
-    blocksLayer(depth: number): boolean;
-    isPassable(): boolean;
-    hasCellFlag(flag: number): boolean;
+    isWall(): boolean;
+    isStairs(): boolean;
+    readonly tile: Tile;
+    hasTile(tile: string | number | Tile): boolean;
+    hasItem(): boolean;
+    readonly item: Item | null;
+    hasActor(): boolean;
+    hasPlayer(): boolean;
+    readonly actor: Actor | null;
+    getDescription(): string;
+    getFlavor(): string;
+    getName(opts: any): string;
+}
+interface CellType extends CellInfoType {
+    flags: CellFlags;
+    chokeCount: number;
     setCellFlag(flag: number): void;
     clearCellFlag(flag: number): void;
+    depthPriority(depth: number): number;
+    highestPriority(): number;
+    depthTile(depth: number): Tile;
+    blocksLayer(depth: number): boolean;
+    isPassable(): boolean;
     setTile(tile: Tile): boolean;
     clear(): void;
-    clearLayer(depth: number): boolean;
+    clearDepth(depth: number): boolean;
     hasTile(tile?: string | number | Tile): boolean;
     hasDepthTile(depth: number): boolean;
     highestPriorityTile(): Tile;
     isEmpty(): boolean;
     isWall(): boolean;
     eachGlowLight(cb: (light: LightType) => any): void;
-    activate(event: string, map: MapType, x: number, y: number, ctx: Partial<EffectCtx>): Promise<boolean> | boolean;
+    activate(event: string, map: MapType, x: number, y: number, ctx?: Partial<EffectCtx>): Promise<boolean> | boolean;
     hasEffect(name: string): boolean;
-    hasItem(): boolean;
-    hasActor(): boolean;
-    redraw(): void;
     needsRedraw: boolean;
-    clearMemory(): void;
-    storeMemory(): void;
-    getSnapshot(dest: Mixer): void;
-    putSnapshot(src: Mixer): void;
 }
-declare type ObjectMatchFn = (obj: GameObject) => boolean;
-declare type ObjectFn = (obj: GameObject) => any;
-interface ObjectListType {
-    at(x: number, y: number, cb: ObjectMatchFn): GameObject | null;
-    has(obj: GameObject): boolean;
-    add(x: number, y: number, obj: GameObject): boolean;
-    remove(obj: GameObject): boolean;
-    move(obj: GameObject, x: number, y: number): boolean;
-    forEach(cb: ObjectFn): void;
-    forEachAt(x: number, y: number, cb: ObjectFn): void;
-}
-declare type EachCellCb = (cell: CellType, x: number, y: number, map: MapType) => void;
+declare type EachCellCb = (cell: CellType, x: number, y: number, map: MapType) => any;
+declare type EachItemCb = (item: Item) => any;
+declare type EachActorCb = (actor: Actor) => any;
 declare type MapTestFn = (cell: CellType, x: number, y: number, map: MapType) => boolean;
 interface MapType {
     readonly width: number;
     readonly height: number;
-    readonly objects: ObjectListType;
     light: LightSystemType;
     fov: FovSystemType;
     properties: Record<string, any>;
     hasXY(x: number, y: number): boolean;
     isBoundaryXY(x: number, y: number): boolean;
+    cellInfo(x: number, y: number, useMemory?: boolean): CellInfoType;
     cell(x: number, y: number): CellType;
     get(x: number, y: number): CellType | undefined;
     eachCell(cb: EachCellCb): void;
-    hasItem(x: number, y: number): boolean;
-    hasActor(x: number, y: number): boolean;
+    eachItem(cb: EachItemCb): void;
+    addItem(x: number, y: number, actor: Item): boolean;
+    removeItem(actor: Item): boolean;
+    moveItem(item: Item, x: number, y: number): boolean;
+    eachActor(cb: EachActorCb): void;
+    addActor(x: number, y: number, actor: Actor): boolean;
+    removeActor(actor: Actor): boolean;
+    moveActor(actor: Actor, x: number, y: number): boolean;
     isVisible(x: number, y: number): boolean;
-    blocksVision(x: number, y: number): boolean;
-    blocksMove(x: number, y: number): boolean;
-    isStairs(x: number, y: number): boolean;
-    isWall(x: number, y: number): boolean;
-    isPassable(x: number, y: number): boolean;
-    count(cb: MapTestFn): number;
-    dump(fmt?: (cell: CellType) => string): void;
     hasMapFlag(flag: number): boolean;
     setMapFlag(flag: number): void;
     clearMapFlag(flag: number): void;
     setCellFlag(x: number, y: number, flag: number): void;
     clearCellFlag(x: number, y: number, flag: number): void;
-    hasCellFlag(x: number, y: number, flag: number): boolean;
-    hasObjectFlag(x: number, y: number, flag: number): boolean;
-    hasTileFlag(x: number, y: number, flag: number): boolean;
     fill(tile: string, boundary?: string): void;
     setTile(x: number, y: number, tile: string | number | Tile, opts?: SetTileOptions): boolean;
-    hasTile(x: number, y: number, tile: string | number | Tile): boolean;
     update(dt: number): Promise<void>;
+    count(cb: MapTestFn): number;
+    dump(fmt?: (cell: CellType) => string): void;
     getAppearanceAt(x: number, y: number, dest: Mixer): void;
 }
 
@@ -2019,22 +2058,24 @@ declare namespace flags$1 {
 
 declare class Actor extends GameObject {
     flags: ActorFlags;
+    next: Actor | null;
     constructor();
     hasActorFlag(flag: number): boolean;
     hasAllActorFlags(flags: number): boolean;
+    actorFlags(): number;
     isPlayer(): boolean;
     isVisible(): boolean;
     forbidsCell(_cell: CellType): boolean;
 }
 
-type index$3_Actor = Actor;
-declare const index$3_Actor: typeof Actor;
-type index$3_ActorFlags = ActorFlags;
-declare namespace index$3 {
+type index$2_Actor = Actor;
+declare const index$2_Actor: typeof Actor;
+type index$2_ActorFlags = ActorFlags;
+declare namespace index$2 {
   export {
-    index$3_Actor as Actor,
+    index$2_Actor as Actor,
     flags$1 as flags,
-    index$3_ActorFlags as ActorFlags,
+    index$2_ActorFlags as ActorFlags,
   };
 }
 
@@ -2148,45 +2189,45 @@ declare class EmitEffect implements EffectHandler {
     fireSync(config: EffectInfo, _map: MapType, _x: number, _y: number, _ctx: EffectCtx): boolean;
 }
 
-type index$2_EffectInfo = EffectInfo;
-type index$2_EffectCtx = EffectCtx;
-type index$2_EffectConfig = EffectConfig;
-type index$2_EffectBase = EffectBase;
-type index$2_EffectHandler = EffectHandler;
-declare const index$2_reset: typeof reset;
-declare const index$2_resetAll: typeof resetAll;
-declare const index$2_effects: typeof effects;
-declare const index$2_install: typeof install;
-declare const index$2_installAll: typeof installAll;
-declare const index$2_effectTypes: typeof effectTypes;
-declare const index$2_installType: typeof installType;
-declare const index$2_fire: typeof fire;
-declare const index$2_fireSync: typeof fireSync;
-type index$2_MessageEffect = MessageEffect;
-declare const index$2_MessageEffect: typeof MessageEffect;
-type index$2_EmitEffect = EmitEffect;
-declare const index$2_EmitEffect: typeof EmitEffect;
-declare namespace index$2 {
+type index$1_EffectInfo = EffectInfo;
+type index$1_EffectCtx = EffectCtx;
+type index$1_EffectConfig = EffectConfig;
+type index$1_EffectBase = EffectBase;
+type index$1_EffectHandler = EffectHandler;
+declare const index$1_reset: typeof reset;
+declare const index$1_resetAll: typeof resetAll;
+declare const index$1_effects: typeof effects;
+declare const index$1_install: typeof install;
+declare const index$1_installAll: typeof installAll;
+declare const index$1_effectTypes: typeof effectTypes;
+declare const index$1_installType: typeof installType;
+declare const index$1_fire: typeof fire;
+declare const index$1_fireSync: typeof fireSync;
+type index$1_MessageEffect = MessageEffect;
+declare const index$1_MessageEffect: typeof MessageEffect;
+type index$1_EmitEffect = EmitEffect;
+declare const index$1_EmitEffect: typeof EmitEffect;
+declare namespace index$1 {
   export {
     Effect as Flags,
-    index$2_EffectInfo as EffectInfo,
-    index$2_EffectCtx as EffectCtx,
-    index$2_EffectConfig as EffectConfig,
-    index$2_EffectBase as EffectBase,
-    index$2_EffectHandler as EffectHandler,
-    index$2_reset as reset,
-    index$2_resetAll as resetAll,
-    index$2_effects as effects,
-    index$2_install as install,
-    index$2_installAll as installAll,
-    index$2_effectTypes as effectTypes,
-    index$2_installType as installType,
+    index$1_EffectInfo as EffectInfo,
+    index$1_EffectCtx as EffectCtx,
+    index$1_EffectConfig as EffectConfig,
+    index$1_EffectBase as EffectBase,
+    index$1_EffectHandler as EffectHandler,
+    index$1_reset as reset,
+    index$1_resetAll as resetAll,
+    index$1_effects as effects,
+    index$1_install as install,
+    index$1_installAll as installAll,
+    index$1_effectTypes as effectTypes,
+    index$1_installType as installType,
     make$2 as make,
     from$1 as from,
-    index$2_fire as fire,
-    index$2_fireSync as fireSync,
-    index$2_MessageEffect as MessageEffect,
-    index$2_EmitEffect as EmitEffect,
+    index$1_fire as fire,
+    index$1_fireSync as fireSync,
+    index$1_MessageEffect as MessageEffect,
+    index$1_EmitEffect as EmitEffect,
   };
 }
 
@@ -2222,29 +2263,6 @@ declare namespace blob {
     blob_Blob as Blob,
     blob_fillBlob as fillBlob,
     make$1 as make,
-  };
-}
-
-interface ItemFlags extends ObjectFlags {
-    item: number;
-}
-
-declare class Item extends GameObject {
-    flags: ItemFlags;
-    quantity: number;
-    constructor();
-    hasItemFlag(flag: number): boolean;
-    hasAllItemFlags(flags: number): boolean;
-    forbidsCell(_cell: CellType): boolean;
-}
-
-type index$1_Item = Item;
-declare const index$1_Item: typeof Item;
-type index$1_ItemFlags = ItemFlags;
-declare namespace index$1 {
-  export {
-    index$1_Item as Item,
-    index$1_ItemFlags as ItemFlags,
   };
 }
 
@@ -2297,61 +2315,78 @@ declare enum Map$1 {
 
 declare type TileData = Tile | null;
 declare type TileArray = [Tile, ...TileData[]];
-interface AllCellFlags extends CellFlags, ActorFlags, ItemFlags, TileFlags {
-}
-declare class CellMemory {
-    snapshot: Mixer;
-    flags: AllCellFlags;
-    constructor();
+declare type EachCb<T> = (t: T) => any;
+declare type MatchCb<T> = (t: T) => boolean;
+declare type ReduceCb<T> = (out: any, t: T) => any;
+declare class CellObjects {
+    cell: Cell;
+    constructor(cell: Cell);
+    forEach(cb: EachCb<GameObject>): void;
+    some(cb: MatchCb<GameObject>): boolean;
+    reduce(cb: ReduceCb<GameObject>, start?: any): any;
 }
 declare class Cell implements CellType {
     flags: CellFlags;
     chokeCount: number;
     tiles: TileArray;
-    objects: Chain<GameObject>;
-    gasVolume: number;
-    liquidVolume: number;
-    memory: CellMemory;
-    constructor();
-    hasTileFlag(flag: number): boolean;
-    hasAllTileFlags(flags: number): boolean;
+    _actor: Actor | null;
+    _item: Item | null;
+    _objects: CellObjects;
+    constructor(groundTile?: number | string | Tile);
+    copy(other: Cell): void;
+    hasCellFlag(flag: number): boolean;
+    setCellFlag(flag: number): void;
+    clearCellFlag(flag: number): void;
     hasObjectFlag(flag: number): boolean;
     hasAllObjectFlags(flags: number): boolean;
+    hasTileFlag(flag: number): boolean;
+    hasAllTileFlags(flags: number): boolean;
+    hasTileMechFlag(flag: number): boolean;
+    hasAllTileMechFlags(flags: number): boolean;
+    cellFlags(): number;
     objectFlags(): number;
     tileFlags(): number;
     tileMechFlags(): number;
+    itemFlags(): number;
+    actorFlags(): number;
     get needsRedraw(): boolean;
     set needsRedraw(v: boolean);
     depthPriority(depth: number): number;
     highestPriority(): number;
     depthTile(depth: number): Tile;
-    isEmpty(): boolean;
     hasTile(tile?: string | number | Tile): boolean;
     hasDepthTile(depth: number): boolean;
     highestPriorityTile(): Tile;
+    get tile(): Tile;
+    tileWithObjectFlag(flag: number): TileData;
+    tileWithFlag(flag: number): TileData;
+    tileWithMechFlag(flag: number): TileData;
     blocksVision(): boolean;
     blocksPathing(): boolean;
     blocksMove(): boolean;
     blocksEffects(): boolean;
     blocksLayer(depth: number): boolean;
+    isEmpty(): boolean;
     isPassable(): boolean;
     isWall(): boolean;
-    hasCellFlag(flag: number): boolean;
-    setCellFlag(flag: number): void;
-    clearCellFlag(flag: number): void;
-    setTile(tile: Tile): boolean;
+    isStairs(): boolean;
+    setTile(tile: string | number | Tile): boolean;
     clear(): void;
-    clearLayer(depth: Depth): boolean;
+    clearDepth(depth: Depth): boolean;
+    clearDepthsWithFlags(tileFlag: number, tileMechFlag?: number): void;
     eachGlowLight(cb: (light: LightType) => any): void;
     activate(event: string, map: MapType, x: number, y: number, ctx?: Partial<EffectCtx>): Promise<boolean>;
     hasEffect(name: string): boolean;
     hasItem(): boolean;
+    get item(): Item | null;
+    set item(val: Item | null);
     hasActor(): boolean;
-    redraw(): void;
-    clearMemory(): void;
-    storeMemory(): void;
-    getSnapshot(dest: Mixer): void;
-    putSnapshot(src: Mixer): void;
+    hasPlayer(): boolean;
+    get actor(): Actor | null;
+    set actor(val: Actor | null);
+    getDescription(): string;
+    getFlavor(): string;
+    getName(opts?: {}): string;
     dump(): string;
 }
 
@@ -2362,24 +2397,17 @@ declare class MapLayer {
     name: string;
     constructor(map: Map, name?: string);
 }
-declare abstract class ObjectLayer extends MapLayer {
+declare class ActorLayer extends MapLayer {
     constructor(map: Map, name?: string);
-    abstract add(x: number, y: number, obj: GameObject, _opts?: any): boolean;
-    abstract remove(obj: GameObject): boolean;
+    add(x: number, y: number, obj: Actor, _opts?: any): boolean;
+    remove(obj: Actor): boolean;
     putAppearance(dest: Mixer, x: number, y: number): void;
     update(_dt: number): void;
 }
-declare class ActorLayer extends ObjectLayer {
+declare class ItemLayer extends MapLayer {
     constructor(map: Map, name?: string);
-    add(x: number, y: number, obj: GameObject, _opts?: any): boolean;
-    remove(obj: GameObject): boolean;
-    putAppearance(dest: Mixer, x: number, y: number): void;
-    update(_dt: number): void;
-}
-declare class ItemLayer extends ObjectLayer {
-    constructor(map: Map, name?: string);
-    add(x: number, y: number, obj: GameObject, _opts?: any): boolean;
-    remove(obj: GameObject): boolean;
+    add(x: number, y: number, obj: Item, _opts?: any): boolean;
+    remove(obj: Item): boolean;
     putAppearance(dest: Mixer, x: number, y: number): void;
     update(_dt: number): void;
 }
@@ -2390,16 +2418,58 @@ declare class TileLayer extends MapLayer {
     putAppearance(dest: Mixer, x: number, y: number): void;
 }
 
-declare class ObjectList implements ObjectListType {
-    map: Map;
-    constructor(map: Map);
-    at(x: number, y: number, cb: ObjectMatchFn): GameObject | null;
-    has(obj: GameObject): boolean;
-    add(x: number, y: number, obj: GameObject): boolean;
-    remove(obj: GameObject): boolean;
-    move(obj: GameObject, x: number, y: number): boolean;
-    forEach(cb: ObjectFn): void;
-    forEachAt(x: number, y: number, cb: ObjectFn): number;
+declare class CellMemory implements CellInfoType {
+    chokeCount: number;
+    flags: {
+        cell: number;
+        item: number;
+        actor: number;
+        tile: number;
+        tileMech: number;
+        object: number;
+    };
+    blocks: {
+        vision: boolean;
+        effects: boolean;
+        move: boolean;
+        pathing: boolean;
+    };
+    _tile: Tile;
+    _item: Item | null;
+    _actor: Actor | null;
+    snapshot: Mixer;
+    constructor();
+    clear(): void;
+    store(cell: CellInfoType): void;
+    getSnapshot(dest: Mixer): void;
+    putSnapshot(src: Mixer): void;
+    hasCellFlag(flag: number): boolean;
+    hasTileFlag(flag: number): boolean;
+    hasAllTileFlags(flags: number): boolean;
+    hasObjectFlag(flag: number): boolean;
+    hasAllObjectFlags(flags: number): boolean;
+    cellFlags(): number;
+    objectFlags(): number;
+    tileFlags(): number;
+    tileMechFlags(): number;
+    itemFlags(): number;
+    actorFlags(): number;
+    blocksVision(): boolean;
+    blocksPathing(): boolean;
+    blocksMove(): boolean;
+    blocksEffects(): boolean;
+    isWall(): boolean;
+    isStairs(): boolean;
+    get tile(): Tile;
+    hasTile(tile: string | number | Tile): boolean;
+    hasItem(): boolean;
+    get item(): Item | null;
+    hasActor(): boolean;
+    hasPlayer(): boolean;
+    get actor(): Actor | null;
+    getDescription(): string;
+    getFlavor(): string;
+    getName(_opts: any): string;
 }
 
 interface MapOptions extends LightSystemOptions, FovSystemOptions {
@@ -2420,7 +2490,6 @@ declare class Map implements LightSystemSite, FovSite, MapType {
     width: number;
     height: number;
     cells: Grid<Cell>;
-    _objects: ObjectList;
     layers: LayerType[];
     flags: {
         map: 0;
@@ -2428,7 +2497,9 @@ declare class Map implements LightSystemSite, FovSite, MapType {
     light: LightSystemType;
     fov: FovSystemType;
     properties: Record<string, any>;
+    memory: Grid<CellMemory>;
     constructor(width: number, height: number, opts?: Partial<MapOptions>);
+    cellInfo(x: number, y: number, useMemory?: boolean): CellInfoType;
     initLayers(): void;
     addLayer(depth: number, layer: LayerType): void;
     removeLayer(depth: number): void;
@@ -2439,13 +2510,18 @@ declare class Map implements LightSystemSite, FovSite, MapType {
     get(x: number, y: number): Cell | undefined;
     eachCell(cb: EachCellCb): void;
     drawInto(dest: Canvas | DataBuffer, opts?: Partial<MapDrawOptions> | boolean): void;
-    hasItem(x: number, y: number): boolean;
-    hasActor(x: number, y: number): boolean;
+    itemAt(x: number, y: number): Item | null;
+    eachItem(cb: EachCb$1<Item>): void;
+    addItem(x: number, y: number, item: Item): boolean;
+    removeItem(item: Item): boolean;
+    moveItem(item: Item, x: number, y: number): boolean;
+    hasPlayer(x: number, y: number): boolean;
+    actorAt(x: number, y: number): Actor | null;
+    eachActor(cb: EachCb$1<Actor>): void;
+    addActor(x: number, y: number, item: Actor): boolean;
+    removeActor(item: Actor): boolean;
+    moveActor(item: Actor, x: number, y: number): boolean;
     isVisible(x: number, y: number): boolean;
-    blocksVision(x: number, y: number): boolean;
-    blocksMove(x: number, y: number): boolean;
-    isPassable(x: number, y: number): boolean;
-    isStairs(x: number, y: number): boolean;
     count(cb: MapTestFn): number;
     dump(fmt?: (cell: CellType) => string): void;
     hasMapFlag(flag: number): boolean;
@@ -2453,26 +2529,23 @@ declare class Map implements LightSystemSite, FovSite, MapType {
     clearMapFlag(flag: number): void;
     setCellFlag(x: number, y: number, flag: number): void;
     clearCellFlag(x: number, y: number, flag: number): void;
-    hasCellFlag(x: number, y: number, flag: number): boolean;
-    hasObjectFlag(x: number, y: number, flag: number): boolean;
-    hasTileFlag(x: number, y: number, flag: number): boolean;
     fill(tile: string | number | Tile, boundary?: string | number | Tile): void;
     setTile(x: number, y: number, tile: string | number | Tile, opts?: SetTileOptions): boolean;
-    hasTile(x: number, y: number, tile: string | number | Tile): boolean;
-    get objects(): ObjectList;
     update(dt: number): Promise<void>;
     copy(_src: Map): void;
     clone(): void;
     getAppearanceAt(x: number, y: number, dest: Mixer): void;
+    hasActor(x: number, y: number): boolean;
     eachGlowLight(cb: LightCb): void;
     eachDynamicLight(_cb: LightCb): void;
     eachViewport(_cb: ViewportCb): void;
     lightingChanged(): boolean;
     hasVisibleLight(x: number, y: number): boolean;
-    cellRevealed(_x: number, _y: number): void;
+    blocksVision(x: number, y: number): boolean;
+    onCellRevealed(_x: number, _y: number): void;
     redrawCell(x: number, y: number, clearMemory?: boolean): void;
+    clearMemory(x: number, y: number): void;
     storeMemory(x: number, y: number): void;
-    isWall(x: number, y: number): boolean;
 }
 declare function make(w: number, h: number, floor?: string, boundary?: string): Map;
 declare function make(w: number, h: number, floor: string): Map;
@@ -2529,16 +2602,13 @@ type index_CellFlags = CellFlags;
 type index_MapFlags = MapFlags;
 type index_SetOptions = SetOptions;
 type index_SetTileOptions = SetTileOptions;
+type index_CellInfoType = CellInfoType;
 type index_CellType = CellType;
-type index_ObjectMatchFn = ObjectMatchFn;
-type index_ObjectFn = ObjectFn;
-type index_ObjectListType = ObjectListType;
 type index_EachCellCb = EachCellCb;
+type index_EachItemCb = EachItemCb;
+type index_EachActorCb = EachActorCb;
 type index_MapTestFn = MapTestFn;
 type index_MapType = MapType;
-type index_AllCellFlags = AllCellFlags;
-type index_CellMemory = CellMemory;
-declare const index_CellMemory: typeof CellMemory;
 type index_Cell = Cell;
 declare const index_Cell: typeof Cell;
 type index_MapOptions = MapOptions;
@@ -2572,15 +2642,13 @@ declare namespace index {
     index_MapFlags as MapFlags,
     index_SetOptions as SetOptions,
     index_SetTileOptions as SetTileOptions,
+    index_CellInfoType as CellInfoType,
     index_CellType as CellType,
-    index_ObjectMatchFn as ObjectMatchFn,
-    index_ObjectFn as ObjectFn,
-    index_ObjectListType as ObjectListType,
     index_EachCellCb as EachCellCb,
+    index_EachItemCb as EachItemCb,
+    index_EachActorCb as EachActorCb,
     index_MapTestFn as MapTestFn,
     index_MapType as MapType,
-    index_AllCellFlags as AllCellFlags,
-    index_CellMemory as CellMemory,
     index_Cell as Cell,
     index_MapOptions as MapOptions,
     index_LayerType as LayerType,
@@ -2607,4 +2675,4 @@ declare namespace index {
   };
 }
 
-export { Random, index$3 as actor, blob, index$9 as canvas, index$c as color, colors, config, cosmetic, data, index$2 as effect, events, flag, index$a as fov, frequency, index$5 as gameObject, grid, io, index$1 as item, index$6 as light, loop, index as map, message, path, random, range, scheduler, index$8 as sprite, sprites, index$7 as text, index$4 as tile, types, index$b as utils };
+export { Random, index$2 as actor, blob, index$9 as canvas, index$c as color, colors, config, cosmetic, data, index$1 as effect, events, flag, index$a as fov, frequency, index$5 as gameObject, grid, io, index$4 as item, index$6 as light, loop, index as map, message, path, random, range, scheduler, index$8 as sprite, sprites, index$7 as text, index$3 as tile, types, index$b as utils };

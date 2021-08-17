@@ -210,18 +210,14 @@ describe('tile effect', () => {
             map.setTile(ctx.x - 1, ctx.y, tile);
 
             expect(
-                map.hasObjectFlag(
-                    ctx.x,
-                    ctx.y - 1,
-                    Map.flags.GameObject.L_BLOCKS_EFFECTS
-                )
+                map
+                    .cellInfo(ctx.x, ctx.y - 1)
+                    .hasObjectFlag(Map.flags.GameObject.L_BLOCKS_EFFECTS)
             ).toBeTruthy();
             expect(
-                map.hasObjectFlag(
-                    ctx.x - 1,
-                    ctx.y,
-                    Map.flags.GameObject.L_BLOCKS_EFFECTS
-                )
+                map
+                    .cellInfo(ctx.x - 1, ctx.y)
+                    .hasObjectFlag(Map.flags.GameObject.L_BLOCKS_EFFECTS)
             ).toBeTruthy();
 
             let cell = map.cell(ctx.x - 1, ctx.y);
@@ -489,11 +485,11 @@ describe('tile effect', () => {
     describe('fire', () => {
         test('tile', async () => {
             effect = Effect.make({ tile: 'WALL' });
-            expect(map.hasTile(ctx.x, ctx.y, 'WALL')).toBeFalsy();
+            expect(map.cellInfo(ctx.x, ctx.y).hasTile('WALL')).toBeFalsy();
             await expect(
                 Effect.fire(effect, map, ctx.x, ctx.y, ctx)
             ).resolves.toBeTruthy();
-            expect(map.hasTile(ctx.x, ctx.y, 'WALL')).toBeTruthy();
+            expect(map.cellInfo(ctx.x, ctx.y).hasTile('WALL')).toBeTruthy();
             Utils.eachNeighbor(ctx.x, ctx.y, (x, y) => {
                 const cell = map.cell(x, y);
                 expect(cell.hasTile('WALL')).toBeFalsy();
@@ -502,11 +498,11 @@ describe('tile effect', () => {
 
         test('tile and neighbors - string', async () => {
             effect = Effect.make({ tile: 'WALL,100,100' })!;
-            expect(map.hasTile(ctx.x, ctx.y, 'WALL')).toBeFalsy();
+            expect(map.cellInfo(ctx.x, ctx.y).hasTile('WALL')).toBeFalsy();
             await expect(
                 Effect.fire(effect, map, ctx.x, ctx.y, ctx)
             ).resolves.toBeTruthy();
-            expect(map.hasTile(ctx.x, ctx.y, 'WALL')).toBeTruthy();
+            expect(map.cellInfo(ctx.x, ctx.y).hasTile('WALL')).toBeTruthy();
             Utils.eachNeighbor(
                 ctx.x,
                 ctx.y,
@@ -523,11 +519,11 @@ describe('tile effect', () => {
                 tile: { id: 'WALL', spread: 100, decrement: 100 },
             });
 
-            expect(map.hasTile(ctx.x, ctx.y, 'WALL')).toBeFalsy();
+            expect(map.cellInfo(ctx.x, ctx.y).hasTile('WALL')).toBeFalsy();
             await expect(
                 Effect.fire(effect, map, ctx.x, ctx.y, ctx)
             ).resolves.toBeTruthy();
-            expect(map.hasTile(ctx.x, ctx.y, 'WALL')).toBeTruthy();
+            expect(map.cellInfo(ctx.x, ctx.y).hasTile('WALL')).toBeTruthy();
             Utils.eachNeighbor(
                 ctx.x,
                 ctx.y,
@@ -614,7 +610,7 @@ describe('tile effect', () => {
             const actor = new Actor();
             jest.spyOn(actor, 'forbidsCell');
 
-            map.objects.add(ctx.x, ctx.y, actor);
+            map.addActor(ctx.x, ctx.y, actor);
             expect(actor).toBeAtXY(ctx.x, ctx.y);
             expect(cell.hasActor()).toBeTruthy();
             grid[ctx.x][ctx.y] = 1;
@@ -642,7 +638,7 @@ describe('tile effect', () => {
             const item = new Item();
             jest.spyOn(item, 'forbidsCell');
 
-            map.objects.add(ctx.x, ctx.y, item);
+            map.addItem(ctx.x, ctx.y, item);
             expect(item).toBeAtXY(ctx.x, ctx.y);
             expect(cell.hasItem()).toBeTruthy();
             grid[ctx.x][ctx.y] = 1;

@@ -213,10 +213,10 @@ export class SpawnEffect implements Effect.EffectHandler {
             const lakeX = i + blockingToMapX;
             const lakeY = j + blockingToMapY;
             if (blockingGrid.get(lakeX, lakeY)) {
-                if (map.isStairs(i, j)) {
+                if (map.cellInfo(i, j).isStairs()) {
                     disrupts = true;
                 }
-            } else if (!map.blocksMove(i, j)) {
+            } else if (!map.cellInfo(i, j).blocksMove()) {
                 walkableGrid[i][j] = 1;
             }
         });
@@ -336,14 +336,14 @@ function cellIsOk(
     }
 
     if (effect.flags & Effect.Flags.E_BUILD_IN_WALLS) {
-        if (!map.isWall(x, y)) return false;
+        if (!map.cellInfo(x, y).isWall()) return false;
     } else if (effect.flags & Effect.Flags.E_MUST_TOUCH_WALLS) {
         let ok = false;
         Utils.eachNeighbor(
             x,
             y,
             (i, j) => {
-                if (map.isWall(i, j)) {
+                if (map.cellInfo(i, j).isWall()) {
                     ok = true;
                 }
             },
@@ -352,12 +352,12 @@ function cellIsOk(
         if (!ok) return false;
     } else if (effect.flags & Effect.Flags.E_NO_TOUCH_WALLS) {
         let ok = true;
-        if (map.isWall(x, y)) return false; // or on wall
+        if (map.cellInfo(x, y).isWall()) return false; // or on wall
         Utils.eachNeighbor(
             x,
             y,
             (i, j) => {
-                if (map.isWall(i, j)) {
+                if (map.cellInfo(i, j).isWall()) {
                     ok = false;
                 }
             },
@@ -551,16 +551,16 @@ export function clearCells(map: MapType, spawnMap: Grid.NumGrid, flags = 0) {
             cell.clear();
         } else {
             if (flags & Effect.Flags.E_CLEAR_GAS) {
-                cell.clearLayer(Entity.flags.Depth.GAS);
+                cell.clearDepth(Entity.flags.Depth.GAS);
             }
             if (flags & Effect.Flags.E_CLEAR_LIQUID) {
-                cell.clearLayer(Entity.flags.Depth.LIQUID);
+                cell.clearDepth(Entity.flags.Depth.LIQUID);
             }
             if (flags & Effect.Flags.E_CLEAR_SURFACE) {
-                cell.clearLayer(Entity.flags.Depth.SURFACE);
+                cell.clearDepth(Entity.flags.Depth.SURFACE);
             }
             if (flags & Effect.Flags.E_CLEAR_GROUND) {
-                cell.clearLayer(Entity.flags.Depth.GROUND);
+                cell.clearDepth(Entity.flags.Depth.GROUND);
             }
         }
         didSomething = true;
@@ -579,7 +579,7 @@ export function evacuateCreatures(map: MapType, blockingMap: Grid.NumGrid) {
             const cell = map.cell(i, j);
             if (!cell.hasActor()) continue;
 
-            cell.objects.forEach((obj) => {
+            Utils.eachChain(cell.actor, (obj) => {
                 if (!(obj instanceof Actor)) return;
                 const monst: Actor = obj;
                 const loc = random.matchingLocNear(i, j, (x, y) => {
@@ -589,7 +589,7 @@ export function evacuateCreatures(map: MapType, blockingMap: Grid.NumGrid) {
                     return !monst.forbidsCell(c);
                 });
                 if (loc && loc[0] >= 0 && loc[1] >= 0) {
-                    map.objects.move(monst, loc[0], loc[1]);
+                    map.moveActor(monst, loc[0], loc[1]);
                     // map.redrawXY(loc[0], loc[1]);
                     didSomething = true;
                 }
@@ -606,7 +606,7 @@ export function evacuateItems(map: MapType, blockingMap: Grid.NumGrid) {
         const cell = map.cell(i, j);
         if (!cell.hasItem()) return;
 
-        cell.objects.forEach((obj) => {
+        Utils.eachChain(cell.item, (obj) => {
             if (!(obj instanceof Item)) return;
             const item: Item = obj;
             const loc = random.matchingLocNear(i, j, (x, y) => {
@@ -616,7 +616,7 @@ export function evacuateItems(map: MapType, blockingMap: Grid.NumGrid) {
                 return !item.forbidsCell(dest);
             });
             if (loc && loc[0] >= 0 && loc[1] >= 0) {
-                map.objects.move(item, loc[0], loc[1]);
+                map.moveItem(item, loc[0], loc[1]);
                 // map.redrawXY(loc[0], loc[1]);
                 didSomething = true;
             }
@@ -677,7 +677,7 @@ class ClearTileEffect implements Effect.EffectHandler {
 
         if (!map) return false;
         const cell = map.cell(x, y);
-        return cell.clearLayer(config.clear);
+        return cell.clearDepth(config.clear);
     }
 }
 

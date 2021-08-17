@@ -1,4 +1,3 @@
-import { GameObject } from '../gameObject';
 import { Mixer } from '../sprite';
 import * as Tile from '../tile';
 import * as Map from './map';
@@ -6,6 +5,8 @@ import * as Flags from './flags';
 import { Actor } from '../actor';
 import { Item } from '../item';
 import { SetTileOptions } from './types';
+import { utils } from '..';
+import { Depth } from '../gameObject/flags';
 
 export class MapLayer {
     map: Map.Map;
@@ -21,114 +22,74 @@ export class MapLayer {
     }
 }
 
-export abstract class ObjectLayer extends MapLayer {
-    constructor(map: Map.Map, name = 'object') {
-        super(map, name);
-    }
-
-    abstract add(x: number, y: number, obj: GameObject, _opts?: any): boolean;
-    abstract remove(obj: GameObject): boolean;
-
-    putAppearance(dest: Mixer, x: number, y: number) {
-        const cell = this.map.cell(x, y);
-        const obj = cell.objects.find((o) => o.depth == this.depth);
-        if (obj) {
-            dest.drawSprite(obj.sprite);
-        }
-    }
-
-    update(_dt: number) {}
-}
-
-export class ActorLayer extends ObjectLayer {
+export class ActorLayer extends MapLayer {
     constructor(map: Map.Map, name = 'actor') {
         super(map, name);
     }
 
-    add(x: number, y: number, obj: GameObject, _opts?: any): boolean {
+    add(x: number, y: number, obj: Actor, _opts?: any): boolean {
         const cell = this.map.cell(x, y);
 
         const actor = obj as Actor;
         if (actor.forbidsCell(cell)) return false;
 
-        cell.objects.add(obj);
-        let flag = actor.isPlayer()
-            ? Flags.Cell.HAS_PLAYER
-            : Flags.Cell.HAS_ACTOR;
-        cell.setCellFlag(flag);
+        if (!utils.addToChain(cell, 'actor', obj)) return false;
+
+        if (obj.isPlayer()) {
+            cell.setCellFlag(Flags.Cell.HAS_PLAYER);
+        }
         obj.x = x;
         obj.y = y;
         return true;
     }
 
-    remove(obj: GameObject) {
+    remove(obj: Actor) {
         const cell = this.map.cell(obj.x, obj.y);
-        cell.objects.remove(obj);
-        let flag = 0;
-        cell.objects.forEach((o) => {
-            if (!o) return;
-            if (o instanceof Actor) {
-                flag |= o.isPlayer()
-                    ? Flags.Cell.HAS_PLAYER
-                    : Flags.Cell.HAS_ACTOR;
-            }
-        });
-        cell.clearCellFlag(Flags.Cell.HAS_ANY_ACTOR);
-        cell.setCellFlag(flag);
+
+        if (!utils.removeFromChain(cell, 'actor', obj)) return false;
+
+        if (obj.isPlayer()) {
+            cell.clearCellFlag(Flags.Cell.HAS_PLAYER);
+        }
         return true;
     }
 
     putAppearance(dest: Mixer, x: number, y: number) {
         const cell = this.map.cell(x, y);
-        const obj = cell.objects.find((o) => o.depth == this.depth);
-        if (obj) {
-            dest.drawSprite(obj.sprite);
-        }
+        if (!cell.actor) return;
+        dest.drawSprite(cell.actor.sprite);
     }
 
     update(_dt: number) {}
 }
 
-export class ItemLayer extends ObjectLayer {
+export class ItemLayer extends MapLayer {
     constructor(map: Map.Map, name = 'item') {
         super(map, name);
     }
 
-    add(x: number, y: number, obj: GameObject, _opts?: any): boolean {
+    add(x: number, y: number, obj: Item, _opts?: any): boolean {
         const cell = this.map.cell(x, y);
 
         const item = obj as Item;
         if (item.forbidsCell(cell)) return false;
 
-        cell.objects.add(obj);
-        let flag = Flags.Cell.HAS_ITEM;
-        cell.setCellFlag(flag);
+        if (!utils.addToChain(cell, 'item', obj)) return false;
         obj.x = x;
         obj.y = y;
         return true;
     }
 
-    remove(obj: GameObject) {
+    remove(obj: Item) {
         const cell = this.map.cell(obj.x, obj.y);
-        cell.objects.remove(obj);
-        let flag = 0;
-        cell.objects.forEach((o) => {
-            if (!o) return;
-            if (o instanceof Item) {
-                flag |= Flags.Cell.HAS_ITEM;
-            }
-        });
-        cell.clearCellFlag(Flags.Cell.HAS_ITEM);
-        cell.setCellFlag(flag);
+        if (!utils.removeFromChain(cell, 'item', obj)) return false;
         return true;
     }
 
     putAppearance(dest: Mixer, x: number, y: number) {
         const cell = this.map.cell(x, y);
-        const obj = cell.objects.find((o) => o.depth == this.depth);
-        if (obj) {
-            dest.drawSprite(obj.sprite);
-        }
+        if (!cell.item) return;
+        dest.drawSprite(cell.item.sprite);
     }
 
     update(_dt: number) {}
@@ -160,6 +121,12 @@ export class TileLayer extends MapLayer {
         if (opts.blockedByActors && cell.hasActor()) return false;
         if (opts.blockedByOtherLayers && cell.highestPriority() > tile.priority)
             return false;
+
+        if (tile.depth > Depth.GROUND && tile.groundTile) {
+            if (cell.depthTile(Depth.GROUND) === Tile.tiles.NULL) {
+                this.set(x, y, Tile.get(tile.groundTile));
+            }
+        }
 
         if (!cell.setTile(tile)) return false;
 

@@ -1,5 +1,5 @@
-import { Chain } from '../utils/chain';
-import { GameObject } from '../gameObject/gameObject';
+import { Actor } from '../actor';
+import { Item } from '../item';
 import { Tile } from '../tile';
 import { LightType } from '../light/types';
 import { Mixer } from '../sprite';
@@ -25,43 +25,75 @@ export interface SetOptions {
 
 export type SetTileOptions = Partial<SetOptions>;
 
-export interface CellType {
-    flags: CellFlags;
-    tileFlags(): number;
-    tileMechFlags(): number;
-    objects: Chain<GameObject>;
+export interface CellInfoType {
     chokeCount: number;
 
-    // Tiles
+    // Flags
 
+    hasCellFlag(flag: number): boolean;
     hasTileFlag(flag: number): boolean;
     hasAllTileFlags(flags: number): boolean;
     hasObjectFlag(flag: number): boolean;
     hasAllObjectFlags(flags: number): boolean;
 
+    cellFlags(): number;
     objectFlags(): number;
     tileFlags(): number;
     tileMechFlags(): number;
-
-    depthPriority(depth: number): number;
-    highestPriority(): number;
-    depthTile(depth: number): Tile;
+    itemFlags(): number;
+    actorFlags(): number;
 
     blocksVision(): boolean;
     blocksPathing(): boolean;
     blocksMove(): boolean;
     blocksEffects(): boolean;
-    blocksLayer(depth: number): boolean;
-    isPassable(): boolean;
 
-    hasCellFlag(flag: number): boolean;
+    isWall(): boolean;
+    isStairs(): boolean;
+
+    // Tiles
+
+    readonly tile: Tile;
+    hasTile(tile: string | number | Tile): boolean;
+
+    // Items
+
+    hasItem(): boolean;
+    readonly item: Item | null;
+
+    // Actors
+
+    hasActor(): boolean;
+    hasPlayer(): boolean;
+    readonly actor: Actor | null;
+
+    // Info
+
+    getDescription(): string;
+    getFlavor(): string;
+    getName(opts: any): string;
+}
+
+export interface CellType extends CellInfoType {
+    flags: CellFlags;
+    chokeCount: number;
+
     setCellFlag(flag: number): void;
     clearCellFlag(flag: number): void;
+
+    // Tiles
+
+    depthPriority(depth: number): number;
+    highestPriority(): number;
+    depthTile(depth: number): Tile;
+    blocksLayer(depth: number): boolean;
+
+    isPassable(): boolean;
 
     // @returns - whether or not the change results in a change to the cell lighting.
     setTile(tile: Tile): boolean;
     clear(): void;
-    clearLayer(depth: number): boolean;
+    clearDepth(depth: number): boolean;
 
     hasTile(tile?: string | number | Tile): boolean;
     hasDepthTile(depth: number): boolean;
@@ -81,44 +113,13 @@ export interface CellType {
         map: MapType,
         x: number,
         y: number,
-        ctx: Partial<EffectCtx>
+        ctx?: Partial<EffectCtx>
     ): Promise<boolean> | boolean;
 
     hasEffect(name: string): boolean;
 
-    // // Items
-
-    hasItem(): boolean;
-
-    // // Actors
-
-    hasActor(): boolean;
-
-    redraw(): void;
+    // redraw(): void;
     needsRedraw: boolean;
-
-    clearMemory(): void;
-    storeMemory(): void;
-
-    getSnapshot(dest: Mixer): void;
-    putSnapshot(src: Mixer): void;
-}
-
-export type ObjectMatchFn = (obj: GameObject) => boolean;
-export type ObjectFn = (obj: GameObject) => any;
-
-export interface ObjectListType {
-    at(x: number, y: number, cb: ObjectMatchFn): GameObject | null;
-
-    has(obj: GameObject): boolean;
-
-    add(x: number, y: number, obj: GameObject): boolean;
-    remove(obj: GameObject): boolean;
-
-    move(obj: GameObject, x: number, y: number): boolean;
-
-    forEach(cb: ObjectFn): void;
-    forEachAt(x: number, y: number, cb: ObjectFn): void;
 }
 
 export type EachCellCb = (
@@ -126,7 +127,11 @@ export type EachCellCb = (
     x: number,
     y: number,
     map: MapType
-) => void;
+) => any;
+
+export type EachItemCb = (item: Item) => any;
+export type EachActorCb = (actor: Actor) => any;
+
 export type MapTestFn = (
     cell: CellType,
     x: number,
@@ -138,8 +143,6 @@ export interface MapType {
     readonly width: number;
     readonly height: number;
 
-    readonly objects: ObjectListType;
-
     light: LightSystemType;
     fov: FovSystemType;
     properties: Record<string, any>;
@@ -147,28 +150,73 @@ export interface MapType {
     hasXY(x: number, y: number): boolean;
     isBoundaryXY(x: number, y: number): boolean;
 
+    cellInfo(x: number, y: number, useMemory?: boolean): CellInfoType;
     cell(x: number, y: number): CellType;
     get(x: number, y: number): CellType | undefined;
     eachCell(cb: EachCellCb): void;
 
-    hasItem(x: number, y: number): boolean;
+    // Items
+
+    // itemAt(x: number, y: number): Item | null;
+    eachItem(cb: EachItemCb): void;
+    addItem(x: number, y: number, actor: Item): boolean;
+    removeItem(actor: Item): boolean;
+    moveItem(item: Item, x: number, y: number): boolean;
 
     // Actors
 
-    hasActor(x: number, y: number): boolean;
+    // actorAt(x: number, y: number): Actor | null;
+    eachActor(cb: EachActorCb): void;
+    addActor(x: number, y: number, actor: Actor): boolean;
+    removeActor(actor: Actor): boolean;
+    moveActor(actor: Actor, x: number, y: number): boolean;
 
     // Information
 
     isVisible(x: number, y: number): boolean;
-    blocksVision(x: number, y: number): boolean;
-    blocksMove(x: number, y: number): boolean;
 
-    isStairs(x: number, y: number): boolean;
-    isWall(x: number, y: number): boolean;
-    isPassable(x: number, y: number): boolean;
+    // hasCellFlag(x: number, y: number, flag: number): boolean;
+    // hasObjectFlag(x: number, y: number, flag: number): boolean;
+    // hasAllObjectFlags(x: number, y: number, flags: number): boolean;
+    // hasTileFlag(x: number, y: number, flag: number): boolean;
+    // hasAllTileFlags(x: number, y: number, flags: number): boolean;
 
-    count(cb: MapTestFn): number;
-    dump(fmt?: (cell: CellType) => string): void;
+    // cellFlags(x: number, y: number, useMemory?: boolean): number;
+    // objectFlags(x: number, y: number, useMemory?: boolean): number;
+    // tileFlags(x: number, y: number, useMemory?: boolean): number;
+    // tileMechFlags(x: number, y: number, useMemory?: boolean): number;
+    // itemFlags(x: number, y: number, useMemory?: boolean): number;
+    // actorFlags(x: number, y: number, useMemory?: boolean): number;
+
+    // blocksVision(x: number, y: number, useMemory?: boolean): boolean;
+    // blocksPathing(x: number, y: number, useMemory?: boolean): boolean;
+    // blocksMove(x: number, y: number, useMemory?: boolean): boolean;
+    // blocksEffects(x: number, y: number, useMemory?: boolean): boolean;
+
+    // Tiles
+
+    // hasTile(x: number, y: number, tile: string | number | Tile, useMemory?: boolean): boolean;
+
+    // Items
+
+    // hasItem(x: number, y: number, useMemory?: boolean): boolean;
+
+    // Actors
+
+    // hasActor(x: number, y: number, useMemory?: boolean): boolean;
+    // hasPlayer(x: number, y: number, useMemory?: boolean): boolean;
+
+    // Info
+
+    // getDescription(x: number, y: number, useMemory?: boolean): string;
+    // getFlavor(x: number, y: number, useMemory?: boolean): string;
+    // getName(x: number, y: number, opts: any, useMemory?: boolean): string;
+
+    // hasTile(x: number, y: number, tile: string | number | Tile, useMemory?: boolean): boolean;
+
+    // isStairs(x: number, y: number, useMemory?: boolean): boolean;
+    // isWall(x: number, y: number, useMemory?: boolean): boolean;
+    // isPassable(x: number, y: number, useMemory?: boolean): boolean;
 
     // flags
 
@@ -178,10 +226,6 @@ export interface MapType {
 
     setCellFlag(x: number, y: number, flag: number): void;
     clearCellFlag(x: number, y: number, flag: number): void;
-    hasCellFlag(x: number, y: number, flag: number): boolean;
-
-    hasObjectFlag(x: number, y: number, flag: number): boolean;
-    hasTileFlag(x: number, y: number, flag: number): boolean;
 
     fill(tile: string, boundary?: string): void;
 
@@ -192,9 +236,10 @@ export interface MapType {
         opts?: SetTileOptions
     ): boolean;
 
-    hasTile(x: number, y: number, tile: string | number | Tile): boolean;
-
     update(dt: number): Promise<void>;
+
+    count(cb: MapTestFn): number;
+    dump(fmt?: (cell: CellType) => string): void;
 
     getAppearanceAt(x: number, y: number, dest: Mixer): void;
 }

@@ -18,6 +18,8 @@ export interface SpriteData {
     readonly opacity?: number;
 }
 
+export type EachCb<T> = (t: T) => any;
+
 // export interface ObjectFlags {
 //     readonly object: number;
 // }

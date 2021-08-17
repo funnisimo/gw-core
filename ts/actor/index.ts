@@ -8,6 +8,7 @@ export { ActorFlags } from './types';
 
 export class Actor extends GameObject {
     flags: ActorFlags;
+    next: Actor | null = null;
 
     constructor() {
         super();
@@ -22,6 +23,9 @@ export class Actor extends GameObject {
     }
     hasAllActorFlags(flags: number) {
         return (this.flags.actor & flags) === flags;
+    }
+    actorFlags(): number {
+        return this.flags.actor;
     }
 
     isPlayer() {

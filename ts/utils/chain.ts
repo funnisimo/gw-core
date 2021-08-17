@@ -89,6 +89,7 @@ export function findInChain<T extends Chainable<T>>(
 }
 
 export type ChainChangeFn = () => any;
+export type ChainReduceFn<T> = (out: any, t: T) => any;
 
 export class Chain<T extends Chainable<T>> {
     data: T | null;
@@ -99,6 +100,18 @@ export class Chain<T extends Chainable<T>> {
         this.data = null;
         this.sort = sort || (() => -1);
         this.onchange = onchange || (() => {});
+    }
+
+    copy(other: Chain<T>) {
+        this.data = other.data;
+        this.sort = other.sort;
+        this.onchange = other.onchange;
+    }
+
+    get length(): number {
+        let count = 0;
+        this.forEach(() => ++count);
+        return count;
     }
 
     add(obj: T): boolean {
@@ -140,5 +153,39 @@ export class Chain<T extends Chainable<T>> {
 
     forEach(cb: ChainFn<T>) {
         return eachChain(this.data, cb);
+    }
+
+    reduce(cb: ChainReduceFn<T>, out?: any): any {
+        let current = this.data;
+        if (!current) return out;
+
+        if (out === undefined) {
+            out = current;
+            current = current.next;
+        }
+
+        while (current) {
+            cb(out, current);
+            current = current.next;
+        }
+        return out;
+    }
+
+    some(cb: ChainMatch<T>): boolean {
+        let current = this.data;
+        while (current) {
+            if (cb(current)) return true;
+            current = current.next;
+        }
+        return false;
+    }
+
+    every(cb: ChainMatch<T>): boolean {
+        let current = this.data;
+        while (current) {
+            if (!cb(current)) return false;
+            current = current.next;
+        }
+        return true;
     }
 }
