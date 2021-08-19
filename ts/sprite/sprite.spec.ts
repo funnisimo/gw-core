@@ -13,6 +13,9 @@ describe('Sprite', () => {
         expect(b.fg).toBe(colors.green);
         expect(b.bg).toBe(colors.blue);
         expect(b.opacity).toEqual(50);
+        expect(b.toString()).toEqual(
+            '{ ch: @, fg: green, bg: blue, opacity: 50 }'
+        );
 
         const d = Sprite.make('@', [100, 0, 0], [0, 0, 100], 50);
         expect(d.ch).toEqual('@');

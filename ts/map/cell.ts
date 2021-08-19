@@ -184,8 +184,8 @@ export class Cell implements CellType {
             TILE.tiles.NULL.priority
         );
     }
-    depthTile(depth: number): TILE.Tile {
-        return this.tiles[depth] || TILE.tiles.NULL;
+    depthTile(depth: number): TILE.Tile | null {
+        return this.tiles[depth] || null;
     }
 
     hasTile(tile?: string | number | TILE.Tile): boolean {
@@ -208,6 +208,9 @@ export class Cell implements CellType {
     }
     get tile(): TILE.Tile {
         return this.highestPriorityTile();
+    }
+    eachTile(cb: EachCb<TILE.Tile>): void {
+        this.tiles.forEach((t) => t && cb(t));
     }
 
     tileWithObjectFlag(flag: number) {
@@ -272,6 +275,10 @@ export class Cell implements CellType {
     }
     isStairs(): boolean {
         return this.hasTileFlag(TileFlags.T_HAS_STAIRS);
+    }
+
+    hasKey(): boolean {
+        return false;
     }
 
     // @returns - whether or not the change results in a change to the cell lighting.
@@ -351,61 +358,43 @@ export class Cell implements CellType {
         let didSomething = false;
 
         if (ctx.depth !== undefined) {
-            const tile = this.depthTile(ctx.depth);
+            const tile = (ctx.tile = this.depthTile(ctx.depth));
             if (tile && tile.effects) {
                 const ev = tile.effects[event];
-                let effect: Effect.EffectInfo;
-                if (typeof ev === 'string') {
-                    effect = Effect.effects[ev];
-                } else {
-                    effect = ev;
-                }
-                if (effect) {
-                    // console.log(' - has event');
-                    // if (
-                    //     ctx.force ||
-                    //     !effect.chance ||
-                    //     random.chance(effect.chance, 10000)
-                    // ) {
-                    ctx.tile = tile;
-                    // console.log(' - spawn event @%d,%d - %s', x, y, event);
-                    didSomething = await Effect.fire(effect, map, x, y, ctx);
-                    // cell.debug(" - spawned");
-                    // }
-                }
+                didSomething = await this._fire(ev, map, x, y, ctx);
             }
         } else {
             // console.log('fire event - %s', event);
-            for (let tile of this.tiles) {
-                if (!tile || !tile.effects) continue;
-                const ev = tile.effects[event];
+            for (ctx.tile of this.tiles) {
+                if (!ctx.tile || !ctx.tile.effects) continue;
+                const ev = ctx.tile.effects[event];
                 // console.log(' - ', ev);
 
-                let effect: Effect.EffectInfo;
-                if (typeof ev === 'string') {
-                    effect = Effect.effects[ev];
-                } else {
-                    effect = ev;
+                if (await this._fire(ev, map, x, y, ctx)) {
+                    didSomething = true;
+                    break;
                 }
-                if (effect) {
-                    // cell.debug(" - has event");
-                    // if (
-                    //     ctx.force ||
-                    //     !effect.chance ||
-                    //     random.chance(effect.chance, 10000)
-                    // ) {
-                    ctx.tile = tile;
-                    // console.log(' - spawn event @%d,%d - %s', x, y, name);
-                    didSomething =
-                        (await Effect.fire(effect, map, x, y, ctx)) ||
-                        didSomething;
-                    // cell.debug(" - spawned");
-                    if (didSomething) {
-                        break;
-                    }
-                    // }
-                }
+                // }
             }
+        }
+        return didSomething;
+    }
+
+    async _fire(
+        effect: string | Effect.EffectInfo,
+        map: MapType,
+        x: number,
+        y: number,
+        ctx: Partial<Effect.EffectCtx>
+    ) {
+        if (typeof effect === 'string') {
+            effect = Effect.effects[effect];
+        }
+        let didSomething = false;
+        if (effect) {
+            // console.log(' - spawn event @%d,%d - %s', x, y, name);
+            didSomething = await Effect.fire(effect, map, x, y, ctx);
+            // cell.debug(" - spawned");
         }
         return didSomething;
     }

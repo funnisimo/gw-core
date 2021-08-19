@@ -1,7 +1,7 @@
 import { fl as Fl } from '../flag';
 
 export { GameObject, Depth } from '../gameObject/flags';
-export { Tile } from '../tile/flags';
+export { Tile, TileMech } from '../tile/flags';
 
 ///////////////////////////////////////////////////////
 // CELL

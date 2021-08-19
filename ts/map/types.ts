@@ -6,6 +6,7 @@ import { Mixer } from '../sprite';
 import { EffectCtx } from '../effect/types';
 import { LightSystemType } from '../light/types';
 import { FovSystemType } from '../fov/types';
+import { EachCb } from '../types';
 
 export interface CellFlags {
     cell: number;
@@ -35,6 +36,7 @@ export interface CellInfoType {
     hasAllTileFlags(flags: number): boolean;
     hasObjectFlag(flag: number): boolean;
     hasAllObjectFlags(flags: number): boolean;
+    hasTileMechFlag(flag: number): boolean;
 
     cellFlags(): number;
     objectFlags(): number;
@@ -50,6 +52,7 @@ export interface CellInfoType {
 
     isWall(): boolean;
     isStairs(): boolean;
+    hasKey(): boolean;
 
     // Tiles
 
@@ -85,8 +88,9 @@ export interface CellType extends CellInfoType {
 
     depthPriority(depth: number): number;
     highestPriority(): number;
-    depthTile(depth: number): Tile;
+    depthTile(depth: number): Tile | null;
     blocksLayer(depth: number): boolean;
+    eachTile(cb: EachCb<Tile>): void;
 
     isPassable(): boolean;
 
@@ -212,8 +216,6 @@ export interface MapType {
     // getFlavor(x: number, y: number, useMemory?: boolean): string;
     // getName(x: number, y: number, opts: any, useMemory?: boolean): string;
 
-    // hasTile(x: number, y: number, tile: string | number | Tile, useMemory?: boolean): boolean;
-
     // isStairs(x: number, y: number, useMemory?: boolean): boolean;
     // isWall(x: number, y: number, useMemory?: boolean): boolean;
     // isPassable(x: number, y: number, useMemory?: boolean): boolean;
@@ -229,6 +231,7 @@ export interface MapType {
 
     fill(tile: string, boundary?: string): void;
 
+    hasTile(x: number, y: number, tile: string | number | Tile): boolean;
     setTile(
         x: number,
         y: number,
@@ -236,7 +239,7 @@ export interface MapType {
         opts?: SetTileOptions
     ): boolean;
 
-    update(dt: number): Promise<void>;
+    tick(dt: number): Promise<boolean>;
 
     count(cb: MapTestFn): number;
     dump(fmt?: (cell: CellType) => string): void;

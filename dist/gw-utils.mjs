@@ -298,6 +298,15 @@ function eachNeighbor(x, y, fn, only4dirs = false) {
         fn(x1, y1);
     }
 }
+async function eachNeighborAsync(x, y, fn, only4dirs = false) {
+    const max = only4dirs ? 4 : 8;
+    for (let i = 0; i < max; ++i) {
+        const dir = DIRS$2[i];
+        const x1 = x + dir[0];
+        const y1 = y + dir[1];
+        await fn(x1, y1);
+    }
+}
 function matchingNeighbor(x, y, matchFn, only4dirs = false) {
     const maxIndex = only4dirs ? 4 : 8;
     for (let d = 0; d < maxIndex; ++d) {
@@ -790,6 +799,7 @@ var index$c = {
     equalsXY: equalsXY,
     lerpXY: lerpXY,
     eachNeighbor: eachNeighbor,
+    eachNeighborAsync: eachNeighborAsync,
     matchingNeighbor: matchingNeighbor,
     distanceBetween: distanceBetween,
     distanceFromTo: distanceFromTo,
@@ -1484,10 +1494,10 @@ class Grid extends Array {
         });
         return count;
     }
-    dump(fmtFn) {
-        this.dumpRect(0, 0, this.width, this.height, fmtFn);
+    dump(fmtFn, log = console.log) {
+        this.dumpRect(0, 0, this.width, this.height, fmtFn, log);
     }
-    dumpRect(left, top, width, height, fmtFn) {
+    dumpRect(left, top, width, height, fmtFn, log = console.log) {
         let i, j;
         fmtFn = fmtFn || _formatGridValue;
         left = clamp(left, 0, this.width - 2);
@@ -1506,10 +1516,10 @@ class Grid extends Array {
             }
             output.push(line);
         }
-        console.log(output.join('\n'));
+        log(output.join('\n'));
     }
-    dumpAround(x, y, radius) {
-        this.dumpRect(x - radius, y - radius, 2 * radius, 2 * radius);
+    dumpAround(x, y, radius, fmtFn, log = console.log) {
+        this.dumpRect(x - radius, y - radius, 2 * radius, 2 * radius, fmtFn, log);
     }
     // TODO - Use for(radius) loop to speed this up (do not look at each cell)
     closestMatchingLoc(x, y, v) {
@@ -2367,7 +2377,7 @@ class FovSystem {
         this.flags[x][y] |= FovFlags.ALWAYS_VISIBLE | FovFlags.REVEALED;
     }
     revealAll() {
-        this.flags.update((v) => v | FovFlags.REVEALED);
+        this.flags.update((v) => v | FovFlags.REVEALED | FovFlags.VISIBLE);
     }
     revealCell(x, y) {
         const flag = FovFlags.REVEALED;
@@ -5733,6 +5743,10 @@ class Sprite {
     clone() {
         return new Sprite(this.ch, this.fg, this.bg, this.opacity);
     }
+    toString() {
+        // prettier-ignore
+        return `{ ch: ${this.ch}, fg: ${this.fg.toString(true)}, bg: ${this.bg.toString(true)}, opacity: ${this.opacity} }`;
+    }
 }
 const sprites = {};
 function make$5(...args) {
@@ -6052,33 +6066,31 @@ var Effect;
     // E_ALWAYS_FIRE = Fl(10), // Fire even if the cell is marked as having fired this turn
     Effect[Effect["E_NEXT_ALWAYS"] = fl(0)] = "E_NEXT_ALWAYS";
     Effect[Effect["E_NEXT_EVERYWHERE"] = fl(1)] = "E_NEXT_EVERYWHERE";
-    // E_NO_REDRAW_CELL = Fl(2),
-    Effect[Effect["E_TREAT_AS_BLOCKING"] = fl(3)] = "E_TREAT_AS_BLOCKING";
-    Effect[Effect["E_PERMIT_BLOCKING"] = fl(4)] = "E_PERMIT_BLOCKING";
-    Effect[Effect["E_ABORT_IF_BLOCKS_MAP"] = fl(5)] = "E_ABORT_IF_BLOCKS_MAP";
-    Effect[Effect["E_BLOCKED_BY_ITEMS"] = fl(6)] = "E_BLOCKED_BY_ITEMS";
-    Effect[Effect["E_BLOCKED_BY_ACTORS"] = fl(7)] = "E_BLOCKED_BY_ACTORS";
-    Effect[Effect["E_BLOCKED_BY_OTHER_LAYERS"] = fl(8)] = "E_BLOCKED_BY_OTHER_LAYERS";
-    Effect[Effect["E_SUPERPRIORITY"] = fl(9)] = "E_SUPERPRIORITY";
-    Effect[Effect["E_NO_MARK_FIRED"] = fl(11)] = "E_NO_MARK_FIRED";
+    Effect[Effect["E_FIRED"] = fl(2)] = "E_FIRED";
+    Effect[Effect["E_NO_MARK_FIRED"] = fl(3)] = "E_NO_MARK_FIRED";
     // MUST_REPLACE_LAYER
     // NEEDS_EMPTY_LAYER
-    Effect[Effect["E_PROTECTED"] = fl(12)] = "E_PROTECTED";
+    Effect[Effect["E_PROTECTED"] = fl(4)] = "E_PROTECTED";
+    // E_NO_REDRAW_CELL = Fl(),
+    Effect[Effect["E_TREAT_AS_BLOCKING"] = fl(5)] = "E_TREAT_AS_BLOCKING";
+    Effect[Effect["E_PERMIT_BLOCKING"] = fl(6)] = "E_PERMIT_BLOCKING";
+    Effect[Effect["E_ABORT_IF_BLOCKS_MAP"] = fl(7)] = "E_ABORT_IF_BLOCKS_MAP";
+    Effect[Effect["E_BLOCKED_BY_ITEMS"] = fl(8)] = "E_BLOCKED_BY_ITEMS";
+    Effect[Effect["E_BLOCKED_BY_ACTORS"] = fl(9)] = "E_BLOCKED_BY_ACTORS";
+    Effect[Effect["E_BLOCKED_BY_OTHER_LAYERS"] = fl(10)] = "E_BLOCKED_BY_OTHER_LAYERS";
+    Effect[Effect["E_SUPERPRIORITY"] = fl(11)] = "E_SUPERPRIORITY";
     Effect[Effect["E_SPREAD_CIRCLE"] = fl(13)] = "E_SPREAD_CIRCLE";
     Effect[Effect["E_SPREAD_LINE"] = fl(14)] = "E_SPREAD_LINE";
-    // E_NULL_SURFACE = Fl(15), // Clear the surface layer
-    // E_NULL_LIQUID = Fl(16), // Clear liquid layer
-    // E_NULL_GAS = Fl(17), // Clear gas layer
-    Effect[Effect["E_EVACUATE_CREATURES"] = fl(18)] = "E_EVACUATE_CREATURES";
-    Effect[Effect["E_EVACUATE_ITEMS"] = fl(19)] = "E_EVACUATE_ITEMS";
-    Effect[Effect["E_BUILD_IN_WALLS"] = fl(20)] = "E_BUILD_IN_WALLS";
-    Effect[Effect["E_MUST_TOUCH_WALLS"] = fl(21)] = "E_MUST_TOUCH_WALLS";
-    Effect[Effect["E_NO_TOUCH_WALLS"] = fl(22)] = "E_NO_TOUCH_WALLS";
-    Effect[Effect["E_FIRED"] = fl(23)] = "E_FIRED";
-    Effect[Effect["E_CLEAR_GROUND"] = fl(17)] = "E_CLEAR_GROUND";
-    Effect[Effect["E_CLEAR_SURFACE"] = fl(24)] = "E_CLEAR_SURFACE";
-    Effect[Effect["E_CLEAR_LIQUID"] = fl(25)] = "E_CLEAR_LIQUID";
-    Effect[Effect["E_CLEAR_GAS"] = fl(26)] = "E_CLEAR_GAS";
+    Effect[Effect["E_EVACUATE_CREATURES"] = fl(15)] = "E_EVACUATE_CREATURES";
+    Effect[Effect["E_EVACUATE_ITEMS"] = fl(16)] = "E_EVACUATE_ITEMS";
+    Effect[Effect["E_BUILD_IN_WALLS"] = fl(17)] = "E_BUILD_IN_WALLS";
+    Effect[Effect["E_MUST_TOUCH_WALLS"] = fl(18)] = "E_MUST_TOUCH_WALLS";
+    Effect[Effect["E_NO_TOUCH_WALLS"] = fl(19)] = "E_NO_TOUCH_WALLS";
+    Effect[Effect["E_CLEAR_GROUND"] = fl(21)] = "E_CLEAR_GROUND";
+    Effect[Effect["E_CLEAR_SURFACE"] = fl(22)] = "E_CLEAR_SURFACE";
+    Effect[Effect["E_CLEAR_LIQUID"] = fl(23)] = "E_CLEAR_LIQUID";
+    Effect[Effect["E_CLEAR_GAS"] = fl(24)] = "E_CLEAR_GAS";
+    Effect[Effect["E_CLEAR_TILE"] = fl(25)] = "E_CLEAR_TILE";
     Effect[Effect["E_CLEAR_CELL"] = Effect.E_CLEAR_GROUND |
         Effect.E_CLEAR_SURFACE |
         Effect.E_CLEAR_LIQUID |
@@ -6089,7 +6101,6 @@ var Effect;
     Effect[Effect["E_ACTIVATE_DORMANT_MONSTER"] = fl(27)] = "E_ACTIVATE_DORMANT_MONSTER";
     Effect[Effect["E_AGGRAVATES_MONSTERS"] = fl(28)] = "E_AGGRAVATES_MONSTERS";
     Effect[Effect["E_RESURRECT_ALLY"] = fl(29)] = "E_RESURRECT_ALLY";
-    Effect[Effect["E_EMIT_EVENT"] = fl(30)] = "E_EMIT_EVENT";
 })(Effect || (Effect = {}));
 
 function make$4(opts) {
@@ -6683,6 +6694,9 @@ class LightSystem {
         this.flags = make$a(map.width, map.height);
         this.finishLightUpdate();
     }
+    getAmbient() {
+        return this.ambient;
+    }
     setAmbient(light) {
         if (light instanceof Color) {
             light = light.toLight();
@@ -6963,7 +6977,7 @@ var GameObject$1;
         GameObject.L_BLOCKS_ACTORS |
         GameObject.L_BLOCKS_SURFACE] = "L_BLOCKS_EVERYTHING";
 })(GameObject$1 || (GameObject$1 = {}));
-var Depth;
+var Depth$1;
 (function (Depth) {
     Depth[Depth["ALL_LAYERS"] = -1] = "ALL_LAYERS";
     Depth[Depth["GROUND"] = 0] = "GROUND";
@@ -6974,12 +6988,12 @@ var Depth;
     Depth[Depth["GAS"] = 5] = "GAS";
     Depth[Depth["FX"] = 6] = "FX";
     Depth[Depth["UI"] = 7] = "UI";
-})(Depth || (Depth = {}));
+})(Depth$1 || (Depth$1 = {}));
 
 var flags$3 = {
     __proto__: null,
     get GameObject () { return GameObject$1; },
-    get Depth () { return Depth; }
+    get Depth () { return Depth$1; }
 };
 
 class GameObject {
@@ -7032,7 +7046,7 @@ class Item extends GameObject {
         // @ts-ignore
         this.flags = this.flags || {};
         this.flags.item = 0;
-        this.depth = Depth.ITEM;
+        this.depth = Depth$1.ITEM;
     }
     itemFlags() {
         return this.flags.item;
@@ -7062,7 +7076,7 @@ var flags$2 = {
     __proto__: null,
     get Actor () { return Actor$1; },
     get GameObject () { return GameObject$1; },
-    get Depth () { return Depth; }
+    get Depth () { return Depth$1; }
 };
 
 class Actor extends GameObject {
@@ -7072,7 +7086,7 @@ class Actor extends GameObject {
         // @ts-ignore
         this.flags = this.flags || {};
         this.flags.actor = 0;
-        this.depth = Depth.ACTOR;
+        this.depth = Depth$1.ACTOR;
     }
     hasActorFlag(flag) {
         return !!(this.flags.actor & flag);
@@ -7323,7 +7337,7 @@ function make$1(options) {
     let depth = base.depth || 0;
     if (options.depth) {
         if (typeof options.depth === 'string') {
-            depth = Depth[options.depth];
+            depth = Depth$1[options.depth];
         }
         else {
             depth = options.depth;
@@ -7344,7 +7358,7 @@ function make$1(options) {
         priority: (_b = options.priority) !== null && _b !== void 0 ? _b : base.priority,
         depth: depth,
         light,
-        groundTile: null,
+        groundTile: options.groundTile || null,
         ch: (_c = options.ch) !== null && _c !== void 0 ? _c : base.sprite.ch,
         fg: (_d = options.fg) !== null && _d !== void 0 ? _d : base.sprite.fg,
         bg: (_e = options.bg) !== null && _e !== void 0 ? _e : base.sprite.bg,
@@ -7468,7 +7482,7 @@ install('WALL', {
     fg: [7, 7, 7, 0, 3, 3, 3],
     bg: [40, 40, 40, 10, 10, 0, 5],
     priority: 100,
-    flags: 'L_BLOCKS_EVERYTHING',
+    flags: 'L_WALL_FLAGS',
     article: 'a',
     name: 'stone wall',
     description: 'A wall made from rough cut stone.',
@@ -7479,7 +7493,7 @@ install('IMPREGNABLE', {
     fg: [7, 7, 7, 0, 3, 3, 3],
     bg: [40, 40, 40, 10, 10, 0, 5],
     priority: 100,
-    flags: 'L_BLOCKS_EVERYTHING, IMPREGNABLE',
+    flags: 'L_WALL_FLAGS, IMPREGNABLE',
     article: 'a',
     name: 'impregnable wall',
     description: 'A wall made from very hard stone.',
@@ -7501,7 +7515,7 @@ install('SHALLOW', {
     priority: 20,
     name: 'shallow water',
     article: 'the',
-    depth: 'SURFACE',
+    depth: 'SURFACE', // 'LIQUID'?
 });
 install('BRIDGE', {
     ch: '=',
@@ -7735,7 +7749,7 @@ class Cell {
         return this.tiles.reduce((out, t) => Math.max(out, t ? t.priority : 0), tiles.NULL.priority);
     }
     depthTile(depth) {
-        return this.tiles[depth] || tiles.NULL;
+        return this.tiles[depth] || null;
     }
     hasTile(tile) {
         if (!tile)
@@ -7760,6 +7774,9 @@ class Cell {
     }
     get tile() {
         return this.highestPriorityTile();
+    }
+    eachTile(cb) {
+        this.tiles.forEach((t) => t && cb(t));
     }
     tileWithObjectFlag(flag) {
         return this.tiles.find((t) => t && t.flags.object & flag) || null;
@@ -7805,6 +7822,9 @@ class Cell {
     }
     isStairs() {
         return this.hasTileFlag(Tile$1.T_HAS_STAIRS);
+    }
+    hasKey() {
+        return false;
     }
     // @returns - whether or not the change results in a change to the cell lighting.
     setTile(tile) {
@@ -7872,64 +7892,37 @@ class Cell {
         ctx.cell = this;
         let didSomething = false;
         if (ctx.depth !== undefined) {
-            const tile = this.depthTile(ctx.depth);
+            const tile = (ctx.tile = this.depthTile(ctx.depth));
             if (tile && tile.effects) {
                 const ev = tile.effects[event];
-                let effect;
-                if (typeof ev === 'string') {
-                    effect = effects[ev];
-                }
-                else {
-                    effect = ev;
-                }
-                if (effect) {
-                    // console.log(' - has event');
-                    // if (
-                    //     ctx.force ||
-                    //     !effect.chance ||
-                    //     random.chance(effect.chance, 10000)
-                    // ) {
-                    ctx.tile = tile;
-                    // console.log(' - spawn event @%d,%d - %s', x, y, event);
-                    didSomething = await fire(effect, map, x, y, ctx);
-                    // cell.debug(" - spawned");
-                    // }
-                }
+                didSomething = await this._fire(ev, map, x, y, ctx);
             }
         }
         else {
             // console.log('fire event - %s', event);
-            for (let tile of this.tiles) {
-                if (!tile || !tile.effects)
+            for (ctx.tile of this.tiles) {
+                if (!ctx.tile || !ctx.tile.effects)
                     continue;
-                const ev = tile.effects[event];
+                const ev = ctx.tile.effects[event];
                 // console.log(' - ', ev);
-                let effect;
-                if (typeof ev === 'string') {
-                    effect = effects[ev];
+                if (await this._fire(ev, map, x, y, ctx)) {
+                    didSomething = true;
+                    break;
                 }
-                else {
-                    effect = ev;
-                }
-                if (effect) {
-                    // cell.debug(" - has event");
-                    // if (
-                    //     ctx.force ||
-                    //     !effect.chance ||
-                    //     random.chance(effect.chance, 10000)
-                    // ) {
-                    ctx.tile = tile;
-                    // console.log(' - spawn event @%d,%d - %s', x, y, name);
-                    didSomething =
-                        (await fire(effect, map, x, y, ctx)) ||
-                            didSomething;
-                    // cell.debug(" - spawned");
-                    if (didSomething) {
-                        break;
-                    }
-                    // }
-                }
+                // }
             }
+        }
+        return didSomething;
+    }
+    async _fire(effect, map, x, y, ctx) {
+        if (typeof effect === 'string') {
+            effect = effects[effect];
+        }
+        let didSomething = false;
+        if (effect) {
+            // console.log(' - spawn event @%d,%d - %s', x, y, name);
+            didSomething = await fire(effect, map, x, y, ctx);
+            // cell.debug(" - spawned");
         }
         return didSomething;
     }
@@ -8003,6 +7996,10 @@ class MapLayer {
         this.properties = {};
         this.name = name;
     }
+    copy(_other) { }
+    async tick(_dt) {
+        return false;
+    }
 }
 class ActorLayer extends MapLayer {
     constructor(map, name = 'actor') {
@@ -8037,7 +8034,6 @@ class ActorLayer extends MapLayer {
             return;
         dest.drawSprite(cell.actor.sprite);
     }
-    update(_dt) { }
 }
 class ItemLayer extends MapLayer {
     constructor(map, name = 'item') {
@@ -8066,7 +8062,6 @@ class ItemLayer extends MapLayer {
             return;
         dest.drawSprite(cell.item.sprite);
     }
-    update(_dt) { }
 }
 class TileLayer extends MapLayer {
     constructor(map, name = 'tile') {
@@ -8093,8 +8088,9 @@ class TileLayer extends MapLayer {
             return false;
         if (opts.blockedByOtherLayers && cell.highestPriority() > tile.priority)
             return false;
-        if (tile.depth > Depth.GROUND && tile.groundTile) {
-            if (cell.depthTile(Depth.GROUND) === tiles.NULL) {
+        if (tile.depth > Depth$1.GROUND && tile.groundTile) {
+            const ground = cell.depthTile(Depth$1.GROUND);
+            if (!ground || ground === tiles.NULL) {
                 this.set(x, y, get(tile.groundTile));
             }
         }
@@ -8102,6 +8098,9 @@ class TileLayer extends MapLayer {
             return false;
         if (current.light !== tile.light) {
             this.map.light.glowLightChanged = true;
+        }
+        if (tile.hasTileFlag(Tile$1.T_IS_FIRE)) {
+            cell.setCellFlag(Cell$1.CAUGHT_FIRE_THIS_TURN);
         }
         // if (volume) {
         //     if (tile.depth === Depth.GAS) {
@@ -8113,33 +8112,35 @@ class TileLayer extends MapLayer {
         // }
         return true;
     }
-    async update(_dt) {
+    clear(x, y) {
+        const cell = this.map.cell(x, y);
+        return cell.clearDepth(this.depth);
+    }
+    async tick(_dt) {
         // Run any tick effects
+        // Bookkeeping for fire, pressure plates and key-activated tiles.
+        for (let x = 0; x < this.map.width; ++x) {
+            for (let y = 0; y < this.map.height; ++y) {
+                const cell = this.map.cell(x, y);
+                if (!cell.hasCellFlag(Cell$1.HAS_ANY_ACTOR | Cell$1.HAS_ITEM) &&
+                    cell.hasCellFlag(Cell$1.PRESSURE_PLATE_DEPRESSED)) {
+                    cell.clearCellFlag(Cell$1.PRESSURE_PLATE_DEPRESSED);
+                }
+                if (cell.hasEffect('noKey') && !cell.hasKey()) {
+                    await cell.activate('noKey', this.map, x, y);
+                }
+            }
+        }
+        return true;
     }
     putAppearance(dest, x, y) {
         const cell = this.map.cell(x, y);
         const tile = cell.depthTile(this.depth);
-        if (tile) {
+        if (tile && tile !== tiles.NULL) {
             dest.drawSprite(tile.sprite);
         }
     }
 }
-// class GasLayer extends TileLayer {
-//     constructor(map: TileMap) {
-//         super(map);
-//     }
-//     async update(dt: number) {
-//         // do dissipation...
-//     }
-// }
-// class LiquidLayer extends TileLayer {
-//     constructor(map: TileMap) {
-//         super(map);
-//     }
-//     async update(dt: number) {
-//         // do dissipation...
-//     }
-// }
 
 class CellMemory {
     constructor() {
@@ -8161,6 +8162,7 @@ class CellMemory {
         this._tile = tiles.NULL;
         this._item = null;
         this._actor = null;
+        this._hasKey = false;
         this.snapshot = new Mixer();
     }
     clear() {
@@ -8176,6 +8178,7 @@ class CellMemory {
         this.blocks.move = false;
         this.blocks.pathing = false;
         this.blocks.vision = false;
+        this._hasKey = false;
     }
     store(cell) {
         this._item = null;
@@ -8197,6 +8200,7 @@ class CellMemory {
         this.blocks.move = cell.blocksMove();
         this.blocks.pathing = cell.blocksPathing();
         this.blocks.vision = cell.blocksVision();
+        this._hasKey = cell.hasKey();
     }
     getSnapshot(dest) {
         dest.copy(this.snapshot);
@@ -8218,6 +8222,9 @@ class CellMemory {
     }
     hasAllObjectFlags(flags) {
         return (this.flags.object & flags) == flags;
+    }
+    hasTileMechFlag(flag) {
+        return !!(this.flags.tileMech & flag);
     }
     cellFlags() {
         return this.flags.cell;
@@ -8255,6 +8262,9 @@ class CellMemory {
     isStairs() {
         return this.hasTileFlag(Tile$1.T_HAS_STAIRS);
     }
+    hasKey() {
+        return this._hasKey;
+    }
     get tile() {
         return this._tile;
     }
@@ -8290,6 +8300,230 @@ class CellMemory {
     }
 }
 
+const Depth = Depth$1;
+const ObjectFlags$1 = GameObject$1;
+const TileFlags = Tile$1;
+const TileMechFlags = TileMech;
+const CellFlags = Cell$1;
+class FireLayer extends TileLayer {
+    constructor(map, name = 'tile') {
+        super(map, name);
+    }
+    async tick(_dt) {
+        // Run any tick effects
+        // Bookkeeping for fire
+        for (let x = 0; x < this.map.width; ++x) {
+            for (let y = 0; y < this.map.height; ++y) {
+                const cell = this.map.cell(x, y);
+                cell.clearCellFlag(CellFlags.CAUGHT_FIRE_THIS_TURN);
+            }
+        }
+        // now spread the fire...
+        for (let x = 0; x < this.map.width; ++x) {
+            for (let y = 0; y < this.map.height; ++y) {
+                const cell = this.map.cell(x, y);
+                if (cell.hasTileFlag(TileFlags.T_IS_FIRE) &&
+                    !(cell.flags.cell & CellFlags.CAUGHT_FIRE_THIS_TURN)) {
+                    await this.exposeToFire(x, y, false);
+                    for (let d = 0; d < 4; ++d) {
+                        const dir = DIRS$2[d];
+                        await this.exposeToFire(x + dir[0], y + dir[1]);
+                    }
+                }
+            }
+        }
+        return true;
+    }
+    async exposeToFire(x, y, alwaysIgnite = false) {
+        let ignitionChance = 0, bestExtinguishingPriority = 0, explosiveNeighborCount = 0;
+        let fireIgnited = false, explosivePromotion = false;
+        const cell = this.map.cell(x, y);
+        if (!cell.hasTileFlag(TileFlags.T_IS_FLAMMABLE)) {
+            return false;
+        }
+        // Pick the extinguishing layer with the best priority.
+        cell.eachTile((tile) => {
+            if (tile.hasTileFlag(TileFlags.T_EXTINGUISHES_FIRE) &&
+                tile.priority > bestExtinguishingPriority) {
+                bestExtinguishingPriority = tile.priority;
+            }
+        });
+        // Pick the fire type of the most flammable layer that is either gas or equal-or-better priority than the best extinguishing layer.
+        cell.eachTile((tile) => {
+            if (tile.flags.tile & TileFlags.T_IS_FLAMMABLE &&
+                (tile.depth === Depth.GAS ||
+                    tile.priority >= bestExtinguishingPriority)) {
+                const effect = from$2(tile.effects.fire);
+                if (effect && effect.chance > ignitionChance) {
+                    ignitionChance = effect.chance;
+                }
+            }
+        });
+        if (alwaysIgnite ||
+            (ignitionChance && random.chance(ignitionChance, 10000))) {
+            // If it ignites...
+            fireIgnited = true;
+            // Count explosive neighbors.
+            if (cell.hasTileMechFlag(TileMechFlags.TM_EXPLOSIVE_PROMOTE)) {
+                eachNeighbor(x, y, (x0, y0) => {
+                    const n = this.map.cell(x0, y0);
+                    if (n.hasObjectFlag(ObjectFlags$1.L_BLOCKS_GAS) ||
+                        n.hasTileFlag(TileFlags.T_IS_FIRE) ||
+                        n.hasTileMechFlag(TileMechFlags.TM_EXPLOSIVE_PROMOTE)) {
+                        ++explosiveNeighborCount;
+                    }
+                });
+                if (explosiveNeighborCount >= 8) {
+                    explosivePromotion = true;
+                }
+            }
+            let event = 'fire';
+            if (explosivePromotion && cell.hasEffect('explode')) {
+                event = 'explode';
+            }
+            // cell.eachTile( (tile) => {
+            //     if (tile.flags.tile & TileFlags.T_IS_FLAMMABLE) {
+            //         if (tile.depth === Depth.GAS) {
+            //             cell.gasVolume = 0;
+            //         } else if (tile.depth === Depth.LIQUID) {
+            //             cell.liquidVolume = 0;
+            //         }
+            //     }
+            // });
+            await cell.activate(event, this.map, x, y, {
+                force: true,
+            });
+            cell.needsRedraw = true;
+        }
+        return fireIgnited;
+    }
+}
+
+const ObjectFlags = GameObject$1;
+class GasLayer extends TileLayer {
+    constructor(map, name = 'gas') {
+        super(map, name);
+        this.needsUpdate = false;
+        this.volume = alloc(map.width, map.height, 0);
+    }
+    set(x, y, tile, opts = {}) {
+        if (!opts.volume)
+            return false;
+        const cell = this.map.cell(x, y);
+        if (cell.depthTile(tile.depth) === tile) {
+            this.volume[x][y] += opts.volume;
+            return true;
+        }
+        if (!super.set(x, y, tile, opts)) {
+            return false;
+        }
+        this.volume[x][y] = opts.volume;
+        this.needsUpdate = true;
+        return true;
+    }
+    clear(x, y) {
+        const cell = this.map.cell(x, y);
+        if (cell.clearDepth(this.depth)) {
+            this.volume[x][y] = 0;
+            return true;
+        }
+        return false;
+    }
+    copy(other) {
+        this.volume.copy(other.volume);
+    }
+    async tick(_dt) {
+        if (!this.needsUpdate)
+            return false;
+        this.needsUpdate = false;
+        const startingVolume = this.volume;
+        this.volume = alloc(this.map.width, this.map.height);
+        // dissipate the gas...
+        this.dissipate(startingVolume);
+        // spread the gas...
+        this.spread(startingVolume);
+        free(startingVolume);
+        return true;
+    }
+    dissipate(volume) {
+        volume.update((v, x, y) => {
+            if (!v)
+                return 0;
+            const tile = this.map.cell(x, y).depthTile(this.depth);
+            if (tile && tile.dissipate) {
+                let d = Math.max(0.5, (v * tile.dissipate) / 10000); // 1000 = 10%
+                v = Math.max(0, v - d);
+            }
+            if (v) {
+                this.needsUpdate = true;
+            }
+            else {
+                this.clear(x, y);
+            }
+            return v;
+        });
+    }
+    calcOpacity(volume) {
+        return Math.floor(Math.min(volume, 10) * 10);
+    }
+    updateCellVolume(x, y, startingVolume) {
+        let total = 0;
+        let count = 0;
+        let highestVolume = 0;
+        const cell = this.map.cell(x, y);
+        let startingTile = cell.depthTile(this.depth);
+        let highestTile = startingTile;
+        if (cell.hasObjectFlag(ObjectFlags.L_BLOCKS_GAS)) {
+            this.volume[x][y] = 0;
+            if (startingVolume[x][y]) {
+                this.clear(x, y);
+            }
+            return;
+        }
+        for (let i = Math.max(0, x - 1); i < Math.min(x + 2, startingVolume.width); ++i) {
+            for (let j = Math.max(0, y - 1); j < Math.min(y + 2, startingVolume.height); ++j) {
+                const v = startingVolume[i][j];
+                if (!cell.hasObjectFlag(ObjectFlags.L_BLOCKS_GAS)) {
+                    ++count;
+                    if (v > highestVolume) {
+                        highestVolume = v;
+                        highestTile = this.map.cell(i, j).depthTile(this.depth);
+                    }
+                }
+                total += v;
+            }
+        }
+        const v = Math.floor((total * 10) / count) / 10;
+        this.volume[x][y] = v;
+        if (v > 0 && highestTile) {
+            if (!startingTile || startingTile !== highestTile) {
+                cell.setTile(highestTile);
+            }
+        }
+        if (v > 0) {
+            cell.needsRedraw = true;
+        }
+    }
+    spread(startingVolume) {
+        for (let x = 0; x < startingVolume.width; ++x) {
+            for (let y = 0; y < startingVolume.height; ++y) {
+                this.updateCellVolume(x, y, startingVolume);
+            }
+        }
+    }
+    putAppearance(dest, x, y) {
+        const volume = this.volume[x][y];
+        if (!volume)
+            return;
+        const cell = this.map.cell(x, y);
+        const tile = cell.depthTile(this.depth);
+        if (tile) {
+            const opacity = this.calcOpacity(volume);
+            dest.drawSprite(tile.sprite, opacity);
+        }
+    }
+}
+
 class Map {
     constructor(width, height, opts = {}) {
         this.width = width;
@@ -8310,21 +8544,31 @@ class Map {
     }
     // LAYERS
     initLayers() {
-        this.addLayer(Depth.GROUND, new TileLayer(this, 'ground'));
-        this.addLayer(Depth.SURFACE, new TileLayer(this, 'surface'));
-        this.addLayer(Depth.ITEM, new ItemLayer(this, 'item'));
-        this.addLayer(Depth.ACTOR, new ActorLayer(this, 'actor'));
+        this.addLayer(Depth$1.GROUND, new TileLayer(this, 'ground'));
+        this.addLayer(Depth$1.SURFACE, new FireLayer(this, 'surface'));
+        this.addLayer(Depth$1.GAS, new GasLayer(this, 'gas'));
+        this.addLayer(Depth$1.ITEM, new ItemLayer(this, 'item'));
+        this.addLayer(Depth$1.ACTOR, new ActorLayer(this, 'actor'));
     }
     addLayer(depth, layer) {
+        if (typeof depth !== 'number') {
+            depth = Depth$1[depth];
+        }
         layer.depth = depth;
         this.layers[depth] = layer;
     }
     removeLayer(depth) {
+        if (typeof depth !== 'number') {
+            depth = Depth$1[depth];
+        }
         if (!depth)
             throw new Error('Cannot remove layer with depth=0.');
         delete this.layers[depth];
     }
     getLayer(depth) {
+        if (typeof depth !== 'number') {
+            depth = Depth$1[depth];
+        }
         return this.layers[depth] || null;
     }
     hasXY(x, y) {
@@ -8350,13 +8594,8 @@ class Map {
         const mixer = new Mixer();
         for (let x = 0; x < buffer.width; ++x) {
             for (let y = 0; y < buffer.height; ++y) {
-                const cell = this.cell(x, y);
                 this.getAppearanceAt(x, y, mixer);
-                const glyph = typeof mixer.ch === 'number'
-                    ? mixer.ch
-                    : buffer.toGlyph(mixer.ch);
-                buffer.draw(x, y, glyph, mixer.fg.toInt(), mixer.bg.toInt());
-                cell.needsRedraw = false;
+                buffer.drawSprite(x, y, mixer);
             }
         }
     }
@@ -8416,8 +8655,8 @@ class Map {
     count(cb) {
         return this.cells.count((cell, x, y) => cb(cell, x, y, this));
     }
-    dump(fmt) {
-        this.cells.dump(fmt || ((c) => c.dump()));
+    dump(fmt, log = console.log) {
+        this.cells.dump(fmt || ((c) => c.dump()), log);
     }
     // flags
     hasMapFlag(flag) {
@@ -8448,6 +8687,9 @@ class Map {
             }
         }
     }
+    hasTile(x, y, tile, useMemory = false) {
+        return this.cellInfo(x, y, useMemory).hasTile(tile);
+    }
     setTile(x, y, tile, opts) {
         if (!(tile instanceof Tile)) {
             tile = get(tile);
@@ -8463,17 +8705,110 @@ class Map {
             return false;
         return layer.set(x, y, tile, opts);
     }
-    async update(dt) {
-        await asyncForEach(this.layers, (l) => l.update(dt));
+    async tick(dt) {
+        let didSomething = await this.fireAll('tick');
+        for (let layer of this.layers) {
+            if (layer && (await layer.tick(dt))) {
+                didSomething = true;
+            }
+        }
+        return didSomething;
     }
-    copy(_src) { }
-    clone() { }
+    copy(src) {
+        if (this.constructor !== src.constructor)
+            throw new Error('Maps must be same type to copy.');
+        if (this.width !== src.width || this.height !== src.height)
+            throw new Error('Maps must be same size to copy');
+        this.cells.forEach((c, x, y) => {
+            c.copy(src.cells[x][y]);
+        });
+        this.layers.forEach((l, depth) => {
+            l.copy(src.layers[depth]);
+        });
+        this.flags.map = src.flags.map;
+        this.light.setAmbient(src.light.getAmbient());
+    }
+    clone() {
+        // @ts-ignore
+        const other = new this.constructor(this.width, this.height);
+        other.copy(this);
+        return other;
+    }
+    async fire(event, x, y, ctx) {
+        const cell = this.cell(x, y);
+        return cell.activate(event, this, x, y, ctx);
+    }
+    async fireAll(event, ctx = {}) {
+        let didSomething = false;
+        const willFire = alloc(this.width, this.height);
+        // Figure out which tiles will fire - before we change everything...
+        this.cells.forEach((cell, x, y) => {
+            cell.clearCellFlag(Cell$1.EVENT_FIRED_THIS_TURN | Cell$1.EVENT_PROTECTED);
+            cell.eachTile((tile) => {
+                const ev = tile.effects[event];
+                if (!ev)
+                    return;
+                const effect = from$2(ev);
+                if (!effect)
+                    return;
+                let promoteChance = 0;
+                // < 0 means try to fire my neighbors...
+                if (effect.chance < 0) {
+                    promoteChance = 0;
+                    eachNeighbor(x, y, (i, j) => {
+                        const n = this.cell(i, j);
+                        if (!n.hasObjectFlag(GameObject$1.L_BLOCKS_EFFECTS) &&
+                            n.depthTile(tile.depth) !=
+                                cell.depthTile(tile.depth) &&
+                            !n.hasCellFlag(Cell$1.CAUGHT_FIRE_THIS_TURN)) {
+                            // TODO - Should this break from the loop after doing this once or keep going?
+                            promoteChance += -1 * effect.chance;
+                        }
+                    }, true);
+                }
+                else {
+                    promoteChance = effect.chance || 100 * 100; // 100%
+                }
+                if (!cell.hasCellFlag(Cell$1.CAUGHT_FIRE_THIS_TURN) &&
+                    random.chance(promoteChance, 10000)) {
+                    willFire[x][y] |= fl(tile.depth);
+                    // cell.flags.cellMech |= Cell.MechFlags.EVENT_FIRED_THIS_TURN;
+                }
+            });
+        });
+        // Then activate them - so that we don't activate the next generation as part of the forEach
+        ctx.force = true;
+        await willFire.forEachAsync(async (w, x, y) => {
+            if (!w)
+                return;
+            const cell = this.cell(x, y);
+            if (cell.hasCellFlag(Cell$1.EVENT_FIRED_THIS_TURN))
+                return;
+            for (let depth = 0; depth <= Depth$1.GAS; ++depth) {
+                if (w & fl(depth)) {
+                    await cell.activate(event, this, x, y, {
+                        force: true,
+                        depth,
+                    });
+                }
+            }
+        });
+        free(willFire);
+        return didSomething;
+    }
     getAppearanceAt(x, y, dest) {
         dest.blackOut();
         const cell = this.cell(x, y);
         const isVisible = this.fov.isAnyKindOfVisible(x, y);
         if (cell.needsRedraw && isVisible) {
             this.layers.forEach((layer) => layer.putAppearance(dest, x, y));
+            if (dest.dances) {
+                cell.setCellFlag(Cell$1.COLORS_DANCE);
+            }
+            else {
+                cell.clearCellFlag(Cell$1.COLORS_DANCE);
+            }
+            dest.bake();
             this.memory[x][y].putSnapshot(dest);
             cell.needsRedraw = false;
         }
@@ -8490,15 +8825,8 @@ class Map {
         else {
             dest.blackOut();
         }
-        dest.bake(!this.fov.isAnyKindOfVisible(x, y));
         if (cell.hasObjectFlag(GameObject$1.L_VISUALLY_DISTINCT)) {
             separate(dest.fg, dest.bg);
-        }
-        if (dest.dances) {
-            cell.setCellFlag(Cell$1.COLORS_DANCE);
-        }
-        else {
-            cell.clearCellFlag(Cell$1.COLORS_DANCE);
         }
     }
     // // LightSystemSite
@@ -8529,7 +8857,7 @@ class Map {
         // if (cell.item) {
         //     const theItem: GW.types.ItemType = cell.item;
         //     if (
-        //         theItem.hasLayerFlag(ObjectFlags.L_INTERRUPT_WHEN_SEEN)
+        //         theItem.hasObjectFlag(ObjectFlags.L_INTERRUPT_WHEN_SEEN)
         //     ) {
         //         GW.message.add(
         //             '§you§ §see§ ΩitemMessageColorΩ§item§∆.',
@@ -9306,16 +9634,16 @@ function clearCells(map, spawnMap, flags = 0) {
         }
         else {
             if (flags & Effect.E_CLEAR_GAS) {
-                cell.clearDepth(Depth.GAS);
+                cell.clearDepth(Depth$1.GAS);
             }
             if (flags & Effect.E_CLEAR_LIQUID) {
-                cell.clearDepth(Depth.LIQUID);
+                cell.clearDepth(Depth$1.LIQUID);
             }
             if (flags & Effect.E_CLEAR_SURFACE) {
-                cell.clearDepth(Depth.SURFACE);
+                cell.clearDepth(Depth$1.SURFACE);
             }
             if (flags & Effect.E_CLEAR_GROUND) {
-                cell.clearDepth(Depth.GROUND);
+                cell.clearDepth(Depth$1.GROUND);
             }
         }
         didSomething = true;
@@ -9393,7 +9721,7 @@ class ClearTileEffect {
             config = config.split(/[,|]/).map((t) => t.trim());
         }
         if (config === true) {
-            layers = Depth.ALL_LAYERS;
+            layers = Depth$1.ALL_LAYERS;
         }
         else if (typeof config === 'number') {
             layers = config;
@@ -9402,7 +9730,7 @@ class ClearTileEffect {
             layers = config.reduce((out, v) => {
                 if (typeof v === 'number')
                     return out | v;
-                const depth = Depth[v] ||
+                const depth = Depth$1[v] ||
                     0;
                 return out | depth;
             }, 0);
@@ -9427,7 +9755,7 @@ class ClearTileEffect {
 }
 installType('clear', new ClearTileEffect());
 
-const flags = { Cell: Cell$1, Map: Map$1, GameObject: GameObject$1 };
+const flags = { Cell: Cell$1, Map: Map$1, GameObject: GameObject$1, Depth: Depth$1, Tile: Tile$1 };
 
 var index = {
     __proto__: null,
@@ -9449,7 +9777,14 @@ var index = {
     computeSpawnMap: computeSpawnMap,
     clearCells: clearCells,
     evacuateCreatures: evacuateCreatures,
-    evacuateItems: evacuateItems
+    evacuateItems: evacuateItems,
+    CellMemory: CellMemory,
+    MapLayer: MapLayer,
+    ActorLayer: ActorLayer,
+    ItemLayer: ItemLayer,
+    TileLayer: TileLayer,
+    GasLayer: GasLayer,
+    FireLayer: FireLayer
 };
 
 export { Random, index$2 as actor, blob, index$8 as canvas, index$a as color, colors, config$1 as config, cosmetic, data, index$6 as effect, events, flag, index$b as fov, frequency, index$4 as gameObject, grid, io, index$3 as item, index$5 as light, loop, index as map, message, path, random, range, scheduler, index$7 as sprite, sprites, index$9 as text, index$1 as tile, types, index$c as utils };

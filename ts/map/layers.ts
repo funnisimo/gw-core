@@ -1,29 +1,35 @@
 import { Mixer } from '../sprite';
 import * as Tile from '../tile';
-import * as Map from './map';
+import { MapType } from './types';
 import * as Flags from './flags';
 import { Actor } from '../actor';
 import { Item } from '../item';
 import { SetTileOptions } from './types';
-import { utils } from '..';
+import * as Utils from '../utils';
 import { Depth } from '../gameObject/flags';
 
 export class MapLayer {
-    map: Map.Map;
+    map: MapType;
     depth: number;
     properties: Record<string, any>;
     name: string;
 
-    constructor(map: Map.Map, name = 'layer') {
+    constructor(map: MapType, name = 'layer') {
         this.map = map;
         this.depth = -1;
         this.properties = {};
         this.name = name;
     }
+
+    copy(_other: MapLayer) {}
+
+    async tick(_dt: number): Promise<boolean> {
+        return false;
+    }
 }
 
 export class ActorLayer extends MapLayer {
-    constructor(map: Map.Map, name = 'actor') {
+    constructor(map: MapType, name = 'actor') {
         super(map, name);
     }
 
@@ -33,7 +39,7 @@ export class ActorLayer extends MapLayer {
         const actor = obj as Actor;
         if (actor.forbidsCell(cell)) return false;
 
-        if (!utils.addToChain(cell, 'actor', obj)) return false;
+        if (!Utils.addToChain(cell, 'actor', obj)) return false;
 
         if (obj.isPlayer()) {
             cell.setCellFlag(Flags.Cell.HAS_PLAYER);
@@ -46,7 +52,7 @@ export class ActorLayer extends MapLayer {
     remove(obj: Actor) {
         const cell = this.map.cell(obj.x, obj.y);
 
-        if (!utils.removeFromChain(cell, 'actor', obj)) return false;
+        if (!Utils.removeFromChain(cell, 'actor', obj)) return false;
 
         if (obj.isPlayer()) {
             cell.clearCellFlag(Flags.Cell.HAS_PLAYER);
@@ -59,12 +65,10 @@ export class ActorLayer extends MapLayer {
         if (!cell.actor) return;
         dest.drawSprite(cell.actor.sprite);
     }
-
-    update(_dt: number) {}
 }
 
 export class ItemLayer extends MapLayer {
-    constructor(map: Map.Map, name = 'item') {
+    constructor(map: MapType, name = 'item') {
         super(map, name);
     }
 
@@ -74,7 +78,7 @@ export class ItemLayer extends MapLayer {
         const item = obj as Item;
         if (item.forbidsCell(cell)) return false;
 
-        if (!utils.addToChain(cell, 'item', obj)) return false;
+        if (!Utils.addToChain(cell, 'item', obj)) return false;
         obj.x = x;
         obj.y = y;
         return true;
@@ -82,7 +86,7 @@ export class ItemLayer extends MapLayer {
 
     remove(obj: Item) {
         const cell = this.map.cell(obj.x, obj.y);
-        if (!utils.removeFromChain(cell, 'item', obj)) return false;
+        if (!Utils.removeFromChain(cell, 'item', obj)) return false;
         return true;
     }
 
@@ -91,12 +95,10 @@ export class ItemLayer extends MapLayer {
         if (!cell.item) return;
         dest.drawSprite(cell.item.sprite);
     }
-
-    update(_dt: number) {}
 }
 
 export class TileLayer extends MapLayer {
-    constructor(map: Map.Map, name = 'tile') {
+    constructor(map: MapType, name = 'tile') {
         super(map, name);
     }
 
@@ -123,7 +125,8 @@ export class TileLayer extends MapLayer {
             return false;
 
         if (tile.depth > Depth.GROUND && tile.groundTile) {
-            if (cell.depthTile(Depth.GROUND) === Tile.tiles.NULL) {
+            const ground = cell.depthTile(Depth.GROUND);
+            if (!ground || ground === Tile.tiles.NULL) {
                 this.set(x, y, Tile.get(tile.groundTile));
             }
         }
@@ -132,6 +135,10 @@ export class TileLayer extends MapLayer {
 
         if (current.light !== tile.light) {
             this.map.light.glowLightChanged = true;
+        }
+
+        if (tile.hasTileFlag(Flags.Tile.T_IS_FIRE)) {
+            cell.setCellFlag(Flags.Cell.CAUGHT_FIRE_THIS_TURN);
         }
 
         // if (volume) {
@@ -146,35 +153,40 @@ export class TileLayer extends MapLayer {
         return true;
     }
 
-    async update(_dt: number) {
+    clear(x: number, y: number) {
+        const cell = this.map.cell(x, y);
+        return cell.clearDepth(this.depth);
+    }
+
+    async tick(_dt: number): Promise<boolean> {
         // Run any tick effects
+
+        // Bookkeeping for fire, pressure plates and key-activated tiles.
+        for (let x = 0; x < this.map.width; ++x) {
+            for (let y = 0; y < this.map.height; ++y) {
+                const cell = this.map.cell(x, y);
+                if (
+                    !cell.hasCellFlag(
+                        Flags.Cell.HAS_ANY_ACTOR | Flags.Cell.HAS_ITEM
+                    ) &&
+                    cell.hasCellFlag(Flags.Cell.PRESSURE_PLATE_DEPRESSED)
+                ) {
+                    cell.clearCellFlag(Flags.Cell.PRESSURE_PLATE_DEPRESSED);
+                }
+                if (cell.hasEffect('noKey') && !cell.hasKey()) {
+                    await cell.activate('noKey', this.map, x, y);
+                }
+            }
+        }
+
+        return true;
     }
 
     putAppearance(dest: Mixer, x: number, y: number) {
         const cell = this.map.cell(x, y);
         const tile = cell.depthTile(this.depth);
-        if (tile) {
+        if (tile && tile !== Tile.tiles.NULL) {
             dest.drawSprite(tile.sprite);
         }
     }
 }
-
-// class GasLayer extends TileLayer {
-//     constructor(map: TileMap) {
-//         super(map);
-//     }
-
-//     async update(dt: number) {
-//         // do dissipation...
-//     }
-// }
-
-// class LiquidLayer extends TileLayer {
-//     constructor(map: TileMap) {
-//         super(map);
-//     }
-
-//     async update(dt: number) {
-//         // do dissipation...
-//     }
-// }

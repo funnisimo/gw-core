@@ -6,6 +6,7 @@ import {
     LightCb,
     LightSystemOptions,
 } from '../light';
+import { fl as Fl } from '../flag';
 import * as Flags from './flags';
 import { Cell } from './cell';
 import * as FOV from '../fov';
@@ -29,6 +30,10 @@ import {
 import * as Color from '../color';
 import { EachCb } from '../types';
 import { CellMemory } from './cellMemory';
+import { FireLayer } from './fireLayer';
+import { GasLayer } from './gasLayer';
+import * as Effect from '../effect';
+import { random } from '../random';
 
 export interface MapOptions extends LightSystemOptions, FOV.FovSystemOptions {
     tile: string | true;
@@ -83,22 +88,33 @@ export class Map implements LightSystemSite, FOV.FovSite, MapType {
 
     initLayers() {
         this.addLayer(Depth.GROUND, new TileLayer(this, 'ground'));
-        this.addLayer(Depth.SURFACE, new TileLayer(this, 'surface'));
+        this.addLayer(Depth.SURFACE, new FireLayer(this, 'surface'));
+        this.addLayer(Depth.GAS, new GasLayer(this, 'gas'));
         this.addLayer(Depth.ITEM, new ItemLayer(this, 'item'));
         this.addLayer(Depth.ACTOR, new ActorLayer(this, 'actor'));
     }
 
-    addLayer(depth: number, layer: LayerType) {
+    addLayer(depth: number | keyof typeof Depth, layer: LayerType) {
+        if (typeof depth !== 'number') {
+            depth = Depth[depth as keyof typeof Depth];
+        }
+
         layer.depth = depth;
         this.layers[depth] = layer;
     }
 
-    removeLayer(depth: number) {
+    removeLayer(depth: number | keyof typeof Depth) {
+        if (typeof depth !== 'number') {
+            depth = Depth[depth as keyof typeof Depth];
+        }
         if (!depth) throw new Error('Cannot remove layer with depth=0.');
         delete this.layers[depth];
     }
 
-    getLayer(depth: number): LayerType | null {
+    getLayer(depth: number | keyof typeof Depth): LayerType | null {
+        if (typeof depth !== 'number') {
+            depth = Depth[depth as keyof typeof Depth];
+        }
         return this.layers[depth] || null;
     }
 
@@ -132,14 +148,8 @@ export class Map implements LightSystemSite, FOV.FovSite, MapType {
         const mixer = new Mixer();
         for (let x = 0; x < buffer.width; ++x) {
             for (let y = 0; y < buffer.height; ++y) {
-                const cell = this.cell(x, y);
                 this.getAppearanceAt(x, y, mixer);
-                const glyph =
-                    typeof mixer.ch === 'number'
-                        ? mixer.ch
-                        : buffer.toGlyph(mixer.ch);
-                buffer.draw(x, y, glyph, mixer.fg.toInt(), mixer.bg.toInt());
-                cell.needsRedraw = false;
+                buffer.drawSprite(x, y, mixer);
             }
         }
     }
@@ -204,8 +214,8 @@ export class Map implements LightSystemSite, FOV.FovSite, MapType {
     count(cb: MapTestFn): number {
         return this.cells.count((cell, x, y) => cb(cell, x, y, this));
     }
-    dump(fmt?: (cell: CellType) => string) {
-        this.cells.dump(fmt || ((c: Cell) => c.dump()));
+    dump(fmt?: (cell: CellType) => string, log = console.log) {
+        this.cells.dump(fmt || ((c: Cell) => c.dump()), log);
     }
 
     // flags
@@ -242,6 +252,15 @@ export class Map implements LightSystemSite, FOV.FovSite, MapType {
         }
     }
 
+    hasTile(
+        x: number,
+        y: number,
+        tile: string | number | Tile,
+        useMemory = false
+    ): boolean {
+        return this.cellInfo(x, y, useMemory).hasTile(tile);
+    }
+
     setTile(
         x: number,
         y: number,
@@ -262,13 +281,127 @@ export class Map implements LightSystemSite, FOV.FovSite, MapType {
         return layer.set(x, y, tile, opts);
     }
 
-    async update(dt: number): Promise<void> {
-        await Utils.asyncForEach(this.layers, (l) => l.update(dt));
+    async tick(dt: number): Promise<boolean> {
+        let didSomething = await this.fireAll('tick');
+        for (let layer of this.layers) {
+            if (layer && (await layer.tick(dt))) {
+                didSomething = true;
+            }
+        }
+
+        return didSomething;
     }
 
-    copy(_src: Map): void {}
+    copy(src: Map): void {
+        if (this.constructor !== src.constructor)
+            throw new Error('Maps must be same type to copy.');
+        if (this.width !== src.width || this.height !== src.height)
+            throw new Error('Maps must be same size to copy');
 
-    clone() {}
+        this.cells.forEach((c, x, y) => {
+            c.copy(src.cells[x][y]);
+        });
+
+        this.layers.forEach((l, depth) => {
+            l.copy(src.layers[depth]);
+        });
+
+        this.flags.map = src.flags.map;
+        this.light.setAmbient(src.light.getAmbient());
+    }
+
+    clone(): Map {
+        // @ts-ignore
+        const other: Map = new this.constructor(this.width, this.height);
+        other.copy(this);
+        return other;
+    }
+
+    async fire(
+        event: string,
+        x: number,
+        y: number,
+        ctx: Partial<Effect.EffectCtx>
+    ): Promise<boolean> {
+        const cell = this.cell(x, y);
+        return cell.activate(event, this, x, y, ctx);
+    }
+
+    async fireAll(
+        event: string,
+        ctx: Partial<Effect.EffectCtx> = {}
+    ): Promise<boolean> {
+        let didSomething = false;
+        const willFire = Grid.alloc(this.width, this.height);
+
+        // Figure out which tiles will fire - before we change everything...
+        this.cells.forEach((cell, x, y) => {
+            cell.clearCellFlag(
+                Flags.Cell.EVENT_FIRED_THIS_TURN | Flags.Cell.EVENT_PROTECTED
+            );
+            cell.eachTile((tile) => {
+                const ev = tile.effects[event];
+                if (!ev) return;
+
+                const effect = Effect.from(ev);
+                if (!effect) return;
+
+                let promoteChance = 0;
+
+                // < 0 means try to fire my neighbors...
+                if (effect.chance < 0) {
+                    promoteChance = 0;
+                    Utils.eachNeighbor(
+                        x,
+                        y,
+                        (i, j) => {
+                            const n = this.cell(i, j);
+                            if (
+                                !n.hasObjectFlag(
+                                    Flags.GameObject.L_BLOCKS_EFFECTS
+                                ) &&
+                                n.depthTile(tile.depth) !=
+                                    cell.depthTile(tile.depth) &&
+                                !n.hasCellFlag(Flags.Cell.CAUGHT_FIRE_THIS_TURN)
+                            ) {
+                                // TODO - Should this break from the loop after doing this once or keep going?
+                                promoteChance += -1 * effect.chance;
+                            }
+                        },
+                        true
+                    );
+                } else {
+                    promoteChance = effect.chance || 100 * 100; // 100%
+                }
+                if (
+                    !cell.hasCellFlag(Flags.Cell.CAUGHT_FIRE_THIS_TURN) &&
+                    random.chance(promoteChance, 10000)
+                ) {
+                    willFire[x][y] |= Fl(tile.depth);
+                    // cell.flags.cellMech |= Cell.MechFlags.EVENT_FIRED_THIS_TURN;
+                }
+            });
+        });
+
+        // Then activate them - so that we don't activate the next generation as part of the forEach
+        ctx.force = true;
+        await willFire.forEachAsync(async (w, x, y) => {
+            if (!w) return;
+            const cell = this.cell(x, y);
+            if (cell.hasCellFlag(Flags.Cell.EVENT_FIRED_THIS_TURN)) return;
+            for (let depth = 0; depth <= Flags.Depth.GAS; ++depth) {
+                if (w & Fl(depth)) {
+                    await cell.activate(event, this, x, y, {
+                        force: true,
+                        depth,
+                    });
+                }
+            }
+        });
+
+        Grid.free(willFire);
+        return didSomething;
+    }
 
     getAppearanceAt(x: number, y: number, dest: Mixer) {
         dest.blackOut();
@@ -277,6 +410,14 @@ export class Map implements LightSystemSite, FOV.FovSite, MapType {
 
         if (cell.needsRedraw && isVisible) {
             this.layers.forEach((layer) => layer.putAppearance(dest, x, y));
+
+            if (dest.dances) {
+                cell.setCellFlag(Flags.Cell.COLORS_DANCE);
+            } else {
+                cell.clearCellFlag(Flags.Cell.COLORS_DANCE);
+            }
+
+            dest.bake();
             this.memory[x][y].putSnapshot(dest);
             cell.needsRedraw = false;
         } else {
@@ -292,15 +433,8 @@ export class Map implements LightSystemSite, FOV.FovSite, MapType {
             dest.blackOut();
         }
 
-        dest.bake(!this.fov.isAnyKindOfVisible(x, y));
         if (cell.hasObjectFlag(Flags.GameObject.L_VISUALLY_DISTINCT)) {
             Color.separate(dest.fg, dest.bg);
-        }
-
-        if (dest.dances) {
-            cell.setCellFlag(Flags.Cell.COLORS_DANCE);
-        } else {
-            cell.clearCellFlag(Flags.Cell.COLORS_DANCE);
         }
     }
 
@@ -335,7 +469,7 @@ export class Map implements LightSystemSite, FOV.FovSite, MapType {
         // if (cell.item) {
         //     const theItem: GW.types.ItemType = cell.item;
         //     if (
-        //         theItem.hasLayerFlag(ObjectFlags.L_INTERRUPT_WHEN_SEEN)
+        //         theItem.hasObjectFlag(ObjectFlags.L_INTERRUPT_WHEN_SEEN)
         //     ) {
         //         GW.message.add(
         //             '§you§ §see§ ΩitemMessageColorΩ§item§∆.',

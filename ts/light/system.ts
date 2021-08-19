@@ -74,6 +74,9 @@ export class LightSystem implements LightSystemType, PaintSite {
         this.finishLightUpdate();
     }
 
+    getAmbient(): Color.LightValue {
+        return this.ambient;
+    }
     setAmbient(light: Color.LightValue | Color.Color) {
         if (light instanceof Color.Color) {
             light = light.toLight();

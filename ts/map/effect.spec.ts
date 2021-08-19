@@ -541,14 +541,14 @@ describe('tile effect', () => {
             expect(effect.flags & Effect.Flags.E_CLEAR_CELL).toBeTruthy();
             map.setTile(ctx.x, ctx.y, 'BRIDGE');
             const cell = map.cell(ctx.x, ctx.y);
-            expect(cell.depthTile(Depth.SURFACE).id).toEqual('BRIDGE');
-            expect(cell.depthTile(Depth.GROUND).id).toEqual('FLOOR');
+            expect(cell.depthTile(Depth.SURFACE)!.id).toEqual('BRIDGE');
+            expect(cell.depthTile(Depth.GROUND)!.id).toEqual('FLOOR');
 
             await expect(
                 Effect.fire(effect, map, ctx.x, ctx.y, ctx)
             ).resolves.toBeTruthy();
-            expect(cell.depthTile(Depth.GROUND).id).toEqual('FLOOR');
-            expect(cell.depthTile(Depth.SURFACE).id).toEqual('NULL');
+            expect(cell.depthTile(Depth.GROUND)!.id).toEqual('FLOOR');
+            expect(cell.depthTile(Depth.SURFACE)).toBeNull();
         });
 
         // test('Will add liquids with volume', async () => {

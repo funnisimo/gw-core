@@ -98,6 +98,7 @@ export interface LightSystemSite {
 export interface LightSystemType {
     update(force?: boolean): boolean; // didSomething
     setAmbient(light: LightValue | Color): void;
+    getAmbient(): LightValue;
 
     readonly changed: boolean;
 

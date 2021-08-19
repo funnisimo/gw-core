@@ -24,6 +24,7 @@ export class CellMemory implements CellInfoType {
     _tile: TILE.Tile = TILE.tiles.NULL;
     _item: Item | null = null;
     _actor: Actor | null = null;
+    _hasKey: boolean = false;
     snapshot: Mixer;
 
     constructor() {
@@ -43,6 +44,7 @@ export class CellMemory implements CellInfoType {
         this.blocks.move = false;
         this.blocks.pathing = false;
         this.blocks.vision = false;
+        this._hasKey = false;
     }
 
     store(cell: CellInfoType) {
@@ -66,6 +68,8 @@ export class CellMemory implements CellInfoType {
         this.blocks.move = cell.blocksMove();
         this.blocks.pathing = cell.blocksPathing();
         this.blocks.vision = cell.blocksVision();
+
+        this._hasKey = cell.hasKey();
     }
 
     getSnapshot(dest: Mixer) {
@@ -89,6 +93,9 @@ export class CellMemory implements CellInfoType {
     }
     hasAllObjectFlags(flags: number): boolean {
         return (this.flags.object & flags) == flags;
+    }
+    hasTileMechFlag(flag: number): boolean {
+        return !!(this.flags.tileMech & flag);
     }
 
     cellFlags(): number {
@@ -127,6 +134,9 @@ export class CellMemory implements CellInfoType {
     }
     isStairs(): boolean {
         return this.hasTileFlag(TileFlags.T_HAS_STAIRS);
+    }
+    hasKey(): boolean {
+        return this._hasKey;
     }
 
     get tile(): TILE.Tile {

@@ -38,7 +38,7 @@ describe('FOV System', () => {
 
             blocksVision: jest.fn().mockReturnValue(false),
 
-            cellRevealed: jest.fn(),
+            onCellRevealed: jest.fn(),
             redrawCell: jest.fn(),
             storeMemory: jest.fn(),
         };

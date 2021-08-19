@@ -31,6 +31,11 @@ export class Sprite implements SpriteData {
     clone() {
         return new Sprite(this.ch, this.fg, this.bg, this.opacity);
     }
+
+    toString() {
+        // prettier-ignore
+        return `{ ch: ${this.ch}, fg: ${this.fg.toString(true)}, bg: ${this.bg.toString(true)}, opacity: ${this.opacity} }`;
+    }
 }
 
 export const sprites: Record<string, Sprite> = {};

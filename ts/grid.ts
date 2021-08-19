@@ -310,8 +310,8 @@ export class Grid<T> extends Array<Array<T>> {
         return count;
     }
 
-    dump(fmtFn?: GridFormat<T>) {
-        this.dumpRect(0, 0, this.width, this.height, fmtFn);
+    dump(fmtFn?: GridFormat<T>, log = console.log) {
+        this.dumpRect(0, 0, this.width, this.height, fmtFn, log);
     }
 
     dumpRect(
@@ -319,7 +319,8 @@ export class Grid<T> extends Array<Array<T>> {
         top: number,
         width: number,
         height: number,
-        fmtFn?: GridFormat<T>
+        fmtFn?: GridFormat<T>,
+        log = console.log
     ) {
         let i, j;
 
@@ -344,11 +345,24 @@ export class Grid<T> extends Array<Array<T>> {
             }
             output.push(line);
         }
-        console.log(output.join('\n'));
+        log(output.join('\n'));
     }
 
-    dumpAround(x: number, y: number, radius: number) {
-        this.dumpRect(x - radius, y - radius, 2 * radius, 2 * radius);
+    dumpAround(
+        x: number,
+        y: number,
+        radius: number,
+        fmtFn?: GridFormat<T>,
+        log = console.log
+    ) {
+        this.dumpRect(
+            x - radius,
+            y - radius,
+            2 * radius,
+            2 * radius,
+            fmtFn,
+            log
+        );
     }
 
     // TODO - Use for(radius) loop to speed this up (do not look at each cell)

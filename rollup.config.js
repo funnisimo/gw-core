@@ -45,6 +45,6 @@ export default [
     {
         input: './js/index.d.ts',
         output: [{ file: 'dist/gw-utils.d.ts', format: 'es' }],
-        plugins: [nodeResolve(), dts()],
+        plugins: [dts()],
     },
 ];

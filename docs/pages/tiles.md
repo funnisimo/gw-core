@@ -23,7 +23,7 @@ All of these fields are optional. Tiles can be placed that have no visual elemen
 
 ```js
 GW.tile.install('GRASS', {
-    // layer: 'SURFACE',
+    depth: 'SURFACE',
     ch: '"',
     fg: 'green',
 });
@@ -34,7 +34,7 @@ const charToTile = {
     '#': 'WALL',
     '+': 'DOOR',
     '~': 'LAKE',
-    // '=': 'BRIDGE',
+    '=': 'BRIDGE',
 };
 
 const prefab = [
@@ -44,7 +44,7 @@ const prefab = [
     '#...#....#',
     '##+####+##',
     '#.."~~~".#',
-    '#...~~...#',
+    '#...==...#',
     '#."~~~"..#',
     '#.."~~~".#',
     '##########',
@@ -79,13 +79,13 @@ If you mouse over the map you will see how the tree affects visibility.
 
 ```js
 GW.tile.install('GRASS', {
-    // layer: 'SURFACE',
+    depth: 'SURFACE',
     ch: '"',
     fg: 'green',
 });
 
 GW.tile.install('TREE', {
-    // layer: 'SURFACE',
+    depth: 'SURFACE',
     ch: 'T',
     fg: 'green',
     flags: 'L_BLOCKS_MOVE, L_BLOCKS_VISION',
@@ -98,7 +98,7 @@ const charToTile = {
     '#': 'WALL',
     '+': 'DOOR',
     '~': 'LAKE',
-    // '=': 'BRIDGE',
+    '=': 'BRIDGE',
 };
 
 const prefab = [
@@ -108,7 +108,7 @@ const prefab = [
     '#...TT"..#',
     '#.TT~~..##',
     '#.."~~~".#',
-    '#...~~...#',
+    '#...==...#',
     '#."~~~"..#',
     '#.."~~~".#',
     '##########',

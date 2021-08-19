@@ -225,7 +225,7 @@ export function make(options: Partial<TileOptions>) {
         priority: options.priority ?? base.priority,
         depth: depth,
         light,
-        groundTile: null,
+        groundTile: options.groundTile || null,
 
         ch: options.ch ?? base.sprite.ch,
         fg: options.fg ?? base.sprite.fg,

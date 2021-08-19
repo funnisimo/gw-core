@@ -86,7 +86,7 @@ export class FovSystem implements TYPES.FovSystemType {
     }
 
     revealAll(): void {
-        this.flags.update((v) => v | FovFlags.REVEALED);
+        this.flags.update((v) => v | FovFlags.REVEALED | FovFlags.VISIBLE);
     }
     revealCell(x: number, y: number) {
         const flag = FovFlags.REVEALED;
