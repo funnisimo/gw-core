@@ -19,3 +19,16 @@ export interface SpriteData {
 }
 
 export type EachCb<T> = (t: T) => any;
+
+export type RandomFunction = () => number;
+export type SeedFunction = (seed?: number) => RandomFunction;
+
+export interface RandomConfig {
+    make: SeedFunction;
+}
+
+export type WeightedArray = number[];
+
+export interface WeightedObject {
+    [key: string]: number;
+}

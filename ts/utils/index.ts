@@ -4,8 +4,9 @@
  */
 
 import { Loc, XY } from '../types';
+import { Random, Alea } from '../random';
 
-export { Loc, XY };
+export { Loc, XY, Random, Alea };
 
 export * from './chain';
 

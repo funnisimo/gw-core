@@ -15,7 +15,7 @@ export * as text from './text';
 export * as types from './types';
 export * as message from './message';
 export * as effect from './effect';
-export { cosmetic, random, Random } from './random';
+export { cosmetic, random } from './random';
 export { colors } from './color';
 export { sprites } from './sprite';
 export * from './gw';

@@ -124,16 +124,68 @@ interface SpriteData$1 {
     readonly opacity?: number;
 }
 declare type EachCb$1<T> = (t: T) => any;
+declare type RandomFunction = () => number;
+declare type SeedFunction = (seed?: number) => RandomFunction;
+interface RandomConfig {
+    make: SeedFunction;
+}
+declare type WeightedArray = number[];
+interface WeightedObject {
+    [key: string]: number;
+}
 
 type types_d_XY = XY;
+type types_d_RandomFunction = RandomFunction;
+type types_d_SeedFunction = SeedFunction;
+type types_d_RandomConfig = RandomConfig;
+type types_d_WeightedArray = WeightedArray;
+type types_d_WeightedObject = WeightedObject;
 declare namespace types_d {
   export {
     Loc$1 as Loc,
     types_d_XY as XY,
     SpriteData$1 as SpriteData,
     EachCb$1 as EachCb,
+    types_d_RandomFunction as RandomFunction,
+    types_d_SeedFunction as SeedFunction,
+    types_d_RandomConfig as RandomConfig,
+    types_d_WeightedArray as WeightedArray,
+    types_d_WeightedObject as WeightedObject,
   };
 }
+
+/**
+ * The code in this function is extracted from ROT.JS.
+ * Source: https://github.com/ondras/rot.js/blob/v2.2.0/src/rng.ts
+ * Copyright (c) 2012-now(), Ondrej Zara
+ * All rights reserved.
+ * License: BSD 3-Clause "New" or "Revised" License
+ * See: https://github.com/ondras/rot.js/blob/v2.2.0/license.txt
+ */
+declare function Alea(seed?: number): RandomFunction;
+declare class Random {
+    private _fn;
+    constructor();
+    configure(config?: Partial<RandomConfig>): void;
+    seed(val?: number): void;
+    value(): number;
+    float(): number;
+    number(max?: number): number;
+    int(max?: number): number;
+    range(lo: number, hi: number): number;
+    dice(count: number, sides: number, addend?: number): number;
+    weighted(weights: WeightedArray | WeightedObject): string | number;
+    item(list: any[]): any;
+    key(obj: object): any;
+    shuffle(list: any[], fromIndex?: number, toIndex?: number): any[];
+    sequence(n: number): any[];
+    chance(percent: number, outOf?: number): boolean;
+    clumped(lo: number, hi: number, clumps: number): number;
+    matchingLoc(width: number, height: number, matchFn: XYMatchFunc): Loc$1;
+    matchingLocNear(x: number, y: number, matchFn: XYMatchFunc): Loc$1;
+}
+declare const random: Random;
+declare const cosmetic: Random;
 
 interface Chainable<T> {
     next: T | null;
@@ -262,6 +314,9 @@ declare function arcCount(x: number, y: number, testFn: XYMatchFunc): number;
 declare function asyncForEach<T>(iterable: Iterable<T>, fn: (t: T) => Promise<any> | any): Promise<void>;
 
 type index_d$b_XY = XY;
+type index_d$b_Random = Random;
+declare const index_d$b_Random: typeof Random;
+declare const index_d$b_Alea: typeof Alea;
 declare const index_d$b_DIRS: typeof DIRS;
 declare const index_d$b_NO_DIRECTION: typeof NO_DIRECTION;
 declare const index_d$b_UP: typeof UP;
@@ -349,6 +404,8 @@ declare namespace index_d$b {
   export {
     Loc$1 as Loc,
     index_d$b_XY as XY,
+    index_d$b_Random as Random,
+    index_d$b_Alea as Alea,
     index_d$b_DIRS as DIRS,
     index_d$b_NO_DIRECTION as NO_DIRECTION,
     index_d$b_UP as UP,
@@ -432,33 +489,6 @@ declare namespace index_d$b {
     index_d$b_Chain as Chain,
   };
 }
-
-declare type WeightedArray = number[];
-interface WeightedObject {
-    [key: string]: number;
-}
-declare class Random {
-    private _fn;
-    constructor();
-    seed(val: number): void;
-    value(): number;
-    float(): number;
-    number(max?: number): number;
-    int(max?: number): number;
-    range(lo: number, hi: number): number;
-    dice(count: number, sides: number, addend?: number): number;
-    weighted(weights: WeightedArray | WeightedObject): string | number;
-    item(list: any[]): any;
-    key(obj: object): any;
-    shuffle(list: any[], fromIndex?: number, toIndex?: number): any[];
-    sequence(n: number): any[];
-    chance(percent: number, outOf?: number): boolean;
-    clumped(lo: number, hi: number, clumps: number): number;
-    matchingLoc(width: number, height: number, matchFn: XYMatchFunc): Loc$1;
-    matchingLocNear(x: number, y: number, matchFn: XYMatchFunc): Loc$1;
-}
-declare const random: Random;
-declare const cosmetic: Random;
 
 declare type RangeBase = Range | string | number[] | number;
 declare class Range {
@@ -2811,4 +2841,4 @@ declare namespace index_d {
   };
 }
 
-export { Random, index_d$4 as actor, blob_d as blob, index_d$9 as canvas, index_d$c as color, colors, config, cosmetic, data, index_d$1 as effect, events_d as events, flag_d as flag, index_d$a as fov, frequency_d as frequency, index_d$5 as gameObject, grid_d as grid, io_d as io, index_d$3 as item, index_d$6 as light, loop, index_d as map, message_d as message, path_d as path, random, range_d as range, scheduler_d as scheduler, index_d$8 as sprite, sprites, index_d$7 as text, index_d$2 as tile, types_d as types, index_d$b as utils };
+export { index_d$4 as actor, blob_d as blob, index_d$9 as canvas, index_d$c as color, colors, config, cosmetic, data, index_d$1 as effect, events_d as events, flag_d as flag, index_d$a as fov, frequency_d as frequency, index_d$5 as gameObject, grid_d as grid, io_d as io, index_d$3 as item, index_d$6 as light, loop, index_d as map, message_d as message, path_d as path, random, range_d as range, scheduler_d as scheduler, index_d$8 as sprite, sprites, index_d$7 as text, index_d$2 as tile, types_d as types, index_d$b as utils };

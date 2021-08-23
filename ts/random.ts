@@ -1,32 +1,74 @@
 import * as Utils from './utils';
-import * as ROT from 'rot-js';
+import {
+    RandomFunction,
+    WeightedArray,
+    RandomConfig,
+    WeightedObject,
+} from './types';
 
-export type RandomFunction = () => number;
-export type SeedFunction = (seed?: number) => RandomFunction;
+/**
+ * The code in this function is extracted from ROT.JS.
+ * Source: https://github.com/ondras/rot.js/blob/v2.2.0/src/rng.ts
+ * Copyright (c) 2012-now(), Ondrej Zara
+ * All rights reserved.
+ * License: BSD 3-Clause "New" or "Revised" License
+ * See: https://github.com/ondras/rot.js/blob/v2.2.0/license.txt
+ */
+export function Alea(seed?: number): RandomFunction {
+    /**
+     * This code is an implementation of Alea algorithm; (C) 2010 Johannes Baagøe.
+     * Alea is licensed according to the http://en.wikipedia.org/wiki/MIT_License.
+     */
 
-export interface RandomConfig {
-    make: SeedFunction;
+    const FRAC = 2.3283064365386963e-10; /* 2^-32 */
+
+    // let _seed = 0;
+    let _s0 = 0;
+    let _s1 = 0;
+    let _s2 = 0;
+    let _c = 0;
+
+    /**
+     * Seed the number generator
+     */
+    if (seed) {
+        seed = seed < 1 ? 1 / seed : seed;
+
+        // _seed = seed;
+        _s0 = (seed >>> 0) * FRAC;
+
+        seed = (seed * 69069 + 1) >>> 0;
+        _s1 = seed * FRAC;
+
+        seed = (seed * 69069 + 1) >>> 0;
+        _s2 = seed * FRAC;
+
+        _c = 1;
+    }
+
+    /**
+     * @returns Pseudorandom value [0,1), uniformly distributed
+     */
+    return () => {
+        let t = 2091639 * _s0 + _c * FRAC;
+        _s0 = _s1;
+        _s1 = _s2;
+        _c = t | 0;
+        _s2 = t - _c;
+        return _s2;
+    };
 }
 
 const RANDOM_CONFIG: RandomConfig = {
-    make: (seed?: number) => {
-        let rng = ROT.RNG.clone();
-        if (seed) {
-            rng.setSeed(seed);
-        }
-        return rng.getUniform.bind(rng);
-    },
+    make: Alea,
+    // make: (seed?: number) => {
+    //     let rng = ROT.RNG.clone();
+    //     if (seed) {
+    //         rng.setSeed(seed);
+    //     }
+    //     return rng.getUniform.bind(rng);
+    // },
 };
-
-export function configure(config: Partial<RandomConfig> = {}) {
-    if (config.make) {
-        RANDOM_CONFIG.make = config.make;
-        random.seed();
-        cosmetic.seed();
-    }
-}
-
-export type WeightedArray = number[];
 
 function lotteryDrawArray(rand: Random, frequencies: WeightedArray) {
     let i, maxFreq, randIndex;
@@ -55,10 +97,6 @@ function lotteryDrawArray(rand: Random, frequencies: WeightedArray) {
     return 0;
 }
 
-export interface WeightedObject {
-    [key: string]: number;
-}
-
 function lotteryDrawObject(rand: Random, weights: WeightedObject) {
     const entries = Object.entries(weights);
     const frequencies = entries.map(([_, weight]) => weight);
@@ -85,6 +123,14 @@ export class Random {
 
     constructor() {
         this._fn = RANDOM_CONFIG.make();
+    }
+
+    configure(config: Partial<RandomConfig> = {}) {
+        if (config.make) {
+            RANDOM_CONFIG.make = config.make;
+            random.seed();
+            cosmetic.seed();
+        }
     }
 
     seed(val?: number) {

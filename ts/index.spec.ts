@@ -21,7 +21,8 @@ describe('GW', () => {
         expect(GW.message).toBeDefined();
         expect(GW.random).toBeDefined();
         expect(GW.cosmetic).toBeDefined();
-        expect(GW.Random).toBeDefined();
+        expect(GW.utils.Random).toBeDefined();
+        expect(GW.utils.Alea).toBeDefined();
         expect(GW.data).toBeObject();
         expect(GW.config).toBeObject();
         expect(GW.colors).toBeObject();
