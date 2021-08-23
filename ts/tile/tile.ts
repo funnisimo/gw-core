@@ -160,7 +160,7 @@ export interface TileOptions extends Sprite.SpriteConfig {
     article: string;
 
     flags: Flag.FlagBase;
-    priority: number;
+    priority: number | string;
     dissipate: number;
     depth: Depth | DepthString;
 
@@ -171,11 +171,25 @@ export interface TileOptions extends Sprite.SpriteConfig {
 }
 
 export function make(options: Partial<TileOptions>) {
-    let base = { effects: {}, flags: {}, sprite: {} } as Tile;
+    let base = { effects: {}, flags: {}, sprite: {}, priority: 50 } as Tile;
     if (options.extends) {
         base = tiles[options.extends];
         if (!base)
             throw new Error('Failed to find base tile: ' + options.extends);
+    }
+
+    let priority: number = -1;
+    if (typeof options.priority === 'string') {
+        if (
+            options.priority.startsWith('+') ||
+            options.priority.startsWith('-')
+        ) {
+            priority = base.priority + Number.parseInt(options.priority);
+        } else {
+            priority = Number.parseInt(options.priority);
+        }
+    } else if (options.priority !== undefined) {
+        priority = options.priority;
     }
 
     const effects: Record<string, Effect.EffectInfo | string> = {};
@@ -222,7 +236,7 @@ export function make(options: Partial<TileOptions>) {
         flags,
         dissipate: options.dissipate ?? base.dissipate,
         effects,
-        priority: options.priority ?? base.priority,
+        priority: priority != -1 ? priority : undefined,
         depth: depth,
         light,
         groundTile: options.groundTile || null,

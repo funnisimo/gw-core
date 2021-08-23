@@ -4,7 +4,7 @@ import { EffectInfo, EffectBase } from './types';
 import { EffectHandler } from './handler';
 import { Effect as Flags } from './flags';
 
-import { effectTypes, effects } from './effect';
+import { handlers, effects } from './effect';
 
 export function make(opts: EffectBase): EffectInfo {
     if (!opts) throw new Error('opts required to make effect.');
@@ -34,9 +34,7 @@ export function make(opts: EffectBase): EffectInfo {
     }
 
     // and all the handlers
-    Object.values(effectTypes).forEach((v: EffectHandler) =>
-        v.make(opts, info)
-    );
+    Object.values(handlers).forEach((v: EffectHandler) => v.make(opts, info));
 
     return info;
 }

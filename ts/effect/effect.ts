@@ -28,8 +28,8 @@ export function installAll(effects: Record<string, Partial<EffectConfig>>) {
     });
 }
 
-export const effectTypes: Record<string, EffectHandler> = {};
+export const handlers: Record<string, EffectHandler> = {};
 
-export function installType(id: string, effectType: EffectHandler) {
-    effectTypes[id] = effectType;
+export function installHandler(id: string, handler: EffectHandler) {
+    handlers[id] = handler;
 }

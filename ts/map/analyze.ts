@@ -85,9 +85,10 @@ export function updateChokepoints(map: MapType, updateCounts: boolean) {
         for (let i = 0; i < map.width; i++) {
             for (let j = 0; j < map.height; j++) {
                 map.cell(i, j).chokeCount = 30000;
-                if (map.cell(i, j).flags.cell & CellFlags.IS_IN_ROOM_MACHINE) {
-                    passMap[i][j] = 0;
-                }
+                // Not sure why this was done in Brogue
+                // if (map.cell(i, j).flags.cell & CellFlags.IS_IN_ROOM_MACHINE) {
+                //     passMap[i][j] = 0;
+                // }
             }
         }
 

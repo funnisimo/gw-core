@@ -45,4 +45,4 @@ export class EmitEffect implements EffectHandler {
     }
 }
 
-EFFECT.installType('emit', new EmitEffect());
+EFFECT.installHandler('emit', new EmitEffect());

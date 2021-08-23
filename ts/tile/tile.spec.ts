@@ -2,6 +2,7 @@ import 'jest-extended';
 import * as Tile from './index';
 import { colors as COLORS } from '../color';
 import { GameObject as ObjectFlags, Depth } from '../gameObject/flags';
+import * as Map from '../map';
 
 const NONE = COLORS.NONE;
 
@@ -311,89 +312,131 @@ describe('Tile', () => {
             )
         ).toBeFalsy();
     });
+
+    test('PORTCULLIS', async () => {
+        // Portcullis (closed, dormant)
+        // [WALL_CHAR,		gray,					floorBackColor,		10,	0,	DF_PLAIN_FIRE,	0,			DF_OPEN_PORTCULLIS,	0,			NO_LIGHT,		(T_OBSTRUCTS_PASSABILITY | T_OBSTRUCTS_ITEMS), (TM_STAND_IN_TILE | TM_VANISHES_UPON_PROMOTION | TM_IS_WIRED | TM_LIST_IN_SIDEBAR | TM_VISUALLY_DISTINCT | TM_CONNECTS_LEVEL), "a heavy portcullis",	"The iron bars rattle but will not budge; they are firmly locked in place."],
+        // [FLOOR_CHAR,	floorForeColor,		floorBackColor,		95,	0,	DF_PLAIN_FIRE,	0,			DF_ACTIVATE_PORTCULLIS,0,		NO_LIGHT,		(0), (TM_VANISHES_UPON_PROMOTION | TM_IS_WIRED),                                                    "the ground",			""],
+
+        // Effects - Portcullis (activate, open)
+        // [PORTCULLIS_CLOSED,			DUNGEON,	0,		0,		DFF_EVACUATE_CREATURES_FIRST,	"with a heavy mechanical sound, an iron portcullis falls from the ceiling!", GENERIC_FLASH_LIGHT],
+        // [PORTCULLIS_DORMANT,		DUNGEON,	0,		0,		0,  "the portcullis slowly rises from the ground into a slot in the ceiling.", GENERIC_FLASH_LIGHT],
+
+        const portcullis = Tile.install('PORTCULLIS_CLOSED', {
+            extends: 'WALL',
+            priority: '+1',
+            fg: 0x800,
+            bg: Tile.tiles.FLOOR.sprite.bg,
+            flavor: 'a heavy portcullis',
+            description:
+                'The iron bars rattle but will not budge; they are firmly locked in place.',
+            flags:
+                '!L_BLOCKS_VISION, !L_BLOCKS_GAS, L_LIST_IN_SIDEBAR, L_VISUALLY_DISTINCT, T_CONNECTS_LEVEL',
+            effects: {
+                machine: {
+                    tile: 'PORTCULLIS_DORMANT',
+                    message:
+                        'the portcullis slowly rises from the ground into a slot in the ceiling.',
+                    flash: true,
+                    flags: 'E_SUPERPRIORITY',
+                },
+            },
+        });
+        expect(portcullis.blocksVision()).toBeFalsy();
+        expect(portcullis.blocksMove()).toBeTruthy();
+        expect(portcullis.priority).toEqual(Tile.tiles.WALL.priority + 1);
+
+        const portcullisOpen = Tile.install('PORTCULLIS_DORMANT', {
+            extends: 'FLOOR',
+            priority: '+1',
+            effects: {
+                machine: {
+                    tile: 'PORTCULLIS_CLOSED',
+                    message:
+                        'with a heavy mechanical sound, an iron portcullis falls from the ceiling!',
+                    flash: true,
+                    flags: 'E_EVACUATE_CREATURES_FIRST',
+                },
+            },
+        });
+        expect(portcullisOpen.blocksVision()).toBeFalsy();
+        expect(portcullisOpen.blocksMove()).toBeFalsy();
+        expect(portcullisOpen.priority).toEqual(Tile.tiles.FLOOR.priority + 1);
+
+        const map = Map.make(10, 10, { tile: 'FLOOR', boundary: 'WALL' });
+        expect(map.cellInfo(5, 5).blocksMove()).toBeFalsy();
+        map.setTile(5, 5, 'PORTCULLIS_CLOSED');
+        expect(map.hasTile(5, 5, 'PORTCULLIS_CLOSED')).toBeTruthy();
+        expect(map.cellInfo(5, 5).blocksMove()).toBeTruthy();
+        expect(map.cellInfo(5, 5).blocksVision()).toBeFalsy();
+
+        await map.fire('machine', 5, 5);
+        expect(map.hasTile(5, 5, 'PORTCULLIS_DORMANT')).toBeTruthy();
+        expect(map.cellInfo(5, 5).blocksMove()).toBeFalsy();
+        expect(map.cellInfo(5, 5).blocksVision()).toBeFalsy();
+
+        await map.fire('machine', 5, 5);
+        expect(map.hasTile(5, 5, 'PORTCULLIS_CLOSED')).toBeTruthy();
+        expect(map.cellInfo(5, 5).blocksMove()).toBeTruthy();
+        expect(map.cellInfo(5, 5).blocksVision()).toBeFalsy();
+    });
+
+    test('WALL_LEVER', async () => {
+        // Wall Lever - (lever, pulled)
+        // [LEVER_CHAR,	wallForeColor,			wallBackColor,			0,	0,	DF_PLAIN_FIRE,	0,			DF_PULL_LEVER,  0,				NO_LIGHT,		(T_OBSTRUCTS_EVERYTHING), (TM_STAND_IN_TILE | TM_VANISHES_UPON_PROMOTION | TM_IS_WIRED | TM_PROMOTES_ON_PLAYER_ENTRY | TM_LIST_IN_SIDEBAR | TM_VISUALLY_DISTINCT | TM_INVERT_WHEN_HIGHLIGHTED),"a lever", "The lever moves."],
+        // [LEVER_PULLED_CHAR,wallForeColor,		wallBackColor,			0,	0,	DF_PLAIN_FIRE,	0,			0,				0,				NO_LIGHT,		(T_OBSTRUCTS_EVERYTHING), (TM_STAND_IN_TILE),                                                       "an inactive lever",    "The lever won't budge."],
+        // Effects - pull lever
+        // [WALL_LEVER_PULLED,         DUNGEON,    0,      0,      0],
+
+        const lever = Tile.install('WALL_LEVER', {
+            extends: 'WALL',
+            priority: '+1',
+            ch: '\\',
+            fg: 0x800,
+            flavor: 'a lever',
+            description: 'The lever moves.',
+            flags: 'L_LIST_IN_SIDEBAR, L_VISUALLY_DISTINCT, T_CONNECTS_LEVEL',
+            effects: {
+                playerEnter: {
+                    tile: 'WALL_LEVER_PULLED',
+                    activateMachine: true,
+                    message: 'the lever moves.',
+                },
+            },
+        });
+        expect(lever.blocksVision()).toBeTruthy();
+        expect(lever.blocksMove()).toBeTruthy();
+        expect(lever.priority).toEqual(Tile.tiles.WALL.priority + 1);
+
+        const leverPulled = Tile.install('WALL_LEVER_PULLED', {
+            extends: 'WALL',
+            priority: '+1',
+            ch: '/',
+            fg: 0x800,
+            flavor: 'an inactive lever',
+            description: "The lever won't budge.",
+        });
+        expect(leverPulled.blocksVision()).toBeTruthy();
+        expect(leverPulled.blocksMove()).toBeTruthy();
+        expect(leverPulled.priority).toEqual(Tile.tiles.WALL.priority + 1);
+
+        const map = Map.make(10, 10, { tile: 'FLOOR', boundary: 'WALL' });
+        const cell = map.cell(5, 5);
+        expect(cell.blocksMove()).toBeFalsy();
+        map.setTile(5, 5, 'WALL_LEVER', { machine: 4 });
+        expect(map.hasTile(5, 5, 'WALL_LEVER')).toBeTruthy();
+        expect(cell.machineId).toEqual(4);
+
+        jest.spyOn(map, 'activateMachine');
+
+        await map.fire('playerEnter', 5, 5);
+        expect(map.hasTile(5, 5, 'WALL_LEVER_PULLED')).toBeTruthy();
+
+        expect(map.activateMachine).toHaveBeenCalledWith(
+            4,
+            5,
+            5,
+            expect.anything()
+        );
+    });
 });
-
-// describe('tiles', () => {
-
-//   let map;
-//   let grid;
-//   let feat;
-//   let ctx;
-
-//   beforeEach( () => {
-//     map = GW.make.map(20, 20, { tile: 'FLOOR', boundary: 'WALL' });
-//     ctx = { map, x: 10, y: 10 };
-//     grid = null;
-//   });
-
-//   afterEach( () => {
-//     if (grid) GW.grid.free(grid);
-//     grid = null;
-//   });
-
-//   describe('BRIDGE', () => {
-//     test('has see through bg', () => {
-//       const tile = Tile.tiles.BRIDGE;
-//       expect(tile.sprite.bg).toBeUndefined();
-//     });
-//   });
-
-//   describe('DOOR', () => {
-
-//     test('can do doors (open/close)', async () => {
-//       map.setTile(10, 10, 'DOOR');
-//       const cell = map.cell(10, 10);
-
-//       expect(Tile.tiles.DOOR.events.enter).toBeDefined();
-//       expect(Tile.tiles.DOOR.events.open).toBeDefined();
-
-//       expect(Tile.tiles.DOOR_OPEN.events.tick).toBeDefined();
-//       expect(Tile.tiles.DOOR_OPEN.events.enter).not.toBeDefined();
-//       expect(Tile.tiles.DOOR_OPEN.events.open).not.toBeDefined();
-
-//       expect(cell.ground).toEqual('DOOR');
-//       await cell.fireEvent('enter', ctx);
-//       expect(cell.ground).toEqual('DOOR_OPEN');
-
-//       cell.clearFlags(0, GW.flags.cellMech.EVENT_FIRED_THIS_TURN);
-//       await cell.fireEvent('tick', ctx);
-//       expect(cell.ground).toEqual('DOOR');
-
-//       const kind = new GW.types.ItemKind({ name: 'Thing' });
-//       const item = GW.make.item(kind);
-
-//       cell.clearFlags(0, GW.flags.cellMech.EVENT_FIRED_THIS_TURN);
-//       await cell.fireEvent('enter', ctx);
-//       expect(cell.ground).toEqual('DOOR_OPEN');
-
-//       // drop item to block door
-//       map.addItem(10, 10, item);
-//       expect(cell.item).toBe(item);
-
-//       cell.clearFlags(0, GW.flags.cellMech.EVENT_FIRED_THIS_TURN);
-//       await cell.fireEvent('tick', ctx);
-//       expect(cell.ground).toEqual('DOOR_OPEN');
-
-//       map.removeItem(item);
-//       expect(cell.item).toBeNull();
-
-//       cell.clearFlags(0, GW.flags.cellMech.EVENT_FIRED_THIS_TURN);
-//       await cell.fireEvent('tick', ctx);
-//       expect(cell.ground).toEqual('DOOR');
-
-//       cell.clearFlags(0, GW.flags.cellMech.EVENT_FIRED_THIS_TURN);
-//       await cell.fireEvent('enter', ctx);
-//       expect(cell.ground).toEqual('DOOR_OPEN');
-
-//       const player = GW.make.player({ name: 'player' });
-//       map.addActor(10, 10, player);
-//       expect(cell.actor).toBe(player);
-
-//       cell.clearFlags(0, GW.flags.cellMech.EVENT_FIRED_THIS_TURN);
-//       await cell.fireEvent('tick', ctx);
-//       expect(cell.ground).toEqual('DOOR_OPEN');
-
-//     });
-
-//   });
-// });

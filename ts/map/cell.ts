@@ -81,6 +81,7 @@ export class Cell implements CellType {
     flags: CellFlags;
     chokeCount = 0;
     tiles: TileArray;
+    machineId = 0;
     // gasVolume: number = 0;
     // liquidVolume: number = 0;
     _actor: Actor | null = null;
@@ -200,9 +201,9 @@ export class Cell implements CellType {
         return !!t && t !== TILE.tiles.NULL;
     }
     highestPriorityTile(): TILE.Tile {
-        return this.tiles.reduce((out, tile) => {
+        return this.tiles.reduce((out: TILE.Tile, tile: TILE.Tile | null) => {
             if (!tile) return out;
-            if (tile.priority >= out!.priority) return tile; // higher depth will get picked with >=
+            if (tile.priority >= out.priority) return tile; // higher depth will get picked with >=
             return out;
         }, TILE.tiles.NULL)!;
     }
@@ -314,6 +315,10 @@ export class Cell implements CellType {
     clear() {
         this.tiles = [TILE.tiles.NULL];
         this.needsRedraw = true;
+        this.flags.cell = 0;
+        this.chokeCount = 0;
+        this._actor = null;
+        this._item = null;
     }
     clearDepth(depth: Depth): boolean {
         if (depth == 0) {
@@ -380,6 +385,39 @@ export class Cell implements CellType {
         return didSomething;
     }
 
+    activateSync(
+        event: string,
+        map: MapType,
+        x: number,
+        y: number,
+        ctx: Partial<Effect.EffectCtx> = {}
+    ): boolean {
+        ctx.cell = this;
+        let didSomething = false;
+
+        if (ctx.depth !== undefined) {
+            const tile = (ctx.tile = this.depthTile(ctx.depth));
+            if (tile && tile.effects) {
+                const ev = tile.effects[event];
+                didSomething = this._fireSync(ev, map, x, y, ctx);
+            }
+        } else {
+            // console.log('fire event - %s', event);
+            for (ctx.tile of this.tiles) {
+                if (!ctx.tile || !ctx.tile.effects) continue;
+                const ev = ctx.tile.effects[event];
+                // console.log(' - ', ev);
+
+                if (this._fireSync(ev, map, x, y, ctx)) {
+                    didSomething = true;
+                    break;
+                }
+                // }
+            }
+        }
+        return didSomething;
+    }
+
     async _fire(
         effect: string | Effect.EffectInfo,
         map: MapType,
@@ -394,6 +432,25 @@ export class Cell implements CellType {
         if (effect) {
             // console.log(' - spawn event @%d,%d - %s', x, y, name);
             didSomething = await Effect.fire(effect, map, x, y, ctx);
+            // cell.debug(" - spawned");
+        }
+        return didSomething;
+    }
+
+    _fireSync(
+        effect: string | Effect.EffectInfo,
+        map: MapType,
+        x: number,
+        y: number,
+        ctx: Partial<Effect.EffectCtx>
+    ): boolean {
+        if (typeof effect === 'string') {
+            effect = Effect.effects[effect];
+        }
+        let didSomething = false;
+        if (effect) {
+            // console.log(' - spawn event @%d,%d - %s', x, y, name);
+            didSomething = Effect.fireSync(effect, map, x, y, ctx);
             // cell.debug(" - spawned");
         }
         return didSomething;

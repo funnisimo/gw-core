@@ -167,9 +167,7 @@ describe('Cell', () => {
     test('objectFlags', () => {
         const cell: Cell = new Cell('WALL');
 
-        expect(cell.objectFlags()).toEqual(
-            Flags.GameObject.L_BLOCKS_EVERYTHING
-        );
+        expect(cell.objectFlags()).toEqual(Flags.GameObject.L_WALL_FLAGS);
     });
 
     test('tileFlags', () => {

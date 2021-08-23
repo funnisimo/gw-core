@@ -468,6 +468,7 @@ declare class Range {
     private _rng;
     constructor(lower: number, upper?: number, clumps?: number, rng?: Random);
     value(): number;
+    contains(value: number): boolean;
     copy(other: Range): this;
     toString(): string;
 }
@@ -598,6 +599,12 @@ declare class Grid<T> extends Array<Array<T>> {
     matchingLocNear(x: number, y: number, v: T | GridMatch<T>): Loc;
     arcCount(x: number, y: number, testFn: GridMatch<T>): number;
 }
+declare const stats: {
+    active: number;
+    alloc: number;
+    create: number;
+    free: number;
+};
 declare class NumGrid extends Grid<number> {
     x?: number;
     y?: number;
@@ -634,6 +641,7 @@ type grid_d_GridMatch<_0> = GridMatch<_0>;
 type grid_d_GridFormat<_0> = GridFormat<_0>;
 type grid_d_Grid<_0> = Grid<_0>;
 declare const grid_d_Grid: typeof Grid;
+declare const grid_d_stats: typeof stats;
 type grid_d_NumGrid = NumGrid;
 declare const grid_d_NumGrid: typeof NumGrid;
 declare const grid_d_alloc: typeof alloc;
@@ -653,6 +661,7 @@ declare namespace grid_d {
     grid_d_GridMatch as GridMatch,
     grid_d_GridFormat as GridFormat,
     grid_d_Grid as Grid,
+    grid_d_stats as stats,
     grid_d_NumGrid as NumGrid,
     grid_d_alloc as alloc,
     grid_d_free as free,
@@ -1900,7 +1909,7 @@ interface TileOptions extends SpriteConfig {
     flavor: string;
     article: string;
     flags: FlagBase;
-    priority: number;
+    priority: number | string;
     dissipate: number;
     depth: Depth | DepthString;
     effects: Record<string, Partial<EffectConfig> | string | null>;
@@ -1960,10 +1969,12 @@ interface SetOptions {
     blockedByActors: boolean;
     blockedByItems: boolean;
     volume: number;
+    machine: number;
 }
 declare type SetTileOptions = Partial<SetOptions>;
 interface CellInfoType {
     chokeCount: number;
+    machineId: number;
     hasCellFlag(flag: number): boolean;
     hasTileFlag(flag: number): boolean;
     hasAllTileFlags(flags: number): boolean;
@@ -1996,7 +2007,6 @@ interface CellInfoType {
 }
 interface CellType extends CellInfoType {
     flags: CellFlags;
-    chokeCount: number;
     setCellFlag(flag: number): void;
     clearCellFlag(flag: number): void;
     depthPriority(depth: number): number;
@@ -2015,6 +2025,7 @@ interface CellType extends CellInfoType {
     isWall(): boolean;
     eachGlowLight(cb: (light: LightType) => any): void;
     activate(event: string, map: MapType, x: number, y: number, ctx?: Partial<EffectCtx>): Promise<boolean> | boolean;
+    activateSync(event: string, map: MapType, x: number, y: number, ctx?: Partial<EffectCtx>): boolean;
     hasEffect(name: string): boolean;
     needsRedraw: boolean;
 }
@@ -2052,6 +2063,12 @@ interface MapType {
     hasTile(x: number, y: number, tile: string | number | Tile): boolean;
     setTile(x: number, y: number, tile: string | number | Tile, opts?: SetTileOptions): boolean;
     tick(dt: number): Promise<boolean>;
+    fire(event: string, x: number, y: number, ctx?: Partial<EffectCtx>): Promise<boolean>;
+    fireSync(event: string, x: number, y: number, ctx?: Partial<EffectCtx>): boolean;
+    fireAll(event: string, ctx?: Partial<EffectCtx>): Promise<boolean>;
+    fireAllSync(event: string, ctx?: Partial<EffectCtx>): boolean;
+    activateMachine(machineId: number, originX: number, originY: number, ctx?: Partial<EffectCtx>): Promise<boolean>;
+    activateMachineSync(machineId: number, originX: number, originY: number, ctx?: Partial<EffectCtx>): boolean;
     count(cb: MapTestFn): number;
     dump(fmt?: (cell: CellType) => string): void;
     getAppearanceAt(x: number, y: number, dest: Mixer): void;
@@ -2187,8 +2204,8 @@ declare function resetAll(): void;
 declare const effects: Record<string, EffectInfo>;
 declare function install(id: string, config: Partial<EffectConfig>): EffectInfo;
 declare function installAll(effects: Record<string, Partial<EffectConfig>>): void;
-declare const effectTypes: Record<string, EffectHandler>;
-declare function installType(id: string, effectType: EffectHandler): void;
+declare const handlers: Record<string, EffectHandler>;
+declare function installHandler(id: string, handler: EffectHandler): void;
 
 declare function make$2(opts: EffectBase): EffectInfo;
 declare function from$1(opts: EffectBase | string): EffectInfo;
@@ -2208,6 +2225,18 @@ declare class EmitEffect implements EffectHandler {
     fireSync(config: EffectInfo, _map: MapType, _x: number, _y: number, _ctx: EffectCtx): boolean;
 }
 
+declare class FnEffect implements EffectHandler {
+    make(src: Partial<EffectConfig>, dest: EffectInfo): boolean;
+    fire(config: any, map: MapType, x: number, y: number, ctx: Partial<EffectCtx>): Promise<any>;
+    fireSync(config: any, map: MapType, x: number, y: number, ctx: Partial<EffectCtx>): any;
+}
+
+declare class ActivateMachineEffect implements EffectHandler {
+    make(src: Partial<EffectConfig>, dest: EffectInfo): boolean;
+    fire(config: any, map: MapType, x: number, y: number, ctx: Partial<EffectCtx>): Promise<boolean>;
+    fireSync(config: any, map: MapType, x: number, y: number, ctx: Partial<EffectCtx>): boolean;
+}
+
 type index_d$1_EffectInfo = EffectInfo;
 type index_d$1_EffectCtx = EffectCtx;
 type index_d$1_EffectConfig = EffectConfig;
@@ -2218,14 +2247,18 @@ declare const index_d$1_resetAll: typeof resetAll;
 declare const index_d$1_effects: typeof effects;
 declare const index_d$1_install: typeof install;
 declare const index_d$1_installAll: typeof installAll;
-declare const index_d$1_effectTypes: typeof effectTypes;
-declare const index_d$1_installType: typeof installType;
+declare const index_d$1_handlers: typeof handlers;
+declare const index_d$1_installHandler: typeof installHandler;
 declare const index_d$1_fire: typeof fire;
 declare const index_d$1_fireSync: typeof fireSync;
 type index_d$1_MessageEffect = MessageEffect;
 declare const index_d$1_MessageEffect: typeof MessageEffect;
 type index_d$1_EmitEffect = EmitEffect;
 declare const index_d$1_EmitEffect: typeof EmitEffect;
+type index_d$1_FnEffect = FnEffect;
+declare const index_d$1_FnEffect: typeof FnEffect;
+type index_d$1_ActivateMachineEffect = ActivateMachineEffect;
+declare const index_d$1_ActivateMachineEffect: typeof ActivateMachineEffect;
 declare namespace index_d$1 {
   export {
     Effect as Flags,
@@ -2239,14 +2272,16 @@ declare namespace index_d$1 {
     index_d$1_effects as effects,
     index_d$1_install as install,
     index_d$1_installAll as installAll,
-    index_d$1_effectTypes as effectTypes,
-    index_d$1_installType as installType,
+    index_d$1_handlers as handlers,
+    index_d$1_installHandler as installHandler,
     make$2 as make,
     from$1 as from,
     index_d$1_fire as fire,
     index_d$1_fireSync as fireSync,
     index_d$1_MessageEffect as MessageEffect,
     index_d$1_EmitEffect as EmitEffect,
+    index_d$1_FnEffect as FnEffect,
+    index_d$1_ActivateMachineEffect as ActivateMachineEffect,
   };
 }
 
@@ -2348,6 +2383,7 @@ declare class Cell implements CellType {
     flags: CellFlags;
     chokeCount: number;
     tiles: TileArray;
+    machineId: number;
     _actor: Actor | null;
     _item: Item | null;
     _objects: CellObjects;
@@ -2397,7 +2433,9 @@ declare class Cell implements CellType {
     clearDepthsWithFlags(tileFlag: number, tileMechFlag?: number): void;
     eachGlowLight(cb: (light: LightType) => any): void;
     activate(event: string, map: MapType, x: number, y: number, ctx?: Partial<EffectCtx>): Promise<boolean>;
+    activateSync(event: string, map: MapType, x: number, y: number, ctx?: Partial<EffectCtx>): boolean;
     _fire(effect: string | EffectInfo, map: MapType, x: number, y: number, ctx: Partial<EffectCtx>): Promise<boolean>;
+    _fireSync(effect: string | EffectInfo, map: MapType, x: number, y: number, ctx: Partial<EffectCtx>): boolean;
     hasEffect(name: string): boolean;
     hasItem(): boolean;
     get item(): Item | null;
@@ -2443,6 +2481,7 @@ declare class TileLayer extends MapLayer {
 
 declare class CellMemory implements CellInfoType {
     chokeCount: number;
+    machineId: number;
     flags: {
         cell: number;
         item: number;
@@ -2564,8 +2603,12 @@ declare class Map implements LightSystemSite, FovSite, MapType {
     tick(dt: number): Promise<boolean>;
     copy(src: Map): void;
     clone(): Map;
-    fire(event: string, x: number, y: number, ctx: Partial<EffectCtx>): Promise<boolean>;
+    fire(event: string, x: number, y: number, ctx?: Partial<EffectCtx>): Promise<boolean>;
+    fireSync(event: string, x: number, y: number, ctx?: Partial<EffectCtx>): boolean;
     fireAll(event: string, ctx?: Partial<EffectCtx>): Promise<boolean>;
+    fireAllSync(event: string, ctx?: Partial<EffectCtx>): boolean;
+    activateMachine(machineId: number, originX: number, originY: number, ctx?: Partial<EffectCtx>): Promise<boolean>;
+    activateMachineSync(machineId: number, originX: number, originY: number, ctx?: Partial<EffectCtx>): boolean;
     getAppearanceAt(x: number, y: number, dest: Mixer): void;
     hasActor(x: number, y: number): boolean;
     eachGlowLight(cb: LightCb): void;

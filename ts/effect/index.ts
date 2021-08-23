@@ -7,3 +7,4 @@ export * from './fire';
 export * from './message';
 export * from './emit';
 export * from './fn';
+export * from './activateMachine';

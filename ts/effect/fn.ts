@@ -6,7 +6,7 @@ import { MapType } from '../map/types';
 //////////////////////////////////////////////
 // FN
 
-class FnEffect implements EffectHandler {
+export class FnEffect implements EffectHandler {
     make(src: Partial<TYPES.EffectConfig>, dest: TYPES.EffectInfo): boolean {
         if (!src.fn) return true;
 
@@ -50,4 +50,4 @@ class FnEffect implements EffectHandler {
     }
 }
 
-EFFECT.installType('fn', new FnEffect());
+EFFECT.installHandler('fn', new FnEffect());

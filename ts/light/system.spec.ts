@@ -10,7 +10,7 @@ import { data as DATA } from '../gw';
 interface TestLightSystem extends Light.LightSystemSite {
     grid: Grid.NumGrid;
     flags: Grid.NumGrid;
-    ambientLight: Light.LightValue;
+    ambientLight: Color.LightValue;
 
     glowLights: Light.StaticLightInfo[];
     dynamicLights: Light.StaticLightInfo[];

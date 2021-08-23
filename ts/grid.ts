@@ -444,14 +444,12 @@ export class Grid<T> extends Array<Array<T>> {
 
 const GRID_CACHE: NumGrid[] = [];
 
-// @ts-ignore
-let GRID_ACTIVE_COUNT = 0;
-// @ts-ignore
-let GRID_ALLOC_COUNT = 0;
-// @ts-ignore
-let GRID_CREATE_COUNT = 0;
-// @ts-ignore
-let GRID_FREE_COUNT = 0;
+export const stats = {
+    active: 0,
+    alloc: 0,
+    create: 0,
+    free: 0,
+};
 
 export class NumGrid extends Grid<number> {
     public x?: number;
@@ -475,12 +473,12 @@ export class NumGrid extends Grid<number> {
         if (!w || !h)
             throw new Error('Grid alloc requires width and height parameters.');
 
-        ++GRID_ACTIVE_COUNT;
-        ++GRID_ALLOC_COUNT;
+        ++stats.active;
+        ++stats.alloc;
 
         let grid = GRID_CACHE.pop();
         if (!grid) {
-            ++GRID_CREATE_COUNT;
+            ++stats.create;
             return new NumGrid(w, h, v);
         }
         grid._resize(w, h, v);
@@ -492,8 +490,8 @@ export class NumGrid extends Grid<number> {
             if (GRID_CACHE.indexOf(grid) >= 0) return;
 
             GRID_CACHE.push(grid);
-            ++GRID_FREE_COUNT;
-            --GRID_ACTIVE_COUNT;
+            ++stats.free;
+            --stats.active;
         }
     }
 

@@ -321,10 +321,20 @@ export class Map implements LightSystemSite, FOV.FovSite, MapType {
         event: string,
         x: number,
         y: number,
-        ctx: Partial<Effect.EffectCtx>
+        ctx: Partial<Effect.EffectCtx> = {}
     ): Promise<boolean> {
         const cell = this.cell(x, y);
         return cell.activate(event, this, x, y, ctx);
+    }
+
+    fireSync(
+        event: string,
+        x: number,
+        y: number,
+        ctx: Partial<Effect.EffectCtx> = {}
+    ): boolean {
+        const cell = this.cell(x, y);
+        return cell.activateSync(event, this, x, y, ctx);
     }
 
     async fireAll(
@@ -400,6 +410,125 @@ export class Map implements LightSystemSite, FOV.FovSite, MapType {
         });
 
         Grid.free(willFire);
+        return didSomething;
+    }
+
+    fireAllSync(event: string, ctx: Partial<Effect.EffectCtx> = {}): boolean {
+        let didSomething = false;
+        const willFire = Grid.alloc(this.width, this.height);
+
+        // Figure out which tiles will fire - before we change everything...
+        this.cells.forEach((cell, x, y) => {
+            cell.clearCellFlag(
+                Flags.Cell.EVENT_FIRED_THIS_TURN | Flags.Cell.EVENT_PROTECTED
+            );
+            cell.eachTile((tile) => {
+                const ev = tile.effects[event];
+                if (!ev) return;
+
+                const effect = Effect.from(ev);
+                if (!effect) return;
+
+                let promoteChance = 0;
+
+                // < 0 means try to fire my neighbors...
+                if (effect.chance < 0) {
+                    promoteChance = 0;
+                    Utils.eachNeighbor(
+                        x,
+                        y,
+                        (i, j) => {
+                            const n = this.cell(i, j);
+                            if (
+                                !n.hasObjectFlag(
+                                    Flags.GameObject.L_BLOCKS_EFFECTS
+                                ) &&
+                                n.depthTile(tile.depth) !=
+                                    cell.depthTile(tile.depth) &&
+                                !n.hasCellFlag(Flags.Cell.CAUGHT_FIRE_THIS_TURN)
+                            ) {
+                                // TODO - Should this break from the loop after doing this once or keep going?
+                                promoteChance += -1 * effect.chance;
+                            }
+                        },
+                        true
+                    );
+                } else {
+                    promoteChance = effect.chance || 100 * 100; // 100%
+                }
+                if (
+                    !cell.hasCellFlag(Flags.Cell.CAUGHT_FIRE_THIS_TURN) &&
+                    random.chance(promoteChance, 10000)
+                ) {
+                    willFire[x][y] |= Fl(tile.depth);
+                    // cell.flags.cellMech |= Cell.MechFlags.EVENT_FIRED_THIS_TURN;
+                }
+            });
+        });
+
+        // Then activate them - so that we don't activate the next generation as part of the forEach
+        ctx.force = true;
+        willFire.forEach((w, x, y) => {
+            if (!w) return;
+            const cell = this.cell(x, y);
+            if (cell.hasCellFlag(Flags.Cell.EVENT_FIRED_THIS_TURN)) return;
+            for (let depth = 0; depth <= Flags.Depth.GAS; ++depth) {
+                if (w & Fl(depth)) {
+                    cell.activate(event, this, x, y, {
+                        force: true,
+                        depth,
+                    });
+                }
+            }
+        });
+
+        Grid.free(willFire);
+        return didSomething;
+    }
+
+    async activateMachine(
+        machineId: number,
+        originX: number,
+        originY: number,
+        ctx: Partial<Effect.EffectCtx> = {}
+    ): Promise<boolean> {
+        let didSomething = false;
+        ctx.originX = originX;
+        ctx.originY = originY;
+        for (let x = 0; x < this.width; ++x) {
+            for (let y = 0; y < this.height; ++y) {
+                const cell = this.cells[x][y];
+                if (cell.machineId !== machineId) continue;
+                if (cell.hasEffect('machine')) {
+                    didSomething =
+                        (await cell.activate('machine', this, x, y, ctx)) ||
+                        didSomething;
+                }
+            }
+        }
+        return didSomething;
+    }
+
+    activateMachineSync(
+        machineId: number,
+        originX: number,
+        originY: number,
+        ctx: Partial<Effect.EffectCtx> = {}
+    ): boolean {
+        let didSomething = false;
+        ctx.originX = originX;
+        ctx.originY = originY;
+        for (let x = 0; x < this.width; ++x) {
+            for (let y = 0; y < this.height; ++y) {
+                const cell = this.cells[x][y];
+                if (cell.machineId !== machineId) continue;
+                if (cell.hasEffect('machine')) {
+                    didSomething =
+                        cell.activateSync('machine', this, x, y, ctx) ||
+                        didSomething;
+                }
+            }
+        }
         return didSomething;
     }
 

@@ -6,7 +6,7 @@ import { MapType } from '../map/types';
 import { EffectInfo, EffectCtx } from './types';
 import { Effect as Flags } from './flags';
 
-import { effectTypes } from './effect';
+import { handlers } from './effect';
 import { from } from './make';
 
 export async function fire(
@@ -30,8 +30,8 @@ export async function fire(
     const grid = (ctx.grid = Grid.alloc(map.width, map.height));
 
     let didSomething = true;
-    const handlers = Object.values(effectTypes);
-    for (let h of handlers) {
+    const allHandlers = Object.values(handlers);
+    for (let h of allHandlers) {
         if (await h.fire(effect, map, x, y, ctx)) {
             didSomething = true;
         }
@@ -90,8 +90,8 @@ export function fireSync(
     const grid = (ctx.grid = Grid.alloc(map.width, map.height));
 
     let didSomething = true;
-    const handlers = Object.values(effectTypes);
-    for (let h of handlers) {
+    const allHandlers = Object.values(handlers);
+    for (let h of allHandlers) {
         if (h.fireSync(effect, map, x, y, ctx)) {
             didSomething = true;
         }

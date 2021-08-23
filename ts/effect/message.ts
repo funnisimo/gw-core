@@ -57,4 +57,4 @@ export class MessageEffect implements EffectHandler {
     }
 }
 
-EFFECT.installType('message', new MessageEffect());
+EFFECT.installHandler('message', new MessageEffect());

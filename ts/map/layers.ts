@@ -133,6 +133,10 @@ export class TileLayer extends MapLayer {
 
         if (!cell.setTile(tile)) return false;
 
+        if (opts.machine) {
+            cell.machineId = opts.machine;
+        }
+
         if (current.light !== tile.light) {
             this.map.light.glowLightChanged = true;
         }

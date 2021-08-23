@@ -1116,6 +1116,9 @@
             const rng = this._rng || random;
             return rng.clumped(this.lo, this.hi, this.clumps);
         }
+        contains(value) {
+            return this.lo <= value && this.hi >= value;
+        }
         copy(other) {
             this.lo = other.lo;
             this.hi = other.hi;
@@ -1609,6 +1612,12 @@
         }
     }
     const GRID_CACHE = [];
+    const stats = {
+        active: 0,
+        alloc: 0,
+        create: 0,
+        free: 0,
+    };
     class NumGrid extends Grid {
         constructor(w, h, v = 0) {
             super(w, h, v);
@@ -1625,8 +1634,11 @@
             }
             if (!w || !h)
                 throw new Error('Grid alloc requires width and height parameters.');
+            ++stats.active;
+            ++stats.alloc;
             let grid = GRID_CACHE.pop();
             if (!grid) {
+                ++stats.create;
                 return new NumGrid(w, h, v);
             }
             grid._resize(w, h, v);
@@ -1637,6 +1649,8 @@
                 if (GRID_CACHE.indexOf(grid) >= 0)
                     return;
                 GRID_CACHE.push(grid);
+                ++stats.free;
+                --stats.active;
             }
         }
         _resize(width, height, v = 0) {
@@ -1822,6 +1836,7 @@
         __proto__: null,
         makeArray: makeArray,
         Grid: Grid,
+        stats: stats,
         NumGrid: NumGrid,
         alloc: alloc,
         free: free,
@@ -6155,7 +6170,7 @@ void main() {
             }
         }
         // and all the handlers
-        Object.values(effectTypes).forEach((v) => v.make(opts, info));
+        Object.values(handlers).forEach((v) => v.make(opts, info));
         return info;
     }
     function from$2(opts) {
@@ -6189,9 +6204,9 @@ void main() {
             install$2(id, config);
         });
     }
-    const effectTypes = {};
-    function installType(id, effectType) {
-        effectTypes[id] = effectType;
+    const handlers = {};
+    function installHandler(id, handler) {
+        handlers[id] = handler;
     }
 
     async function fire(effect, map, x, y, ctx_ = {}) {
@@ -6208,8 +6223,8 @@ void main() {
             return false;
         const grid$1 = (ctx.grid = alloc(map.width, map.height));
         let didSomething = true;
-        const handlers = Object.values(effectTypes);
-        for (let h of handlers) {
+        const allHandlers = Object.values(handlers);
+        for (let h of allHandlers) {
             if (await h.fire(effect, map, x, y, ctx)) {
                 didSomething = true;
             }
@@ -6254,8 +6269,8 @@ void main() {
             return false;
         const grid$1 = (ctx.grid = alloc(map.width, map.height));
         let didSomething = true;
-        const handlers = Object.values(effectTypes);
-        for (let h of handlers) {
+        const allHandlers = Object.values(handlers);
+        for (let h of allHandlers) {
             if (h.fireSync(effect, map, x, y, ctx)) {
                 didSomething = true;
             }
@@ -6317,7 +6332,7 @@ void main() {
             throw new Error('Cannot use "message" effects in build steps.');
         }
     }
-    installType('message', new MessageEffect());
+    installHandler('message', new MessageEffect());
 
     //////////////////////////////////////////////
     // EMIT
@@ -6343,7 +6358,7 @@ void main() {
             throw new Error('Cannot use "emit" effects in build steps.');
         }
     }
-    installType('emit', new EmitEffect());
+    installHandler('emit', new EmitEffect());
 
     //////////////////////////////////////////////
     // FN
@@ -6374,7 +6389,39 @@ void main() {
             return false;
         }
     }
-    installType('fn', new FnEffect());
+    installHandler('fn', new FnEffect());
+
+    //////////////////////////////////////////////
+    // ActivateMachine
+    class ActivateMachineEffect {
+        make(src, dest) {
+            if (!src.activateMachine)
+                return true;
+            dest.activateMachine = true;
+            return true;
+        }
+        async fire(config, map, x, y, ctx) {
+            if (config.activateMachine) {
+                const cell = map.cell(x, y);
+                const machine = cell.machineId;
+                if (!machine)
+                    return false;
+                return await map.activateMachine(machine, x, y, ctx);
+            }
+            return false;
+        }
+        fireSync(config, map, x, y, ctx) {
+            if (config.activateMachine) {
+                const cell = map.cell(x, y);
+                const machine = cell.machineId;
+                if (!machine)
+                    return false;
+                return map.activateMachineSync(machine, x, y, ctx);
+            }
+            return false;
+        }
+    }
+    installHandler('activateMachine', new ActivateMachineEffect());
 
     var index$6 = {
         __proto__: null,
@@ -6384,14 +6431,16 @@ void main() {
         effects: effects,
         install: install$2,
         installAll: installAll$2,
-        effectTypes: effectTypes,
-        installType: installType,
+        handlers: handlers,
+        installHandler: installHandler,
         make: make$4,
         from: from$2,
         fire: fire,
         fireSync: fireSync,
         MessageEffect: MessageEffect,
-        EmitEffect: EmitEffect
+        EmitEffect: EmitEffect,
+        FnEffect: FnEffect,
+        ActivateMachineEffect: ActivateMachineEffect
     };
 
     class Blob {
@@ -7333,12 +7382,25 @@ void main() {
         }
     }
     function make$1(options) {
-        var _a, _b, _c, _d, _e, _f, _g;
-        let base = { effects: {}, flags: {}, sprite: {} };
+        var _a, _b, _c, _d, _e, _f;
+        let base = { effects: {}, flags: {}, sprite: {}, priority: 50 };
         if (options.extends) {
             base = tiles[options.extends];
             if (!base)
                 throw new Error('Failed to find base tile: ' + options.extends);
+        }
+        let priority = -1;
+        if (typeof options.priority === 'string') {
+            if (options.priority.startsWith('+') ||
+                options.priority.startsWith('-')) {
+                priority = base.priority + Number.parseInt(options.priority);
+            }
+            else {
+                priority = Number.parseInt(options.priority);
+            }
+        }
+        else if (options.priority !== undefined) {
+            priority = options.priority;
         }
         const effects = {};
         Object.assign(effects, base.effects);
@@ -7381,18 +7443,18 @@ void main() {
             flags,
             dissipate: (_a = options.dissipate) !== null && _a !== void 0 ? _a : base.dissipate,
             effects,
-            priority: (_b = options.priority) !== null && _b !== void 0 ? _b : base.priority,
+            priority: priority != -1 ? priority : undefined,
             depth: depth,
             light,
             groundTile: options.groundTile || null,
-            ch: (_c = options.ch) !== null && _c !== void 0 ? _c : base.sprite.ch,
-            fg: (_d = options.fg) !== null && _d !== void 0 ? _d : base.sprite.fg,
-            bg: (_e = options.bg) !== null && _e !== void 0 ? _e : base.sprite.bg,
-            opacity: (_f = options.opacity) !== null && _f !== void 0 ? _f : base.sprite.opacity,
+            ch: (_b = options.ch) !== null && _b !== void 0 ? _b : base.sprite.ch,
+            fg: (_c = options.fg) !== null && _c !== void 0 ? _c : base.sprite.fg,
+            bg: (_d = options.bg) !== null && _d !== void 0 ? _d : base.sprite.bg,
+            opacity: (_e = options.opacity) !== null && _e !== void 0 ? _e : base.sprite.opacity,
             name: options.name || base.name,
             description: options.description || base.description,
             flavor: options.flavor || base.flavor,
-            article: (_g = options.article) !== null && _g !== void 0 ? _g : base.article,
+            article: (_f = options.article) !== null && _f !== void 0 ? _f : base.article,
         };
         const tile = new Tile(config);
         return tile;
@@ -7690,6 +7752,7 @@ void main() {
     class Cell {
         constructor(groundTile) {
             this.chokeCount = 0;
+            this.machineId = 0;
             // gasVolume: number = 0;
             // liquidVolume: number = 0;
             this._actor = null;
@@ -7880,6 +7943,10 @@ void main() {
         clear() {
             this.tiles = [tiles.NULL];
             this.needsRedraw = true;
+            this.flags.cell = 0;
+            this.chokeCount = 0;
+            this._actor = null;
+            this._item = null;
         }
         clearDepth(depth) {
             if (depth == 0) {
@@ -7940,6 +8007,32 @@ void main() {
             }
             return didSomething;
         }
+        activateSync(event, map, x, y, ctx = {}) {
+            ctx.cell = this;
+            let didSomething = false;
+            if (ctx.depth !== undefined) {
+                const tile = (ctx.tile = this.depthTile(ctx.depth));
+                if (tile && tile.effects) {
+                    const ev = tile.effects[event];
+                    didSomething = this._fireSync(ev, map, x, y, ctx);
+                }
+            }
+            else {
+                // console.log('fire event - %s', event);
+                for (ctx.tile of this.tiles) {
+                    if (!ctx.tile || !ctx.tile.effects)
+                        continue;
+                    const ev = ctx.tile.effects[event];
+                    // console.log(' - ', ev);
+                    if (this._fireSync(ev, map, x, y, ctx)) {
+                        didSomething = true;
+                        break;
+                    }
+                    // }
+                }
+            }
+            return didSomething;
+        }
         async _fire(effect, map, x, y, ctx) {
             if (typeof effect === 'string') {
                 effect = effects[effect];
@@ -7948,6 +8041,18 @@ void main() {
             if (effect) {
                 // console.log(' - spawn event @%d,%d - %s', x, y, name);
                 didSomething = await fire(effect, map, x, y, ctx);
+                // cell.debug(" - spawned");
+            }
+            return didSomething;
+        }
+        _fireSync(effect, map, x, y, ctx) {
+            if (typeof effect === 'string') {
+                effect = effects[effect];
+            }
+            let didSomething = false;
+            if (effect) {
+                // console.log(' - spawn event @%d,%d - %s', x, y, name);
+                didSomething = fireSync(effect, map, x, y, ctx);
                 // cell.debug(" - spawned");
             }
             return didSomething;
@@ -8122,6 +8227,9 @@ void main() {
             }
             if (!cell.setTile(tile))
                 return false;
+            if (opts.machine) {
+                cell.machineId = opts.machine;
+            }
             if (current.light !== tile.light) {
                 this.map.light.glowLightChanged = true;
             }
@@ -8171,6 +8279,7 @@ void main() {
     class CellMemory {
         constructor() {
             this.chokeCount = 0;
+            this.machineId = 0;
             this.flags = {
                 cell: 0,
                 item: 0,
@@ -8205,6 +8314,8 @@ void main() {
             this.blocks.pathing = false;
             this.blocks.vision = false;
             this._hasKey = false;
+            this.machineId = 0;
+            this.chokeCount = 0;
         }
         store(cell) {
             this._item = null;
@@ -8227,6 +8338,8 @@ void main() {
             this.blocks.pathing = cell.blocksPathing();
             this.blocks.vision = cell.blocksVision();
             this._hasKey = cell.hasKey();
+            this.chokeCount = cell.chokeCount;
+            this.machineId = cell.machineId;
         }
         getSnapshot(dest) {
             dest.copy(this.snapshot);
@@ -8760,9 +8873,13 @@ void main() {
             other.copy(this);
             return other;
         }
-        async fire(event, x, y, ctx) {
+        async fire(event, x, y, ctx = {}) {
             const cell = this.cell(x, y);
             return cell.activate(event, this, x, y, ctx);
+        }
+        fireSync(event, x, y, ctx = {}) {
+            const cell = this.cell(x, y);
+            return cell.activateSync(event, this, x, y, ctx);
         }
         async fireAll(event, ctx = {}) {
             let didSomething = false;
@@ -8820,6 +8937,100 @@ void main() {
                 }
             });
             free(willFire);
+            return didSomething;
+        }
+        fireAllSync(event, ctx = {}) {
+            let didSomething = false;
+            const willFire = alloc(this.width, this.height);
+            // Figure out which tiles will fire - before we change everything...
+            this.cells.forEach((cell, x, y) => {
+                cell.clearCellFlag(Cell$1.EVENT_FIRED_THIS_TURN | Cell$1.EVENT_PROTECTED);
+                cell.eachTile((tile) => {
+                    const ev = tile.effects[event];
+                    if (!ev)
+                        return;
+                    const effect = from$2(ev);
+                    if (!effect)
+                        return;
+                    let promoteChance = 0;
+                    // < 0 means try to fire my neighbors...
+                    if (effect.chance < 0) {
+                        promoteChance = 0;
+                        eachNeighbor(x, y, (i, j) => {
+                            const n = this.cell(i, j);
+                            if (!n.hasObjectFlag(GameObject$1.L_BLOCKS_EFFECTS) &&
+                                n.depthTile(tile.depth) !=
+                                    cell.depthTile(tile.depth) &&
+                                !n.hasCellFlag(Cell$1.CAUGHT_FIRE_THIS_TURN)) {
+                                // TODO - Should this break from the loop after doing this once or keep going?
+                                promoteChance += -1 * effect.chance;
+                            }
+                        }, true);
+                    }
+                    else {
+                        promoteChance = effect.chance || 100 * 100; // 100%
+                    }
+                    if (!cell.hasCellFlag(Cell$1.CAUGHT_FIRE_THIS_TURN) &&
+                        random.chance(promoteChance, 10000)) {
+                        willFire[x][y] |= fl(tile.depth);
+                        // cell.flags.cellMech |= Cell.MechFlags.EVENT_FIRED_THIS_TURN;
+                    }
+                });
+            });
+            // Then activate them - so that we don't activate the next generation as part of the forEach
+            ctx.force = true;
+            willFire.forEach((w, x, y) => {
+                if (!w)
+                    return;
+                const cell = this.cell(x, y);
+                if (cell.hasCellFlag(Cell$1.EVENT_FIRED_THIS_TURN))
+                    return;
+                for (let depth = 0; depth <= Depth$1.GAS; ++depth) {
+                    if (w & fl(depth)) {
+                        cell.activate(event, this, x, y, {
+                            force: true,
+                            depth,
+                        });
+                    }
+                }
+            });
+            free(willFire);
+            return didSomething;
+        }
+        async activateMachine(machineId, originX, originY, ctx = {}) {
+            let didSomething = false;
+            ctx.originX = originX;
+            ctx.originY = originY;
+            for (let x = 0; x < this.width; ++x) {
+                for (let y = 0; y < this.height; ++y) {
+                    const cell = this.cells[x][y];
+                    if (cell.machineId !== machineId)
+                        continue;
+                    if (cell.hasEffect('machine')) {
+                        didSomething =
+                            (await cell.activate('machine', this, x, y, ctx)) ||
+                                didSomething;
+                    }
+                }
+            }
+            return didSomething;
+        }
+        activateMachineSync(machineId, originX, originY, ctx = {}) {
+            let didSomething = false;
+            ctx.originX = originX;
+            ctx.originY = originY;
+            for (let x = 0; x < this.width; ++x) {
+                for (let y = 0; y < this.height; ++y) {
+                    const cell = this.cells[x][y];
+                    if (cell.machineId !== machineId)
+                        continue;
+                    if (cell.hasEffect('machine')) {
+                        didSomething =
+                            cell.activateSync('machine', this, x, y, ctx) ||
+                                didSomething;
+                    }
+                }
+            }
             return didSomething;
         }
         getAppearanceAt(x, y, dest) {
@@ -9057,9 +9268,10 @@ void main() {
             for (let i = 0; i < map.width; i++) {
                 for (let j = 0; j < map.height; j++) {
                     map.cell(i, j).chokeCount = 30000;
-                    if (map.cell(i, j).flags.cell & Cell$1.IS_IN_ROOM_MACHINE) {
-                        passMap[i][j] = 0;
-                    }
+                    // Not sure why this was done in Brogue
+                    // if (map.cell(i, j).flags.cell & CellFlags.IS_IN_ROOM_MACHINE) {
+                    //     passMap[i][j] = 0;
+                    // }
                 }
             }
             // Scan through and find a chokepoint next to an open point.
@@ -9428,7 +9640,7 @@ void main() {
             return disrupts;
         }
     }
-    installType('tile', new SpawnEffect());
+    installHandler('tile', new SpawnEffect());
     // tick
     // Spawn
     function spawnTiles(flags, spawnMap, map, tile, volume = 0) {
@@ -9779,7 +9991,7 @@ void main() {
             return cell.clearDepth(config.clear);
         }
     }
-    installType('clear', new ClearTileEffect());
+    installHandler('clear', new ClearTileEffect());
 
     const flags = { Cell: Cell$1, Map: Map$1, GameObject: GameObject$1, Depth: Depth$1, Tile: Tile$1 };
 

@@ -22,12 +22,14 @@ export interface SetOptions {
     blockedByActors: boolean;
     blockedByItems: boolean;
     volume: number;
+    machine: number;
 }
 
 export type SetTileOptions = Partial<SetOptions>;
 
 export interface CellInfoType {
     chokeCount: number;
+    machineId: number;
 
     // Flags
 
@@ -79,7 +81,6 @@ export interface CellInfoType {
 
 export interface CellType extends CellInfoType {
     flags: CellFlags;
-    chokeCount: number;
 
     setCellFlag(flag: number): void;
     clearCellFlag(flag: number): void;
@@ -119,6 +120,13 @@ export interface CellType extends CellInfoType {
         y: number,
         ctx?: Partial<EffectCtx>
     ): Promise<boolean> | boolean;
+    activateSync(
+        event: string,
+        map: MapType,
+        x: number,
+        y: number,
+        ctx?: Partial<EffectCtx>
+    ): boolean;
 
     hasEffect(name: string): boolean;
 
@@ -240,6 +248,33 @@ export interface MapType {
     ): boolean;
 
     tick(dt: number): Promise<boolean>;
+    fire(
+        event: string,
+        x: number,
+        y: number,
+        ctx?: Partial<EffectCtx>
+    ): Promise<boolean>;
+    fireSync(
+        event: string,
+        x: number,
+        y: number,
+        ctx?: Partial<EffectCtx>
+    ): boolean;
+    fireAll(event: string, ctx?: Partial<EffectCtx>): Promise<boolean>;
+    fireAllSync(event: string, ctx?: Partial<EffectCtx>): boolean;
+
+    activateMachine(
+        machineId: number,
+        originX: number,
+        originY: number,
+        ctx?: Partial<EffectCtx>
+    ): Promise<boolean>;
+    activateMachineSync(
+        machineId: number,
+        originX: number,
+        originY: number,
+        ctx?: Partial<EffectCtx>
+    ): boolean;
 
     count(cb: MapTestFn): number;
     dump(fmt?: (cell: CellType) => string): void;

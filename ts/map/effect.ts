@@ -243,7 +243,7 @@ export class SpawnEffect implements Effect.EffectHandler {
     }
 }
 
-Effect.installType('tile', new SpawnEffect());
+Effect.installHandler('tile', new SpawnEffect());
 
 // tick
 
@@ -681,4 +681,4 @@ class ClearTileEffect implements Effect.EffectHandler {
     }
 }
 
-Effect.installType('clear', new ClearTileEffect());
+Effect.installHandler('clear', new ClearTileEffect());

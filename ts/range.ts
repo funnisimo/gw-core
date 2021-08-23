@@ -29,6 +29,10 @@ export class Range {
         return rng.clumped(this.lo, this.hi, this.clumps);
     }
 
+    contains(value: number): boolean {
+        return this.lo <= value && this.hi >= value;
+    }
+
     copy(other: Range) {
         this.lo = other.lo;
         this.hi = other.hi;

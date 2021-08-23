@@ -7,6 +7,7 @@ import { CellInfoType } from './types';
 
 export class CellMemory implements CellInfoType {
     chokeCount = 0;
+    machineId = 0;
     flags = {
         cell: 0,
         item: 0,
@@ -45,6 +46,8 @@ export class CellMemory implements CellInfoType {
         this.blocks.pathing = false;
         this.blocks.vision = false;
         this._hasKey = false;
+        this.machineId = 0;
+        this.chokeCount = 0;
     }
 
     store(cell: CellInfoType) {
@@ -70,6 +73,8 @@ export class CellMemory implements CellInfoType {
         this.blocks.vision = cell.blocksVision();
 
         this._hasKey = cell.hasKey();
+        this.chokeCount = cell.chokeCount;
+        this.machineId = cell.machineId;
     }
 
     getSnapshot(dest: Mixer) {

@@ -68,7 +68,7 @@ describe('Effect', () => {
                 fireSync: jest.fn(),
             };
 
-            Effect.installType('TEST', handler);
+            Effect.installHandler('TEST', handler);
 
             const eff = Effect.make({ TEST: true });
             expect(eff).toMatchObject({

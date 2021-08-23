@@ -34,8 +34,9 @@ describe('CellMemory', () => {
     test('memory', () => {
         const c: Cell = new Cell('FLOOR');
         expect(c.flags.cell).toEqual(Flags.Cell.NEEDS_REDRAW);
-        const mem: CellMemory = new CellMemory();
+        expect(c.hasTile('FLOOR')).toBeTruthy();
 
+        const mem: CellMemory = new CellMemory();
         mem.store(c);
         expect(mem.item).toBeNull();
         expect(mem.actor).toBeNull();
