@@ -1448,7 +1448,7 @@ interface Options {
     colorEnd?: string;
     field?: string;
 }
-declare function configure$1(opts?: Options): void;
+declare function configure(opts?: Options): void;
 
 declare const index_d$7_compile: typeof compile;
 declare const index_d$7_apply: typeof apply;
@@ -1462,6 +1462,7 @@ declare const index_d$7_capitalize: typeof capitalize;
 declare const index_d$7_removeColors: typeof removeColors;
 declare const index_d$7_wordWrap: typeof wordWrap;
 declare const index_d$7_splitIntoLines: typeof splitIntoLines;
+declare const index_d$7_configure: typeof configure;
 declare const index_d$7_addHelper: typeof addHelper;
 declare const index_d$7_options: typeof options;
 type index_d$7_Template = Template;
@@ -1479,12 +1480,127 @@ declare namespace index_d$7 {
     index_d$7_removeColors as removeColors,
     index_d$7_wordWrap as wordWrap,
     index_d$7_splitIntoLines as splitIntoLines,
-    configure$1 as configure,
+    index_d$7_configure as configure,
     index_d$7_addHelper as addHelper,
     index_d$7_options as options,
     index_d$7_Template as Template,
   };
 }
+
+declare const templates: Record<string, Template>;
+declare function install$3(id: string, msg: string): Template;
+declare function installAll$3(config: Record<string, string>): void;
+interface MessageHandler {
+    addMessage(x: number, y: number, msg: string): void;
+    addCombatMessage(x: number, y: number, msg: string): void;
+}
+declare const handlers$1: MessageHandler[];
+declare function add(msg: string, args?: any): void;
+declare function addAt(x: number, y: number, msg: string, args?: any): void;
+declare function addCombat(x: number, y: number, msg: string, args?: any): void;
+interface CacheOptions {
+    length: number;
+    width: number;
+}
+declare type EachMsgFn = (msg: string, confirmed: boolean, i: number) => any;
+declare class MessageCache implements MessageHandler {
+    ARCHIVE: (string | null)[];
+    CONFIRMED: boolean[];
+    ARCHIVE_LINES: number;
+    MSG_WIDTH: number;
+    NEXT_WRITE_INDEX: number;
+    NEEDS_UPDATE: boolean;
+    COMBAT_MESSAGE: string | null;
+    constructor(opts?: Partial<CacheOptions>);
+    get needsUpdate(): boolean;
+    set needsUpdate(needs: boolean);
+    addMessageLine(msg: string): void;
+    addMessage(_x: number, _y: number, msg: string): void;
+    _addMessage(msg: string): void;
+    addCombatMessage(_x: number, _y: number, msg: string): void;
+    _addCombatMessage(msg: string): void;
+    commitCombatMessage(): boolean;
+    confirmAll(): void;
+    forEach(fn: EachMsgFn): void;
+}
+
+declare const message_d_templates: typeof templates;
+type message_d_MessageHandler = MessageHandler;
+declare const message_d_add: typeof add;
+declare const message_d_addAt: typeof addAt;
+declare const message_d_addCombat: typeof addCombat;
+type message_d_CacheOptions = CacheOptions;
+type message_d_EachMsgFn = EachMsgFn;
+type message_d_MessageCache = MessageCache;
+declare const message_d_MessageCache: typeof MessageCache;
+declare namespace message_d {
+  export {
+    message_d_templates as templates,
+    install$3 as install,
+    installAll$3 as installAll,
+    message_d_MessageHandler as MessageHandler,
+    handlers$1 as handlers,
+    message_d_add as add,
+    message_d_addAt as addAt,
+    message_d_addCombat as addCombat,
+    message_d_CacheOptions as CacheOptions,
+    message_d_EachMsgFn as EachMsgFn,
+    message_d_MessageCache as MessageCache,
+  };
+}
+
+declare enum Effect {
+    E_NEXT_ALWAYS,
+    E_NEXT_EVERYWHERE,
+    E_FIRED,
+    E_NO_MARK_FIRED,
+    E_PROTECTED,
+    E_TREAT_AS_BLOCKING,
+    E_PERMIT_BLOCKING,
+    E_ABORT_IF_BLOCKS_MAP,
+    E_BLOCKED_BY_ITEMS,
+    E_BLOCKED_BY_ACTORS,
+    E_BLOCKED_BY_OTHER_LAYERS,
+    E_SUPERPRIORITY,
+    E_SPREAD_CIRCLE,
+    E_SPREAD_LINE,
+    E_EVACUATE_CREATURES,
+    E_EVACUATE_ITEMS,
+    E_BUILD_IN_WALLS,
+    E_MUST_TOUCH_WALLS,
+    E_NO_TOUCH_WALLS,
+    E_CLEAR_GROUND,
+    E_CLEAR_SURFACE,
+    E_CLEAR_LIQUID,
+    E_CLEAR_GAS,
+    E_CLEAR_TILE,
+    E_CLEAR_CELL,
+    E_ONLY_IF_EMPTY,
+    E_ACTIVATE_DORMANT_MONSTER,
+    E_AGGRAVATES_MONSTERS,
+    E_RESURRECT_ALLY
+}
+
+interface EffectInfo {
+    flags: number;
+    chance: number;
+    next: EffectInfo | string | null;
+    id: string;
+    [id: string]: any;
+}
+interface EffectCtx {
+    depth?: number;
+    force?: boolean;
+    grid: NumGrid;
+    [id: string]: any;
+}
+interface EffectConfig {
+    flags: FlagBase;
+    chance: number;
+    next: Partial<EffectConfig> | string | null;
+    [id: string]: any;
+}
+declare type EffectBase = Partial<EffectConfig> | Function;
 
 declare enum GameObject$1 {
     L_SUPERPRIORITY,
@@ -1613,10 +1729,10 @@ declare function make$4(color: ColorBase, radius: RangeBase, fadeTo?: number, pa
 declare function make$4(light: LightBase): Light;
 declare const lights: Record<string, Light>;
 declare function from$2(light: LightBase | LightType): Light;
-declare function install$3(id: string, color: ColorBase, radius: RangeBase, fadeTo?: number, pass?: boolean): Light;
-declare function install$3(id: string, base: LightBase): Light;
-declare function install$3(id: string, config: LightConfig): Light;
-declare function installAll$3(config?: Record<string, LightConfig | LightBase>): void;
+declare function install$2(id: string, color: ColorBase, radius: RangeBase, fadeTo?: number, pass?: boolean): Light;
+declare function install$2(id: string, base: LightBase): Light;
+declare function install$2(id: string, config: LightConfig): Light;
+declare function installAll$2(config?: Record<string, LightConfig | LightBase>): void;
 
 interface StaticLightInfo {
     x: number;
@@ -1697,8 +1813,8 @@ declare namespace index_d$6 {
     make$4 as make,
     index_d$6_lights as lights,
     from$2 as from,
-    install$3 as install,
-    installAll$3 as installAll,
+    install$2 as install,
+    installAll$2 as installAll,
     index_d$6_StaticLightInfo as StaticLightInfo,
     index_d$6_LightSystemOptions as LightSystemOptions,
     index_d$6_LightSystem as LightSystem,
@@ -1737,6 +1853,47 @@ declare namespace index_d$5 {
   };
 }
 
+interface ActorFlags extends ObjectFlags {
+    actor: number;
+}
+
+declare enum Actor$1 {
+    IS_PLAYER
+}
+
+type flags_d_Depth = Depth;
+declare const flags_d_Depth: typeof Depth;
+declare namespace flags_d {
+  export {
+    Actor$1 as Actor,
+    GameObject$1 as GameObject,
+    flags_d_Depth as Depth,
+  };
+}
+
+declare class Actor extends GameObject {
+    flags: ActorFlags;
+    next: Actor | null;
+    constructor();
+    hasActorFlag(flag: number): boolean;
+    hasAllActorFlags(flags: number): boolean;
+    actorFlags(): number;
+    isPlayer(): boolean;
+    isVisible(): boolean;
+    forbidsCell(_cell: CellType): boolean;
+}
+
+type index_d$4_Actor = Actor;
+declare const index_d$4_Actor: typeof Actor;
+type index_d$4_ActorFlags = ActorFlags;
+declare namespace index_d$4 {
+  export {
+    index_d$4_Actor as Actor,
+    flags_d as flags,
+    index_d$4_ActorFlags as ActorFlags,
+  };
+}
+
 interface ItemFlags extends ObjectFlags {
     item: number;
 }
@@ -1752,13 +1909,13 @@ declare class Item extends GameObject {
     forbidsCell(_cell: CellType): boolean;
 }
 
-type index_d$4_Item = Item;
-declare const index_d$4_Item: typeof Item;
-type index_d$4_ItemFlags = ItemFlags;
-declare namespace index_d$4 {
+type index_d$3_Item = Item;
+declare const index_d$3_Item: typeof Item;
+type index_d$3_ItemFlags = ItemFlags;
+declare namespace index_d$3 {
   export {
-    index_d$4_Item as Item,
-    index_d$4_ItemFlags as ItemFlags,
+    index_d$3_Item as Item,
+    index_d$3_ItemFlags as ItemFlags,
   };
 }
 
@@ -1801,27 +1958,6 @@ declare enum TileMech {
     TM_EXPLOSIVE_PROMOTE,
     TM_SWAP_ENCHANTS_ACTIVATION
 }
-
-interface EffectInfo {
-    flags: number;
-    chance: number;
-    next: EffectInfo | string | null;
-    id: string;
-    [id: string]: any;
-}
-interface EffectCtx {
-    depth?: number;
-    force?: boolean;
-    grid: NumGrid;
-    [id: string]: any;
-}
-interface EffectConfig {
-    flags: FlagBase;
-    chance: number;
-    next: Partial<EffectConfig> | string | null;
-    [id: string]: any;
-}
-declare type EffectBase = Partial<EffectConfig> | Function;
 
 interface TileFlags extends ObjectFlags {
     tile: number;
@@ -1920,40 +2056,40 @@ declare function make$3(options: Partial<TileOptions>): Tile;
 declare const tiles: Record<string, Tile>;
 declare const all: Tile[];
 declare function get(id: string | number | Tile): Tile;
-declare function install$2(id: string, options: Partial<TileOptions>): Tile;
-declare function install$2(id: string, base: string, options: Partial<TileOptions>): Tile;
-declare function installAll$2(tiles: Record<string, Partial<TileOptions>>): void;
+declare function install$1(id: string, options: Partial<TileOptions>): Tile;
+declare function install$1(id: string, base: string, options: Partial<TileOptions>): Tile;
+declare function installAll$1(tiles: Record<string, Partial<TileOptions>>): void;
 
 declare const flags$1: {
     Tile: typeof Tile$1;
     TileMech: typeof TileMech;
 };
 
-type index_d$3_TileFlags = TileFlags;
-type index_d$3_NameConfig = NameConfig;
-type index_d$3_TileType = TileType;
-type index_d$3_TileConfig = TileConfig;
-type index_d$3_Tile = Tile;
-declare const index_d$3_Tile: typeof Tile;
-type index_d$3_TileOptions = TileOptions;
-declare const index_d$3_tiles: typeof tiles;
-declare const index_d$3_all: typeof all;
-declare const index_d$3_get: typeof get;
-declare namespace index_d$3 {
+type index_d$2_TileFlags = TileFlags;
+type index_d$2_NameConfig = NameConfig;
+type index_d$2_TileType = TileType;
+type index_d$2_TileConfig = TileConfig;
+type index_d$2_Tile = Tile;
+declare const index_d$2_Tile: typeof Tile;
+type index_d$2_TileOptions = TileOptions;
+declare const index_d$2_tiles: typeof tiles;
+declare const index_d$2_all: typeof all;
+declare const index_d$2_get: typeof get;
+declare namespace index_d$2 {
   export {
     flags$1 as flags,
-    index_d$3_TileFlags as TileFlags,
-    index_d$3_NameConfig as NameConfig,
-    index_d$3_TileType as TileType,
-    index_d$3_TileConfig as TileConfig,
-    index_d$3_Tile as Tile,
-    index_d$3_TileOptions as TileOptions,
+    index_d$2_TileFlags as TileFlags,
+    index_d$2_NameConfig as NameConfig,
+    index_d$2_TileType as TileType,
+    index_d$2_TileConfig as TileConfig,
+    index_d$2_Tile as Tile,
+    index_d$2_TileOptions as TileOptions,
     make$3 as make,
-    index_d$3_tiles as tiles,
-    index_d$3_all as all,
-    index_d$3_get as get,
-    install$2 as install,
-    installAll$2 as installAll,
+    index_d$2_tiles as tiles,
+    index_d$2_all as all,
+    index_d$2_get as get,
+    install$1 as install,
+    installAll$1 as installAll,
   };
 }
 
@@ -2072,125 +2208,6 @@ interface MapType {
     count(cb: MapTestFn): number;
     dump(fmt?: (cell: CellType) => string): void;
     getAppearanceAt(x: number, y: number, dest: Mixer): void;
-}
-
-interface ActorFlags extends ObjectFlags {
-    actor: number;
-}
-
-declare enum Actor$1 {
-    IS_PLAYER
-}
-
-type flags_d_Depth = Depth;
-declare const flags_d_Depth: typeof Depth;
-declare namespace flags_d {
-  export {
-    Actor$1 as Actor,
-    GameObject$1 as GameObject,
-    flags_d_Depth as Depth,
-  };
-}
-
-declare class Actor extends GameObject {
-    flags: ActorFlags;
-    next: Actor | null;
-    constructor();
-    hasActorFlag(flag: number): boolean;
-    hasAllActorFlags(flags: number): boolean;
-    actorFlags(): number;
-    isPlayer(): boolean;
-    isVisible(): boolean;
-    forbidsCell(_cell: CellType): boolean;
-}
-
-type index_d$2_Actor = Actor;
-declare const index_d$2_Actor: typeof Actor;
-type index_d$2_ActorFlags = ActorFlags;
-declare namespace index_d$2 {
-  export {
-    index_d$2_Actor as Actor,
-    flags_d as flags,
-    index_d$2_ActorFlags as ActorFlags,
-  };
-}
-
-declare const templates: Record<string, Template>;
-declare function install$1(id: string, msg: string): void;
-declare function installAll$1(config: Record<string, string>): void;
-declare function needsUpdate(needs?: boolean): boolean;
-interface MessageOptions {
-    length: number;
-    width: number;
-}
-declare function configure(opts: Partial<MessageOptions>): void;
-declare function add(msg: string, args?: any): void;
-declare function fromActor(actor: Actor, msg: string, args?: any): void;
-declare function forPlayer(actor: Actor, msg: string, args?: any): void;
-declare function addCombat(actor: Actor, msg: string, args?: any): void;
-declare function confirmAll(): void;
-declare type EachMsgFn = (msg: string, confirmed: boolean, i: number) => any;
-declare function forEach(fn: EachMsgFn): void;
-
-declare const message_d_templates: typeof templates;
-declare const message_d_needsUpdate: typeof needsUpdate;
-type message_d_MessageOptions = MessageOptions;
-declare const message_d_configure: typeof configure;
-declare const message_d_add: typeof add;
-declare const message_d_fromActor: typeof fromActor;
-declare const message_d_forPlayer: typeof forPlayer;
-declare const message_d_addCombat: typeof addCombat;
-declare const message_d_confirmAll: typeof confirmAll;
-type message_d_EachMsgFn = EachMsgFn;
-declare const message_d_forEach: typeof forEach;
-declare namespace message_d {
-  export {
-    message_d_templates as templates,
-    install$1 as install,
-    installAll$1 as installAll,
-    message_d_needsUpdate as needsUpdate,
-    message_d_MessageOptions as MessageOptions,
-    message_d_configure as configure,
-    message_d_add as add,
-    message_d_fromActor as fromActor,
-    message_d_forPlayer as forPlayer,
-    message_d_addCombat as addCombat,
-    message_d_confirmAll as confirmAll,
-    message_d_EachMsgFn as EachMsgFn,
-    message_d_forEach as forEach,
-  };
-}
-
-declare enum Effect {
-    E_NEXT_ALWAYS,
-    E_NEXT_EVERYWHERE,
-    E_FIRED,
-    E_NO_MARK_FIRED,
-    E_PROTECTED,
-    E_TREAT_AS_BLOCKING,
-    E_PERMIT_BLOCKING,
-    E_ABORT_IF_BLOCKS_MAP,
-    E_BLOCKED_BY_ITEMS,
-    E_BLOCKED_BY_ACTORS,
-    E_BLOCKED_BY_OTHER_LAYERS,
-    E_SUPERPRIORITY,
-    E_SPREAD_CIRCLE,
-    E_SPREAD_LINE,
-    E_EVACUATE_CREATURES,
-    E_EVACUATE_ITEMS,
-    E_BUILD_IN_WALLS,
-    E_MUST_TOUCH_WALLS,
-    E_NO_TOUCH_WALLS,
-    E_CLEAR_GROUND,
-    E_CLEAR_SURFACE,
-    E_CLEAR_LIQUID,
-    E_CLEAR_GAS,
-    E_CLEAR_TILE,
-    E_CLEAR_CELL,
-    E_ONLY_IF_EMPTY,
-    E_ACTIVATE_DORMANT_MONSTER,
-    E_AGGRAVATES_MONSTERS,
-    E_RESURRECT_ALLY
 }
 
 interface EffectHandler {
@@ -2794,4 +2811,4 @@ declare namespace index_d {
   };
 }
 
-export { Random, index_d$2 as actor, blob_d as blob, index_d$9 as canvas, index_d$c as color, colors, config, cosmetic, data, index_d$1 as effect, events_d as events, flag_d as flag, index_d$a as fov, frequency_d as frequency, index_d$5 as gameObject, grid_d as grid, io_d as io, index_d$4 as item, index_d$6 as light, loop, index_d as map, message_d as message, path_d as path, random, range_d as range, scheduler_d as scheduler, index_d$8 as sprite, sprites, index_d$7 as text, index_d$3 as tile, types_d as types, index_d$b as utils };
+export { Random, index_d$4 as actor, blob_d as blob, index_d$9 as canvas, index_d$c as color, colors, config, cosmetic, data, index_d$1 as effect, events_d as events, flag_d as flag, index_d$a as fov, frequency_d as frequency, index_d$5 as gameObject, grid_d as grid, io_d as io, index_d$3 as item, index_d$6 as light, loop, index_d as map, message_d as message, path_d as path, random, range_d as range, scheduler_d as scheduler, index_d$8 as sprite, sprites, index_d$7 as text, index_d$2 as tile, types_d as types, index_d$b as utils };

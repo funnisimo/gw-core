@@ -30,7 +30,7 @@ export class MessageEffect implements EffectHandler {
     ) {
         if (!config.message) return false;
 
-        const fired = config.flags & Flags.E_FIRED ? true : false;
+        const fired = !!(config.flags & Flags.E_FIRED);
 
         if (
             config.message &&

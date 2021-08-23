@@ -1,16 +1,10 @@
 import * as Grid from './grid';
 import * as Utils from './utils';
 
-// var PATH = {};
-// export { PATH as path };
-
 export const FORBIDDEN = -1;
 export const OBSTRUCTION = -2;
 export const AVOIDED = 10;
 export const NO_PATH = 30000;
-
-// GW.actor.avoidsCell = GW.actor.avoidsCell || Utils.FALSE;
-// GW.actor.canPass = GW.actor.canPass || ((a, b) => a === b);
 
 export type BlockedFn = (
     toX: number,
@@ -145,11 +139,6 @@ function clear(map: DijkstraMap, maxDistance: number, eightWays: boolean) {
     }
 }
 
-// function pdsGetDistance(map, x, y) {
-// 	update(map);
-// 	return getLink(map, x, y).distance;
-// }
-
 function setDistance(map: DijkstraMap, x: number, y: number, distance: number) {
     let left, right, link;
 
@@ -177,97 +166,11 @@ function setDistance(map: DijkstraMap, x: number, y: number, distance: number) {
     }
 }
 
-// function pdsSetCosts(map: DijkstraMap, costMap: Grid.NumGrid) {
-// 	let i, j;
-
-// 	for (i=0; i<map.width; i++) {
-// 		for (j=0; j<map.height; j++) {
-// 			if (i != 0 && j != 0 && i < map.width - 1 && j < map.height - 1) {
-// 				getLink(map, i, j).cost = costMap[i][j];
-// 			} else {
-// 				getLink(map, i, j).cost = FORBIDDEN;
-// 			}
-// 		}
-// 	}
-// }
-
 function isBoundaryXY(data: Grid.NumGrid, x: number, y: number) {
     if (x <= 0 || y <= 0) return true;
     if (x >= data.length - 1 || y >= data[0].length - 1) return true;
     return false;
 }
-
-// function pdsBatchInput(
-//   map: DijkstraMap,
-//   distanceMap: Grid.NumGrid,
-//   costMap: Grid.NumGrid,
-//   maxDistance: number,
-//   eightWays: boolean
-// ) {
-//   let i, j;
-
-//   map.eightWays = eightWays;
-
-//   let left: CostLink | null = map.front;
-//   let right: CostLink | null = map.front.right;
-
-//   map.front.right = null;
-//   for (i = 0; i < map.width; i++) {
-//     for (j = 0; j < map.height; j++) {
-//       let link = getLink(map, i, j);
-
-//       if (distanceMap != null) {
-//         link.distance = distanceMap[i][j];
-//       } else {
-//         if (costMap != null) {
-//           // totally hackish; refactor
-//           link.distance = maxDistance;
-//         }
-//       }
-
-//       let cost;
-
-//       if (isBoundaryXY(costMap, i, j)) {
-//         cost = OBSTRUCTION;
-//       } else {
-//         cost = costMap[i][j];
-//       }
-
-//       link.cost = cost;
-
-//       if (cost > 0) {
-//         if (link.distance < maxDistance) {
-//           if (right === null || right.distance > link.distance) {
-//             // left and right are used to traverse the list; if many cells have similar values,
-//             // some time can be saved by not clearing them with each insertion.  this time,
-//             // sadly, we have to start from the front.
-
-//             left = map.front;
-//             right = map.front.right;
-//           }
-
-//           while (right !== null && right.distance < link.distance) {
-//             left = right;
-//             right = right.right;
-//           }
-
-//           link.right = right;
-//           link.left = left;
-//           left.right = link;
-//           if (right != null) right.left = link;
-
-//           left = link;
-//         } else {
-//           link.right = null;
-//           link.left = null;
-//         }
-//       } else {
-//         link.right = null;
-//         link.left = null;
-//       }
-//     }
-//   }
-// }
 
 function batchOutput(map: DijkstraMap, distanceMap: Grid.NumGrid) {
     let i, j;
@@ -282,83 +185,6 @@ function batchOutput(map: DijkstraMap, distanceMap: Grid.NumGrid) {
 }
 
 var DIJKSTRA_MAP: DijkstraMap;
-
-// function dijkstraScan(
-//   distanceMap: Grid.NumGrid,
-//   costMap: Grid.NumGrid,
-//   useDiagonals = false
-// ) {
-//   // static makeDijkstraMap map;
-
-//   const width = distanceMap.length;
-//   const height = distanceMap[0].length;
-
-//   if (
-//     !DIJKSTRA_MAP ||
-//     DIJKSTRA_MAP.width < width ||
-//     DIJKSTRA_MAP.height < height
-//   ) {
-//     DIJKSTRA_MAP = makeDijkstraMap(width, height);
-//   }
-
-//   DIJKSTRA_MAP.width = width;
-//   DIJKSTRA_MAP.height = height;
-
-//   pdsBatchInput(DIJKSTRA_MAP, distanceMap, costMap, NO_PATH, useDiagonals);
-//   batchOutput(DIJKSTRA_MAP, distanceMap);
-// }
-
-//
-// function populateGenericCostMap(costMap, map) {
-//   let i, j;
-//
-// 	for (i=0; i<map.width; i++) {
-// 		for (j=0; j<map.height; j++) {
-//       if (map.hasTileFlag(i, j, def.T_OBSTRUCTS_PASSABILITY)
-//           && (!map.hasTileMechFlag(i, j, def.TM_IS_SECRET) || (map.discoveredTileFlags(i, j) & def.T_OBSTRUCTS_PASSABILITY)))
-// 			{
-// 				costMap[i][j] = map.hasTileFlag(i, j, def.T_OBSTRUCTS_DIAGONAL_MOVEMENT) ? OBSTRUCTION : FORBIDDEN;
-//       } else if (map.hasTileFlag(i, j, def.T_PATHING_BLOCKER & ~def.T_OBSTRUCTS_PASSABILITY)) {
-// 				costMap[i][j] = FORBIDDEN;
-//       } else {
-//         costMap[i][j] = 1;
-//       }
-//     }
-//   }
-// }
-//
-// GW.path.populateGenericCostMap = populateGenericCostMap;
-//
-//
-// function baseCostFunction(blockingTerrainFlags, traveler, canUseSecretDoors, i, j) {
-// 	let cost = 1;
-// 	monst = GW.MAP.actorAt(i, j);
-// 	const monstFlags = (monst ? (monst.info ? monst.info.flags : monst.flags) : 0) || 0;
-// 	if ((monstFlags & (def.MONST_IMMUNE_TO_WEAPONS | def.MONST_INVULNERABLE))
-// 			&& (monstFlags & (def.MONST_IMMOBILE | def.MONST_GETS_TURN_ON_ACTIVATION)))
-// 	{
-// 			// Always avoid damage-immune stationary monsters.
-// 		cost = FORBIDDEN;
-// 	} else if (canUseSecretDoors
-// 			&& GW.MAP.hasTileMechFlag(i, j, TM_IS_SECRET)
-// 			&& GW.MAP.hasTileFlag(i, j, T_OBSTRUCTS_PASSABILITY)
-// 			&& !(GW.MAP.hasDiscoveredFlag(i, j) & T_OBSTRUCTS_PASSABILITY))
-// 	{
-// 		cost = 1;
-// 	} else if (GW.MAP.hasTileFlag(i, j, T_OBSTRUCTS_PASSABILITY)
-// 				 || (traveler && traveler === GW.PLAYER && !(GW.MAP.hasCellFlag(i, j, (REVEALED | MAGIC_MAPPED)))))
-// 	{
-// 		cost = GW.MAP.hasTileFlag(i, j, T_OBSTRUCTS_DIAGONAL_MOVEMENT) ? OBSTRUCTION : FORBIDDEN;
-// 	} else if ((traveler && GW.actor.avoidsCell(traveler, i, j)) || GW.MAP.hasTileFlag(i, j, blockingTerrainFlags)) {
-// 		cost = FORBIDDEN;
-// 	}
-//
-// 	return cost;
-// }
-//
-// GW.path.costFn = baseCostFunction;
-// GW.path.simpleCost = baseCostFunction.bind(undefined, 0, null, false);
-// GW.path.costForActor = ((actor) => baseCostFunction.bind(undefined, GW.actor.forbiddenFlags(actor), actor, actor !== GW.PLAYER));
 
 export function calculateDistances(
     distanceMap: Grid.NumGrid,
@@ -401,29 +227,6 @@ export function calculateDistances(
     //   distanceMap.x = destinationX;
     //   distanceMap.y = destinationY;
 }
-
-// function pathingDistance(x1, y1, x2, y2, blockingTerrainFlags, actor) {
-// 	let retval;
-// 	const distanceMap = GW.grid.alloc(DUNGEON.width, DUNGEON.height, 0);
-// 	const costFn = baseCostFunction.bind(undefined, blockingTerrainFlags, actor, true);
-// 	calculateDistances(distanceMap, x2, y2, costFn, true);
-// 	retval = distanceMap[x1][y1];
-// 	GW.grid.free(distanceMap);
-// 	return retval;
-// }
-//
-// GW.path.distanceFromTo = pathingDistance;
-
-// function monstTravelDistance(monst, x2, y2, blockingTerrainFlags) {
-// 	let retval;
-// 	const distanceMap = GW.grid.alloc(DUNGEON.width, DUNGEON.height, 0);
-// 	calculateDistances(distanceMap, x2, y2, blockingTerrainFlags, monst, true, true);
-// 	retval = distanceMap[monst.x][monst.y];
-// 	GW.grid.free(distanceMap);
-// 	return retval;
-// }
-//
-// GW.actor.travelDistance = monstTravelDistance;
 
 // Returns null if there are no beneficial moves.
 // If preferDiagonals is true, we will prefer diagonal moves.
@@ -535,5 +338,3 @@ export function getPath(
 
     return steps ? path : null;
 }
-//
-// GW.path.from = getMonsterPathOnMap;

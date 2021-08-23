@@ -2635,8 +2635,6 @@
         FovSystem: FovSystem
     };
 
-    // var PATH = {};
-    // export { PATH as path };
     const FORBIDDEN = -1;
     const OBSTRUCTION = -2;
     const AVOIDED = 10;
@@ -2731,10 +2729,6 @@
             map.links[i].left = map.links[i].right = null;
         }
     }
-    // function pdsGetDistance(map, x, y) {
-    // 	update(map);
-    // 	return getLink(map, x, y).distance;
-    // }
     function setDistance(map, x, y, distance) {
         let left, right, link;
         if (x > 0 && y > 0 && x < map.width - 1 && y < map.height - 1) {
@@ -2759,18 +2753,6 @@
             }
         }
     }
-    // function pdsSetCosts(map: DijkstraMap, costMap: Grid.NumGrid) {
-    // 	let i, j;
-    // 	for (i=0; i<map.width; i++) {
-    // 		for (j=0; j<map.height; j++) {
-    // 			if (i != 0 && j != 0 && i < map.width - 1 && j < map.height - 1) {
-    // 				getLink(map, i, j).cost = costMap[i][j];
-    // 			} else {
-    // 				getLink(map, i, j).cost = FORBIDDEN;
-    // 			}
-    // 		}
-    // 	}
-    // }
     function isBoundaryXY(data, x, y) {
         if (x <= 0 || y <= 0)
             return true;
@@ -2778,65 +2760,6 @@
             return true;
         return false;
     }
-    // function pdsBatchInput(
-    //   map: DijkstraMap,
-    //   distanceMap: Grid.NumGrid,
-    //   costMap: Grid.NumGrid,
-    //   maxDistance: number,
-    //   eightWays: boolean
-    // ) {
-    //   let i, j;
-    //   map.eightWays = eightWays;
-    //   let left: CostLink | null = map.front;
-    //   let right: CostLink | null = map.front.right;
-    //   map.front.right = null;
-    //   for (i = 0; i < map.width; i++) {
-    //     for (j = 0; j < map.height; j++) {
-    //       let link = getLink(map, i, j);
-    //       if (distanceMap != null) {
-    //         link.distance = distanceMap[i][j];
-    //       } else {
-    //         if (costMap != null) {
-    //           // totally hackish; refactor
-    //           link.distance = maxDistance;
-    //         }
-    //       }
-    //       let cost;
-    //       if (isBoundaryXY(costMap, i, j)) {
-    //         cost = OBSTRUCTION;
-    //       } else {
-    //         cost = costMap[i][j];
-    //       }
-    //       link.cost = cost;
-    //       if (cost > 0) {
-    //         if (link.distance < maxDistance) {
-    //           if (right === null || right.distance > link.distance) {
-    //             // left and right are used to traverse the list; if many cells have similar values,
-    //             // some time can be saved by not clearing them with each insertion.  this time,
-    //             // sadly, we have to start from the front.
-    //             left = map.front;
-    //             right = map.front.right;
-    //           }
-    //           while (right !== null && right.distance < link.distance) {
-    //             left = right;
-    //             right = right.right;
-    //           }
-    //           link.right = right;
-    //           link.left = left;
-    //           left.right = link;
-    //           if (right != null) right.left = link;
-    //           left = link;
-    //         } else {
-    //           link.right = null;
-    //           link.left = null;
-    //         }
-    //       } else {
-    //         link.right = null;
-    //         link.left = null;
-    //       }
-    //     }
-    //   }
-    // }
     function batchOutput(map, distanceMap) {
         let i, j;
         update(map);
@@ -2848,77 +2771,6 @@
         }
     }
     var DIJKSTRA_MAP;
-    // function dijkstraScan(
-    //   distanceMap: Grid.NumGrid,
-    //   costMap: Grid.NumGrid,
-    //   useDiagonals = false
-    // ) {
-    //   // static makeDijkstraMap map;
-    //   const width = distanceMap.length;
-    //   const height = distanceMap[0].length;
-    //   if (
-    //     !DIJKSTRA_MAP ||
-    //     DIJKSTRA_MAP.width < width ||
-    //     DIJKSTRA_MAP.height < height
-    //   ) {
-    //     DIJKSTRA_MAP = makeDijkstraMap(width, height);
-    //   }
-    //   DIJKSTRA_MAP.width = width;
-    //   DIJKSTRA_MAP.height = height;
-    //   pdsBatchInput(DIJKSTRA_MAP, distanceMap, costMap, NO_PATH, useDiagonals);
-    //   batchOutput(DIJKSTRA_MAP, distanceMap);
-    // }
-    //
-    // function populateGenericCostMap(costMap, map) {
-    //   let i, j;
-    //
-    // 	for (i=0; i<map.width; i++) {
-    // 		for (j=0; j<map.height; j++) {
-    //       if (map.hasTileFlag(i, j, def.T_OBSTRUCTS_PASSABILITY)
-    //           && (!map.hasTileMechFlag(i, j, def.TM_IS_SECRET) || (map.discoveredTileFlags(i, j) & def.T_OBSTRUCTS_PASSABILITY)))
-    // 			{
-    // 				costMap[i][j] = map.hasTileFlag(i, j, def.T_OBSTRUCTS_DIAGONAL_MOVEMENT) ? OBSTRUCTION : FORBIDDEN;
-    //       } else if (map.hasTileFlag(i, j, def.T_PATHING_BLOCKER & ~def.T_OBSTRUCTS_PASSABILITY)) {
-    // 				costMap[i][j] = FORBIDDEN;
-    //       } else {
-    //         costMap[i][j] = 1;
-    //       }
-    //     }
-    //   }
-    // }
-    //
-    // GW.path.populateGenericCostMap = populateGenericCostMap;
-    //
-    //
-    // function baseCostFunction(blockingTerrainFlags, traveler, canUseSecretDoors, i, j) {
-    // 	let cost = 1;
-    // 	monst = GW.MAP.actorAt(i, j);
-    // 	const monstFlags = (monst ? (monst.info ? monst.info.flags : monst.flags) : 0) || 0;
-    // 	if ((monstFlags & (def.MONST_IMMUNE_TO_WEAPONS | def.MONST_INVULNERABLE))
-    // 			&& (monstFlags & (def.MONST_IMMOBILE | def.MONST_GETS_TURN_ON_ACTIVATION)))
-    // 	{
-    // 			// Always avoid damage-immune stationary monsters.
-    // 		cost = FORBIDDEN;
-    // 	} else if (canUseSecretDoors
-    // 			&& GW.MAP.hasTileMechFlag(i, j, TM_IS_SECRET)
-    // 			&& GW.MAP.hasTileFlag(i, j, T_OBSTRUCTS_PASSABILITY)
-    // 			&& !(GW.MAP.hasDiscoveredFlag(i, j) & T_OBSTRUCTS_PASSABILITY))
-    // 	{
-    // 		cost = 1;
-    // 	} else if (GW.MAP.hasTileFlag(i, j, T_OBSTRUCTS_PASSABILITY)
-    // 				 || (traveler && traveler === GW.PLAYER && !(GW.MAP.hasCellFlag(i, j, (REVEALED | MAGIC_MAPPED)))))
-    // 	{
-    // 		cost = GW.MAP.hasTileFlag(i, j, T_OBSTRUCTS_DIAGONAL_MOVEMENT) ? OBSTRUCTION : FORBIDDEN;
-    // 	} else if ((traveler && GW.actor.avoidsCell(traveler, i, j)) || GW.MAP.hasTileFlag(i, j, blockingTerrainFlags)) {
-    // 		cost = FORBIDDEN;
-    // 	}
-    //
-    // 	return cost;
-    // }
-    //
-    // GW.path.costFn = baseCostFunction;
-    // GW.path.simpleCost = baseCostFunction.bind(undefined, 0, null, false);
-    // GW.path.costForActor = ((actor) => baseCostFunction.bind(undefined, GW.actor.forbiddenFlags(actor), actor, actor !== GW.PLAYER));
     function calculateDistances(distanceMap, destinationX, destinationY, costMap, eightWays = false, maxDistance = NO_PATH) {
         const width = distanceMap.length;
         const height = distanceMap[0].length;
@@ -2946,27 +2798,6 @@
         //   distanceMap.x = destinationX;
         //   distanceMap.y = destinationY;
     }
-    // function pathingDistance(x1, y1, x2, y2, blockingTerrainFlags, actor) {
-    // 	let retval;
-    // 	const distanceMap = GW.grid.alloc(DUNGEON.width, DUNGEON.height, 0);
-    // 	const costFn = baseCostFunction.bind(undefined, blockingTerrainFlags, actor, true);
-    // 	calculateDistances(distanceMap, x2, y2, costFn, true);
-    // 	retval = distanceMap[x1][y1];
-    // 	GW.grid.free(distanceMap);
-    // 	return retval;
-    // }
-    //
-    // GW.path.distanceFromTo = pathingDistance;
-    // function monstTravelDistance(monst, x2, y2, blockingTerrainFlags) {
-    // 	let retval;
-    // 	const distanceMap = GW.grid.alloc(DUNGEON.width, DUNGEON.height, 0);
-    // 	calculateDistances(distanceMap, x2, y2, blockingTerrainFlags, monst, true, true);
-    // 	retval = distanceMap[monst.x][monst.y];
-    // 	GW.grid.free(distanceMap);
-    // 	return retval;
-    // }
-    //
-    // GW.actor.travelDistance = monstTravelDistance;
     // Returns null if there are no beneficial moves.
     // If preferDiagonals is true, we will prefer diagonal moves.
     // Always rolls downhill on the distance map.
@@ -3047,8 +2878,6 @@
         } while (dir);
         return steps ? path : null;
     }
-    //
-    // GW.path.from = getMonsterPathOnMap;
 
     var path = {
         __proto__: null,
@@ -4980,7 +4809,7 @@ void main() {
         return output;
     }
 
-    function configure$1(opts = {}) {
+    function configure(opts = {}) {
         if (opts.fg !== undefined) {
             options.defaultFg = opts.fg;
         }
@@ -5012,7 +4841,7 @@ void main() {
         removeColors: removeColors,
         wordWrap: wordWrap,
         splitIntoLines: splitIntoLines,
-        configure: configure$1,
+        configure: configure,
         addHelper: addHelper,
         options: options
     };
@@ -5875,70 +5704,6 @@ void main() {
         makeMixer: makeMixer
     };
 
-    // export interface ObjectFlags {
-    //     readonly object: number;
-    // }
-    // export interface GameObjectType {
-    //     readonly sprite: SpriteData;
-    //     readonly priority: number;
-    //     readonly depth: number;
-    //     // readonly light: LightType | null;
-    //     readonly flags: ObjectFlags;
-    //     hasObjectFlag(flag: number): boolean;
-    // }
-    // export interface TileFlags extends ObjectFlags {
-    //     readonly tile: number;
-    //     readonly tileMech: number;
-    // }
-    // export interface TileType extends GameObjectType {
-    //     readonly id: string;
-    //     readonly flags: TileFlags;
-    // }
-    // export interface ActorFlags extends ObjectFlags {
-    //     actor: number;
-    // }
-    // export interface ActorType
-    //     extends XY,
-    //         Chainable<GameObjectType>,
-    //         GameObjectType {
-    //     isPlayer: () => boolean;
-    //     isVisible: () => boolean;
-    //     isDetected: () => boolean;
-    //     blocksVision: () => boolean; // kind.flags & Flags.ActorKind.AK_BLOCKS_VISION
-    //     layerFlags: () => number;
-    //     avoidsCell: (cell: CellType) => boolean;
-    //     // if (cell.flags & Flags.Cell.HAS_ACTOR) return false;
-    //     // return !cell.hasTileFlag(forbidTileFlags);
-    //     forbidsCell: (cell: CellType) => boolean;
-    //     delete: () => void;
-    //     rememberedInCell: CellType | null;
-    //     readonly flags: ActorFlags;
-    //     next: GameObjectType | null;
-    // }
-    // export interface ItemFlags extends ObjectFlags {
-    //     item: number;
-    // }
-    // export interface ItemType
-    //     extends XY,
-    //         Chainable<GameObjectType>,
-    //         GameObjectType {
-    //     quantity: number;
-    //     readonly flags: ItemFlags;
-    //     layerFlags: () => number;
-    //     blocksMove: () => boolean;
-    //     avoidsCell: (cell: CellType) => boolean;
-    //     forbidsCell: (cell: CellType) => boolean;
-    //     // if (cell.flags & Flags.Cell.HAS_ITEM) return false;
-    //     // return !cell.hasTileFlag(theItem.kind.forbiddenTileFlags());
-    //     isDetected: () => boolean; // flags & Flags.Item.ITEM_MAGIC_DETECTED && GW.item.magicChar(theItem)
-    //     delete: () => void;
-    //     clone: () => this;
-    //     next: GameObjectType | null;
-    // }
-    // export interface FxType extends XY, Chainable<GameObjectType>, GameObjectType {
-    //     next: GameObjectType | null;
-    // }
-
     var types = {
         __proto__: null
     };
@@ -5953,37 +5718,16 @@ void main() {
     function install$3(id, msg) {
         const template = compile(msg);
         templates[id] = template;
+        return template;
     }
     function installAll$3(config) {
         Object.entries(config).forEach(([id, msg]) => install$3(id, msg));
     }
-    // messages
-    const ARCHIVE = [];
-    const CONFIRMED = [];
-    var ARCHIVE_LINES = 30;
-    var MSG_WIDTH = 80;
-    var NEXT_WRITE_INDEX = 0;
-    var NEEDS_UPDATE = false;
-    let COMBAT_MESSAGE = null;
-    function needsUpdate(needs) {
-        if (needs) {
-            NEEDS_UPDATE = true;
-        }
-        return NEEDS_UPDATE;
-    }
-    function configure(opts) {
-        if (!opts)
-            opts = {};
-        ARCHIVE_LINES = opts.length || 30;
-        MSG_WIDTH = opts.width || 80;
-        for (let i = 0; i < ARCHIVE_LINES; ++i) {
-            ARCHIVE[i] = null;
-            CONFIRMED[i] = false;
-        }
-    }
-    ////////////////////////////////////
-    // Messages
+    const handlers$1 = [];
     function add(msg, args) {
+        return addAt(-1, -1, msg, args);
+    }
+    function addAt(x, y, msg, args) {
         const template = templates[msg];
         if (template) {
             msg = template(args);
@@ -5991,97 +5735,119 @@ void main() {
         else if (args) {
             msg = apply(msg, args);
         }
-        commitCombatMessage();
-        addMessage(msg);
+        handlers$1.forEach((h) => h.addMessage(x, y, msg));
     }
-    function fromActor(actor, msg, args) {
-        if (actor.isPlayer() || actor.isVisible()) {
-            add(msg, args);
+    function addCombat(x, y, msg, args) {
+        const template = templates[msg];
+        if (template) {
+            msg = template(args);
         }
+        else if (args) {
+            msg = apply(msg, args);
+        }
+        handlers$1.forEach((h) => h.addCombatMessage(x, y, msg));
     }
-    function forPlayer(actor, msg, args) {
-        if (!actor.isPlayer())
-            return;
-        add(msg, args);
-    }
-    function addCombat(actor, msg, args) {
-        if (actor.isPlayer() || actor.isVisible()) {
-            const template = templates[msg];
-            if (template) {
-                msg = template(args);
+    class MessageCache {
+        constructor(opts = {}) {
+            this.ARCHIVE = [];
+            this.CONFIRMED = [];
+            this.ARCHIVE_LINES = 30;
+            this.MSG_WIDTH = 80;
+            this.NEXT_WRITE_INDEX = 0;
+            this.NEEDS_UPDATE = true;
+            this.COMBAT_MESSAGE = null;
+            this.ARCHIVE_LINES = opts.length || 30;
+            this.MSG_WIDTH = opts.width || 80;
+            for (let i = 0; i < this.ARCHIVE_LINES; ++i) {
+                this.ARCHIVE[i] = null;
+                this.CONFIRMED[i] = false;
             }
-            else if (args) {
-                msg = apply(msg, args);
+            handlers$1.push(this);
+        }
+        get needsUpdate() {
+            return this.NEEDS_UPDATE;
+        }
+        set needsUpdate(needs) {
+            if (needs) {
+                this.NEEDS_UPDATE = true;
             }
-            addCombatMessage(msg);
         }
-    }
-    // function messageWithoutCaps(msg, requireAcknowledgment) {
-    function addMessageLine(msg) {
-        if (!length(msg)) {
-            return;
-        }
-        // Add the message to the archive.
-        ARCHIVE[NEXT_WRITE_INDEX] = msg;
-        CONFIRMED[NEXT_WRITE_INDEX] = false;
-        NEXT_WRITE_INDEX = (NEXT_WRITE_INDEX + 1) % ARCHIVE_LINES;
-    }
-    function addMessage(msg) {
-        var _a;
-        msg = capitalize(msg);
-        // // Implement the American quotation mark/period/comma ordering rule.
-        // for (i=0; text.text[i] && text.text[i+1]; i++) {
-        //     if (text.charCodeAt(i) === COLOR_ESCAPE) {
-        //         i += 4;
-        //     } else if (text.text[i] === '"'
-        //                && (text.text[i+1] === '.' || text.text[i+1] === ','))
-        // 		{
-        // 			const replace = text.text[i+1] + '"';
-        // 			text.spliceRaw(i, 2, replace);
-        //     }
-        // }
-        const lines = splitIntoLines(msg, MSG_WIDTH);
-        if ((_a = config$1.message) === null || _a === void 0 ? void 0 : _a.reverseMultiLine) {
-            lines.reverse();
-        }
-        lines.forEach((l) => addMessageLine(l));
-        // display the message:
-        NEEDS_UPDATE = true;
-        // if (GAME.playbackMode) {
-        // 	GAME.playbackDelayThisTurn += GAME.playbackDelayPerTurn * 5;
-        // }
-    }
-    function addCombatMessage(msg) {
-        if (!COMBAT_MESSAGE) {
-            COMBAT_MESSAGE = msg;
-        }
-        else {
-            COMBAT_MESSAGE += ', ' + capitalize(msg);
-        }
-        NEEDS_UPDATE = true;
-    }
-    function commitCombatMessage() {
-        if (!COMBAT_MESSAGE)
-            return false;
-        addMessage(COMBAT_MESSAGE + '.');
-        COMBAT_MESSAGE = null;
-        return true;
-    }
-    function confirmAll() {
-        for (let i = 0; i < CONFIRMED.length; i++) {
-            CONFIRMED[i] = true;
-        }
-        NEEDS_UPDATE = true;
-    }
-    function forEach(fn) {
-        commitCombatMessage();
-        for (let i = 0; i < ARCHIVE_LINES; ++i) {
-            const n = (ARCHIVE_LINES - i + NEXT_WRITE_INDEX - 1) % ARCHIVE_LINES;
-            const msg = ARCHIVE[n];
-            if (!msg)
+        // function messageWithoutCaps(msg, requireAcknowledgment) {
+        addMessageLine(msg) {
+            if (!length(msg)) {
                 return;
-            if (fn(msg, CONFIRMED[n], i) === false)
-                return;
+            }
+            // Add the message to the archive.
+            this.ARCHIVE[this.NEXT_WRITE_INDEX] = msg;
+            this.CONFIRMED[this.NEXT_WRITE_INDEX] = false;
+            this.NEXT_WRITE_INDEX =
+                (this.NEXT_WRITE_INDEX + 1) % this.ARCHIVE_LINES;
+        }
+        addMessage(_x, _y, msg) {
+            this._addMessage(msg);
+        }
+        _addMessage(msg) {
+            var _a;
+            this.commitCombatMessage();
+            msg = capitalize(msg);
+            // // Implement the American quotation mark/period/comma ordering rule.
+            // for (i=0; text.text[i] && text.text[i+1]; i++) {
+            //     if (text.charCodeAt(i) === COLOR_ESCAPE) {
+            //         i += 4;
+            //     } else if (text.text[i] === '"'
+            //                && (text.text[i+1] === '.' || text.text[i+1] === ','))
+            // 		{
+            // 			const replace = text.text[i+1] + '"';
+            // 			text.spliceRaw(i, 2, replace);
+            //     }
+            // }
+            const lines = splitIntoLines(msg, this.MSG_WIDTH);
+            if ((_a = config$1.message) === null || _a === void 0 ? void 0 : _a.reverseMultiLine) {
+                lines.reverse();
+            }
+            lines.forEach((l) => this.addMessageLine(l));
+            // display the message:
+            this.NEEDS_UPDATE = true;
+            // if (GAME.playbackMode) {
+            // 	GAME.playbackDelayThisTurn += GAME.playbackDelayPerTurn * 5;
+            // }
+        }
+        addCombatMessage(_x, _y, msg) {
+            this._addCombatMessage(msg);
+        }
+        _addCombatMessage(msg) {
+            if (!this.COMBAT_MESSAGE) {
+                this.COMBAT_MESSAGE = msg;
+            }
+            else {
+                this.COMBAT_MESSAGE += ', ' + capitalize(msg);
+            }
+            this.NEEDS_UPDATE = true;
+        }
+        commitCombatMessage() {
+            if (!this.COMBAT_MESSAGE)
+                return false;
+            this._addMessage(this.COMBAT_MESSAGE + '.');
+            this.COMBAT_MESSAGE = null;
+            return true;
+        }
+        confirmAll() {
+            for (let i = 0; i < this.CONFIRMED.length; i++) {
+                this.CONFIRMED[i] = true;
+            }
+            this.NEEDS_UPDATE = true;
+        }
+        forEach(fn) {
+            this.commitCombatMessage();
+            for (let i = 0; i < this.ARCHIVE_LINES; ++i) {
+                const n = (this.ARCHIVE_LINES - i + this.NEXT_WRITE_INDEX - 1) %
+                    this.ARCHIVE_LINES;
+                const msg = this.ARCHIVE[n];
+                if (!msg)
+                    return;
+                if (fn(msg, this.CONFIRMED[n], i) === false)
+                    return;
+            }
         }
     }
 
@@ -6090,14 +5856,11 @@ void main() {
         templates: templates,
         install: install$3,
         installAll: installAll$3,
-        needsUpdate: needsUpdate,
-        configure: configure,
+        handlers: handlers$1,
         add: add,
-        fromActor: fromActor,
-        forPlayer: forPlayer,
+        addAt: addAt,
         addCombat: addCombat,
-        confirmAll: confirmAll,
-        forEach: forEach
+        MessageCache: MessageCache
     };
 
     ///////////////////////////////////////////////////////
@@ -6316,7 +6079,7 @@ void main() {
         async fire(config, map, x, y, ctx) {
             if (!config.message)
                 return false;
-            const fired = config.flags & Effect.E_FIRED ? true : false;
+            const fired = !!(config.flags & Effect.E_FIRED);
             if (config.message &&
                 config.message.length &&
                 !fired &&
