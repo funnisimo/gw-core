@@ -53,62 +53,62 @@ declare function fromArray(vals: ColorData, base256?: boolean): Color;
 declare function fromCss(css: string): Color;
 declare function fromName(name: string): Color;
 declare function fromNumber(val: number, base256?: boolean): Color;
-declare function make$b(): Color;
-declare function make$b(rgb: number, base256?: boolean): Color;
-declare function make$b(color?: ColorBase | null): Color;
-declare function make$b(arrayLike: ColorData, base256?: boolean): Color;
-declare function make$b(...rgb: number[]): Color;
-declare function from$6(): Color;
-declare function from$6(rgb: number, base256?: boolean): Color;
-declare function from$6(color?: ColorBase | null): Color;
-declare function from$6(arrayLike: ColorData, base256?: boolean): Color;
-declare function from$6(...rgb: number[]): Color;
+declare function make$8(): Color;
+declare function make$8(rgb: number, base256?: boolean): Color;
+declare function make$8(color?: ColorBase | null): Color;
+declare function make$8(arrayLike: ColorData, base256?: boolean): Color;
+declare function make$8(...rgb: number[]): Color;
+declare function from$4(): Color;
+declare function from$4(rgb: number, base256?: boolean): Color;
+declare function from$4(color?: ColorBase | null): Color;
+declare function from$4(arrayLike: ColorData, base256?: boolean): Color;
+declare function from$4(...rgb: number[]): Color;
 declare function separate(a: Color, b: Color): void;
 declare function swap(a: Color, b: Color): void;
 declare function relativeLuminance(a: Color, b: Color): number;
 declare function distance(a: Color, b: Color): number;
-declare function install$5(name: string, info: ColorBase): Color;
-declare function install$5(name: string, ...rgb: ColorData): Color;
+declare function install$3(name: string, info: ColorBase): Color;
+declare function install$3(name: string, ...rgb: ColorData): Color;
 declare function installSpread(name: string, info: ColorBase): Color;
 declare function installSpread(name: string, ...rgb: ColorData): Color;
 declare const NONE: Color;
 
-type index_d$c_ColorData = ColorData;
-type index_d$c_ColorBase = ColorBase;
-type index_d$c_LightValue = LightValue;
-declare const index_d$c_colors: typeof colors;
-type index_d$c_Color = Color;
-declare const index_d$c_Color: typeof Color;
-declare const index_d$c_fromArray: typeof fromArray;
-declare const index_d$c_fromCss: typeof fromCss;
-declare const index_d$c_fromName: typeof fromName;
-declare const index_d$c_fromNumber: typeof fromNumber;
-declare const index_d$c_separate: typeof separate;
-declare const index_d$c_swap: typeof swap;
-declare const index_d$c_relativeLuminance: typeof relativeLuminance;
-declare const index_d$c_distance: typeof distance;
-declare const index_d$c_installSpread: typeof installSpread;
-declare const index_d$c_NONE: typeof NONE;
-declare namespace index_d$c {
+type index_d$6_ColorData = ColorData;
+type index_d$6_ColorBase = ColorBase;
+type index_d$6_LightValue = LightValue;
+declare const index_d$6_colors: typeof colors;
+type index_d$6_Color = Color;
+declare const index_d$6_Color: typeof Color;
+declare const index_d$6_fromArray: typeof fromArray;
+declare const index_d$6_fromCss: typeof fromCss;
+declare const index_d$6_fromName: typeof fromName;
+declare const index_d$6_fromNumber: typeof fromNumber;
+declare const index_d$6_separate: typeof separate;
+declare const index_d$6_swap: typeof swap;
+declare const index_d$6_relativeLuminance: typeof relativeLuminance;
+declare const index_d$6_distance: typeof distance;
+declare const index_d$6_installSpread: typeof installSpread;
+declare const index_d$6_NONE: typeof NONE;
+declare namespace index_d$6 {
   export {
-    index_d$c_ColorData as ColorData,
-    index_d$c_ColorBase as ColorBase,
-    index_d$c_LightValue as LightValue,
-    index_d$c_colors as colors,
-    index_d$c_Color as Color,
-    index_d$c_fromArray as fromArray,
-    index_d$c_fromCss as fromCss,
-    index_d$c_fromName as fromName,
-    index_d$c_fromNumber as fromNumber,
-    make$b as make,
-    from$6 as from,
-    index_d$c_separate as separate,
-    index_d$c_swap as swap,
-    index_d$c_relativeLuminance as relativeLuminance,
-    index_d$c_distance as distance,
-    install$5 as install,
-    index_d$c_installSpread as installSpread,
-    index_d$c_NONE as NONE,
+    index_d$6_ColorData as ColorData,
+    index_d$6_ColorBase as ColorBase,
+    index_d$6_LightValue as LightValue,
+    index_d$6_colors as colors,
+    index_d$6_Color as Color,
+    index_d$6_fromArray as fromArray,
+    index_d$6_fromCss as fromCss,
+    index_d$6_fromName as fromName,
+    index_d$6_fromNumber as fromNumber,
+    make$8 as make,
+    from$4 as from,
+    index_d$6_separate as separate,
+    index_d$6_swap as swap,
+    index_d$6_relativeLuminance as relativeLuminance,
+    index_d$6_distance as distance,
+    install$3 as install,
+    index_d$6_installSpread as installSpread,
+    index_d$6_NONE as NONE,
   };
 }
 
@@ -123,7 +123,7 @@ interface SpriteData$1 {
     readonly bg?: Color | ColorBase;
     readonly opacity?: number;
 }
-declare type EachCb$1<T> = (t: T) => any;
+declare type EachCb<T> = (t: T) => any;
 declare type RandomFunction = () => number;
 declare type SeedFunction = (seed?: number) => RandomFunction;
 interface RandomConfig {
@@ -135,6 +135,7 @@ interface WeightedObject {
 }
 
 type types_d_XY = XY;
+type types_d_EachCb<_0> = EachCb<_0>;
 type types_d_RandomFunction = RandomFunction;
 type types_d_SeedFunction = SeedFunction;
 type types_d_RandomConfig = RandomConfig;
@@ -145,7 +146,7 @@ declare namespace types_d {
     Loc$1 as Loc,
     types_d_XY as XY,
     SpriteData$1 as SpriteData,
-    EachCb$1 as EachCb,
+    types_d_EachCb as EachCb,
     types_d_RandomFunction as RandomFunction,
     types_d_SeedFunction as SeedFunction,
     types_d_RandomConfig as RandomConfig,
@@ -313,180 +314,180 @@ declare function forBorder(x: number, y: number, width: number, height: number, 
 declare function arcCount(x: number, y: number, testFn: XYMatchFunc): number;
 declare function asyncForEach<T>(iterable: Iterable<T>, fn: (t: T) => Promise<any> | any): Promise<void>;
 
-type index_d$b_XY = XY;
-type index_d$b_Random = Random;
-declare const index_d$b_Random: typeof Random;
-declare const index_d$b_Alea: typeof Alea;
-declare const index_d$b_DIRS: typeof DIRS;
-declare const index_d$b_NO_DIRECTION: typeof NO_DIRECTION;
-declare const index_d$b_UP: typeof UP;
-declare const index_d$b_RIGHT: typeof RIGHT;
-declare const index_d$b_DOWN: typeof DOWN;
-declare const index_d$b_LEFT: typeof LEFT;
-declare const index_d$b_RIGHT_UP: typeof RIGHT_UP;
-declare const index_d$b_RIGHT_DOWN: typeof RIGHT_DOWN;
-declare const index_d$b_LEFT_DOWN: typeof LEFT_DOWN;
-declare const index_d$b_LEFT_UP: typeof LEFT_UP;
-declare const index_d$b_CLOCK_DIRS: typeof CLOCK_DIRS;
-declare const index_d$b_NOOP: typeof NOOP;
-declare const index_d$b_TRUE: typeof TRUE;
-declare const index_d$b_FALSE: typeof FALSE;
-declare const index_d$b_ONE: typeof ONE;
-declare const index_d$b_ZERO: typeof ZERO;
-declare const index_d$b_IDENTITY: typeof IDENTITY;
-declare const index_d$b_IS_ZERO: typeof IS_ZERO;
-declare const index_d$b_IS_NONZERO: typeof IS_NONZERO;
-declare const index_d$b_clamp: typeof clamp;
-declare const index_d$b_x: typeof x;
-declare const index_d$b_y: typeof y;
-type index_d$b_Bounds = Bounds;
-declare const index_d$b_Bounds: typeof Bounds;
-declare const index_d$b_copyXY: typeof copyXY;
-declare const index_d$b_addXY: typeof addXY;
-declare const index_d$b_equalsXY: typeof equalsXY;
-declare const index_d$b_lerpXY: typeof lerpXY;
-type index_d$b_XYFunc = XYFunc;
-declare const index_d$b_eachNeighbor: typeof eachNeighbor;
-declare const index_d$b_eachNeighborAsync: typeof eachNeighborAsync;
-type index_d$b_XYMatchFunc = XYMatchFunc;
-declare const index_d$b_matchingNeighbor: typeof matchingNeighbor;
-declare const index_d$b_distanceBetween: typeof distanceBetween;
-declare const index_d$b_distanceFromTo: typeof distanceFromTo;
-declare const index_d$b_calcRadius: typeof calcRadius;
-declare const index_d$b_dirBetween: typeof dirBetween;
-declare const index_d$b_dirFromTo: typeof dirFromTo;
-declare const index_d$b_dirIndex: typeof dirIndex;
-declare const index_d$b_isOppositeDir: typeof isOppositeDir;
-declare const index_d$b_isSameDir: typeof isSameDir;
-declare const index_d$b_dirSpread: typeof dirSpread;
-declare const index_d$b_stepFromTo: typeof stepFromTo;
-declare const index_d$b_smoothHiliteGradient: typeof smoothHiliteGradient;
-declare const index_d$b_copyObject: typeof copyObject;
-declare const index_d$b_assignObject: typeof assignObject;
-declare const index_d$b_assignOmitting: typeof assignOmitting;
-declare const index_d$b_setDefault: typeof setDefault;
-type index_d$b_AssignCallback = AssignCallback;
-declare const index_d$b_setDefaults: typeof setDefaults;
-declare const index_d$b_setOptions: typeof setOptions;
-declare const index_d$b_kindDefaults: typeof kindDefaults;
-declare const index_d$b_pick: typeof pick;
-declare const index_d$b_clearObject: typeof clearObject;
-declare const index_d$b_ERROR: typeof ERROR;
-declare const index_d$b_WARN: typeof WARN;
-declare const index_d$b_first: typeof first;
-declare const index_d$b_getOpt: typeof getOpt;
-declare const index_d$b_firstOpt: typeof firstOpt;
-declare const index_d$b_arraysIntersect: typeof arraysIntersect;
-declare const index_d$b_sum: typeof sum;
-declare const index_d$b_forLine: typeof forLine;
-declare const index_d$b_getLine: typeof getLine;
-declare const index_d$b_getLineThru: typeof getLineThru;
-declare const index_d$b_forCircle: typeof forCircle;
-declare const index_d$b_forRect: typeof forRect;
-declare const index_d$b_forBorder: typeof forBorder;
-declare const index_d$b_arcCount: typeof arcCount;
-declare const index_d$b_asyncForEach: typeof asyncForEach;
-type index_d$b_Chainable<_0> = Chainable<_0>;
-type index_d$b_ChainSort<_0> = ChainSort<_0>;
-type index_d$b_ChainMatch<_0> = ChainMatch<_0>;
-type index_d$b_ChainFn<_0> = ChainFn<_0>;
-declare const index_d$b_chainLength: typeof chainLength;
-declare const index_d$b_chainIncludes: typeof chainIncludes;
-declare const index_d$b_eachChain: typeof eachChain;
-declare const index_d$b_addToChain: typeof addToChain;
-declare const index_d$b_removeFromChain: typeof removeFromChain;
-declare const index_d$b_findInChain: typeof findInChain;
-type index_d$b_ChainChangeFn = ChainChangeFn;
-type index_d$b_ChainReduceFn<_0> = ChainReduceFn<_0>;
-type index_d$b_Chain<_0> = Chain<_0>;
-declare const index_d$b_Chain: typeof Chain;
-declare namespace index_d$b {
+type index_d$5_XY = XY;
+type index_d$5_Random = Random;
+declare const index_d$5_Random: typeof Random;
+declare const index_d$5_Alea: typeof Alea;
+declare const index_d$5_DIRS: typeof DIRS;
+declare const index_d$5_NO_DIRECTION: typeof NO_DIRECTION;
+declare const index_d$5_UP: typeof UP;
+declare const index_d$5_RIGHT: typeof RIGHT;
+declare const index_d$5_DOWN: typeof DOWN;
+declare const index_d$5_LEFT: typeof LEFT;
+declare const index_d$5_RIGHT_UP: typeof RIGHT_UP;
+declare const index_d$5_RIGHT_DOWN: typeof RIGHT_DOWN;
+declare const index_d$5_LEFT_DOWN: typeof LEFT_DOWN;
+declare const index_d$5_LEFT_UP: typeof LEFT_UP;
+declare const index_d$5_CLOCK_DIRS: typeof CLOCK_DIRS;
+declare const index_d$5_NOOP: typeof NOOP;
+declare const index_d$5_TRUE: typeof TRUE;
+declare const index_d$5_FALSE: typeof FALSE;
+declare const index_d$5_ONE: typeof ONE;
+declare const index_d$5_ZERO: typeof ZERO;
+declare const index_d$5_IDENTITY: typeof IDENTITY;
+declare const index_d$5_IS_ZERO: typeof IS_ZERO;
+declare const index_d$5_IS_NONZERO: typeof IS_NONZERO;
+declare const index_d$5_clamp: typeof clamp;
+declare const index_d$5_x: typeof x;
+declare const index_d$5_y: typeof y;
+type index_d$5_Bounds = Bounds;
+declare const index_d$5_Bounds: typeof Bounds;
+declare const index_d$5_copyXY: typeof copyXY;
+declare const index_d$5_addXY: typeof addXY;
+declare const index_d$5_equalsXY: typeof equalsXY;
+declare const index_d$5_lerpXY: typeof lerpXY;
+type index_d$5_XYFunc = XYFunc;
+declare const index_d$5_eachNeighbor: typeof eachNeighbor;
+declare const index_d$5_eachNeighborAsync: typeof eachNeighborAsync;
+type index_d$5_XYMatchFunc = XYMatchFunc;
+declare const index_d$5_matchingNeighbor: typeof matchingNeighbor;
+declare const index_d$5_distanceBetween: typeof distanceBetween;
+declare const index_d$5_distanceFromTo: typeof distanceFromTo;
+declare const index_d$5_calcRadius: typeof calcRadius;
+declare const index_d$5_dirBetween: typeof dirBetween;
+declare const index_d$5_dirFromTo: typeof dirFromTo;
+declare const index_d$5_dirIndex: typeof dirIndex;
+declare const index_d$5_isOppositeDir: typeof isOppositeDir;
+declare const index_d$5_isSameDir: typeof isSameDir;
+declare const index_d$5_dirSpread: typeof dirSpread;
+declare const index_d$5_stepFromTo: typeof stepFromTo;
+declare const index_d$5_smoothHiliteGradient: typeof smoothHiliteGradient;
+declare const index_d$5_copyObject: typeof copyObject;
+declare const index_d$5_assignObject: typeof assignObject;
+declare const index_d$5_assignOmitting: typeof assignOmitting;
+declare const index_d$5_setDefault: typeof setDefault;
+type index_d$5_AssignCallback = AssignCallback;
+declare const index_d$5_setDefaults: typeof setDefaults;
+declare const index_d$5_setOptions: typeof setOptions;
+declare const index_d$5_kindDefaults: typeof kindDefaults;
+declare const index_d$5_pick: typeof pick;
+declare const index_d$5_clearObject: typeof clearObject;
+declare const index_d$5_ERROR: typeof ERROR;
+declare const index_d$5_WARN: typeof WARN;
+declare const index_d$5_first: typeof first;
+declare const index_d$5_getOpt: typeof getOpt;
+declare const index_d$5_firstOpt: typeof firstOpt;
+declare const index_d$5_arraysIntersect: typeof arraysIntersect;
+declare const index_d$5_sum: typeof sum;
+declare const index_d$5_forLine: typeof forLine;
+declare const index_d$5_getLine: typeof getLine;
+declare const index_d$5_getLineThru: typeof getLineThru;
+declare const index_d$5_forCircle: typeof forCircle;
+declare const index_d$5_forRect: typeof forRect;
+declare const index_d$5_forBorder: typeof forBorder;
+declare const index_d$5_arcCount: typeof arcCount;
+declare const index_d$5_asyncForEach: typeof asyncForEach;
+type index_d$5_Chainable<_0> = Chainable<_0>;
+type index_d$5_ChainSort<_0> = ChainSort<_0>;
+type index_d$5_ChainMatch<_0> = ChainMatch<_0>;
+type index_d$5_ChainFn<_0> = ChainFn<_0>;
+declare const index_d$5_chainLength: typeof chainLength;
+declare const index_d$5_chainIncludes: typeof chainIncludes;
+declare const index_d$5_eachChain: typeof eachChain;
+declare const index_d$5_addToChain: typeof addToChain;
+declare const index_d$5_removeFromChain: typeof removeFromChain;
+declare const index_d$5_findInChain: typeof findInChain;
+type index_d$5_ChainChangeFn = ChainChangeFn;
+type index_d$5_ChainReduceFn<_0> = ChainReduceFn<_0>;
+type index_d$5_Chain<_0> = Chain<_0>;
+declare const index_d$5_Chain: typeof Chain;
+declare namespace index_d$5 {
   export {
     Loc$1 as Loc,
-    index_d$b_XY as XY,
-    index_d$b_Random as Random,
-    index_d$b_Alea as Alea,
-    index_d$b_DIRS as DIRS,
-    index_d$b_NO_DIRECTION as NO_DIRECTION,
-    index_d$b_UP as UP,
-    index_d$b_RIGHT as RIGHT,
-    index_d$b_DOWN as DOWN,
-    index_d$b_LEFT as LEFT,
-    index_d$b_RIGHT_UP as RIGHT_UP,
-    index_d$b_RIGHT_DOWN as RIGHT_DOWN,
-    index_d$b_LEFT_DOWN as LEFT_DOWN,
-    index_d$b_LEFT_UP as LEFT_UP,
-    index_d$b_CLOCK_DIRS as CLOCK_DIRS,
-    index_d$b_NOOP as NOOP,
-    index_d$b_TRUE as TRUE,
-    index_d$b_FALSE as FALSE,
-    index_d$b_ONE as ONE,
-    index_d$b_ZERO as ZERO,
-    index_d$b_IDENTITY as IDENTITY,
-    index_d$b_IS_ZERO as IS_ZERO,
-    index_d$b_IS_NONZERO as IS_NONZERO,
-    index_d$b_clamp as clamp,
-    index_d$b_x as x,
-    index_d$b_y as y,
-    index_d$b_Bounds as Bounds,
-    index_d$b_copyXY as copyXY,
-    index_d$b_addXY as addXY,
-    index_d$b_equalsXY as equalsXY,
-    index_d$b_lerpXY as lerpXY,
-    index_d$b_XYFunc as XYFunc,
-    index_d$b_eachNeighbor as eachNeighbor,
-    index_d$b_eachNeighborAsync as eachNeighborAsync,
-    index_d$b_XYMatchFunc as XYMatchFunc,
-    index_d$b_matchingNeighbor as matchingNeighbor,
-    index_d$b_distanceBetween as distanceBetween,
-    index_d$b_distanceFromTo as distanceFromTo,
-    index_d$b_calcRadius as calcRadius,
-    index_d$b_dirBetween as dirBetween,
-    index_d$b_dirFromTo as dirFromTo,
-    index_d$b_dirIndex as dirIndex,
-    index_d$b_isOppositeDir as isOppositeDir,
-    index_d$b_isSameDir as isSameDir,
-    index_d$b_dirSpread as dirSpread,
-    index_d$b_stepFromTo as stepFromTo,
-    index_d$b_smoothHiliteGradient as smoothHiliteGradient,
-    index_d$b_copyObject as copyObject,
-    index_d$b_assignObject as assignObject,
-    index_d$b_assignOmitting as assignOmitting,
-    index_d$b_setDefault as setDefault,
-    index_d$b_AssignCallback as AssignCallback,
-    index_d$b_setDefaults as setDefaults,
-    index_d$b_setOptions as setOptions,
-    index_d$b_kindDefaults as kindDefaults,
-    index_d$b_pick as pick,
-    index_d$b_clearObject as clearObject,
-    index_d$b_ERROR as ERROR,
-    index_d$b_WARN as WARN,
-    index_d$b_first as first,
-    index_d$b_getOpt as getOpt,
-    index_d$b_firstOpt as firstOpt,
-    index_d$b_arraysIntersect as arraysIntersect,
-    index_d$b_sum as sum,
-    index_d$b_forLine as forLine,
-    index_d$b_getLine as getLine,
-    index_d$b_getLineThru as getLineThru,
-    index_d$b_forCircle as forCircle,
-    index_d$b_forRect as forRect,
-    index_d$b_forBorder as forBorder,
-    index_d$b_arcCount as arcCount,
-    index_d$b_asyncForEach as asyncForEach,
-    index_d$b_Chainable as Chainable,
-    index_d$b_ChainSort as ChainSort,
-    index_d$b_ChainMatch as ChainMatch,
-    index_d$b_ChainFn as ChainFn,
-    index_d$b_chainLength as chainLength,
-    index_d$b_chainIncludes as chainIncludes,
-    index_d$b_eachChain as eachChain,
-    index_d$b_addToChain as addToChain,
-    index_d$b_removeFromChain as removeFromChain,
-    index_d$b_findInChain as findInChain,
-    index_d$b_ChainChangeFn as ChainChangeFn,
-    index_d$b_ChainReduceFn as ChainReduceFn,
-    index_d$b_Chain as Chain,
+    index_d$5_XY as XY,
+    index_d$5_Random as Random,
+    index_d$5_Alea as Alea,
+    index_d$5_DIRS as DIRS,
+    index_d$5_NO_DIRECTION as NO_DIRECTION,
+    index_d$5_UP as UP,
+    index_d$5_RIGHT as RIGHT,
+    index_d$5_DOWN as DOWN,
+    index_d$5_LEFT as LEFT,
+    index_d$5_RIGHT_UP as RIGHT_UP,
+    index_d$5_RIGHT_DOWN as RIGHT_DOWN,
+    index_d$5_LEFT_DOWN as LEFT_DOWN,
+    index_d$5_LEFT_UP as LEFT_UP,
+    index_d$5_CLOCK_DIRS as CLOCK_DIRS,
+    index_d$5_NOOP as NOOP,
+    index_d$5_TRUE as TRUE,
+    index_d$5_FALSE as FALSE,
+    index_d$5_ONE as ONE,
+    index_d$5_ZERO as ZERO,
+    index_d$5_IDENTITY as IDENTITY,
+    index_d$5_IS_ZERO as IS_ZERO,
+    index_d$5_IS_NONZERO as IS_NONZERO,
+    index_d$5_clamp as clamp,
+    index_d$5_x as x,
+    index_d$5_y as y,
+    index_d$5_Bounds as Bounds,
+    index_d$5_copyXY as copyXY,
+    index_d$5_addXY as addXY,
+    index_d$5_equalsXY as equalsXY,
+    index_d$5_lerpXY as lerpXY,
+    index_d$5_XYFunc as XYFunc,
+    index_d$5_eachNeighbor as eachNeighbor,
+    index_d$5_eachNeighborAsync as eachNeighborAsync,
+    index_d$5_XYMatchFunc as XYMatchFunc,
+    index_d$5_matchingNeighbor as matchingNeighbor,
+    index_d$5_distanceBetween as distanceBetween,
+    index_d$5_distanceFromTo as distanceFromTo,
+    index_d$5_calcRadius as calcRadius,
+    index_d$5_dirBetween as dirBetween,
+    index_d$5_dirFromTo as dirFromTo,
+    index_d$5_dirIndex as dirIndex,
+    index_d$5_isOppositeDir as isOppositeDir,
+    index_d$5_isSameDir as isSameDir,
+    index_d$5_dirSpread as dirSpread,
+    index_d$5_stepFromTo as stepFromTo,
+    index_d$5_smoothHiliteGradient as smoothHiliteGradient,
+    index_d$5_copyObject as copyObject,
+    index_d$5_assignObject as assignObject,
+    index_d$5_assignOmitting as assignOmitting,
+    index_d$5_setDefault as setDefault,
+    index_d$5_AssignCallback as AssignCallback,
+    index_d$5_setDefaults as setDefaults,
+    index_d$5_setOptions as setOptions,
+    index_d$5_kindDefaults as kindDefaults,
+    index_d$5_pick as pick,
+    index_d$5_clearObject as clearObject,
+    index_d$5_ERROR as ERROR,
+    index_d$5_WARN as WARN,
+    index_d$5_first as first,
+    index_d$5_getOpt as getOpt,
+    index_d$5_firstOpt as firstOpt,
+    index_d$5_arraysIntersect as arraysIntersect,
+    index_d$5_sum as sum,
+    index_d$5_forLine as forLine,
+    index_d$5_getLine as getLine,
+    index_d$5_getLineThru as getLineThru,
+    index_d$5_forCircle as forCircle,
+    index_d$5_forRect as forRect,
+    index_d$5_forBorder as forBorder,
+    index_d$5_arcCount as arcCount,
+    index_d$5_asyncForEach as asyncForEach,
+    index_d$5_Chainable as Chainable,
+    index_d$5_ChainSort as ChainSort,
+    index_d$5_ChainMatch as ChainMatch,
+    index_d$5_ChainFn as ChainFn,
+    index_d$5_chainLength as chainLength,
+    index_d$5_chainIncludes as chainIncludes,
+    index_d$5_eachChain as eachChain,
+    index_d$5_addToChain as addToChain,
+    index_d$5_removeFromChain as removeFromChain,
+    index_d$5_findInChain as findInChain,
+    index_d$5_ChainChangeFn as ChainChangeFn,
+    index_d$5_ChainReduceFn as ChainReduceFn,
+    index_d$5_Chain as Chain,
   };
 }
 
@@ -502,8 +503,8 @@ declare class Range {
     copy(other: Range): this;
     toString(): string;
 }
-declare function make$a(config: RangeBase | null, rng?: Random): Range;
-declare const from$5: typeof make$a;
+declare function make$7(config: RangeBase | null, rng?: Random): Range;
+declare const from$3: typeof make$7;
 declare function asFn(config: RangeBase | null, rng?: Random): () => number;
 
 type range_d_RangeBase = RangeBase;
@@ -514,8 +515,8 @@ declare namespace range_d {
   export {
     range_d_RangeBase as RangeBase,
     range_d_Range as Range,
-    make$a as make,
-    from$5 as from,
+    make$7 as make,
+    from$3 as from,
     range_d_asFn as asFn,
   };
 }
@@ -524,7 +525,7 @@ declare type FlagSource = number | string;
 declare type FlagBase = number | string | FlagSource[] | null;
 declare function fl(N: number): number;
 declare function toString<T>(flagObj: T, value: number): string;
-declare function from$4<T>(obj: T, ...args: (FlagBase | undefined)[]): number;
+declare function from$2<T>(obj: T, ...args: (FlagBase | undefined)[]): number;
 
 type flag_d_FlagBase = FlagBase;
 declare const flag_d_fl: typeof fl;
@@ -534,7 +535,7 @@ declare namespace flag_d {
     flag_d_FlagBase as FlagBase,
     flag_d_fl as fl,
     flag_d_toString as toString,
-    from$4 as from,
+    from$2 as from,
   };
 }
 
@@ -654,8 +655,8 @@ declare class NumGrid extends Grid<number> {
 }
 declare const alloc: typeof NumGrid.alloc;
 declare const free: typeof NumGrid.free;
-declare function make$9<T>(w: number, h: number, v?: number | GridInit<number>): NumGrid;
-declare function make$9<T>(w: number, h: number, v?: T | GridInit<T>): Grid<T>;
+declare function make$6<T>(w: number, h: number, v?: number | GridInit<number>): NumGrid;
+declare function make$6<T>(w: number, h: number, v?: T | GridInit<T>): Grid<T>;
 declare type GridZip<T, U> = (destVal: T, sourceVal: U, destX: number, destY: number, sourceX: number, sourceY: number, destGrid: Grid<T>, sourceGrid: Grid<U>) => void;
 declare function offsetZip<T, U>(destGrid: Grid<T>, srcGrid: Grid<U>, srcToDestX: number, srcToDestY: number, value: T | GridZip<T, U>): void;
 declare function intersection(onto: NumGrid, a: NumGrid, b?: NumGrid): void;
@@ -695,7 +696,7 @@ declare namespace grid_d {
     grid_d_NumGrid as NumGrid,
     grid_d_alloc as alloc,
     grid_d_free as free,
-    make$9 as make,
+    make$6 as make,
     grid_d_GridZip as GridZip,
     grid_d_offsetZip as offsetZip,
     grid_d_intersection as intersection,
@@ -759,7 +760,7 @@ declare class Loop {
     pause(ms: number): Promise<boolean | null>;
     waitForAck(): Promise<boolean | null>;
 }
-declare function make$8(): Loop;
+declare function make$5(): Loop;
 declare const loop: Loop;
 
 type io_d_CommandFn = CommandFn;
@@ -805,7 +806,7 @@ declare namespace io_d {
     io_d_onkeydown as onkeydown,
     io_d_makeMouseEvent as makeMouseEvent,
     io_d_Loop as Loop,
-    make$8 as make,
+    make$5 as make,
     io_d_loop as loop,
   };
 }
@@ -920,29 +921,29 @@ declare class FovSystem implements FovSystemType {
     update(x: number, y: number, r: number): boolean;
 }
 
-type index_d$a_FovFlags = FovFlags;
-declare const index_d$a_FovFlags: typeof FovFlags;
-type index_d$a_FovStrategy = FovStrategy;
-type index_d$a_SetVisibleFn = SetVisibleFn;
-type index_d$a_ViewportCb = ViewportCb;
-type index_d$a_FovSite = FovSite;
-type index_d$a_FovSystemType = FovSystemType;
-type index_d$a_FOV = FOV;
-declare const index_d$a_FOV: typeof FOV;
-type index_d$a_FovSystemOptions = FovSystemOptions;
-type index_d$a_FovSystem = FovSystem;
-declare const index_d$a_FovSystem: typeof FovSystem;
-declare namespace index_d$a {
+type index_d$4_FovFlags = FovFlags;
+declare const index_d$4_FovFlags: typeof FovFlags;
+type index_d$4_FovStrategy = FovStrategy;
+type index_d$4_SetVisibleFn = SetVisibleFn;
+type index_d$4_ViewportCb = ViewportCb;
+type index_d$4_FovSite = FovSite;
+type index_d$4_FovSystemType = FovSystemType;
+type index_d$4_FOV = FOV;
+declare const index_d$4_FOV: typeof FOV;
+type index_d$4_FovSystemOptions = FovSystemOptions;
+type index_d$4_FovSystem = FovSystem;
+declare const index_d$4_FovSystem: typeof FovSystem;
+declare namespace index_d$4 {
   export {
-    index_d$a_FovFlags as FovFlags,
-    index_d$a_FovStrategy as FovStrategy,
-    index_d$a_SetVisibleFn as SetVisibleFn,
-    index_d$a_ViewportCb as ViewportCb,
-    index_d$a_FovSite as FovSite,
-    index_d$a_FovSystemType as FovSystemType,
-    index_d$a_FOV as FOV,
-    index_d$a_FovSystemOptions as FovSystemOptions,
-    index_d$a_FovSystem as FovSystem,
+    index_d$4_FovFlags as FovFlags,
+    index_d$4_FovStrategy as FovStrategy,
+    index_d$4_SetVisibleFn as SetVisibleFn,
+    index_d$4_ViewportCb as ViewportCb,
+    index_d$4_FovSite as FovSite,
+    index_d$4_FovSystemType as FovSystemType,
+    index_d$4_FOV as FOV,
+    index_d$4_FovSystemOptions as FovSystemOptions,
+    index_d$4_FovSystem as FovSystem,
   };
 }
 
@@ -1105,7 +1106,7 @@ declare namespace events_d {
 
 declare type FrequencyFn = (danger: number) => number;
 declare type FrequencyConfig = FrequencyFn | number | string | Record<string, number> | null;
-declare function make$7(v?: FrequencyConfig): FrequencyFn;
+declare function make$4(v?: FrequencyConfig): FrequencyFn;
 
 type frequency_d_FrequencyFn = FrequencyFn;
 type frequency_d_FrequencyConfig = FrequencyConfig;
@@ -1113,7 +1114,7 @@ declare namespace frequency_d {
   export {
     frequency_d_FrequencyFn as FrequencyFn,
     frequency_d_FrequencyConfig as FrequencyConfig,
-    make$7 as make,
+    make$4 as make,
   };
 }
 
@@ -1339,47 +1340,47 @@ declare class Canvas2D extends BaseCanvas {
     _render(): void;
     protected _renderCell(index: number): void;
 }
-declare function make$6(opts: Partial<CanvasOptions>): BaseCanvas;
-declare function make$6(width: number, height: number, opts?: Partial<CanvasOptions>): BaseCanvas;
+declare function make$3(opts: Partial<CanvasOptions>): BaseCanvas;
+declare function make$3(width: number, height: number, opts?: Partial<CanvasOptions>): BaseCanvas;
 
-type index_d$9_MouseEventFn = MouseEventFn;
-type index_d$9_CanvasOptions = CanvasOptions;
-type index_d$9_NotSupportedError = NotSupportedError;
-declare const index_d$9_NotSupportedError: typeof NotSupportedError;
-type index_d$9_BaseCanvas = BaseCanvas;
-declare const index_d$9_BaseCanvas: typeof BaseCanvas;
-type index_d$9_Canvas = Canvas;
-declare const index_d$9_Canvas: typeof Canvas;
-type index_d$9_Canvas2D = Canvas2D;
-declare const index_d$9_Canvas2D: typeof Canvas2D;
-type index_d$9_GlyphOptions = GlyphOptions;
-type index_d$9_Glyphs = Glyphs;
-declare const index_d$9_Glyphs: typeof Glyphs;
-type index_d$9_DrawData = DrawData;
-type index_d$9_BufferTarget = BufferTarget;
-type index_d$9_DataBuffer = DataBuffer;
-declare const index_d$9_DataBuffer: typeof DataBuffer;
-declare const index_d$9_makeDataBuffer: typeof makeDataBuffer;
-type index_d$9_Buffer = Buffer;
-declare const index_d$9_Buffer: typeof Buffer;
-declare const index_d$9_makeBuffer: typeof makeBuffer;
-declare namespace index_d$9 {
+type index_d$3_MouseEventFn = MouseEventFn;
+type index_d$3_CanvasOptions = CanvasOptions;
+type index_d$3_NotSupportedError = NotSupportedError;
+declare const index_d$3_NotSupportedError: typeof NotSupportedError;
+type index_d$3_BaseCanvas = BaseCanvas;
+declare const index_d$3_BaseCanvas: typeof BaseCanvas;
+type index_d$3_Canvas = Canvas;
+declare const index_d$3_Canvas: typeof Canvas;
+type index_d$3_Canvas2D = Canvas2D;
+declare const index_d$3_Canvas2D: typeof Canvas2D;
+type index_d$3_GlyphOptions = GlyphOptions;
+type index_d$3_Glyphs = Glyphs;
+declare const index_d$3_Glyphs: typeof Glyphs;
+type index_d$3_DrawData = DrawData;
+type index_d$3_BufferTarget = BufferTarget;
+type index_d$3_DataBuffer = DataBuffer;
+declare const index_d$3_DataBuffer: typeof DataBuffer;
+declare const index_d$3_makeDataBuffer: typeof makeDataBuffer;
+type index_d$3_Buffer = Buffer;
+declare const index_d$3_Buffer: typeof Buffer;
+declare const index_d$3_makeBuffer: typeof makeBuffer;
+declare namespace index_d$3 {
   export {
-    index_d$9_MouseEventFn as MouseEventFn,
-    index_d$9_CanvasOptions as CanvasOptions,
-    index_d$9_NotSupportedError as NotSupportedError,
-    index_d$9_BaseCanvas as BaseCanvas,
-    index_d$9_Canvas as Canvas,
-    index_d$9_Canvas2D as Canvas2D,
-    make$6 as make,
-    index_d$9_GlyphOptions as GlyphOptions,
-    index_d$9_Glyphs as Glyphs,
-    index_d$9_DrawData as DrawData,
-    index_d$9_BufferTarget as BufferTarget,
-    index_d$9_DataBuffer as DataBuffer,
-    index_d$9_makeDataBuffer as makeDataBuffer,
-    index_d$9_Buffer as Buffer,
-    index_d$9_makeBuffer as makeBuffer,
+    index_d$3_MouseEventFn as MouseEventFn,
+    index_d$3_CanvasOptions as CanvasOptions,
+    index_d$3_NotSupportedError as NotSupportedError,
+    index_d$3_BaseCanvas as BaseCanvas,
+    index_d$3_Canvas as Canvas,
+    index_d$3_Canvas2D as Canvas2D,
+    make$3 as make,
+    index_d$3_GlyphOptions as GlyphOptions,
+    index_d$3_Glyphs as Glyphs,
+    index_d$3_DrawData as DrawData,
+    index_d$3_BufferTarget as BufferTarget,
+    index_d$3_DataBuffer as DataBuffer,
+    index_d$3_makeDataBuffer as makeDataBuffer,
+    index_d$3_Buffer as Buffer,
+    index_d$3_makeBuffer as makeBuffer,
   };
 }
 
@@ -1400,17 +1401,17 @@ declare class Sprite implements SpriteData$1 {
     toString(): string;
 }
 declare const sprites: Record<string, Sprite>;
-declare function make$5(): Sprite;
-declare function make$5(bg: ColorBase, opacity?: number): Sprite;
-declare function make$5(ch: string | null, fg: ColorBase | null, bg: ColorBase | null, opacity?: number): Sprite;
-declare function make$5(args: any[]): Sprite;
-declare function make$5(info: Partial<SpriteConfig>): Sprite;
-declare function from$3(name: string): Sprite;
-declare function from$3(config: Partial<SpriteConfig>): Sprite;
-declare function install$4(name: string, bg: ColorBase, opacity?: number): Sprite;
-declare function install$4(name: string, ch: string | null, fg: Color | number | string | number[] | null, bg: Color | number | string | number[] | null, opacity?: number): Sprite;
-declare function install$4(name: string, args: any[]): Sprite;
-declare function install$4(name: string, info: Partial<SpriteConfig>): Sprite;
+declare function make$2(): Sprite;
+declare function make$2(bg: ColorBase, opacity?: number): Sprite;
+declare function make$2(ch: string | null, fg: ColorBase | null, bg: ColorBase | null, opacity?: number): Sprite;
+declare function make$2(args: any[]): Sprite;
+declare function make$2(info: Partial<SpriteConfig>): Sprite;
+declare function from$1(name: string): Sprite;
+declare function from$1(config: Partial<SpriteConfig>): Sprite;
+declare function install$2(name: string, bg: ColorBase, opacity?: number): Sprite;
+declare function install$2(name: string, ch: string | null, fg: Color | number | string | number[] | null, bg: Color | number | string | number[] | null, opacity?: number): Sprite;
+declare function install$2(name: string, args: any[]): Sprite;
+declare function install$2(name: string, info: Partial<SpriteConfig>): Sprite;
 
 interface SpriteData {
     readonly ch: string | null;
@@ -1419,27 +1420,27 @@ interface SpriteData {
     readonly opacity: number;
 }
 
-type index_d$8_SpriteConfig = SpriteConfig;
-type index_d$8_Sprite = Sprite;
-declare const index_d$8_Sprite: typeof Sprite;
-declare const index_d$8_sprites: typeof sprites;
-type index_d$8_DrawInfo = DrawInfo;
-type index_d$8_Mixer = Mixer;
-declare const index_d$8_Mixer: typeof Mixer;
-declare const index_d$8_makeMixer: typeof makeMixer;
-type index_d$8_SpriteData = SpriteData;
-declare namespace index_d$8 {
+type index_d$2_SpriteConfig = SpriteConfig;
+type index_d$2_Sprite = Sprite;
+declare const index_d$2_Sprite: typeof Sprite;
+declare const index_d$2_sprites: typeof sprites;
+type index_d$2_DrawInfo = DrawInfo;
+type index_d$2_Mixer = Mixer;
+declare const index_d$2_Mixer: typeof Mixer;
+declare const index_d$2_makeMixer: typeof makeMixer;
+type index_d$2_SpriteData = SpriteData;
+declare namespace index_d$2 {
   export {
-    index_d$8_SpriteConfig as SpriteConfig,
-    index_d$8_Sprite as Sprite,
-    index_d$8_sprites as sprites,
-    make$5 as make,
-    from$3 as from,
-    install$4 as install,
-    index_d$8_DrawInfo as DrawInfo,
-    index_d$8_Mixer as Mixer,
-    index_d$8_makeMixer as makeMixer,
-    index_d$8_SpriteData as SpriteData,
+    index_d$2_SpriteConfig as SpriteConfig,
+    index_d$2_Sprite as Sprite,
+    index_d$2_sprites as sprites,
+    make$2 as make,
+    from$1 as from,
+    install$2 as install,
+    index_d$2_DrawInfo as DrawInfo,
+    index_d$2_Mixer as Mixer,
+    index_d$2_makeMixer as makeMixer,
+    index_d$2_SpriteData as SpriteData,
   };
 }
 
@@ -1480,51 +1481,51 @@ interface Options {
 }
 declare function configure(opts?: Options): void;
 
-declare const index_d$7_compile: typeof compile;
-declare const index_d$7_apply: typeof apply;
-declare const index_d$7_eachChar: typeof eachChar;
-declare const index_d$7_length: typeof length;
-declare const index_d$7_padStart: typeof padStart;
-declare const index_d$7_padEnd: typeof padEnd;
-declare const index_d$7_center: typeof center;
-declare const index_d$7_firstChar: typeof firstChar;
-declare const index_d$7_capitalize: typeof capitalize;
-declare const index_d$7_removeColors: typeof removeColors;
-declare const index_d$7_wordWrap: typeof wordWrap;
-declare const index_d$7_splitIntoLines: typeof splitIntoLines;
-declare const index_d$7_configure: typeof configure;
-declare const index_d$7_addHelper: typeof addHelper;
-declare const index_d$7_options: typeof options;
-type index_d$7_Template = Template;
-declare namespace index_d$7 {
+declare const index_d$1_compile: typeof compile;
+declare const index_d$1_apply: typeof apply;
+declare const index_d$1_eachChar: typeof eachChar;
+declare const index_d$1_length: typeof length;
+declare const index_d$1_padStart: typeof padStart;
+declare const index_d$1_padEnd: typeof padEnd;
+declare const index_d$1_center: typeof center;
+declare const index_d$1_firstChar: typeof firstChar;
+declare const index_d$1_capitalize: typeof capitalize;
+declare const index_d$1_removeColors: typeof removeColors;
+declare const index_d$1_wordWrap: typeof wordWrap;
+declare const index_d$1_splitIntoLines: typeof splitIntoLines;
+declare const index_d$1_configure: typeof configure;
+declare const index_d$1_addHelper: typeof addHelper;
+declare const index_d$1_options: typeof options;
+type index_d$1_Template = Template;
+declare namespace index_d$1 {
   export {
-    index_d$7_compile as compile,
-    index_d$7_apply as apply,
-    index_d$7_eachChar as eachChar,
-    index_d$7_length as length,
-    index_d$7_padStart as padStart,
-    index_d$7_padEnd as padEnd,
-    index_d$7_center as center,
-    index_d$7_firstChar as firstChar,
-    index_d$7_capitalize as capitalize,
-    index_d$7_removeColors as removeColors,
-    index_d$7_wordWrap as wordWrap,
-    index_d$7_splitIntoLines as splitIntoLines,
-    index_d$7_configure as configure,
-    index_d$7_addHelper as addHelper,
-    index_d$7_options as options,
-    index_d$7_Template as Template,
+    index_d$1_compile as compile,
+    index_d$1_apply as apply,
+    index_d$1_eachChar as eachChar,
+    index_d$1_length as length,
+    index_d$1_padStart as padStart,
+    index_d$1_padEnd as padEnd,
+    index_d$1_center as center,
+    index_d$1_firstChar as firstChar,
+    index_d$1_capitalize as capitalize,
+    index_d$1_removeColors as removeColors,
+    index_d$1_wordWrap as wordWrap,
+    index_d$1_splitIntoLines as splitIntoLines,
+    index_d$1_configure as configure,
+    index_d$1_addHelper as addHelper,
+    index_d$1_options as options,
+    index_d$1_Template as Template,
   };
 }
 
 declare const templates: Record<string, Template>;
-declare function install$3(id: string, msg: string): Template;
-declare function installAll$3(config: Record<string, string>): void;
+declare function install$1(id: string, msg: string): Template;
+declare function installAll$1(config: Record<string, string>): void;
 interface MessageHandler {
     addMessage(x: number, y: number, msg: string): void;
     addCombatMessage(x: number, y: number, msg: string): void;
 }
-declare const handlers$1: MessageHandler[];
+declare const handlers: MessageHandler[];
 declare function add(msg: string, args?: any): void;
 declare function addAt(x: number, y: number, msg: string, args?: any): void;
 declare function addCombat(x: number, y: number, msg: string, args?: any): void;
@@ -1556,6 +1557,7 @@ declare class MessageCache implements MessageHandler {
 
 declare const message_d_templates: typeof templates;
 type message_d_MessageHandler = MessageHandler;
+declare const message_d_handlers: typeof handlers;
 declare const message_d_add: typeof add;
 declare const message_d_addAt: typeof addAt;
 declare const message_d_addCombat: typeof addCombat;
@@ -1566,10 +1568,10 @@ declare const message_d_MessageCache: typeof MessageCache;
 declare namespace message_d {
   export {
     message_d_templates as templates,
-    install$3 as install,
-    installAll$3 as installAll,
+    install$1 as install,
+    installAll$1 as installAll,
     message_d_MessageHandler as MessageHandler,
-    handlers$1 as handlers,
+    message_d_handlers as handlers,
     message_d_add as add,
     message_d_addAt as addAt,
     message_d_addCombat as addCombat,
@@ -1579,104 +1581,38 @@ declare namespace message_d {
   };
 }
 
-declare enum Effect {
-    E_NEXT_ALWAYS,
-    E_NEXT_EVERYWHERE,
-    E_FIRED,
-    E_NO_MARK_FIRED,
-    E_PROTECTED,
-    E_TREAT_AS_BLOCKING,
-    E_PERMIT_BLOCKING,
-    E_ABORT_IF_BLOCKS_MAP,
-    E_BLOCKED_BY_ITEMS,
-    E_BLOCKED_BY_ACTORS,
-    E_BLOCKED_BY_OTHER_LAYERS,
-    E_SUPERPRIORITY,
-    E_SPREAD_CIRCLE,
-    E_SPREAD_LINE,
-    E_EVACUATE_CREATURES,
-    E_EVACUATE_ITEMS,
-    E_BUILD_IN_WALLS,
-    E_MUST_TOUCH_WALLS,
-    E_NO_TOUCH_WALLS,
-    E_CLEAR_GROUND,
-    E_CLEAR_SURFACE,
-    E_CLEAR_LIQUID,
-    E_CLEAR_GAS,
-    E_CLEAR_TILE,
-    E_CLEAR_CELL,
-    E_ONLY_IF_EMPTY,
-    E_ACTIVATE_DORMANT_MONSTER,
-    E_AGGRAVATES_MONSTERS,
-    E_RESURRECT_ALLY
-}
+declare const data: any;
+declare const config$1: any;
 
-interface EffectInfo {
-    flags: number;
-    chance: number;
-    next: EffectInfo | string | null;
-    id: string;
-    [id: string]: any;
+interface BlobConfig {
+    rounds: number;
+    minWidth: number;
+    minHeight: number;
+    maxWidth: number;
+    maxHeight: number;
+    percentSeeded: number;
+    birthParameters: string;
+    survivalParameters: string;
 }
-interface EffectCtx {
-    depth?: number;
-    force?: boolean;
-    grid: NumGrid;
-    [id: string]: any;
+declare class Blob {
+    options: BlobConfig;
+    constructor(opts?: Partial<BlobConfig>);
+    carve(width: number, height: number, setFn: XYFunc): Bounds;
+    _cellularAutomataRound(grid: NumGrid): boolean;
 }
-interface EffectConfig {
-    flags: FlagBase;
-    chance: number;
-    next: Partial<EffectConfig> | string | null;
-    [id: string]: any;
-}
-declare type EffectBase = Partial<EffectConfig> | Function;
+declare function fillBlob(grid: NumGrid, opts?: Partial<BlobConfig>): Bounds;
+declare function make$1(opts?: Partial<BlobConfig>): Blob;
 
-declare enum GameObject$1 {
-    L_SUPERPRIORITY,
-    L_SECRETLY_PASSABLE,
-    L_BLOCKS_MOVE,
-    L_BLOCKS_VISION,
-    L_BLOCKS_SURFACE,
-    L_BLOCKS_LIQUID,
-    L_BLOCKS_GAS,
-    L_BLOCKS_ITEMS,
-    L_BLOCKS_ACTORS,
-    L_BLOCKS_EFFECTS,
-    L_BLOCKS_DIAGONAL,
-    L_INTERRUPT_WHEN_SEEN,
-    L_LIST_IN_SIDEBAR,
-    L_VISUALLY_DISTINCT,
-    L_BRIGHT_MEMORY,
-    L_INVERT_WHEN_HIGHLIGHTED,
-    L_BLOCKED_BY_STAIRS,
-    L_BLOCKS_SCENT,
-    L_DIVIDES_LEVEL,
-    L_WAYPOINT_BLOCKER,
-    L_WALL_FLAGS,
-    L_BLOCKS_EVERYTHING
-}
-declare enum Depth {
-    ALL_LAYERS = -1,
-    GROUND = 0,
-    SURFACE = 1,
-    ITEM = 2,
-    ACTOR = 3,
-    LIQUID = 4,
-    GAS = 5,
-    FX = 6,
-    UI = 7
-}
-declare type DepthString = keyof typeof Depth;
-
-type flags_d$1_Depth = Depth;
-declare const flags_d$1_Depth: typeof Depth;
-type flags_d$1_DepthString = DepthString;
-declare namespace flags_d$1 {
+type blob_d_BlobConfig = BlobConfig;
+type blob_d_Blob = Blob;
+declare const blob_d_Blob: typeof Blob;
+declare const blob_d_fillBlob: typeof fillBlob;
+declare namespace blob_d {
   export {
-    GameObject$1 as GameObject,
-    flags_d$1_Depth as Depth,
-    flags_d$1_DepthString as DepthString,
+    blob_d_BlobConfig as BlobConfig,
+    blob_d_Blob as Blob,
+    blob_d_fillBlob as fillBlob,
+    make$1 as make,
   };
 }
 
@@ -1727,17 +1663,7 @@ interface LightSystemType {
     isInShadow(x: number, y: number): boolean;
 }
 
-interface ObjectFlags {
-    object: number;
-}
-interface ObjectType extends Chainable<ObjectType>, XY {
-    sprite: Sprite;
-    depth: number;
-    light: LightType | null;
-    flags: ObjectFlags;
-}
-
-declare const config$1: {
+declare const config: {
     INTENSITY_DARK: number;
     INTENSITY_SHADOW: number;
 };
@@ -1755,14 +1681,14 @@ declare class Light implements LightType {
 declare function intensity(light: Color | LightValue): number;
 declare function isDarkLight(light: Color | LightValue, threshold?: number): boolean;
 declare function isShadowLight(light: Color | LightValue, threshold?: number): boolean;
-declare function make$4(color: ColorBase, radius: RangeBase, fadeTo?: number, pass?: boolean): Light;
-declare function make$4(light: LightBase): Light;
+declare function make(color: ColorBase, radius: RangeBase, fadeTo?: number, pass?: boolean): Light;
+declare function make(light: LightBase): Light;
 declare const lights: Record<string, Light>;
-declare function from$2(light: LightBase | LightType): Light;
-declare function install$2(id: string, color: ColorBase, radius: RangeBase, fadeTo?: number, pass?: boolean): Light;
-declare function install$2(id: string, base: LightBase): Light;
-declare function install$2(id: string, config: LightConfig): Light;
-declare function installAll$2(config?: Record<string, LightConfig | LightBase>): void;
+declare function from(light: LightBase | LightType): Light;
+declare function install(id: string, color: ColorBase, radius: RangeBase, fadeTo?: number, pass?: boolean): Light;
+declare function install(id: string, base: LightBase): Light;
+declare function install(id: string, config: LightConfig): Light;
+declare function installAll(config?: Record<string, LightConfig | LightBase>): void;
 
 interface StaticLightInfo {
     x: number;
@@ -1809,1036 +1735,51 @@ declare class LightSystem implements LightSystemType, PaintSite {
     addCellLight(x: number, y: number, light: LightValue, dispelShadows: boolean): void;
 }
 
-type index_d$6_LightConfig = LightConfig;
-type index_d$6_LightBase = LightBase;
-type index_d$6_LightType = LightType;
-type index_d$6_LightCb = LightCb;
-type index_d$6_PaintSite = PaintSite;
-type index_d$6_LightSystemSite = LightSystemSite;
-type index_d$6_LightSystemType = LightSystemType;
-type index_d$6_Light = Light;
-declare const index_d$6_Light: typeof Light;
-declare const index_d$6_intensity: typeof intensity;
-declare const index_d$6_isDarkLight: typeof isDarkLight;
-declare const index_d$6_isShadowLight: typeof isShadowLight;
-declare const index_d$6_lights: typeof lights;
-type index_d$6_StaticLightInfo = StaticLightInfo;
-type index_d$6_LightSystemOptions = LightSystemOptions;
-type index_d$6_LightSystem = LightSystem;
-declare const index_d$6_LightSystem: typeof LightSystem;
-declare namespace index_d$6 {
-  export {
-    index_d$6_LightConfig as LightConfig,
-    index_d$6_LightBase as LightBase,
-    index_d$6_LightType as LightType,
-    index_d$6_LightCb as LightCb,
-    index_d$6_PaintSite as PaintSite,
-    index_d$6_LightSystemSite as LightSystemSite,
-    index_d$6_LightSystemType as LightSystemType,
-    config$1 as config,
-    index_d$6_Light as Light,
-    index_d$6_intensity as intensity,
-    index_d$6_isDarkLight as isDarkLight,
-    index_d$6_isShadowLight as isShadowLight,
-    make$4 as make,
-    index_d$6_lights as lights,
-    from$2 as from,
-    install$2 as install,
-    installAll$2 as installAll,
-    index_d$6_StaticLightInfo as StaticLightInfo,
-    index_d$6_LightSystemOptions as LightSystemOptions,
-    index_d$6_LightSystem as LightSystem,
-  };
-}
-
-declare class GameObject implements ObjectType {
-    sprite: Sprite;
-    depth: number;
-    light: LightType | null;
-    flags: ObjectFlags;
-    next: GameObject | null;
-    x: number;
-    y: number;
-    constructor();
-    hasObjectFlag(flag: number): boolean;
-    hasAllObjectFlags(flags: number): boolean;
-    blocksMove(): boolean;
-    blocksVision(): boolean;
-    blocksPathing(): boolean;
-    blocksEffects(): boolean;
-    itemFlags(): number;
-    actorFlags(): number;
-}
-
-type index_d$5_ObjectFlags = ObjectFlags;
-type index_d$5_ObjectType = ObjectType;
-type index_d$5_GameObject = GameObject;
-declare const index_d$5_GameObject: typeof GameObject;
-declare namespace index_d$5 {
-  export {
-    flags_d$1 as flags,
-    index_d$5_ObjectFlags as ObjectFlags,
-    index_d$5_ObjectType as ObjectType,
-    index_d$5_GameObject as GameObject,
-  };
-}
-
-interface ActorFlags extends ObjectFlags {
-    actor: number;
-}
-
-declare enum Actor$1 {
-    IS_PLAYER
-}
-
-type flags_d_Depth = Depth;
-declare const flags_d_Depth: typeof Depth;
-declare namespace flags_d {
-  export {
-    Actor$1 as Actor,
-    GameObject$1 as GameObject,
-    flags_d_Depth as Depth,
-  };
-}
-
-declare class Actor extends GameObject {
-    flags: ActorFlags;
-    next: Actor | null;
-    constructor();
-    hasActorFlag(flag: number): boolean;
-    hasAllActorFlags(flags: number): boolean;
-    actorFlags(): number;
-    isPlayer(): boolean;
-    isVisible(): boolean;
-    forbidsCell(_cell: CellType): boolean;
-}
-
-type index_d$4_Actor = Actor;
-declare const index_d$4_Actor: typeof Actor;
-type index_d$4_ActorFlags = ActorFlags;
-declare namespace index_d$4 {
-  export {
-    index_d$4_Actor as Actor,
-    flags_d as flags,
-    index_d$4_ActorFlags as ActorFlags,
-  };
-}
-
-interface ItemFlags extends ObjectFlags {
-    item: number;
-}
-
-declare class Item extends GameObject {
-    flags: ItemFlags;
-    quantity: number;
-    next: Item | null;
-    constructor();
-    itemFlags(): number;
-    hasItemFlag(flag: number): boolean;
-    hasAllItemFlags(flags: number): boolean;
-    forbidsCell(_cell: CellType): boolean;
-}
-
-type index_d$3_Item = Item;
-declare const index_d$3_Item: typeof Item;
-type index_d$3_ItemFlags = ItemFlags;
-declare namespace index_d$3 {
-  export {
-    index_d$3_Item as Item,
-    index_d$3_ItemFlags as ItemFlags,
-  };
-}
-
-declare enum Tile$1 {
-    T_BRIDGE,
-    T_AUTO_DESCENT,
-    T_LAVA,
-    T_DEEP_WATER,
-    T_IS_FLAMMABLE,
-    T_SPONTANEOUSLY_IGNITES,
-    T_IS_FIRE,
-    T_EXTINGUISHES_FIRE,
-    T_IS_SECRET,
-    T_IS_TRAP,
-    T_SACRED,
-    T_UP_STAIRS,
-    T_DOWN_STAIRS,
-    T_PORTAL,
-    T_IS_DOOR,
-    T_ALLOWS_SUBMERGING,
-    T_ENTANGLES,
-    T_REFLECTS,
-    T_STAND_IN_TILE,
-    T_CONNECTS_LEVEL,
-    T_BLOCKS_OTHER_LAYERS,
-    T_HAS_STAIRS,
-    T_OBSTRUCTS_SCENT,
-    T_PATHING_BLOCKER,
-    T_LAKE_PATHING_BLOCKER,
-    T_WAYPOINT_BLOCKER,
-    T_DIVIDES_LEVEL,
-    T_MOVES_ITEMS,
-    T_CAN_BE_BRIDGED,
-    T_IS_DEEP_LIQUID
-}
-declare enum TileMech {
-    TM_IS_WIRED,
-    TM_IS_CIRCUIT_BREAKER,
-    TM_VANISHES_UPON_PROMOTION,
-    TM_EXPLOSIVE_PROMOTE,
-    TM_SWAP_ENCHANTS_ACTIVATION
-}
-
-interface TileFlags extends ObjectFlags {
-    tile: number;
-    tileMech: number;
-}
-interface NameConfig {
-    article?: boolean | string;
-    color?: boolean | string | ColorBase;
-}
-interface TileType {
-    readonly id: string;
-    readonly index: number;
-    readonly flags: TileFlags;
-    readonly dissipate: number;
-    readonly effects: Record<string, string | EffectInfo>;
-    readonly groundTile: string | null;
-    hasObjectFlag(flag: number): boolean;
-    hasTileFlag(flag: number): boolean;
-    hasTileMechFlag(flag: number): boolean;
-    hasAllObjectFlags(flag: number): boolean;
-    hasAllTileFlags(flag: number): boolean;
-    hasAllTileMechFlags(flag: number): boolean;
-    hasEffect(name: string): boolean;
-    getName(): string;
-    getName(config: NameConfig): string;
-    getName(article: string): string;
-    getName(article: boolean): string;
-    getDescription(): string;
-    getFlavor(): string;
-}
-
-interface TileConfig extends SpriteConfig {
-    id: string;
-    flags: TileFlags;
-    dissipate: number;
-    effects: Record<string, EffectInfo | string>;
-    priority: number;
-    depth: number;
-    light: LightType | null;
-    groundTile: string | null;
-    name: string;
-    description: string;
-    flavor: string;
-    article: string | null;
-}
-declare class Tile implements TileType {
-    id: string;
-    index: number;
-    flags: TileFlags;
-    dissipate: number;
-    effects: Record<string, string | EffectInfo>;
-    sprite: Sprite;
-    priority: number;
-    depth: number;
-    light: LightType | null;
-    groundTile: string | null;
-    name: string;
-    description: string;
-    flavor: string;
-    article: string | null;
-    constructor(config: Partial<TileConfig>);
-    hasObjectFlag(flag: number): boolean;
-    hasTileFlag(flag: number): boolean;
-    hasTileMechFlag(flag: number): boolean;
-    hasAllObjectFlags(flag: number): boolean;
-    hasAllTileFlags(flag: number): boolean;
-    hasAllTileMechFlags(flag: number): boolean;
-    blocksVision(): boolean;
-    blocksMove(): boolean;
-    blocksPathing(): boolean;
-    blocksEffects(): boolean;
-    hasEffect(name: string): boolean;
-    getName(): string;
-    getName(config: NameConfig): string;
-    getName(article: string): string;
-    getName(article: boolean): string;
-    getDescription(): string;
-    getFlavor(): string;
-}
-interface TileOptions extends SpriteConfig {
-    extends: string;
-    id: string;
-    name: string;
-    description: string;
-    flavor: string;
-    article: string;
-    flags: FlagBase;
-    priority: number | string;
-    dissipate: number;
-    depth: Depth | DepthString;
-    effects: Record<string, Partial<EffectConfig> | string | null>;
-    groundTile: string;
-    light: LightBase | null;
-}
-declare function make$3(options: Partial<TileOptions>): Tile;
-declare const tiles: Record<string, Tile>;
-declare const all: Tile[];
-declare function get(id: string | number | Tile): Tile;
-declare function install$1(id: string, options: Partial<TileOptions>): Tile;
-declare function install$1(id: string, base: string, options: Partial<TileOptions>): Tile;
-declare function installAll$1(tiles: Record<string, Partial<TileOptions>>): void;
-
-declare const flags$1: {
-    Tile: typeof Tile$1;
-    TileMech: typeof TileMech;
-};
-
-type index_d$2_TileFlags = TileFlags;
-type index_d$2_NameConfig = NameConfig;
-type index_d$2_TileType = TileType;
-type index_d$2_TileConfig = TileConfig;
-type index_d$2_Tile = Tile;
-declare const index_d$2_Tile: typeof Tile;
-type index_d$2_TileOptions = TileOptions;
-declare const index_d$2_tiles: typeof tiles;
-declare const index_d$2_all: typeof all;
-declare const index_d$2_get: typeof get;
-declare namespace index_d$2 {
-  export {
-    flags$1 as flags,
-    index_d$2_TileFlags as TileFlags,
-    index_d$2_NameConfig as NameConfig,
-    index_d$2_TileType as TileType,
-    index_d$2_TileConfig as TileConfig,
-    index_d$2_Tile as Tile,
-    index_d$2_TileOptions as TileOptions,
-    make$3 as make,
-    index_d$2_tiles as tiles,
-    index_d$2_all as all,
-    index_d$2_get as get,
-    install$1 as install,
-    installAll$1 as installAll,
-  };
-}
-
-interface CellFlags {
-    cell: number;
-}
-interface MapFlags {
-    map: number;
-}
-interface SetOptions {
-    superpriority: boolean;
-    blockedByOtherLayers: boolean;
-    blockedByActors: boolean;
-    blockedByItems: boolean;
-    volume: number;
-    machine: number;
-}
-declare type SetTileOptions = Partial<SetOptions>;
-interface CellInfoType {
-    chokeCount: number;
-    machineId: number;
-    hasCellFlag(flag: number): boolean;
-    hasTileFlag(flag: number): boolean;
-    hasAllTileFlags(flags: number): boolean;
-    hasObjectFlag(flag: number): boolean;
-    hasAllObjectFlags(flags: number): boolean;
-    hasTileMechFlag(flag: number): boolean;
-    cellFlags(): number;
-    objectFlags(): number;
-    tileFlags(): number;
-    tileMechFlags(): number;
-    itemFlags(): number;
-    actorFlags(): number;
-    blocksVision(): boolean;
-    blocksPathing(): boolean;
-    blocksMove(): boolean;
-    blocksEffects(): boolean;
-    isWall(): boolean;
-    isStairs(): boolean;
-    hasKey(): boolean;
-    readonly tile: Tile;
-    hasTile(tile: string | number | Tile): boolean;
-    hasItem(): boolean;
-    readonly item: Item | null;
-    hasActor(): boolean;
-    hasPlayer(): boolean;
-    readonly actor: Actor | null;
-    getDescription(): string;
-    getFlavor(): string;
-    getName(opts: any): string;
-}
-interface CellType extends CellInfoType {
-    flags: CellFlags;
-    setCellFlag(flag: number): void;
-    clearCellFlag(flag: number): void;
-    depthPriority(depth: number): number;
-    highestPriority(): number;
-    depthTile(depth: number): Tile | null;
-    blocksLayer(depth: number): boolean;
-    eachTile(cb: EachCb$1<Tile>): void;
-    isPassable(): boolean;
-    setTile(tile: Tile): boolean;
-    clear(): void;
-    clearDepth(depth: number): boolean;
-    hasTile(tile?: string | number | Tile): boolean;
-    hasDepthTile(depth: number): boolean;
-    highestPriorityTile(): Tile;
-    isEmpty(): boolean;
-    isWall(): boolean;
-    eachGlowLight(cb: (light: LightType) => any): void;
-    activate(event: string, map: MapType, x: number, y: number, ctx?: Partial<EffectCtx>): Promise<boolean> | boolean;
-    activateSync(event: string, map: MapType, x: number, y: number, ctx?: Partial<EffectCtx>): boolean;
-    hasEffect(name: string): boolean;
-    needsRedraw: boolean;
-}
-declare type EachCellCb = (cell: CellType, x: number, y: number, map: MapType) => any;
-declare type EachItemCb = (item: Item) => any;
-declare type EachActorCb = (actor: Actor) => any;
-declare type MapTestFn = (cell: CellType, x: number, y: number, map: MapType) => boolean;
-interface MapType {
-    readonly width: number;
-    readonly height: number;
-    light: LightSystemType;
-    fov: FovSystemType;
-    properties: Record<string, any>;
-    hasXY(x: number, y: number): boolean;
-    isBoundaryXY(x: number, y: number): boolean;
-    cellInfo(x: number, y: number, useMemory?: boolean): CellInfoType;
-    cell(x: number, y: number): CellType;
-    get(x: number, y: number): CellType | undefined;
-    eachCell(cb: EachCellCb): void;
-    eachItem(cb: EachItemCb): void;
-    addItem(x: number, y: number, actor: Item): boolean;
-    removeItem(actor: Item): boolean;
-    moveItem(item: Item, x: number, y: number): boolean;
-    eachActor(cb: EachActorCb): void;
-    addActor(x: number, y: number, actor: Actor): boolean;
-    removeActor(actor: Actor): boolean;
-    moveActor(actor: Actor, x: number, y: number): boolean;
-    isVisible(x: number, y: number): boolean;
-    hasMapFlag(flag: number): boolean;
-    setMapFlag(flag: number): void;
-    clearMapFlag(flag: number): void;
-    setCellFlag(x: number, y: number, flag: number): void;
-    clearCellFlag(x: number, y: number, flag: number): void;
-    fill(tile: string, boundary?: string): void;
-    hasTile(x: number, y: number, tile: string | number | Tile): boolean;
-    setTile(x: number, y: number, tile: string | number | Tile, opts?: SetTileOptions): boolean;
-    tick(dt: number): Promise<boolean>;
-    fire(event: string, x: number, y: number, ctx?: Partial<EffectCtx>): Promise<boolean>;
-    fireSync(event: string, x: number, y: number, ctx?: Partial<EffectCtx>): boolean;
-    fireAll(event: string, ctx?: Partial<EffectCtx>): Promise<boolean>;
-    fireAllSync(event: string, ctx?: Partial<EffectCtx>): boolean;
-    activateMachine(machineId: number, originX: number, originY: number, ctx?: Partial<EffectCtx>): Promise<boolean>;
-    activateMachineSync(machineId: number, originX: number, originY: number, ctx?: Partial<EffectCtx>): boolean;
-    count(cb: MapTestFn): number;
-    dump(fmt?: (cell: CellType) => string): void;
-    getAppearanceAt(x: number, y: number, dest: Mixer): void;
-}
-
-interface EffectHandler {
-    make: (src: Partial<EffectConfig>, dest: EffectInfo) => boolean;
-    fire: (config: EffectInfo, map: MapType, x: number, y: number, ctx: EffectCtx) => boolean | Promise<boolean>;
-    fireSync: (config: EffectInfo, map: MapType, x: number, y: number, ctx: EffectCtx) => boolean;
-}
-
-declare function reset(effect: EffectInfo): void;
-declare function resetAll(): void;
-declare const effects: Record<string, EffectInfo>;
-declare function install(id: string, config: Partial<EffectConfig>): EffectInfo;
-declare function installAll(effects: Record<string, Partial<EffectConfig>>): void;
-declare const handlers: Record<string, EffectHandler>;
-declare function installHandler(id: string, handler: EffectHandler): void;
-
-declare function make$2(opts: EffectBase): EffectInfo;
-declare function from$1(opts: EffectBase | string): EffectInfo;
-
-declare function fire(effect: EffectInfo | string, map: MapType, x: number, y: number, ctx_?: Partial<EffectCtx>): Promise<boolean>;
-declare function fireSync(effect: EffectInfo | string, map: MapType, x: number, y: number, ctx_?: Partial<EffectCtx>): boolean;
-
-declare class MessageEffect implements EffectHandler {
-    make(src: Partial<EffectConfig>, dest: EffectInfo): boolean;
-    fire(config: EffectInfo, map: MapType, x: number, y: number, ctx: EffectCtx): Promise<boolean>;
-    fireSync(config: EffectInfo, _map: MapType, _x: number, _y: number, _ctx: EffectCtx): boolean;
-}
-
-declare class EmitEffect implements EffectHandler {
-    make(src: Partial<EffectConfig>, dest: EffectInfo): boolean;
-    fire(config: any, _map: MapType, x: number, y: number, ctx: EffectCtx): Promise<boolean>;
-    fireSync(config: EffectInfo, _map: MapType, _x: number, _y: number, _ctx: EffectCtx): boolean;
-}
-
-declare class FnEffect implements EffectHandler {
-    make(src: Partial<EffectConfig>, dest: EffectInfo): boolean;
-    fire(config: any, map: MapType, x: number, y: number, ctx: Partial<EffectCtx>): Promise<any>;
-    fireSync(config: any, map: MapType, x: number, y: number, ctx: Partial<EffectCtx>): any;
-}
-
-declare class ActivateMachineEffect implements EffectHandler {
-    make(src: Partial<EffectConfig>, dest: EffectInfo): boolean;
-    fire(config: any, map: MapType, x: number, y: number, ctx: Partial<EffectCtx>): Promise<boolean>;
-    fireSync(config: any, map: MapType, x: number, y: number, ctx: Partial<EffectCtx>): boolean;
-}
-
-type index_d$1_EffectInfo = EffectInfo;
-type index_d$1_EffectCtx = EffectCtx;
-type index_d$1_EffectConfig = EffectConfig;
-type index_d$1_EffectBase = EffectBase;
-type index_d$1_EffectHandler = EffectHandler;
-declare const index_d$1_reset: typeof reset;
-declare const index_d$1_resetAll: typeof resetAll;
-declare const index_d$1_effects: typeof effects;
-declare const index_d$1_install: typeof install;
-declare const index_d$1_installAll: typeof installAll;
-declare const index_d$1_handlers: typeof handlers;
-declare const index_d$1_installHandler: typeof installHandler;
-declare const index_d$1_fire: typeof fire;
-declare const index_d$1_fireSync: typeof fireSync;
-type index_d$1_MessageEffect = MessageEffect;
-declare const index_d$1_MessageEffect: typeof MessageEffect;
-type index_d$1_EmitEffect = EmitEffect;
-declare const index_d$1_EmitEffect: typeof EmitEffect;
-type index_d$1_FnEffect = FnEffect;
-declare const index_d$1_FnEffect: typeof FnEffect;
-type index_d$1_ActivateMachineEffect = ActivateMachineEffect;
-declare const index_d$1_ActivateMachineEffect: typeof ActivateMachineEffect;
-declare namespace index_d$1 {
-  export {
-    Effect as Flags,
-    index_d$1_EffectInfo as EffectInfo,
-    index_d$1_EffectCtx as EffectCtx,
-    index_d$1_EffectConfig as EffectConfig,
-    index_d$1_EffectBase as EffectBase,
-    index_d$1_EffectHandler as EffectHandler,
-    index_d$1_reset as reset,
-    index_d$1_resetAll as resetAll,
-    index_d$1_effects as effects,
-    index_d$1_install as install,
-    index_d$1_installAll as installAll,
-    index_d$1_handlers as handlers,
-    index_d$1_installHandler as installHandler,
-    make$2 as make,
-    from$1 as from,
-    index_d$1_fire as fire,
-    index_d$1_fireSync as fireSync,
-    index_d$1_MessageEffect as MessageEffect,
-    index_d$1_EmitEffect as EmitEffect,
-    index_d$1_FnEffect as FnEffect,
-    index_d$1_ActivateMachineEffect as ActivateMachineEffect,
-  };
-}
-
-declare const data: any;
-declare const config: any;
-
-interface BlobConfig {
-    rounds: number;
-    minWidth: number;
-    minHeight: number;
-    maxWidth: number;
-    maxHeight: number;
-    percentSeeded: number;
-    birthParameters: string;
-    survivalParameters: string;
-}
-declare class Blob {
-    options: BlobConfig;
-    constructor(opts?: Partial<BlobConfig>);
-    carve(width: number, height: number, setFn: XYFunc): Bounds;
-    _cellularAutomataRound(grid: NumGrid): boolean;
-}
-declare function fillBlob(grid: NumGrid, opts?: Partial<BlobConfig>): Bounds;
-declare function make$1(opts?: Partial<BlobConfig>): Blob;
-
-type blob_d_BlobConfig = BlobConfig;
-type blob_d_Blob = Blob;
-declare const blob_d_Blob: typeof Blob;
-declare const blob_d_fillBlob: typeof fillBlob;
-declare namespace blob_d {
-  export {
-    blob_d_BlobConfig as BlobConfig,
-    blob_d_Blob as Blob,
-    blob_d_fillBlob as fillBlob,
-    make$1 as make,
-  };
-}
-
-declare enum Cell$1 {
-    SEARCHED_FROM_HERE,
-    PRESSURE_PLATE_DEPRESSED,
-    KNOWN_TO_BE_TRAP_FREE,
-    CAUGHT_FIRE_THIS_TURN,
-    EVENT_FIRED_THIS_TURN,
-    EVENT_PROTECTED,
-    IS_IN_LOOP,
-    IS_CHOKEPOINT,
-    IS_GATE_SITE,
-    IS_IN_ROOM_MACHINE,
-    IS_IN_AREA_MACHINE,
-    IS_POWERED,
-    IMPREGNABLE,
-    NEEDS_REDRAW,
-    CELL_CHANGED,
-    HAS_SURFACE,
-    HAS_LIQUID,
-    HAS_GAS,
-    HAS_PLAYER,
-    HAS_ACTOR,
-    HAS_DORMANT_MONSTER,
-    HAS_ITEM,
-    IS_IN_PATH,
-    IS_CURSOR,
-    STABLE_MEMORY,
-    IS_WIRED,
-    IS_CIRCUIT_BREAKER,
-    COLORS_DANCE,
-    IS_IN_MACHINE,
-    PERMANENT_CELL_FLAGS,
-    HAS_ANY_ACTOR,
-    HAS_ANY_OBJECT,
-    CELL_DEFAULT
-}
-declare enum Map$1 {
-    MAP_CHANGED,
-    MAP_ALWAYS_LIT,
-    MAP_SAW_WELCOME,
-    MAP_NO_LIQUID,
-    MAP_NO_GAS,
-    MAP_CALC_FOV,
-    MAP_FOV_CHANGED,
-    MAP_DANCES,
-    MAP_DEFAULT = 0
-}
-
-declare type TileData = Tile | null;
-declare type TileArray = [Tile, ...TileData[]];
-declare type EachCb<T> = (t: T) => any;
-declare type MatchCb<T> = (t: T) => boolean;
-declare type ReduceCb<T> = (out: any, t: T) => any;
-declare class CellObjects {
-    cell: Cell;
-    constructor(cell: Cell);
-    forEach(cb: EachCb<GameObject>): void;
-    some(cb: MatchCb<GameObject>): boolean;
-    reduce(cb: ReduceCb<GameObject>, start?: any): any;
-}
-declare class Cell implements CellType {
-    flags: CellFlags;
-    chokeCount: number;
-    tiles: TileArray;
-    machineId: number;
-    _actor: Actor | null;
-    _item: Item | null;
-    _objects: CellObjects;
-    constructor(groundTile?: number | string | Tile);
-    copy(other: Cell): void;
-    hasCellFlag(flag: number): boolean;
-    setCellFlag(flag: number): void;
-    clearCellFlag(flag: number): void;
-    hasObjectFlag(flag: number): boolean;
-    hasAllObjectFlags(flags: number): boolean;
-    hasTileFlag(flag: number): boolean;
-    hasAllTileFlags(flags: number): boolean;
-    hasTileMechFlag(flag: number): boolean;
-    hasAllTileMechFlags(flags: number): boolean;
-    cellFlags(): number;
-    objectFlags(): number;
-    tileFlags(): number;
-    tileMechFlags(): number;
-    itemFlags(): number;
-    actorFlags(): number;
-    get needsRedraw(): boolean;
-    set needsRedraw(v: boolean);
-    depthPriority(depth: number): number;
-    highestPriority(): number;
-    depthTile(depth: number): Tile | null;
-    hasTile(tile?: string | number | Tile): boolean;
-    hasDepthTile(depth: number): boolean;
-    highestPriorityTile(): Tile;
-    get tile(): Tile;
-    eachTile(cb: EachCb<Tile>): void;
-    tileWithObjectFlag(flag: number): Tile | null;
-    tileWithFlag(flag: number): Tile | null;
-    tileWithMechFlag(flag: number): Tile | null;
-    blocksVision(): boolean;
-    blocksPathing(): boolean;
-    blocksMove(): boolean;
-    blocksEffects(): boolean;
-    blocksLayer(depth: number): boolean;
-    isEmpty(): boolean;
-    isPassable(): boolean;
-    isWall(): boolean;
-    isStairs(): boolean;
-    hasKey(): boolean;
-    setTile(tile: string | number | Tile): boolean;
-    clear(): void;
-    clearDepth(depth: Depth): boolean;
-    clearDepthsWithFlags(tileFlag: number, tileMechFlag?: number): void;
-    eachGlowLight(cb: (light: LightType) => any): void;
-    activate(event: string, map: MapType, x: number, y: number, ctx?: Partial<EffectCtx>): Promise<boolean>;
-    activateSync(event: string, map: MapType, x: number, y: number, ctx?: Partial<EffectCtx>): boolean;
-    _fire(effect: string | EffectInfo, map: MapType, x: number, y: number, ctx: Partial<EffectCtx>): Promise<boolean>;
-    _fireSync(effect: string | EffectInfo, map: MapType, x: number, y: number, ctx: Partial<EffectCtx>): boolean;
-    hasEffect(name: string): boolean;
-    hasItem(): boolean;
-    get item(): Item | null;
-    set item(val: Item | null);
-    hasActor(): boolean;
-    hasPlayer(): boolean;
-    get actor(): Actor | null;
-    set actor(val: Actor | null);
-    getDescription(): string;
-    getFlavor(): string;
-    getName(opts?: {}): string;
-    dump(): string;
-}
-
-declare class MapLayer {
-    map: MapType;
-    depth: number;
-    properties: Record<string, any>;
-    name: string;
-    constructor(map: MapType, name?: string);
-    copy(_other: MapLayer): void;
-    tick(_dt: number): Promise<boolean>;
-}
-declare class ActorLayer extends MapLayer {
-    constructor(map: MapType, name?: string);
-    add(x: number, y: number, obj: Actor, _opts?: any): boolean;
-    remove(obj: Actor): boolean;
-    putAppearance(dest: Mixer, x: number, y: number): void;
-}
-declare class ItemLayer extends MapLayer {
-    constructor(map: MapType, name?: string);
-    add(x: number, y: number, obj: Item, _opts?: any): boolean;
-    remove(obj: Item): boolean;
-    putAppearance(dest: Mixer, x: number, y: number): void;
-}
-declare class TileLayer extends MapLayer {
-    constructor(map: MapType, name?: string);
-    set(x: number, y: number, tile: Tile, opts?: SetTileOptions): boolean;
-    clear(x: number, y: number): boolean;
-    tick(_dt: number): Promise<boolean>;
-    putAppearance(dest: Mixer, x: number, y: number): void;
-}
-
-declare class CellMemory implements CellInfoType {
-    chokeCount: number;
-    machineId: number;
-    flags: {
-        cell: number;
-        item: number;
-        actor: number;
-        tile: number;
-        tileMech: number;
-        object: number;
-    };
-    blocks: {
-        vision: boolean;
-        effects: boolean;
-        move: boolean;
-        pathing: boolean;
-    };
-    _tile: Tile;
-    _item: Item | null;
-    _actor: Actor | null;
-    _hasKey: boolean;
-    snapshot: Mixer;
-    constructor();
-    clear(): void;
-    store(cell: CellInfoType): void;
-    getSnapshot(dest: Mixer): void;
-    putSnapshot(src: Mixer): void;
-    hasCellFlag(flag: number): boolean;
-    hasTileFlag(flag: number): boolean;
-    hasAllTileFlags(flags: number): boolean;
-    hasObjectFlag(flag: number): boolean;
-    hasAllObjectFlags(flags: number): boolean;
-    hasTileMechFlag(flag: number): boolean;
-    cellFlags(): number;
-    objectFlags(): number;
-    tileFlags(): number;
-    tileMechFlags(): number;
-    itemFlags(): number;
-    actorFlags(): number;
-    blocksVision(): boolean;
-    blocksPathing(): boolean;
-    blocksMove(): boolean;
-    blocksEffects(): boolean;
-    isWall(): boolean;
-    isStairs(): boolean;
-    hasKey(): boolean;
-    get tile(): Tile;
-    hasTile(tile: string | number | Tile): boolean;
-    hasItem(): boolean;
-    get item(): Item | null;
-    hasActor(): boolean;
-    hasPlayer(): boolean;
-    get actor(): Actor | null;
-    getDescription(): string;
-    getFlavor(): string;
-    getName(_opts: any): string;
-}
-
-interface MapOptions extends LightSystemOptions, FovSystemOptions {
-    tile: string | true;
-    boundary: string | true;
-}
-declare type LayerType = TileLayer | ActorLayer | ItemLayer;
-interface MapDrawOptions {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-    mapOffsetX: number;
-    mapOffsetY: number;
-    force: boolean;
-}
-declare class Map implements LightSystemSite, FovSite, MapType {
-    width: number;
-    height: number;
-    cells: Grid<Cell>;
-    layers: LayerType[];
-    flags: {
-        map: 0;
-    };
-    light: LightSystemType;
-    fov: FovSystemType;
-    properties: Record<string, any>;
-    memory: Grid<CellMemory>;
-    constructor(width: number, height: number, opts?: Partial<MapOptions>);
-    cellInfo(x: number, y: number, useMemory?: boolean): CellInfoType;
-    initLayers(): void;
-    addLayer(depth: number | keyof typeof Depth, layer: LayerType): void;
-    removeLayer(depth: number | keyof typeof Depth): void;
-    getLayer(depth: number | keyof typeof Depth): LayerType | null;
-    hasXY(x: number, y: number): boolean;
-    isBoundaryXY(x: number, y: number): boolean;
-    cell(x: number, y: number): CellType;
-    get(x: number, y: number): Cell | undefined;
-    eachCell(cb: EachCellCb): void;
-    drawInto(dest: Canvas | DataBuffer, opts?: Partial<MapDrawOptions> | boolean): void;
-    itemAt(x: number, y: number): Item | null;
-    eachItem(cb: EachCb$1<Item>): void;
-    addItem(x: number, y: number, item: Item): boolean;
-    removeItem(item: Item): boolean;
-    moveItem(item: Item, x: number, y: number): boolean;
-    hasPlayer(x: number, y: number): boolean;
-    actorAt(x: number, y: number): Actor | null;
-    eachActor(cb: EachCb$1<Actor>): void;
-    addActor(x: number, y: number, item: Actor): boolean;
-    removeActor(item: Actor): boolean;
-    moveActor(item: Actor, x: number, y: number): boolean;
-    isVisible(x: number, y: number): boolean;
-    count(cb: MapTestFn): number;
-    dump(fmt?: (cell: CellType) => string, log?: {
-        (...data: any[]): void;
-        (message?: any, ...optionalParams: any[]): void;
-    }): void;
-    hasMapFlag(flag: number): boolean;
-    setMapFlag(flag: number): void;
-    clearMapFlag(flag: number): void;
-    setCellFlag(x: number, y: number, flag: number): void;
-    clearCellFlag(x: number, y: number, flag: number): void;
-    fill(tile: string | number | Tile, boundary?: string | number | Tile): void;
-    hasTile(x: number, y: number, tile: string | number | Tile, useMemory?: boolean): boolean;
-    setTile(x: number, y: number, tile: string | number | Tile, opts?: SetTileOptions): boolean;
-    tick(dt: number): Promise<boolean>;
-    copy(src: Map): void;
-    clone(): Map;
-    fire(event: string, x: number, y: number, ctx?: Partial<EffectCtx>): Promise<boolean>;
-    fireSync(event: string, x: number, y: number, ctx?: Partial<EffectCtx>): boolean;
-    fireAll(event: string, ctx?: Partial<EffectCtx>): Promise<boolean>;
-    fireAllSync(event: string, ctx?: Partial<EffectCtx>): boolean;
-    activateMachine(machineId: number, originX: number, originY: number, ctx?: Partial<EffectCtx>): Promise<boolean>;
-    activateMachineSync(machineId: number, originX: number, originY: number, ctx?: Partial<EffectCtx>): boolean;
-    getAppearanceAt(x: number, y: number, dest: Mixer): void;
-    hasActor(x: number, y: number): boolean;
-    eachGlowLight(cb: LightCb): void;
-    eachDynamicLight(_cb: LightCb): void;
-    eachViewport(_cb: ViewportCb): void;
-    lightingChanged(): boolean;
-    hasVisibleLight(x: number, y: number): boolean;
-    blocksVision(x: number, y: number): boolean;
-    onCellRevealed(_x: number, _y: number): void;
-    redrawCell(x: number, y: number, clearMemory?: boolean): void;
-    clearMemory(x: number, y: number): void;
-    storeMemory(x: number, y: number): void;
-}
-declare function make(w: number, h: number, floor?: string, boundary?: string): Map;
-declare function make(w: number, h: number, floor: string): Map;
-declare function make(w: number, h: number, opts: Partial<MapOptions>): Map;
-declare function from(prefab: string | string[] | NumGrid, charToTile: Record<string, string | null>, opts?: Partial<MapOptions>): Map;
-
-declare function analyze(map: MapType, updateChokeCounts?: boolean): void;
-declare function updateChokepoints(map: MapType, updateCounts: boolean): void;
-declare function floodFillCount(map: MapType, results: NumGrid, passMap: NumGrid, startX: number, startY: number): number;
-declare function updateLoopiness(map: MapType): void;
-declare function resetLoopiness(cell: CellType, _x: number, _y: number, _map: MapType): void;
-declare function checkLoopiness(cell: CellType, x: number, y: number, map: MapType): boolean;
-declare function fillInnerLoopGrid(map: MapType, grid: NumGrid): void;
-declare function cleanLoopiness(map: MapType): void;
-
-interface SpawnConfig {
-    tile: string;
-    grow: number;
-    decrement: number;
-    matchTile: string;
-    flags: FlagBase;
-    volume: number;
-    next: string;
-}
-interface SpawnInfo {
-    tile: string;
-    grow: number;
-    decrement: number;
-    matchTile: string;
-    flags: number;
-    volume: number;
-    next: string | null;
-}
-declare class SpawnEffect implements EffectHandler {
-    make(src: Partial<EffectConfig>, dest: EffectInfo): boolean;
-    fire(effect: EffectInfo, map: MapType, x: number, y: number, ctx: EffectCtx): Promise<boolean>;
-    fireSync(effect: EffectInfo, map: MapType, x: number, y: number, ctx: EffectCtx): boolean;
-    mapDisruptedBy(map: MapType, blockingGrid: NumGrid, blockingToMapX?: number, blockingToMapY?: number): boolean;
-}
-declare function spawnTiles(flags: number, spawnMap: NumGrid, map: MapType, tile: Tile, volume?: number): boolean;
-declare function computeSpawnMap(effect: EffectInfo, map: MapType, x: number, y: number, ctx: EffectCtx): boolean;
-declare function clearCells(map: MapType, spawnMap: NumGrid, flags?: number): boolean;
-declare function evacuateCreatures(map: MapType, blockingMap: NumGrid): boolean;
-declare function evacuateItems(map: MapType, blockingMap: NumGrid): boolean;
-
-declare class GasLayer extends TileLayer {
-    volume: NumGrid;
-    needsUpdate: boolean;
-    constructor(map: MapType, name?: string);
-    set(x: number, y: number, tile: Tile, opts?: SetTileOptions): boolean;
-    clear(x: number, y: number): boolean;
-    copy(other: GasLayer): void;
-    tick(_dt: number): Promise<boolean>;
-    dissipate(volume: NumGrid): void;
-    calcOpacity(volume: number): number;
-    updateCellVolume(x: number, y: number, startingVolume: NumGrid): void;
-    spread(startingVolume: NumGrid): void;
-    putAppearance(dest: Mixer, x: number, y: number): void;
-}
-
-declare class FireLayer extends TileLayer {
-    constructor(map: MapType, name?: string);
-    tick(_dt: number): Promise<boolean>;
-    exposeToFire(x: number, y: number, alwaysIgnite?: boolean): Promise<boolean>;
-}
-
-declare const flags: {
-    Cell: typeof Cell$1;
-    Map: typeof Map$1;
-    GameObject: typeof GameObject$1;
-    Depth: typeof Depth;
-    Tile: typeof Tile$1;
-};
-
-declare const index_d_flags: typeof flags;
-type index_d_CellFlags = CellFlags;
-type index_d_MapFlags = MapFlags;
-type index_d_SetOptions = SetOptions;
-type index_d_SetTileOptions = SetTileOptions;
-type index_d_CellInfoType = CellInfoType;
-type index_d_CellType = CellType;
-type index_d_EachCellCb = EachCellCb;
-type index_d_EachItemCb = EachItemCb;
-type index_d_EachActorCb = EachActorCb;
-type index_d_MapTestFn = MapTestFn;
-type index_d_MapType = MapType;
-type index_d_Cell = Cell;
-declare const index_d_Cell: typeof Cell;
-type index_d_MapOptions = MapOptions;
-type index_d_LayerType = LayerType;
-type index_d_MapDrawOptions = MapDrawOptions;
-type index_d_Map = Map;
-declare const index_d_Map: typeof Map;
+type index_d_LightConfig = LightConfig;
+type index_d_LightBase = LightBase;
+type index_d_LightType = LightType;
+type index_d_LightCb = LightCb;
+type index_d_PaintSite = PaintSite;
+type index_d_LightSystemSite = LightSystemSite;
+type index_d_LightSystemType = LightSystemType;
+declare const index_d_config: typeof config;
+type index_d_Light = Light;
+declare const index_d_Light: typeof Light;
+declare const index_d_intensity: typeof intensity;
+declare const index_d_isDarkLight: typeof isDarkLight;
+declare const index_d_isShadowLight: typeof isShadowLight;
 declare const index_d_make: typeof make;
+declare const index_d_lights: typeof lights;
 declare const index_d_from: typeof from;
-declare const index_d_analyze: typeof analyze;
-declare const index_d_updateChokepoints: typeof updateChokepoints;
-declare const index_d_floodFillCount: typeof floodFillCount;
-declare const index_d_updateLoopiness: typeof updateLoopiness;
-declare const index_d_resetLoopiness: typeof resetLoopiness;
-declare const index_d_checkLoopiness: typeof checkLoopiness;
-declare const index_d_fillInnerLoopGrid: typeof fillInnerLoopGrid;
-declare const index_d_cleanLoopiness: typeof cleanLoopiness;
-type index_d_SpawnConfig = SpawnConfig;
-type index_d_SpawnInfo = SpawnInfo;
-type index_d_SpawnEffect = SpawnEffect;
-declare const index_d_SpawnEffect: typeof SpawnEffect;
-declare const index_d_spawnTiles: typeof spawnTiles;
-declare const index_d_computeSpawnMap: typeof computeSpawnMap;
-declare const index_d_clearCells: typeof clearCells;
-declare const index_d_evacuateCreatures: typeof evacuateCreatures;
-declare const index_d_evacuateItems: typeof evacuateItems;
-type index_d_CellMemory = CellMemory;
-declare const index_d_CellMemory: typeof CellMemory;
-type index_d_MapLayer = MapLayer;
-declare const index_d_MapLayer: typeof MapLayer;
-type index_d_ActorLayer = ActorLayer;
-declare const index_d_ActorLayer: typeof ActorLayer;
-type index_d_ItemLayer = ItemLayer;
-declare const index_d_ItemLayer: typeof ItemLayer;
-type index_d_TileLayer = TileLayer;
-declare const index_d_TileLayer: typeof TileLayer;
-type index_d_GasLayer = GasLayer;
-declare const index_d_GasLayer: typeof GasLayer;
-type index_d_FireLayer = FireLayer;
-declare const index_d_FireLayer: typeof FireLayer;
+declare const index_d_install: typeof install;
+declare const index_d_installAll: typeof installAll;
+type index_d_StaticLightInfo = StaticLightInfo;
+type index_d_LightSystemOptions = LightSystemOptions;
+type index_d_LightSystem = LightSystem;
+declare const index_d_LightSystem: typeof LightSystem;
 declare namespace index_d {
   export {
-    index_d_flags as flags,
-    index_d_CellFlags as CellFlags,
-    index_d_MapFlags as MapFlags,
-    index_d_SetOptions as SetOptions,
-    index_d_SetTileOptions as SetTileOptions,
-    index_d_CellInfoType as CellInfoType,
-    index_d_CellType as CellType,
-    index_d_EachCellCb as EachCellCb,
-    index_d_EachItemCb as EachItemCb,
-    index_d_EachActorCb as EachActorCb,
-    index_d_MapTestFn as MapTestFn,
-    index_d_MapType as MapType,
-    index_d_Cell as Cell,
-    index_d_MapOptions as MapOptions,
-    index_d_LayerType as LayerType,
-    index_d_MapDrawOptions as MapDrawOptions,
-    index_d_Map as Map,
+    index_d_LightConfig as LightConfig,
+    index_d_LightBase as LightBase,
+    index_d_LightType as LightType,
+    index_d_LightCb as LightCb,
+    index_d_PaintSite as PaintSite,
+    index_d_LightSystemSite as LightSystemSite,
+    index_d_LightSystemType as LightSystemType,
+    index_d_config as config,
+    index_d_Light as Light,
+    index_d_intensity as intensity,
+    index_d_isDarkLight as isDarkLight,
+    index_d_isShadowLight as isShadowLight,
     index_d_make as make,
+    index_d_lights as lights,
     index_d_from as from,
-    index_d_analyze as analyze,
-    index_d_updateChokepoints as updateChokepoints,
-    index_d_floodFillCount as floodFillCount,
-    index_d_updateLoopiness as updateLoopiness,
-    index_d_resetLoopiness as resetLoopiness,
-    index_d_checkLoopiness as checkLoopiness,
-    index_d_fillInnerLoopGrid as fillInnerLoopGrid,
-    index_d_cleanLoopiness as cleanLoopiness,
-    index_d_SpawnConfig as SpawnConfig,
-    index_d_SpawnInfo as SpawnInfo,
-    index_d_SpawnEffect as SpawnEffect,
-    index_d_spawnTiles as spawnTiles,
-    index_d_computeSpawnMap as computeSpawnMap,
-    index_d_clearCells as clearCells,
-    index_d_evacuateCreatures as evacuateCreatures,
-    index_d_evacuateItems as evacuateItems,
-    index_d_CellMemory as CellMemory,
-    index_d_MapLayer as MapLayer,
-    index_d_ActorLayer as ActorLayer,
-    index_d_ItemLayer as ItemLayer,
-    index_d_TileLayer as TileLayer,
-    index_d_GasLayer as GasLayer,
-    index_d_FireLayer as FireLayer,
+    index_d_install as install,
+    index_d_installAll as installAll,
+    index_d_StaticLightInfo as StaticLightInfo,
+    index_d_LightSystemOptions as LightSystemOptions,
+    index_d_LightSystem as LightSystem,
   };
 }
 
-export { index_d$4 as actor, blob_d as blob, index_d$9 as canvas, index_d$c as color, colors, config, cosmetic, data, index_d$1 as effect, events_d as events, flag_d as flag, index_d$a as fov, frequency_d as frequency, index_d$5 as gameObject, grid_d as grid, io_d as io, index_d$3 as item, index_d$6 as light, loop, index_d as map, message_d as message, path_d as path, random, range_d as range, scheduler_d as scheduler, index_d$8 as sprite, sprites, index_d$7 as text, index_d$2 as tile, types_d as types, index_d$b as utils };
+export { blob_d as blob, index_d$3 as canvas, index_d$6 as color, colors, config$1 as config, cosmetic, data, events_d as events, flag_d as flag, index_d$4 as fov, frequency_d as frequency, grid_d as grid, io_d as io, index_d as light, loop, message_d as message, path_d as path, random, range_d as range, scheduler_d as scheduler, index_d$2 as sprite, sprites, index_d$1 as text, types_d as types, index_d$5 as utils };

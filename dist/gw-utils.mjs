@@ -11,8 +11,9 @@ function Alea(seed) {
      * This code is an implementation of Alea algorithm; (C) 2010 Johannes Baagøe.
      * Alea is licensed according to the http://en.wikipedia.org/wiki/MIT_License.
      */
+    seed = Math.abs(seed || Date.now());
+    seed = seed < 1 ? 1 / seed : seed;
     const FRAC = 2.3283064365386963e-10; /* 2^-32 */
-    // let _seed = 0;
     let _s0 = 0;
     let _s1 = 0;
     let _s2 = 0;
@@ -20,20 +21,16 @@ function Alea(seed) {
     /**
      * Seed the number generator
      */
-    if (seed) {
-        seed = seed < 1 ? 1 / seed : seed;
-        // _seed = seed;
-        _s0 = (seed >>> 0) * FRAC;
-        seed = (seed * 69069 + 1) >>> 0;
-        _s1 = seed * FRAC;
-        seed = (seed * 69069 + 1) >>> 0;
-        _s2 = seed * FRAC;
-        _c = 1;
-    }
+    _s0 = (seed >>> 0) * FRAC;
+    seed = (seed * 69069 + 1) >>> 0;
+    _s1 = seed * FRAC;
+    seed = (seed * 69069 + 1) >>> 0;
+    _s2 = seed * FRAC;
+    _c = 1;
     /**
      * @returns Pseudorandom value [0,1), uniformly distributed
      */
-    return () => {
+    return function alea() {
         let t = 2091639 * _s0 + _c * FRAC;
         _s0 = _s1;
         _s1 = _s2;
@@ -1053,7 +1050,7 @@ async function asyncForEach(iterable, fn) {
     }
 }
 
-var index$c = {
+var index$6 = {
     __proto__: null,
     Random: Random,
     Alea: Alea,
@@ -1167,7 +1164,7 @@ class Range {
         return `${this.lo}-${this.hi}`;
     }
 }
-function make$b(config, rng) {
+function make$8(config, rng) {
     if (!config)
         return new Range(0, 0, 0, rng);
     if (config instanceof Range)
@@ -1219,17 +1216,17 @@ function make$b(config, rng) {
     }
     throw new Error('Not a valid range - ' + config);
 }
-const from$6 = make$b;
+const from$4 = make$8;
 function asFn(config, rng) {
-    const range = make$b(config, rng);
+    const range = make$8(config, rng);
     return () => range.value();
 }
 
 var range = {
     __proto__: null,
     Range: Range,
-    make: make$b,
-    from: from$6,
+    make: make$8,
+    from: from$4,
     asFn: asFn
 };
 
@@ -1260,7 +1257,7 @@ function toString(flagObj, value) {
     }
     return out.join(' | ');
 }
-function from$5(obj, ...args) {
+function from$3(obj, ...args) {
     let result = 0;
     for (let index = 0; index < args.length; ++index) {
         let value = args[index];
@@ -1315,7 +1312,7 @@ var flag = {
     __proto__: null,
     fl: fl,
     toString: toString,
-    from: from$5
+    from: from$3
 };
 
 const DIRS$1 = DIRS$2;
@@ -1832,7 +1829,7 @@ class NumGrid extends Grid {
 // Grid.fillBlob = fillBlob;
 const alloc = NumGrid.alloc.bind(NumGrid);
 const free = NumGrid.free.bind(NumGrid);
-function make$a(w, h, v) {
+function make$7(w, h, v) {
     if (v === undefined)
         return new NumGrid(w, h, 0);
     if (typeof v === 'number')
@@ -1874,7 +1871,7 @@ var grid = {
     NumGrid: NumGrid,
     alloc: alloc,
     free: free,
-    make: make$a,
+    make: make$7,
     offsetZip: offsetZip,
     intersection: intersection,
     unite: unite
@@ -2232,11 +2229,11 @@ class Loop {
         return this.pause(5 * 60 * 1000); // 5 min
     }
 }
-function make$9() {
+function make$6() {
     return new Loop();
 }
 // Makes a default global loop that you access through these funcitons...
-const loop = make$9();
+const loop = make$6();
 
 var io = {
     __proto__: null,
@@ -2256,7 +2253,7 @@ var io = {
     onkeydown: onkeydown,
     makeMouseEvent: makeMouseEvent,
     Loop: Loop,
-    make: make$9,
+    make: make$6,
     loop: loop
 };
 
@@ -2397,7 +2394,7 @@ class FOV {
 class FovSystem {
     constructor(site, opts = {}) {
         this.site = site;
-        this.flags = make$a(site.width, site.height, FovFlags.VISIBLE);
+        this.flags = make$7(site.width, site.height, FovFlags.VISIBLE);
         this._changed = true;
         this.viewportChanged = false;
         this.fov = new FOV({
@@ -2662,7 +2659,7 @@ class FovSystem {
     }
 }
 
-var index$b = {
+var index$5 = {
     __proto__: null,
     get FovFlags () { return FovFlags; },
     FOV: FOV,
@@ -3093,7 +3090,7 @@ var events = {
     emit: emit
 };
 
-function make$8(v) {
+function make$5(v) {
     if (v === undefined)
         return () => 100;
     if (v === null)
@@ -3146,7 +3143,7 @@ function make$8(v) {
 
 var frequency = {
     __proto__: null,
-    make: make$8
+    make: make$5
 };
 
 class Scheduler {
@@ -3686,7 +3683,7 @@ class Color extends Int16Array {
         else if (typeof other === 'number') {
             return this.toInt() == other || this.toInt(true) == other;
         }
-        const O = from$4(other);
+        const O = from$2(other);
         if (this.isNull())
             return O.isNull();
         return this.every((v, i) => {
@@ -3703,7 +3700,7 @@ class Color extends Int16Array {
             }
         }
         else {
-            other = from$4(other);
+            other = from$2(other);
             this.dances = other.dances;
         }
         for (let i = 0; i < this.length; ++i) {
@@ -3784,7 +3781,7 @@ class Color extends Int16Array {
         return this._changed();
     }
     mix(other, percent) {
-        const O = from$4(other);
+        const O = from$2(other);
         if (O.isNull())
             return this;
         if (this.isNull()) {
@@ -3848,7 +3845,7 @@ class Color extends Int16Array {
     }
     // Adds a color to this one
     add(other, percent = 100) {
-        const O = from$4(other);
+        const O = from$2(other);
         if (O.isNull())
             return this;
         if (this.isNull()) {
@@ -3965,7 +3962,7 @@ function fromNumber(val, base256 = false) {
     }
     return c;
 }
-function make$7(...args) {
+function make$4(...args) {
     let arg = args[0];
     let base256 = args[1];
     if (args.length == 0)
@@ -3993,7 +3990,7 @@ function make$7(...args) {
     }
     throw new Error('Failed to make color - unknown argument: ' + JSON.stringify(arg));
 }
-function from$4(...args) {
+function from$2(...args) {
     const arg = args[0];
     if (arg instanceof Color)
         return arg;
@@ -4004,7 +4001,7 @@ function from$4(...args) {
             return fromName(arg);
         }
     }
-    return make$7(arg, args[1]);
+    return make$4(arg, args[1]);
 }
 // adjusts the luminosity of 2 colors to ensure there is enough separation between them
 function separate(a, b) {
@@ -4054,12 +4051,12 @@ function distance(a, b) {
             (a.b - b.b) * (a.b - b.b) * 0.3333)) /
         65025);
 }
-function install$5(name, ...args) {
+function install$3(name, ...args) {
     let info = args;
     if (args.length == 1) {
         info = args[0];
     }
-    const c = info instanceof Color ? info : make$7(info);
+    const c = info instanceof Color ? info : make$4(info);
     colors[name] = c;
     c.name = name;
     return c;
@@ -4067,22 +4064,22 @@ function install$5(name, ...args) {
 function installSpread(name, ...args) {
     let c;
     if (args.length == 1) {
-        c = install$5(name, args[0]);
+        c = install$3(name, args[0]);
     }
     else {
-        c = install$5(name, ...args);
+        c = install$3(name, ...args);
     }
-    install$5('light_' + name, c.clone().lighten(25));
-    install$5('lighter_' + name, c.clone().lighten(50));
-    install$5('lightest_' + name, c.clone().lighten(75));
-    install$5('dark_' + name, c.clone().darken(25));
-    install$5('darker_' + name, c.clone().darken(50));
-    install$5('darkest_' + name, c.clone().darken(75));
+    install$3('light_' + name, c.clone().lighten(25));
+    install$3('lighter_' + name, c.clone().lighten(50));
+    install$3('lightest_' + name, c.clone().lighten(75));
+    install$3('dark_' + name, c.clone().darken(25));
+    install$3('darker_' + name, c.clone().darken(50));
+    install$3('darkest_' + name, c.clone().darken(75));
     return c;
 }
-const NONE = install$5('NONE', -1);
-const BLACK = install$5('black', 0x000);
-const WHITE = install$5('white', 0xfff);
+const NONE = install$3('NONE', -1);
+const BLACK = install$3('black', 0x000);
+const WHITE = install$3('white', 0xfff);
 installSpread('teal', [30, 100, 100]);
 installSpread('brown', [60, 40, 0]);
 installSpread('tan', [80, 70, 55]); // 80, 67,		15);
@@ -4112,7 +4109,7 @@ installSpread('azure', [0, 50, 100]);
 installSpread('silver', [75, 75, 75]);
 installSpread('gold', [100, 85, 0]);
 
-var index$a = {
+var index$4 = {
     __proto__: null,
     colors: colors,
     Color: Color,
@@ -4120,13 +4117,13 @@ var index$a = {
     fromCss: fromCss,
     fromName: fromName,
     fromNumber: fromNumber,
-    make: make$7,
-    from: from$4,
+    make: make$4,
+    from: from$2,
     separate: separate,
     swap: swap,
     relativeLuminance: relativeLuminance,
     distance: distance,
-    install: install$5,
+    install: install$3,
     installSpread: installSpread,
     NONE: NONE
 };
@@ -4134,8 +4131,8 @@ var index$a = {
 class Mixer {
     constructor(base) {
         this.ch = first(base === null || base === void 0 ? void 0 : base.ch, -1);
-        this.fg = from$4(base === null || base === void 0 ? void 0 : base.fg);
-        this.bg = from$4(base === null || base === void 0 ? void 0 : base.bg);
+        this.fg = from$2(base === null || base === void 0 ? void 0 : base.fg);
+        this.bg = from$2(base === null || base === void 0 ? void 0 : base.bg);
     }
     _changed() {
         return this;
@@ -4176,11 +4173,11 @@ class Mixer {
             this.ch = ch;
         }
         if (fg !== -1 && fg !== null) {
-            fg = from$4(fg);
+            fg = from$2(fg);
             this.fg.copy(fg);
         }
         if (bg !== -1 && bg !== null) {
-            bg = from$4(bg);
+            bg = from$2(bg);
             this.bg.copy(bg);
         }
         return this._changed();
@@ -4208,7 +4205,7 @@ class Mixer {
         return this._changed();
     }
     multiply(color, fg = true, bg = true) {
-        color = from$4(color);
+        color = from$2(color);
         if (fg) {
             this.fg.multiply(color);
         }
@@ -4225,7 +4222,7 @@ class Mixer {
         return this._changed();
     }
     mix(color, fg = 50, bg = fg) {
-        color = from$4(color);
+        color = from$2(color);
         if (fg > 0) {
             this.fg.mix(color, fg);
         }
@@ -4235,7 +4232,7 @@ class Mixer {
         return this._changed();
     }
     add(color, fg = 100, bg = fg) {
-        color = from$4(color);
+        color = from$2(color);
         if (fg > 0) {
             this.fg.add(color, fg);
         }
@@ -4861,7 +4858,7 @@ function configure(opts = {}) {
     }
 }
 
-var index$9 = {
+var index$3 = {
     __proto__: null,
     compile: compile,
     apply: apply,
@@ -4928,10 +4925,10 @@ class DataBuffer {
             glyph = this.toGlyph(glyph);
         }
         if (typeof fg !== 'number') {
-            fg = from$4(fg).toInt();
+            fg = from$2(fg).toInt();
         }
         if (typeof bg !== 'number') {
-            bg = from$4(bg).toInt();
+            bg = from$2(bg).toInt();
         }
         glyph = glyph >= 0 ? glyph & 0xff : current >> 24;
         bg = bg >= 0 ? bg & 0xfff : (current >> 12) & 0xfff;
@@ -4970,9 +4967,9 @@ class DataBuffer {
     }
     drawText(x, y, text, fg = 0xfff, bg = -1) {
         if (typeof fg !== 'number')
-            fg = from$4(fg);
+            fg = from$2(fg);
         if (typeof bg !== 'number')
-            bg = from$4(bg);
+            bg = from$2(bg);
         eachChar(text, (ch, fg0, bg0, i) => {
             if (x + i >= this.width)
                 return;
@@ -4982,9 +4979,9 @@ class DataBuffer {
     }
     wrapText(x, y, width, text, fg = 0xfff, bg = -1, indent = 0) {
         if (typeof fg !== 'number')
-            fg = from$4(fg);
+            fg = from$2(fg);
         if (typeof bg !== 'number')
-            bg = from$4(bg);
+            bg = from$2(bg);
         width = Math.min(width, this.width - x);
         text = wordWrap(text, width, indent);
         let xi = x;
@@ -5010,9 +5007,9 @@ class DataBuffer {
         if (typeof ch !== 'number')
             ch = this.toGlyph(ch);
         if (typeof fg !== 'number')
-            fg = from$4(fg).toInt();
+            fg = from$2(fg).toInt();
         if (typeof bg !== 'number')
-            bg = from$4(bg).toInt();
+            bg = from$2(bg).toInt();
         for (let i = x; i < x + w; ++i) {
             for (let j = y; j < y + h; ++j) {
                 this.draw(i, j, ch, fg, bg);
@@ -5022,12 +5019,12 @@ class DataBuffer {
     }
     blackOutRect(x, y, w, h, bg = 0) {
         if (typeof bg !== 'number')
-            bg = from$4(bg);
+            bg = from$2(bg);
         return this.fillRect(x, y, w, h, 0, 0, bg);
     }
     highlight(x, y, color, strength) {
         if (typeof color !== 'number') {
-            color = from$4(color);
+            color = from$2(color);
         }
         const mixer = new Mixer();
         const data = this.get(x, y);
@@ -5039,7 +5036,7 @@ class DataBuffer {
     }
     mix(color, percent) {
         if (typeof color !== 'number')
-            color = from$4(color);
+            color = from$2(color);
         const mixer = new Mixer();
         for (let x = 0; x < this.width; ++x) {
             for (let y = 0; y < this.height; ++y) {
@@ -5481,7 +5478,7 @@ class Canvas2D extends BaseCanvas {
         this._ctx.putImageData(d, px, py);
     }
 }
-function make$6(...args) {
+function make$3(...args) {
     let width = args[0];
     let height = args[1];
     let opts = args[2];
@@ -5621,13 +5618,13 @@ function createGeometry(gl, attribs, width, height) {
     return { position, uv };
 }
 
-var index$8 = {
+var index$2 = {
     __proto__: null,
     NotSupportedError: NotSupportedError,
     BaseCanvas: BaseCanvas,
     Canvas: Canvas,
     Canvas2D: Canvas2D,
-    make: make$6,
+    make: make$3,
     Glyphs: Glyphs,
     DataBuffer: DataBuffer,
     makeDataBuffer: makeDataBuffer,
@@ -5640,8 +5637,8 @@ class Sprite {
         if (!ch)
             ch = null;
         this.ch = ch;
-        this.fg = from$4(fg);
-        this.bg = from$4(bg);
+        this.fg = from$2(fg);
+        this.bg = from$2(bg);
         this.opacity = opacity >= 0 ? opacity : 100;
     }
     clone() {
@@ -5653,7 +5650,7 @@ class Sprite {
     }
 }
 const sprites = {};
-function make$5(...args) {
+function make$2(...args) {
     let ch = null, fg = -1, bg = -1, opacity;
     if (args.length == 0) {
         return new Sprite(null, -1, -1);
@@ -5696,44 +5693,44 @@ function make$5(...args) {
         }
     }
     if (typeof fg === 'string')
-        fg = from$4(fg);
+        fg = from$2(fg);
     else if (Array.isArray(fg))
-        fg = make$7(fg);
+        fg = make$4(fg);
     else if (fg === undefined || fg === null)
         fg = -1;
     if (typeof bg === 'string')
-        bg = from$4(bg);
+        bg = from$2(bg);
     else if (Array.isArray(bg))
-        bg = make$7(bg);
+        bg = make$4(bg);
     else if (bg === undefined || bg === null)
         bg = -1;
     return new Sprite(ch, fg, bg, opacity);
 }
-function from$3(...args) {
+function from$1(...args) {
     if (args.length == 1 && typeof args[0] === 'string') {
         const sprite = sprites[args[0]];
         if (!sprite)
             throw new Error('Failed to find sprite: ' + args[0]);
         return sprite;
     }
-    return make$5(args);
+    return make$2(args);
 }
-function install$4(name, ...args) {
+function install$2(name, ...args) {
     let sprite;
     // @ts-ignore
-    sprite = make$5(...args);
+    sprite = make$2(...args);
     sprite.name = name;
     sprites[name] = sprite;
     return sprite;
 }
 
-var index$7 = {
+var index$1 = {
     __proto__: null,
     Sprite: Sprite,
     sprites: sprites,
-    make: make$5,
-    from: from$3,
-    install: install$4,
+    make: make$2,
+    from: from$1,
+    install: install$2,
     Mixer: Mixer,
     makeMixer: makeMixer
 };
@@ -5749,15 +5746,15 @@ const config$1 = {};
 
 const templates = {};
 config$1.message = config$1.message || {};
-function install$3(id, msg) {
+function install$1(id, msg) {
     const template = compile(msg);
     templates[id] = template;
     return template;
 }
-function installAll$3(config) {
-    Object.entries(config).forEach(([id, msg]) => install$3(id, msg));
+function installAll$1(config) {
+    Object.entries(config).forEach(([id, msg]) => install$1(id, msg));
 }
-const handlers$1 = [];
+const handlers = [];
 function add(msg, args) {
     return addAt(-1, -1, msg, args);
 }
@@ -5769,7 +5766,7 @@ function addAt(x, y, msg, args) {
     else if (args) {
         msg = apply(msg, args);
     }
-    handlers$1.forEach((h) => h.addMessage(x, y, msg));
+    handlers.forEach((h) => h.addMessage(x, y, msg));
 }
 function addCombat(x, y, msg, args) {
     const template = templates[msg];
@@ -5779,7 +5776,7 @@ function addCombat(x, y, msg, args) {
     else if (args) {
         msg = apply(msg, args);
     }
-    handlers$1.forEach((h) => h.addCombatMessage(x, y, msg));
+    handlers.forEach((h) => h.addCombatMessage(x, y, msg));
 }
 class MessageCache {
     constructor(opts = {}) {
@@ -5796,7 +5793,7 @@ class MessageCache {
             this.ARCHIVE[i] = null;
             this.CONFIRMED[i] = false;
         }
-        handlers$1.push(this);
+        handlers.push(this);
     }
     get needsUpdate() {
         return this.NEEDS_UPDATE;
@@ -5888,356 +5885,13 @@ class MessageCache {
 var message = {
     __proto__: null,
     templates: templates,
-    install: install$3,
-    installAll: installAll$3,
-    handlers: handlers$1,
+    install: install$1,
+    installAll: installAll$1,
+    handlers: handlers,
     add: add,
     addAt: addAt,
     addCombat: addCombat,
     MessageCache: MessageCache
-};
-
-///////////////////////////////////////////////////////
-// TILE EVENT
-var Effect;
-(function (Effect) {
-    // E_ALWAYS_FIRE = Fl(10), // Fire even if the cell is marked as having fired this turn
-    Effect[Effect["E_NEXT_ALWAYS"] = fl(0)] = "E_NEXT_ALWAYS";
-    Effect[Effect["E_NEXT_EVERYWHERE"] = fl(1)] = "E_NEXT_EVERYWHERE";
-    Effect[Effect["E_FIRED"] = fl(2)] = "E_FIRED";
-    Effect[Effect["E_NO_MARK_FIRED"] = fl(3)] = "E_NO_MARK_FIRED";
-    // MUST_REPLACE_LAYER
-    // NEEDS_EMPTY_LAYER
-    Effect[Effect["E_PROTECTED"] = fl(4)] = "E_PROTECTED";
-    // E_NO_REDRAW_CELL = Fl(),
-    Effect[Effect["E_TREAT_AS_BLOCKING"] = fl(5)] = "E_TREAT_AS_BLOCKING";
-    Effect[Effect["E_PERMIT_BLOCKING"] = fl(6)] = "E_PERMIT_BLOCKING";
-    Effect[Effect["E_ABORT_IF_BLOCKS_MAP"] = fl(7)] = "E_ABORT_IF_BLOCKS_MAP";
-    Effect[Effect["E_BLOCKED_BY_ITEMS"] = fl(8)] = "E_BLOCKED_BY_ITEMS";
-    Effect[Effect["E_BLOCKED_BY_ACTORS"] = fl(9)] = "E_BLOCKED_BY_ACTORS";
-    Effect[Effect["E_BLOCKED_BY_OTHER_LAYERS"] = fl(10)] = "E_BLOCKED_BY_OTHER_LAYERS";
-    Effect[Effect["E_SUPERPRIORITY"] = fl(11)] = "E_SUPERPRIORITY";
-    Effect[Effect["E_SPREAD_CIRCLE"] = fl(13)] = "E_SPREAD_CIRCLE";
-    Effect[Effect["E_SPREAD_LINE"] = fl(14)] = "E_SPREAD_LINE";
-    Effect[Effect["E_EVACUATE_CREATURES"] = fl(15)] = "E_EVACUATE_CREATURES";
-    Effect[Effect["E_EVACUATE_ITEMS"] = fl(16)] = "E_EVACUATE_ITEMS";
-    Effect[Effect["E_BUILD_IN_WALLS"] = fl(17)] = "E_BUILD_IN_WALLS";
-    Effect[Effect["E_MUST_TOUCH_WALLS"] = fl(18)] = "E_MUST_TOUCH_WALLS";
-    Effect[Effect["E_NO_TOUCH_WALLS"] = fl(19)] = "E_NO_TOUCH_WALLS";
-    Effect[Effect["E_CLEAR_GROUND"] = fl(21)] = "E_CLEAR_GROUND";
-    Effect[Effect["E_CLEAR_SURFACE"] = fl(22)] = "E_CLEAR_SURFACE";
-    Effect[Effect["E_CLEAR_LIQUID"] = fl(23)] = "E_CLEAR_LIQUID";
-    Effect[Effect["E_CLEAR_GAS"] = fl(24)] = "E_CLEAR_GAS";
-    Effect[Effect["E_CLEAR_TILE"] = fl(25)] = "E_CLEAR_TILE";
-    Effect[Effect["E_CLEAR_CELL"] = Effect.E_CLEAR_GROUND |
-        Effect.E_CLEAR_SURFACE |
-        Effect.E_CLEAR_LIQUID |
-        Effect.E_CLEAR_GAS] = "E_CLEAR_CELL";
-    Effect[Effect["E_ONLY_IF_EMPTY"] = Effect.E_BLOCKED_BY_ITEMS | Effect.E_BLOCKED_BY_ACTORS] = "E_ONLY_IF_EMPTY";
-    // E_NULLIFY_CELL = E_NULL_SURFACE | E_NULL_LIQUID | E_NULL_GAS,
-    // These should be effect types
-    Effect[Effect["E_ACTIVATE_DORMANT_MONSTER"] = fl(27)] = "E_ACTIVATE_DORMANT_MONSTER";
-    Effect[Effect["E_AGGRAVATES_MONSTERS"] = fl(28)] = "E_AGGRAVATES_MONSTERS";
-    Effect[Effect["E_RESURRECT_ALLY"] = fl(29)] = "E_RESURRECT_ALLY";
-})(Effect || (Effect = {}));
-
-function make$4(opts) {
-    var _a;
-    if (!opts)
-        throw new Error('opts required to make effect.');
-    if (typeof opts === 'string') {
-        throw new Error('Cannot make effect from string: ' + opts);
-    }
-    if (typeof opts === 'function') {
-        opts = { fn: opts };
-    }
-    // now make base effect stuff
-    const info = {
-        flags: from$5(Effect, opts.flags),
-        chance: (_a = opts.chance) !== null && _a !== void 0 ? _a : 0,
-        next: null,
-        id: opts.id || 'n/a',
-    };
-    if (opts.next) {
-        if (typeof opts.next === 'string') {
-            info.next = opts.next;
-        }
-        else {
-            info.next = make$4(opts.next);
-        }
-    }
-    // and all the handlers
-    Object.values(handlers).forEach((v) => v.make(opts, info));
-    return info;
-}
-function from$2(opts) {
-    if (!opts)
-        throw new Error('Cannot make effect from null | undefined');
-    if (typeof opts === 'string') {
-        const effect = effects[opts];
-        if (effect)
-            return effect;
-        throw new Error('Unknown effect - ' + opts);
-    }
-    return make$4(opts);
-}
-
-// resetMessageDisplayed
-function reset(effect) {
-    effect.flags &= ~Effect.E_FIRED;
-}
-function resetAll() {
-    Object.values(effects).forEach((e) => reset(e));
-}
-const effects = {};
-function install$2(id, config) {
-    const effect = make$4(config);
-    effects[id] = effect;
-    effect.id = id;
-    return effect;
-}
-function installAll$2(effects) {
-    Object.entries(effects).forEach(([id, config]) => {
-        install$2(id, config);
-    });
-}
-const handlers = {};
-function installHandler(id, handler) {
-    handlers[id] = handler;
-}
-
-async function fire(effect, map, x, y, ctx_ = {}) {
-    if (!effect)
-        return false;
-    if (typeof effect === 'string') {
-        const name = effect;
-        effect = from$2(name);
-        if (!effect)
-            throw new Error('Failed to find effect: ' + name);
-    }
-    const ctx = ctx_;
-    if (!ctx.force && effect.chance && !random.chance(effect.chance, 10000))
-        return false;
-    const grid$1 = (ctx.grid = alloc(map.width, map.height));
-    let didSomething = true;
-    const allHandlers = Object.values(handlers);
-    for (let h of allHandlers) {
-        if (await h.fire(effect, map, x, y, ctx)) {
-            didSomething = true;
-        }
-    }
-    // bookkeeping
-    if (didSomething &&
-        map.isVisible(x, y) &&
-        !(effect.flags & Effect.E_NO_MARK_FIRED)) {
-        effect.flags |= Effect.E_FIRED;
-    }
-    // do the next effect - if applicable
-    if (effect.next &&
-        (didSomething || effect.flags & Effect.E_NEXT_ALWAYS) &&
-        !data.gameHasEnded) {
-        const nextInfo = typeof effect.next === 'string' ? from$2(effect.next) : effect.next;
-        if (effect.flags & Effect.E_NEXT_EVERYWHERE) {
-            await grid$1.forEachAsync(async (v, i, j) => {
-                if (!v)
-                    return;
-                // @ts-ignore
-                await fire(nextInfo, map, i, j, ctx);
-            });
-        }
-        else {
-            await fire(nextInfo, map, x, y, ctx);
-        }
-    }
-    free(grid$1);
-    return didSomething;
-}
-function fireSync(effect, map, x, y, ctx_ = {}) {
-    if (!effect)
-        return false;
-    if (typeof effect === 'string') {
-        const name = effect;
-        effect = from$2(name);
-        if (!effect)
-            throw new Error('Failed to find effect: ' + name);
-    }
-    const ctx = ctx_;
-    if (!ctx.force && effect.chance && !random.chance(effect.chance, 10000))
-        return false;
-    const grid$1 = (ctx.grid = alloc(map.width, map.height));
-    let didSomething = true;
-    const allHandlers = Object.values(handlers);
-    for (let h of allHandlers) {
-        if (h.fireSync(effect, map, x, y, ctx)) {
-            didSomething = true;
-        }
-    }
-    // bookkeeping
-    if (didSomething &&
-        map.isVisible(x, y) &&
-        !(effect.flags & Effect.E_NO_MARK_FIRED)) {
-        effect.flags |= Effect.E_FIRED;
-    }
-    // do the next effect - if applicable
-    if (effect.next &&
-        (didSomething || effect.flags & Effect.E_NEXT_ALWAYS) &&
-        !data.gameHasEnded) {
-        const nextInfo = typeof effect.next === 'string' ? from$2(effect.next) : effect.next;
-        if (effect.flags & Effect.E_NEXT_EVERYWHERE) {
-            grid$1.forEach(async (v, i, j) => {
-                if (!v)
-                    return;
-                fireSync(nextInfo, map, i, j, ctx);
-            });
-        }
-        else {
-            fireSync(nextInfo, map, x, y, ctx);
-        }
-    }
-    free(grid$1);
-    return didSomething;
-}
-
-//////////////////////////////////////////////
-// MESSAGE
-class MessageEffect {
-    make(src, dest) {
-        if (!src.message)
-            return true;
-        if (typeof src.message !== 'string') {
-            throw new Error('Emit must be configured with name of event to emit');
-        }
-        dest.message = src.message;
-        return true;
-    }
-    async fire(config, map, x, y, ctx) {
-        if (!config.message)
-            return false;
-        const fired = !!(config.flags & Effect.E_FIRED);
-        if (config.message &&
-            config.message.length &&
-            !fired &&
-            map.isVisible(x, y)) {
-            add(config.message, ctx);
-            return true;
-        }
-        return false;
-    }
-    fireSync(config, _map, _x, _y, _ctx) {
-        if (!config.message)
-            return false;
-        throw new Error('Cannot use "message" effects in build steps.');
-    }
-}
-installHandler('message', new MessageEffect());
-
-//////////////////////////////////////////////
-// EMIT
-class EmitEffect {
-    make(src, dest) {
-        if (!src.emit)
-            return true;
-        if (typeof src.emit !== 'string') {
-            throw new Error('emit effects must be string name to emit: { emit: "EVENT" }');
-        }
-        dest.emit = src.emit;
-        return true;
-    }
-    async fire(config, _map, x, y, ctx) {
-        if (config.emit) {
-            return await emit(config.emit, x, y, ctx);
-        }
-        return false;
-    }
-    fireSync(config, _map, _x, _y, _ctx) {
-        if (!config.emit)
-            return false;
-        throw new Error('Cannot use "emit" effects in build steps.');
-    }
-}
-installHandler('emit', new EmitEffect());
-
-//////////////////////////////////////////////
-// FN
-class FnEffect {
-    make(src, dest) {
-        if (!src.fn)
-            return true;
-        if (typeof src.fn !== 'function') {
-            throw new Error('fn effects must be functions.');
-        }
-        dest.fn = src.fn;
-        return true;
-    }
-    async fire(config, map, x, y, ctx) {
-        if (config.fn) {
-            return await config.fn(config, map, x, y, ctx);
-        }
-        return false;
-    }
-    fireSync(config, map, x, y, ctx) {
-        if (config.fn) {
-            const result = config.fn(config, map, x, y, ctx);
-            if (result === true || result === false) {
-                return result;
-            }
-            throw new Error('Cannot use async function effects in build steps.');
-        }
-        return false;
-    }
-}
-installHandler('fn', new FnEffect());
-
-//////////////////////////////////////////////
-// ActivateMachine
-class ActivateMachineEffect {
-    make(src, dest) {
-        if (!src.activateMachine)
-            return true;
-        dest.activateMachine = true;
-        return true;
-    }
-    async fire(config, map, x, y, ctx) {
-        if (config.activateMachine) {
-            const cell = map.cell(x, y);
-            const machine = cell.machineId;
-            if (!machine)
-                return false;
-            return await map.activateMachine(machine, x, y, ctx);
-        }
-        return false;
-    }
-    fireSync(config, map, x, y, ctx) {
-        if (config.activateMachine) {
-            const cell = map.cell(x, y);
-            const machine = cell.machineId;
-            if (!machine)
-                return false;
-            return map.activateMachineSync(machine, x, y, ctx);
-        }
-        return false;
-    }
-}
-installHandler('activateMachine', new ActivateMachineEffect());
-
-var index$6 = {
-    __proto__: null,
-    get Flags () { return Effect; },
-    reset: reset,
-    resetAll: resetAll,
-    effects: effects,
-    install: install$2,
-    installAll: installAll$2,
-    handlers: handlers,
-    installHandler: installHandler,
-    make: make$4,
-    from: from$2,
-    fire: fire,
-    fireSync: fireSync,
-    MessageEffect: MessageEffect,
-    EmitEffect: EmitEffect,
-    FnEffect: FnEffect,
-    ActivateMachineEffect: ActivateMachineEffect
 };
 
 class Blob {
@@ -6366,7 +6020,7 @@ function fillBlob(grid, opts = {}) {
     const blob = new Blob(opts);
     return blob.carve(grid.width, grid.height, (x, y) => (grid[x][y] = 1));
 }
-function make$3(opts = {}) {
+function make$1(opts = {}) {
     return new Blob(opts);
 }
 
@@ -6374,7 +6028,7 @@ var blob = {
     __proto__: null,
     Blob: Blob,
     fillBlob: fillBlob,
-    make: make$3
+    make: make$1
 };
 
 // const LIGHT_SMOOTHING_THRESHOLD = 150;       // light components higher than this magnitude will be toned down a little
@@ -6382,14 +6036,14 @@ const config = (config$1.light = {
     INTENSITY_DARK: 20,
     INTENSITY_SHADOW: 50,
 }); // less than 20% for highest color in rgb
-const LIGHT_COMPONENTS = make$7();
+const LIGHT_COMPONENTS = make$4();
 class Light {
     constructor(color, range$1, fadeTo, pass = false) {
         this.fadeTo = 0;
         this.passThroughActors = false;
         this.id = null;
-        this.color = from$4(color) || null; /* color */
-        this.radius = make$b(range$1 || 1);
+        this.color = from$2(color) || null; /* color */
+        this.radius = make$8(range$1 || 1);
         this.fadeTo = fadeTo || 0;
         this.passThroughActors = pass; // generally no, but miner light does (TODO - string parameter?  'false' or 'true')
     }
@@ -6468,7 +6122,7 @@ function isShadowLight(light, threshold) {
     threshold = threshold !== null && threshold !== void 0 ? threshold : (_a = config$1.light) === null || _a === void 0 ? void 0 : _a.INTENSITY_SHADOW;
     return intensity(light) <= (threshold || 20);
 }
-function make$2(...args) {
+function make(...args) {
     if (args.length == 1) {
         const config = args[0];
         if (typeof config === 'string') {
@@ -6478,14 +6132,14 @@ function make$2(...args) {
             const [color, radius, fadeTo, pass] = config
                 .split(/[,|]/)
                 .map((t) => t.trim());
-            return new Light(from$4(color), from$6(radius || 1), Number.parseInt(fadeTo || '0'), !!pass && pass !== 'false');
+            return new Light(from$2(color), from$4(radius || 1), Number.parseInt(fadeTo || '0'), !!pass && pass !== 'false');
         }
         else if (Array.isArray(config)) {
             const [color, radius, fadeTo, pass] = config;
             return new Light(color, radius, fadeTo, pass);
         }
         else if (config && config.color) {
-            return new Light(from$4(config.color), from$6(config.radius), Number.parseInt(config.fadeTo || '0'), config.pass);
+            return new Light(from$2(config.color), from$4(config.radius), Number.parseInt(config.fadeTo || '0'), config.pass);
         }
         else {
             throw new Error('Unknown Light config - ' + config);
@@ -6497,7 +6151,7 @@ function make$2(...args) {
     }
 }
 const lights = {};
-function from$1(...args) {
+function from(...args) {
     if (args.length != 1)
         ERROR('Unknown Light config: ' + JSON.stringify(args));
     const arg = args[0];
@@ -6508,25 +6162,25 @@ function from$1(...args) {
     }
     if (arg && arg.paint)
         return arg;
-    return make$2(arg);
+    return make(arg);
 }
-function install$1(id, ...args) {
+function install(id, ...args) {
     let source;
     if (args.length == 1) {
-        source = make$2(args[0]);
+        source = make(args[0]);
     }
     else {
-        source = make$2(args[0], args[1], args[2], args[3]);
+        source = make(args[0], args[1], args[2], args[3]);
     }
     lights[id] = source;
     if (source)
         source.id = id;
     return source;
 }
-function installAll$1(config = {}) {
+function installAll(config = {}) {
     const entries = Object.entries(config);
     entries.forEach(([name, info]) => {
-        install$1(name, info);
+        install(name, info);
     });
 }
 // // TODO - Move?
@@ -6556,14 +6210,14 @@ class LightSystem {
     constructor(map, opts = {}) {
         this.staticLights = null;
         this.site = map;
-        this.ambient = from$4(opts.ambient || 'white').toLight();
+        this.ambient = from$2(opts.ambient || 'white').toLight();
         this._changed = false;
         this.glowLightChanged = false;
         this.dynamicLightChanged = false;
-        this.light = make$a(map.width, map.height, () => this.ambient.slice());
-        this.glowLight = make$a(map.width, map.height, () => this.ambient.slice());
-        this.oldLight = make$a(map.width, map.height, () => this.ambient.slice());
-        this.flags = make$a(map.width, map.height);
+        this.light = make$7(map.width, map.height, () => this.ambient.slice());
+        this.glowLight = make$7(map.width, map.height, () => this.ambient.slice());
+        this.oldLight = make$7(map.width, map.height, () => this.ambient.slice());
+        this.flags = make$7(map.width, map.height);
         this.finishLightUpdate();
     }
     getAmbient() {
@@ -6619,7 +6273,7 @@ class LightSystem {
         const info = {
             x,
             y,
-            light: from$1(light),
+            light: from(light),
             next: this.staticLights,
         };
         this.staticLights = info;
@@ -6795,3031 +6449,19 @@ class LightSystem {
     }
 }
 
-var index$5 = {
+var index = {
     __proto__: null,
     config: config,
     Light: Light,
     intensity: intensity,
     isDarkLight: isDarkLight,
     isShadowLight: isShadowLight,
-    make: make$2,
+    make: make,
     lights: lights,
-    from: from$1,
-    install: install$1,
-    installAll: installAll$1,
+    from: from,
+    install: install,
+    installAll: installAll,
     LightSystem: LightSystem
 };
 
-var GameObject$1;
-(function (GameObject) {
-    // L_DYNAMIC = Fl(0), // for movable things like actors or items
-    GameObject[GameObject["L_SUPERPRIORITY"] = fl(1)] = "L_SUPERPRIORITY";
-    GameObject[GameObject["L_SECRETLY_PASSABLE"] = fl(2)] = "L_SECRETLY_PASSABLE";
-    GameObject[GameObject["L_BLOCKS_MOVE"] = fl(3)] = "L_BLOCKS_MOVE";
-    GameObject[GameObject["L_BLOCKS_VISION"] = fl(4)] = "L_BLOCKS_VISION";
-    GameObject[GameObject["L_BLOCKS_SURFACE"] = fl(6)] = "L_BLOCKS_SURFACE";
-    GameObject[GameObject["L_BLOCKS_LIQUID"] = fl(8)] = "L_BLOCKS_LIQUID";
-    GameObject[GameObject["L_BLOCKS_GAS"] = fl(7)] = "L_BLOCKS_GAS";
-    GameObject[GameObject["L_BLOCKS_ITEMS"] = fl(5)] = "L_BLOCKS_ITEMS";
-    GameObject[GameObject["L_BLOCKS_ACTORS"] = fl(11)] = "L_BLOCKS_ACTORS";
-    GameObject[GameObject["L_BLOCKS_EFFECTS"] = fl(9)] = "L_BLOCKS_EFFECTS";
-    GameObject[GameObject["L_BLOCKS_DIAGONAL"] = fl(10)] = "L_BLOCKS_DIAGONAL";
-    GameObject[GameObject["L_INTERRUPT_WHEN_SEEN"] = fl(12)] = "L_INTERRUPT_WHEN_SEEN";
-    GameObject[GameObject["L_LIST_IN_SIDEBAR"] = fl(13)] = "L_LIST_IN_SIDEBAR";
-    GameObject[GameObject["L_VISUALLY_DISTINCT"] = fl(14)] = "L_VISUALLY_DISTINCT";
-    GameObject[GameObject["L_BRIGHT_MEMORY"] = fl(15)] = "L_BRIGHT_MEMORY";
-    GameObject[GameObject["L_INVERT_WHEN_HIGHLIGHTED"] = fl(16)] = "L_INVERT_WHEN_HIGHLIGHTED";
-    GameObject[GameObject["L_BLOCKED_BY_STAIRS"] = GameObject.L_BLOCKS_ITEMS |
-        GameObject.L_BLOCKS_SURFACE |
-        GameObject.L_BLOCKS_GAS |
-        GameObject.L_BLOCKS_LIQUID |
-        GameObject.L_BLOCKS_EFFECTS |
-        GameObject.L_BLOCKS_ACTORS] = "L_BLOCKED_BY_STAIRS";
-    GameObject[GameObject["L_BLOCKS_SCENT"] = GameObject.L_BLOCKS_MOVE | GameObject.L_BLOCKS_VISION] = "L_BLOCKS_SCENT";
-    GameObject[GameObject["L_DIVIDES_LEVEL"] = GameObject.L_BLOCKS_MOVE] = "L_DIVIDES_LEVEL";
-    GameObject[GameObject["L_WAYPOINT_BLOCKER"] = GameObject.L_BLOCKS_MOVE] = "L_WAYPOINT_BLOCKER";
-    GameObject[GameObject["L_WALL_FLAGS"] = GameObject.L_BLOCKS_MOVE |
-        GameObject.L_BLOCKS_VISION |
-        GameObject.L_BLOCKS_LIQUID |
-        GameObject.L_BLOCKS_GAS |
-        GameObject.L_BLOCKS_EFFECTS |
-        GameObject.L_BLOCKS_DIAGONAL] = "L_WALL_FLAGS";
-    GameObject[GameObject["L_BLOCKS_EVERYTHING"] = GameObject.L_WALL_FLAGS |
-        GameObject.L_BLOCKS_ITEMS |
-        GameObject.L_BLOCKS_ACTORS |
-        GameObject.L_BLOCKS_SURFACE] = "L_BLOCKS_EVERYTHING";
-})(GameObject$1 || (GameObject$1 = {}));
-var Depth$1;
-(function (Depth) {
-    Depth[Depth["ALL_LAYERS"] = -1] = "ALL_LAYERS";
-    Depth[Depth["GROUND"] = 0] = "GROUND";
-    Depth[Depth["SURFACE"] = 1] = "SURFACE";
-    Depth[Depth["ITEM"] = 2] = "ITEM";
-    Depth[Depth["ACTOR"] = 3] = "ACTOR";
-    Depth[Depth["LIQUID"] = 4] = "LIQUID";
-    Depth[Depth["GAS"] = 5] = "GAS";
-    Depth[Depth["FX"] = 6] = "FX";
-    Depth[Depth["UI"] = 7] = "UI";
-})(Depth$1 || (Depth$1 = {}));
-
-var flags$3 = {
-    __proto__: null,
-    get GameObject () { return GameObject$1; },
-    get Depth () { return Depth$1; }
-};
-
-class GameObject {
-    constructor() {
-        this.sprite = new Sprite();
-        this.depth = 1; // default - TODO - enum/const
-        this.light = null;
-        this.flags = { object: 0 };
-        this.next = null;
-        this.x = -1;
-        this.y = -1;
-    }
-    hasObjectFlag(flag) {
-        return !!(this.flags.object & flag);
-    }
-    hasAllObjectFlags(flags) {
-        return (this.flags.object & flags) === flags;
-    }
-    blocksMove() {
-        return this.hasObjectFlag(GameObject$1.L_BLOCKS_MOVE);
-    }
-    blocksVision() {
-        return this.hasObjectFlag(GameObject$1.L_BLOCKS_VISION);
-    }
-    blocksPathing() {
-        return this.hasObjectFlag(GameObject$1.L_BLOCKS_MOVE);
-    }
-    blocksEffects() {
-        return this.hasObjectFlag(GameObject$1.L_BLOCKS_EFFECTS);
-    }
-    itemFlags() {
-        return 0;
-    }
-    actorFlags() {
-        return 0;
-    }
-}
-
-var index$4 = {
-    __proto__: null,
-    flags: flags$3,
-    GameObject: GameObject
-};
-
-class Item extends GameObject {
-    constructor() {
-        super();
-        this.quantity = 1;
-        this.next = null;
-        // @ts-ignore
-        this.flags = this.flags || {};
-        this.flags.item = 0;
-        this.depth = Depth$1.ITEM;
-    }
-    itemFlags() {
-        return this.flags.item;
-    }
-    hasItemFlag(flag) {
-        return !!(this.flags.item & flag);
-    }
-    hasAllItemFlags(flags) {
-        return (this.flags.item & flags) === flags;
-    }
-    forbidsCell(_cell) {
-        return false;
-    }
-}
-
-var index$3 = {
-    __proto__: null,
-    Item: Item
-};
-
-var Actor$1;
-(function (Actor) {
-    Actor[Actor["IS_PLAYER"] = fl(0)] = "IS_PLAYER";
-})(Actor$1 || (Actor$1 = {}));
-
-var flags$2 = {
-    __proto__: null,
-    get Actor () { return Actor$1; },
-    get GameObject () { return GameObject$1; },
-    get Depth () { return Depth$1; }
-};
-
-class Actor extends GameObject {
-    constructor() {
-        super();
-        this.next = null;
-        // @ts-ignore
-        this.flags = this.flags || {};
-        this.flags.actor = 0;
-        this.depth = Depth$1.ACTOR;
-    }
-    hasActorFlag(flag) {
-        return !!(this.flags.actor & flag);
-    }
-    hasAllActorFlags(flags) {
-        return (this.flags.actor & flags) === flags;
-    }
-    actorFlags() {
-        return this.flags.actor;
-    }
-    isPlayer() {
-        return this.hasActorFlag(Actor$1.IS_PLAYER);
-    }
-    isVisible() {
-        return true;
-    }
-    forbidsCell(_cell) {
-        return false;
-    }
-}
-
-var index$2 = {
-    __proto__: null,
-    flags: flags$2,
-    Actor: Actor
-};
-
-///////////////////////////////////////////////////////
-// TILE
-var Tile$1;
-(function (Tile) {
-    Tile[Tile["T_BRIDGE"] = fl(0)] = "T_BRIDGE";
-    Tile[Tile["T_AUTO_DESCENT"] = fl(1)] = "T_AUTO_DESCENT";
-    Tile[Tile["T_LAVA"] = fl(2)] = "T_LAVA";
-    Tile[Tile["T_DEEP_WATER"] = fl(3)] = "T_DEEP_WATER";
-    Tile[Tile["T_IS_FLAMMABLE"] = fl(5)] = "T_IS_FLAMMABLE";
-    Tile[Tile["T_SPONTANEOUSLY_IGNITES"] = fl(6)] = "T_SPONTANEOUSLY_IGNITES";
-    Tile[Tile["T_IS_FIRE"] = fl(7)] = "T_IS_FIRE";
-    Tile[Tile["T_EXTINGUISHES_FIRE"] = fl(8)] = "T_EXTINGUISHES_FIRE";
-    Tile[Tile["T_IS_SECRET"] = fl(9)] = "T_IS_SECRET";
-    Tile[Tile["T_IS_TRAP"] = fl(10)] = "T_IS_TRAP";
-    Tile[Tile["T_SACRED"] = fl(11)] = "T_SACRED";
-    Tile[Tile["T_UP_STAIRS"] = fl(12)] = "T_UP_STAIRS";
-    Tile[Tile["T_DOWN_STAIRS"] = fl(13)] = "T_DOWN_STAIRS";
-    Tile[Tile["T_PORTAL"] = fl(14)] = "T_PORTAL";
-    Tile[Tile["T_IS_DOOR"] = fl(15)] = "T_IS_DOOR";
-    Tile[Tile["T_ALLOWS_SUBMERGING"] = fl(16)] = "T_ALLOWS_SUBMERGING";
-    Tile[Tile["T_ENTANGLES"] = fl(17)] = "T_ENTANGLES";
-    Tile[Tile["T_REFLECTS"] = fl(18)] = "T_REFLECTS";
-    Tile[Tile["T_STAND_IN_TILE"] = fl(19)] = "T_STAND_IN_TILE";
-    Tile[Tile["T_CONNECTS_LEVEL"] = fl(20)] = "T_CONNECTS_LEVEL";
-    Tile[Tile["T_BLOCKS_OTHER_LAYERS"] = fl(21)] = "T_BLOCKS_OTHER_LAYERS";
-    Tile[Tile["T_HAS_STAIRS"] = Tile.T_UP_STAIRS | Tile.T_DOWN_STAIRS | Tile.T_PORTAL] = "T_HAS_STAIRS";
-    Tile[Tile["T_OBSTRUCTS_SCENT"] = Tile.T_AUTO_DESCENT |
-        Tile.T_LAVA |
-        Tile.T_DEEP_WATER |
-        Tile.T_SPONTANEOUSLY_IGNITES |
-        Tile.T_HAS_STAIRS] = "T_OBSTRUCTS_SCENT";
-    Tile[Tile["T_PATHING_BLOCKER"] = Tile.T_AUTO_DESCENT |
-        Tile.T_IS_TRAP |
-        Tile.T_LAVA |
-        Tile.T_DEEP_WATER |
-        Tile.T_IS_FIRE |
-        Tile.T_SPONTANEOUSLY_IGNITES |
-        Tile.T_ENTANGLES] = "T_PATHING_BLOCKER";
-    Tile[Tile["T_LAKE_PATHING_BLOCKER"] = Tile.T_AUTO_DESCENT |
-        Tile.T_LAVA |
-        Tile.T_DEEP_WATER |
-        Tile.T_SPONTANEOUSLY_IGNITES] = "T_LAKE_PATHING_BLOCKER";
-    Tile[Tile["T_WAYPOINT_BLOCKER"] = Tile.T_AUTO_DESCENT |
-        Tile.T_IS_TRAP |
-        Tile.T_LAVA |
-        Tile.T_DEEP_WATER |
-        Tile.T_SPONTANEOUSLY_IGNITES] = "T_WAYPOINT_BLOCKER";
-    Tile[Tile["T_DIVIDES_LEVEL"] = Tile.T_AUTO_DESCENT | Tile.T_IS_TRAP | Tile.T_LAVA | Tile.T_DEEP_WATER] = "T_DIVIDES_LEVEL";
-    Tile[Tile["T_MOVES_ITEMS"] = Tile.T_DEEP_WATER | Tile.T_LAVA] = "T_MOVES_ITEMS";
-    Tile[Tile["T_CAN_BE_BRIDGED"] = Tile.T_AUTO_DESCENT | Tile.T_LAVA | Tile.T_DEEP_WATER] = "T_CAN_BE_BRIDGED";
-    // T_HARMFUL_TERRAIN = T_CAUSES_POISON |
-    //   T_IS_FIRE |
-    //   T_CAUSES_DAMAGE |
-    //   T_CAUSES_PARALYSIS |
-    //   T_CAUSES_CONFUSION |
-    //   T_CAUSES_EXPLOSIVE_DAMAGE,
-    // T_RESPIRATION_IMMUNITIES = T_CAUSES_DAMAGE |
-    //   T_CAUSES_CONFUSION |
-    //   T_CAUSES_PARALYSIS |
-    //   T_CAUSES_NAUSEA,
-    Tile[Tile["T_IS_DEEP_LIQUID"] = Tile.T_LAVA | Tile.T_AUTO_DESCENT | Tile.T_DEEP_WATER] = "T_IS_DEEP_LIQUID";
-})(Tile$1 || (Tile$1 = {}));
-///////////////////////////////////////////////////////
-// TILE MECH
-var TileMech;
-(function (TileMech) {
-    // TM_PROMOTES_WITH_KEY = Fl(1), // promotes if the key is present on the tile (in your pack, carried by monster, or lying on the ground)
-    // TM_PROMOTES_WITHOUT_KEY = Fl(2), // promotes if the key is NOT present on the tile (in your pack, carried by monster, or lying on the ground)
-    // TM_PROMOTES_ON_STEP = Fl(3), // promotes when a creature, player or item is on the tile (whether or not levitating)
-    // TM_PROMOTES_ON_ITEM_REMOVE = Fl(4), // promotes when an item is lifted from the tile (primarily for altars)
-    // TM_PROMOTES_ON_PLAYER_ENTRY = Fl(5), // promotes when the player enters the tile (whether or not levitating)
-    // TM_PROMOTES_ON_SACRIFICE_ENTRY = Fl(6), // promotes when the sacrifice target enters the tile (whether or not levitating)
-    // TM_PROMOTES_ON_ELECTRICITY = Fl(7), // promotes when hit by a lightning bolt
-    // T_CAUSES_POISON = Fl(18), // any non-levitating creature gets 10 poison
-    // T_CAUSES_DAMAGE = Fl(19), // anything on the tile takes max(1-2, 10%) damage per turn
-    // T_CAUSES_NAUSEA = Fl(20), // any creature on the tile becomes nauseous
-    // T_CAUSES_PARALYSIS = Fl(21), // anything caught on this tile is paralyzed
-    // T_CAUSES_CONFUSION = Fl(22), // causes creatures on this tile to become confused
-    // T_CAUSES_HEALING = Fl(23), // heals 20% max HP per turn for any player or non-inanimate monsters
-    // T_CAUSES_EXPLOSIVE_DAMAGE = Fl(25), // is an explosion; deals higher of 15-20 or 50% damage instantly, but not again for five turns
-    TileMech[TileMech["TM_IS_WIRED"] = fl(9)] = "TM_IS_WIRED";
-    TileMech[TileMech["TM_IS_CIRCUIT_BREAKER"] = fl(10)] = "TM_IS_CIRCUIT_BREAKER";
-    TileMech[TileMech["TM_VANISHES_UPON_PROMOTION"] = fl(15)] = "TM_VANISHES_UPON_PROMOTION";
-    TileMech[TileMech["TM_EXPLOSIVE_PROMOTE"] = fl(21)] = "TM_EXPLOSIVE_PROMOTE";
-    TileMech[TileMech["TM_SWAP_ENCHANTS_ACTIVATION"] = fl(25)] = "TM_SWAP_ENCHANTS_ACTIVATION";
-    // TM_PROMOTES = TM_PROMOTES_WITH_KEY |
-    //   TM_PROMOTES_WITHOUT_KEY |
-    //   TM_PROMOTES_ON_STEP |
-    //   TM_PROMOTES_ON_ITEM_REMOVE |
-    //   TM_PROMOTES_ON_SACRIFICE_ENTRY |
-    //   TM_PROMOTES_ON_ELECTRICITY |
-    //   TM_PROMOTES_ON_PLAYER_ENTRY,
-})(TileMech || (TileMech = {}));
-
-class Tile {
-    constructor(config) {
-        var _a, _b, _c, _d;
-        this.index = -1;
-        this.dissipate = 20 * 100; // 0%
-        this.effects = {};
-        this.priority = 50;
-        this.depth = 0;
-        this.light = null;
-        this.groundTile = null;
-        this.id = config.id || 'n/a';
-        this.dissipate = (_a = config.dissipate) !== null && _a !== void 0 ? _a : this.dissipate;
-        this.priority = (_b = config.priority) !== null && _b !== void 0 ? _b : this.priority;
-        this.depth = (_c = config.depth) !== null && _c !== void 0 ? _c : this.depth;
-        this.light = config.light || null;
-        this.groundTile = config.groundTile || null;
-        this.sprite = make$5(config);
-        this.name = config.name || 'tile';
-        this.description = config.description || this.name;
-        this.flavor = config.flavor || this.name;
-        this.article = (_d = config.article) !== null && _d !== void 0 ? _d : null;
-        this.flags = config.flags || { object: 0, tile: 0, tileMech: 0 };
-        if (config.effects) {
-            Object.assign(this.effects, config.effects);
-        }
-    }
-    hasObjectFlag(flag) {
-        return !!(this.flags.object & flag);
-    }
-    hasTileFlag(flag) {
-        return !!(this.flags.tile & flag);
-    }
-    hasTileMechFlag(flag) {
-        return !!(this.flags.tileMech & flag);
-    }
-    hasAllObjectFlags(flag) {
-        return (this.flags.object & flag) === flag;
-    }
-    hasAllTileFlags(flag) {
-        return (this.flags.tile & flag) === flag;
-    }
-    hasAllTileMechFlags(flag) {
-        return (this.flags.tileMech & flag) === flag;
-    }
-    blocksVision() {
-        return !!(this.flags.object & GameObject$1.L_BLOCKS_VISION);
-    }
-    blocksMove() {
-        return !!(this.flags.object & GameObject$1.L_BLOCKS_MOVE);
-    }
-    blocksPathing() {
-        return (this.blocksMove() || this.hasTileFlag(Tile$1.T_PATHING_BLOCKER));
-    }
-    blocksEffects() {
-        return !!(this.flags.object & GameObject$1.L_BLOCKS_EFFECTS);
-    }
-    hasEffect(name) {
-        return name in this.effects;
-    }
-    getName(arg) {
-        let opts = {};
-        if (arg === true || arg === false) {
-            opts.article = arg;
-        }
-        else if (typeof arg === 'string') {
-            opts.article = arg;
-        }
-        else if (arg) {
-            opts = arg;
-        }
-        if (!opts.article && !opts.color)
-            return this.name;
-        let result = this.name;
-        if (opts.color) {
-            let color = opts.color;
-            if (opts.color === true) {
-                color = this.sprite.fg || 'white';
-            }
-            if (typeof color !== 'string') {
-                color = from$4(color).toString();
-            }
-            result = `Ω${color}Ω${this.name}∆`;
-        }
-        if (opts.article) {
-            let article = typeof opts.article === 'string'
-                ? opts.article
-                : this.article || 'a';
-            result = article + ' ' + result;
-        }
-        return result;
-    }
-    getDescription() {
-        return this.description || this.getName();
-    }
-    getFlavor() {
-        return this.flavor || this.getName();
-    }
-}
-function make$1(options) {
-    var _a, _b, _c, _d, _e, _f;
-    let base = { effects: {}, flags: {}, sprite: {}, priority: 50 };
-    if (options.extends) {
-        base = tiles[options.extends];
-        if (!base)
-            throw new Error('Failed to find base tile: ' + options.extends);
-    }
-    let priority = -1;
-    if (typeof options.priority === 'string') {
-        if (options.priority.startsWith('+') ||
-            options.priority.startsWith('-')) {
-            priority = base.priority + Number.parseInt(options.priority);
-        }
-        else {
-            priority = Number.parseInt(options.priority);
-        }
-    }
-    else if (options.priority !== undefined) {
-        priority = options.priority;
-    }
-    const effects = {};
-    Object.assign(effects, base.effects);
-    if (options.effects) {
-        Object.entries(options.effects).forEach(([key, value]) => {
-            if (value === null) {
-                delete effects[key];
-                return;
-            }
-            if (typeof value === 'string') {
-                effects[key] = value;
-                return;
-            }
-            effects[key] = make$4(value);
-        });
-    }
-    const flags = {
-        object: from$5(GameObject$1, base.flags.object, options.flags),
-        tile: from$5(Tile$1, base.flags.tile, options.flags),
-        tileMech: from$5(TileMech, base.flags.tileMech, options.flags),
-    };
-    let depth = base.depth || 0;
-    if (options.depth) {
-        if (typeof options.depth === 'string') {
-            depth = Depth$1[options.depth];
-        }
-        else {
-            depth = options.depth;
-        }
-    }
-    let light = base.light;
-    if (options.light) {
-        light = make$2(options.light);
-    }
-    else if (options.light === null) {
-        light = null;
-    }
-    const config = {
-        id: options.id,
-        flags,
-        dissipate: (_a = options.dissipate) !== null && _a !== void 0 ? _a : base.dissipate,
-        effects,
-        priority: priority != -1 ? priority : undefined,
-        depth: depth,
-        light,
-        groundTile: options.groundTile || null,
-        ch: (_b = options.ch) !== null && _b !== void 0 ? _b : base.sprite.ch,
-        fg: (_c = options.fg) !== null && _c !== void 0 ? _c : base.sprite.fg,
-        bg: (_d = options.bg) !== null && _d !== void 0 ? _d : base.sprite.bg,
-        opacity: (_e = options.opacity) !== null && _e !== void 0 ? _e : base.sprite.opacity,
-        name: options.name || base.name,
-        description: options.description || base.description,
-        flavor: options.flavor || base.flavor,
-        article: (_f = options.article) !== null && _f !== void 0 ? _f : base.article,
-    };
-    const tile = new Tile(config);
-    return tile;
-}
-const tiles = {};
-const all = [];
-function get(id) {
-    if (id instanceof Tile)
-        return id;
-    if (typeof id === 'string')
-        return tiles[id] || null;
-    return all[id] || null;
-}
-function install(id, ...args) {
-    let options = args[0];
-    if (args.length == 2) {
-        options = args[1];
-        options.extends = args[0];
-    }
-    options.id = id;
-    const tile = make$1(options);
-    tile.index = all.length;
-    all.push(tile);
-    tiles[id] = tile;
-    return tile;
-}
-function installAll(tiles) {
-    Object.entries(tiles).forEach(([id, config]) => {
-        install(id, config);
-    });
-}
-
-// These are the minimal set of tiles to make the diggers work
-install('NULL', {
-    ch: '\u2205',
-    fg: 'white',
-    bg: 'black',
-    flags: 'L_BLOCKS_MOVE',
-    name: 'eerie nothingness',
-    article: 'an',
-    priority: 0,
-});
-install('FLOOR', {
-    ch: '\u00b7',
-    fg: [30, 30, 30, 20, 0, 0, 0],
-    bg: [2, 2, 10, 0, 2, 2, 0],
-    priority: 10,
-    article: 'the',
-});
-install('DOOR', {
-    ch: '+',
-    fg: [100, 40, 40],
-    bg: [30, 60, 60],
-    priority: 30,
-    flags: 'T_IS_DOOR, L_BLOCKS_EFFECTS, L_BLOCKS_ITEMS, L_BLOCKS_VISION, L_VISUALLY_DISTINCT',
-    article: 'a',
-    effects: {
-        enter: { tile: 'DOOR_OPEN' },
-        open: { tile: 'DOOR_OPEN_ALWAYS' },
-    },
-});
-install('DOOR_OPEN', 'DOOR', {
-    ch: "'",
-    fg: [100, 40, 40],
-    bg: [30, 60, 60],
-    priority: 40,
-    flags: '!L_BLOCKS_ITEMS, !L_BLOCKS_VISION',
-    name: 'open door',
-    article: 'an',
-    effects: {
-        tick: {
-            chance: 100 * 100,
-            tile: 'DOOR',
-            flags: 'E_SUPERPRIORITY, E_ONLY_IF_EMPTY',
-        },
-        enter: null,
-        open: null,
-        close: { tile: 'DOOR', flags: 'E_SUPERPRIORITY, E_ONLY_IF_EMPTY' },
-    },
-});
-install('DOOR_OPEN_ALWAYS', 'DOOR_OPEN', {
-    effects: {
-        tick: null,
-        close: { tile: 'DOOR', flags: 'E_SUPERPRIORITY, E_ONLY_IF_EMPTY' },
-    },
-});
-install('UP_STAIRS', {
-    ch: '<',
-    fg: [100, 50, 50],
-    bg: [40, 20, 20],
-    priority: 200,
-    flags: 'T_UP_STAIRS, L_BLOCKED_BY_STAIRS, L_VISUALLY_DISTINCT, L_LIST_IN_SIDEBAR',
-    name: 'upward staircase',
-    article: 'an',
-    effects: {
-        player: { emit: 'UP_STAIRS' },
-    },
-});
-install('DOWN_STAIRS', {
-    ch: '>',
-    fg: [100, 50, 50],
-    bg: [40, 20, 20],
-    priority: 200,
-    flags: 'T_DOWN_STAIRS, L_BLOCKED_BY_STAIRS, L_VISUALLY_DISTINCT, L_LIST_IN_SIDEBAR',
-    name: 'downward staircase',
-    article: 'a',
-    effects: {
-        player: { emit: 'DOWN_STAIRS' },
-    },
-});
-install('WALL', {
-    ch: '#',
-    fg: [7, 7, 7, 0, 3, 3, 3],
-    bg: [40, 40, 40, 10, 10, 0, 5],
-    priority: 100,
-    flags: 'L_WALL_FLAGS',
-    article: 'a',
-    name: 'stone wall',
-    description: 'A wall made from rough cut stone.',
-    flavor: 'a rough stone wall',
-});
-install('IMPREGNABLE', {
-    ch: '#',
-    fg: [7, 7, 7, 0, 3, 3, 3],
-    bg: [40, 40, 40, 10, 10, 0, 5],
-    priority: 100,
-    flags: 'L_WALL_FLAGS, IMPREGNABLE',
-    article: 'a',
-    name: 'impregnable wall',
-    description: 'A wall made from very hard stone.',
-    flavor: 'an impregnable wall',
-});
-install('LAKE', {
-    ch: '~',
-    fg: [5, 8, 20, 10, 0, 4, 15, true],
-    bg: [10, 15, 41, 6, 5, 5, 5, true],
-    priority: 50,
-    flags: 'T_DEEP_WATER',
-    name: 'deep water',
-    article: 'the',
-});
-install('SHALLOW', {
-    ch: '\u00b7',
-    fg: [5, 8, 10, 10, 0, 4, 15, true],
-    bg: [10, 30, 30, 6, 0, 10, 10, true],
-    priority: 20,
-    name: 'shallow water',
-    article: 'the',
-    depth: 'SURFACE', // 'LIQUID'?
-});
-install('BRIDGE', {
-    ch: '=',
-    fg: [100, 40, 40],
-    priority: 40,
-    depth: 'SURFACE',
-    flags: 'T_BRIDGE, L_VISUALLY_DISTINCT',
-    article: 'a',
-    groundTile: 'LAKE',
-});
-
-const flags$1 = { Tile: Tile$1, TileMech };
-
-var index$1 = {
-    __proto__: null,
-    flags: flags$1,
-    Tile: Tile,
-    make: make$1,
-    tiles: tiles,
-    all: all,
-    get: get,
-    install: install,
-    installAll: installAll
-};
-
-///////////////////////////////////////////////////////
-// CELL
-var Cell$1;
-(function (Cell) {
-    Cell[Cell["SEARCHED_FROM_HERE"] = fl(0)] = "SEARCHED_FROM_HERE";
-    Cell[Cell["PRESSURE_PLATE_DEPRESSED"] = fl(1)] = "PRESSURE_PLATE_DEPRESSED";
-    Cell[Cell["KNOWN_TO_BE_TRAP_FREE"] = fl(2)] = "KNOWN_TO_BE_TRAP_FREE";
-    Cell[Cell["CAUGHT_FIRE_THIS_TURN"] = fl(3)] = "CAUGHT_FIRE_THIS_TURN";
-    Cell[Cell["EVENT_FIRED_THIS_TURN"] = fl(4)] = "EVENT_FIRED_THIS_TURN";
-    Cell[Cell["EVENT_PROTECTED"] = fl(5)] = "EVENT_PROTECTED";
-    Cell[Cell["IS_IN_LOOP"] = fl(6)] = "IS_IN_LOOP";
-    Cell[Cell["IS_CHOKEPOINT"] = fl(7)] = "IS_CHOKEPOINT";
-    Cell[Cell["IS_GATE_SITE"] = fl(8)] = "IS_GATE_SITE";
-    Cell[Cell["IS_IN_ROOM_MACHINE"] = fl(9)] = "IS_IN_ROOM_MACHINE";
-    Cell[Cell["IS_IN_AREA_MACHINE"] = fl(10)] = "IS_IN_AREA_MACHINE";
-    Cell[Cell["IS_POWERED"] = fl(11)] = "IS_POWERED";
-    Cell[Cell["IMPREGNABLE"] = fl(12)] = "IMPREGNABLE";
-    // DARKENED = Fl(13), // magical blindness?
-    Cell[Cell["NEEDS_REDRAW"] = fl(14)] = "NEEDS_REDRAW";
-    Cell[Cell["CELL_CHANGED"] = fl(15)] = "CELL_CHANGED";
-    // These are to help memory
-    Cell[Cell["HAS_SURFACE"] = fl(16)] = "HAS_SURFACE";
-    Cell[Cell["HAS_LIQUID"] = fl(17)] = "HAS_LIQUID";
-    Cell[Cell["HAS_GAS"] = fl(18)] = "HAS_GAS";
-    Cell[Cell["HAS_PLAYER"] = fl(19)] = "HAS_PLAYER";
-    Cell[Cell["HAS_ACTOR"] = fl(20)] = "HAS_ACTOR";
-    Cell[Cell["HAS_DORMANT_MONSTER"] = fl(21)] = "HAS_DORMANT_MONSTER";
-    Cell[Cell["HAS_ITEM"] = fl(22)] = "HAS_ITEM";
-    Cell[Cell["IS_IN_PATH"] = fl(23)] = "IS_IN_PATH";
-    Cell[Cell["IS_CURSOR"] = fl(24)] = "IS_CURSOR";
-    Cell[Cell["STABLE_MEMORY"] = fl(25)] = "STABLE_MEMORY";
-    Cell[Cell["IS_WIRED"] = fl(26)] = "IS_WIRED";
-    Cell[Cell["IS_CIRCUIT_BREAKER"] = fl(27)] = "IS_CIRCUIT_BREAKER";
-    Cell[Cell["COLORS_DANCE"] = fl(30)] = "COLORS_DANCE";
-    Cell[Cell["IS_IN_MACHINE"] = Cell.IS_IN_ROOM_MACHINE | Cell.IS_IN_AREA_MACHINE] = "IS_IN_MACHINE";
-    Cell[Cell["PERMANENT_CELL_FLAGS"] = Cell.HAS_ITEM |
-        Cell.HAS_DORMANT_MONSTER |
-        Cell.STABLE_MEMORY |
-        Cell.SEARCHED_FROM_HERE |
-        Cell.PRESSURE_PLATE_DEPRESSED |
-        Cell.KNOWN_TO_BE_TRAP_FREE |
-        Cell.IS_IN_LOOP |
-        Cell.IS_CHOKEPOINT |
-        Cell.IS_GATE_SITE |
-        Cell.IS_IN_MACHINE |
-        Cell.IMPREGNABLE] = "PERMANENT_CELL_FLAGS";
-    Cell[Cell["HAS_ANY_ACTOR"] = Cell.HAS_PLAYER | Cell.HAS_ACTOR] = "HAS_ANY_ACTOR";
-    Cell[Cell["HAS_ANY_OBJECT"] = Cell.HAS_ITEM | Cell.HAS_ANY_ACTOR] = "HAS_ANY_OBJECT";
-    Cell[Cell["CELL_DEFAULT"] = Cell.NEEDS_REDRAW | Cell.CELL_CHANGED] = "CELL_DEFAULT";
-})(Cell$1 || (Cell$1 = {}));
-///////////////////////////////////////////////////////
-// MAP
-var Map$1;
-(function (Map) {
-    Map[Map["MAP_CHANGED"] = fl(0)] = "MAP_CHANGED";
-    Map[Map["MAP_ALWAYS_LIT"] = fl(3)] = "MAP_ALWAYS_LIT";
-    Map[Map["MAP_SAW_WELCOME"] = fl(4)] = "MAP_SAW_WELCOME";
-    Map[Map["MAP_NO_LIQUID"] = fl(5)] = "MAP_NO_LIQUID";
-    Map[Map["MAP_NO_GAS"] = fl(6)] = "MAP_NO_GAS";
-    Map[Map["MAP_CALC_FOV"] = fl(7)] = "MAP_CALC_FOV";
-    Map[Map["MAP_FOV_CHANGED"] = fl(8)] = "MAP_FOV_CHANGED";
-    Map[Map["MAP_DANCES"] = fl(9)] = "MAP_DANCES";
-    Map[Map["MAP_DEFAULT"] = 0] = "MAP_DEFAULT";
-})(Map$1 || (Map$1 = {}));
-
-class CellObjects {
-    constructor(cell) {
-        this.cell = cell;
-    }
-    forEach(cb) {
-        let object = this.cell._item;
-        while (object) {
-            cb(object);
-            object = object.next;
-        }
-        object = this.cell._actor;
-        while (object) {
-            cb(object);
-            object = object.next;
-        }
-    }
-    some(cb) {
-        let object = this.cell._item;
-        while (object) {
-            if (cb(object))
-                return true;
-            object = object.next;
-        }
-        object = this.cell._actor;
-        while (object) {
-            if (cb(object))
-                return true;
-            object = object.next;
-        }
-        return false;
-    }
-    reduce(cb, start) {
-        let object = this.cell._item;
-        while (object) {
-            if (start === undefined) {
-                start = object;
-            }
-            else {
-                start = cb(start, object);
-            }
-            object = object.next;
-        }
-        object = this.cell._actor;
-        while (object) {
-            if (start === undefined) {
-                start = object;
-            }
-            else {
-                start = cb(start, object);
-            }
-            object = object.next;
-        }
-        return start;
-    }
-}
-class Cell {
-    constructor(groundTile) {
-        this.chokeCount = 0;
-        this.machineId = 0;
-        // gasVolume: number = 0;
-        // liquidVolume: number = 0;
-        this._actor = null;
-        this._item = null;
-        this._objects = new CellObjects(this);
-        this.flags = { cell: 0 };
-        this.tiles = [tiles.NULL];
-        if (groundTile) {
-            const tile = get(groundTile);
-            this.setTile(tile);
-        }
-    }
-    copy(other) {
-        Object.assign(this.flags, other.flags);
-        this.chokeCount = other.chokeCount;
-        this.tiles = other.tiles.slice();
-        this._actor = other._actor;
-        this._item = other._item;
-    }
-    hasCellFlag(flag) {
-        return !!(this.flags.cell & flag);
-    }
-    setCellFlag(flag) {
-        this.flags.cell |= flag;
-    }
-    clearCellFlag(flag) {
-        this.flags.cell &= ~flag;
-    }
-    hasObjectFlag(flag) {
-        return (this.tiles.some((t) => t && t.flags.object & flag) ||
-            this._objects.some((o) => !!(o.flags.object & flag)));
-    }
-    hasAllObjectFlags(flags) {
-        return (this.objectFlags() & flags) == flags;
-    }
-    hasTileFlag(flag) {
-        return this.tiles.some((t) => t && t.flags.tile & flag);
-    }
-    hasAllTileFlags(flags) {
-        return (this.tileFlags() & flags) == flags;
-    }
-    hasTileMechFlag(flag) {
-        return this.tiles.some((t) => t && t.flags.tileMech & flag);
-    }
-    hasAllTileMechFlags(flags) {
-        return (this.tileMechFlags() & flags) == flags;
-    }
-    cellFlags() {
-        return this.flags.cell;
-    }
-    objectFlags() {
-        return (this.tiles.reduce((out, t) => out | (t ? t.flags.object : 0), 0) |
-            this._objects.reduce((out, o) => out | o.flags.object, 0));
-    }
-    tileFlags() {
-        return this.tiles.reduce((out, t) => out | (t ? t.flags.tile : 0), 0);
-    }
-    tileMechFlags() {
-        return this.tiles.reduce((out, t) => out | (t ? t.flags.tileMech : 0), 0);
-    }
-    itemFlags() {
-        return this._objects.reduce((out, o) => out | o.itemFlags(), 0);
-    }
-    actorFlags() {
-        return this._objects.reduce((out, o) => out | o.actorFlags(), 0);
-    }
-    get needsRedraw() {
-        return !!(this.flags.cell & Cell$1.NEEDS_REDRAW);
-    }
-    set needsRedraw(v) {
-        if (v) {
-            this.flags.cell |= Cell$1.NEEDS_REDRAW;
-        }
-        else {
-            this.flags.cell &= ~Cell$1.NEEDS_REDRAW;
-        }
-    }
-    depthPriority(depth) {
-        const tile = this.tiles[depth];
-        return tile ? tile.priority : tiles.NULL.priority;
-    }
-    highestPriority() {
-        return this.tiles.reduce((out, t) => Math.max(out, t ? t.priority : 0), tiles.NULL.priority);
-    }
-    depthTile(depth) {
-        return this.tiles[depth] || null;
-    }
-    hasTile(tile) {
-        if (!tile)
-            return this.tiles.some((t) => t);
-        if (!(tile instanceof Tile)) {
-            tile = get(tile);
-        }
-        return this.tiles.includes(tile);
-    }
-    hasDepthTile(depth) {
-        const t = this.tiles[depth];
-        return !!t && t !== tiles.NULL;
-    }
-    highestPriorityTile() {
-        return this.tiles.reduce((out, tile) => {
-            if (!tile)
-                return out;
-            if (tile.priority >= out.priority)
-                return tile; // higher depth will get picked with >=
-            return out;
-        }, tiles.NULL);
-    }
-    get tile() {
-        return this.highestPriorityTile();
-    }
-    eachTile(cb) {
-        this.tiles.forEach((t) => t && cb(t));
-    }
-    tileWithObjectFlag(flag) {
-        return this.tiles.find((t) => t && t.flags.object & flag) || null;
-    }
-    tileWithFlag(flag) {
-        return this.tiles.find((t) => t && t.flags.tile & flag) || null;
-    }
-    tileWithMechFlag(flag) {
-        return this.tiles.find((t) => t && t.flags.tileMech & flag) || null;
-    }
-    blocksVision() {
-        return (this.tiles.some((t) => t && t.blocksVision()) ||
-            this._objects.some((o) => o.blocksVision()));
-    }
-    blocksPathing() {
-        return (this.tiles.some((t) => t && t.blocksPathing()) ||
-            this._objects.some((o) => o.blocksPathing()));
-    }
-    blocksMove() {
-        return (this.tiles.some((t) => t && t.blocksMove()) ||
-            this._objects.some((o) => o.blocksMove()));
-    }
-    blocksEffects() {
-        return (this.tiles.some((t) => t && t.blocksEffects()) ||
-            this._objects.some((o) => o.blocksEffects()));
-    }
-    blocksLayer(depth) {
-        return this.tiles.some((t) => t &&
-            !!(t.flags.tile & flags$1.Tile.T_BLOCKS_OTHER_LAYERS) &&
-            t.depth != depth);
-    }
-    // Tests
-    isEmpty() {
-        return (this.tiles.every((t) => !t || t === tiles.NULL) &&
-            this._actor == null &&
-            this._item == null);
-    }
-    isPassable() {
-        return !this.blocksMove();
-    }
-    isWall() {
-        return this.hasAllObjectFlags(GameObject$1.L_WALL_FLAGS);
-    }
-    isStairs() {
-        return this.hasTileFlag(Tile$1.T_HAS_STAIRS);
-    }
-    hasKey() {
-        return false;
-    }
-    // @returns - whether or not the change results in a change to the cell lighting.
-    setTile(tile) {
-        if (!(tile instanceof Tile)) {
-            tile = get(tile);
-            if (!tile)
-                return false;
-        }
-        // const current = this.tiles[tile.depth] || TILE.tiles.NULL;
-        // if (current !== tile) {
-        //     this.gasVolume = 0;
-        //     this.liquidVolume = 0;
-        // }
-        // Check priority, etc...
-        this.tiles[tile.depth] = tile;
-        this.needsRedraw = true;
-        // if (volume) {
-        //     if (tile.depth === Depth.GAS) {
-        //         this.gasVolume = volume;
-        //     }
-        //     if (tile.depth === Depth.LIQUID) {
-        //         this.liquidVolume = volume;
-        //     }
-        // }
-        return true;
-    }
-    clear() {
-        this.tiles = [tiles.NULL];
-        this.needsRedraw = true;
-        this.flags.cell = 0;
-        this.chokeCount = 0;
-        this._actor = null;
-        this._item = null;
-    }
-    clearDepth(depth) {
-        if (depth == 0) {
-            this.tiles[0] = tiles.NULL;
-            this.needsRedraw = true;
-            return true;
-        }
-        else if (this.tiles[depth] !== null) {
-            this.tiles[depth] = null;
-            this.needsRedraw = true;
-            return true;
-        }
-        return false;
-    }
-    clearDepthsWithFlags(tileFlag, tileMechFlag = 0) {
-        for (let i = 0; i < this.tiles.length; ++i) {
-            const tile = this.tiles[i];
-            if (!tile)
-                continue;
-            if (!tile.hasTileFlag(tileFlag))
-                continue;
-            if (tileMechFlag && !tile.hasTileMechFlag(tileMechFlag))
-                continue;
-            this.clearDepth(i);
-        }
-    }
-    // Lights
-    eachGlowLight(cb) {
-        this.tiles.forEach((tile) => {
-            if (tile && tile.light)
-                cb(tile.light);
-        });
-    }
-    // Effects
-    async activate(event, map, x, y, ctx = {}) {
-        ctx.cell = this;
-        let didSomething = false;
-        if (ctx.depth !== undefined) {
-            const tile = (ctx.tile = this.depthTile(ctx.depth));
-            if (tile && tile.effects) {
-                const ev = tile.effects[event];
-                didSomething = await this._fire(ev, map, x, y, ctx);
-            }
-        }
-        else {
-            // console.log('fire event - %s', event);
-            for (ctx.tile of this.tiles) {
-                if (!ctx.tile || !ctx.tile.effects)
-                    continue;
-                const ev = ctx.tile.effects[event];
-                // console.log(' - ', ev);
-                if (await this._fire(ev, map, x, y, ctx)) {
-                    didSomething = true;
-                    break;
-                }
-                // }
-            }
-        }
-        return didSomething;
-    }
-    activateSync(event, map, x, y, ctx = {}) {
-        ctx.cell = this;
-        let didSomething = false;
-        if (ctx.depth !== undefined) {
-            const tile = (ctx.tile = this.depthTile(ctx.depth));
-            if (tile && tile.effects) {
-                const ev = tile.effects[event];
-                didSomething = this._fireSync(ev, map, x, y, ctx);
-            }
-        }
-        else {
-            // console.log('fire event - %s', event);
-            for (ctx.tile of this.tiles) {
-                if (!ctx.tile || !ctx.tile.effects)
-                    continue;
-                const ev = ctx.tile.effects[event];
-                // console.log(' - ', ev);
-                if (this._fireSync(ev, map, x, y, ctx)) {
-                    didSomething = true;
-                    break;
-                }
-                // }
-            }
-        }
-        return didSomething;
-    }
-    async _fire(effect, map, x, y, ctx) {
-        if (typeof effect === 'string') {
-            effect = effects[effect];
-        }
-        let didSomething = false;
-        if (effect) {
-            // console.log(' - spawn event @%d,%d - %s', x, y, name);
-            didSomething = await fire(effect, map, x, y, ctx);
-            // cell.debug(" - spawned");
-        }
-        return didSomething;
-    }
-    _fireSync(effect, map, x, y, ctx) {
-        if (typeof effect === 'string') {
-            effect = effects[effect];
-        }
-        let didSomething = false;
-        if (effect) {
-            // console.log(' - spawn event @%d,%d - %s', x, y, name);
-            didSomething = fireSync(effect, map, x, y, ctx);
-            // cell.debug(" - spawned");
-        }
-        return didSomething;
-    }
-    hasEffect(name) {
-        for (let tile of this.tiles) {
-            if (tile && tile.hasEffect(name))
-                return true;
-        }
-        return false;
-    }
-    // // Items
-    hasItem() {
-        return this.hasCellFlag(Cell$1.HAS_ITEM);
-    }
-    get item() {
-        return this._item;
-    }
-    set item(val) {
-        this._item = val;
-        if (val) {
-            this.setCellFlag(Cell$1.HAS_ITEM);
-        }
-        else {
-            this.clearCellFlag(Cell$1.HAS_ITEM);
-        }
-        this.needsRedraw = true;
-    }
-    // // Actors
-    hasActor() {
-        return this.hasCellFlag(Cell$1.HAS_ACTOR);
-    }
-    hasPlayer() {
-        return this.hasCellFlag(Cell$1.HAS_PLAYER);
-    }
-    get actor() {
-        return this._actor;
-    }
-    set actor(val) {
-        this._actor = val;
-        if (val) {
-            this.setCellFlag(Cell$1.HAS_ACTOR);
-        }
-        else {
-            this.clearCellFlag(Cell$1.HAS_ACTOR);
-        }
-        this.needsRedraw = true;
-    }
-    getDescription() {
-        return this.highestPriorityTile().description;
-    }
-    getFlavor() {
-        return this.highestPriorityTile().flavor;
-    }
-    getName(opts = {}) {
-        return this.highestPriorityTile().getName(opts);
-    }
-    dump() {
-        var _a, _b, _c, _d;
-        if ((_b = (_a = this._actor) === null || _a === void 0 ? void 0 : _a.sprite) === null || _b === void 0 ? void 0 : _b.ch)
-            return this._actor.sprite.ch;
-        if ((_d = (_c = this._item) === null || _c === void 0 ? void 0 : _c.sprite) === null || _d === void 0 ? void 0 : _d.ch)
-            return this._item.sprite.ch;
-        return this.highestPriorityTile().sprite.ch || ' ';
-    }
-}
-
-class MapLayer {
-    constructor(map, name = 'layer') {
-        this.map = map;
-        this.depth = -1;
-        this.properties = {};
-        this.name = name;
-    }
-    copy(_other) { }
-    async tick(_dt) {
-        return false;
-    }
-}
-class ActorLayer extends MapLayer {
-    constructor(map, name = 'actor') {
-        super(map, name);
-    }
-    add(x, y, obj, _opts) {
-        const cell = this.map.cell(x, y);
-        const actor = obj;
-        if (actor.forbidsCell(cell))
-            return false;
-        if (!addToChain(cell, 'actor', obj))
-            ;
-        if (obj.isPlayer()) {
-            cell.setCellFlag(Cell$1.HAS_PLAYER);
-        }
-        obj.x = x;
-        obj.y = y;
-        return true;
-    }
-    remove(obj) {
-        const cell = this.map.cell(obj.x, obj.y);
-        if (!removeFromChain(cell, 'actor', obj))
-            return false;
-        if (obj.isPlayer()) {
-            cell.clearCellFlag(Cell$1.HAS_PLAYER);
-        }
-        return true;
-    }
-    putAppearance(dest, x, y) {
-        const cell = this.map.cell(x, y);
-        if (!cell.actor)
-            return;
-        dest.drawSprite(cell.actor.sprite);
-    }
-}
-class ItemLayer extends MapLayer {
-    constructor(map, name = 'item') {
-        super(map, name);
-    }
-    add(x, y, obj, _opts) {
-        const cell = this.map.cell(x, y);
-        const item = obj;
-        if (item.forbidsCell(cell))
-            return false;
-        if (!addToChain(cell, 'item', obj))
-            ;
-        obj.x = x;
-        obj.y = y;
-        return true;
-    }
-    remove(obj) {
-        const cell = this.map.cell(obj.x, obj.y);
-        if (!removeFromChain(cell, 'item', obj))
-            return false;
-        return true;
-    }
-    putAppearance(dest, x, y) {
-        const cell = this.map.cell(x, y);
-        if (!cell.item)
-            return;
-        dest.drawSprite(cell.item.sprite);
-    }
-}
-class TileLayer extends MapLayer {
-    constructor(map, name = 'tile') {
-        super(map, name);
-    }
-    set(x, y, tile, opts = {}) {
-        const cell = this.map.cell(x, y);
-        const current = cell.depthTile(tile.depth) || tiles.NULL;
-        if (!opts.superpriority) {
-            // if (current !== tile) {
-            //     this.gasVolume = 0;
-            //     this.liquidVolume = 0;
-            // }
-            // Check priority, etc...
-            if (current.priority > tile.priority) {
-                return false;
-            }
-        }
-        if (cell.blocksLayer(tile.depth))
-            return false;
-        if (opts.blockedByItems && cell.hasItem())
-            return false;
-        if (opts.blockedByActors && cell.hasActor())
-            return false;
-        if (opts.blockedByOtherLayers && cell.highestPriority() > tile.priority)
-            return false;
-        if (tile.depth > Depth$1.GROUND && tile.groundTile) {
-            const ground = cell.depthTile(Depth$1.GROUND);
-            if (!ground || ground === tiles.NULL) {
-                this.set(x, y, get(tile.groundTile));
-            }
-        }
-        if (!cell.setTile(tile))
-            return false;
-        if (opts.machine) {
-            cell.machineId = opts.machine;
-        }
-        if (current.light !== tile.light) {
-            this.map.light.glowLightChanged = true;
-        }
-        if (tile.hasTileFlag(Tile$1.T_IS_FIRE)) {
-            cell.setCellFlag(Cell$1.CAUGHT_FIRE_THIS_TURN);
-        }
-        // if (volume) {
-        //     if (tile.depth === Depth.GAS) {
-        //         this.gasVolume = volume;
-        //     }
-        //     if (tile.depth === Depth.LIQUID) {
-        //         this.liquidVolume = volume;
-        //     }
-        // }
-        return true;
-    }
-    clear(x, y) {
-        const cell = this.map.cell(x, y);
-        return cell.clearDepth(this.depth);
-    }
-    async tick(_dt) {
-        // Run any tick effects
-        // Bookkeeping for fire, pressure plates and key-activated tiles.
-        for (let x = 0; x < this.map.width; ++x) {
-            for (let y = 0; y < this.map.height; ++y) {
-                const cell = this.map.cell(x, y);
-                if (!cell.hasCellFlag(Cell$1.HAS_ANY_ACTOR | Cell$1.HAS_ITEM) &&
-                    cell.hasCellFlag(Cell$1.PRESSURE_PLATE_DEPRESSED)) {
-                    cell.clearCellFlag(Cell$1.PRESSURE_PLATE_DEPRESSED);
-                }
-                if (cell.hasEffect('noKey') && !cell.hasKey()) {
-                    await cell.activate('noKey', this.map, x, y);
-                }
-            }
-        }
-        return true;
-    }
-    putAppearance(dest, x, y) {
-        const cell = this.map.cell(x, y);
-        const tile = cell.depthTile(this.depth);
-        if (tile && tile !== tiles.NULL) {
-            dest.drawSprite(tile.sprite);
-        }
-    }
-}
-
-class CellMemory {
-    constructor() {
-        this.chokeCount = 0;
-        this.machineId = 0;
-        this.flags = {
-            cell: 0,
-            item: 0,
-            actor: 0,
-            tile: 0,
-            tileMech: 0,
-            object: 0,
-        };
-        this.blocks = {
-            vision: false,
-            effects: false,
-            move: false,
-            pathing: false,
-        };
-        this._tile = tiles.NULL;
-        this._item = null;
-        this._actor = null;
-        this._hasKey = false;
-        this.snapshot = new Mixer();
-    }
-    clear() {
-        this.snapshot.blackOut();
-        this._item = null;
-        this._actor = null;
-        this._tile = tiles.NULL;
-        this.flags.cell = 0;
-        this.flags.object = 0;
-        this.flags.tile = 0;
-        this.flags.tileMech = 0;
-        this.blocks.effects = false;
-        this.blocks.move = false;
-        this.blocks.pathing = false;
-        this.blocks.vision = false;
-        this._hasKey = false;
-        this.machineId = 0;
-        this.chokeCount = 0;
-    }
-    store(cell) {
-        this._item = null;
-        if (cell.hasItem()) {
-            this._item = cell.item;
-        }
-        this._actor = null;
-        if (cell.hasActor()) {
-            this._actor = cell.actor;
-        }
-        this._tile = cell.tile;
-        this.flags.cell = cell.cellFlags();
-        this.flags.tile = cell.tileFlags();
-        this.flags.tileMech = cell.tileMechFlags();
-        this.flags.object = cell.objectFlags();
-        this.flags.item = cell.itemFlags();
-        this.flags.actor = cell.actorFlags();
-        this.blocks.effects = cell.blocksEffects();
-        this.blocks.move = cell.blocksMove();
-        this.blocks.pathing = cell.blocksPathing();
-        this.blocks.vision = cell.blocksVision();
-        this._hasKey = cell.hasKey();
-        this.chokeCount = cell.chokeCount;
-        this.machineId = cell.machineId;
-    }
-    getSnapshot(dest) {
-        dest.copy(this.snapshot);
-    }
-    putSnapshot(src) {
-        this.snapshot.copy(src);
-    }
-    hasCellFlag(flag) {
-        return !!(this.flags.cell & flag);
-    }
-    hasTileFlag(flag) {
-        return !!(this.flags.tile & flag);
-    }
-    hasAllTileFlags(flags) {
-        return (this.flags.tile & flags) == flags;
-    }
-    hasObjectFlag(flag) {
-        return !!(this.flags.object & flag);
-    }
-    hasAllObjectFlags(flags) {
-        return (this.flags.object & flags) == flags;
-    }
-    hasTileMechFlag(flag) {
-        return !!(this.flags.tileMech & flag);
-    }
-    cellFlags() {
-        return this.flags.cell;
-    }
-    objectFlags() {
-        return this.flags.object;
-    }
-    tileFlags() {
-        return this.flags.tile;
-    }
-    tileMechFlags() {
-        return this.flags.tileMech;
-    }
-    itemFlags() {
-        return this.flags.item;
-    }
-    actorFlags() {
-        return this.flags.actor;
-    }
-    blocksVision() {
-        return this.blocks.vision;
-    }
-    blocksPathing() {
-        return this.blocks.pathing;
-    }
-    blocksMove() {
-        return this.blocks.move;
-    }
-    blocksEffects() {
-        return this.blocks.effects;
-    }
-    isWall() {
-        return this.blocksVision() && this.blocksMove();
-    }
-    isStairs() {
-        return this.hasTileFlag(Tile$1.T_HAS_STAIRS);
-    }
-    hasKey() {
-        return this._hasKey;
-    }
-    get tile() {
-        return this._tile;
-    }
-    hasTile(tile) {
-        if (!(tile instanceof Tile)) {
-            tile = get(tile);
-        }
-        return this._tile === tile;
-    }
-    hasItem() {
-        return !!this._item;
-    }
-    get item() {
-        return this._item;
-    }
-    hasActor() {
-        return !!this._actor;
-    }
-    hasPlayer() {
-        return !!(this.flags.cell & Cell$1.HAS_PLAYER);
-    }
-    get actor() {
-        return this._actor;
-    }
-    getDescription() {
-        throw new Error('Method not implemented.');
-    }
-    getFlavor() {
-        throw new Error('Method not implemented.');
-    }
-    getName(_opts) {
-        throw new Error('Method not implemented.');
-    }
-}
-
-const Depth = Depth$1;
-const ObjectFlags$1 = GameObject$1;
-const TileFlags = Tile$1;
-const TileMechFlags = TileMech;
-const CellFlags = Cell$1;
-class FireLayer extends TileLayer {
-    constructor(map, name = 'tile') {
-        super(map, name);
-    }
-    async tick(_dt) {
-        // Run any tick effects
-        // Bookkeeping for fire
-        for (let x = 0; x < this.map.width; ++x) {
-            for (let y = 0; y < this.map.height; ++y) {
-                const cell = this.map.cell(x, y);
-                cell.clearCellFlag(CellFlags.CAUGHT_FIRE_THIS_TURN);
-            }
-        }
-        // now spread the fire...
-        for (let x = 0; x < this.map.width; ++x) {
-            for (let y = 0; y < this.map.height; ++y) {
-                const cell = this.map.cell(x, y);
-                if (cell.hasTileFlag(TileFlags.T_IS_FIRE) &&
-                    !(cell.flags.cell & CellFlags.CAUGHT_FIRE_THIS_TURN)) {
-                    await this.exposeToFire(x, y, false);
-                    for (let d = 0; d < 4; ++d) {
-                        const dir = DIRS$2[d];
-                        await this.exposeToFire(x + dir[0], y + dir[1]);
-                    }
-                }
-            }
-        }
-        return true;
-    }
-    async exposeToFire(x, y, alwaysIgnite = false) {
-        let ignitionChance = 0, bestExtinguishingPriority = 0, explosiveNeighborCount = 0;
-        let fireIgnited = false, explosivePromotion = false;
-        const cell = this.map.cell(x, y);
-        if (!cell.hasTileFlag(TileFlags.T_IS_FLAMMABLE)) {
-            return false;
-        }
-        // Pick the extinguishing layer with the best priority.
-        cell.eachTile((tile) => {
-            if (tile.hasTileFlag(TileFlags.T_EXTINGUISHES_FIRE) &&
-                tile.priority > bestExtinguishingPriority) {
-                bestExtinguishingPriority = tile.priority;
-            }
-        });
-        // Pick the fire type of the most flammable layer that is either gas or equal-or-better priority than the best extinguishing layer.
-        cell.eachTile((tile) => {
-            if (tile.flags.tile & TileFlags.T_IS_FLAMMABLE &&
-                (tile.depth === Depth.GAS ||
-                    tile.priority >= bestExtinguishingPriority)) {
-                const effect = from$2(tile.effects.fire);
-                if (effect && effect.chance > ignitionChance) {
-                    ignitionChance = effect.chance;
-                }
-            }
-        });
-        if (alwaysIgnite ||
-            (ignitionChance && random.chance(ignitionChance, 10000))) {
-            // If it ignites...
-            fireIgnited = true;
-            // Count explosive neighbors.
-            if (cell.hasTileMechFlag(TileMechFlags.TM_EXPLOSIVE_PROMOTE)) {
-                eachNeighbor(x, y, (x0, y0) => {
-                    const n = this.map.cell(x0, y0);
-                    if (n.hasObjectFlag(ObjectFlags$1.L_BLOCKS_GAS) ||
-                        n.hasTileFlag(TileFlags.T_IS_FIRE) ||
-                        n.hasTileMechFlag(TileMechFlags.TM_EXPLOSIVE_PROMOTE)) {
-                        ++explosiveNeighborCount;
-                    }
-                });
-                if (explosiveNeighborCount >= 8) {
-                    explosivePromotion = true;
-                }
-            }
-            let event = 'fire';
-            if (explosivePromotion && cell.hasEffect('explode')) {
-                event = 'explode';
-            }
-            // cell.eachTile( (tile) => {
-            //     if (tile.flags.tile & TileFlags.T_IS_FLAMMABLE) {
-            //         if (tile.depth === Depth.GAS) {
-            //             cell.gasVolume = 0;
-            //         } else if (tile.depth === Depth.LIQUID) {
-            //             cell.liquidVolume = 0;
-            //         }
-            //     }
-            // });
-            await cell.activate(event, this.map, x, y, {
-                force: true,
-            });
-            cell.needsRedraw = true;
-        }
-        return fireIgnited;
-    }
-}
-
-const ObjectFlags = GameObject$1;
-class GasLayer extends TileLayer {
-    constructor(map, name = 'gas') {
-        super(map, name);
-        this.needsUpdate = false;
-        this.volume = alloc(map.width, map.height, 0);
-    }
-    set(x, y, tile, opts = {}) {
-        if (!opts.volume)
-            return false;
-        const cell = this.map.cell(x, y);
-        if (cell.depthTile(tile.depth) === tile) {
-            this.volume[x][y] += opts.volume;
-            return true;
-        }
-        if (!super.set(x, y, tile, opts)) {
-            return false;
-        }
-        this.volume[x][y] = opts.volume;
-        this.needsUpdate = true;
-        return true;
-    }
-    clear(x, y) {
-        const cell = this.map.cell(x, y);
-        if (cell.clearDepth(this.depth)) {
-            this.volume[x][y] = 0;
-            return true;
-        }
-        return false;
-    }
-    copy(other) {
-        this.volume.copy(other.volume);
-    }
-    async tick(_dt) {
-        if (!this.needsUpdate)
-            return false;
-        this.needsUpdate = false;
-        const startingVolume = this.volume;
-        this.volume = alloc(this.map.width, this.map.height);
-        // dissipate the gas...
-        this.dissipate(startingVolume);
-        // spread the gas...
-        this.spread(startingVolume);
-        free(startingVolume);
-        return true;
-    }
-    dissipate(volume) {
-        volume.update((v, x, y) => {
-            if (!v)
-                return 0;
-            const tile = this.map.cell(x, y).depthTile(this.depth);
-            if (tile && tile.dissipate) {
-                let d = Math.max(0.5, (v * tile.dissipate) / 10000); // 1000 = 10%
-                v = Math.max(0, v - d);
-            }
-            if (v) {
-                this.needsUpdate = true;
-            }
-            else {
-                this.clear(x, y);
-            }
-            return v;
-        });
-    }
-    calcOpacity(volume) {
-        return Math.floor(Math.min(volume, 10) * 10);
-    }
-    updateCellVolume(x, y, startingVolume) {
-        let total = 0;
-        let count = 0;
-        let highestVolume = 0;
-        const cell = this.map.cell(x, y);
-        let startingTile = cell.depthTile(this.depth);
-        let highestTile = startingTile;
-        if (cell.hasObjectFlag(ObjectFlags.L_BLOCKS_GAS)) {
-            this.volume[x][y] = 0;
-            if (startingVolume[x][y]) {
-                this.clear(x, y);
-            }
-            return;
-        }
-        for (let i = Math.max(0, x - 1); i < Math.min(x + 2, startingVolume.width); ++i) {
-            for (let j = Math.max(0, y - 1); j < Math.min(y + 2, startingVolume.height); ++j) {
-                const v = startingVolume[i][j];
-                if (!cell.hasObjectFlag(ObjectFlags.L_BLOCKS_GAS)) {
-                    ++count;
-                    if (v > highestVolume) {
-                        highestVolume = v;
-                        highestTile = this.map.cell(i, j).depthTile(this.depth);
-                    }
-                }
-                total += v;
-            }
-        }
-        const v = Math.floor((total * 10) / count) / 10;
-        this.volume[x][y] = v;
-        if (v > 0 && highestTile) {
-            if (!startingTile || startingTile !== highestTile) {
-                cell.setTile(highestTile);
-            }
-        }
-        if (v > 0) {
-            cell.needsRedraw = true;
-        }
-    }
-    spread(startingVolume) {
-        for (let x = 0; x < startingVolume.width; ++x) {
-            for (let y = 0; y < startingVolume.height; ++y) {
-                this.updateCellVolume(x, y, startingVolume);
-            }
-        }
-    }
-    putAppearance(dest, x, y) {
-        const volume = this.volume[x][y];
-        if (!volume)
-            return;
-        const cell = this.map.cell(x, y);
-        const tile = cell.depthTile(this.depth);
-        if (tile) {
-            const opacity = this.calcOpacity(volume);
-            dest.drawSprite(tile.sprite, opacity);
-        }
-    }
-}
-
-class Map {
-    constructor(width, height, opts = {}) {
-        this.width = width;
-        this.height = height;
-        this.flags = { map: 0 };
-        this.layers = [];
-        this.cells = make$a(width, height, () => new Cell());
-        this.memory = make$a(width, height, () => new CellMemory());
-        this.light = new LightSystem(this, opts);
-        this.fov = new FovSystem(this, opts);
-        this.properties = {};
-        this.initLayers();
-    }
-    cellInfo(x, y, useMemory = false) {
-        if (useMemory)
-            return this.memory[x][y];
-        return this.cell(x, y);
-    }
-    // LAYERS
-    initLayers() {
-        this.addLayer(Depth$1.GROUND, new TileLayer(this, 'ground'));
-        this.addLayer(Depth$1.SURFACE, new FireLayer(this, 'surface'));
-        this.addLayer(Depth$1.GAS, new GasLayer(this, 'gas'));
-        this.addLayer(Depth$1.ITEM, new ItemLayer(this, 'item'));
-        this.addLayer(Depth$1.ACTOR, new ActorLayer(this, 'actor'));
-    }
-    addLayer(depth, layer) {
-        if (typeof depth !== 'number') {
-            depth = Depth$1[depth];
-        }
-        layer.depth = depth;
-        this.layers[depth] = layer;
-    }
-    removeLayer(depth) {
-        if (typeof depth !== 'number') {
-            depth = Depth$1[depth];
-        }
-        if (!depth)
-            throw new Error('Cannot remove layer with depth=0.');
-        delete this.layers[depth];
-    }
-    getLayer(depth) {
-        if (typeof depth !== 'number') {
-            depth = Depth$1[depth];
-        }
-        return this.layers[depth] || null;
-    }
-    hasXY(x, y) {
-        return this.cells.hasXY(x, y);
-    }
-    isBoundaryXY(x, y) {
-        return x == 0 || y == 0 || x == this.width - 1 || y == this.height - 1;
-    }
-    cell(x, y) {
-        return this.cells[x][y];
-    }
-    get(x, y) {
-        return this.cells.get(x, y);
-    }
-    eachCell(cb) {
-        this.cells.forEach((cell, x, y) => cb(cell, x, y, this));
-    }
-    // DRAW
-    drawInto(dest, opts = {}) {
-        const buffer = dest instanceof Canvas ? dest.buffer : dest;
-        if (typeof opts === 'boolean')
-            opts = { force: opts };
-        const mixer = new Mixer();
-        for (let x = 0; x < buffer.width; ++x) {
-            for (let y = 0; y < buffer.height; ++y) {
-                this.getAppearanceAt(x, y, mixer);
-                buffer.drawSprite(x, y, mixer);
-            }
-        }
-    }
-    // items
-    itemAt(x, y) {
-        return this.cell(x, y).item;
-    }
-    eachItem(cb) {
-        this.cells.forEach((cell) => {
-            eachChain(cell.item, cb);
-        });
-    }
-    addItem(x, y, item) {
-        const layer = this.layers[item.depth];
-        return layer.add(x, y, item);
-    }
-    removeItem(item) {
-        const layer = this.layers[item.depth];
-        return layer.remove(item);
-    }
-    moveItem(item, x, y) {
-        const layer = this.layers[item.depth];
-        if (!layer.remove(item))
-            return false;
-        return layer.add(x, y, item);
-    }
-    // Actors
-    hasPlayer(x, y) {
-        return this.cell(x, y).hasPlayer();
-    }
-    actorAt(x, y) {
-        return this.cell(x, y).actor;
-    }
-    eachActor(cb) {
-        this.cells.forEach((cell) => {
-            eachChain(cell.actor, cb);
-        });
-    }
-    addActor(x, y, item) {
-        const layer = this.layers[item.depth];
-        return layer.add(x, y, item);
-    }
-    removeActor(item) {
-        const layer = this.layers[item.depth];
-        return layer.remove(item);
-    }
-    moveActor(item, x, y) {
-        const layer = this.layers[item.depth];
-        if (!layer.remove(item))
-            return false;
-        return layer.add(x, y, item);
-    }
-    // Information
-    isVisible(x, y) {
-        return this.fov.isAnyKindOfVisible(x, y);
-    }
-    count(cb) {
-        return this.cells.count((cell, x, y) => cb(cell, x, y, this));
-    }
-    dump(fmt, log = console.log) {
-        this.cells.dump(fmt || ((c) => c.dump()), log);
-    }
-    // flags
-    hasMapFlag(flag) {
-        return !!(this.flags.map & flag);
-    }
-    setMapFlag(flag) {
-        this.flags.map |= flag;
-    }
-    clearMapFlag(flag) {
-        this.flags.map &= ~flag;
-    }
-    setCellFlag(x, y, flag) {
-        this.cell(x, y).setCellFlag(flag);
-    }
-    clearCellFlag(x, y, flag) {
-        this.cell(x, y).clearCellFlag(flag);
-    }
-    // Skips all the logic checks and just forces a clean cell with the given tile
-    fill(tile, boundary) {
-        tile = get(tile);
-        boundary = get(boundary || tile);
-        let i, j;
-        for (i = 0; i < this.width; ++i) {
-            for (j = 0; j < this.height; ++j) {
-                const cell = this.cell(i, j);
-                cell.clear();
-                cell.setTile(this.isBoundaryXY(i, j) ? boundary : tile);
-            }
-        }
-    }
-    hasTile(x, y, tile, useMemory = false) {
-        return this.cellInfo(x, y, useMemory).hasTile(tile);
-    }
-    setTile(x, y, tile, opts) {
-        if (!(tile instanceof Tile)) {
-            tile = get(tile);
-            if (!tile)
-                return false;
-        }
-        if (opts === true) {
-            opts = { superpriority: true };
-        }
-        const depth = tile.depth || 0;
-        const layer = this.layers[depth] || this.layers[0];
-        if (!(layer instanceof TileLayer))
-            return false;
-        return layer.set(x, y, tile, opts);
-    }
-    async tick(dt) {
-        let didSomething = await this.fireAll('tick');
-        for (let layer of this.layers) {
-            if (layer && (await layer.tick(dt))) {
-                didSomething = true;
-            }
-        }
-        return didSomething;
-    }
-    copy(src) {
-        if (this.constructor !== src.constructor)
-            throw new Error('Maps must be same type to copy.');
-        if (this.width !== src.width || this.height !== src.height)
-            throw new Error('Maps must be same size to copy');
-        this.cells.forEach((c, x, y) => {
-            c.copy(src.cells[x][y]);
-        });
-        this.layers.forEach((l, depth) => {
-            l.copy(src.layers[depth]);
-        });
-        this.flags.map = src.flags.map;
-        this.light.setAmbient(src.light.getAmbient());
-    }
-    clone() {
-        // @ts-ignore
-        const other = new this.constructor(this.width, this.height);
-        other.copy(this);
-        return other;
-    }
-    async fire(event, x, y, ctx = {}) {
-        const cell = this.cell(x, y);
-        return cell.activate(event, this, x, y, ctx);
-    }
-    fireSync(event, x, y, ctx = {}) {
-        const cell = this.cell(x, y);
-        return cell.activateSync(event, this, x, y, ctx);
-    }
-    async fireAll(event, ctx = {}) {
-        let didSomething = false;
-        const willFire = alloc(this.width, this.height);
-        // Figure out which tiles will fire - before we change everything...
-        this.cells.forEach((cell, x, y) => {
-            cell.clearCellFlag(Cell$1.EVENT_FIRED_THIS_TURN | Cell$1.EVENT_PROTECTED);
-            cell.eachTile((tile) => {
-                const ev = tile.effects[event];
-                if (!ev)
-                    return;
-                const effect = from$2(ev);
-                if (!effect)
-                    return;
-                let promoteChance = 0;
-                // < 0 means try to fire my neighbors...
-                if (effect.chance < 0) {
-                    promoteChance = 0;
-                    eachNeighbor(x, y, (i, j) => {
-                        const n = this.cell(i, j);
-                        if (!n.hasObjectFlag(GameObject$1.L_BLOCKS_EFFECTS) &&
-                            n.depthTile(tile.depth) !=
-                                cell.depthTile(tile.depth) &&
-                            !n.hasCellFlag(Cell$1.CAUGHT_FIRE_THIS_TURN)) {
-                            // TODO - Should this break from the loop after doing this once or keep going?
-                            promoteChance += -1 * effect.chance;
-                        }
-                    }, true);
-                }
-                else {
-                    promoteChance = effect.chance || 100 * 100; // 100%
-                }
-                if (!cell.hasCellFlag(Cell$1.CAUGHT_FIRE_THIS_TURN) &&
-                    random.chance(promoteChance, 10000)) {
-                    willFire[x][y] |= fl(tile.depth);
-                    // cell.flags.cellMech |= Cell.MechFlags.EVENT_FIRED_THIS_TURN;
-                }
-            });
-        });
-        // Then activate them - so that we don't activate the next generation as part of the forEach
-        ctx.force = true;
-        await willFire.forEachAsync(async (w, x, y) => {
-            if (!w)
-                return;
-            const cell = this.cell(x, y);
-            if (cell.hasCellFlag(Cell$1.EVENT_FIRED_THIS_TURN))
-                return;
-            for (let depth = 0; depth <= Depth$1.GAS; ++depth) {
-                if (w & fl(depth)) {
-                    await cell.activate(event, this, x, y, {
-                        force: true,
-                        depth,
-                    });
-                }
-            }
-        });
-        free(willFire);
-        return didSomething;
-    }
-    fireAllSync(event, ctx = {}) {
-        let didSomething = false;
-        const willFire = alloc(this.width, this.height);
-        // Figure out which tiles will fire - before we change everything...
-        this.cells.forEach((cell, x, y) => {
-            cell.clearCellFlag(Cell$1.EVENT_FIRED_THIS_TURN | Cell$1.EVENT_PROTECTED);
-            cell.eachTile((tile) => {
-                const ev = tile.effects[event];
-                if (!ev)
-                    return;
-                const effect = from$2(ev);
-                if (!effect)
-                    return;
-                let promoteChance = 0;
-                // < 0 means try to fire my neighbors...
-                if (effect.chance < 0) {
-                    promoteChance = 0;
-                    eachNeighbor(x, y, (i, j) => {
-                        const n = this.cell(i, j);
-                        if (!n.hasObjectFlag(GameObject$1.L_BLOCKS_EFFECTS) &&
-                            n.depthTile(tile.depth) !=
-                                cell.depthTile(tile.depth) &&
-                            !n.hasCellFlag(Cell$1.CAUGHT_FIRE_THIS_TURN)) {
-                            // TODO - Should this break from the loop after doing this once or keep going?
-                            promoteChance += -1 * effect.chance;
-                        }
-                    }, true);
-                }
-                else {
-                    promoteChance = effect.chance || 100 * 100; // 100%
-                }
-                if (!cell.hasCellFlag(Cell$1.CAUGHT_FIRE_THIS_TURN) &&
-                    random.chance(promoteChance, 10000)) {
-                    willFire[x][y] |= fl(tile.depth);
-                    // cell.flags.cellMech |= Cell.MechFlags.EVENT_FIRED_THIS_TURN;
-                }
-            });
-        });
-        // Then activate them - so that we don't activate the next generation as part of the forEach
-        ctx.force = true;
-        willFire.forEach((w, x, y) => {
-            if (!w)
-                return;
-            const cell = this.cell(x, y);
-            if (cell.hasCellFlag(Cell$1.EVENT_FIRED_THIS_TURN))
-                return;
-            for (let depth = 0; depth <= Depth$1.GAS; ++depth) {
-                if (w & fl(depth)) {
-                    cell.activate(event, this, x, y, {
-                        force: true,
-                        depth,
-                    });
-                }
-            }
-        });
-        free(willFire);
-        return didSomething;
-    }
-    async activateMachine(machineId, originX, originY, ctx = {}) {
-        let didSomething = false;
-        ctx.originX = originX;
-        ctx.originY = originY;
-        for (let x = 0; x < this.width; ++x) {
-            for (let y = 0; y < this.height; ++y) {
-                const cell = this.cells[x][y];
-                if (cell.machineId !== machineId)
-                    continue;
-                if (cell.hasEffect('machine')) {
-                    didSomething =
-                        (await cell.activate('machine', this, x, y, ctx)) ||
-                            didSomething;
-                }
-            }
-        }
-        return didSomething;
-    }
-    activateMachineSync(machineId, originX, originY, ctx = {}) {
-        let didSomething = false;
-        ctx.originX = originX;
-        ctx.originY = originY;
-        for (let x = 0; x < this.width; ++x) {
-            for (let y = 0; y < this.height; ++y) {
-                const cell = this.cells[x][y];
-                if (cell.machineId !== machineId)
-                    continue;
-                if (cell.hasEffect('machine')) {
-                    didSomething =
-                        cell.activateSync('machine', this, x, y, ctx) ||
-                            didSomething;
-                }
-            }
-        }
-        return didSomething;
-    }
-    getAppearanceAt(x, y, dest) {
-        dest.blackOut();
-        const cell = this.cell(x, y);
-        const isVisible = this.fov.isAnyKindOfVisible(x, y);
-        if (cell.needsRedraw && isVisible) {
-            this.layers.forEach((layer) => layer.putAppearance(dest, x, y));
-            if (dest.dances) {
-                cell.setCellFlag(Cell$1.COLORS_DANCE);
-            }
-            else {
-                cell.clearCellFlag(Cell$1.COLORS_DANCE);
-            }
-            dest.bake();
-            this.memory[x][y].putSnapshot(dest);
-            cell.needsRedraw = false;
-        }
-        else {
-            this.memory[x][y].getSnapshot(dest);
-        }
-        if (isVisible) {
-            const light = this.light.getLight(x, y);
-            dest.multiply(light);
-        }
-        else if (this.fov.isRevealed(x, y)) {
-            dest.scale(50);
-        }
-        else {
-            dest.blackOut();
-        }
-        if (cell.hasObjectFlag(GameObject$1.L_VISUALLY_DISTINCT)) {
-            separate(dest.fg, dest.bg);
-        }
-    }
-    // // LightSystemSite
-    hasActor(x, y) {
-        return this.cell(x, y).hasActor();
-    }
-    eachGlowLight(cb) {
-        this.cells.forEach((cell, x, y) => {
-            cell.eachGlowLight((light) => cb(x, y, light));
-        });
-    }
-    eachDynamicLight(_cb) { }
-    // FOV System Site
-    eachViewport(_cb) {
-        // TODO !!
-    }
-    lightingChanged() {
-        return this.light.changed;
-    }
-    hasVisibleLight(x, y) {
-        return !this.light.isDark(x, y);
-    }
-    blocksVision(x, y) {
-        return this.cell(x, y).blocksVision();
-    }
-    onCellRevealed(_x, _y) {
-        // if (DATA.automationActive) {
-        // if (cell.item) {
-        //     const theItem: GW.types.ItemType = cell.item;
-        //     if (
-        //         theItem.hasObjectFlag(ObjectFlags.L_INTERRUPT_WHEN_SEEN)
-        //     ) {
-        //         GW.message.add(
-        //             '§you§ §see§ ΩitemMessageColorΩ§item§∆.',
-        //             {
-        //                 item: theItem,
-        //                 actor: DATA.player,
-        //             }
-        //         );
-        //     }
-        // }
-        // if (
-        //     !(this.fov.isMagicMapped(x, y)) &&
-        //     this.site.hasObjectFlag(
-        //         x,
-        //         y,
-        //         ObjectFlags.L_INTERRUPT_WHEN_SEEN
-        //     )
-        // ) {
-        //     const tile = cell.tileWithLayerFlag(
-        //         ObjectFlags.L_INTERRUPT_WHEN_SEEN
-        //     );
-        //     if (tile) {
-        //         GW.message.add(
-        //             '§you§ §see§ ΩbackgroundMessageColorΩ§item§∆.',
-        //             {
-        //                 actor: DATA.player,
-        //                 item: tile.name,
-        //             }
-        //         );
-        //     }
-        // }
-    }
-    redrawCell(x, y, clearMemory) {
-        if (clearMemory) {
-            this.clearMemory(x, y);
-        }
-        this.cells[x][y].needsRedraw = true;
-    }
-    clearMemory(x, y) {
-        this.memory[x][y].clear();
-    }
-    storeMemory(x, y) {
-        const cell = this.cell(x, y);
-        this.memory[x][y].store(cell);
-    }
-}
-function make(w, h, opts = {}, boundary) {
-    if (typeof opts === 'string') {
-        opts = { tile: opts };
-    }
-    if (boundary) {
-        opts.boundary = boundary;
-    }
-    if (opts.tile === true) {
-        opts.tile = 'FLOOR';
-    }
-    if (opts.boundary === true) {
-        opts.boundary = 'WALL';
-    }
-    const map = new Map(w, h, opts);
-    if (opts.tile) {
-        map.fill(opts.tile, opts.boundary);
-    }
-    map.light.update();
-    // if (!DATA.map) {
-    //     DATA.map = map;
-    // }
-    return map;
-}
-function isString(value) {
-    return typeof value === 'string';
-}
-function isStringArray(value) {
-    return Array.isArray(value) && typeof value[0] === 'string';
-}
-function from(prefab, charToTile, opts = {}) {
-    let height = 0;
-    let width = 0;
-    let map;
-    if (isString(prefab)) {
-        prefab = prefab.split('\n');
-    }
-    if (isStringArray(prefab)) {
-        height = prefab.length;
-        width = prefab.reduce((len, line) => Math.max(len, line.length), 0);
-        map = make(width, height, opts);
-        prefab.forEach((line, y) => {
-            for (let x = 0; x < width; ++x) {
-                const ch = line[x] || '.';
-                const tile = charToTile[ch] || 'FLOOR';
-                map.setTile(x, y, tile);
-            }
-        });
-    }
-    else {
-        height = prefab.height;
-        width = prefab.width;
-        map = make(width, height, opts);
-        prefab.forEach((v, x, y) => {
-            const tile = charToTile[v] || 'FLOOR';
-            map.setTile(x, y, tile);
-        });
-    }
-    map.light.update();
-    return map;
-}
-
-function analyze(map, updateChokeCounts = true) {
-    updateLoopiness(map);
-    updateChokepoints(map, updateChokeCounts);
-}
-/////////////////////////////////////////////////////
-/////////////////////////////////////////////////////
-// TODO - Move to Map?
-function updateChokepoints(map, updateCounts) {
-    const passMap = alloc(map.width, map.height);
-    const grid$1 = alloc(map.width, map.height);
-    for (let i = 0; i < map.width; i++) {
-        for (let j = 0; j < map.height; j++) {
-            const cell = map.cell(i, j);
-            if ((cell.blocksPathing() || cell.blocksMove()) &&
-                !cell.hasObjectFlag(GameObject$1.L_SECRETLY_PASSABLE)) {
-                // cell.flags &= ~CellFlags.IS_IN_LOOP;
-                passMap[i][j] = 0;
-            }
-            else {
-                // cell.flags |= CellFlags.IS_IN_LOOP;
-                passMap[i][j] = 1;
-            }
-        }
-    }
-    let passableArcCount;
-    // done finding loops; now flag chokepoints
-    for (let i = 1; i < passMap.width - 1; i++) {
-        for (let j = 1; j < passMap.height - 1; j++) {
-            map.cell(i, j).flags.cell &= ~Cell$1.IS_CHOKEPOINT;
-            if (passMap[i][j] &&
-                !(map.cell(i, j).flags.cell & Cell$1.IS_IN_LOOP)) {
-                passableArcCount = 0;
-                for (let dir = 0; dir < 8; dir++) {
-                    const oldX = i + CLOCK_DIRS[(dir + 7) % 8][0];
-                    const oldY = j + CLOCK_DIRS[(dir + 7) % 8][1];
-                    const newX = i + CLOCK_DIRS[dir][0];
-                    const newY = j + CLOCK_DIRS[dir][1];
-                    if ((map.hasXY(newX, newY) && // RUT.Map.makeValidXy(map, newXy) &&
-                        passMap[newX][newY]) !=
-                        (map.hasXY(oldX, oldY) && // RUT.Map.makeValidXy(map, oldXy) &&
-                            passMap[oldX][oldY])) {
-                        if (++passableArcCount > 2) {
-                            if ((!passMap[i - 1][j] && !passMap[i + 1][j]) ||
-                                (!passMap[i][j - 1] && !passMap[i][j + 1])) {
-                                map.cell(i, j).flags.cell |=
-                                    Cell$1.IS_CHOKEPOINT;
-                            }
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-    }
-    if (updateCounts) {
-        // Done finding chokepoints; now create a chokepoint map.
-        // The chokepoint map is a number for each passable tile. If the tile is a chokepoint,
-        // then the number indicates the number of tiles that would be rendered unreachable if the
-        // chokepoint were blocked. If the tile is not a chokepoint, then the number indicates
-        // the number of tiles that would be rendered unreachable if the nearest exit chokepoint
-        // were blocked.
-        // The cost of all of this is one depth-first flood-fill per open point that is adjacent to a chokepoint.
-        // Start by setting the chokepoint values really high, and roping off room machines.
-        for (let i = 0; i < map.width; i++) {
-            for (let j = 0; j < map.height; j++) {
-                map.cell(i, j).chokeCount = 30000;
-                // Not sure why this was done in Brogue
-                // if (map.cell(i, j).flags.cell & CellFlags.IS_IN_ROOM_MACHINE) {
-                //     passMap[i][j] = 0;
-                // }
-            }
-        }
-        // Scan through and find a chokepoint next to an open point.
-        for (let i = 0; i < map.width; i++) {
-            for (let j = 0; j < map.height; j++) {
-                const cell = map.cell(i, j);
-                if (passMap[i][j] &&
-                    cell.flags.cell & Cell$1.IS_CHOKEPOINT) {
-                    for (let dir = 0; dir < 4; dir++) {
-                        const newX = i + DIRS$2[dir][0];
-                        const newY = j + DIRS$2[dir][1];
-                        if (map.hasXY(newX, newY) && // RUT.Map.makeValidXy(map, newXy) &&
-                            passMap[newX][newY] &&
-                            !(map.cell(newX, newY).flags.cell &
-                                Cell$1.IS_CHOKEPOINT)) {
-                            // OK, (newX, newY) is an open point and (i, j) is a chokepoint.
-                            // Pretend (i, j) is blocked by changing passMap, and run a flood-fill cell count starting on (newX, newY).
-                            // Keep track of the flooded region in grid[][].
-                            grid$1.fill(0);
-                            passMap[i][j] = 0;
-                            let cellCount = floodFillCount(map, grid$1, passMap, newX, newY);
-                            passMap[i][j] = 1;
-                            // CellCount is the size of the region that would be obstructed if the chokepoint were blocked.
-                            // CellCounts less than 4 are not useful, so we skip those cases.
-                            if (cellCount >= 4) {
-                                // Now, on the chokemap, all of those flooded cells should take the lesser of their current value or this resultant number.
-                                for (let i2 = 0; i2 < grid$1.width; i2++) {
-                                    for (let j2 = 0; j2 < grid$1.height; j2++) {
-                                        if (grid$1[i2][j2] &&
-                                            cellCount <
-                                                map.cell(i2, j2).chokeCount) {
-                                            map.cell(i2, j2).chokeCount = cellCount;
-                                            map.cell(i2, j2).flags.cell &= ~Cell$1.IS_GATE_SITE;
-                                        }
-                                    }
-                                }
-                                // The chokepoint itself should also take the lesser of its current value or the flood count.
-                                if (cellCount < cell.chokeCount) {
-                                    cell.chokeCount = cellCount;
-                                    cell.flags.cell |= Cell$1.IS_GATE_SITE;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-    free(passMap);
-    free(grid$1);
-}
-// Assumes it is called with respect to a passable (startX, startY), and that the same is not already included in results.
-// Returns 10000 if the area included an area machine.
-function floodFillCount(map, results, passMap, startX, startY) {
-    let count = passMap[startX][startY] == 2 ? 5000 : 1;
-    if (map.cell(startX, startY).flags.cell & Cell$1.IS_IN_AREA_MACHINE) {
-        count = 10000;
-    }
-    results[startX][startY] = 1;
-    for (let dir = 0; dir < 4; dir++) {
-        const newX = startX + DIRS$2[dir][0];
-        const newY = startY + DIRS$2[dir][1];
-        if (map.hasXY(newX, newY) && // RUT.Map.makeValidXy(map, newXy) &&
-            passMap[newX][newY] &&
-            !results[newX][newY]) {
-            count += floodFillCount(map, results, passMap, newX, newY);
-        }
-    }
-    return Math.min(count, 10000);
-}
-////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////
-// TODO = Move loopiness to Map
-function updateLoopiness(map) {
-    map.eachCell(resetLoopiness);
-    map.eachCell(checkLoopiness);
-    cleanLoopiness(map);
-}
-function resetLoopiness(cell, _x, _y, _map) {
-    if ((cell.blocksPathing() || cell.blocksMove()) &&
-        !cell.hasObjectFlag(GameObject$1.L_SECRETLY_PASSABLE)) {
-        cell.flags.cell &= ~Cell$1.IS_IN_LOOP;
-        // passMap[i][j] = false;
-    }
-    else {
-        cell.flags.cell |= Cell$1.IS_IN_LOOP;
-        // passMap[i][j] = true;
-    }
-}
-function checkLoopiness(cell, x, y, map) {
-    let inString;
-    let newX, newY, dir, sdir;
-    let numStrings, maxStringLength, currentStringLength;
-    if (!cell || !(cell.flags.cell & Cell$1.IS_IN_LOOP)) {
-        return false;
-    }
-    // find an unloopy neighbor to start on
-    for (sdir = 0; sdir < 8; sdir++) {
-        newX = x + CLOCK_DIRS[sdir][0];
-        newY = y + CLOCK_DIRS[sdir][1];
-        if (!map.hasXY(newX, newY))
-            continue;
-        const cell = map.get(newX, newY);
-        if (!cell || !(cell.flags.cell & Cell$1.IS_IN_LOOP)) {
-            break;
-        }
-    }
-    if (sdir == 8) {
-        // no unloopy neighbors
-        return false; // leave cell loopy
-    }
-    // starting on this unloopy neighbor,
-    // work clockwise and count up:
-    // (a) the number of strings of loopy neighbors, and
-    // (b) the length of the longest such string.
-    numStrings = maxStringLength = currentStringLength = 0;
-    inString = false;
-    for (dir = sdir; dir < sdir + 8; dir++) {
-        newX = x + CLOCK_DIRS[dir % 8][0];
-        newY = y + CLOCK_DIRS[dir % 8][1];
-        if (!map.hasXY(newX, newY))
-            continue;
-        const newCell = map.get(newX, newY);
-        if (newCell && newCell.flags.cell & Cell$1.IS_IN_LOOP) {
-            currentStringLength++;
-            if (!inString) {
-                if (numStrings > 0) {
-                    return false; // more than one string here; leave loopy
-                }
-                numStrings++;
-                inString = true;
-            }
-        }
-        else if (inString) {
-            if (currentStringLength > maxStringLength) {
-                maxStringLength = currentStringLength;
-            }
-            currentStringLength = 0;
-            inString = false;
-        }
-    }
-    if (inString && currentStringLength > maxStringLength) {
-        maxStringLength = currentStringLength;
-    }
-    if (numStrings == 1 && maxStringLength <= 4) {
-        cell.flags.cell &= ~Cell$1.IS_IN_LOOP;
-        for (dir = 0; dir < 8; dir++) {
-            const newX = x + CLOCK_DIRS[dir][0];
-            const newY = y + CLOCK_DIRS[dir][1];
-            if (map.hasXY(newX, newY)) {
-                const newCell = map.cell(newX, newY);
-                checkLoopiness(newCell, newX, newY, map);
-            }
-        }
-        return true;
-    }
-    else {
-        return false;
-    }
-}
-function fillInnerLoopGrid(map, grid) {
-    for (let x = 0; x < map.width; ++x) {
-        for (let y = 0; y < map.height; ++y) {
-            const cell = map.cell(x, y);
-            if (cell.flags.cell & Cell$1.IS_IN_LOOP) {
-                grid[x][y] = 1;
-            }
-            else if (x > 0 && y > 0) {
-                const up = map.cell(x, y - 1);
-                const left = map.cell(x - 1, y);
-                if (up.flags.cell & Cell$1.IS_IN_LOOP &&
-                    left.flags.cell & Cell$1.IS_IN_LOOP) {
-                    grid[x][y] = 1;
-                }
-            }
-        }
-    }
-}
-function cleanLoopiness(map) {
-    // remove extraneous loop markings
-    const grid$1 = alloc(map.width, map.height);
-    fillInnerLoopGrid(map, grid$1);
-    // const xy = { x: 0, y: 0 };
-    let designationSurvives;
-    for (let i = 0; i < grid$1.width; i++) {
-        for (let j = 0; j < grid$1.height; j++) {
-            const cell = map.cell(i, j);
-            if (cell.flags.cell & Cell$1.IS_IN_LOOP) {
-                designationSurvives = false;
-                for (let dir = 0; dir < 8; dir++) {
-                    let newX = i + CLOCK_DIRS[dir][0];
-                    let newY = j + CLOCK_DIRS[dir][1];
-                    if (map.hasXY(newX, newY) && // RUT.Map.makeValidXy(map, xy, newX, newY) &&
-                        !grid$1[newX][newY] &&
-                        !(map.cell(newX, newY).flags.cell &
-                            Cell$1.IS_IN_LOOP)) {
-                        designationSurvives = true;
-                        break;
-                    }
-                }
-                if (!designationSurvives) {
-                    grid$1[i][j] = 1;
-                    map.cell(i, j).flags.cell &= ~Cell$1.IS_IN_LOOP;
-                }
-            }
-        }
-    }
-    free(grid$1);
-}
-////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////
-
-class SpawnEffect {
-    make(src, dest) {
-        var _a, _b, _c, _d, _e, _f, _g;
-        if (!src.tile)
-            return true; // no error
-        let config = src.tile;
-        if (typeof config === 'string') {
-            const parts = config.split(/[,|]/).map((p) => p.trim());
-            config = {
-                tile: parts[0],
-                grow: Number.parseInt(parts[1] || '0'),
-                decrement: Number.parseInt(parts[2] || '0'),
-            };
-        }
-        const info = {
-            grow: (_b = (_a = config.grow) !== null && _a !== void 0 ? _a : config.spread) !== null && _b !== void 0 ? _b : 0,
-            decrement: (_c = config.decrement) !== null && _c !== void 0 ? _c : 0,
-            flags: from$5(Effect, config.flags),
-            volume: (_d = config.volume) !== null && _d !== void 0 ? _d : 0,
-            next: (_e = config.next) !== null && _e !== void 0 ? _e : null,
-        };
-        const id = (_f = config.tile) !== null && _f !== void 0 ? _f : config.id;
-        if (typeof id === 'string') {
-            info.tile = id;
-        }
-        else {
-            throw new Error('Invalid tile spawn config: ' + id);
-        }
-        if (!info.tile) {
-            throw new Error('Must have tile.');
-        }
-        const match = (_g = config.matchTile) !== null && _g !== void 0 ? _g : config.match;
-        if (typeof match === 'string') {
-            info.matchTile = match;
-        }
-        else if (match) {
-            throw new Error('Invalid tile spawn match tile: ' + config.matchTile);
-        }
-        dest.tile = info;
-        return true;
-    }
-    async fire(effect, map, x, y, ctx) {
-        let didSomething = false;
-        const spawned = this.fireSync(effect, map, x, y, ctx);
-        if (spawned) {
-            didSomething = true;
-            // await spawnMap.forEachAsync( (v, x, y) => {
-            //     if (!v) return;
-            //     await map.applyInstantEffects(x, y);
-            // });
-            // if (applyEffects) {
-            // if (PLAYER.xLoc == i && PLAYER.yLoc == j && !PLAYER.status.levitating && refresh) {
-            // 	flavorMessage(tileFlavor(PLAYER.xLoc, PLAYER.yLoc));
-            // }
-            // if (cell.actor || cell.item) {
-            // 	for(let t of cell.tiles()) {
-            // 		await t.applyInstantEffects(map, i, j, cell);
-            // 		if (Data.gameHasEnded) {
-            // 			return true;
-            // 		}
-            // 	}
-            // }
-            // if (tile.flags & TileFlags.T_IS_FIRE) {
-            // 	if (cell.flags & CellFlags.HAS_ITEM) {
-            // 		theItem = map.itemAt(i, j);
-            // 		if (theItem.flags & Flags.Item.ITEM_FLAMMABLE) {
-            // 			await burnItem(theItem);
-            // 		}
-            // 	}
-            // }
-            // }
-        }
-        // Grid.free(spawnMap);
-        return didSomething;
-    }
-    fireSync(effect, map, x, y, ctx) {
-        if (!effect.tile)
-            return false; // did nothing
-        const id = effect.tile.tile;
-        const tile = tiles[id] || null;
-        if (!tile) {
-            throw new Error('Failed to find tile for effect: ' + id);
-        }
-        const abortIfBlocking = !!(effect.flags & Effect.E_ABORT_IF_BLOCKS_MAP);
-        const isBlocking = !!(abortIfBlocking &&
-            !(effect.flags & Effect.E_PERMIT_BLOCKING) &&
-            (tile.blocksPathing() ||
-                effect.flags & Effect.E_TREAT_AS_BLOCKING));
-        let didSomething = false;
-        didSomething = computeSpawnMap(effect, map, x, y, ctx);
-        if (!didSomething) {
-            return false;
-        }
-        if (abortIfBlocking &&
-            isBlocking &&
-            this.mapDisruptedBy(map, effect.grid)) {
-            // Grid.free(spawnMap);
-            return false;
-        }
-        if (effect.flags & Effect.E_EVACUATE_CREATURES) {
-            // first, evacuate creatures, so that they do not re-trigger the tile.
-            if (evacuateCreatures(map, ctx.grid)) {
-                didSomething = true;
-            }
-        }
-        if (effect.flags & Effect.E_EVACUATE_ITEMS) {
-            // first, evacuate items, so that they do not re-trigger the tile.
-            if (evacuateItems(map, ctx.grid)) {
-                didSomething = true;
-            }
-        }
-        if (effect.flags & Effect.E_CLEAR_CELL) {
-            // first, clear other tiles (not base/ground)
-            if (clearCells(map, ctx.grid, effect.flags)) {
-                didSomething = true;
-            }
-        }
-        const spawned = spawnTiles(effect.flags, ctx.grid, map, tile, effect.tile.volume);
-        return spawned;
-    }
-    mapDisruptedBy(map, blockingGrid, blockingToMapX = 0, blockingToMapY = 0) {
-        const walkableGrid = alloc(map.width, map.height);
-        let disrupts = false;
-        // Get all walkable locations after lake added
-        forRect(map.width, map.height, (i, j) => {
-            const lakeX = i + blockingToMapX;
-            const lakeY = j + blockingToMapY;
-            if (blockingGrid.get(lakeX, lakeY)) {
-                if (map.cellInfo(i, j).isStairs()) {
-                    disrupts = true;
-                }
-            }
-            else if (!map.cellInfo(i, j).blocksMove()) {
-                walkableGrid[i][j] = 1;
-            }
-        });
-        let first = true;
-        for (let i = 0; i < walkableGrid.width && !disrupts; ++i) {
-            for (let j = 0; j < walkableGrid.height && !disrupts; ++j) {
-                if (walkableGrid[i][j] == 1) {
-                    if (first) {
-                        walkableGrid.floodFill(i, j, 1, 2);
-                        first = false;
-                    }
-                    else {
-                        disrupts = true;
-                    }
-                }
-            }
-        }
-        // console.log('WALKABLE GRID');
-        // walkableGrid.dump();
-        free(walkableGrid);
-        return disrupts;
-    }
-}
-installHandler('tile', new SpawnEffect());
-// tick
-// Spawn
-function spawnTiles(flags, spawnMap, map, tile, volume = 0) {
-    let i, j;
-    let accomplishedSomething;
-    accomplishedSomething = false;
-    const blockedByOtherLayers = !!(flags & Effect.E_BLOCKED_BY_OTHER_LAYERS);
-    const superpriority = !!(flags & Effect.E_SUPERPRIORITY);
-    const blockedByActors = !!(flags & Effect.E_BLOCKED_BY_ACTORS);
-    const blockedByItems = !!(flags & Effect.E_BLOCKED_BY_ITEMS);
-    // const applyEffects = ctx.refreshCell;
-    volume = volume || 0; // (tile ? tile.volume : 0);
-    for (i = 0; i < spawnMap.width; i++) {
-        for (j = 0; j < spawnMap.height; j++) {
-            if (!spawnMap[i][j])
-                continue; // If it's not flagged for building in the spawn map,
-            // const isRoot = spawnMap[i][j] === 1;
-            spawnMap[i][j] = 0; // so that the spawnmap reflects what actually got built
-            const cell = map.cell(i, j);
-            if (cell.hasTile(tile)) ;
-            else if (map.setTile(i, j, tile, {
-                volume,
-                superpriority,
-                blockedByOtherLayers,
-                blockedByActors,
-                blockedByItems,
-            })) {
-                // if the fill won't violate the priority of the most important terrain in this cell:
-                spawnMap[i][j] = 1; // so that the spawnmap reflects what actually got built
-                // map.redrawCell(cell);
-                // if (volume && cell.gas) {
-                //     cell.volume += (feat.volume || 0);
-                // }
-                cell.flags.cell |= Cell$1.EVENT_FIRED_THIS_TURN;
-                if (flags & Effect.E_PROTECTED) {
-                    cell.flags.cell |= Cell$1.EVENT_PROTECTED;
-                }
-                accomplishedSomething = true;
-                // debug('- tile', i, j, 'tile=', tile.id);
-            }
-        }
-    }
-    if (accomplishedSomething) {
-        map.setMapFlag(Map$1.MAP_CHANGED);
-    }
-    return accomplishedSomething;
-}
-// Spread
-function cellIsOk(effect, map, x, y, isStart) {
-    if (!map.hasXY(x, y))
-        return false;
-    const cell = map.cell(x, y);
-    if (cell.hasCellFlag(Cell$1.EVENT_PROTECTED))
-        return false;
-    if (cell.blocksEffects() && !effect.tile.matchTile && !isStart) {
-        return false;
-    }
-    if (effect.flags & Effect.E_BUILD_IN_WALLS) {
-        if (!map.cellInfo(x, y).isWall())
-            return false;
-    }
-    else if (effect.flags & Effect.E_MUST_TOUCH_WALLS) {
-        let ok = false;
-        eachNeighbor(x, y, (i, j) => {
-            if (map.cellInfo(i, j).isWall()) {
-                ok = true;
-            }
-        }, true);
-        if (!ok)
-            return false;
-    }
-    else if (effect.flags & Effect.E_NO_TOUCH_WALLS) {
-        let ok = true;
-        if (map.cellInfo(x, y).isWall())
-            return false; // or on wall
-        eachNeighbor(x, y, (i, j) => {
-            if (map.cellInfo(i, j).isWall()) {
-                ok = false;
-            }
-        }, true);
-        if (!ok)
-            return false;
-    }
-    // if (ctx.bounds && !ctx.bounds.containsXY(x, y)) return false;
-    if (effect.tile.matchTile &&
-        !isStart &&
-        !cell.hasTile(effect.tile.matchTile)) {
-        return false;
-    }
-    return true;
-}
-function computeSpawnMap(effect, map, x, y, ctx) {
-    let i, j, dir, t, x2, y2;
-    let madeChange;
-    // const bounds = ctx.bounds || null;
-    // if (bounds) {
-    //   // Activation.debug('- bounds', bounds);
-    // }
-    const config = effect.tile;
-    let startProb = config.grow || 0;
-    let probDec = config.decrement || 0;
-    const spawnMap = ctx.grid;
-    spawnMap.fill(0);
-    if (!cellIsOk(effect, map, x, y, true)) {
-        return false;
-    }
-    spawnMap[x][y] = t = 1; // incremented before anything else happens
-    let count = 1;
-    if (startProb) {
-        madeChange = true;
-        if (startProb >= 100) {
-            probDec = probDec || 100;
-        }
-        if (probDec <= 0) {
-            probDec = startProb;
-        }
-        while (madeChange && startProb > 0) {
-            madeChange = false;
-            t++;
-            for (i = 0; i < map.width; i++) {
-                for (j = 0; j < map.height; j++) {
-                    if (spawnMap[i][j] == t - 1) {
-                        for (dir = 0; dir < 4; dir++) {
-                            x2 = i + DIRS$2[dir][0];
-                            y2 = j + DIRS$2[dir][1];
-                            if (spawnMap.hasXY(x2, y2) &&
-                                !spawnMap[x2][y2] &&
-                                random.chance(startProb) &&
-                                cellIsOk(effect, map, x2, y2, false)) {
-                                spawnMap[x2][y2] = t;
-                                madeChange = true;
-                                ++count;
-                            }
-                        }
-                    }
-                }
-            }
-            startProb -= probDec;
-        }
-    }
-    return count > 0;
-}
-// export function spreadCircle(
-//     this: any,
-//     ctx: Effect.EffectCtx,
-//     spawnMap: Grid.NumGrid
-// ) {
-//     const x = ctx.x;
-//     const y = ctx.y;
-//     let startProb = this.spread || 0;
-//     let probDec = this.decrement || 0;
-//     spawnMap.fill(0);
-//     spawnMap[x][y] = 1; // incremented before anything else happens
-//     let radius = 0;
-//     startProb = startProb || 100;
-//     if (startProb >= 100) {
-//         probDec = probDec || 100;
-//     }
-//     while (GW.random.chance(startProb)) {
-//         startProb -= probDec;
-//         ++radius;
-//     }
-//     // startProb = 100;
-//     // probDec = 0;
-//     spawnMap.updateCircle(x, y, radius, (_v, i, j) => {
-//         if (!cellIsOk(this, i, j, ctx)) return 0;
-//         // const dist = Math.floor(Utils.distanceBetween(x, y, i, j));
-//         // const prob = startProb - dist * probDec;
-//         // if (!random.chance(prob)) return 0;
-//         return 1;
-//     });
-//     // spawnMap[x][y] = 1;
-//     // if (!isOk(flags, x, y, ctx)) {
-//     //     spawnMap[x][y] = 0;
-//     // }
-//     return true;
-// }
-// export function spreadLine(
-//     this: any,
-//     ctx: Effect.EffectCtx,
-//     spawnMap: Grid.NumGrid
-// ) {
-//     let x2, y2;
-//     let madeChange;
-//     const x = ctx.x;
-//     const y = ctx.y;
-//     let startProb = this.spread || 0;
-//     let probDec = this.decrement || 0;
-//     spawnMap.fill(0);
-//     spawnMap[x][y] = 1; // incremented before anything else happens
-//     if (startProb) {
-//         madeChange = true;
-//         if (startProb >= 100) {
-//             probDec = probDec || 100;
-//         }
-//         x2 = x;
-//         y2 = y;
-//         const dir = Utils.DIRS[GW.random.number(4)];
-//         while (madeChange) {
-//             madeChange = false;
-//             x2 = x2 + dir[0];
-//             y2 = y2 + dir[1];
-//             if (
-//                 spawnMap.hasXY(x2, y2) &&
-//                 !spawnMap[x2][y2] &&
-//                 cellIsOk(this, x2, y2, ctx) &&
-//                 GW.random.chance(startProb)
-//             ) {
-//                 spawnMap[x2][y2] = 1;
-//                 madeChange = true;
-//                 startProb -= probDec;
-//             }
-//         }
-//     }
-//     if (!cellIsOk(this, x, y, ctx)) {
-//         spawnMap[x][y] = 0;
-//     }
-//     return true;
-// }
-function clearCells(map, spawnMap, flags = 0) {
-    let didSomething = false;
-    const clearAll = (flags & Effect.E_CLEAR_CELL) === Effect.E_CLEAR_CELL;
-    spawnMap.forEach((v, i, j) => {
-        if (!v)
-            return;
-        const cell = map.cell(i, j);
-        if (clearAll) {
-            cell.clear();
-        }
-        else {
-            if (flags & Effect.E_CLEAR_GAS) {
-                cell.clearDepth(Depth$1.GAS);
-            }
-            if (flags & Effect.E_CLEAR_LIQUID) {
-                cell.clearDepth(Depth$1.LIQUID);
-            }
-            if (flags & Effect.E_CLEAR_SURFACE) {
-                cell.clearDepth(Depth$1.SURFACE);
-            }
-            if (flags & Effect.E_CLEAR_GROUND) {
-                cell.clearDepth(Depth$1.GROUND);
-            }
-        }
-        didSomething = true;
-    });
-    return didSomething;
-}
-function evacuateCreatures(map, blockingMap) {
-    let i = 0, j = 0;
-    let didSomething = false;
-    for (i = 0; i < map.width; i++) {
-        for (j = 0; j < map.height; j++) {
-            if (!blockingMap[i][j])
-                continue;
-            const cell = map.cell(i, j);
-            if (!cell.hasActor())
-                continue;
-            eachChain(cell.actor, (obj) => {
-                if (!(obj instanceof Actor))
-                    return;
-                const monst = obj;
-                const loc = random.matchingLocNear(i, j, (x, y) => {
-                    if (!map.hasXY(x, y))
-                        return false;
-                    if (blockingMap[x][y])
-                        return false;
-                    const c = map.cell(x, y);
-                    return !monst.forbidsCell(c);
-                });
-                if (loc && loc[0] >= 0 && loc[1] >= 0) {
-                    map.moveActor(monst, loc[0], loc[1]);
-                    // map.redrawXY(loc[0], loc[1]);
-                    didSomething = true;
-                }
-            });
-        }
-    }
-    return didSomething;
-}
-function evacuateItems(map, blockingMap) {
-    let didSomething = false;
-    blockingMap.forEach((v, i, j) => {
-        if (!v)
-            return;
-        const cell = map.cell(i, j);
-        if (!cell.hasItem())
-            return;
-        eachChain(cell.item, (obj) => {
-            if (!(obj instanceof Item))
-                return;
-            const item = obj;
-            const loc = random.matchingLocNear(i, j, (x, y) => {
-                if (!map.hasXY(x, y))
-                    return false;
-                if (blockingMap[x][y])
-                    return false;
-                const dest = map.cell(x, y);
-                return !item.forbidsCell(dest);
-            });
-            if (loc && loc[0] >= 0 && loc[1] >= 0) {
-                map.moveItem(item, loc[0], loc[1]);
-                // map.redrawXY(loc[0], loc[1]);
-                didSomething = true;
-            }
-        });
-    });
-    return didSomething;
-}
-class ClearTileEffect {
-    make(src, dest) {
-        if (!src.clear)
-            return true;
-        let config = src.clear;
-        let layers = 0;
-        if (typeof config === 'string') {
-            config = config.split(/[,|]/).map((t) => t.trim());
-        }
-        if (config === true) {
-            layers = Depth$1.ALL_LAYERS;
-        }
-        else if (typeof config === 'number') {
-            layers = config;
-        }
-        else if (Array.isArray(config)) {
-            layers = config.reduce((out, v) => {
-                if (typeof v === 'number')
-                    return out | v;
-                const depth = Depth$1[v] ||
-                    0;
-                return out | depth;
-            }, 0);
-        }
-        else {
-            throw new Error('clear effect must have number or string config.');
-        }
-        dest.clear = layers;
-        return layers > 0;
-    }
-    fire(config, map, x, y, ctx) {
-        return this.fireSync(config, map, x, y, ctx);
-    }
-    fireSync(config, map, x, y, _ctx) {
-        if (!config.clear)
-            return false;
-        if (!map)
-            return false;
-        const cell = map.cell(x, y);
-        return cell.clearDepth(config.clear);
-    }
-}
-installHandler('clear', new ClearTileEffect());
-
-const flags = { Cell: Cell$1, Map: Map$1, GameObject: GameObject$1, Depth: Depth$1, Tile: Tile$1 };
-
-var index = {
-    __proto__: null,
-    flags: flags,
-    Cell: Cell,
-    Map: Map,
-    make: make,
-    from: from,
-    analyze: analyze,
-    updateChokepoints: updateChokepoints,
-    floodFillCount: floodFillCount,
-    updateLoopiness: updateLoopiness,
-    resetLoopiness: resetLoopiness,
-    checkLoopiness: checkLoopiness,
-    fillInnerLoopGrid: fillInnerLoopGrid,
-    cleanLoopiness: cleanLoopiness,
-    SpawnEffect: SpawnEffect,
-    spawnTiles: spawnTiles,
-    computeSpawnMap: computeSpawnMap,
-    clearCells: clearCells,
-    evacuateCreatures: evacuateCreatures,
-    evacuateItems: evacuateItems,
-    CellMemory: CellMemory,
-    MapLayer: MapLayer,
-    ActorLayer: ActorLayer,
-    ItemLayer: ItemLayer,
-    TileLayer: TileLayer,
-    GasLayer: GasLayer,
-    FireLayer: FireLayer
-};
-
-export { index$2 as actor, blob, index$8 as canvas, index$a as color, colors, config$1 as config, cosmetic, data, index$6 as effect, events, flag, index$b as fov, frequency, index$4 as gameObject, grid, io, index$3 as item, index$5 as light, loop, index as map, message, path, random, range, scheduler, index$7 as sprite, sprites, index$9 as text, index$1 as tile, types, index$c as utils };
+export { blob, index$2 as canvas, index$4 as color, colors, config$1 as config, cosmetic, data, events, flag, index$5 as fov, frequency, grid, io, index as light, loop, message, path, random, range, scheduler, index$1 as sprite, sprites, index$3 as text, types, index$6 as utils };

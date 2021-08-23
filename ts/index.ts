@@ -14,20 +14,10 @@ export * as color from './color';
 export * as text from './text';
 export * as types from './types';
 export * as message from './message';
-export * as effect from './effect';
 export { cosmetic, random } from './random';
 export { colors } from './color';
 export { sprites } from './sprite';
 export * from './gw';
 export { loop } from './io';
 export * as blob from './blob';
-
 export * as light from './light';
-
-export * as gameObject from './gameObject';
-
-export * as item from './item';
-export * as actor from './actor';
-
-export * as tile from './tile';
-export * as map from './map';

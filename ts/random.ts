@@ -20,9 +20,11 @@ export function Alea(seed?: number): RandomFunction {
      * Alea is licensed according to the http://en.wikipedia.org/wiki/MIT_License.
      */
 
+    seed = Math.abs(seed || Date.now());
+    seed = seed < 1 ? 1 / seed : seed;
+
     const FRAC = 2.3283064365386963e-10; /* 2^-32 */
 
-    // let _seed = 0;
     let _s0 = 0;
     let _s1 = 0;
     let _s2 = 0;
@@ -31,25 +33,18 @@ export function Alea(seed?: number): RandomFunction {
     /**
      * Seed the number generator
      */
-    if (seed) {
-        seed = seed < 1 ? 1 / seed : seed;
 
-        // _seed = seed;
-        _s0 = (seed >>> 0) * FRAC;
-
-        seed = (seed * 69069 + 1) >>> 0;
-        _s1 = seed * FRAC;
-
-        seed = (seed * 69069 + 1) >>> 0;
-        _s2 = seed * FRAC;
-
-        _c = 1;
-    }
+    _s0 = (seed >>> 0) * FRAC;
+    seed = (seed * 69069 + 1) >>> 0;
+    _s1 = seed * FRAC;
+    seed = (seed * 69069 + 1) >>> 0;
+    _s2 = seed * FRAC;
+    _c = 1;
 
     /**
      * @returns Pseudorandom value [0,1), uniformly distributed
      */
-    return () => {
+    return function alea() {
         let t = 2091639 * _s0 + _c * FRAC;
         _s0 = _s1;
         _s1 = _s2;
