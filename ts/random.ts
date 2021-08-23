@@ -1,23 +1,30 @@
 import * as Utils from './utils';
 import * as ROT from 'rot-js';
 
-// export type RandomFunction = () => number;
-// export type SeedFunction = (seed?: number) => RandomFunction;
+export type RandomFunction = () => number;
+export type SeedFunction = (seed?: number) => RandomFunction;
 
-// export interface RandomConfig {
-//     make: SeedFunction;
-// }
+export interface RandomConfig {
+    make: SeedFunction;
+}
 
-// const RANDOM_CONFIG: RandomConfig = {
-//     make: (seed?: number) => {
-//         let rng = ROT.RNG;
-//         if (seed) {
-//             rng = ROT.RNG.clone();
-//             rng.setSeed(seed);
-//         }
-//         return rng.getUniform.bind(ROT.RNG);
-//     },
-// };
+const RANDOM_CONFIG: RandomConfig = {
+    make: (seed?: number) => {
+        let rng = ROT.RNG.clone();
+        if (seed) {
+            rng.setSeed(seed);
+        }
+        return rng.getUniform.bind(rng);
+    },
+};
+
+export function configure(config: Partial<RandomConfig> = {}) {
+    if (config.make) {
+        RANDOM_CONFIG.make = config.make;
+        random.seed();
+        cosmetic.seed();
+    }
+}
 
 export type WeightedArray = number[];
 
@@ -60,7 +67,7 @@ function lotteryDrawObject(rand: Random, weights: WeightedObject) {
 }
 
 export class Random {
-    private _fn: typeof ROT.RNG;
+    private _fn: RandomFunction;
 
     // static configure(opts: Partial<RandomConfig>) {
     //     if (opts.make) {
@@ -77,25 +84,24 @@ export class Random {
     // }
 
     constructor() {
-        this._fn = ROT.RNG.clone();
+        this._fn = RANDOM_CONFIG.make();
     }
 
-    seed(val: number) {
-        this._fn.setSeed(val);
+    seed(val?: number) {
+        val = val || Date.now();
+        this._fn = RANDOM_CONFIG.make(val);
     }
 
     value() {
-        return this._fn.getUniform();
+        return this._fn();
     }
 
     float() {
         return this.value();
     }
 
-    number(max?: number) {
-        // @ts-ignore
+    number(max = Number.MAX_SAFE_INTEGER) {
         if (max <= 0) return 0;
-        max = max || Number.MAX_SAFE_INTEGER;
         return Math.floor(this.value() * max);
     }
 
