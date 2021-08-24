@@ -340,6 +340,11 @@ export class Loop {
             this.pushEvent(e);
         }, 16) as unknown) as number;
 
+        if (keymap.start && typeof keymap.start === 'function') {
+            // @ts-ignore
+            await keymap.start();
+        }
+
         this.running = true;
         while (this.running) {
             const ev = await this.nextEvent(ms);
@@ -350,6 +355,11 @@ export class Loop {
                 // @ts-ignore
                 keymap.draw();
             }
+        }
+
+        if (keymap.stop && typeof keymap.stop === 'function') {
+            // @ts-ignore
+            await keymap.stop();
         }
 
         clearInterval(interval);

@@ -652,6 +652,7 @@ declare class NumGrid extends Grid<number> {
     randomLeastPositiveLoc(): Loc;
     valueBounds(value: number, bounds?: Bounds): Bounds;
     floodFill(x: number, y: number, matchValue: number | GridMatch<number>, fillValue: number | GridUpdate<number>): number;
+    _floodFill(x: number, y: number, matchFn: GridMatch<number>, fillFn: GridUpdate<number>, done: NumGrid): number;
 }
 declare const alloc: typeof NumGrid.alloc;
 declare const free: typeof NumGrid.free;

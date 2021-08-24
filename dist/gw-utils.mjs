@@ -1804,24 +1804,39 @@ class NumGrid extends Grid {
     }
     // Marks a cell as being a member of blobNumber, then recursively iterates through the rest of the blob
     floodFill(x, y, matchValue, fillValue) {
-        let dir;
-        let newX, newY, numberOfCells = 1;
         const matchFn = typeof matchValue == 'function'
             ? matchValue
             : (v) => v == matchValue;
         const fillFn = typeof fillValue == 'function' ? fillValue : () => fillValue;
+        let done = NumGrid.alloc(this.width, this.height);
         this[x][y] = fillFn(this[x][y], x, y, this);
+        done[x][y] = 1;
+        let newX, newY, numberOfCells = 1;
         // Iterate through the four cardinal neighbors.
-        for (dir = 0; dir < 4; dir++) {
+        for (let dir = 0; dir < 4; dir++) {
             newX = x + DIRS$1[dir][0];
             newY = y + DIRS$1[dir][1];
-            if (!this.hasXY(newX, newY)) {
-                continue;
-            }
-            if (matchFn(this[newX][newY], newX, newY, this)) {
-                // If the neighbor is an unmarked region cell,
-                numberOfCells += this.floodFill(newX, newY, matchFn, fillFn); // then recurse.
-            }
+            // If the neighbor is an unmarked region cell,
+            numberOfCells += this._floodFill(newX, newY, matchFn, fillFn, done); // then recurse.
+        }
+        NumGrid.free(done);
+        return numberOfCells;
+    }
+    // Tests cell, then marks and recursively iterates through the neighbors
+    _floodFill(x, y, matchFn, fillFn, done) {
+        if (!this.hasXY(x, y) || done[x][y])
+            return 0;
+        if (!matchFn(this[x][y], x, y, this))
+            return 0;
+        this[x][y] = fillFn(this[x][y], x, y, this);
+        done[x][y] = 1;
+        let newX, newY, numberOfCells = 1;
+        // Iterate through the four cardinal neighbors.
+        for (let dir = 0; dir < 4; dir++) {
+            newX = x + DIRS$1[dir][0];
+            newY = y + DIRS$1[dir][1];
+            // If the neighbor is an unmarked region cell,
+            numberOfCells += this._floodFill(newX, newY, matchFn, fillFn, done); // then recurse.
         }
         return numberOfCells;
     }
@@ -2153,6 +2168,10 @@ class Loop {
             const e = makeTickEvent(16);
             this.pushEvent(e);
         }, 16);
+        if (keymap.start && typeof keymap.start === 'function') {
+            // @ts-ignore
+            await keymap.start();
+        }
         this.running = true;
         while (this.running) {
             const ev = await this.nextEvent(ms);
@@ -2163,6 +2182,10 @@ class Loop {
                 // @ts-ignore
                 keymap.draw();
             }
+        }
+        if (keymap.stop && typeof keymap.stop === 'function') {
+            // @ts-ignore
+            await keymap.stop();
         }
         clearInterval(interval);
     }
