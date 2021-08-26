@@ -176,7 +176,9 @@ declare class Random {
     range(lo: number, hi: number): number;
     dice(count: number, sides: number, addend?: number): number;
     weighted(weights: WeightedArray | WeightedObject): string | number;
-    item(list: any[]): any;
+    item(list: any[] | {
+        [k: string]: any;
+    }): any;
     key(obj: object): any;
     shuffle(list: any[], fromIndex?: number, toIndex?: number): any[];
     sequence(n: number): any[];
