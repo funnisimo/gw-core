@@ -4,7 +4,7 @@ import '../../test/matchers';
 import * as Light from '.';
 import * as Color from '../color';
 import * as Grid from '../grid';
-import * as Utils from '../utils';
+import * as XY from '../xy';
 import { data as DATA } from '../gw';
 
 interface TestLightSystem extends Light.LightSystemSite {
@@ -22,7 +22,7 @@ describe('light', () => {
 
     function makeSite(w: number, h: number): TestLightSystem {
         const grid = Grid.alloc(w, h);
-        Utils.forBorder(0, 0, w, h, (x, y) => (grid[x][y] = 1));
+        XY.forBorder(0, 0, w, h, (x, y) => (grid[x][y] = 1));
 
         const flags = Grid.alloc(w, h);
 
@@ -90,7 +90,7 @@ describe('light', () => {
 
     describe('updateLighting', () => {
         test('defaults to having white light', () => {
-            Utils.forRect(site.width, site.height, (x, y) => {
+            XY.forRect(site.width, site.height, (x, y) => {
                 expect(system.getLight(x, y)).toEqual([100, 100, 100]);
             });
         });
@@ -102,7 +102,7 @@ describe('light', () => {
             expect(system.glowLightChanged).toBeFalsy();
             expect(system.dynamicLightChanged).toBeFalsy();
 
-            Utils.forRect(site.width, site.height, (x, y) => {
+            XY.forRect(site.width, site.height, (x, y) => {
                 expect(system.getLight(x, y)).toEqual([100, 100, 100]);
                 expect(system.isInShadow(x, y)).toBeFalsy();
                 expect(system.isLit(x, y)).toBeTruthy();
@@ -120,14 +120,14 @@ describe('light', () => {
             // stable glow lights will keep ambient light change from taking hold
             system.update();
 
-            Utils.forRect(site.width, site.height, (x, y) => {
+            XY.forRect(site.width, site.height, (x, y) => {
                 expect(system.getLight(x, y)).toEqual([100, 100, 100]);
             });
 
             system.glowLightChanged = true;
             system.update();
 
-            Utils.forRect(site.width, site.height, (x, y) => {
+            XY.forRect(site.width, site.height, (x, y) => {
                 expect(system.getLight(x, y)).toEqual([0, 0, 100]);
             });
         });

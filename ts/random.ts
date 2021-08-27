@@ -1,4 +1,4 @@
-import * as Utils from './utils';
+import * as XY from './xy';
 import {
     RandomFunction,
     WeightedArray,
@@ -252,13 +252,13 @@ export class Random {
     matchingLoc(
         width: number,
         height: number,
-        matchFn: Utils.XYMatchFunc
-    ): Utils.Loc {
+        matchFn: XY.XYMatchFunc
+    ): XY.Loc {
         let locationCount = 0;
         let i, j, index;
 
         locationCount = 0;
-        Utils.forRect(width, height, (i, j) => {
+        XY.forRect(width, height, (i, j) => {
             if (matchFn(i, j)) {
                 locationCount++;
             }
@@ -283,12 +283,8 @@ export class Random {
         return [-1, -1];
     }
 
-    matchingLocNear(
-        x: number,
-        y: number,
-        matchFn: Utils.XYMatchFunc
-    ): Utils.Loc {
-        let loc: Utils.Loc = [-1, -1];
+    matchingLocNear(x: number, y: number, matchFn: XY.XYMatchFunc): XY.Loc {
+        let loc: XY.Loc = [-1, -1];
         let i, j, k, candidateLocs, randIndex;
 
         candidateLocs = 0;

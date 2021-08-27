@@ -67,6 +67,7 @@ declare function separate(a: Color, b: Color): void;
 declare function swap(a: Color, b: Color): void;
 declare function relativeLuminance(a: Color, b: Color): number;
 declare function distance(a: Color, b: Color): number;
+declare function smoothScalar(rgb: number, maxRgb?: number): number;
 declare function install$3(name: string, info: ColorBase): Color;
 declare function install$3(name: string, ...rgb: ColorData): Color;
 declare function installSpread(name: string, info: ColorBase): Color;
@@ -87,6 +88,7 @@ declare const index_d$6_separate: typeof separate;
 declare const index_d$6_swap: typeof swap;
 declare const index_d$6_relativeLuminance: typeof relativeLuminance;
 declare const index_d$6_distance: typeof distance;
+declare const index_d$6_smoothScalar: typeof smoothScalar;
 declare const index_d$6_installSpread: typeof installSpread;
 declare const index_d$6_NONE: typeof NONE;
 declare namespace index_d$6 {
@@ -106,6 +108,7 @@ declare namespace index_d$6 {
     index_d$6_swap as swap,
     index_d$6_relativeLuminance as relativeLuminance,
     index_d$6_distance as distance,
+    index_d$6_smoothScalar as smoothScalar,
     install$3 as install,
     index_d$6_installSpread as installSpread,
     index_d$6_NONE as NONE,
@@ -155,6 +158,150 @@ declare namespace types_d {
   };
 }
 
+declare const DIRS: Loc$1[];
+declare const NO_DIRECTION = -1;
+declare const UP = 0;
+declare const RIGHT = 1;
+declare const DOWN = 2;
+declare const LEFT = 3;
+declare const RIGHT_UP = 4;
+declare const RIGHT_DOWN = 5;
+declare const LEFT_DOWN = 6;
+declare const LEFT_UP = 7;
+declare const CLOCK_DIRS: Loc$1[];
+declare function x(src: XY | Loc$1): any;
+declare function y(src: XY | Loc$1): any;
+declare class Bounds {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    constructor(x: number, y: number, w: number, h: number);
+    get left(): number;
+    get right(): number;
+    get top(): number;
+    get bottom(): number;
+    contains(x: number, y: number): boolean;
+    contains(loc: Loc$1 | XY): boolean;
+}
+declare function copyXY(dest: XY, src: XY | Loc$1): void;
+declare function addXY(dest: XY, src: XY | Loc$1): void;
+declare function equalsXY(dest: XY | Loc$1 | null | undefined, src: XY | Loc$1 | null | undefined): boolean;
+declare function lerpXY(a: XY | Loc$1, b: XY | Loc$1, pct: number): any[];
+declare type XYFunc = (x: number, y: number) => any;
+declare function eachNeighbor(x: number, y: number, fn: XYFunc, only4dirs?: boolean): void;
+declare function eachNeighborAsync(x: number, y: number, fn: XYFunc, only4dirs?: boolean): Promise<void>;
+declare type XYMatchFunc = (x: number, y: number) => boolean;
+declare function matchingNeighbor(x: number, y: number, matchFn: XYMatchFunc, only4dirs?: boolean): Loc$1;
+declare function distanceBetween(x1: number, y1: number, x2: number, y2: number): number;
+declare function distanceFromTo(a: XY | Loc$1, b: XY | Loc$1): number;
+declare function calcRadius(x: number, y: number): number;
+declare function dirBetween(x: number, y: number, toX: number, toY: number): number[];
+declare function dirFromTo(a: XY | Loc$1, b: XY | Loc$1): number[];
+declare function dirIndex(dir: XY | Loc$1): number;
+declare function isOppositeDir(a: Loc$1, b: Loc$1): boolean;
+declare function isSameDir(a: Loc$1, b: Loc$1): boolean;
+declare function dirSpread(dir: Loc$1): Loc$1[];
+declare function stepFromTo(a: XY | Loc$1, b: XY | Loc$1, fn: (x: number, y: number) => any): void;
+declare function forLine(fromX: number, fromY: number, toX: number, toY: number, stepFn: (x: number, y: number) => boolean): void;
+declare function getLine(fromX: number, fromY: number, toX: number, toY: number): Loc$1[];
+declare function getLineThru(fromX: number, fromY: number, toX: number, toY: number, width: number, height: number): Loc$1[];
+declare function forCircle(x: number, y: number, radius: number, fn: XYFunc): void;
+declare function forRect(width: number, height: number, fn: XYFunc): void;
+declare function forRect(x: number, y: number, width: number, height: number, fn: XYFunc): void;
+declare function forBorder(width: number, height: number, fn: XYFunc): void;
+declare function forBorder(x: number, y: number, width: number, height: number, fn: XYFunc): void;
+declare function arcCount(x: number, y: number, testFn: XYMatchFunc): number;
+
+type xy_d_XY = XY;
+declare const xy_d_DIRS: typeof DIRS;
+declare const xy_d_NO_DIRECTION: typeof NO_DIRECTION;
+declare const xy_d_UP: typeof UP;
+declare const xy_d_RIGHT: typeof RIGHT;
+declare const xy_d_DOWN: typeof DOWN;
+declare const xy_d_LEFT: typeof LEFT;
+declare const xy_d_RIGHT_UP: typeof RIGHT_UP;
+declare const xy_d_RIGHT_DOWN: typeof RIGHT_DOWN;
+declare const xy_d_LEFT_DOWN: typeof LEFT_DOWN;
+declare const xy_d_LEFT_UP: typeof LEFT_UP;
+declare const xy_d_CLOCK_DIRS: typeof CLOCK_DIRS;
+declare const xy_d_x: typeof x;
+declare const xy_d_y: typeof y;
+type xy_d_Bounds = Bounds;
+declare const xy_d_Bounds: typeof Bounds;
+declare const xy_d_copyXY: typeof copyXY;
+declare const xy_d_addXY: typeof addXY;
+declare const xy_d_equalsXY: typeof equalsXY;
+declare const xy_d_lerpXY: typeof lerpXY;
+type xy_d_XYFunc = XYFunc;
+declare const xy_d_eachNeighbor: typeof eachNeighbor;
+declare const xy_d_eachNeighborAsync: typeof eachNeighborAsync;
+type xy_d_XYMatchFunc = XYMatchFunc;
+declare const xy_d_matchingNeighbor: typeof matchingNeighbor;
+declare const xy_d_distanceBetween: typeof distanceBetween;
+declare const xy_d_distanceFromTo: typeof distanceFromTo;
+declare const xy_d_calcRadius: typeof calcRadius;
+declare const xy_d_dirBetween: typeof dirBetween;
+declare const xy_d_dirFromTo: typeof dirFromTo;
+declare const xy_d_dirIndex: typeof dirIndex;
+declare const xy_d_isOppositeDir: typeof isOppositeDir;
+declare const xy_d_isSameDir: typeof isSameDir;
+declare const xy_d_dirSpread: typeof dirSpread;
+declare const xy_d_stepFromTo: typeof stepFromTo;
+declare const xy_d_forLine: typeof forLine;
+declare const xy_d_getLine: typeof getLine;
+declare const xy_d_getLineThru: typeof getLineThru;
+declare const xy_d_forCircle: typeof forCircle;
+declare const xy_d_forRect: typeof forRect;
+declare const xy_d_forBorder: typeof forBorder;
+declare const xy_d_arcCount: typeof arcCount;
+declare namespace xy_d {
+  export {
+    Loc$1 as Loc,
+    xy_d_XY as XY,
+    xy_d_DIRS as DIRS,
+    xy_d_NO_DIRECTION as NO_DIRECTION,
+    xy_d_UP as UP,
+    xy_d_RIGHT as RIGHT,
+    xy_d_DOWN as DOWN,
+    xy_d_LEFT as LEFT,
+    xy_d_RIGHT_UP as RIGHT_UP,
+    xy_d_RIGHT_DOWN as RIGHT_DOWN,
+    xy_d_LEFT_DOWN as LEFT_DOWN,
+    xy_d_LEFT_UP as LEFT_UP,
+    xy_d_CLOCK_DIRS as CLOCK_DIRS,
+    xy_d_x as x,
+    xy_d_y as y,
+    xy_d_Bounds as Bounds,
+    xy_d_copyXY as copyXY,
+    xy_d_addXY as addXY,
+    xy_d_equalsXY as equalsXY,
+    xy_d_lerpXY as lerpXY,
+    xy_d_XYFunc as XYFunc,
+    xy_d_eachNeighbor as eachNeighbor,
+    xy_d_eachNeighborAsync as eachNeighborAsync,
+    xy_d_XYMatchFunc as XYMatchFunc,
+    xy_d_matchingNeighbor as matchingNeighbor,
+    xy_d_distanceBetween as distanceBetween,
+    xy_d_distanceFromTo as distanceFromTo,
+    xy_d_calcRadius as calcRadius,
+    xy_d_dirBetween as dirBetween,
+    xy_d_dirFromTo as dirFromTo,
+    xy_d_dirIndex as dirIndex,
+    xy_d_isOppositeDir as isOppositeDir,
+    xy_d_isSameDir as isSameDir,
+    xy_d_dirSpread as dirSpread,
+    xy_d_stepFromTo as stepFromTo,
+    xy_d_forLine as forLine,
+    xy_d_getLine as getLine,
+    xy_d_getLineThru as getLineThru,
+    xy_d_forCircle as forCircle,
+    xy_d_forRect as forRect,
+    xy_d_forBorder as forBorder,
+    xy_d_arcCount as arcCount,
+  };
+}
+
 /**
  * The code in this function is extracted from ROT.JS.
  * Source: https://github.com/ondras/rot.js/blob/v2.2.0/src/rng.ts
@@ -195,17 +342,6 @@ declare const cosmetic: Random;
  * @module utils
  */
 
-declare const DIRS: Loc$1[];
-declare const NO_DIRECTION = -1;
-declare const UP = 0;
-declare const RIGHT = 1;
-declare const DOWN = 2;
-declare const LEFT = 3;
-declare const RIGHT_UP = 4;
-declare const RIGHT_DOWN = 5;
-declare const LEFT_DOWN = 6;
-declare const LEFT_UP = 7;
-declare const CLOCK_DIRS: Loc$1[];
 declare function NOOP(): void;
 declare function TRUE(): boolean;
 declare function FALSE(): boolean;
@@ -222,84 +358,16 @@ declare function IS_NONZERO(x: number): boolean;
  * @returns {Number} the clamped value
  */
 declare function clamp(v: number, min: number, max: number): number;
-declare function x(src: XY | Loc$1): any;
-declare function y(src: XY | Loc$1): any;
-declare class Bounds {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-    constructor(x: number, y: number, w: number, h: number);
-    get left(): number;
-    get right(): number;
-    get top(): number;
-    get bottom(): number;
-    contains(x: number, y: number): boolean;
-    contains(loc: Loc$1 | XY): boolean;
-}
-declare function copyXY(dest: XY, src: XY | Loc$1): void;
-declare function addXY(dest: XY, src: XY | Loc$1): void;
-declare function equalsXY(dest: XY | Loc$1 | null | undefined, src: XY | Loc$1 | null | undefined): boolean;
-declare function lerpXY(a: XY | Loc$1, b: XY | Loc$1, pct: number): any[];
-declare type XYFunc = (x: number, y: number) => any;
-declare function eachNeighbor(x: number, y: number, fn: XYFunc, only4dirs?: boolean): void;
-declare function eachNeighborAsync(x: number, y: number, fn: XYFunc, only4dirs?: boolean): Promise<void>;
-declare type XYMatchFunc = (x: number, y: number) => boolean;
-declare function matchingNeighbor(x: number, y: number, matchFn: XYMatchFunc, only4dirs?: boolean): Loc$1;
-declare function distanceBetween(x1: number, y1: number, x2: number, y2: number): number;
-declare function distanceFromTo(a: XY | Loc$1, b: XY | Loc$1): number;
-declare function calcRadius(x: number, y: number): number;
-declare function dirBetween(x: number, y: number, toX: number, toY: number): number[];
-declare function dirFromTo(a: XY | Loc$1, b: XY | Loc$1): number[];
-declare function dirIndex(dir: XY | Loc$1): number;
-declare function isOppositeDir(a: Loc$1, b: Loc$1): boolean;
-declare function isSameDir(a: Loc$1, b: Loc$1): boolean;
-declare function dirSpread(dir: Loc$1): Loc$1[];
-declare function stepFromTo(a: XY | Loc$1, b: XY | Loc$1, fn: (x: number, y: number) => any): void;
-declare function smoothHiliteGradient(currentXValue: number, maxXValue: number): number;
-declare function copyObject(dest: any, src: any): void;
-declare function assignObject(dest: any, src: any): void;
-declare function assignOmitting(omit: string | string[], dest: any, src: any): void;
-declare function setDefault(obj: any, field: string, val: any): void;
-declare type AssignCallback = (dest: any, key: string, current: any, def: any) => boolean;
-declare function setDefaults(obj: any, def: any, custom?: AssignCallback | null): void;
-declare function setOptions(obj: any, opts: any): void;
-declare function kindDefaults(obj: any, def: any): void;
-declare function pick(obj: any, ...fields: string[]): any;
-declare function clearObject(obj: any): void;
 declare function ERROR(message: string): void;
 declare function WARN(...args: string[]): void;
 declare function first(...args: any[]): any;
-declare function getOpt(obj: any, member: string, _default: any): any;
-declare function firstOpt(field: string, ...args: any[]): any;
 declare function arraysIntersect(a: any[], b: any[]): boolean;
 declare function sum(arr: number[]): number;
-declare function forLine(fromX: number, fromY: number, toX: number, toY: number, stepFn: (x: number, y: number) => boolean): void;
-declare function getLine(fromX: number, fromY: number, toX: number, toY: number): Loc$1[];
-declare function getLineThru(fromX: number, fromY: number, toX: number, toY: number, width: number, height: number): Loc$1[];
-declare function forCircle(x: number, y: number, radius: number, fn: XYFunc): void;
-declare function forRect(width: number, height: number, fn: XYFunc): void;
-declare function forRect(x: number, y: number, width: number, height: number, fn: XYFunc): void;
-declare function forBorder(width: number, height: number, fn: XYFunc): void;
-declare function forBorder(x: number, y: number, width: number, height: number, fn: XYFunc): void;
-declare function arcCount(x: number, y: number, testFn: XYMatchFunc): number;
 declare function asyncForEach<T>(iterable: Iterable<T>, fn: (t: T) => Promise<any> | any): Promise<void>;
 
-type index_d$5_XY = XY;
 type index_d$5_Random = Random;
 declare const index_d$5_Random: typeof Random;
 declare const index_d$5_Alea: typeof Alea;
-declare const index_d$5_DIRS: typeof DIRS;
-declare const index_d$5_NO_DIRECTION: typeof NO_DIRECTION;
-declare const index_d$5_UP: typeof UP;
-declare const index_d$5_RIGHT: typeof RIGHT;
-declare const index_d$5_DOWN: typeof DOWN;
-declare const index_d$5_LEFT: typeof LEFT;
-declare const index_d$5_RIGHT_UP: typeof RIGHT_UP;
-declare const index_d$5_RIGHT_DOWN: typeof RIGHT_DOWN;
-declare const index_d$5_LEFT_DOWN: typeof LEFT_DOWN;
-declare const index_d$5_LEFT_UP: typeof LEFT_UP;
-declare const index_d$5_CLOCK_DIRS: typeof CLOCK_DIRS;
 declare const index_d$5_NOOP: typeof NOOP;
 declare const index_d$5_TRUE: typeof TRUE;
 declare const index_d$5_FALSE: typeof FALSE;
@@ -309,72 +377,16 @@ declare const index_d$5_IDENTITY: typeof IDENTITY;
 declare const index_d$5_IS_ZERO: typeof IS_ZERO;
 declare const index_d$5_IS_NONZERO: typeof IS_NONZERO;
 declare const index_d$5_clamp: typeof clamp;
-declare const index_d$5_x: typeof x;
-declare const index_d$5_y: typeof y;
-type index_d$5_Bounds = Bounds;
-declare const index_d$5_Bounds: typeof Bounds;
-declare const index_d$5_copyXY: typeof copyXY;
-declare const index_d$5_addXY: typeof addXY;
-declare const index_d$5_equalsXY: typeof equalsXY;
-declare const index_d$5_lerpXY: typeof lerpXY;
-type index_d$5_XYFunc = XYFunc;
-declare const index_d$5_eachNeighbor: typeof eachNeighbor;
-declare const index_d$5_eachNeighborAsync: typeof eachNeighborAsync;
-type index_d$5_XYMatchFunc = XYMatchFunc;
-declare const index_d$5_matchingNeighbor: typeof matchingNeighbor;
-declare const index_d$5_distanceBetween: typeof distanceBetween;
-declare const index_d$5_distanceFromTo: typeof distanceFromTo;
-declare const index_d$5_calcRadius: typeof calcRadius;
-declare const index_d$5_dirBetween: typeof dirBetween;
-declare const index_d$5_dirFromTo: typeof dirFromTo;
-declare const index_d$5_dirIndex: typeof dirIndex;
-declare const index_d$5_isOppositeDir: typeof isOppositeDir;
-declare const index_d$5_isSameDir: typeof isSameDir;
-declare const index_d$5_dirSpread: typeof dirSpread;
-declare const index_d$5_stepFromTo: typeof stepFromTo;
-declare const index_d$5_smoothHiliteGradient: typeof smoothHiliteGradient;
-declare const index_d$5_copyObject: typeof copyObject;
-declare const index_d$5_assignObject: typeof assignObject;
-declare const index_d$5_assignOmitting: typeof assignOmitting;
-declare const index_d$5_setDefault: typeof setDefault;
-type index_d$5_AssignCallback = AssignCallback;
-declare const index_d$5_setDefaults: typeof setDefaults;
-declare const index_d$5_setOptions: typeof setOptions;
-declare const index_d$5_kindDefaults: typeof kindDefaults;
-declare const index_d$5_pick: typeof pick;
-declare const index_d$5_clearObject: typeof clearObject;
 declare const index_d$5_ERROR: typeof ERROR;
 declare const index_d$5_WARN: typeof WARN;
 declare const index_d$5_first: typeof first;
-declare const index_d$5_getOpt: typeof getOpt;
-declare const index_d$5_firstOpt: typeof firstOpt;
 declare const index_d$5_arraysIntersect: typeof arraysIntersect;
 declare const index_d$5_sum: typeof sum;
-declare const index_d$5_forLine: typeof forLine;
-declare const index_d$5_getLine: typeof getLine;
-declare const index_d$5_getLineThru: typeof getLineThru;
-declare const index_d$5_forCircle: typeof forCircle;
-declare const index_d$5_forRect: typeof forRect;
-declare const index_d$5_forBorder: typeof forBorder;
-declare const index_d$5_arcCount: typeof arcCount;
 declare const index_d$5_asyncForEach: typeof asyncForEach;
 declare namespace index_d$5 {
   export {
-    Loc$1 as Loc,
-    index_d$5_XY as XY,
     index_d$5_Random as Random,
     index_d$5_Alea as Alea,
-    index_d$5_DIRS as DIRS,
-    index_d$5_NO_DIRECTION as NO_DIRECTION,
-    index_d$5_UP as UP,
-    index_d$5_RIGHT as RIGHT,
-    index_d$5_DOWN as DOWN,
-    index_d$5_LEFT as LEFT,
-    index_d$5_RIGHT_UP as RIGHT_UP,
-    index_d$5_RIGHT_DOWN as RIGHT_DOWN,
-    index_d$5_LEFT_DOWN as LEFT_DOWN,
-    index_d$5_LEFT_UP as LEFT_UP,
-    index_d$5_CLOCK_DIRS as CLOCK_DIRS,
     index_d$5_NOOP as NOOP,
     index_d$5_TRUE as TRUE,
     index_d$5_FALSE as FALSE,
@@ -384,85 +396,41 @@ declare namespace index_d$5 {
     index_d$5_IS_ZERO as IS_ZERO,
     index_d$5_IS_NONZERO as IS_NONZERO,
     index_d$5_clamp as clamp,
-    index_d$5_x as x,
-    index_d$5_y as y,
-    index_d$5_Bounds as Bounds,
-    index_d$5_copyXY as copyXY,
-    index_d$5_addXY as addXY,
-    index_d$5_equalsXY as equalsXY,
-    index_d$5_lerpXY as lerpXY,
-    index_d$5_XYFunc as XYFunc,
-    index_d$5_eachNeighbor as eachNeighbor,
-    index_d$5_eachNeighborAsync as eachNeighborAsync,
-    index_d$5_XYMatchFunc as XYMatchFunc,
-    index_d$5_matchingNeighbor as matchingNeighbor,
-    index_d$5_distanceBetween as distanceBetween,
-    index_d$5_distanceFromTo as distanceFromTo,
-    index_d$5_calcRadius as calcRadius,
-    index_d$5_dirBetween as dirBetween,
-    index_d$5_dirFromTo as dirFromTo,
-    index_d$5_dirIndex as dirIndex,
-    index_d$5_isOppositeDir as isOppositeDir,
-    index_d$5_isSameDir as isSameDir,
-    index_d$5_dirSpread as dirSpread,
-    index_d$5_stepFromTo as stepFromTo,
-    index_d$5_smoothHiliteGradient as smoothHiliteGradient,
-    index_d$5_copyObject as copyObject,
-    index_d$5_assignObject as assignObject,
-    index_d$5_assignOmitting as assignOmitting,
-    index_d$5_setDefault as setDefault,
-    index_d$5_AssignCallback as AssignCallback,
-    index_d$5_setDefaults as setDefaults,
-    index_d$5_setOptions as setOptions,
-    index_d$5_kindDefaults as kindDefaults,
-    index_d$5_pick as pick,
-    index_d$5_clearObject as clearObject,
     index_d$5_ERROR as ERROR,
     index_d$5_WARN as WARN,
     index_d$5_first as first,
-    index_d$5_getOpt as getOpt,
-    index_d$5_firstOpt as firstOpt,
     index_d$5_arraysIntersect as arraysIntersect,
     index_d$5_sum as sum,
-    index_d$5_forLine as forLine,
-    index_d$5_getLine as getLine,
-    index_d$5_getLineThru as getLineThru,
-    index_d$5_forCircle as forCircle,
-    index_d$5_forRect as forRect,
-    index_d$5_forBorder as forBorder,
-    index_d$5_arcCount as arcCount,
     index_d$5_asyncForEach as asyncForEach,
   };
 }
 
+declare type ListEntry<T> = T | null;
 interface ListItem<T> {
-    next: T | null;
+    next: ListEntry<T>;
 }
-declare type ListNode<T extends ListItem<T>> = T | null;
 declare type ListObject = any;
-declare type ListSort<T extends ListItem<T>> = (a: T, b: T) => number;
-declare type ListMatch<T extends ListItem<T>> = (val: T) => boolean;
-declare type ListEachFn<T extends ListItem<T>> = (val: T, index: number) => any;
-declare type ListChangeFn = () => any;
+declare type ListSort<T> = (a: T, b: T) => number;
+declare type ListMatch<T> = (val: T) => boolean;
+declare type ListEachFn<T> = (val: T, index: number) => any;
 declare type ListReduceFn<T> = (out: any, t: T) => any;
-declare function length$1<T extends ListItem<T>>(root: ListNode<T>): number;
-declare function includes<T extends ListItem<T>>(root: ListNode<T>, entry: T): boolean;
+declare function length$1<T extends ListItem<T>>(root: ListEntry<T>): number;
+declare function includes<T extends ListItem<T>>(root: ListEntry<T>, entry: T): boolean;
 declare function forEach<T extends ListItem<T>>(root: T | null, fn: ListEachFn<T>): number;
 declare function push<T extends ListItem<T>>(obj: ListObject, name: string, entry: ListItem<T>): boolean;
 declare function remove<T extends ListItem<T>>(obj: ListObject, name: string, entry: T): boolean;
-declare function find<T extends ListItem<T>>(root: ListNode<T>, cb: ListMatch<T>): ListNode<T>;
+declare function find<T extends ListItem<T>>(root: ListEntry<T>, cb: ListMatch<T>): ListEntry<T>;
 declare function insert<T extends ListItem<T>>(obj: ListObject, name: string, entry: T, sort?: ListSort<T>): boolean;
-declare function reduce<T extends ListItem<T>>(root: ListNode<T>, cb: ListReduceFn<T>, out?: any): any;
-declare function some<T extends ListItem<T>>(root: ListNode<T>, cb: ListMatch<T>): boolean;
-declare function every<T extends ListItem<T>>(root: ListNode<T>, cb: ListMatch<T>): boolean;
+declare function reduce<T extends ListItem<T>>(root: ListEntry<T>, cb: ListReduceFn<T>, out?: any): any;
+declare function some<T extends ListItem<T>>(root: ListEntry<T>, cb: ListMatch<T>): boolean;
+declare function every<T extends ListItem<T>>(root: ListEntry<T>, cb: ListMatch<T>): boolean;
 
+type list_d_ListEntry<_0> = ListEntry<_0>;
 type list_d_ListItem<_0> = ListItem<_0>;
-type list_d_ListNode<_0> = ListNode<_0>;
 type list_d_ListObject = ListObject;
 type list_d_ListSort<_0> = ListSort<_0>;
 type list_d_ListMatch<_0> = ListMatch<_0>;
 type list_d_ListEachFn<_0> = ListEachFn<_0>;
-type list_d_ListChangeFn = ListChangeFn;
 type list_d_ListReduceFn<_0> = ListReduceFn<_0>;
 declare const list_d_includes: typeof includes;
 declare const list_d_forEach: typeof forEach;
@@ -475,13 +443,12 @@ declare const list_d_some: typeof some;
 declare const list_d_every: typeof every;
 declare namespace list_d {
   export {
+    list_d_ListEntry as ListEntry,
     list_d_ListItem as ListItem,
-    list_d_ListNode as ListNode,
     list_d_ListObject as ListObject,
     list_d_ListSort as ListSort,
     list_d_ListMatch as ListMatch,
     list_d_ListEachFn as ListEachFn,
-    list_d_ListChangeFn as ListChangeFn,
     list_d_ListReduceFn as ListReduceFn,
     length$1 as length,
     list_d_includes as includes,
@@ -493,6 +460,48 @@ declare namespace list_d {
     list_d_reduce as reduce,
     list_d_some as some,
     list_d_every as every,
+  };
+}
+
+declare function copyObject(dest: any, src: any): void;
+declare function assignObject(dest: any, src: any): void;
+declare function assignOmitting(omit: string | string[], dest: any, src: any): void;
+declare function setDefault(obj: any, field: string, val: any): void;
+declare type AssignCallback = (dest: any, key: string, current: any, def: any) => boolean;
+declare function setDefaults(obj: any, def: any, custom?: AssignCallback | null): void;
+declare function setOptions(obj: any, opts: any): void;
+declare function kindDefaults(obj: any, def: any): void;
+declare function pick(obj: any, ...fields: string[]): any;
+declare function clearObject(obj: any): void;
+declare function getOpt(obj: any, member: string, _default: any): any;
+declare function firstOpt(field: string, ...args: any[]): any;
+
+declare const object_d_copyObject: typeof copyObject;
+declare const object_d_assignObject: typeof assignObject;
+declare const object_d_assignOmitting: typeof assignOmitting;
+declare const object_d_setDefault: typeof setDefault;
+type object_d_AssignCallback = AssignCallback;
+declare const object_d_setDefaults: typeof setDefaults;
+declare const object_d_setOptions: typeof setOptions;
+declare const object_d_kindDefaults: typeof kindDefaults;
+declare const object_d_pick: typeof pick;
+declare const object_d_clearObject: typeof clearObject;
+declare const object_d_getOpt: typeof getOpt;
+declare const object_d_firstOpt: typeof firstOpt;
+declare namespace object_d {
+  export {
+    object_d_copyObject as copyObject,
+    object_d_assignObject as assignObject,
+    object_d_assignOmitting as assignOmitting,
+    object_d_setDefault as setDefault,
+    object_d_AssignCallback as AssignCallback,
+    object_d_setDefaults as setDefaults,
+    object_d_setOptions as setOptions,
+    object_d_kindDefaults as kindDefaults,
+    object_d_pick as pick,
+    object_d_clearObject as clearObject,
+    object_d_getOpt as getOpt,
+    object_d_firstOpt as firstOpt,
   };
 }
 
@@ -1788,4 +1797,4 @@ declare namespace index_d {
   };
 }
 
-export { blob_d as blob, index_d$3 as canvas, index_d$6 as color, colors, config$1 as config, cosmetic, data, events_d as events, flag_d as flag, index_d$4 as fov, frequency_d as frequency, grid_d as grid, io_d as io, index_d as light, list_d as list, loop, message_d as message, path_d as path, random, range_d as range, scheduler_d as scheduler, index_d$2 as sprite, sprites, index_d$1 as text, types_d as types, index_d$5 as utils };
+export { blob_d as blob, index_d$3 as canvas, index_d$6 as color, colors, config$1 as config, cosmetic, data, events_d as events, flag_d as flag, index_d$4 as fov, frequency_d as frequency, grid_d as grid, io_d as io, index_d as light, list_d as list, loop, message_d as message, object_d as object, path_d as path, random, range_d as range, scheduler_d as scheduler, index_d$2 as sprite, sprites, index_d$1 as text, types_d as types, index_d$5 as utils, xy_d as xy };

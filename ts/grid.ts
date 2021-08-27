@@ -1,8 +1,9 @@
 import { random } from './random';
 import * as Utils from './utils';
+import * as XY from './xy';
 
-type Loc = Utils.Loc;
-const DIRS = Utils.DIRS;
+type Loc = XY.Loc;
+const DIRS = XY.DIRS;
 
 // var GRID = {};
 // export { GRID as grid };
@@ -127,7 +128,7 @@ export class Grid<T> extends Array<Array<T>> {
     }
 
     eachNeighbor(x: number, y: number, fn: GridEach<T>, only4dirs = false) {
-        Utils.eachNeighbor(
+        XY.eachNeighbor(
             x,
             y,
             (i, j) => {
@@ -157,7 +158,7 @@ export class Grid<T> extends Array<Array<T>> {
     }
 
     forRect(x: number, y: number, w: number, h: number, fn: GridEach<T>) {
-        Utils.forRect(x, y, w, h, (i, j) => {
+        XY.forRect(x, y, w, h, (i, j) => {
             if (this.hasXY(i, j)) {
                 fn(this[i][j], i, j, this);
             }
@@ -206,7 +207,7 @@ export class Grid<T> extends Array<Array<T>> {
     }
 
     forCircle(x: number, y: number, radius: number, fn: GridEach<T>) {
-        Utils.forCircle(x, y, radius, (i, j) => {
+        XY.forCircle(x, y, radius, (i, j) => {
             if (this.hasXY(i, j)) fn(this[i][j], i, j, this);
         });
     }
@@ -240,7 +241,7 @@ export class Grid<T> extends Array<Array<T>> {
     }
 
     update(fn: GridUpdate<T>) {
-        Utils.forRect(this.width, this.height, (i, j) => {
+        XY.forRect(this.width, this.height, (i, j) => {
             if (this.hasXY(i, j)) this[i][j] = fn(this[i][j], i, j, this);
         });
     }
@@ -252,13 +253,13 @@ export class Grid<T> extends Array<Array<T>> {
         height: number,
         fn: GridUpdate<T>
     ) {
-        Utils.forRect(x, y, width, height, (i, j) => {
+        XY.forRect(x, y, width, height, (i, j) => {
             if (this.hasXY(i, j)) this[i][j] = fn(this[i][j], i, j, this);
         });
     }
 
     updateCircle(x: number, y: number, radius: number, fn: GridUpdate<T>) {
-        Utils.forCircle(x, y, radius, (i, j) => {
+        XY.forCircle(x, y, radius, (i, j) => {
             if (this.hasXY(i, j)) {
                 this[i][j] = fn(this[i][j], i, j, this);
             }
@@ -377,9 +378,7 @@ export class Grid<T> extends Array<Array<T>> {
 
         this.forEach((v, i, j) => {
             if (fn(v, i, j, this)) {
-                const dist = Math.floor(
-                    100 * Utils.distanceBetween(x, y, i, j)
-                );
+                const dist = Math.floor(100 * XY.distanceBetween(x, y, i, j));
                 if (dist < bestDistance) {
                     bestLoc[0] = i;
                     bestLoc[1] = j;
@@ -411,7 +410,7 @@ export class Grid<T> extends Array<Array<T>> {
     }
 
     randomMatchingLoc(v: T | GridMatch<T>): Loc {
-        const fn: Utils.XYMatchFunc =
+        const fn: XY.XYMatchFunc =
             typeof v === 'function'
                 ? (x, y) => (v as GridMatch<T>)(this[x][y], x, y, this)
                 : (x, y) => this.get(x, y) === v;
@@ -420,7 +419,7 @@ export class Grid<T> extends Array<Array<T>> {
     }
 
     matchingLocNear(x: number, y: number, v: T | GridMatch<T>): Loc {
-        const fn: Utils.XYMatchFunc =
+        const fn: XY.XYMatchFunc =
             typeof v === 'function'
                 ? (x, y) => (v as GridMatch<T>)(this[x][y], x, y, this)
                 : (x, y) => this.get(x, y) === v;
@@ -436,7 +435,7 @@ export class Grid<T> extends Array<Array<T>> {
     //		Four means it is in the intersection of two hallways.
     //		Five or more means there is a bug.
     arcCount(x: number, y: number, testFn: GridMatch<T>) {
-        return Utils.arcCount(x, y, (i, j) => {
+        return XY.arcCount(x, y, (i, j) => {
             return this.hasXY(i, j) && testFn(this[i][j], i, j, this);
         });
     }
@@ -603,7 +602,7 @@ export class NumGrid extends Grid<number> {
         return this.randomMatchingLoc(targetValue);
     }
 
-    valueBounds(value: number, bounds?: Utils.Bounds) {
+    valueBounds(value: number, bounds?: XY.Bounds) {
         let foundValueAtThisLine = false;
         let i: number, j: number;
         let left = this.width - 1,
@@ -650,7 +649,7 @@ export class NumGrid extends Grid<number> {
             }
         }
 
-        bounds = bounds || new Utils.Bounds(0, 0, 0, 0);
+        bounds = bounds || new XY.Bounds(0, 0, 0, 0);
         bounds.x = left;
         bounds.y = top;
         bounds.width = right - left + 1;

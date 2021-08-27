@@ -1,6 +1,7 @@
 // CREDIT - This is adapted from: http://roguebasin.roguelikedevelopment.org/index.php?title=Improved_Shadowcasting_in_Java
 
 import * as Utils from '../utils';
+import * as XY from '../xy';
 
 import { FovStrategy, SetVisibleFn } from './types';
 
@@ -17,7 +18,7 @@ export class FOV {
 
     constructor(strategy: FovStrategy) {
         this._isBlocked = strategy.isBlocked;
-        this._calcRadius = strategy.calcRadius || Utils.calcRadius;
+        this._calcRadius = strategy.calcRadius || XY.calcRadius;
         this._hasXY = strategy.hasXY || Utils.TRUE;
         this._debug = strategy.debug || Utils.NOOP;
     }
@@ -31,7 +32,7 @@ export class FOV {
 
         // uses the diagonals
         for (let i = 4; i < 8; ++i) {
-            const d = Utils.DIRS[i];
+            const d = XY.DIRS[i];
             this.castLight(1, 1.0, 0.0, 0, d[0], d[1], 0);
             this.castLight(1, 1.0, 0.0, d[0], 0, 0, d[1]);
         }

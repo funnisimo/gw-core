@@ -3,6 +3,7 @@ import { Glyphs, GlyphOptions } from './glyphs';
 import { BufferTarget, Buffer } from './buffer';
 import * as IO from '../io';
 import * as Utils from '../utils';
+import * as XY from '../xy';
 
 type GL = WebGL2RenderingContext;
 const VERTICES_PER_TILE = 6;
@@ -38,7 +39,7 @@ export class NotSupportedError extends Error {
 }
 
 export abstract class BaseCanvas implements BufferTarget {
-    public mouse: Utils.XY = { x: -1, y: -1 };
+    public mouse: XY.XY = { x: -1, y: -1 };
     protected _data!: Uint32Array;
     protected _renderRequested: boolean = false;
     protected _glyphs!: Glyphs;

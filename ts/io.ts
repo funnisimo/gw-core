@@ -1,4 +1,5 @@
 import * as Utils from './utils';
+import * as XY from './xy';
 
 export interface Event {
     shiftKey: boolean;
@@ -13,7 +14,7 @@ export interface Event {
     y: number;
     clientX: number;
     clientY: number;
-    dir: Utils.Loc | null;
+    dir: XY.Loc | null;
     dt: number;
 }
 
@@ -156,7 +157,7 @@ export function makeKeyEvent(e: KeyboardEvent) {
     return ev;
 }
 
-export function keyCodeDirection(key: string): Utils.Loc | null {
+export function keyCodeDirection(key: string): XY.Loc | null {
     const lowerKey = key.toLowerCase();
 
     if (lowerKey === 'arrowup') {
@@ -217,11 +218,11 @@ export function makeMouseEvent(e: MouseEvent, x: number, y: number) {
 export class Loop {
     public running = false;
     public events: Event[] = [];
-    public mouse: Utils.XY = { x: -1, y: -1 };
+    public mouse: XY.XY = { x: -1, y: -1 };
 
     protected CURRENT_HANDLER: EventHandler | null = null;
     protected PAUSED: EventHandler | null = null;
-    protected LAST_CLICK: Utils.XY = { x: -1, y: -1 };
+    protected LAST_CLICK: XY.XY = { x: -1, y: -1 };
 
     constructor() {}
 

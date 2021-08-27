@@ -10,7 +10,7 @@ import {
 import * as Grid from '../grid';
 import * as Light from './light';
 import { data as DATA } from '../gw';
-import * as Utils from '../utils';
+import * as XY from '../xy';
 import * as Color from '../color';
 import { fl as Fl } from '../flag';
 import * as List from '../list';
@@ -268,7 +268,7 @@ export class LightSystem implements LightSystemType, PaintSite {
     }
 
     finishLightUpdate(): void {
-        Utils.forRect(this.width, this.height, (x, y) => {
+        XY.forRect(this.width, this.height, (x, y) => {
             // clear light flags
             // this.flags[x][y] &= ~(LightFlags.LIT | LightFlags.DARK);
             const oldLight = this.oldLight[x][y];

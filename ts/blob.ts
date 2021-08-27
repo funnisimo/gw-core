@@ -1,4 +1,4 @@
-import * as UTILS from './utils';
+import * as XY from './xy';
 import * as GRID from './grid';
 import { random } from './random';
 
@@ -40,11 +40,11 @@ export class Blob {
         }
     }
 
-    carve(width: number, height: number, setFn: UTILS.XYFunc): UTILS.Bounds {
+    carve(width: number, height: number, setFn: XY.XYFunc): XY.Bounds {
         let i, j, k;
         let blobNumber, blobSize, topBlobNumber, topBlobSize;
 
-        let bounds = new UTILS.Bounds(0, 0, 0, 0);
+        let bounds = new XY.Bounds(0, 0, 0, 0);
         const dest = GRID.alloc(width, height);
 
         const left = Math.floor((dest.width - this.options.maxWidth) / 2);
@@ -133,9 +133,9 @@ export class Blob {
         for (i = 0; i < grid.width; i++) {
             for (j = 0; j < grid.height; j++) {
                 nbCount = 0;
-                for (dir = 0; dir < UTILS.DIRS.length; dir++) {
-                    newX = i + UTILS.DIRS[dir][0];
-                    newY = j + UTILS.DIRS[dir][1];
+                for (dir = 0; dir < XY.DIRS.length; dir++) {
+                    newX = i + XY.DIRS[dir][0];
+                    newY = j + XY.DIRS[dir][1];
                     if (grid.hasXY(newX, newY) && buffer2[newX][newY]) {
                         nbCount++;
                     }
@@ -166,7 +166,7 @@ export class Blob {
 export function fillBlob(
     grid: GRID.NumGrid,
     opts: Partial<BlobConfig> = {}
-): UTILS.Bounds {
+): XY.Bounds {
     const blob = new Blob(opts);
     return blob.carve(grid.width, grid.height, (x, y) => (grid[x][y] = 1));
 }

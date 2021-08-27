@@ -1,5 +1,5 @@
 import * as Grid from './grid';
-import * as Utils from './utils';
+import * as XY from './xy';
 
 export const FORBIDDEN = -1;
 export const OBSTRUCTION = -2;
@@ -54,7 +54,7 @@ function getLink(map: DijkstraMap, x: number, y: number): CostLink {
     return map.links[x + map.width * y];
 }
 
-const DIRS = Utils.DIRS;
+const DIRS = XY.DIRS;
 
 function update(map: DijkstraMap) {
     let dir, dirs;
@@ -247,11 +247,11 @@ export function nextStep(
     // brogueAssert(coordinatesAreInMap(x, y));
 
     bestScore = 0;
-    bestDir = Utils.NO_DIRECTION;
+    bestDir = XY.NO_DIRECTION;
 
     for (dir = 0; dir < (useDiagonals ? 8 : 4); ++dir) {
-        newX = x + Utils.DIRS[dir][0];
-        newY = y + Utils.DIRS[dir][1];
+        newX = x + XY.DIRS[dir][0];
+        newY = y + XY.DIRS[dir][1];
 
         blocked = isBlocked(newX, newY, x, y, distanceMap);
 
@@ -263,7 +263,7 @@ export function nextStep(
             bestScore = distanceMap[x][y] - distanceMap[newX][newY];
         }
     }
-    return Utils.DIRS[bestDir] || null;
+    return XY.DIRS[bestDir] || null;
 }
 
 function getClosestValidLocationOnMap(

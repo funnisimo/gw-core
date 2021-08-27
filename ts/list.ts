@@ -1,18 +1,17 @@
 // CHAIN
 
+export type ListEntry<T> = T | null;
 export interface ListItem<T> {
-    next: T | null;
+    next: ListEntry<T>;
 }
-export type ListNode<T extends ListItem<T>> = T | null;
 export type ListObject = any;
 
-export type ListSort<T extends ListItem<T>> = (a: T, b: T) => number;
-export type ListMatch<T extends ListItem<T>> = (val: T) => boolean;
-export type ListEachFn<T extends ListItem<T>> = (val: T, index: number) => any;
-export type ListChangeFn = () => any;
+export type ListSort<T> = (a: T, b: T) => number;
+export type ListMatch<T> = (val: T) => boolean;
+export type ListEachFn<T> = (val: T, index: number) => any;
 export type ListReduceFn<T> = (out: any, t: T) => any;
 
-export function length<T extends ListItem<T>>(root: ListNode<T>): number {
+export function length<T extends ListItem<T>>(root: ListEntry<T>): number {
     let count = 0;
     while (root) {
         count += 1;
@@ -22,7 +21,7 @@ export function length<T extends ListItem<T>>(root: ListNode<T>): number {
 }
 
 export function includes<T extends ListItem<T>>(
-    root: ListNode<T>,
+    root: ListEntry<T>,
     entry: T
 ): boolean {
     while (root && root !== entry) {
@@ -83,7 +82,7 @@ export function remove<T extends ListItem<T>>(
 }
 
 export function find<T extends ListItem<T>>(
-    root: ListNode<T>,
+    root: ListEntry<T>,
     cb: ListMatch<T>
 ) {
     while (root && !cb(root as T)) {
@@ -121,7 +120,7 @@ export function insert<T extends ListItem<T>>(
 }
 
 export function reduce<T extends ListItem<T>>(
-    root: ListNode<T>,
+    root: ListEntry<T>,
     cb: ListReduceFn<T>,
     out?: any
 ): any {
@@ -134,14 +133,14 @@ export function reduce<T extends ListItem<T>>(
     }
 
     while (current) {
-        cb(out, current);
+        out = cb(out, current);
         current = current.next;
     }
     return out;
 }
 
 export function some<T extends ListItem<T>>(
-    root: ListNode<T>,
+    root: ListEntry<T>,
     cb: ListMatch<T>
 ): boolean {
     let current = root;
@@ -153,7 +152,7 @@ export function some<T extends ListItem<T>>(
 }
 
 export function every<T extends ListItem<T>>(
-    root: ListNode<T>,
+    root: ListEntry<T>,
     cb: ListMatch<T>
 ): boolean {
     let current = root;

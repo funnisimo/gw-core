@@ -1,3 +1,4 @@
+import * as XY from '../xy';
 import * as Utils from '../utils';
 import * as Range from '../range';
 import * as Grid from '../grid';
@@ -91,7 +92,7 @@ export class Light implements Types.LightType {
             lightMultiplier = Math.floor(
                 100 -
                     (100 - fadeToPercent) *
-                        (Utils.distanceBetween(x, y, i, j) / radius)
+                        (XY.distanceBetween(x, y, i, j) / radius)
             );
             for (k = 0; k < 3; ++k) {
                 lightValue[k] = Math.floor(

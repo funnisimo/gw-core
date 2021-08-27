@@ -565,6 +565,12 @@ export function distance(a: Color, b: Color) {
     );
 }
 
+// Draws the smooth gradient that appears on a button when you hover over or depress it.
+// Returns the percentage by which the current tile should be averaged toward a hilite color.
+export function smoothScalar(rgb: number, maxRgb = 255) {
+    return Math.floor(100 * Math.sin((Math.PI * rgb) / maxRgb));
+}
+
 export function install(name: string, info: ColorBase): Color;
 export function install(name: string, ...rgb: ColorData): Color; // TODO - Remove!
 export function install(name: string, ...args: any[]) {
