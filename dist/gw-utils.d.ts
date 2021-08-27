@@ -190,37 +190,6 @@ declare class Random {
 declare const random: Random;
 declare const cosmetic: Random;
 
-interface Chainable<T> {
-    next: T | null;
-}
-declare type ChainSort<T> = (a: T, b: T) => number;
-declare type ChainMatch<T> = (val: T) => boolean;
-declare type ChainFn<T> = (val: T) => any;
-declare function chainLength<T extends Chainable<T>>(root: T | null): number;
-declare function chainIncludes<T extends Chainable<T>>(chain: T | null, entry: T): boolean;
-declare function eachChain<T extends Chainable<T>>(item: T | null, fn: (item: T, index: number) => any): number;
-declare function addToChain<T extends Chainable<T>>(obj: any, name: string, entry: T): boolean;
-declare function removeFromChain<T extends Chainable<T>>(obj: any, name: string, entry: T): boolean;
-declare function findInChain<T extends Chainable<T>>(root: T | null, cb: ChainMatch<T>): T | null;
-declare type ChainChangeFn = () => any;
-declare type ChainReduceFn<T> = (out: any, t: T) => any;
-declare class Chain<T extends Chainable<T>> {
-    data: T | null;
-    sort: ChainSort<T>;
-    onchange: ChainChangeFn;
-    constructor(sort?: ChainSort<T>, onchange?: ChainChangeFn);
-    copy(other: Chain<T>): void;
-    get length(): number;
-    add(obj: T): boolean;
-    has(obj: T): boolean;
-    remove(obj: T): boolean;
-    find(cb: ChainMatch<T>): T | null;
-    forEach(cb: ChainFn<T>): number;
-    reduce(cb: ChainReduceFn<T>, out?: any): any;
-    some(cb: ChainMatch<T>): boolean;
-    every(cb: ChainMatch<T>): boolean;
-}
-
 /**
  * GW.utils
  * @module utils
@@ -389,20 +358,6 @@ declare const index_d$5_forRect: typeof forRect;
 declare const index_d$5_forBorder: typeof forBorder;
 declare const index_d$5_arcCount: typeof arcCount;
 declare const index_d$5_asyncForEach: typeof asyncForEach;
-type index_d$5_Chainable<_0> = Chainable<_0>;
-type index_d$5_ChainSort<_0> = ChainSort<_0>;
-type index_d$5_ChainMatch<_0> = ChainMatch<_0>;
-type index_d$5_ChainFn<_0> = ChainFn<_0>;
-declare const index_d$5_chainLength: typeof chainLength;
-declare const index_d$5_chainIncludes: typeof chainIncludes;
-declare const index_d$5_eachChain: typeof eachChain;
-declare const index_d$5_addToChain: typeof addToChain;
-declare const index_d$5_removeFromChain: typeof removeFromChain;
-declare const index_d$5_findInChain: typeof findInChain;
-type index_d$5_ChainChangeFn = ChainChangeFn;
-type index_d$5_ChainReduceFn<_0> = ChainReduceFn<_0>;
-type index_d$5_Chain<_0> = Chain<_0>;
-declare const index_d$5_Chain: typeof Chain;
 declare namespace index_d$5 {
   export {
     Loc$1 as Loc,
@@ -477,19 +432,67 @@ declare namespace index_d$5 {
     index_d$5_forBorder as forBorder,
     index_d$5_arcCount as arcCount,
     index_d$5_asyncForEach as asyncForEach,
-    index_d$5_Chainable as Chainable,
-    index_d$5_ChainSort as ChainSort,
-    index_d$5_ChainMatch as ChainMatch,
-    index_d$5_ChainFn as ChainFn,
-    index_d$5_chainLength as chainLength,
-    index_d$5_chainIncludes as chainIncludes,
-    index_d$5_eachChain as eachChain,
-    index_d$5_addToChain as addToChain,
-    index_d$5_removeFromChain as removeFromChain,
-    index_d$5_findInChain as findInChain,
-    index_d$5_ChainChangeFn as ChainChangeFn,
-    index_d$5_ChainReduceFn as ChainReduceFn,
-    index_d$5_Chain as Chain,
+  };
+}
+
+interface ListItem<T> {
+    next: T | null;
+}
+declare type ListNode<T extends ListItem<T>> = T | null;
+declare type ListObject = any;
+declare type ListSort<T extends ListItem<T>> = (a: T, b: T) => number;
+declare type ListMatch<T extends ListItem<T>> = (val: T) => boolean;
+declare type ListEachFn<T extends ListItem<T>> = (val: T, index: number) => any;
+declare type ListChangeFn = () => any;
+declare type ListReduceFn<T> = (out: any, t: T) => any;
+declare function length$1<T extends ListItem<T>>(root: ListNode<T>): number;
+declare function includes<T extends ListItem<T>>(root: ListNode<T>, entry: T): boolean;
+declare function forEach<T extends ListItem<T>>(root: T | null, fn: ListEachFn<T>): number;
+declare function push<T extends ListItem<T>>(obj: ListObject, name: string, entry: ListItem<T>): boolean;
+declare function remove<T extends ListItem<T>>(obj: ListObject, name: string, entry: T): boolean;
+declare function find<T extends ListItem<T>>(root: ListNode<T>, cb: ListMatch<T>): ListNode<T>;
+declare function insert<T extends ListItem<T>>(obj: ListObject, name: string, entry: T, sort?: ListSort<T>): boolean;
+declare function reduce<T extends ListItem<T>>(root: ListNode<T>, cb: ListReduceFn<T>, out?: any): any;
+declare function some<T extends ListItem<T>>(root: ListNode<T>, cb: ListMatch<T>): boolean;
+declare function every<T extends ListItem<T>>(root: ListNode<T>, cb: ListMatch<T>): boolean;
+
+type list_d_ListItem<_0> = ListItem<_0>;
+type list_d_ListNode<_0> = ListNode<_0>;
+type list_d_ListObject = ListObject;
+type list_d_ListSort<_0> = ListSort<_0>;
+type list_d_ListMatch<_0> = ListMatch<_0>;
+type list_d_ListEachFn<_0> = ListEachFn<_0>;
+type list_d_ListChangeFn = ListChangeFn;
+type list_d_ListReduceFn<_0> = ListReduceFn<_0>;
+declare const list_d_includes: typeof includes;
+declare const list_d_forEach: typeof forEach;
+declare const list_d_push: typeof push;
+declare const list_d_remove: typeof remove;
+declare const list_d_find: typeof find;
+declare const list_d_insert: typeof insert;
+declare const list_d_reduce: typeof reduce;
+declare const list_d_some: typeof some;
+declare const list_d_every: typeof every;
+declare namespace list_d {
+  export {
+    list_d_ListItem as ListItem,
+    list_d_ListNode as ListNode,
+    list_d_ListObject as ListObject,
+    list_d_ListSort as ListSort,
+    list_d_ListMatch as ListMatch,
+    list_d_ListEachFn as ListEachFn,
+    list_d_ListChangeFn as ListChangeFn,
+    list_d_ListReduceFn as ListReduceFn,
+    length$1 as length,
+    list_d_includes as includes,
+    list_d_forEach as forEach,
+    list_d_push as push,
+    list_d_remove as remove,
+    list_d_find as find,
+    list_d_insert as insert,
+    list_d_reduce as reduce,
+    list_d_some as some,
+    list_d_every as every,
   };
 }
 
@@ -984,7 +987,7 @@ declare type EventFn = (...args: any[]) => Promise<any>;
 /**
  * Data for an event listener.
  */
-declare class Listener implements Chainable<Listener> {
+declare class Listener implements ListItem<Listener> {
     fn: EventFn;
     context: any;
     once: boolean;
@@ -1785,4 +1788,4 @@ declare namespace index_d {
   };
 }
 
-export { blob_d as blob, index_d$3 as canvas, index_d$6 as color, colors, config$1 as config, cosmetic, data, events_d as events, flag_d as flag, index_d$4 as fov, frequency_d as frequency, grid_d as grid, io_d as io, index_d as light, loop, message_d as message, path_d as path, random, range_d as range, scheduler_d as scheduler, index_d$2 as sprite, sprites, index_d$1 as text, types_d as types, index_d$5 as utils };
+export { blob_d as blob, index_d$3 as canvas, index_d$6 as color, colors, config$1 as config, cosmetic, data, events_d as events, flag_d as flag, index_d$4 as fov, frequency_d as frequency, grid_d as grid, io_d as io, index_d as light, list_d as list, loop, message_d as message, path_d as path, random, range_d as range, scheduler_d as scheduler, index_d$2 as sprite, sprites, index_d$1 as text, types_d as types, index_d$5 as utils };

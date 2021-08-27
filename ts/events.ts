@@ -1,11 +1,11 @@
-import * as Utils from './utils';
+import * as List from './list';
 
 export type EventFn = (...args: any[]) => Promise<any>;
 
 /**
  * Data for an event listener.
  */
-export class Listener implements Utils.Chainable<Listener> {
+export class Listener implements List.ListItem<Listener> {
     public fn: EventFn;
     public context: any;
     public once: boolean;
@@ -62,7 +62,7 @@ export function addListener(
     }
 
     const listener = new Listener(fn, context || null, once);
-    Utils.addToChain(EVENTS, event, listener);
+    List.push(EVENTS, event, listener);
     return listener;
 }
 
@@ -112,9 +112,9 @@ export function removeListener(
     if (!fn) return false;
 
     let success = false;
-    Utils.eachChain(EVENTS[event], (obj: Listener) => {
+    List.forEach(EVENTS[event], (obj: Listener) => {
         if (obj.matches(fn, context, once)) {
-            Utils.removeFromChain(EVENTS, event, obj);
+            List.remove(EVENTS, event, obj);
             success = true;
         }
     });
@@ -176,7 +176,7 @@ export async function emit(...args: any[]) {
 
     while (listener) {
         let next = listener.next;
-        if (listener.once) Utils.removeFromChain(EVENTS, event, listener);
+        if (listener.once) List.remove(EVENTS, event, listener);
         await listener.fn.apply(listener.context, args);
         listener = next;
     }

@@ -1,4 +1,5 @@
 export * as utils from './utils';
+export * as list from './list';
 export * as range from './range';
 export * as flag from './flag';
 export * as grid from './grid';

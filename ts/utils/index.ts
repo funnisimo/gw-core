@@ -8,8 +8,6 @@ import { Random, Alea } from '../random';
 
 export { Loc, XY, Random, Alea };
 
-export * from './chain';
-
 // DIRS are organized clockwise
 // - first 4 are arrow directions
 //   >> rotate 90 degrees clockwise ==>> newIndex = (oldIndex + 1) % 4

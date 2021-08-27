@@ -116,39 +116,6 @@ describe('Utils', () => {
         expect(dest).toEqual({ a: 10, b: 20, d: 4, e: 5 });
     });
 
-    test('addToChain + removeFromChain', () => {
-        const obj = {
-            chain: null,
-        };
-
-        const a = { next: null };
-        const b = { next: null };
-        const c = { next: null };
-        const d = { next: null };
-        const e = { next: null };
-        const f = { next: null };
-
-        Utils.addToChain(obj, 'chain', a);
-        Utils.addToChain(obj, 'chain', b);
-        Utils.addToChain(obj, 'chain', c);
-        Utils.addToChain(obj, 'chain', d);
-        Utils.addToChain(obj, 'chain', e);
-        Utils.addToChain(obj, 'chain', f);
-        expect(obj.chain).toBe(f);
-        expect(f.next).toBe(e);
-        expect(e.next).toBe(d);
-        expect(d.next).toBe(c);
-        expect(c.next).toBe(b);
-        expect(b.next).toBe(a);
-        expect(a.next).toBeNull();
-        expect(Utils.chainLength(obj.chain)).toEqual(6);
-
-        Utils.removeFromChain(obj, 'chain', c);
-        expect(c.next).toBeNull();
-        expect(d.next).toBe(b);
-        expect(Utils.chainLength(obj.chain)).toEqual(5);
-    });
-
     describe('setDefaults', () => {
         test('null', () => {
             const dest = {} as any;

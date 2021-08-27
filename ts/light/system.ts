@@ -13,6 +13,7 @@ import { data as DATA } from '../gw';
 import * as Utils from '../utils';
 import * as Color from '../color';
 import { fl as Fl } from '../flag';
+import * as List from '../list';
 
 export interface StaticLightInfo {
     x: number;
@@ -171,7 +172,7 @@ export class LightSystem implements LightSystemType, PaintSite {
     }
 
     eachStaticLight(fn: LightCb) {
-        Utils.eachChain(this.staticLights, (info: StaticLightInfo) =>
+        List.forEach(this.staticLights, (info: StaticLightInfo) =>
             fn(info.x, info.y, info.light)
         );
         this.site.eachGlowLight((x, y, light) => {
