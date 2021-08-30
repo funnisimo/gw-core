@@ -8,7 +8,7 @@ import * as XY from '../xy';
 type GL = WebGL2RenderingContext;
 const VERTICES_PER_TILE = 6;
 
-export type MouseEventFn = (ev: IO.Event) => void;
+export type EventFn = (ev: IO.Event) => void;
 
 interface BaseOptions {
     width: number;
@@ -192,7 +192,7 @@ export abstract class BaseCanvas implements BufferTarget {
         return x >= 0 && y >= 0 && x < this.width && y < this.height;
     }
 
-    set onclick(fn: MouseEventFn | null) {
+    set onclick(fn: EventFn | null) {
         if (fn) {
             this.node.onclick = (e: MouseEvent) => {
                 const x = this._toX(e.offsetX);
@@ -205,7 +205,7 @@ export abstract class BaseCanvas implements BufferTarget {
         }
     }
 
-    set onmousemove(fn: MouseEventFn | null) {
+    set onmousemove(fn: EventFn | null) {
         if (fn) {
             this.node.onmousemove = (e: MouseEvent) => {
                 const x = this._toX(e.offsetX);
@@ -221,7 +221,7 @@ export abstract class BaseCanvas implements BufferTarget {
         }
     }
 
-    set onmouseup(fn: MouseEventFn | null) {
+    set onmouseup(fn: EventFn | null) {
         if (fn) {
             this.node.onmouseup = (e: MouseEvent) => {
                 const x = this._toX(e.offsetX);
@@ -231,6 +231,18 @@ export abstract class BaseCanvas implements BufferTarget {
             };
         } else {
             this.node.onmouseup = null;
+        }
+    }
+
+    set onkeydown(fn: EventFn | null) {
+        if (fn) {
+            this.node.onkeydown = (e: KeyboardEvent) => {
+                e.stopPropagation();
+                const ev = IO.makeKeyEvent(e);
+                fn(ev);
+            };
+        } else {
+            this.node.onkeydown = null;
         }
     }
 
@@ -560,6 +572,7 @@ export function make(...args: any[]): BaseCanvas {
         canvas.onclick = (e) => loop.pushEvent(e);
         canvas.onmousemove = (e) => loop.pushEvent(e);
         canvas.onmouseup = (e) => loop.pushEvent(e);
+        // canvas.onkeydown = (e) => loop.pushEvent(e); // Keyboard events require tabindex to be set, better to let user do this.
     }
 
     return canvas;

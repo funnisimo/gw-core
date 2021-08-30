@@ -212,9 +212,14 @@ function stepFromTo(a, b, fn) {
     }
 }
 // LINES
+function forLine(x, y, dir, length, fn) {
+    for (let l = 0; l < length; ++l) {
+        fn(x + l * dir[0], y + l * dir[1]);
+    }
+}
 const FP_BASE = 16;
 const FP_FACTOR = 1 << 16;
-function forLine(fromX, fromY, toX, toY, stepFn) {
+function forLineBetween(fromX, fromY, toX, toY, stepFn) {
     let targetVector = [], error = [], currentVector = [], previousVector = [], quadrantTransform = [];
     let largerTargetComponent, i;
     let currentLoc = [-1, -1], previousLoc = [-1, -1];
@@ -266,7 +271,7 @@ function forLine(fromX, fromY, toX, toY, stepFn) {
 // terminus indicator after the end of the list.
 function getLine(fromX, fromY, toX, toY) {
     const line = [];
-    forLine(fromX, fromY, toX, toY, (x, y) => {
+    forLineBetween(fromX, fromY, toX, toY, (x, y) => {
         line.push([x, y]);
         return x == toX && y == toY;
     });
@@ -280,7 +285,7 @@ function getLine(fromX, fromY, toX, toY) {
 // terminus indicator after the end of the list.
 function getLineThru(fromX, fromY, toX, toY, width, height) {
     const line = [];
-    forLine(fromX, fromY, toX, toY, (x, y) => {
+    forLineBetween(fromX, fromY, toX, toY, (x, y) => {
         if (x < 0 || y < 0 || x >= width || y >= height)
             return true;
         line.push([x, y]);
@@ -402,6 +407,7 @@ var xy = /*#__PURE__*/Object.freeze({
     dirSpread: dirSpread,
     stepFromTo: stepFromTo,
     forLine: forLine,
+    forLineBetween: forLineBetween,
     getLine: getLine,
     getLineThru: getLineThru,
     forCircle: forCircle,
@@ -2002,16 +2008,6 @@ function keyCodeDirection(key) {
 function ignoreKeyEvent(e) {
     return CONTROL_CODES.includes(e.code);
 }
-function onkeydown(e) {
-    if (ignoreKeyEvent(e))
-        return;
-    if (e.code === 'Escape') {
-        loop.clearEvents(); // clear all current events, then push on the escape
-    }
-    const ev = makeKeyEvent(e);
-    loop.pushEvent(ev);
-    e.preventDefault();
-}
 // MOUSE
 function makeMouseEvent(e, x, y) {
     const ev = DEAD_EVENTS.pop() || {};
@@ -2230,6 +2226,16 @@ class Loop {
     waitForAck() {
         return this.pause(5 * 60 * 1000); // 5 min
     }
+    onkeydown(e) {
+        if (ignoreKeyEvent(e))
+            return;
+        if (e.code === 'Escape') {
+            this.clearEvents(); // clear all current events, then push on the escape
+        }
+        const ev = makeKeyEvent(e);
+        this.pushEvent(ev);
+        e.preventDefault();
+    }
 }
 function make$6() {
     return new Loop();
@@ -2252,7 +2258,6 @@ var io = /*#__PURE__*/Object.freeze({
     makeKeyEvent: makeKeyEvent,
     keyCodeDirection: keyCodeDirection,
     ignoreKeyEvent: ignoreKeyEvent,
-    onkeydown: onkeydown,
     makeMouseEvent: makeMouseEvent,
     Loop: Loop,
     make: make$6,
@@ -5293,6 +5298,18 @@ class BaseCanvas {
             this.node.onmouseup = null;
         }
     }
+    set onkeydown(fn) {
+        if (fn) {
+            this.node.onkeydown = (e) => {
+                e.stopPropagation();
+                const ev = makeKeyEvent(e);
+                fn(ev);
+            };
+        }
+        else {
+            this.node.onkeydown = null;
+        }
+    }
     _toX(offsetX) {
         return clamp(Math.floor(this.width * (offsetX / this.node.clientWidth)), 0, this.width - 1);
     }
@@ -5534,6 +5551,7 @@ function make$3(...args) {
         canvas.onclick = (e) => loop$1.pushEvent(e);
         canvas.onmousemove = (e) => loop$1.pushEvent(e);
         canvas.onmouseup = (e) => loop$1.pushEvent(e);
+        // canvas.onkeydown = (e) => loop.pushEvent(e); // Keyboard events require tabindex to be set, better to let user do this.
     }
     return canvas;
 }

@@ -176,19 +176,6 @@ export function ignoreKeyEvent(e: KeyboardEvent) {
     return CONTROL_CODES.includes(e.code);
 }
 
-export function onkeydown(e: KeyboardEvent) {
-    if (ignoreKeyEvent(e)) return;
-
-    if (e.code === 'Escape') {
-        loop.clearEvents(); // clear all current events, then push on the escape
-    }
-
-    const ev = makeKeyEvent(e);
-    loop.pushEvent(ev);
-
-    e.preventDefault();
-}
-
 // MOUSE
 
 export function makeMouseEvent(e: MouseEvent, x: number, y: number) {
@@ -432,6 +419,19 @@ export class Loop {
 
     waitForAck() {
         return this.pause(5 * 60 * 1000); // 5 min
+    }
+
+    onkeydown(e: KeyboardEvent) {
+        if (ignoreKeyEvent(e)) return;
+
+        if (e.code === 'Escape') {
+            this.clearEvents(); // clear all current events, then push on the escape
+        }
+
+        const ev = makeKeyEvent(e);
+        this.pushEvent(ev);
+
+        e.preventDefault();
     }
 }
 

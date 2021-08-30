@@ -57,10 +57,10 @@ export function y(src: XY | Loc) {
 }
 
 export class Bounds {
-    public x: number;
-    public y: number;
-    public width: number;
-    public height: number;
+    x: number;
+    y: number;
+    width: number;
+    height: number;
 
     constructor(x: number, y: number, w: number, h: number) {
         this.x = x;
@@ -276,10 +276,22 @@ export function stepFromTo(
 
 // LINES
 
+export function forLine(
+    x: number,
+    y: number,
+    dir: Loc,
+    length: number,
+    fn: (x: number, y: number) => any
+) {
+    for (let l = 0; l < length; ++l) {
+        fn(x + l * dir[0], y + l * dir[1]);
+    }
+}
+
 const FP_BASE = 16;
 const FP_FACTOR = 1 << 16;
 
-export function forLine(
+export function forLineBetween(
     fromX: number,
     fromY: number,
     toX: number,
@@ -363,7 +375,7 @@ export function getLine(
 ): Loc[] {
     const line: Array<Loc> = [];
 
-    forLine(fromX, fromY, toX, toY, (x: number, y: number) => {
+    forLineBetween(fromX, fromY, toX, toY, (x: number, y: number) => {
         line.push([x, y]);
         return x == toX && y == toY;
     });
@@ -387,7 +399,7 @@ export function getLineThru(
 ): Loc[] {
     const line: Array<Loc> = [];
 
-    forLine(fromX, fromY, toX, toY, (x: number, y: number) => {
+    forLineBetween(fromX, fromY, toX, toY, (x: number, y: number) => {
         if (x < 0 || y < 0 || x >= width || y >= height) return true;
         line.push([x, y]);
         return false;

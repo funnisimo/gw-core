@@ -203,7 +203,8 @@ declare function isOppositeDir(a: Loc$1, b: Loc$1): boolean;
 declare function isSameDir(a: Loc$1, b: Loc$1): boolean;
 declare function dirSpread(dir: Loc$1): Loc$1[];
 declare function stepFromTo(a: XY | Loc$1, b: XY | Loc$1, fn: (x: number, y: number) => any): void;
-declare function forLine(fromX: number, fromY: number, toX: number, toY: number, stepFn: (x: number, y: number) => boolean): void;
+declare function forLine(x: number, y: number, dir: Loc$1, length: number, fn: (x: number, y: number) => any): void;
+declare function forLineBetween(fromX: number, fromY: number, toX: number, toY: number, stepFn: (x: number, y: number) => boolean): void;
 declare function getLine(fromX: number, fromY: number, toX: number, toY: number): Loc$1[];
 declare function getLineThru(fromX: number, fromY: number, toX: number, toY: number, width: number, height: number): Loc$1[];
 declare function forCircle(x: number, y: number, radius: number, fn: XYFunc): void;
@@ -249,6 +250,7 @@ declare const xy_d_isSameDir: typeof isSameDir;
 declare const xy_d_dirSpread: typeof dirSpread;
 declare const xy_d_stepFromTo: typeof stepFromTo;
 declare const xy_d_forLine: typeof forLine;
+declare const xy_d_forLineBetween: typeof forLineBetween;
 declare const xy_d_getLine: typeof getLine;
 declare const xy_d_getLineThru: typeof getLineThru;
 declare const xy_d_forCircle: typeof forCircle;
@@ -293,6 +295,7 @@ declare namespace xy_d {
     xy_d_dirSpread as dirSpread,
     xy_d_stepFromTo as stepFromTo,
     xy_d_forLine as forLine,
+    xy_d_forLineBetween as forLineBetween,
     xy_d_getLine as getLine,
     xy_d_getLineThru as getLineThru,
     xy_d_forCircle as forCircle,
@@ -751,7 +754,6 @@ declare function makeTickEvent(dt: number): Event$1;
 declare function makeKeyEvent(e: KeyboardEvent): Event$1;
 declare function keyCodeDirection(key: string): Loc$1 | null;
 declare function ignoreKeyEvent(e: KeyboardEvent): boolean;
-declare function onkeydown(e: KeyboardEvent): void;
 declare function makeMouseEvent(e: MouseEvent, x: number, y: number): Event$1;
 declare class Loop {
     running: boolean;
@@ -774,6 +776,7 @@ declare class Loop {
     nextKeyOrClick(ms?: number, matchFn?: EventMatchFn): Promise<Event$1 | null>;
     pause(ms: number): Promise<boolean | null>;
     waitForAck(): Promise<boolean | null>;
+    onkeydown(e: KeyboardEvent): void;
 }
 declare function make$5(): Loop;
 declare const loop: Loop;
@@ -794,7 +797,6 @@ declare const io_d_makeTickEvent: typeof makeTickEvent;
 declare const io_d_makeKeyEvent: typeof makeKeyEvent;
 declare const io_d_keyCodeDirection: typeof keyCodeDirection;
 declare const io_d_ignoreKeyEvent: typeof ignoreKeyEvent;
-declare const io_d_onkeydown: typeof onkeydown;
 declare const io_d_makeMouseEvent: typeof makeMouseEvent;
 type io_d_Loop = Loop;
 declare const io_d_Loop: typeof Loop;
@@ -818,7 +820,6 @@ declare namespace io_d {
     io_d_makeKeyEvent as makeKeyEvent,
     io_d_keyCodeDirection as keyCodeDirection,
     io_d_ignoreKeyEvent as ignoreKeyEvent,
-    io_d_onkeydown as onkeydown,
     io_d_makeMouseEvent as makeMouseEvent,
     io_d_Loop as Loop,
     make$5 as make,
@@ -992,12 +993,12 @@ declare namespace path_d {
   };
 }
 
-declare type EventFn = (...args: any[]) => Promise<any>;
+declare type EventFn$1 = (...args: any[]) => Promise<any>;
 /**
  * Data for an event listener.
  */
 declare class Listener implements ListItem<Listener> {
-    fn: EventFn;
+    fn: EventFn$1;
     context: any;
     once: boolean;
     next: Listener | null;
@@ -1007,7 +1008,7 @@ declare class Listener implements ListItem<Listener> {
      * @param {Object} [context=null] The context to invoke the listener with.
      * @param {Boolean} [once=false] Specify if the listener is a one-time listener.
      */
-    constructor(fn: EventFn, context?: any, once?: boolean);
+    constructor(fn: EventFn$1, context?: any, once?: boolean);
     /**
      * Compares this Listener to the parameters.
      * @param {Function} fn - The function
@@ -1015,7 +1016,7 @@ declare class Listener implements ListItem<Listener> {
      * @param {Boolean} [once] - Whether or not it is a one time handler.
      * @returns Whether or not this Listener matches the parameters.
      */
-    matches(fn: EventFn, context?: any, once?: boolean): boolean;
+    matches(fn: EventFn$1, context?: any, once?: boolean): boolean;
 }
 /**
  * Add a listener for a given event.
@@ -1026,7 +1027,7 @@ declare class Listener implements ListItem<Listener> {
  * @param {Boolean} once Specify if the listener is a one-time listener.
  * @returns {Listener}
  */
-declare function addListener(event: string, fn: EventFn, context?: any, once?: boolean): Listener;
+declare function addListener(event: string, fn: EventFn$1, context?: any, once?: boolean): Listener;
 /**
  * Add a listener for a given event.
  *
@@ -1036,7 +1037,7 @@ declare function addListener(event: string, fn: EventFn, context?: any, once?: b
  * @param {Boolean} once Specify if the listener is a one-time listener.
  * @returns {Listener}
  */
-declare function on(event: string, fn: EventFn, context?: any, once?: boolean): Listener;
+declare function on(event: string, fn: EventFn$1, context?: any, once?: boolean): Listener;
 /**
  * Add a one-time listener for a given event.
  *
@@ -1046,7 +1047,7 @@ declare function on(event: string, fn: EventFn, context?: any, once?: boolean): 
  * @returns {EventEmitter} `this`.
  * @public
  */
-declare function once(event: string, fn: EventFn, context?: any): Listener;
+declare function once(event: string, fn: EventFn$1, context?: any): Listener;
 /**
  * Remove the listeners of a given event.
  *
@@ -1057,7 +1058,7 @@ declare function once(event: string, fn: EventFn, context?: any): Listener;
  * @returns {EventEmitter} `this`.
  * @public
  */
-declare function removeListener(event: string, fn: EventFn, context?: any, once?: boolean): boolean;
+declare function removeListener(event: string, fn: EventFn$1, context?: any, once?: boolean): boolean;
 /**
  * Remove the listeners of a given event.
  *
@@ -1068,7 +1069,7 @@ declare function removeListener(event: string, fn: EventFn, context?: any, once?
  * @returns {EventEmitter} `this`.
  * @public
  */
-declare function off(event: string, fn: EventFn, context?: any, once?: boolean): boolean;
+declare function off(event: string, fn: EventFn$1, context?: any, once?: boolean): boolean;
 /**
  * Clear event by name.
  *
@@ -1093,7 +1094,6 @@ declare function removeAllListeners(event?: string): void;
  */
 declare function emit(...args: any[]): Promise<boolean>;
 
-type events_d_EventFn = EventFn;
 type events_d_Listener = Listener;
 declare const events_d_Listener: typeof Listener;
 declare const events_d_addListener: typeof addListener;
@@ -1106,7 +1106,7 @@ declare const events_d_removeAllListeners: typeof removeAllListeners;
 declare const events_d_emit: typeof emit;
 declare namespace events_d {
   export {
-    events_d_EventFn as EventFn,
+    EventFn$1 as EventFn,
     events_d_Listener as Listener,
     events_d_addListener as addListener,
     events_d_on as on,
@@ -1276,7 +1276,7 @@ declare class Buffer extends DataBuffer {
 declare function makeBuffer(width: number, height: number): DataBuffer;
 declare function makeBuffer(canvas: BufferTarget): Buffer;
 
-declare type MouseEventFn = (ev: Event$1) => void;
+declare type EventFn = (ev: Event$1) => void;
 interface BaseOptions {
     width: number;
     height: number;
@@ -1322,9 +1322,10 @@ declare abstract class BaseCanvas implements BufferTarget {
     render(): void;
     abstract _render(): void;
     hasXY(x: number, y: number): boolean;
-    set onclick(fn: MouseEventFn | null);
-    set onmousemove(fn: MouseEventFn | null);
-    set onmouseup(fn: MouseEventFn | null);
+    set onclick(fn: EventFn | null);
+    set onmousemove(fn: EventFn | null);
+    set onmouseup(fn: EventFn | null);
+    set onkeydown(fn: EventFn | null);
     protected _toX(offsetX: number): number;
     protected _toY(offsetY: number): number;
 }
@@ -1358,7 +1359,7 @@ declare class Canvas2D extends BaseCanvas {
 declare function make$3(opts: Partial<CanvasOptions>): BaseCanvas;
 declare function make$3(width: number, height: number, opts?: Partial<CanvasOptions>): BaseCanvas;
 
-type index_d$3_MouseEventFn = MouseEventFn;
+type index_d$3_EventFn = EventFn;
 type index_d$3_CanvasOptions = CanvasOptions;
 type index_d$3_NotSupportedError = NotSupportedError;
 declare const index_d$3_NotSupportedError: typeof NotSupportedError;
@@ -1381,7 +1382,7 @@ declare const index_d$3_Buffer: typeof Buffer;
 declare const index_d$3_makeBuffer: typeof makeBuffer;
 declare namespace index_d$3 {
   export {
-    index_d$3_MouseEventFn as MouseEventFn,
+    index_d$3_EventFn as EventFn,
     index_d$3_CanvasOptions as CanvasOptions,
     index_d$3_NotSupportedError as NotSupportedError,
     index_d$3_BaseCanvas as BaseCanvas,
