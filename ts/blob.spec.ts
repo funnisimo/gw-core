@@ -23,7 +23,7 @@ describe('Blob', () => {
     });
 
     test('fillBlob - can handle min >= max', () => {
-        GW.random.seed(123456);
+        GW.rng.random.seed(123456);
         a = GW.grid.alloc(50, 30, 0);
         expect(a.count(1)).toEqual(0);
 
@@ -39,7 +39,7 @@ describe('Blob', () => {
     });
 
     test('fillBlob', () => {
-        GW.random.seed(12345);
+        GW.rng.random.seed(12345);
         a = GW.grid.alloc(50, 50);
 
         const blob = new GW.blob.Blob({

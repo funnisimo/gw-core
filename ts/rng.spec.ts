@@ -1,5 +1,5 @@
 import 'jest-extended';
-import { random, cosmetic } from './random';
+import { random, cosmetic } from './rng';
 
 function always(testFn: () => any, count = 1000) {
     for (let i = 0; i < count; ++i) {

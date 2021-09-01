@@ -1,4 +1,4 @@
-import { random, Random } from './random';
+import { random, Random } from './rng';
 
 export type RangeBase = Range | string | number[] | number;
 

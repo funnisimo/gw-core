@@ -3,10 +3,6 @@
  * @module utils
  */
 
-import { Random, Alea } from '../random';
-
-export { Random, Alea };
-
 export function NOOP() {}
 export function TRUE() {
     return true;
@@ -61,15 +57,4 @@ export function arraysIntersect(a: any[], b: any[]) {
 
 export function sum(arr: number[]) {
     return arr.reduce((a, b) => a + b);
-}
-
-// ALGOS
-
-export async function asyncForEach<T>(
-    iterable: Iterable<T>,
-    fn: (t: T) => Promise<any> | any
-) {
-    for (let t of iterable) {
-        await fn(t);
-    }
 }

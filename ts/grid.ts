@@ -1,4 +1,5 @@
-import { random } from './random';
+import { xy } from '.';
+import { random } from './rng';
 import * as Utils from './utils';
 import * as XY from './xy';
 
@@ -309,6 +310,27 @@ export class Grid<T> extends Array<Array<T>> {
             if (fn(v, i, j, this)) ++count;
         });
         return count;
+    }
+
+    /**
+     * Finds the first matching value/result and returns that location as an xy.Loc
+     * @param v - The fill value or a function that returns the fill value.
+     * @returns xy.Loc | null - The location of the first cell matching the criteria or null if not found.
+     * TSIGNORE
+     */
+    // @ts-ignore
+    find(match: GridMatch<T> | T): xy.Loc | null {
+        const fn: GridMatch<T> =
+            typeof match === 'function'
+                ? (match as GridMatch<T>)
+                : (v: T) => v == match;
+        for (let x = 0; x < this.width; ++x) {
+            for (let y = 0; y < this.height; ++y) {
+                const v = this[x][y];
+                if (fn(v, x, y, this)) return [x, y] as xy.Loc;
+            }
+        }
+        return null;
     }
 
     dump(fmtFn?: GridFormat<T>, log = console.log) {

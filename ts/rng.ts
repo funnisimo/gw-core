@@ -65,6 +65,14 @@ const RANDOM_CONFIG: RandomConfig = {
     // },
 };
 
+export function configure(config: Partial<RandomConfig> = {}) {
+    if (config.make) {
+        RANDOM_CONFIG.make = config.make;
+        random.seed();
+        cosmetic.seed();
+    }
+}
+
 function lotteryDrawArray(rand: Random, frequencies: WeightedArray) {
     let i, maxFreq, randIndex;
     maxFreq = 0;
@@ -116,16 +124,8 @@ export class Random {
     //     }
     // }
 
-    constructor() {
-        this._fn = RANDOM_CONFIG.make();
-    }
-
-    configure(config: Partial<RandomConfig> = {}) {
-        if (config.make) {
-            RANDOM_CONFIG.make = config.make;
-            random.seed();
-            cosmetic.seed();
-        }
+    constructor(seed?: number) {
+        this._fn = RANDOM_CONFIG.make(seed);
     }
 
     seed(val?: number) {
@@ -171,13 +171,17 @@ export class Random {
         return total + addend;
     }
 
-    weighted(weights: WeightedArray | WeightedObject) {
+    weighted(weights: WeightedArray): number;
+    weighted(weights: WeightedObject): string;
+    weighted(weights: WeightedArray | WeightedObject): string | number {
         if (Array.isArray(weights)) {
             return lotteryDrawArray(this, weights);
         }
         return lotteryDrawObject(this, weights);
     }
 
+    item(list: any[]): any;
+    item(obj: { [k: string]: any }): any;
     item(list: any[] | { [k: string]: any }): any {
         if (!Array.isArray(list)) {
             list = Object.values(list) as any[];
@@ -339,3 +343,7 @@ export class Random {
 
 export const random = new Random();
 export const cosmetic = new Random();
+
+export function make(seed?: number): Random {
+    return new Random(seed);
+}

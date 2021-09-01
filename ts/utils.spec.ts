@@ -1,4 +1,4 @@
-import * as Utils from '.';
+import * as Utils from './utils';
 
 describe('Utils', () => {
     test('basics', () => {

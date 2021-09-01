@@ -1,4 +1,4 @@
-import { cosmetic } from '../random';
+import { cosmetic } from '../rng';
 // import { make as Make } from './gw';
 
 export type ColorData =

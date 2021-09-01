@@ -1,4 +1,4 @@
-export * as utils from './utils';
+export * from './utils';
 export * as xy from './xy';
 export * as list from './list';
 export * as object from './object';
@@ -17,7 +17,8 @@ export * as color from './color';
 export * as text from './text';
 export * as types from './types';
 export * as message from './message';
-export { cosmetic, random } from './random';
+// export { cosmetic, random } from './rng';
+export * as rng from './rng';
 export { colors } from './color';
 export { sprites } from './sprite';
 export * from './gw';

@@ -1,7 +1,7 @@
 import * as Grid from './grid';
 import * as GW from './index';
 // import * as UTILS from '../test/utils';
-import { random } from './random';
+import { random } from './rng';
 
 describe('GW.grid', () => {
     let a: Grid.NumGrid;
@@ -63,7 +63,7 @@ describe('GW.grid', () => {
 
     test('alloc a clone', () => {
         a = GW.grid.alloc(10, 10);
-        a.update(() => GW.random.number(100) + 1);
+        a.update(() => GW.rng.random.number(100) + 1);
         expect(a[0][0]).toBeGreaterThan(0);
 
         const b = GW.grid.alloc(a);
@@ -404,35 +404,35 @@ describe('GW.grid', () => {
         a = GW.grid.alloc(10, 10, 0);
 
         // all open around
-        expect(a.arcCount(4, 3, GW.utils.IS_ZERO)).toEqual(1);
+        expect(a.arcCount(4, 3, GW.IS_ZERO)).toEqual(1);
 
         // one blocked
         a[3][3] = 1;
-        expect(a.arcCount(4, 3, GW.utils.IS_ZERO)).toEqual(1);
+        expect(a.arcCount(4, 3, GW.IS_ZERO)).toEqual(1);
         a[3][2] = 1;
-        expect(a.arcCount(4, 3, GW.utils.IS_ZERO)).toEqual(1);
+        expect(a.arcCount(4, 3, GW.IS_ZERO)).toEqual(1);
         a[3][4] = 1;
-        expect(a.arcCount(4, 3, GW.utils.IS_ZERO)).toEqual(1);
+        expect(a.arcCount(4, 3, GW.IS_ZERO)).toEqual(1);
 
         // two blocked
         a[5][3] = 1;
-        expect(a.arcCount(4, 3, GW.utils.IS_ZERO)).toEqual(2);
+        expect(a.arcCount(4, 3, GW.IS_ZERO)).toEqual(2);
         a[5][2] = 1;
-        expect(a.arcCount(4, 3, GW.utils.IS_ZERO)).toEqual(2);
+        expect(a.arcCount(4, 3, GW.IS_ZERO)).toEqual(2);
         a[5][4] = 1;
-        expect(a.arcCount(4, 3, GW.utils.IS_ZERO)).toEqual(2);
+        expect(a.arcCount(4, 3, GW.IS_ZERO)).toEqual(2);
 
         // T intersection
         a[5][3] = 0;
-        expect(a.arcCount(4, 3, GW.utils.IS_ZERO)).toEqual(3);
+        expect(a.arcCount(4, 3, GW.IS_ZERO)).toEqual(3);
 
         // + intersection
         a[3][3] = 0;
-        expect(a.arcCount(4, 3, GW.utils.IS_ZERO)).toEqual(4);
+        expect(a.arcCount(4, 3, GW.IS_ZERO)).toEqual(4);
 
         // all filled around
         a.fill(1);
-        expect(a.arcCount(4, 3, GW.utils.IS_ZERO)).toEqual(0);
+        expect(a.arcCount(4, 3, GW.IS_ZERO)).toEqual(0);
     });
 
     test('findReplaceRange', () => {
@@ -509,7 +509,7 @@ describe('GW.grid', () => {
     });
 
     test('randomLeastPositiveLoc', () => {
-        GW.random.seed(12345);
+        GW.rng.random.seed(12345);
         a = GW.grid.alloc(10, 10);
         a.fillRect(0, 0, 4, 4, -1);
         a.fillRect(7, 7, 3, 3, 2);

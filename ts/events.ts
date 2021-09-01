@@ -1,6 +1,6 @@
 import * as List from './list';
 
-export type EventFn = (...args: any[]) => Promise<any>;
+export type EventFn = (...args: any[]) => Promise<any> | any;
 
 /**
  * Data for an event listener.
@@ -13,11 +13,11 @@ export class Listener implements List.ListItem<Listener> {
 
     /**
      * Creates a Listener.
-     * @param {Function} fn The listener function.
-     * @param {Object} [context=null] The context to invoke the listener with.
-     * @param {Boolean} [once=false] Specify if the listener is a one-time listener.
+     * @param {EventFn} fn The listener function.
+     * @param {any} [context=null] The context to invoke the listener with.
+     * @param {boolean} [once=false] Specify if the listener is a one-time listener.
      */
-    constructor(fn: EventFn, context?: any, once = false) {
+    constructor(fn: EventFn, context?: any, once: boolean = false) {
         this.fn = fn;
         this.context = context || null;
         this.once = once || false;
@@ -26,9 +26,9 @@ export class Listener implements List.ListItem<Listener> {
 
     /**
      * Compares this Listener to the parameters.
-     * @param {Function} fn - The function
-     * @param {Object} [context] - The context Object.
-     * @param {Boolean} [once] - Whether or not it is a one time handler.
+     * @param {EventFn} fn - The function
+     * @param {any} [context] - The context Object.
+     * @param {boolean} [once] - Whether or not it is a one time handler.
      * @returns Whether or not this Listener matches the parameters.
      */
     matches(fn: EventFn, context?: any, once?: boolean) {
@@ -46,9 +46,9 @@ var EVENTS: Record<string, Listener | null> = {};
  * Add a listener for a given event.
  *
  * @param {String} event The event name.
- * @param {Function} fn The listener function.
+ * @param {EventFn} fn The listener function.
  * @param {*} context The context to invoke the listener with.
- * @param {Boolean} once Specify if the listener is a one-time listener.
+ * @param {boolean} once Specify if the listener is a one-time listener.
  * @returns {Listener}
  */
 export function addListener(
@@ -70,9 +70,9 @@ export function addListener(
  * Add a listener for a given event.
  *
  * @param {String} event The event name.
- * @param {Function} fn The listener function.
+ * @param {EventFn} fn The listener function.
  * @param {*} context The context to invoke the listener with.
- * @param {Boolean} once Specify if the listener is a one-time listener.
+ * @param {boolean} once Specify if the listener is a one-time listener.
  * @returns {Listener}
  */
 export function on(event: string, fn: EventFn, context?: any, once = false) {
@@ -83,7 +83,7 @@ export function on(event: string, fn: EventFn, context?: any, once = false) {
  * Add a one-time listener for a given event.
  *
  * @param {(String|Symbol)} event The event name.
- * @param {Function} fn The listener function.
+ * @param {EventFn} fn The listener function.
  * @param {*} [context=this] The context to invoke the listener with.
  * @returns {EventEmitter} `this`.
  * @public
@@ -96,9 +96,9 @@ export function once(event: string, fn: EventFn, context?: any) {
  * Remove the listeners of a given event.
  *
  * @param {String} event The event name.
- * @param {Function} fn Only remove the listeners that match this function.
+ * @param {EventFn} fn Only remove the listeners that match this function.
  * @param {*} context Only remove the listeners that have this context.
- * @param {Boolean} once Only remove one-time listeners.
+ * @param {boolean} once Only remove one-time listeners.
  * @returns {EventEmitter} `this`.
  * @public
  */
@@ -125,9 +125,9 @@ export function removeListener(
  * Remove the listeners of a given event.
  *
  * @param {String} event The event name.
- * @param {Function} fn Only remove the listeners that match this function.
+ * @param {EventFn} fn Only remove the listeners that match this function.
  * @param {*} context Only remove the listeners that have this context.
- * @param {Boolean} once Only remove one-time listeners.
+ * @param {boolean} once Only remove one-time listeners.
  * @returns {EventEmitter} `this`.
  * @public
  */
@@ -166,7 +166,7 @@ export function removeAllListeners(event?: string) {
  *
  * @param {String} event The event name.
  * @param {...*} args The additional arguments to the event handlers.
- * @returns {Boolean} `true` if the event had listeners, else `false`.
+ * @returns {boolean} `true` if the event had listeners, else `false`.
  * @public
  */
 export async function emit(...args: any[]) {

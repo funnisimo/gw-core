@@ -1,6 +1,6 @@
 import * as XY from './xy';
 import * as GRID from './grid';
-import { random } from './random';
+import { random } from './rng';
 
 export interface BlobConfig {
     rounds: number;

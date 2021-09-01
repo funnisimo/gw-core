@@ -1,3 +1,29 @@
+/**
+ * GW.utils
+ * @module utils
+ */
+declare function NOOP(): void;
+declare function TRUE(): boolean;
+declare function FALSE(): boolean;
+declare function ONE(): number;
+declare function ZERO(): number;
+declare function IDENTITY(x: any): any;
+declare function IS_ZERO(x: number): boolean;
+declare function IS_NONZERO(x: number): boolean;
+/**
+ * clamps a value between min and max (inclusive)
+ * @param v {Number} the value to clamp
+ * @param min {Number} the minimum value
+ * @param max {Number} the maximum value
+ * @returns {Number} the clamped value
+ */
+declare function clamp(v: number, min: number, max: number): number;
+declare function ERROR(message: string): void;
+declare function WARN(...args: string[]): void;
+declare function first(...args: any[]): any;
+declare function arraysIntersect(a: any[], b: any[]): boolean;
+declare function sum(arr: number[]): number;
+
 declare type ColorData = [number, number, number] | [number, number, number, number, number, number, number] | [number, number, number, number, number, number, number, boolean];
 declare type ColorBase = string | number | ColorData | Color;
 declare type LightValue = [number, number, number];
@@ -53,11 +79,11 @@ declare function fromArray(vals: ColorData, base256?: boolean): Color;
 declare function fromCss(css: string): Color;
 declare function fromName(name: string): Color;
 declare function fromNumber(val: number, base256?: boolean): Color;
-declare function make$8(): Color;
-declare function make$8(rgb: number, base256?: boolean): Color;
-declare function make$8(color?: ColorBase | null): Color;
-declare function make$8(arrayLike: ColorData, base256?: boolean): Color;
-declare function make$8(...rgb: number[]): Color;
+declare function make$9(): Color;
+declare function make$9(rgb: number, base256?: boolean): Color;
+declare function make$9(color?: ColorBase | null): Color;
+declare function make$9(arrayLike: ColorData, base256?: boolean): Color;
+declare function make$9(...rgb: number[]): Color;
 declare function from$4(): Color;
 declare function from$4(rgb: number, base256?: boolean): Color;
 declare function from$4(color?: ColorBase | null): Color;
@@ -74,44 +100,44 @@ declare function installSpread(name: string, info: ColorBase): Color;
 declare function installSpread(name: string, ...rgb: ColorData): Color;
 declare const NONE: Color;
 
-type index_d$6_ColorData = ColorData;
-type index_d$6_ColorBase = ColorBase;
-type index_d$6_LightValue = LightValue;
-declare const index_d$6_colors: typeof colors;
-type index_d$6_Color = Color;
-declare const index_d$6_Color: typeof Color;
-declare const index_d$6_fromArray: typeof fromArray;
-declare const index_d$6_fromCss: typeof fromCss;
-declare const index_d$6_fromName: typeof fromName;
-declare const index_d$6_fromNumber: typeof fromNumber;
-declare const index_d$6_separate: typeof separate;
-declare const index_d$6_swap: typeof swap;
-declare const index_d$6_relativeLuminance: typeof relativeLuminance;
-declare const index_d$6_distance: typeof distance;
-declare const index_d$6_smoothScalar: typeof smoothScalar;
-declare const index_d$6_installSpread: typeof installSpread;
-declare const index_d$6_NONE: typeof NONE;
-declare namespace index_d$6 {
+type index_d$5_ColorData = ColorData;
+type index_d$5_ColorBase = ColorBase;
+type index_d$5_LightValue = LightValue;
+declare const index_d$5_colors: typeof colors;
+type index_d$5_Color = Color;
+declare const index_d$5_Color: typeof Color;
+declare const index_d$5_fromArray: typeof fromArray;
+declare const index_d$5_fromCss: typeof fromCss;
+declare const index_d$5_fromName: typeof fromName;
+declare const index_d$5_fromNumber: typeof fromNumber;
+declare const index_d$5_separate: typeof separate;
+declare const index_d$5_swap: typeof swap;
+declare const index_d$5_relativeLuminance: typeof relativeLuminance;
+declare const index_d$5_distance: typeof distance;
+declare const index_d$5_smoothScalar: typeof smoothScalar;
+declare const index_d$5_installSpread: typeof installSpread;
+declare const index_d$5_NONE: typeof NONE;
+declare namespace index_d$5 {
   export {
-    index_d$6_ColorData as ColorData,
-    index_d$6_ColorBase as ColorBase,
-    index_d$6_LightValue as LightValue,
-    index_d$6_colors as colors,
-    index_d$6_Color as Color,
-    index_d$6_fromArray as fromArray,
-    index_d$6_fromCss as fromCss,
-    index_d$6_fromName as fromName,
-    index_d$6_fromNumber as fromNumber,
-    make$8 as make,
+    index_d$5_ColorData as ColorData,
+    index_d$5_ColorBase as ColorBase,
+    index_d$5_LightValue as LightValue,
+    index_d$5_colors as colors,
+    index_d$5_Color as Color,
+    index_d$5_fromArray as fromArray,
+    index_d$5_fromCss as fromCss,
+    index_d$5_fromName as fromName,
+    index_d$5_fromNumber as fromNumber,
+    make$9 as make,
     from$4 as from,
-    index_d$6_separate as separate,
-    index_d$6_swap as swap,
-    index_d$6_relativeLuminance as relativeLuminance,
-    index_d$6_distance as distance,
-    index_d$6_smoothScalar as smoothScalar,
+    index_d$5_separate as separate,
+    index_d$5_swap as swap,
+    index_d$5_relativeLuminance as relativeLuminance,
+    index_d$5_distance as distance,
+    index_d$5_smoothScalar as smoothScalar,
     install$3 as install,
-    index_d$6_installSpread as installSpread,
-    index_d$6_NONE as NONE,
+    index_d$5_installSpread as installSpread,
+    index_d$5_NONE as NONE,
   };
 }
 
@@ -305,109 +331,6 @@ declare namespace xy_d {
   };
 }
 
-/**
- * The code in this function is extracted from ROT.JS.
- * Source: https://github.com/ondras/rot.js/blob/v2.2.0/src/rng.ts
- * Copyright (c) 2012-now(), Ondrej Zara
- * All rights reserved.
- * License: BSD 3-Clause "New" or "Revised" License
- * See: https://github.com/ondras/rot.js/blob/v2.2.0/license.txt
- */
-declare function Alea(seed?: number): RandomFunction;
-declare class Random {
-    private _fn;
-    constructor();
-    configure(config?: Partial<RandomConfig>): void;
-    seed(val?: number): void;
-    value(): number;
-    float(): number;
-    number(max?: number): number;
-    int(max?: number): number;
-    range(lo: number, hi: number): number;
-    dice(count: number, sides: number, addend?: number): number;
-    weighted(weights: WeightedArray | WeightedObject): string | number;
-    item(list: any[] | {
-        [k: string]: any;
-    }): any;
-    key(obj: object): any;
-    shuffle(list: any[], fromIndex?: number, toIndex?: number): any[];
-    sequence(n: number): any[];
-    chance(percent: number, outOf?: number): boolean;
-    clumped(lo: number, hi: number, clumps: number): number;
-    matchingLoc(width: number, height: number, matchFn: XYMatchFunc): Loc$1;
-    matchingLocNear(x: number, y: number, matchFn: XYMatchFunc): Loc$1;
-}
-declare const random: Random;
-declare const cosmetic: Random;
-
-/**
- * GW.utils
- * @module utils
- */
-
-declare function NOOP(): void;
-declare function TRUE(): boolean;
-declare function FALSE(): boolean;
-declare function ONE(): number;
-declare function ZERO(): number;
-declare function IDENTITY(x: any): any;
-declare function IS_ZERO(x: number): boolean;
-declare function IS_NONZERO(x: number): boolean;
-/**
- * clamps a value between min and max (inclusive)
- * @param v {Number} the value to clamp
- * @param min {Number} the minimum value
- * @param max {Number} the maximum value
- * @returns {Number} the clamped value
- */
-declare function clamp(v: number, min: number, max: number): number;
-declare function ERROR(message: string): void;
-declare function WARN(...args: string[]): void;
-declare function first(...args: any[]): any;
-declare function arraysIntersect(a: any[], b: any[]): boolean;
-declare function sum(arr: number[]): number;
-declare function asyncForEach<T>(iterable: Iterable<T>, fn: (t: T) => Promise<any> | any): Promise<void>;
-
-type index_d$5_Random = Random;
-declare const index_d$5_Random: typeof Random;
-declare const index_d$5_Alea: typeof Alea;
-declare const index_d$5_NOOP: typeof NOOP;
-declare const index_d$5_TRUE: typeof TRUE;
-declare const index_d$5_FALSE: typeof FALSE;
-declare const index_d$5_ONE: typeof ONE;
-declare const index_d$5_ZERO: typeof ZERO;
-declare const index_d$5_IDENTITY: typeof IDENTITY;
-declare const index_d$5_IS_ZERO: typeof IS_ZERO;
-declare const index_d$5_IS_NONZERO: typeof IS_NONZERO;
-declare const index_d$5_clamp: typeof clamp;
-declare const index_d$5_ERROR: typeof ERROR;
-declare const index_d$5_WARN: typeof WARN;
-declare const index_d$5_first: typeof first;
-declare const index_d$5_arraysIntersect: typeof arraysIntersect;
-declare const index_d$5_sum: typeof sum;
-declare const index_d$5_asyncForEach: typeof asyncForEach;
-declare namespace index_d$5 {
-  export {
-    index_d$5_Random as Random,
-    index_d$5_Alea as Alea,
-    index_d$5_NOOP as NOOP,
-    index_d$5_TRUE as TRUE,
-    index_d$5_FALSE as FALSE,
-    index_d$5_ONE as ONE,
-    index_d$5_ZERO as ZERO,
-    index_d$5_IDENTITY as IDENTITY,
-    index_d$5_IS_ZERO as IS_ZERO,
-    index_d$5_IS_NONZERO as IS_NONZERO,
-    index_d$5_clamp as clamp,
-    index_d$5_ERROR as ERROR,
-    index_d$5_WARN as WARN,
-    index_d$5_first as first,
-    index_d$5_arraysIntersect as arraysIntersect,
-    index_d$5_sum as sum,
-    index_d$5_asyncForEach as asyncForEach,
-  };
-}
-
 declare type ListEntry<T> = T | null;
 interface ListItem<T> {
     next: ListEntry<T>;
@@ -505,6 +428,60 @@ declare namespace object_d {
     object_d_clearObject as clearObject,
     object_d_getOpt as getOpt,
     object_d_firstOpt as firstOpt,
+  };
+}
+
+/**
+ * The code in this function is extracted from ROT.JS.
+ * Source: https://github.com/ondras/rot.js/blob/v2.2.0/src/rng.ts
+ * Copyright (c) 2012-now(), Ondrej Zara
+ * All rights reserved.
+ * License: BSD 3-Clause "New" or "Revised" License
+ * See: https://github.com/ondras/rot.js/blob/v2.2.0/license.txt
+ */
+declare function Alea(seed?: number): RandomFunction;
+declare function configure$1(config?: Partial<RandomConfig>): void;
+declare class Random {
+    private _fn;
+    constructor(seed?: number);
+    seed(val?: number): void;
+    value(): number;
+    float(): number;
+    number(max?: number): number;
+    int(max?: number): number;
+    range(lo: number, hi: number): number;
+    dice(count: number, sides: number, addend?: number): number;
+    weighted(weights: WeightedArray): number;
+    weighted(weights: WeightedObject): string;
+    item(list: any[]): any;
+    item(obj: {
+        [k: string]: any;
+    }): any;
+    key(obj: object): any;
+    shuffle(list: any[], fromIndex?: number, toIndex?: number): any[];
+    sequence(n: number): any[];
+    chance(percent: number, outOf?: number): boolean;
+    clumped(lo: number, hi: number, clumps: number): number;
+    matchingLoc(width: number, height: number, matchFn: XYMatchFunc): Loc$1;
+    matchingLocNear(x: number, y: number, matchFn: XYMatchFunc): Loc$1;
+}
+declare const random: Random;
+declare const cosmetic: Random;
+declare function make$8(seed?: number): Random;
+
+declare const rng_d_Alea: typeof Alea;
+type rng_d_Random = Random;
+declare const rng_d_Random: typeof Random;
+declare const rng_d_random: typeof random;
+declare const rng_d_cosmetic: typeof cosmetic;
+declare namespace rng_d {
+  export {
+    rng_d_Alea as Alea,
+    configure$1 as configure,
+    rng_d_Random as Random,
+    rng_d_random as random,
+    rng_d_cosmetic as cosmetic,
+    make$8 as make,
   };
 }
 
@@ -629,6 +606,14 @@ declare class Grid<T> extends Array<Array<T>> {
     replace(findValue: T, replaceValue: T): void;
     copy(from: Grid<T>): void;
     count(match: GridMatch<T> | T): number;
+    /**
+     * Finds the first matching value/result and returns that location as an xy.Loc
+     * @param v - The fill value or a function that returns the fill value.
+     * @returns xy.Loc | null - The location of the first cell matching the criteria or null if not found.
+     */
+     // @ts-ignore
+
+    find(match: GridMatch<T> | T): Loc$1 | null;
     dump(fmtFn?: GridFormat<T>, log?: {
         (...data: any[]): void;
         (message?: any, ...optionalParams: any[]): void;
@@ -993,7 +978,7 @@ declare namespace path_d {
   };
 }
 
-declare type EventFn$1 = (...args: any[]) => Promise<any>;
+declare type EventFn$1 = (...args: any[]) => Promise<any> | any;
 /**
  * Data for an event listener.
  */
@@ -1004,16 +989,16 @@ declare class Listener implements ListItem<Listener> {
     next: Listener | null;
     /**
      * Creates a Listener.
-     * @param {Function} fn The listener function.
-     * @param {Object} [context=null] The context to invoke the listener with.
-     * @param {Boolean} [once=false] Specify if the listener is a one-time listener.
+     * @param {EventFn} fn The listener function.
+     * @param {any} [context=null] The context to invoke the listener with.
+     * @param {boolean} [once=false] Specify if the listener is a one-time listener.
      */
     constructor(fn: EventFn$1, context?: any, once?: boolean);
     /**
      * Compares this Listener to the parameters.
-     * @param {Function} fn - The function
-     * @param {Object} [context] - The context Object.
-     * @param {Boolean} [once] - Whether or not it is a one time handler.
+     * @param {EventFn} fn - The function
+     * @param {any} [context] - The context Object.
+     * @param {boolean} [once] - Whether or not it is a one time handler.
      * @returns Whether or not this Listener matches the parameters.
      */
     matches(fn: EventFn$1, context?: any, once?: boolean): boolean;
@@ -1022,9 +1007,9 @@ declare class Listener implements ListItem<Listener> {
  * Add a listener for a given event.
  *
  * @param {String} event The event name.
- * @param {Function} fn The listener function.
+ * @param {EventFn} fn The listener function.
  * @param {*} context The context to invoke the listener with.
- * @param {Boolean} once Specify if the listener is a one-time listener.
+ * @param {boolean} once Specify if the listener is a one-time listener.
  * @returns {Listener}
  */
 declare function addListener(event: string, fn: EventFn$1, context?: any, once?: boolean): Listener;
@@ -1032,9 +1017,9 @@ declare function addListener(event: string, fn: EventFn$1, context?: any, once?:
  * Add a listener for a given event.
  *
  * @param {String} event The event name.
- * @param {Function} fn The listener function.
+ * @param {EventFn} fn The listener function.
  * @param {*} context The context to invoke the listener with.
- * @param {Boolean} once Specify if the listener is a one-time listener.
+ * @param {boolean} once Specify if the listener is a one-time listener.
  * @returns {Listener}
  */
 declare function on(event: string, fn: EventFn$1, context?: any, once?: boolean): Listener;
@@ -1042,7 +1027,7 @@ declare function on(event: string, fn: EventFn$1, context?: any, once?: boolean)
  * Add a one-time listener for a given event.
  *
  * @param {(String|Symbol)} event The event name.
- * @param {Function} fn The listener function.
+ * @param {EventFn} fn The listener function.
  * @param {*} [context=this] The context to invoke the listener with.
  * @returns {EventEmitter} `this`.
  * @public
@@ -1052,9 +1037,9 @@ declare function once(event: string, fn: EventFn$1, context?: any): Listener;
  * Remove the listeners of a given event.
  *
  * @param {String} event The event name.
- * @param {Function} fn Only remove the listeners that match this function.
+ * @param {EventFn} fn Only remove the listeners that match this function.
  * @param {*} context Only remove the listeners that have this context.
- * @param {Boolean} once Only remove one-time listeners.
+ * @param {boolean} once Only remove one-time listeners.
  * @returns {EventEmitter} `this`.
  * @public
  */
@@ -1063,9 +1048,9 @@ declare function removeListener(event: string, fn: EventFn$1, context?: any, onc
  * Remove the listeners of a given event.
  *
  * @param {String} event The event name.
- * @param {Function} fn Only remove the listeners that match this function.
+ * @param {EventFn} fn Only remove the listeners that match this function.
  * @param {*} context Only remove the listeners that have this context.
- * @param {Boolean} once Only remove one-time listeners.
+ * @param {boolean} once Only remove one-time listeners.
  * @returns {EventEmitter} `this`.
  * @public
  */
@@ -1089,7 +1074,7 @@ declare function removeAllListeners(event?: string): void;
  *
  * @param {String} event The event name.
  * @param {...*} args The additional arguments to the event handlers.
- * @returns {Boolean} `true` if the event had listeners, else `false`.
+ * @returns {boolean} `true` if the event had listeners, else `false`.
  * @public
  */
 declare function emit(...args: any[]): Promise<boolean>;
@@ -1798,4 +1783,4 @@ declare namespace index_d {
   };
 }
 
-export { blob_d as blob, index_d$3 as canvas, index_d$6 as color, colors, config$1 as config, cosmetic, data, events_d as events, flag_d as flag, index_d$4 as fov, frequency_d as frequency, grid_d as grid, io_d as io, index_d as light, list_d as list, loop, message_d as message, object_d as object, path_d as path, random, range_d as range, scheduler_d as scheduler, index_d$2 as sprite, sprites, index_d$1 as text, types_d as types, index_d$5 as utils, xy_d as xy };
+export { ERROR, FALSE, IDENTITY, IS_NONZERO, IS_ZERO, NOOP, ONE, TRUE, WARN, ZERO, arraysIntersect, blob_d as blob, index_d$3 as canvas, clamp, index_d$5 as color, colors, config$1 as config, data, events_d as events, first, flag_d as flag, index_d$4 as fov, frequency_d as frequency, grid_d as grid, io_d as io, index_d as light, list_d as list, loop, message_d as message, object_d as object, path_d as path, range_d as range, rng_d as rng, scheduler_d as scheduler, index_d$2 as sprite, sprites, sum, index_d$1 as text, types_d as types, xy_d as xy };

@@ -1,6 +1,6 @@
 import * as Color from '../color';
 import { Mixer, makeMixer } from './mixer';
-import { cosmetic } from '../random';
+import { cosmetic } from '../rng';
 
 describe('Mixer', () => {
     beforeEach(() => {
