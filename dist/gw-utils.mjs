@@ -133,6 +133,9 @@ class Bounds {
             this.x + this.width > i &&
             this.y + this.height > j);
     }
+    toString() {
+        return `[${this.x},${this.y} -> ${this.right},${this.bottom}]`;
+    }
 }
 function copyXY(dest, src) {
     dest.x = x(src);
@@ -4184,7 +4187,7 @@ class Mixer {
         return this;
     }
     copy(other) {
-        this.ch = other.ch;
+        this.ch = other.ch || 0;
         this.fg.copy(other.fg);
         this.bg.copy(other.bg);
         return this._changed();

@@ -209,6 +209,7 @@ declare class Bounds {
     get bottom(): number;
     contains(x: number, y: number): boolean;
     contains(loc: Loc$1 | XY): boolean;
+    toString(): string;
 }
 declare function copyXY(dest: XY, src: XY | Loc$1): void;
 declare function addXY(dest: XY, src: XY | Loc$1): void;
@@ -1194,7 +1195,7 @@ declare class Glyphs {
 }
 
 interface DrawInfo {
-    ch: string | number;
+    ch: string | number | null;
     fg: ColorBase;
     bg: ColorBase;
 }

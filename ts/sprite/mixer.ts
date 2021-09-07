@@ -3,7 +3,7 @@ import { SpriteData } from '../types';
 import * as Utils from '../utils';
 
 export interface DrawInfo {
-    ch: string | number;
+    ch: string | number | null;
     fg: Color.ColorBase;
     bg: Color.ColorBase;
 }
@@ -24,7 +24,7 @@ export class Mixer implements DrawInfo {
     }
 
     copy(other: DrawInfo) {
-        this.ch = other.ch;
+        this.ch = other.ch || 0;
         this.fg.copy(other.fg);
         this.bg.copy(other.bg);
         return this._changed();

@@ -98,6 +98,10 @@ export class Bounds {
             this.y + this.height > j
         );
     }
+
+    toString() {
+        return `[${this.x},${this.y} -> ${this.right},${this.bottom}]`;
+    }
 }
 
 export function copyXY(dest: XY, src: XY | Loc) {
