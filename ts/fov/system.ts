@@ -18,14 +18,14 @@ export class FovSystem implements TYPES.FovSystemType {
     site: TYPES.FovSite;
     flags: Grid.NumGrid; // FovFlags
     fov: FOV.FOV;
+    needsUpdate: boolean;
     protected _changed: boolean;
-    viewportChanged: boolean;
 
     constructor(site: TYPES.FovSite, opts: Partial<FovSystemOptions> = {}) {
         this.site = site;
         this.flags = Grid.make(site.width, site.height, FovFlags.VISIBLE);
+        this.needsUpdate = true;
         this._changed = true;
-        this.viewportChanged = false;
 
         this.fov = new FOV.FOV({
             isBlocked(x: number, y: number): boolean {
@@ -50,10 +50,6 @@ export class FovSystem implements TYPES.FovSystemType {
         }
     }
 
-    get changed() {
-        return this._changed;
-    }
-
     isVisible(x: number, y: number): boolean {
         return !!((this.flags.get(x, y) || 0) & FovFlags.VISIBLE);
     }
@@ -73,6 +69,12 @@ export class FovSystem implements TYPES.FovSystemType {
     isRevealed(x: number, y: number): boolean {
         return !!((this.flags.get(x, y) || 0) & FovFlags.REVEALED);
     }
+    fovChanged(x: number, y: number): boolean {
+        const flags = this.flags.get(x, y) || 0;
+        const isVisible = !!(flags & FovFlags.ANY_KIND_OF_VISIBLE);
+        const wasVisible = !!(flags & FovFlags.WAS_ANY_KIND_OF_VISIBLE);
+        return isVisible !== wasVisible;
+    }
 
     makeAlwaysVisible() {
         this.flags.update(
@@ -80,23 +82,43 @@ export class FovSystem implements TYPES.FovSystemType {
                 v |
                 (FovFlags.ALWAYS_VISIBLE | FovFlags.REVEALED | FovFlags.VISIBLE)
         );
+        this.changed = true;
     }
     makeCellAlwaysVisible(x: number, y: number) {
         this.flags[x][y] |= FovFlags.ALWAYS_VISIBLE | FovFlags.REVEALED;
+        this.changed = true;
     }
 
     revealAll(): void {
         this.flags.update((v) => v | FovFlags.REVEALED | FovFlags.VISIBLE);
+        this.changed = true;
     }
     revealCell(x: number, y: number) {
         const flag = FovFlags.REVEALED;
         this.flags[x][y] |= flag;
+        this.changed = true;
     }
     hideCell(x: number, y: number): void {
         this.flags[x][y] &= ~(FovFlags.MAGIC_MAPPED | FovFlags.REVEALED);
+        this.changed = true;
     }
     magicMapCell(x: number, y: number): void {
         this.flags[x][y] |= FovFlags.MAGIC_MAPPED;
+        this.changed = true;
+    }
+
+    get changed(): boolean {
+        return this._changed;
+    }
+    set changed(v: boolean) {
+        this._changed = v;
+        this.needsUpdate = this.needsUpdate || v;
+    }
+
+    copy(other: FovSystem) {
+        this.flags.copy(other.flags);
+        this.needsUpdate = other.needsUpdate;
+        this._changed = other._changed;
     }
 
     protected demoteCellVisibility(flag: number): number {
@@ -276,13 +298,15 @@ export class FovSystem implements TYPES.FovSystemType {
     update(cx?: number, cy?: number, cr?: number): boolean {
         // if (!this.site.usesFov()) return false;
         if (
-            !this.viewportChanged &&
+            !this.needsUpdate &&
             cx === undefined &&
             !this.site.lightingChanged()
         ) {
             return false;
         }
 
+        this.needsUpdate = false;
+        this._changed = false;
         this.flags.update(this.demoteCellVisibility.bind(this));
 
         this.site.eachViewport((x, y, radius, type) => {
@@ -336,6 +360,7 @@ export class FovSystem implements TYPES.FovSystemType {
         // 		}
         // 	}
         // }
+
         return true;
     }
 }

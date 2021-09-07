@@ -45,9 +45,11 @@ export interface FovSystemType {
     isDirectlyVisible(x: number, y: number): boolean;
     isMagicMapped(x: number, y: number): boolean;
     isRevealed(x: number, y: number): boolean;
+    fovChanged(x: number, y: number): boolean;
 
-    readonly changed: boolean;
-    viewportChanged: boolean;
+    changed: boolean;
+    needsUpdate: boolean;
+    copy(other: FovSystemType): void;
 
     makeAlwaysVisible(): void;
     makeCellAlwaysVisible(x: number, y: number): void;

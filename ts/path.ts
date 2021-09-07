@@ -306,8 +306,9 @@ export function getPath(
     distanceMap: Grid.NumGrid,
     originX: number,
     originY: number,
-    isBlocked: BlockedFn
-) {
+    isBlocked: BlockedFn,
+    eightWays = false
+): XY.Loc[] | null {
     // actor = actor || GW.PLAYER;
     let x = originX;
     let y = originY;
@@ -321,10 +322,10 @@ export function getPath(
         }
     }
 
-    const path = [[x, y]];
+    const path: XY.Loc[] = [[x, y]];
     let dir;
     do {
-        dir = nextStep(distanceMap, x, y, isBlocked, true);
+        dir = nextStep(distanceMap, x, y, isBlocked, eightWays);
         if (dir) {
             x += dir[0];
             y += dir[1];

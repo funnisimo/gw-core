@@ -219,6 +219,7 @@ declare function eachNeighbor(x: number, y: number, fn: XYFunc, only4dirs?: bool
 declare function eachNeighborAsync(x: number, y: number, fn: XYFunc, only4dirs?: boolean): Promise<void>;
 declare type XYMatchFunc = (x: number, y: number) => boolean;
 declare function matchingNeighbor(x: number, y: number, matchFn: XYMatchFunc, only4dirs?: boolean): Loc$1;
+declare function straightDistanceBetween(x1: number, y1: number, x2: number, y2: number): number;
 declare function distanceBetween(x1: number, y1: number, x2: number, y2: number): number;
 declare function distanceFromTo(a: XY | Loc$1, b: XY | Loc$1): number;
 declare function calcRadius(x: number, y: number): number;
@@ -265,6 +266,7 @@ declare const xy_d_eachNeighbor: typeof eachNeighbor;
 declare const xy_d_eachNeighborAsync: typeof eachNeighborAsync;
 type xy_d_XYMatchFunc = XYMatchFunc;
 declare const xy_d_matchingNeighbor: typeof matchingNeighbor;
+declare const xy_d_straightDistanceBetween: typeof straightDistanceBetween;
 declare const xy_d_distanceBetween: typeof distanceBetween;
 declare const xy_d_distanceFromTo: typeof distanceFromTo;
 declare const xy_d_calcRadius: typeof calcRadius;
@@ -310,6 +312,7 @@ declare namespace xy_d {
     xy_d_eachNeighborAsync as eachNeighborAsync,
     xy_d_XYMatchFunc as XYMatchFunc,
     xy_d_matchingNeighbor as matchingNeighbor,
+    xy_d_straightDistanceBetween as straightDistanceBetween,
     xy_d_distanceBetween as distanceBetween,
     xy_d_distanceFromTo as distanceFromTo,
     xy_d_calcRadius as calcRadius,
@@ -469,6 +472,10 @@ declare const random: Random;
 declare const cosmetic: Random;
 declare function make$8(seed?: number): Random;
 
+type rng_d_WeightedArray = WeightedArray;
+type rng_d_WeightedObject = WeightedObject;
+type rng_d_RandomConfig = RandomConfig;
+type rng_d_RandomFunction = RandomFunction;
 declare const rng_d_Alea: typeof Alea;
 type rng_d_Random = Random;
 declare const rng_d_Random: typeof Random;
@@ -476,6 +483,10 @@ declare const rng_d_random: typeof random;
 declare const rng_d_cosmetic: typeof cosmetic;
 declare namespace rng_d {
   export {
+    rng_d_WeightedArray as WeightedArray,
+    rng_d_WeightedObject as WeightedObject,
+    rng_d_RandomConfig as RandomConfig,
+    rng_d_RandomFunction as RandomFunction,
     rng_d_Alea as Alea,
     configure$1 as configure,
     rng_d_Random as Random,
@@ -490,16 +501,15 @@ declare class Range {
     lo: number;
     hi: number;
     clumps: number;
-    private _rng;
-    constructor(lower: number, upper?: number, clumps?: number, rng?: Random);
-    value(): number;
+    constructor(lower: number, upper?: number, clumps?: number);
+    value(rng?: Random): number;
     contains(value: number): boolean;
     copy(other: Range): this;
     toString(): string;
 }
-declare function make$7(config: RangeBase | null, rng?: Random): Range;
+declare function make$7(config: RangeBase | null): Range;
 declare const from$3: typeof make$7;
-declare function asFn(config: RangeBase | null, rng?: Random): () => number;
+declare function asFn(config: RangeBase | null): () => number;
 
 type range_d_RangeBase = RangeBase;
 type range_d_Range = Range;
@@ -654,7 +664,6 @@ declare class NumGrid extends Grid<number> {
     randomLeastPositiveLoc(): Loc;
     valueBounds(value: number, bounds?: Bounds): Bounds;
     floodFill(x: number, y: number, matchValue: number | GridMatch<number>, fillValue: number | GridUpdate<number>): number;
-    _floodFill(x: number, y: number, matchFn: GridMatch<number>, fillFn: GridUpdate<number>, done: NumGrid): number;
 }
 declare const alloc: typeof NumGrid.alloc;
 declare const free: typeof NumGrid.free;
@@ -862,8 +871,10 @@ interface FovSystemType {
     isDirectlyVisible(x: number, y: number): boolean;
     isMagicMapped(x: number, y: number): boolean;
     isRevealed(x: number, y: number): boolean;
-    readonly changed: boolean;
-    viewportChanged: boolean;
+    fovChanged(x: number, y: number): boolean;
+    changed: boolean;
+    needsUpdate: boolean;
+    copy(other: FovSystemType): void;
     makeAlwaysVisible(): void;
     makeCellAlwaysVisible(x: number, y: number): void;
     revealAll(): void;
@@ -896,22 +907,25 @@ declare class FovSystem implements FovSystemType {
     site: FovSite;
     flags: NumGrid;
     fov: FOV;
+    needsUpdate: boolean;
     protected _changed: boolean;
-    viewportChanged: boolean;
     constructor(site: FovSite, opts?: Partial<FovSystemOptions>);
-    get changed(): boolean;
     isVisible(x: number, y: number): boolean;
     isAnyKindOfVisible(x: number, y: number): boolean;
     isInFov(x: number, y: number): boolean;
     isDirectlyVisible(x: number, y: number): boolean;
     isMagicMapped(x: number, y: number): boolean;
     isRevealed(x: number, y: number): boolean;
+    fovChanged(x: number, y: number): boolean;
     makeAlwaysVisible(): void;
     makeCellAlwaysVisible(x: number, y: number): void;
     revealAll(): void;
     revealCell(x: number, y: number): void;
     hideCell(x: number, y: number): void;
     magicMapCell(x: number, y: number): void;
+    get changed(): boolean;
+    set changed(v: boolean);
+    copy(other: FovSystem): void;
     protected demoteCellVisibility(flag: number): number;
     protected updateCellVisibility(flag: number, x: number, y: number): boolean;
     protected updateCellClairyvoyance(flag: number, x: number, y: number): boolean;
@@ -955,7 +969,7 @@ declare const NO_PATH = 30000;
 declare type BlockedFn = (toX: number, toY: number, fromX: number, fromY: number, distanceMap: NumGrid) => boolean;
 declare function calculateDistances(distanceMap: NumGrid, destinationX: number, destinationY: number, costMap: NumGrid, eightWays?: boolean, maxDistance?: number): void;
 declare function nextStep(distanceMap: NumGrid, x: number, y: number, isBlocked: BlockedFn, useDiagonals?: boolean): Loc$1;
-declare function getPath(distanceMap: NumGrid, originX: number, originY: number, isBlocked: BlockedFn): number[][] | null;
+declare function getPath(distanceMap: NumGrid, originX: number, originY: number, isBlocked: BlockedFn, eightWays?: boolean): Loc$1[] | null;
 
 declare const path_d_FORBIDDEN: typeof FORBIDDEN;
 declare const path_d_OBSTRUCTION: typeof OBSTRUCTION;
@@ -1586,6 +1600,7 @@ declare const data: any;
 declare const config$1: any;
 
 interface BlobConfig {
+    rng: Random;
     rounds: number;
     minWidth: number;
     minHeight: number;
@@ -1652,7 +1667,9 @@ interface LightSystemType {
     update(force?: boolean): boolean;
     setAmbient(light: LightValue | Color): void;
     getAmbient(): LightValue;
-    readonly changed: boolean;
+    copy(other: LightSystemType): void;
+    changed: boolean;
+    readonly needsUpdate: boolean;
     glowLightChanged: boolean;
     dynamicLightChanged: boolean;
     addStatic(x: number, y: number, light: LightType): void;
@@ -1706,16 +1723,16 @@ declare class LightSystem implements LightSystemType, PaintSite {
     ambient: LightValue;
     glowLightChanged: boolean;
     dynamicLightChanged: boolean;
-    protected _changed: boolean;
+    changed: boolean;
     light: Grid<LightValue>;
     oldLight: Grid<LightValue>;
     glowLight: Grid<LightValue>;
     flags: NumGrid;
     constructor(map: LightSystemSite, opts?: Partial<LightSystemOptions>);
+    copy(other: LightSystem): void;
     getAmbient(): LightValue;
     setAmbient(light: LightValue | Color): void;
-    get anyLightChanged(): boolean;
-    get changed(): boolean;
+    get needsUpdate(): boolean;
     getLight(x: number, y: number): LightValue;
     isLit(x: number, y: number): boolean;
     isDark(x: number, y: number): boolean;

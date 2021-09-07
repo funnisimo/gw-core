@@ -52,7 +52,7 @@ describe('FOV System', () => {
             radius: 5,
             type: FOV.FovFlags.PLAYER,
         });
-        system.viewportChanged = true;
+        system.needsUpdate = true;
 
         expect(system.isDirectlyVisible(10, 10)).toBeFalsy();
         expect(system.update()).toBeTruthy();

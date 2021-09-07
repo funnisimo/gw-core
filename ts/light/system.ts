@@ -40,7 +40,7 @@ export class LightSystem implements LightSystemType, PaintSite {
     ambient: Color.LightValue;
     glowLightChanged: boolean;
     dynamicLightChanged: boolean;
-    protected _changed: boolean;
+    changed: boolean;
 
     light: Grid.Grid<Color.LightValue>;
     oldLight: Grid.Grid<Color.LightValue>;
@@ -50,7 +50,7 @@ export class LightSystem implements LightSystemType, PaintSite {
     constructor(map: LightSystemSite, opts: Partial<LightSystemOptions> = {}) {
         this.site = map;
         this.ambient = Color.from(opts.ambient || 'white').toLight();
-        this._changed = false;
+        this.changed = false;
 
         this.glowLightChanged = false;
         this.dynamicLightChanged = false;
@@ -75,6 +75,18 @@ export class LightSystem implements LightSystemType, PaintSite {
         this.finishLightUpdate();
     }
 
+    copy(other: LightSystem) {
+        this.setAmbient(other.ambient);
+        this.glowLightChanged = true;
+        this.dynamicLightChanged = true;
+        this.changed = true;
+
+        this.staticLights = null;
+        List.forEach(other.staticLights, (info: StaticLightInfo) =>
+            this.addStatic(info.x, info.y, info.light)
+        );
+    }
+
     getAmbient(): Color.LightValue {
         return this.ambient;
     }
@@ -88,12 +100,8 @@ export class LightSystem implements LightSystemType, PaintSite {
         this.glowLightChanged = true;
     }
 
-    get anyLightChanged() {
+    get needsUpdate() {
         return this.glowLightChanged || this.dynamicLightChanged;
-    }
-
-    get changed() {
-        return this._changed;
     }
 
     getLight(x: number, y: number): Color.LightValue {
@@ -185,8 +193,8 @@ export class LightSystem implements LightSystemType, PaintSite {
     }
 
     update(force = false): boolean {
-        this._changed = false;
-        if (!force && !this.anyLightChanged) return false;
+        this.changed = false;
+        if (!force && !this.needsUpdate) return false;
         // Copy Light over oldLight
         this.startLightUpdate();
 
@@ -236,7 +244,7 @@ export class LightSystem implements LightSystemType, PaintSite {
         }
 
         this.dynamicLightChanged = false;
-        this._changed = true;
+        this.changed = true;
 
         // if (PLAYER.status.invisible) {
         //     PLAYER.info.foreColor = playerInvisibleColor;

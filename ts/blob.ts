@@ -1,8 +1,9 @@
 import * as XY from './xy';
 import * as GRID from './grid';
-import { random } from './rng';
+import { random, Random } from './rng';
 
 export interface BlobConfig {
+    rng: Random;
     rounds: number;
     minWidth: number;
     minHeight: number;
@@ -15,6 +16,7 @@ export interface BlobConfig {
 
 export class Blob {
     public options: BlobConfig = {
+        rng: random,
         rounds: 5,
         minWidth: 10,
         minHeight: 10,
@@ -60,7 +62,7 @@ export class Blob {
             // Fill relevant portion with noise based on the percentSeeded argument.
             for (i = 0; i < this.options.maxWidth; i++) {
                 for (j = 0; j < this.options.maxHeight; j++) {
-                    dest[i + left][j + top] = random.chance(
+                    dest[i + left][j + top] = this.options.rng.chance(
                         this.options.percentSeeded
                     )
                         ? 1

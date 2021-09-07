@@ -694,49 +694,38 @@ export class NumGrid extends Grid<number> {
             typeof fillValue == 'function' ? fillValue : () => fillValue;
 
         let done = NumGrid.alloc(this.width, this.height);
-        this[x][y] = fillFn(this[x][y], x, y, this);
-        done[x][y] = 1;
+        let newX, newY;
 
-        let newX,
-            newY,
-            numberOfCells = 1;
+        const todo: XY.Loc[] = [[x, y]];
+        const free: XY.Loc[] = [];
 
-        // Iterate through the four cardinal neighbors.
-        for (let dir = 0; dir < 4; dir++) {
-            newX = x + DIRS[dir][0];
-            newY = y + DIRS[dir][1];
-            // If the neighbor is an unmarked region cell,
-            numberOfCells += this._floodFill(newX, newY, matchFn, fillFn, done); // then recurse.
+        let count = 1;
+
+        while (todo.length) {
+            const item = todo.pop()!;
+            [x, y] = item;
+            free.push(item);
+
+            if (!this.hasXY(x, y) || done[x][y]) continue;
+            if (!matchFn(this[x][y], x, y, this)) continue;
+            this[x][y] = fillFn(this[x][y], x, y, this);
+            done[x][y] = 1;
+            ++count;
+
+            // Iterate through the four cardinal neighbors.
+            for (let dir = 0; dir < 4; dir++) {
+                newX = x + DIRS[dir][0];
+                newY = y + DIRS[dir][1];
+                // If the neighbor is an unmarked region cell,
+                const item = free.pop() || [-1, -1];
+                item[0] = newX;
+                item[1] = newY;
+                todo.push(item);
+            }
         }
+
         NumGrid.free(done);
-        return numberOfCells;
-    }
-
-    // Tests cell, then marks and recursively iterates through the neighbors
-    _floodFill(
-        x: number,
-        y: number,
-        matchFn: GridMatch<number>,
-        fillFn: GridUpdate<number>,
-        done: NumGrid
-    ) {
-        if (!this.hasXY(x, y) || done[x][y]) return 0;
-        if (!matchFn(this[x][y], x, y, this)) return 0;
-        this[x][y] = fillFn(this[x][y], x, y, this);
-        done[x][y] = 1;
-
-        let newX,
-            newY,
-            numberOfCells = 1;
-
-        // Iterate through the four cardinal neighbors.
-        for (let dir = 0; dir < 4; dir++) {
-            newX = x + DIRS[dir][0];
-            newY = y + DIRS[dir][1];
-            // If the neighbor is an unmarked region cell,
-            numberOfCells += this._floodFill(newX, newY, matchFn, fillFn, done); // then recurse.
-        }
-        return numberOfCells;
+        return count;
     }
 }
 

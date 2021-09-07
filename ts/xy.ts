@@ -181,6 +181,17 @@ export function matchingNeighbor(
     return [-1, -1];
 }
 
+export function straightDistanceBetween(
+    x1: number,
+    y1: number,
+    x2: number,
+    y2: number
+) {
+    const x = Math.abs(x1 - x2);
+    const y = Math.abs(y1 - y2);
+    return x + y;
+}
+
 export function distanceBetween(
     x1: number,
     y1: number,

@@ -100,8 +100,10 @@ export interface LightSystemType {
     setAmbient(light: LightValue | Color): void;
     getAmbient(): LightValue;
 
-    readonly changed: boolean;
+    copy(other: LightSystemType): void;
 
+    changed: boolean;
+    readonly needsUpdate: boolean;
     glowLightChanged: boolean;
     dynamicLightChanged: boolean;
 

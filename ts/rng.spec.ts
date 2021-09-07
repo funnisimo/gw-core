@@ -73,6 +73,14 @@ describe('random', () => {
         expect(random.key(source)).toEqual('d');
         expect(random.key(source)).toEqual('c');
     });
+
+    test('weighted object', () => {
+        random.seed(12345);
+        expect(random.weighted({})).toEqual(-1);
+        expect(random.weighted({ 4: 0 })).toEqual(-1);
+        expect(random.weighted({ 4: 1 })).toEqual('4');
+        expect(random.weighted({ 2: 1, 3: 1, 4: 1 })).toEqual('2');
+    });
 });
 
 describe('cosmetic', () => {

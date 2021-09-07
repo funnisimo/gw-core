@@ -189,6 +189,11 @@ function matchingNeighbor(x, y, matchFn, only4dirs = false) {
     }
     return [-1, -1];
 }
+function straightDistanceBetween(x1, y1, x2, y2) {
+    const x = Math.abs(x1 - x2);
+    const y = Math.abs(y1 - y2);
+    return x + y;
+}
 function distanceBetween(x1, y1, x2, y2) {
     const x = Math.abs(x1 - x2);
     const y = Math.abs(y1 - y2);
@@ -452,6 +457,7 @@ var xy = /*#__PURE__*/Object.freeze({
     eachNeighbor: eachNeighbor,
     eachNeighborAsync: eachNeighborAsync,
     matchingNeighbor: matchingNeighbor,
+    straightDistanceBetween: straightDistanceBetween,
     distanceBetween: distanceBetween,
     distanceFromTo: distanceFromTo,
     calcRadius: calcRadius,
@@ -891,6 +897,8 @@ function lotteryDrawObject(rand, weights) {
     const entries = Object.entries(weights);
     const frequencies = entries.map(([_, weight]) => weight);
     const index = lotteryDrawArray(rand, frequencies);
+    if (index < 0)
+        return -1;
     return entries[index][0];
 }
 class Random {
@@ -1100,8 +1108,7 @@ var rng = /*#__PURE__*/Object.freeze({
 });
 
 class Range {
-    constructor(lower, upper = 0, clumps = 1, rng) {
-        this._rng = rng || null;
+    constructor(lower, upper = 0, clumps = 1) {
         if (Array.isArray(lower)) {
             clumps = lower[2];
             upper = lower[1];
@@ -1114,8 +1121,8 @@ class Range {
         this.hi = upper || this.lo;
         this.clumps = clumps || 1;
     }
-    value() {
-        const rng = this._rng || random;
+    value(rng) {
+        rng = rng || random;
         return rng.clumped(this.lo, this.hi, this.clumps);
     }
     contains(value) {
@@ -1125,7 +1132,6 @@ class Range {
         this.lo = other.lo;
         this.hi = other.hi;
         this.clumps = other.clumps;
-        this._rng = other._rng;
         return this;
     }
     toString() {
@@ -1135,29 +1141,29 @@ class Range {
         return `${this.lo}-${this.hi}`;
     }
 }
-function make$8(config, rng) {
+function make$8(config) {
     if (!config)
-        return new Range(0, 0, 0, rng);
+        return new Range(0, 0, 0);
     if (config instanceof Range)
         return config; // don't need to clone since they are immutable
     // if (config.value) return config;  // calc or damage
     if (typeof config == 'function')
         throw new Error('Custom range functions not supported - extend Range');
     if (config === undefined || config === null)
-        return new Range(0, 0, 0, rng);
+        return new Range(0, 0, 0);
     if (typeof config == 'number')
-        return new Range(config, config, 1, rng);
+        return new Range(config, config, 1);
     // @ts-ignore
     if (config === true || config === false)
         throw new Error('Invalid random config: ' + config);
     if (Array.isArray(config)) {
-        return new Range(config[0], config[1], config[2], rng);
+        return new Range(config[0], config[1], config[2]);
     }
     if (typeof config !== 'string') {
         throw new Error('Calculations must be strings.  Received: ' + JSON.stringify(config));
     }
     if (config.length == 0)
-        return new Range(0, 0, 0, rng);
+        return new Range(0, 0, 0);
     const RE = /^(?:([+-]?\d*)[Dd](\d+)([+-]?\d*)|([+-]?\d+)-(\d+):?(\d+)?|([+-]?\d+)~(\d+)|([+-]?\d+\.?\d*))/g;
     let results;
     while ((results = RE.exec(config)) !== null) {
@@ -1167,29 +1173,29 @@ function make$8(config, rng) {
             const addend = Number.parseInt(results[3]) || 0;
             const lower = addend + count;
             const upper = addend + count * sides;
-            return new Range(lower, upper, count, rng);
+            return new Range(lower, upper, count);
         }
         else if (results[4] && results[5]) {
             const min = Number.parseInt(results[4]);
             const max = Number.parseInt(results[5]);
             const clumps = Number.parseInt(results[6]);
-            return new Range(min, max, clumps, rng);
+            return new Range(min, max, clumps);
         }
         else if (results[7] && results[8]) {
             const base = Number.parseInt(results[7]);
             const std = Number.parseInt(results[8]);
-            return new Range(base - 2 * std, base + 2 * std, 3, rng);
+            return new Range(base - 2 * std, base + 2 * std, 3);
         }
         else if (results[9]) {
             const v = Number.parseFloat(results[9]);
-            return new Range(v, v, 1, rng);
+            return new Range(v, v, 1);
         }
     }
     throw new Error('Not a valid range - ' + config);
 }
 const from$4 = make$8;
-function asFn(config, rng) {
-    const range = make$8(config, rng);
+function asFn(config) {
+    const range = make$8(config);
     return () => range.value();
 }
 
@@ -1800,36 +1806,34 @@ class NumGrid extends Grid {
             : (v) => v == matchValue;
         const fillFn = typeof fillValue == 'function' ? fillValue : () => fillValue;
         let done = NumGrid.alloc(this.width, this.height);
-        this[x][y] = fillFn(this[x][y], x, y, this);
-        done[x][y] = 1;
-        let newX, newY, numberOfCells = 1;
-        // Iterate through the four cardinal neighbors.
-        for (let dir = 0; dir < 4; dir++) {
-            newX = x + DIRS$1[dir][0];
-            newY = y + DIRS$1[dir][1];
-            // If the neighbor is an unmarked region cell,
-            numberOfCells += this._floodFill(newX, newY, matchFn, fillFn, done); // then recurse.
+        let newX, newY;
+        const todo = [[x, y]];
+        const free = [];
+        let count = 1;
+        while (todo.length) {
+            const item = todo.pop();
+            [x, y] = item;
+            free.push(item);
+            if (!this.hasXY(x, y) || done[x][y])
+                continue;
+            if (!matchFn(this[x][y], x, y, this))
+                continue;
+            this[x][y] = fillFn(this[x][y], x, y, this);
+            done[x][y] = 1;
+            ++count;
+            // Iterate through the four cardinal neighbors.
+            for (let dir = 0; dir < 4; dir++) {
+                newX = x + DIRS$1[dir][0];
+                newY = y + DIRS$1[dir][1];
+                // If the neighbor is an unmarked region cell,
+                const item = free.pop() || [-1, -1];
+                item[0] = newX;
+                item[1] = newY;
+                todo.push(item);
+            }
         }
         NumGrid.free(done);
-        return numberOfCells;
-    }
-    // Tests cell, then marks and recursively iterates through the neighbors
-    _floodFill(x, y, matchFn, fillFn, done) {
-        if (!this.hasXY(x, y) || done[x][y])
-            return 0;
-        if (!matchFn(this[x][y], x, y, this))
-            return 0;
-        this[x][y] = fillFn(this[x][y], x, y, this);
-        done[x][y] = 1;
-        let newX, newY, numberOfCells = 1;
-        // Iterate through the four cardinal neighbors.
-        for (let dir = 0; dir < 4; dir++) {
-            newX = x + DIRS$1[dir][0];
-            newY = y + DIRS$1[dir][1];
-            // If the neighbor is an unmarked region cell,
-            numberOfCells += this._floodFill(newX, newY, matchFn, fillFn, done); // then recurse.
-        }
-        return numberOfCells;
+        return count;
     }
 }
 // Grid.fillBlob = fillBlob;
@@ -2408,8 +2412,8 @@ class FovSystem {
     constructor(site, opts = {}) {
         this.site = site;
         this.flags = make$7(site.width, site.height, FovFlags.VISIBLE);
+        this.needsUpdate = true;
         this._changed = true;
-        this.viewportChanged = false;
         this.fov = new FOV({
             isBlocked(x, y) {
                 return site.blocksVision(x, y);
@@ -2432,9 +2436,6 @@ class FovSystem {
             this.revealAll();
         }
     }
-    get changed() {
-        return this._changed;
-    }
     isVisible(x, y) {
         return !!((this.flags.get(x, y) || 0) & FovFlags.VISIBLE);
     }
@@ -2454,25 +2455,49 @@ class FovSystem {
     isRevealed(x, y) {
         return !!((this.flags.get(x, y) || 0) & FovFlags.REVEALED);
     }
+    fovChanged(x, y) {
+        const flags = this.flags.get(x, y) || 0;
+        const isVisible = !!(flags & FovFlags.ANY_KIND_OF_VISIBLE);
+        const wasVisible = !!(flags & FovFlags.WAS_ANY_KIND_OF_VISIBLE);
+        return isVisible !== wasVisible;
+    }
     makeAlwaysVisible() {
         this.flags.update((v) => v |
             (FovFlags.ALWAYS_VISIBLE | FovFlags.REVEALED | FovFlags.VISIBLE));
+        this.changed = true;
     }
     makeCellAlwaysVisible(x, y) {
         this.flags[x][y] |= FovFlags.ALWAYS_VISIBLE | FovFlags.REVEALED;
+        this.changed = true;
     }
     revealAll() {
         this.flags.update((v) => v | FovFlags.REVEALED | FovFlags.VISIBLE);
+        this.changed = true;
     }
     revealCell(x, y) {
         const flag = FovFlags.REVEALED;
         this.flags[x][y] |= flag;
+        this.changed = true;
     }
     hideCell(x, y) {
         this.flags[x][y] &= ~(FovFlags.MAGIC_MAPPED | FovFlags.REVEALED);
+        this.changed = true;
     }
     magicMapCell(x, y) {
         this.flags[x][y] |= FovFlags.MAGIC_MAPPED;
+        this.changed = true;
+    }
+    get changed() {
+        return this._changed;
+    }
+    set changed(v) {
+        this._changed = v;
+        this.needsUpdate = this.needsUpdate || v;
+    }
+    copy(other) {
+        this.flags.copy(other.flags);
+        this.needsUpdate = other.needsUpdate;
+        this._changed = other._changed;
     }
     demoteCellVisibility(flag) {
         flag &= ~(FovFlags.WAS_ANY_KIND_OF_VISIBLE | FovFlags.WAS_IN_FOV);
@@ -2617,11 +2642,13 @@ class FovSystem {
     }
     update(cx, cy, cr) {
         // if (!this.site.usesFov()) return false;
-        if (!this.viewportChanged &&
+        if (!this.needsUpdate &&
             cx === undefined &&
             !this.site.lightingChanged()) {
             return false;
         }
+        this.needsUpdate = false;
+        this._changed = false;
         this.flags.update(this.demoteCellVisibility.bind(this));
         this.site.eachViewport((x, y, radius, type) => {
             const flag = type & FovFlags.VIEWPORT_TYPES;
@@ -2894,7 +2921,7 @@ function getClosestValidLocationOnMap(distanceMap, x, y) {
     return null;
 }
 // Populates path[][] with a list of coordinates starting at origin and traversing down the map. Returns the number of steps in the path.
-function getPath(distanceMap, originX, originY, isBlocked) {
+function getPath(distanceMap, originX, originY, isBlocked, eightWays = false) {
     // actor = actor || GW.PLAYER;
     let x = originX;
     let y = originY;
@@ -2909,7 +2936,7 @@ function getPath(distanceMap, originX, originY, isBlocked) {
     const path = [[x, y]];
     let dir;
     do {
-        dir = nextStep(distanceMap, x, y, isBlocked, true);
+        dir = nextStep(distanceMap, x, y, isBlocked, eightWays);
         if (dir) {
             x += dir[0];
             y += dir[1];
@@ -5937,6 +5964,7 @@ var message = /*#__PURE__*/Object.freeze({
 class Blob {
     constructor(opts = {}) {
         this.options = {
+            rng: random,
             rounds: 5,
             minWidth: 10,
             minHeight: 10,
@@ -5973,7 +6001,7 @@ class Blob {
             // Fill relevant portion with noise based on the percentSeeded argument.
             for (i = 0; i < this.options.maxWidth; i++) {
                 for (j = 0; j < this.options.maxHeight; j++) {
-                    dest[i + left][j + top] = random.chance(this.options.percentSeeded)
+                    dest[i + left][j + top] = this.options.rng.chance(this.options.percentSeeded)
                         ? 1
                         : 0;
                 }
@@ -6251,7 +6279,7 @@ class LightSystem {
         this.staticLights = null;
         this.site = map;
         this.ambient = from$2(opts.ambient || 'white').toLight();
-        this._changed = false;
+        this.changed = false;
         this.glowLightChanged = false;
         this.dynamicLightChanged = false;
         this.light = make$7(map.width, map.height, () => this.ambient.slice());
@@ -6259,6 +6287,14 @@ class LightSystem {
         this.oldLight = make$7(map.width, map.height, () => this.ambient.slice());
         this.flags = make$7(map.width, map.height);
         this.finishLightUpdate();
+    }
+    copy(other) {
+        this.setAmbient(other.ambient);
+        this.glowLightChanged = true;
+        this.dynamicLightChanged = true;
+        this.changed = true;
+        this.staticLights = null;
+        forEach(other.staticLights, (info) => this.addStatic(info.x, info.y, info.light));
     }
     getAmbient() {
         return this.ambient;
@@ -6272,11 +6308,8 @@ class LightSystem {
         }
         this.glowLightChanged = true;
     }
-    get anyLightChanged() {
+    get needsUpdate() {
         return this.glowLightChanged || this.dynamicLightChanged;
-    }
-    get changed() {
-        return this._changed;
     }
     getLight(x, y) {
         return this.light[x][y];
@@ -6356,8 +6389,8 @@ class LightSystem {
         this.site.eachDynamicLight(fn);
     }
     update(force = false) {
-        this._changed = false;
-        if (!force && !this.anyLightChanged)
+        this.changed = false;
+        if (!force && !this.needsUpdate)
             return false;
         // Copy Light over oldLight
         this.startLightUpdate();
@@ -6401,7 +6434,7 @@ class LightSystem {
             }
         }
         this.dynamicLightChanged = false;
-        this._changed = true;
+        this.changed = true;
         // if (PLAYER.status.invisible) {
         //     PLAYER.info.foreColor = playerInvisibleColor;
         // } else if (playerInDarkness()) {

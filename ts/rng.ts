@@ -6,6 +6,8 @@ import {
     WeightedObject,
 } from './types';
 
+export { WeightedArray, WeightedObject, RandomConfig, RandomFunction };
+
 /**
  * The code in this function is extracted from ROT.JS.
  * Source: https://github.com/ondras/rot.js/blob/v2.2.0/src/rng.ts
@@ -104,6 +106,7 @@ function lotteryDrawObject(rand: Random, weights: WeightedObject) {
     const entries = Object.entries(weights);
     const frequencies = entries.map(([_, weight]) => weight);
     const index = lotteryDrawArray(rand, frequencies);
+    if (index < 0) return -1;
     return entries[index][0];
 }
 
