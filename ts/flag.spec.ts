@@ -9,6 +9,7 @@ describe("flag", () => {
       B = Fl(1),
       C = Fl(2),
       D = Fl(3),
+      E = Fl(3), // same as D
       AB = A | B,
       BC = B | C,
       AD = A | D,
@@ -22,7 +23,7 @@ describe("flag", () => {
     expect(Flag.BC).toEqual(6);
     expect(Flag.AD).toEqual(9);
 
-    expect(GW.flag.toString(Flag, 11)).toEqual("A | B | D");
+    expect(GW.flag.toString(Flag, 11)).toEqual("A | B | D | E");
     expect(GW.flag.from(Flag, "A")).toEqual(Flag.A);
     expect(GW.flag.from(Flag, "UNKNOWN")).toEqual(0);
     expect(GW.flag.from(Flag, "A | B")).toEqual(Flag.AB);
@@ -33,9 +34,12 @@ describe("flag", () => {
     );
     expect(GW.flag.from(Flag, Flag.AB, "!A")).toEqual(Flag.B);
     expect(GW.flag.from(Flag, Flag.AB, "0, D")).toEqual(Flag.D);
+    expect(GW.flag.from(Flag, undefined, "1", 2)).toEqual(3);
+    expect(GW.flag.from(Flag, [1,"2"])).toEqual(3);
+    expect(GW.flag.from(Flag, null, undefined)).toEqual(0);
 
     expect(GW.flag.toString(Flag, Flag.A | Flag.B | Flag.C | Flag.D)).toEqual(
-      "A | B | C | D"
+      "A | B | C | D | E"
     );
   });
 });

@@ -62,6 +62,12 @@ export function from<T>(obj: T, ...args: (FlagBase | undefined)[]): number {
                         const f = obj[v.substring(1) as string];
                         result &= ~f;
                     } else {
+                        const n = Number.parseInt(v);
+                        if (n >= 0) {
+                            result |= n;
+                            return;
+                        }
+    
                         // @ts-ignore
                         const f = obj[v];
                         if (f) {

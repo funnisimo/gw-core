@@ -1274,6 +1274,11 @@
                             result &= ~f;
                         }
                         else {
+                            const n = Number.parseInt(v);
+                            if (n >= 0) {
+                                result |= n;
+                                return;
+                            }
                             // @ts-ignore
                             const f = obj[v];
                             if (f) {
