@@ -5706,7 +5706,7 @@ class Sprite {
         this.ch = ch;
         this.fg = from$2(fg);
         this.bg = from$2(bg);
-        this.opacity = opacity >= 0 ? opacity : 100;
+        this.opacity = clamp(opacity, 0, 100);
     }
     clone() {
         return new Sprite(this.ch, this.fg, this.bg, this.opacity);

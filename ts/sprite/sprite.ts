@@ -1,5 +1,6 @@
 import * as Color from '../color';
 import { SpriteData } from '../types';
+import { clamp } from '../utils';
 
 export interface SpriteConfig {
     ch: string | null;
@@ -25,7 +26,7 @@ export class Sprite implements SpriteData {
         this.ch = ch;
         this.fg = Color.from(fg);
         this.bg = Color.from(bg);
-        this.opacity = opacity >= 0 ? opacity : 100;
+        this.opacity = clamp(opacity, 0, 100);
     }
 
     clone() {

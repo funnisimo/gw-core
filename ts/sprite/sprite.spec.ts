@@ -80,6 +80,15 @@ describe('Sprite', () => {
         expect(n.opacity).toEqual(100);
     });
 
+    test('clone', () => {
+        const sprite = Sprite.make('T', 'red', 'blue');
+        const clone = sprite.clone();
+        expect(clone.ch).toEqual(sprite.ch);
+        expect(clone.fg).toEqual(sprite.fg);
+        expect(clone.bg).toEqual(sprite.bg);
+        expect(clone.opacity).toEqual(sprite.opacity);
+    });
+
     test('install', () => {
         // const a = Sprite.install("TEST");
         // expect(a).toEqual({});
@@ -155,6 +164,29 @@ describe('Sprite', () => {
         expect(w.fg).toEqual(NONE);
         expect(w.bg).toBe(colors.white);
         expect(w.opacity).toEqual(100);
+
+        const x = Sprite.from('hilite');
+        expect(x).toBe(w);
+    });
+
+    test('from', () => {
+        const made = Sprite.from({ ch: 'A', fg: 0xF00 });
+        expect(made.ch).toEqual('A');
+        expect(made.fg.toInt()).toEqual(0xF00);
+        expect(made.bg.toInt()).toEqual(-1);
+        expect(made.opacity).toEqual(100);
+
+        expect( () => Sprite.from('UNKNOWN')).toThrow();
+    });
+
+    test('constructor', () => {
+        const sprite = new Sprite.Sprite();
+        expect(sprite.toString()).toEqual('{  }');
+    });
+
+    test('toString', () => {
+        const sprite = Sprite.make({ ch: 'A', fg: 0x800, opacity: 50 });
+        expect(sprite.toString()).toEqual('{ ch: A, fg: #870000, opacity: 50 }');
     });
 
     //   test("copy", () => {
