@@ -118,6 +118,8 @@ describe('Color', () => {
     test('from', () => {
         const c = Color.from(-1);
         expect(c.isNull()).toBeTruthy();
+
+        expect(Color.from('red')).toBe(Color.colors.red);
     });
 
     test('equals', () => {
@@ -166,6 +168,9 @@ describe('Color', () => {
 
         b.copy(a);
         expect(b.dances).toBeTruthy();
+
+        b.copy('red');
+        expect(b.css()).toEqual('#f00');
     });
 
     test('clone', () => {
@@ -409,6 +414,11 @@ describe('Color', () => {
         expect(d.css()).toEqual('#5ff');
     });
 
+    test('css', () => {
+        const c = Color.from(-1);
+        expect(c.css()).toEqual('transparent');
+    })
+
     test('rgb hsl', () => {
         const c = Color.fromCss('#f80');
         expect(c.r).toEqual(255);
@@ -555,5 +565,21 @@ describe('Color', () => {
         expect(Color.colors.test).toBeObject();
         expect(Color.colors.dark_test).toBeObject();
         expect(Color.colors.light_test).toBeObject();
+    });
+
+    test('smoothScalar', () => {
+        expect(Color.smoothScalar(255)).toEqual(0);
+        expect(Color.smoothScalar(128)).toEqual(99);
+        expect(Color.smoothScalar(0)).toEqual(0);
+
+        expect(Color.smoothScalar(100, 100)).toEqual(0);
+        expect(Color.smoothScalar(50, 100)).toEqual(100);
+        expect(Color.smoothScalar(0, 100)).toEqual(0);
+
+    });
+
+    test('toLight', () => {
+        const c = Color.from('#f00');
+        expect(c.toLight()).toEqual([100,0,0]);
     });
 });
