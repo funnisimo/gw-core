@@ -39,6 +39,11 @@ describe('Mixer', () => {
         expect(b.bg.css()).toEqual('#333');
         expect(b.equals(a)).toBeTruthy();
         expect(a.equals(b)).toBeTruthy();
+
+        b.copy({ });
+        expect(b.ch).toEqual(-1);
+        expect(b.fg.css()).toEqual('transparent');
+        expect(b.bg.css()).toEqual('transparent');
     });
 
     test('clone', () => {
@@ -137,6 +142,8 @@ describe('Mixer', () => {
         expect(mixer.ch).toEqual('@');
         expect(mixer.fg.css()).toEqual('#808');
         expect(mixer.bg.css()).toEqual('#888');
+
+        expect(mixer.drawSprite(mixer)).toBe(mixer);
     });
 
     test('invert', () => {
@@ -237,10 +244,11 @@ describe('Mixer', () => {
 
     test('bake', () => {
         const mixer = new Mixer();
-        mixer.draw('@', 0xd73, Color.fromArray([50, 50, 50, 50, 10, 10, 10]));
+        mixer.draw('@', 0xd73, Color.fromArray([50, 50, 50, 50, 10, 10, 10, true]));
         expect(mixer.ch).toEqual('@');
         expect(mixer.fg.css()).toEqual('#d73');
-        expect(mixer.bg.css()).toEqual('#888');
+        expect(mixer.bg.css()).toEqual('#ccc');
+        expect(mixer.dances).toBeTruthy();
 
         const data = mixer.bake();
         expect(data.ch).toEqual('@');
@@ -248,10 +256,28 @@ describe('Mixer', () => {
         expect(data.bg).toEqual(3276);
         expect(mixer.fg.css()).toEqual('#d73');
         expect(mixer.bg.css()).toEqual('#ccc');
+        expect(mixer.dances).toBeTruthy();
+    });
+
+    test('scale', () => {
+        const mixer = new Mixer({ ch: '@', fg: 'red', bg: 'white' });
+        expect(mixer.fg.css()).toEqual('#f00');
+        expect(mixer.bg.css()).toEqual('#fff');
+        mixer.scale(50);
+        expect(mixer.fg.css()).toEqual('#800');
+        expect(mixer.bg.css()).toEqual('#888');
+
+        mixer.scale(200, false, false);
+        expect(mixer.fg.css()).toEqual('#800');
+        expect(mixer.bg.css()).toEqual('#888');
+
     });
 
     test('toString', () => {
         const mixer = new Mixer({ ch: '@', fg: 'red', bg: 'black' });
+        expect(mixer.fg).not.toBe(Color.colors.red);
+        expect(mixer.fg).toEqual(Color.colors.red);
+        expect(mixer.fg.name).toEqual('red');
         expect(mixer.toString()).toEqual('{ ch: @, fg: red, bg: black }');
     });
 });

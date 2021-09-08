@@ -1205,7 +1205,7 @@ declare class Mixer implements DrawInfo {
     bg: Color;
     constructor(base?: Partial<DrawInfo>);
     protected _changed(): this;
-    copy(other: DrawInfo): this;
+    copy(other: Partial<DrawInfo>): this;
     clone(): Mixer;
     equals(other: Mixer): boolean;
     get dances(): boolean;

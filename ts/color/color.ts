@@ -381,6 +381,7 @@ export class Color extends Int16Array {
      */
     css(base256 = false) {
         const v = this.toInt(base256);
+        if (v < 0) return 'transparent';
         return '#' + v.toString(16).padStart(base256 ? 6 : 3, '0');
     }
 

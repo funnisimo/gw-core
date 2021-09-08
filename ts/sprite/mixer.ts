@@ -15,18 +15,18 @@ export class Mixer implements DrawInfo {
 
     constructor(base?: Partial<DrawInfo>) {
         this.ch = Utils.first(base?.ch, -1);
-        this.fg = Color.from(base?.fg);
-        this.bg = Color.from(base?.bg);
+        this.fg = Color.make(base?.fg);
+        this.bg = Color.make(base?.bg);
     }
 
     protected _changed() {
         return this;
     }
 
-    copy(other: DrawInfo) {
-        this.ch = other.ch || 0;
-        this.fg.copy(other.fg);
-        this.bg.copy(other.bg);
+    copy(other: Partial<DrawInfo>) {
+        this.ch = other.ch || -1;
+        this.fg.copy(other.fg || -1);
+        this.bg.copy(other.bg || -1);
         return this._changed();
     }
 

@@ -3953,6 +3953,8 @@ void main() {
          */
         css(base256 = false) {
             const v = this.toInt(base256);
+            if (v < 0)
+                return 'transparent';
             return '#' + v.toString(16).padStart(base256 ? 6 : 3, '0');
         }
         toString(base256 = false) {
@@ -4191,16 +4193,16 @@ void main() {
     class Mixer {
         constructor(base) {
             this.ch = first(base === null || base === void 0 ? void 0 : base.ch, -1);
-            this.fg = from$2(base === null || base === void 0 ? void 0 : base.fg);
-            this.bg = from$2(base === null || base === void 0 ? void 0 : base.bg);
+            this.fg = make$4(base === null || base === void 0 ? void 0 : base.fg);
+            this.bg = make$4(base === null || base === void 0 ? void 0 : base.bg);
         }
         _changed() {
             return this;
         }
         copy(other) {
-            this.ch = other.ch || 0;
-            this.fg.copy(other.fg);
-            this.bg.copy(other.bg);
+            this.ch = other.ch || -1;
+            this.fg.copy(other.fg || -1);
+            this.bg.copy(other.bg || -1);
             return this._changed();
         }
         clone() {
