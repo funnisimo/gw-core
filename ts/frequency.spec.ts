@@ -75,6 +75,14 @@ describe('frequency', () => {
         }
     });
 
+    test('object - { 1: "100" }', () => {
+        // @ts-ignore
+        const f = Frequency.make({ 1: "100" });
+        for (let i = 0; i < 20; ++i) {
+            expect(f(i)).toEqual(i == 1 ? 100 : 0);
+        }
+    });
+
     test('object - { 1-5: 150 }', () => {
         const f = Frequency.make({ '1-5': 150 });
         for (let i = 0; i < 20; ++i) {
