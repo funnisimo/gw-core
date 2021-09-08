@@ -8,6 +8,29 @@ describe('Blob', () => {
         GW.grid.free(a);
     });
 
+    test('default constructor', () => {
+        const blob = new GW.blob.Blob();
+        expect(blob.options.minHeight).toBeGreaterThan(0);
+        expect(blob.options.minHeight).toBeGreaterThan(0);
+    });
+
+    test('make', () => {
+        const blob = GW.blob.make();
+        expect(blob).toBeDefined();
+    });
+
+    test('fillBlob - default', () => {
+        a = GW.grid.alloc(80, 30, 0);
+
+        expect(a.count(1)).toEqual(0);
+
+        GW.blob.fillBlob(a);
+
+        expect(a.count(1)).toBeGreaterThan(0);
+
+        GW.grid.free(a);
+    });
+
     test('fillBlob', () => {
         a = GW.grid.alloc(80, 30, 0);
         expect(a.count(1)).toEqual(0);
