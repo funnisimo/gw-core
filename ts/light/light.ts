@@ -24,13 +24,13 @@ export class Light implements Types.LightType {
 
     constructor(
         color: Color.ColorBase,
-        range: string | Range.Range,
-        fadeTo: number,
+        radius: Range.RangeBase = 1,
+        fadeTo = 0,
         pass = false
     ) {
-        this.color = Color.from(color) || null; /* color */
-        this.radius = Range.make(range || 1);
-        this.fadeTo = fadeTo || 0;
+        this.color = Color.from(color); /* color */
+        this.radius = Range.make(radius);
+        this.fadeTo = fadeTo;
         this.passThroughActors = pass; // generally no, but miner light does (TODO - string parameter?  'false' or 'true')
     }
 
@@ -47,13 +47,13 @@ export class Light implements Types.LightType {
 
     // Returns true if any part of the light hit cells that are in the player's field of view.
     paint(
-        map: Types.PaintSite,
+        site: Types.PaintSite,
         x: number,
         y: number,
         maintainShadows = false,
         isMinersLight = false
     ) {
-        if (!map) return false;
+        if (!site) return false;
 
         let k;
         // let colorComponents = [0,0,0];
@@ -77,8 +77,8 @@ export class Light implements Types.LightType {
             !isDarkLight(LIGHT_COMPONENTS);
         const fadeToPercent = this.fadeTo;
 
-        const grid = Grid.alloc(map.width, map.height, 0);
-        map.calcFov(x, y, outerRadius, this.passThroughActors, (i, j) => {
+        const grid = Grid.alloc(site.width, site.height, 0);
+        site.calcFov(x, y, outerRadius, this.passThroughActors, (i, j) => {
             grid[i][j] = 1;
         });
 
@@ -99,7 +99,7 @@ export class Light implements Types.LightType {
                     (LIGHT_COMPONENTS[k] * lightMultiplier) / 100
                 );
             }
-            map.addCellLight(i, j, lightValue, dispelShadows);
+            site.addCellLight(i, j, lightValue, dispelShadows);
 
             // if (dispelShadows) {
             //     map.clearCellFlag(i, j, CellFlags.IS_IN_SHADOW);
@@ -127,23 +127,21 @@ export function intensity(light: Color.Color | Color.LightValue) {
 
 export function isDarkLight(
     light: Color.Color | Color.LightValue,
-    threshold?: number
+    threshold = 20
 ): boolean {
-    threshold = threshold ?? CONFIG.light?.INTENSITY_DARK;
-    return intensity(light) <= (threshold || 20);
+    return intensity(light) <= threshold;
 }
 
 export function isShadowLight(
     light: Color.Color | Color.LightValue,
-    threshold?: number
+    threshold = 40
 ): boolean {
-    threshold = threshold ?? CONFIG.light?.INTENSITY_SHADOW;
-    return intensity(light) <= (threshold || 20);
+    return intensity(light) <= threshold;
 }
 
 export function make(
     color: Color.ColorBase,
-    radius: Range.RangeBase,
+    radius?: Range.RangeBase,
     fadeTo?: number,
     pass?: boolean
 ): Light;
@@ -218,12 +216,12 @@ export function install(id: string, ...args: any[]) {
         source = make(args[0], args[1], args[2], args[3]);
     }
     lights[id] = source;
-    if (source) source.id = id;
+    source.id = id;
     return source;
 }
 
 export function installAll(
-    config: Record<string, Types.LightConfig | Types.LightBase> = {}
+    config: Record<string, Types.LightConfig | Types.LightBase>
 ) {
     const entries = Object.entries(config);
     entries.forEach(([name, info]) => {

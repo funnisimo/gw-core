@@ -1692,22 +1692,22 @@ declare class Light implements LightType {
     fadeTo: number;
     passThroughActors: boolean;
     id: string | null;
-    constructor(color: ColorBase, range: string | Range, fadeTo: number, pass?: boolean);
+    constructor(color: ColorBase, radius?: RangeBase, fadeTo?: number, pass?: boolean);
     copy(other: Light): void;
     get intensity(): number;
-    paint(map: PaintSite, x: number, y: number, maintainShadows?: boolean, isMinersLight?: boolean): boolean;
+    paint(site: PaintSite, x: number, y: number, maintainShadows?: boolean, isMinersLight?: boolean): boolean;
 }
 declare function intensity(light: Color | LightValue): number;
 declare function isDarkLight(light: Color | LightValue, threshold?: number): boolean;
 declare function isShadowLight(light: Color | LightValue, threshold?: number): boolean;
-declare function make(color: ColorBase, radius: RangeBase, fadeTo?: number, pass?: boolean): Light;
+declare function make(color: ColorBase, radius?: RangeBase, fadeTo?: number, pass?: boolean): Light;
 declare function make(light: LightBase): Light;
 declare const lights: Record<string, Light>;
 declare function from(light: LightBase | LightType): Light;
 declare function install(id: string, color: ColorBase, radius: RangeBase, fadeTo?: number, pass?: boolean): Light;
 declare function install(id: string, base: LightBase): Light;
 declare function install(id: string, config: LightConfig): Light;
-declare function installAll(config?: Record<string, LightConfig | LightBase>): void;
+declare function installAll(config: Record<string, LightConfig | LightBase>): void;
 
 interface StaticLightInfo {
     x: number;

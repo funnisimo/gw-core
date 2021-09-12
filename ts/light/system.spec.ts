@@ -20,7 +20,7 @@ describe('light', () => {
     let site: TestLightSystem;
     let system: Light.LightSystem;
 
-    function makeSite(w: number, h: number): TestLightSystem {
+    function makeSystem(w: number, h: number): TestLightSystem {
         const grid = Grid.alloc(w, h);
         XY.forBorder(0, 0, w, h, (x, y) => (grid[x][y] = 1));
 
@@ -76,8 +76,9 @@ describe('light', () => {
         };
     }
 
+
     beforeEach(() => {
-        site = makeSite(20, 20);
+        site = makeSystem(20, 20);
         system = new Light.LightSystem(site);
     });
 

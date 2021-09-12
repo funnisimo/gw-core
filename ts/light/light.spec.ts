@@ -7,6 +7,50 @@ import * as Color from '../color';
 describe('light', () => {
     let light: Light.LightType;
 
+    function makeSite(w: number, h: number): Light.PaintSite {
+        return {
+            width: w,
+            height: h,
+
+            calcFov: jest.fn(),
+            addCellLight: jest.fn(),
+        };
+    }
+
+    test('constructor', () => {
+        const a = new Light.Light('red');
+        expect(a.fadeTo).toEqual(0);
+        expect(a.radius.toString()).toEqual('1');
+
+        // @ts-ignore
+        expect(() => Light.make(8)).toThrow();
+    });
+
+    test('paint - oddities', () => {
+        const site = makeSite(10, 10);
+        const light = Light.make('red', 0, 0);
+
+        // @ts-ignore
+        expect(light.paint(null)).toBeFalsy();
+        expect(light.paint(site, 5, 5)).toBeFalsy();
+    });
+
+    test('paint', () => {
+        const site = makeSite(10, 10);
+        const light = Light.make('red', 3, 0);
+
+        // @ts-ignore
+        site.calcFov.mockImplementation((x, y, radius, pass, cb) => {
+            const offset = Math.floor(radius / 2);
+            for (let i = 0; i < radius; ++i) {
+                cb(x + i - offset, y);
+                cb(x, y + i - offset);
+            }
+        });
+
+        expect(light.paint(site, 5, 5)).toBeTruthy();
+    });
+
     test('will create lights', () => {
         light = Light.make({ color: 'blue', radius: 3, fadeTo: 50 });
         expect(light.color).toEqual(Color.colors.blue);
@@ -37,6 +81,20 @@ describe('light', () => {
         expect(light.radius).toMatchObject({ clumps: 1, hi: 3, lo: 3 });
         expect(light.fadeTo).toEqual(50);
         expect(light.passThroughActors).toBe(false);
+
+        light = Light.make('red');
+        expect(light.color).toEqual(Color.colors.red);
+        expect(light.radius).toMatchObject({ clumps: 1, hi: 1, lo: 1 });
+        expect(light.fadeTo).toEqual(0);
+        expect(light.passThroughActors).toBe(false);
+    });
+
+    test('install', () => {
+        let light: Light.Light;
+
+        light = Light.install('TEST', 'red', 3, 0);
+        expect(Light.make('TEST')).toBe(light);
+        expect(Light.lights.TEST).toBe(light);
     });
 
     test('copy', () => {
@@ -133,5 +191,17 @@ describe('light', () => {
         expect(light.radius).toMatchObject({ clumps: 1, hi: 5, lo: 5 });
         expect(light.fadeTo).toEqual(0);
         expect(light.passThroughActors).toBeFalsy();
+
+        expect(Light.make('TEST6')).toBe(light);
+    });
+
+    test('isDarkLight', () => {
+        expect(Light.isDarkLight(Color.colors.black, 20)).toBeTruthy();
+        expect(Light.isDarkLight(Color.colors.white)).toBeFalsy();
+    });
+
+    test('isShadowLight', () => {
+        expect(Light.isShadowLight(Color.colors.black, 20)).toBeTruthy();
+        expect(Light.isShadowLight(Color.colors.white)).toBeFalsy();
     });
 });

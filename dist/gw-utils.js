@@ -6122,13 +6122,13 @@ void main() {
     }); // less than 20% for highest color in rgb
     const LIGHT_COMPONENTS = make$4();
     class Light {
-        constructor(color, range$1, fadeTo, pass = false) {
+        constructor(color, radius = 1, fadeTo = 0, pass = false) {
             this.fadeTo = 0;
             this.passThroughActors = false;
             this.id = null;
-            this.color = from$2(color) || null; /* color */
-            this.radius = make$8(range$1 || 1);
-            this.fadeTo = fadeTo || 0;
+            this.color = from$2(color); /* color */
+            this.radius = make$8(radius);
+            this.fadeTo = fadeTo;
             this.passThroughActors = pass; // generally no, but miner light does (TODO - string parameter?  'false' or 'true')
         }
         copy(other) {
@@ -6141,8 +6141,8 @@ void main() {
             return intensity(this.color);
         }
         // Returns true if any part of the light hit cells that are in the player's field of view.
-        paint(map, x, y, maintainShadows = false, isMinersLight = false) {
-            if (!map)
+        paint(site, x, y, maintainShadows = false, isMinersLight = false) {
+            if (!site)
                 return false;
             let k;
             // let colorComponents = [0,0,0];
@@ -6160,8 +6160,8 @@ void main() {
                 !maintainShadows &&
                 !isDarkLight(LIGHT_COMPONENTS);
             const fadeToPercent = this.fadeTo;
-            const grid$1 = alloc(map.width, map.height, 0);
-            map.calcFov(x, y, outerRadius, this.passThroughActors, (i, j) => {
+            const grid$1 = alloc(site.width, site.height, 0);
+            site.calcFov(x, y, outerRadius, this.passThroughActors, (i, j) => {
                 grid$1[i][j] = 1;
             });
             // let overlappedFieldOfView = false;
@@ -6176,7 +6176,7 @@ void main() {
                 for (k = 0; k < 3; ++k) {
                     lightValue[k] = Math.floor((LIGHT_COMPONENTS[k] * lightMultiplier) / 100);
                 }
-                map.addCellLight(i, j, lightValue, dispelShadows);
+                site.addCellLight(i, j, lightValue, dispelShadows);
                 // if (dispelShadows) {
                 //     map.clearCellFlag(i, j, CellFlags.IS_IN_SHADOW);
                 // }
@@ -6196,15 +6196,11 @@ void main() {
     function intensity(light) {
         return Math.max(light[0], light[1], light[2]);
     }
-    function isDarkLight(light, threshold) {
-        var _a;
-        threshold = threshold !== null && threshold !== void 0 ? threshold : (_a = config$1.light) === null || _a === void 0 ? void 0 : _a.INTENSITY_DARK;
-        return intensity(light) <= (threshold || 20);
+    function isDarkLight(light, threshold = 20) {
+        return intensity(light) <= threshold;
     }
-    function isShadowLight(light, threshold) {
-        var _a;
-        threshold = threshold !== null && threshold !== void 0 ? threshold : (_a = config$1.light) === null || _a === void 0 ? void 0 : _a.INTENSITY_SHADOW;
-        return intensity(light) <= (threshold || 20);
+    function isShadowLight(light, threshold = 40) {
+        return intensity(light) <= threshold;
     }
     function make(...args) {
         if (args.length == 1) {
@@ -6257,11 +6253,10 @@ void main() {
             source = make(args[0], args[1], args[2], args[3]);
         }
         lights[id] = source;
-        if (source)
-            source.id = id;
+        source.id = id;
         return source;
     }
-    function installAll(config = {}) {
+    function installAll(config) {
         const entries = Object.entries(config);
         entries.forEach(([name, info]) => {
             install(name, info);
