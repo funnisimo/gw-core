@@ -56,7 +56,7 @@ export class Mixer implements DrawInfo {
     }
 
     blackOut() {
-        this.ch = 0;
+        this.ch = -1;
         this.fg.blackOut();
         this.bg.blackOut();
         return this._changed();

@@ -547,7 +547,7 @@ declare namespace flag_d {
 declare type Loc = Loc$1;
 declare type ArrayInit<T> = (i: number) => T;
 declare function makeArray<T>(l: number, fn?: T | ArrayInit<T>): Array<T>;
-declare type GridInit<T> = (x: number, y: number) => T;
+declare type GridInit<T> = (x: number, y: number, grid: Grid<T>) => T;
 declare type GridEach<T> = (value: T, x: number, y: number, grid: Grid<T>) => any;
 declare type AsyncGridEach<T> = (value: T, x: number, y: number, grid: Grid<T>) => Promise<any>;
 declare type GridUpdate<T> = (value: T, x: number, y: number, grid: Grid<T>) => T;
@@ -874,6 +874,7 @@ interface FovSystemType {
     isRevealed(x: number, y: number): boolean;
     fovChanged(x: number, y: number): boolean;
     changed: boolean;
+    readonly isEnabled: boolean;
     needsUpdate: boolean;
     copy(other: FovSystemType): void;
     makeAlwaysVisible(): void;
@@ -910,6 +911,7 @@ declare class FovSystem implements FovSystemType {
     fov: FOV;
     needsUpdate: boolean;
     protected _changed: boolean;
+    isEnabled: boolean;
     constructor(site: FovSite, opts?: Partial<FovSystemOptions>);
     isVisible(x: number, y: number): boolean;
     isAnyKindOfVisible(x: number, y: number): boolean;

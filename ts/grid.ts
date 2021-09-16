@@ -39,7 +39,7 @@ function _formatGridValue(v: any) {
     }
 }
 
-export type GridInit<T> = (x: number, y: number) => T;
+export type GridInit<T> = (x: number, y: number, grid: Grid<T>) => T;
 export type GridEach<T> = (
     value: T,
     x: number,
@@ -73,11 +73,12 @@ export class Grid<T> extends Array<Array<T>> {
 
     constructor(w: number, h: number, v: GridInit<T> | T) {
         super(w);
+        const grid = this;
         for (let x = 0; x < w; ++x) {
             if (typeof v === 'function') {
                 this[x] = new Array(h)
                     .fill(0)
-                    .map((_: any, i: number) => (v as GridInit<T>)(x, i));
+                    .map((_: any, i: number) => (v as GridInit<T>)(x, i, grid));
             } else {
                 this[x] = new Array(h).fill(v);
             }
@@ -536,7 +537,7 @@ export class NumGrid extends Grid<number> {
         for (x = 0; x < width; ++x) {
             const col = this[x];
             for (y = 0; y < height; ++y) {
-                col[y] = fn(x, y);
+                col[y] = fn(x, y, this);
             }
             col.length = height;
         }

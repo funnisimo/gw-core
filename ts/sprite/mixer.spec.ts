@@ -40,7 +40,7 @@ describe('Mixer', () => {
         expect(b.equals(a)).toBeTruthy();
         expect(a.equals(b)).toBeTruthy();
 
-        b.copy({ });
+        b.copy({});
         expect(b.ch).toEqual(-1);
         expect(b.fg.css()).toEqual('transparent');
         expect(b.bg.css()).toEqual('transparent');
@@ -80,7 +80,7 @@ describe('Mixer', () => {
         expect(a.bg.css()).toEqual('#333');
 
         a.blackOut();
-        expect(a.ch).toEqual(0);
+        expect(a.ch).toEqual(-1);
         expect(a.fg.toInt()).toEqual(0);
         expect(a.bg.toInt()).toEqual(0);
     });
@@ -244,7 +244,11 @@ describe('Mixer', () => {
 
     test('bake', () => {
         const mixer = new Mixer();
-        mixer.draw('@', 0xd73, Color.fromArray([50, 50, 50, 50, 10, 10, 10, true]));
+        mixer.draw(
+            '@',
+            0xd73,
+            Color.fromArray([50, 50, 50, 50, 10, 10, 10, true])
+        );
         expect(mixer.ch).toEqual('@');
         expect(mixer.fg.css()).toEqual('#d73');
         expect(mixer.bg.css()).toEqual('#ccc');
@@ -270,7 +274,6 @@ describe('Mixer', () => {
         mixer.scale(200, false, false);
         expect(mixer.fg.css()).toEqual('#800');
         expect(mixer.bg.css()).toEqual('#888');
-
     });
 
     test('toString', () => {

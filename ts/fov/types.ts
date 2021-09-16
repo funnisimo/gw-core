@@ -48,6 +48,7 @@ export interface FovSystemType {
     fovChanged(x: number, y: number): boolean;
 
     changed: boolean;
+    readonly isEnabled: boolean;
     needsUpdate: boolean;
     copy(other: FovSystemType): void;
 

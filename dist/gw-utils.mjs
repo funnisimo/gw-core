@@ -1337,11 +1337,12 @@ function _formatGridValue(v) {
 class Grid extends Array {
     constructor(w, h, v) {
         super(w);
+        const grid = this;
         for (let x = 0; x < w; ++x) {
             if (typeof v === 'function') {
                 this[x] = new Array(h)
                     .fill(0)
-                    .map((_, i) => v(x, i));
+                    .map((_, i) => v(x, i, grid));
             }
             else {
                 this[x] = new Array(h).fill(v);
@@ -1699,7 +1700,7 @@ class NumGrid extends Grid {
         for (x = 0; x < width; ++x) {
             const col = this[x];
             for (y = 0; y < height; ++y) {
-                col[y] = fn(x, y);
+                col[y] = fn(x, y, this);
             }
             col.length = height;
         }
@@ -2418,6 +2419,7 @@ class FOV {
 // import * as GW from 'gw-utils';
 class FovSystem {
     constructor(site, opts = {}) {
+        this.isEnabled = false;
         this.site = site;
         this.flags = make$7(site.width, site.height, FovFlags.VISIBLE);
         this.needsUpdate = true;
@@ -2433,12 +2435,14 @@ class FovSystem {
         // we want fov, so do not reveal the map initially
         if (opts.fov === true) {
             this.flags.fill(0);
+            this.isEnabled = true;
         }
         if (opts.visible) {
             this.makeAlwaysVisible();
         }
         else if (opts.visible === false) {
             this.flags.fill(0);
+            this.isEnabled = true;
         }
         else if (opts.revealed) {
             this.revealAll();
@@ -2655,6 +2659,7 @@ class FovSystem {
             !this.site.lightingChanged()) {
             return false;
         }
+        this.isEnabled = true; // you called update so you must want it enabled...
         this.needsUpdate = false;
         this._changed = false;
         this.flags.update(this.demoteCellVisibility.bind(this));
@@ -4219,7 +4224,7 @@ class Mixer {
         return this._changed();
     }
     blackOut() {
-        this.ch = 0;
+        this.ch = -1;
         this.fg.blackOut();
         this.bg.blackOut();
         return this._changed();

@@ -20,6 +20,7 @@ export class FovSystem implements TYPES.FovSystemType {
     fov: FOV.FOV;
     needsUpdate: boolean;
     protected _changed: boolean;
+    isEnabled = false;
 
     constructor(site: TYPES.FovSite, opts: Partial<FovSystemOptions> = {}) {
         this.site = site;
@@ -39,12 +40,14 @@ export class FovSystem implements TYPES.FovSystemType {
         // we want fov, so do not reveal the map initially
         if (opts.fov === true) {
             this.flags.fill(0);
+            this.isEnabled = true;
         }
 
         if (opts.visible) {
             this.makeAlwaysVisible();
         } else if (opts.visible === false) {
             this.flags.fill(0);
+            this.isEnabled = true;
         } else if (opts.revealed) {
             this.revealAll();
         }
@@ -305,6 +308,7 @@ export class FovSystem implements TYPES.FovSystemType {
             return false;
         }
 
+        this.isEnabled = true; // you called update so you must want it enabled...
         this.needsUpdate = false;
         this._changed = false;
         this.flags.update(this.demoteCellVisibility.bind(this));
