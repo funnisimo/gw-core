@@ -6313,6 +6313,9 @@ class LightSystem {
         if (light instanceof Color) {
             light = light.toLight();
         }
+        else if (!Array.isArray(light)) {
+            light = from$2(light);
+        }
         for (let i = 0; i < 3; ++i) {
             this.ambient[i] = light[i];
         }
@@ -6439,7 +6442,7 @@ class LightSystem {
         const PLAYER = data.player;
         if (PLAYER) {
             const PLAYERS_LIGHT = lights.PLAYERS_LIGHT;
-            if (PLAYERS_LIGHT && PLAYERS_LIGHT.radius) {
+            if (PLAYERS_LIGHT) {
                 PLAYERS_LIGHT.paint(this, PLAYER.x, PLAYER.y, true, true);
             }
         }
@@ -6508,15 +6511,15 @@ class LightSystem {
     }
     // PaintSite
     calcFov(x, y, radius, passThroughActors, cb) {
-        const map = this.site;
+        const site = this.site;
         const fov = new FOV({
             isBlocked(x, y) {
-                if (!passThroughActors && map.hasActor(x, y))
+                if (!passThroughActors && site.hasActor(x, y))
                     return false;
-                return map.blocksVision(x, y);
+                return site.blocksVision(x, y);
             },
             hasXY(x, y) {
-                return map.hasXY(x, y);
+                return site.hasXY(x, y);
             },
         });
         fov.calculate(x, y, radius, cb);

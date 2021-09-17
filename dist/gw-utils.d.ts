@@ -1734,7 +1734,7 @@ declare class LightSystem implements LightSystemType, PaintSite {
     constructor(map: LightSystemSite, opts?: Partial<LightSystemOptions>);
     copy(other: LightSystem): void;
     getAmbient(): LightValue;
-    setAmbient(light: LightValue | Color): void;
+    setAmbient(light: LightValue | ColorBase): void;
     get needsUpdate(): boolean;
     getLight(x: number, y: number): LightValue;
     isLit(x: number, y: number): boolean;

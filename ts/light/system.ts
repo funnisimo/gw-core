@@ -90,12 +90,14 @@ export class LightSystem implements LightSystemType, PaintSite {
     getAmbient(): Color.LightValue {
         return this.ambient;
     }
-    setAmbient(light: Color.LightValue | Color.Color) {
+    setAmbient(light: Color.LightValue | Color.ColorBase) {
         if (light instanceof Color.Color) {
             light = light.toLight();
+        } else if (!Array.isArray(light)) {
+            light = Color.from(light);
         }
         for (let i = 0; i < 3; ++i) {
-            this.ambient[i] = light[i];
+            this.ambient[i] = light[i] as number;
         }
         this.glowLightChanged = true;
     }
@@ -238,7 +240,7 @@ export class LightSystem implements LightSystemType, PaintSite {
         const PLAYER = DATA.player;
         if (PLAYER) {
             const PLAYERS_LIGHT = Light.lights.PLAYERS_LIGHT;
-            if (PLAYERS_LIGHT && PLAYERS_LIGHT.radius) {
+            if (PLAYERS_LIGHT) {
                 PLAYERS_LIGHT.paint(this, PLAYER.x, PLAYER.y, true, true);
             }
         }
@@ -321,14 +323,14 @@ export class LightSystem implements LightSystemType, PaintSite {
         passThroughActors: boolean,
         cb: (x: number, y: number) => void
     ) {
-        const map = this.site;
+        const site = this.site;
         const fov = new FOV({
             isBlocked(x: number, y: number): boolean {
-                if (!passThroughActors && map.hasActor(x, y)) return false;
-                return map.blocksVision(x, y);
+                if (!passThroughActors && site.hasActor(x, y)) return false;
+                return site.blocksVision(x, y);
             },
             hasXY(x: number, y: number) {
-                return map.hasXY(x, y);
+                return site.hasXY(x, y);
             },
         });
         fov.calculate(x, y, radius, cb);

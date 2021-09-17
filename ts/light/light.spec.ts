@@ -198,10 +198,12 @@ describe('light', () => {
     test('isDarkLight', () => {
         expect(Light.isDarkLight(Color.colors.black, 20)).toBeTruthy();
         expect(Light.isDarkLight(Color.colors.white)).toBeFalsy();
+        expect(Light.isDarkLight(Color.from(0x444))).toBeFalsy();
     });
 
     test('isShadowLight', () => {
         expect(Light.isShadowLight(Color.colors.black, 20)).toBeTruthy();
         expect(Light.isShadowLight(Color.colors.white)).toBeFalsy();
+        expect(Light.isShadowLight(Color.from(0x444))).toBeTruthy();
     });
 });
