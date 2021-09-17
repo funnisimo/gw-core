@@ -1102,7 +1102,7 @@
     }
     const random = new Random();
     const cosmetic = new Random();
-    function make$9(seed) {
+    function make$a(seed) {
         return new Random(seed);
     }
 
@@ -1113,7 +1113,7 @@
         Random: Random,
         random: random,
         cosmetic: cosmetic,
-        make: make$9
+        make: make$a
     });
 
     class Range {
@@ -1150,7 +1150,7 @@
             return `${this.lo}-${this.hi}`;
         }
     }
-    function make$8(config) {
+    function make$9(config) {
         if (!config)
             return new Range(0, 0, 0);
         if (config instanceof Range)
@@ -1202,16 +1202,16 @@
         }
         throw new Error('Not a valid range - ' + config);
     }
-    const from$4 = make$8;
+    const from$4 = make$9;
     function asFn(config) {
-        const range = make$8(config);
+        const range = make$9(config);
         return () => range.value();
     }
 
     var range = /*#__PURE__*/Object.freeze({
         __proto__: null,
         Range: Range,
-        make: make$8,
+        make: make$9,
         from: from$4,
         asFn: asFn
     });
@@ -1298,12 +1298,36 @@
         }
         return result;
     }
+    function make$8(obj) {
+        const out = {};
+        Object.entries(obj).forEach(([key, value]) => {
+            if (typeof value === 'string') {
+                const parts = value.split(/[,|]/).map((t) => t.trim());
+                const flag = parts.reduce((result, id) => result | out[id], 0);
+                out[key] = flag;
+            }
+            else if (Array.isArray(value)) {
+                const flag = value.reduce((result, v) => {
+                    if (typeof v === 'string') {
+                        return result | out[v];
+                    }
+                    return result | v;
+                }, 0);
+                out[key] = flag;
+            }
+            else if (value) {
+                out[key] = value;
+            }
+        });
+        return out;
+    }
 
     var flag = /*#__PURE__*/Object.freeze({
         __proto__: null,
         fl: fl,
         toString: toString,
-        from: from$3
+        from: from$3,
+        make: make$8
     });
 
     const DIRS$1 = DIRS$2;
@@ -6132,7 +6156,7 @@ void main() {
             this.passThroughActors = false;
             this.id = null;
             this.color = from$2(color); /* color */
-            this.radius = make$8(radius);
+            this.radius = make$9(radius);
             this.fadeTo = fadeTo;
             this.passThroughActors = pass; // generally no, but miner light does (TODO - string parameter?  'false' or 'true')
         }

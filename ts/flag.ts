@@ -2,7 +2,7 @@
 // FLAG
 
 type FlagSource = number | string;
-export type FlagBase = number | string | FlagSource[] | null;
+export type FlagBase = FlagSource | FlagSource[] | null;
 
 export function fl(N: number) {
     return 1 << N;
@@ -67,7 +67,7 @@ export function from<T>(obj: T, ...args: (FlagBase | undefined)[]): number {
                             result |= n;
                             return;
                         }
-    
+
                         // @ts-ignore
                         const f = obj[v];
                         if (f) {
@@ -84,4 +84,28 @@ export function from<T>(obj: T, ...args: (FlagBase | undefined)[]): number {
         }
     }
     return result;
+}
+
+export function make(obj: Record<string, FlagBase>): Record<string, number> {
+    const out: Record<string, number> = {};
+
+    Object.entries(obj).forEach(([key, value]) => {
+        if (typeof value === 'string') {
+            const parts = value.split(/[,|]/).map((t) => t.trim());
+            const flag = parts.reduce((result, id) => result | out[id], 0);
+            out[key] = flag;
+        } else if (Array.isArray(value)) {
+            const flag = value.reduce((result: number, v: FlagSource) => {
+                if (typeof v === 'string') {
+                    return result | out[v];
+                }
+                return result | v;
+            }, 0);
+            out[key] = flag;
+        } else if (value) {
+            out[key] = value;
+        }
+    });
+
+    return out;
 }

@@ -79,11 +79,11 @@ declare function fromArray(vals: ColorData, base256?: boolean): Color;
 declare function fromCss(css: string): Color;
 declare function fromName(name: string): Color;
 declare function fromNumber(val: number, base256?: boolean): Color;
-declare function make$9(): Color;
-declare function make$9(rgb: number, base256?: boolean): Color;
-declare function make$9(color?: ColorBase | null): Color;
-declare function make$9(arrayLike: ColorData, base256?: boolean): Color;
-declare function make$9(...rgb: number[]): Color;
+declare function make$a(): Color;
+declare function make$a(rgb: number, base256?: boolean): Color;
+declare function make$a(color?: ColorBase | null): Color;
+declare function make$a(arrayLike: ColorData, base256?: boolean): Color;
+declare function make$a(...rgb: number[]): Color;
 declare function from$4(): Color;
 declare function from$4(rgb: number, base256?: boolean): Color;
 declare function from$4(color?: ColorBase | null): Color;
@@ -128,7 +128,7 @@ declare namespace index_d$5 {
     index_d$5_fromCss as fromCss,
     index_d$5_fromName as fromName,
     index_d$5_fromNumber as fromNumber,
-    make$9 as make,
+    make$a as make,
     from$4 as from,
     index_d$5_separate as separate,
     index_d$5_swap as swap,
@@ -471,7 +471,7 @@ declare class Random {
 }
 declare const random: Random;
 declare const cosmetic: Random;
-declare function make$8(seed?: number): Random;
+declare function make$9(seed?: number): Random;
 
 type rng_d_WeightedArray = WeightedArray;
 type rng_d_WeightedObject = WeightedObject;
@@ -493,7 +493,7 @@ declare namespace rng_d {
     rng_d_Random as Random,
     rng_d_random as random,
     rng_d_cosmetic as cosmetic,
-    make$8 as make,
+    make$9 as make,
   };
 }
 
@@ -508,8 +508,8 @@ declare class Range {
     copy(other: Range): this;
     toString(): string;
 }
-declare function make$7(config: RangeBase | null): Range;
-declare const from$3: typeof make$7;
+declare function make$8(config: RangeBase | null): Range;
+declare const from$3: typeof make$8;
 declare function asFn(config: RangeBase | null): () => number;
 
 type range_d_RangeBase = RangeBase;
@@ -520,17 +520,18 @@ declare namespace range_d {
   export {
     range_d_RangeBase as RangeBase,
     range_d_Range as Range,
-    make$7 as make,
+    make$8 as make,
     from$3 as from,
     range_d_asFn as asFn,
   };
 }
 
 declare type FlagSource = number | string;
-declare type FlagBase = number | string | FlagSource[] | null;
+declare type FlagBase = FlagSource | FlagSource[] | null;
 declare function fl(N: number): number;
 declare function toString<T>(flagObj: T, value: number): string;
 declare function from$2<T>(obj: T, ...args: (FlagBase | undefined)[]): number;
+declare function make$7(obj: Record<string, FlagBase>): Record<string, number>;
 
 type flag_d_FlagBase = FlagBase;
 declare const flag_d_fl: typeof fl;
@@ -541,6 +542,7 @@ declare namespace flag_d {
     flag_d_fl as fl,
     flag_d_toString as toString,
     from$2 as from,
+    make$7 as make,
   };
 }
 
