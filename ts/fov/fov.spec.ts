@@ -82,7 +82,7 @@ describe('FOV', () => {
 
         fov.calculate(5, 5, 10, setVisible);
 
-        results.dump();
+        // results.dump();
 
         expect(results[5][5]).toEqual(1); // center is always visible
         expect(results[2][5]).toEqual(1);
