@@ -898,7 +898,7 @@ declare class FOV {
     protected _startY: number;
     protected _maxRadius: number;
     constructor(strategy: FovStrategy);
-    calculate(x: number, y: number, maxRadius: number | undefined, setVisible: SetVisibleFn): void;
+    calculate(x: number, y: number, maxRadius: number, setVisible: SetVisibleFn): void;
     castLight(row: number, startSlope: number, endSlope: number, xx: number, xy: number, yx: number, yy: number): void;
 }
 
@@ -938,7 +938,7 @@ declare class FovSystem implements FovSystemType {
     protected updateCellDetect(flag: number, x: number, y: number): boolean;
     protected promoteCellVisibility(flag: number, x: number, y: number): void;
     update(): boolean;
-    update(x: number, y: number, r: number): boolean;
+    update(x: number, y: number, r?: number): boolean;
 }
 
 type index_d$4_FovFlags = FovFlags;

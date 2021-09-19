@@ -297,8 +297,8 @@ export class FovSystem implements TYPES.FovSystemType {
     }
 
     update(): boolean;
-    update(x: number, y: number, r: number): boolean;
-    update(cx?: number, cy?: number, cr?: number): boolean {
+    update(x: number, y: number, r?: number): boolean;
+    update(cx?: number, cy?: number, cr = 10): boolean {
         // if (!this.site.usesFov()) return false;
         if (
             !this.needsUpdate &&

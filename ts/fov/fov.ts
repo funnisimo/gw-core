@@ -23,7 +23,12 @@ export class FOV {
         this._debug = strategy.debug || Utils.NOOP;
     }
 
-    calculate(x: number, y: number, maxRadius = 10, setVisible: SetVisibleFn) {
+    calculate(
+        x: number,
+        y: number,
+        maxRadius: number,
+        setVisible: SetVisibleFn
+    ) {
         this._setVisible = setVisible;
         this._setVisible(x, y, 1);
         this._startX = x;
