@@ -42,10 +42,11 @@ describe('FOV System', () => {
             redrawCell: jest.fn(),
             storeMemory: jest.fn(),
         };
-        system = new FOV.FovSystem(site);
     });
 
     test('player only', () => {
+        system = new FOV.FovSystem(site);
+
         site.viewports.push({
             x: 10,
             y: 10,
@@ -61,5 +62,35 @@ describe('FOV System', () => {
         expect(system.isDirectlyVisible(4, 10)).toBeFalsy();
         expect(system.isDirectlyVisible(10, 5)).toBeTruthy();
         expect(system.isDirectlyVisible(10, 4)).toBeFalsy();
+    });
+
+    test('constructor - fov on', () => {
+        system = new FOV.FovSystem(site, { fov: true });
+        expect(system.isEnabled).toBeTruthy();
+        expect(system.isAnyKindOfVisible(5, 5)).toBeFalsy();
+        expect(system.isRevealed(5, 5)).toBeFalsy();
+    });
+
+    test('constructor - revealed', () => {
+        system = new FOV.FovSystem(site, { revealed: true });
+        expect(system.isEnabled).toBeFalsy();
+        expect(system.isAnyKindOfVisible(5, 5)).toBeTruthy();
+        expect(system.isRevealed(5, 5)).toBeTruthy();
+    });
+
+    test('constructor - visible', () => {
+        system = new FOV.FovSystem(site, { visible: true });
+        expect(system.isEnabled).toBeFalsy();
+        expect(system.isAnyKindOfVisible(5, 5)).toBeTruthy();
+        expect(system.isVisible(5, 5)).toBeTruthy();
+        expect(system.isDirectlyVisible(5, 5)).toBeFalsy(); // no FOV calculated
+        expect(system.isRevealed(5, 5)).toBeTruthy();
+    });
+
+    test('constructor - not visible', () => {
+        system = new FOV.FovSystem(site, { visible: false });
+        expect(system.isEnabled).toBeTruthy();
+        expect(system.isAnyKindOfVisible(5, 5)).toBeFalsy();
+        expect(system.isRevealed(5, 5)).toBeFalsy();
     });
 });

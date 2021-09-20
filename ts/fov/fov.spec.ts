@@ -15,7 +15,7 @@ describe('FOV', () => {
         _v: number
     ) {
         // console.log(x, y, v);
-        results[x][y] = 1;
+        results.set(x, y, 1);
     }
 
     function setup(w: number, h: number, _captureDebug = false) {
@@ -33,7 +33,7 @@ describe('FOV', () => {
 
         fov = new GW.fov.FOV({
             isBlocked(x: number, y: number) {
-                return !tiles.hasXY(x, y) || tiles[x][y] > 0;
+                return tiles[x][y] > 0;
             },
             hasXY(x: number, y: number) {
                 return tiles.hasXY(x, y);
@@ -53,6 +53,44 @@ describe('FOV', () => {
         if (msgs.length) {
             console.log(msgs.join('\n'));
         }
+    });
+
+    test('do not need hasXY', () => {
+        const w = 20,
+            h = 20;
+        tiles = GW.grid.alloc(w, h, 0);
+        results = GW.grid.alloc(w, h, 0);
+
+        setVisible = setResults.bind(undefined, results);
+
+        // let debug = GW.utils.NOOP;
+        // if (captureDebug) {
+        //     debug = function capture(...args) {
+        //         msgs.push(args.join(', '));
+        //     };
+        // }
+
+        fov = new GW.fov.FOV({
+            isBlocked(x: number, y: number) {
+                return !tiles.hasXY(x, y) || tiles[x][y] > 0;
+            },
+            // debug,
+        });
+
+        tiles[2][5] = 1;
+        tiles[5][2] = 1;
+
+        fov.calculate(5, 5, 10, setVisible);
+
+        // results.dump();
+
+        expect(results[5][5]).toEqual(1); // center is always visible
+        expect(results[2][5]).toEqual(1);
+        expect(results[1][5]).toEqual(0);
+        expect(results[5][2]).toEqual(1);
+        expect(results[5][1]).toEqual(0);
+
+        expect(results[5][10]).toEqual(1); // 10 away
     });
 
     test('will calculate FOV', () => {

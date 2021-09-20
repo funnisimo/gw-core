@@ -2362,7 +2362,7 @@
             this._hasXY = strategy.hasXY || TRUE;
             this._debug = strategy.debug || NOOP;
         }
-        calculate(x, y, maxRadius = 10, setVisible) {
+        calculate(x, y, maxRadius, setVisible) {
             this._setVisible = setVisible;
             this._setVisible(x, y, 1);
             this._startX = x;
@@ -2682,7 +2682,7 @@
             if (this.updateCellDetect(flag, x, y))
                 return;
         }
-        update(cx, cy, cr) {
+        update(cx, cy, cr = 10) {
             // if (!this.site.usesFov()) return false;
             if (!this.needsUpdate &&
                 cx === undefined &&
