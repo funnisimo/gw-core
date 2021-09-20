@@ -1251,6 +1251,7 @@ declare class DataBuffer {
     constructor(width: number, height: number);
     get width(): number;
     get height(): number;
+    clone(): DataBuffer;
     resize(width: number, height: number): void;
     get(x: number, y: number): DrawData;
     toGlyph(ch: string | number): number;
@@ -1259,7 +1260,8 @@ declare class DataBuffer {
     drawSprite(x: number, y: number, sprite: Partial<DrawInfo>): this;
     blackOut(x: number, y: number): void;
     blackOut(): void;
-    fill(glyph?: number | string, fg?: number, bg?: number): this;
+    fill(color: ColorBase): this;
+    fill(glyph?: number | string, fg?: ColorBase, bg?: ColorBase): this;
     copy(other: DataBuffer): this;
     drawText(x: number, y: number, text: string, fg?: ColorBase, bg?: ColorBase): number;
     wrapText(x: number, y: number, width: number, text: string, fg?: Color | number | string, bg?: Color | number | string, indent?: number): number;
@@ -1273,6 +1275,7 @@ declare function makeDataBuffer(width: number, height: number): DataBuffer;
 declare class Buffer extends DataBuffer {
     private _target;
     constructor(canvas: BufferTarget);
+    clone(): Buffer;
     toGlyph(ch: string | number): number;
     render(): this;
     load(): this;

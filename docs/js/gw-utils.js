@@ -4980,6 +4980,11 @@ void main() {
         get height() {
             return this._height;
         }
+        clone() {
+            const other = new DataBuffer(this._width, this._height);
+            other.copy(this);
+            return other;
+        }
         resize(width, height) {
             const orig = this._data;
             this._width = width;
@@ -5042,8 +5047,26 @@ void main() {
             return this.draw(args[0], args[1], 0, 0, 0);
         }
         fill(glyph = 0, fg = 0xfff, bg = 0) {
-            if (typeof glyph == 'string') {
-                glyph = this.toGlyph(glyph);
+            if (arguments.length == 1) {
+                bg = from$2(glyph).toInt();
+                glyph = 0;
+                fg = 0;
+            }
+            else {
+                if (typeof glyph !== 'number') {
+                    if (typeof glyph === 'string') {
+                        glyph = this.toGlyph(glyph);
+                    }
+                    else {
+                        throw new Error('glyph must be number or char');
+                    }
+                }
+                if (typeof fg !== 'number') {
+                    fg = from$2(fg).toInt();
+                }
+                if (typeof bg !== 'number') {
+                    bg = from$2(bg).toInt();
+                }
             }
             glyph = glyph & 0xff;
             fg = fg & 0xfff;
@@ -5174,6 +5197,11 @@ void main() {
             canvas.copyTo(this._data);
         }
         // get canvas() { return this._target; }
+        clone() {
+            const other = new Buffer(this._target);
+            other.copy(this);
+            return other;
+        }
         toGlyph(ch) {
             return this._target.toGlyph(ch);
         }
@@ -5911,9 +5939,7 @@ void main() {
             return this.NEEDS_UPDATE;
         }
         set needsUpdate(needs) {
-            if (needs) {
-                this.NEEDS_UPDATE = true;
-            }
+            this.NEEDS_UPDATE = needs;
         }
         // function messageWithoutCaps(msg, requireAcknowledgment) {
         addMessageLine(msg) {

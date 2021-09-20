@@ -41,6 +41,12 @@ export class DataBuffer {
         return this._height;
     }
 
+    clone(): DataBuffer {
+        const other = new DataBuffer(this._width, this._height);
+        other.copy(this);
+        return other;
+    }
+
     resize(width: number, height: number) {
         const orig = this._data;
         this._width = width;
@@ -113,9 +119,35 @@ export class DataBuffer {
         return this.draw(args[0], args[1], 0, 0, 0);
     }
 
-    fill(glyph: number | string = 0, fg: number = 0xfff, bg: number = 0) {
-        if (typeof glyph == 'string') {
-            glyph = this.toGlyph(glyph);
+    fill(color: Color.ColorBase): this;
+    fill(
+        glyph?: number | string,
+        fg?: Color.ColorBase,
+        bg?: Color.ColorBase
+    ): this;
+    fill(
+        glyph: number | string | Color.ColorBase = 0,
+        fg: Color.ColorBase = 0xfff,
+        bg: Color.ColorBase = 0
+    ): this {
+        if (arguments.length == 1) {
+            bg = Color.from(glyph).toInt();
+            glyph = 0;
+            fg = 0;
+        } else {
+            if (typeof glyph !== 'number') {
+                if (typeof glyph === 'string') {
+                    glyph = this.toGlyph(glyph);
+                } else {
+                    throw new Error('glyph must be number or char');
+                }
+            }
+            if (typeof fg !== 'number') {
+                fg = Color.from(fg).toInt();
+            }
+            if (typeof bg !== 'number') {
+                bg = Color.from(bg).toInt();
+            }
         }
         glyph = glyph & 0xff;
         fg = fg & 0xfff;
@@ -291,6 +323,12 @@ export class Buffer extends DataBuffer {
     }
 
     // get canvas() { return this._target; }
+
+    clone(): Buffer {
+        const other = new Buffer(this._target);
+        other.copy(this);
+        return other;
+    }
 
     toGlyph(ch: string | number) {
         return this._target.toGlyph(ch);

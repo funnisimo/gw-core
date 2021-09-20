@@ -79,9 +79,7 @@ export class MessageCache implements MessageHandler {
         return this.NEEDS_UPDATE;
     }
     set needsUpdate(needs: boolean) {
-        if (needs) {
-            this.NEEDS_UPDATE = true;
-        }
+        this.NEEDS_UPDATE = needs;
     }
 
     // function messageWithoutCaps(msg, requireAcknowledgment) {
