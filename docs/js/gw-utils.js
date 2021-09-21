@@ -2451,7 +2451,18 @@
         constructor(site, opts = {}) {
             this.isEnabled = false;
             this.site = site;
-            this.flags = make$7(site.width, site.height, FovFlags.VISIBLE);
+            let flag = 0;
+            if (opts.revealed)
+                flag |= FovFlags.REVEALED;
+            if (opts.visible)
+                flag |= FovFlags.VISIBLE;
+            if (flag === 0 &&
+                opts.fov !== true &&
+                opts.revealed === undefined &&
+                opts.visible === undefined) {
+                flag = FovFlags.VISIBLE | FovFlags.REVEALED;
+            }
+            this.flags = make$7(site.width, site.height, flag);
             this.needsUpdate = true;
             this._changed = true;
             this.fov = new FOV({
@@ -2464,18 +2475,13 @@
             });
             // we want fov, so do not reveal the map initially
             if (opts.fov === true) {
-                this.flags.fill(0);
                 this.isEnabled = true;
             }
             if (opts.visible) {
                 this.makeAlwaysVisible();
             }
             else if (opts.visible === false) {
-                this.flags.fill(0);
                 this.isEnabled = true;
-            }
-            else if (opts.revealed) {
-                this.revealAll();
             }
         }
         isVisible(x, y) {
@@ -2512,8 +2518,9 @@
             this.flags[x][y] |= FovFlags.ALWAYS_VISIBLE | FovFlags.REVEALED;
             this.changed = true;
         }
-        revealAll() {
-            this.flags.update((v) => v | FovFlags.REVEALED | FovFlags.VISIBLE);
+        revealAll(makeVisibleToo = true) {
+            const flag = FovFlags.REVEALED | (makeVisibleToo ? FovFlags.VISIBLE : 0);
+            this.flags.update((v) => v | flag);
             this.changed = true;
         }
         revealCell(x, y) {
@@ -2609,9 +2616,13 @@
                     // }
                     this.flags[x][y] |= FovFlags.REVEALED;
                 }
+                this.site.redrawCell(x, y);
+            }
+            else if (!isVisible && wasVisible) {
+                // if the cell ceased being visible this move
+                this.site.storeMemory(x, y);
                 // this.site.redrawCell(x, y);
             }
-            else ;
             return isVisible;
         }
         updateCellClairyvoyance(flag, x, y) {
@@ -2621,7 +2632,7 @@
             else if (!isClairy && wasClairy) {
                 // ceased being clairvoyantly visible
                 this.site.storeMemory(x, y);
-                this.site.redrawCell(x, y);
+                // this.site.redrawCell(x, y);
             }
             else if (!wasClairy && isClairy) {
                 // became clairvoyantly visible
@@ -2636,7 +2647,7 @@
             else if (!isTele && wasTele) {
                 // ceased being telepathically visible
                 this.site.storeMemory(x, y);
-                this.site.redrawCell(x, y);
+                // this.site.redrawCell(x, y);
             }
             else if (!wasTele && isTele) {
                 // became telepathically visible

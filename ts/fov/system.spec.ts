@@ -73,8 +73,13 @@ describe('FOV System', () => {
 
     test('constructor - revealed', () => {
         system = new FOV.FovSystem(site, { revealed: true });
+
+        // system.flags.dump((v) =>
+        //     v & FOV.FovFlags.ANY_KIND_OF_VISIBLE ? '!' : ' '
+        // );
+
         expect(system.isEnabled).toBeFalsy();
-        expect(system.isAnyKindOfVisible(5, 5)).toBeTruthy();
+        expect(system.isAnyKindOfVisible(5, 5)).toBeFalsy();
         expect(system.isRevealed(5, 5)).toBeTruthy();
     });
 

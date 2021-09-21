@@ -24,7 +24,20 @@ export class FovSystem implements TYPES.FovSystemType {
 
     constructor(site: TYPES.FovSite, opts: Partial<FovSystemOptions> = {}) {
         this.site = site;
-        this.flags = Grid.make(site.width, site.height, FovFlags.VISIBLE);
+
+        let flag = 0;
+        if (opts.revealed) flag |= FovFlags.REVEALED;
+        if (opts.visible) flag |= FovFlags.VISIBLE;
+        if (
+            flag === 0 &&
+            opts.fov !== true &&
+            opts.revealed === undefined &&
+            opts.visible === undefined
+        ) {
+            flag = FovFlags.VISIBLE | FovFlags.REVEALED;
+        }
+
+        this.flags = Grid.make(site.width, site.height, flag);
         this.needsUpdate = true;
         this._changed = true;
 
@@ -39,17 +52,13 @@ export class FovSystem implements TYPES.FovSystemType {
 
         // we want fov, so do not reveal the map initially
         if (opts.fov === true) {
-            this.flags.fill(0);
             this.isEnabled = true;
         }
 
         if (opts.visible) {
             this.makeAlwaysVisible();
         } else if (opts.visible === false) {
-            this.flags.fill(0);
             this.isEnabled = true;
-        } else if (opts.revealed) {
-            this.revealAll();
         }
     }
 
@@ -92,8 +101,10 @@ export class FovSystem implements TYPES.FovSystemType {
         this.changed = true;
     }
 
-    revealAll(): void {
-        this.flags.update((v) => v | FovFlags.REVEALED | FovFlags.VISIBLE);
+    revealAll(makeVisibleToo = true): void {
+        const flag =
+            FovFlags.REVEALED | (makeVisibleToo ? FovFlags.VISIBLE : 0);
+        this.flags.update((v) => v | flag);
         this.changed = true;
     }
     revealCell(x: number, y: number) {
@@ -203,10 +214,10 @@ export class FovSystem implements TYPES.FovSystemType {
                 // }
                 this.flags[x][y] |= FovFlags.REVEALED;
             }
-            // this.site.redrawCell(x, y);
+            this.site.redrawCell(x, y);
         } else if (!isVisible && wasVisible) {
             // if the cell ceased being visible this move
-            // this.site.storeMemory(x, y);
+            this.site.storeMemory(x, y);
             // this.site.redrawCell(x, y);
         }
         return isVisible;
@@ -227,7 +238,7 @@ export class FovSystem implements TYPES.FovSystemType {
         } else if (!isClairy && wasClairy) {
             // ceased being clairvoyantly visible
             this.site.storeMemory(x, y);
-            this.site.redrawCell(x, y);
+            // this.site.redrawCell(x, y);
         } else if (!wasClairy && isClairy) {
             // became clairvoyantly visible
             this.site.redrawCell(x, y, true);
@@ -247,7 +258,7 @@ export class FovSystem implements TYPES.FovSystemType {
         } else if (!isTele && wasTele) {
             // ceased being telepathically visible
             this.site.storeMemory(x, y);
-            this.site.redrawCell(x, y);
+            // this.site.redrawCell(x, y);
         } else if (!wasTele && isTele) {
             // became telepathically visible
             // if (

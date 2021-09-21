@@ -61,4 +61,5 @@ export interface FovSystemType {
     magicMapCell(x: number, y: number): void;
 
     update(): boolean; // didSomething
+    update(x: number, y: number, r?: number): boolean; // didSomething
 }

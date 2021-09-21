@@ -886,6 +886,7 @@ interface FovSystemType {
     hideCell(x: number, y: number): void;
     magicMapCell(x: number, y: number): void;
     update(): boolean;
+    update(x: number, y: number, r?: number): boolean;
 }
 
 declare class FOV {
@@ -924,7 +925,7 @@ declare class FovSystem implements FovSystemType {
     fovChanged(x: number, y: number): boolean;
     makeAlwaysVisible(): void;
     makeCellAlwaysVisible(x: number, y: number): void;
-    revealAll(): void;
+    revealAll(makeVisibleToo?: boolean): void;
     revealCell(x: number, y: number): void;
     hideCell(x: number, y: number): void;
     magicMapCell(x: number, y: number): void;
