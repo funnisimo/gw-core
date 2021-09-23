@@ -232,7 +232,7 @@ declare function isSameDir(a: Loc$1, b: Loc$1): boolean;
 declare function dirSpread(dir: Loc$1): Loc$1[];
 declare function stepFromTo(a: XY | Loc$1, b: XY | Loc$1, fn: (x: number, y: number) => any): void;
 declare function forLine(x: number, y: number, dir: Loc$1, length: number, fn: (x: number, y: number) => any): void;
-declare function forLineBetween(fromX: number, fromY: number, toX: number, toY: number, stepFn: (x: number, y: number) => boolean): void;
+declare function forLineBetween(fromX: number, fromY: number, toX: number, toY: number, stepFn: (x: number, y: number) => boolean): boolean;
 declare function getLine(fromX: number, fromY: number, toX: number, toY: number): Loc$1[];
 declare function getLineThru(fromX: number, fromY: number, toX: number, toY: number, width: number, height: number): Loc$1[];
 declare function forCircle(x: number, y: number, radius: number, fn: XYFunc): void;

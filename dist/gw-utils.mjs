@@ -128,10 +128,12 @@ class Bounds {
             j = y(i);
             i = x(i);
         }
-        return (this.x <= i &&
+        return (
+            this.x <= i &&
             this.y <= j &&
             this.x + this.width > i &&
-            this.y + this.height > j);
+            this.y + this.height > j
+        );
     }
     toString() {
         return `[${this.x},${this.y} -> ${this.right},${this.bottom}]`;
@@ -146,10 +148,8 @@ function addXY(dest, src) {
     dest.y += y(src);
 }
 function equalsXY(dest, src) {
-    if (!dest && !src)
-        return true;
-    if (!dest || !src)
-        return false;
+    if (!dest && !src) return true;
+    if (!dest || !src) return false;
     return x(dest) == x(src) && y(dest) == y(src);
 }
 function lerpXY(a, b, pct) {
@@ -187,8 +187,7 @@ function matchingNeighbor(x, y, matchFn, only4dirs = false) {
         const dir = DIRS$2[d];
         const i = x + dir[0];
         const j = y + dir[1];
-        if (matchFn(i, j))
-            return [i, j];
+        if (matchFn(i, j)) return [i, j];
     }
     return [-1, -1];
 }
@@ -217,8 +216,7 @@ function dirBetween(x, y, toX, toY) {
         const absY = Math.abs(diffY);
         if (absX >= 2 * absY) {
             diffY = 0;
-        }
-        else if (absY >= 2 * absX) {
+        } else if (absY >= 2 * absX) {
             diffX = 0;
         }
     }
@@ -233,10 +231,8 @@ function dirIndex(dir) {
     return DIRS$2.findIndex((a) => a[0] == x0 && a[1] == y0);
 }
 function isOppositeDir(a, b) {
-    if (a[0] + b[0] != 0)
-        return false;
-    if (a[1] + b[1] != 0)
-        return false;
+    if (a[0] + b[0] != 0) return false;
+    if (a[1] + b[1] != 0) return false;
     return true;
 }
 function isSameDir(a, b) {
@@ -247,12 +243,10 @@ function dirSpread(dir) {
     if (dir[0] == 0) {
         result.push([1, dir[1]]);
         result.push([-1, dir[1]]);
-    }
-    else if (dir[1] == 0) {
+    } else if (dir[1] == 0) {
         result.push([dir[0], 1]);
         result.push([dir[0], -1]);
-    }
-    else {
+    } else {
         result.push([dir[0], 0]);
         result.push([0, dir[1]]);
     }
@@ -284,11 +278,16 @@ function forLine(x, y, dir, length, fn) {
 const FP_BASE = 16;
 const FP_FACTOR = 1 << 16;
 function forLineBetween(fromX, fromY, toX, toY, stepFn) {
-    let targetVector = [], error = [], currentVector = [], previousVector = [], quadrantTransform = [];
+    let targetVector = [],
+        error = [],
+        currentVector = [],
+        previousVector = [],
+        quadrantTransform = [];
     let largerTargetComponent, i;
-    let currentLoc = [-1, -1], previousLoc = [-1, -1];
+    let currentLoc = [-1, -1],
+        previousLoc = [-1, -1];
     if (fromX == toX && fromY == toY) {
-        return;
+        return true;
     }
     const originLoc = [fromX, fromY];
     const targetLoc = [toX, toY];
@@ -298,8 +297,7 @@ function forLineBetween(fromX, fromY, toX, toY, stepFn) {
         if (targetVector[i] < 0) {
             targetVector[i] *= -1;
             quadrantTransform[i] = -1;
-        }
-        else {
+        } else {
             quadrantTransform[i] = 1;
         }
         currentVector[i] = previousVector[i] = error[i] = 0;
@@ -309,8 +307,12 @@ function forLineBetween(fromX, fromY, toX, toY, stepFn) {
     largerTargetComponent = Math.max(targetVector[0], targetVector[1]);
     // targetVector[0] = Math.floor( (targetVector[0] << FP_BASE) / largerTargetComponent);
     // targetVector[1] = Math.floor( (targetVector[1] << FP_BASE) / largerTargetComponent);
-    targetVector[0] = Math.floor((targetVector[0] * FP_FACTOR) / largerTargetComponent);
-    targetVector[1] = Math.floor((targetVector[1] * FP_FACTOR) / largerTargetComponent);
+    targetVector[0] = Math.floor(
+        (targetVector[0] * FP_FACTOR) / largerTargetComponent
+    );
+    targetVector[1] = Math.floor(
+        (targetVector[1] * FP_FACTOR) / largerTargetComponent
+    );
     do {
         for (i = 0; i <= 1; i++) {
             previousLoc[i] = currentLoc[i];
@@ -320,12 +322,18 @@ function forLineBetween(fromX, fromY, toX, toY, stepFn) {
                 currentVector[i]++;
                 error[i] -= FP_FACTOR;
             }
-            currentLoc[i] = Math.floor(quadrantTransform[i] * currentVector[i] + originLoc[i]);
+            currentLoc[i] = Math.floor(
+                quadrantTransform[i] * currentVector[i] + originLoc[i]
+            );
         }
-        if (stepFn(...currentLoc)) {
-            break;
+        if (!stepFn(...currentLoc)) {
+            return false;
+        }
+        if (currentLoc[0] === toX && currentLoc[1] === toY) {
+            return true;
         }
     } while (true);
+    return true;
 }
 // ADAPTED FROM BROGUE 1.7.5
 // Simple line algorithm (maybe this is Bresenham?) that returns a list of coordinates
@@ -337,7 +345,7 @@ function getLine(fromX, fromY, toX, toY) {
     const line = [];
     forLineBetween(fromX, fromY, toX, toY, (x, y) => {
         line.push([x, y]);
-        return x == toX && y == toY;
+        return !(x == toX && y == toY);
     });
     return line;
 }
@@ -350,10 +358,9 @@ function getLine(fromX, fromY, toX, toY) {
 function getLineThru(fromX, fromY, toX, toY, width, height) {
     const line = [];
     forLineBetween(fromX, fromY, toX, toY, (x, y) => {
-        if (x < 0 || y < 0 || x >= width || y >= height)
-            return true;
+        if (x < 0 || y < 0 || x >= width || y >= height) return false;
         line.push([x, y]);
-        return false;
+        return true;
     });
     return line;
 }
@@ -362,8 +369,10 @@ function forCircle(x, y, radius, fn) {
     let i, j;
     for (i = x - radius - 1; i < x + radius + 1; i++) {
         for (j = y - radius - 1; j < y + radius + 1; j++) {
-            if ((i - x) * (i - x) + (j - y) * (j - y) <
-                radius * radius + radius) {
+            if (
+                (i - x) * (i - x) + (j - y) * (j - y) <
+                radius * radius + radius
+            ) {
                 // + radius softens the circle
                 fn(i, j);
             }
@@ -426,14 +435,12 @@ function arcCount(x, y, testFn) {
         // Counts every transition from passable to impassable or vice-versa on the way around the cell:
         const newOk = testFn(newX, newY);
         const oldOk = testFn(oldX, oldY);
-        if (newOk)
-            ++matchCount;
+        if (newOk) ++matchCount;
         if (newOk != oldOk) {
             arcCount++;
         }
     }
-    if (arcCount == 0 && matchCount)
-        return 1;
+    if (arcCount == 0 && matchCount) return 1;
     return Math.floor(arcCount / 2); // Since we added one when we entered a wall and another when we left.
 }
 
