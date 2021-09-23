@@ -55,7 +55,7 @@ export class FovSystem implements TYPES.FovSystemType {
             this.isEnabled = true;
         }
 
-        if (opts.visible) {
+        if (opts.visible && opts.fov !== true) {
             this.makeAlwaysVisible();
         } else if (opts.visible === false) {
             this.isEnabled = true;
@@ -113,7 +113,12 @@ export class FovSystem implements TYPES.FovSystemType {
         this.changed = true;
     }
     hideCell(x: number, y: number): void {
-        this.flags[x][y] &= ~(FovFlags.MAGIC_MAPPED | FovFlags.REVEALED);
+        this.flags[x][y] &= ~(
+            FovFlags.MAGIC_MAPPED |
+            FovFlags.REVEALED |
+            FovFlags.ALWAYS_VISIBLE
+        );
+        this.flags[x][y] = this.demoteCellVisibility(this.flags[x][y]); // clears visible, etc...
         this.changed = true;
     }
     magicMapCell(x: number, y: number): void {

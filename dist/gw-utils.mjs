@@ -2471,7 +2471,7 @@ class FovSystem {
         if (opts.fov === true) {
             this.isEnabled = true;
         }
-        if (opts.visible) {
+        if (opts.visible && opts.fov !== true) {
             this.makeAlwaysVisible();
         }
         else if (opts.visible === false) {
@@ -2523,7 +2523,10 @@ class FovSystem {
         this.changed = true;
     }
     hideCell(x, y) {
-        this.flags[x][y] &= ~(FovFlags.MAGIC_MAPPED | FovFlags.REVEALED);
+        this.flags[x][y] &= ~(FovFlags.MAGIC_MAPPED |
+            FovFlags.REVEALED |
+            FovFlags.ALWAYS_VISIBLE);
+        this.flags[x][y] = this.demoteCellVisibility(this.flags[x][y]); // clears visible, etc...
         this.changed = true;
     }
     magicMapCell(x, y) {
