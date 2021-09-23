@@ -864,9 +864,6 @@ interface FovSite {
     lightingChanged(): boolean;
     hasVisibleLight(x: number, y: number): boolean;
     blocksVision(x: number, y: number): boolean;
-    onCellRevealed(x: number, y: number): void;
-    redrawCell(x: number, y: number, clearMemory?: boolean): void;
-    storeMemory(x: number, y: number): void;
 }
 interface FovSystemType {
     isAnyKindOfVisible(x: number, y: number): boolean;
@@ -876,7 +873,6 @@ interface FovSystemType {
     isRevealed(x: number, y: number): boolean;
     fovChanged(x: number, y: number): boolean;
     changed: boolean;
-    readonly isEnabled: boolean;
     needsUpdate: boolean;
     copy(other: FovSystemType): void;
     makeAlwaysVisible(): void;
@@ -903,10 +899,15 @@ declare class FOV {
     castLight(row: number, startSlope: number, endSlope: number, xx: number, xy: number, yx: number, yy: number): void;
 }
 
+declare type FovChangeFn = (x: number, y: number, isVisible: boolean) => void;
+interface FovNotice {
+    onFovChange: FovChangeFn;
+}
 interface FovSystemOptions {
     revealed: boolean;
     visible: boolean;
-    fov: boolean;
+    alwaysVisible: boolean;
+    onFovChange: FovChangeFn | FovNotice;
 }
 declare class FovSystem implements FovSystemType {
     site: FovSite;
@@ -914,7 +915,7 @@ declare class FovSystem implements FovSystemType {
     fov: FOV;
     needsUpdate: boolean;
     protected _changed: boolean;
-    isEnabled: boolean;
+    onFovChange: FovNotice;
     constructor(site: FovSite, opts?: Partial<FovSystemOptions>);
     isVisible(x: number, y: number): boolean;
     isAnyKindOfVisible(x: number, y: number): boolean;
@@ -951,6 +952,8 @@ type index_d$4_FovSite = FovSite;
 type index_d$4_FovSystemType = FovSystemType;
 type index_d$4_FOV = FOV;
 declare const index_d$4_FOV: typeof FOV;
+type index_d$4_FovChangeFn = FovChangeFn;
+type index_d$4_FovNotice = FovNotice;
 type index_d$4_FovSystemOptions = FovSystemOptions;
 type index_d$4_FovSystem = FovSystem;
 declare const index_d$4_FovSystem: typeof FovSystem;
@@ -963,6 +966,8 @@ declare namespace index_d$4 {
     index_d$4_FovSite as FovSite,
     index_d$4_FovSystemType as FovSystemType,
     index_d$4_FOV as FOV,
+    index_d$4_FovChangeFn as FovChangeFn,
+    index_d$4_FovNotice as FovNotice,
     index_d$4_FovSystemOptions as FovSystemOptions,
     index_d$4_FovSystem as FovSystem,
   };
