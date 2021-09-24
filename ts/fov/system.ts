@@ -34,8 +34,10 @@ export class FovSystem implements TYPES.FovSystemType {
         this.site = site;
 
         let flag = 0;
-        if (opts.revealed) flag |= FovFlags.REVEALED;
-        if (opts.visible || opts.alwaysVisible) flag |= FovFlags.VISIBLE;
+        const visible = opts.visible || opts.alwaysVisible;
+        if (opts.revealed || (visible && opts.revealed !== false))
+            flag |= FovFlags.REVEALED;
+        if (visible) flag |= FovFlags.VISIBLE;
 
         this.flags = Grid.make(site.width, site.height, flag);
         this.needsUpdate = true;

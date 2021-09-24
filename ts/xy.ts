@@ -311,7 +311,7 @@ export function forLineBetween(
     fromY: number,
     toX: number,
     toY: number,
-    stepFn: (x: number, y: number) => boolean
+    stepFn: (x: number, y: number) => boolean | void
 ): boolean {
     let targetVector = [],
         error = [],
@@ -370,11 +370,11 @@ export function forLineBetween(
             );
         }
 
-        if (!stepFn(...currentLoc)) {
+        if (stepFn(...currentLoc) === false) {
             return false;
         }
+        if (currentLoc[0] === toX && currentLoc[1] === toY) return true;
     } while (true);
-    return true;
 }
 
 // ADAPTED FROM BROGUE 1.7.5
@@ -393,7 +393,6 @@ export function getLine(
 
     forLineBetween(fromX, fromY, toX, toY, (x: number, y: number) => {
         line.push([x, y]);
-        return !(x == toX && y == toY);
     });
 
     return line;
@@ -418,7 +417,6 @@ export function getLineThru(
     forLineBetween(fromX, fromY, toX, toY, (x: number, y: number) => {
         if (x < 0 || y < 0 || x >= width || y >= height) return false;
         line.push([x, y]);
-        return true;
     });
 
     return line;

@@ -22,6 +22,7 @@ declare function ERROR(message: string): void;
 declare function WARN(...args: string[]): void;
 declare function first(...args: any[]): any;
 declare function arraysIntersect(a: any[], b: any[]): boolean;
+declare function arrayDelete<T>(a: T[], b: T): boolean;
 declare function sum(arr: number[]): number;
 
 declare type ColorData = [number, number, number] | [number, number, number, number, number, number, number] | [number, number, number, number, number, number, number, boolean];
@@ -232,7 +233,7 @@ declare function isSameDir(a: Loc$1, b: Loc$1): boolean;
 declare function dirSpread(dir: Loc$1): Loc$1[];
 declare function stepFromTo(a: XY | Loc$1, b: XY | Loc$1, fn: (x: number, y: number) => any): void;
 declare function forLine(x: number, y: number, dir: Loc$1, length: number, fn: (x: number, y: number) => any): void;
-declare function forLineBetween(fromX: number, fromY: number, toX: number, toY: number, stepFn: (x: number, y: number) => boolean): boolean;
+declare function forLineBetween(fromX: number, fromY: number, toX: number, toY: number, stepFn: (x: number, y: number) => boolean | void): boolean;
 declare function getLine(fromX: number, fromY: number, toX: number, toY: number): Loc$1[];
 declare function getLineThru(fromX: number, fromY: number, toX: number, toY: number, width: number, height: number): Loc$1[];
 declare function forCircle(x: number, y: number, radius: number, fn: XYFunc): void;
@@ -1814,4 +1815,4 @@ declare namespace index_d {
   };
 }
 
-export { ERROR, FALSE, IDENTITY, IS_NONZERO, IS_ZERO, NOOP, ONE, TRUE, WARN, ZERO, arraysIntersect, blob_d as blob, index_d$3 as canvas, clamp, index_d$5 as color, colors, config$1 as config, data, events_d as events, first, flag_d as flag, index_d$4 as fov, frequency_d as frequency, grid_d as grid, io_d as io, index_d as light, list_d as list, loop, message_d as message, object_d as object, path_d as path, range_d as range, rng_d as rng, scheduler_d as scheduler, index_d$2 as sprite, sprites, sum, index_d$1 as text, types_d as types, xy_d as xy };
+export { ERROR, FALSE, IDENTITY, IS_NONZERO, IS_ZERO, NOOP, ONE, TRUE, WARN, ZERO, arrayDelete, arraysIntersect, blob_d as blob, index_d$3 as canvas, clamp, index_d$5 as color, colors, config$1 as config, data, events_d as events, first, flag_d as flag, index_d$4 as fov, frequency_d as frequency, grid_d as grid, io_d as io, index_d as light, list_d as list, loop, message_d as message, object_d as object, path_d as path, range_d as range, rng_d as rng, scheduler_d as scheduler, index_d$2 as sprite, sprites, sum, index_d$1 as text, types_d as types, xy_d as xy };

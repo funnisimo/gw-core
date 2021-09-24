@@ -80,7 +80,15 @@ describe('FOV System', () => {
         expect(system.isAnyKindOfVisible(5, 5)).toBeTruthy();
         expect(system.isVisible(5, 5)).toBeTruthy();
         expect(system.isDirectlyVisible(5, 5)).toBeFalsy(); // no FOV calculated
-        expect(system.isRevealed(5, 5)).toBeFalsy(); // just visible, not revealed for some reason << is this correct?
+        expect(system.isRevealed(5, 5)).toBeTruthy();
+    });
+
+    test('constructor - visible and not revealed', () => {
+        system = new FOV.FovSystem(site, { visible: true, revealed: false });
+        expect(system.isAnyKindOfVisible(5, 5)).toBeTruthy();
+        expect(system.isVisible(5, 5)).toBeTruthy();
+        expect(system.isDirectlyVisible(5, 5)).toBeFalsy(); // no FOV calculated
+        expect(system.isRevealed(5, 5)).toBeFalsy(); // just visible, not revealed
     });
 
     test('constructor - not visible', () => {
