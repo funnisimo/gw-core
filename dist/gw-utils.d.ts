@@ -931,6 +931,7 @@ declare class FovSystem implements FovSystemType {
     revealCell(x: number, y: number): void;
     hideCell(x: number, y: number): void;
     magicMapCell(x: number, y: number): void;
+    reset(): void;
     get changed(): boolean;
     set changed(v: boolean);
     copy(other: FovSystem): void;
@@ -1270,12 +1271,11 @@ declare class DataBuffer {
     fill(color: ColorBase): this;
     fill(glyph?: number | string, fg?: ColorBase, bg?: ColorBase): this;
     copy(other: DataBuffer): this;
-    drawText(x: number, y: number, text: string, fg?: ColorBase, bg?: ColorBase): number;
-    wrapText(x: number, y: number, width: number, text: string, fg?: Color | number | string, bg?: Color | number | string, indent?: number): number;
+    drawText(x: number, y: number, text: string, fg?: ColorBase, bg?: ColorBase, maxWidth?: number): number;
+    wrapText(x: number, y: number, width: number, text: string, fg?: ColorBase, bg?: ColorBase, indent?: number): number;
     fillRect(x: number, y: number, w: number, h: number, ch?: string | number | null, fg?: ColorBase | null, bg?: ColorBase | null): this;
     blackOutRect(x: number, y: number, w: number, h: number, bg?: ColorBase): this;
     highlight(x: number, y: number, color: ColorBase, strength: number): this;
-    mix(color: ColorBase, percent: number): this;
     dump(): void;
 }
 declare function makeDataBuffer(width: number, height: number): DataBuffer;

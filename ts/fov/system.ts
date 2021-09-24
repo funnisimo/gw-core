@@ -132,6 +132,10 @@ export class FovSystem implements TYPES.FovSystemType {
         this.flags[x][y] |= FovFlags.MAGIC_MAPPED;
         this.changed = true;
     }
+    reset() {
+        this.flags.fill(0);
+        this.changed = true;
+    }
 
     get changed(): boolean {
         return this._changed;

@@ -2538,6 +2538,10 @@ class FovSystem {
         this.flags[x][y] |= FovFlags.MAGIC_MAPPED;
         this.changed = true;
     }
+    reset() {
+        this.flags.fill(0);
+        this.changed = true;
+    }
     get changed() {
         return this._changed;
     }
@@ -4588,7 +4592,7 @@ function advanceChars(text, start, count) {
     const CS = options.colorStart;
     const CE = options.colorEnd;
     let i = start;
-    while (count > 0) {
+    while (count > 0 && i < text.length) {
         const ch = text[i];
         if (ch === CS) {
             ++i;
@@ -4641,11 +4645,17 @@ function firstChar(text) {
     return null;
 }
 function padStart(text, width, pad = ' ') {
-    const colorLen = text.length - length(text);
+    const len = length(text);
+    if (len >= width)
+        return text;
+    const colorLen = text.length - len;
     return text.padStart(width + colorLen, pad);
 }
 function padEnd(text, width, pad = ' ') {
-    const colorLen = text.length - length(text);
+    const len = length(text);
+    if (len >= width)
+        return text;
+    const colorLen = text.length - len;
     return text.padEnd(width + colorLen, pad);
 }
 function center(text, width, pad = ' ') {
@@ -4677,7 +4687,7 @@ function capitalize(text) {
             }
         }
         else if (/[A-Za-z]/.test(ch)) {
-            return text.substring(0, i) + ch.toUpperCase() + text.substring(i + 1);
+            return (text.substring(0, i) + ch.toUpperCase() + text.substring(i + 1));
         }
         else {
             ++i;
@@ -5042,13 +5052,14 @@ class DataBuffer {
         this._data.set(other._data);
         return this;
     }
-    drawText(x, y, text, fg = 0xfff, bg = -1) {
+    drawText(x, y, text, fg = 0xfff, bg = -1, maxWidth = 0) {
         if (typeof fg !== 'number')
             fg = from$2(fg);
         if (typeof bg !== 'number')
             bg = from$2(bg);
+        maxWidth = maxWidth || this.width;
         eachChar(text, (ch, fg0, bg0, i) => {
-            if (x + i >= this.width)
+            if (x + i >= this.width || i > maxWidth)
                 return;
             this.draw(i + x, y, ch, fg0, bg0);
         }, fg, bg);
@@ -5111,21 +5122,20 @@ class DataBuffer {
         this.drawSprite(x, y, mixer);
         return this;
     }
-    mix(color, percent) {
-        if (typeof color !== 'number')
-            color = from$2(color);
-        const mixer = new Mixer();
-        for (let x = 0; x < this.width; ++x) {
-            for (let y = 0; y < this.height; ++y) {
-                const data = this.get(x, y);
-                mixer.drawSprite(data);
-                mixer.fg.mix(color, percent);
-                mixer.bg.mix(color, percent);
-                this.drawSprite(x, y, mixer);
-            }
-        }
-        return this;
-    }
+    // mix(color: Color.ColorBase, percent: number) {
+    //     if (typeof color !== 'number') color = Color.from(color);
+    //     const mixer = new Mixer();
+    //     for (let x = 0; x < this.width; ++x) {
+    //         for (let y = 0; y < this.height; ++y) {
+    //             const data = this.get(x, y);
+    //             mixer.drawSprite(data);
+    //             mixer.fg.mix(color, percent);
+    //             mixer.bg.mix(color, percent);
+    //             this.drawSprite(x, y, mixer);
+    //         }
+    //     }
+    //     return this;
+    // }
     dump() {
         const data = [];
         let header = '    ';

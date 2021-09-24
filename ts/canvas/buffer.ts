@@ -167,15 +167,17 @@ export class DataBuffer {
         y: number,
         text: string,
         fg: Color.ColorBase = 0xfff,
-        bg: Color.ColorBase = -1
+        bg: Color.ColorBase = -1,
+        maxWidth = 0
     ) {
         if (typeof fg !== 'number') fg = Color.from(fg);
         if (typeof bg !== 'number') bg = Color.from(bg);
+        maxWidth = maxWidth || this.width;
 
         Text.eachChar(
             text,
             (ch, fg0, bg0, i) => {
-                if (x + i >= this.width) return;
+                if (x + i >= this.width || i > maxWidth) return;
                 this.draw(i + x, y, ch, fg0, bg0);
             },
             fg,
@@ -189,8 +191,8 @@ export class DataBuffer {
         y: number,
         width: number,
         text: string,
-        fg: Color.Color | number | string = 0xfff,
-        bg: Color.Color | number | string = -1,
+        fg: Color.ColorBase = 0xfff,
+        bg: Color.ColorBase = -1,
         indent = 0
     ) {
         if (typeof fg !== 'number') fg = Color.from(fg);
@@ -270,20 +272,20 @@ export class DataBuffer {
         return this;
     }
 
-    mix(color: Color.ColorBase, percent: number) {
-        if (typeof color !== 'number') color = Color.from(color);
-        const mixer = new Mixer();
-        for (let x = 0; x < this.width; ++x) {
-            for (let y = 0; y < this.height; ++y) {
-                const data = this.get(x, y);
-                mixer.drawSprite(data);
-                mixer.fg.mix(color, percent);
-                mixer.bg.mix(color, percent);
-                this.drawSprite(x, y, mixer);
-            }
-        }
-        return this;
-    }
+    // mix(color: Color.ColorBase, percent: number) {
+    //     if (typeof color !== 'number') color = Color.from(color);
+    //     const mixer = new Mixer();
+    //     for (let x = 0; x < this.width; ++x) {
+    //         for (let y = 0; y < this.height; ++y) {
+    //             const data = this.get(x, y);
+    //             mixer.drawSprite(data);
+    //             mixer.fg.mix(color, percent);
+    //             mixer.bg.mix(color, percent);
+    //             this.drawSprite(x, y, mixer);
+    //         }
+    //     }
+    //     return this;
+    // }
 
     dump() {
         const data = [];

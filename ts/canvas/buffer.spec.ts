@@ -246,16 +246,16 @@ describe('buffer', () => {
             expect(b.get(2, 2)).toEqual({ glyph: 65, fg: 0xf11, bg: 0x11f });
         });
 
-        test('mix', () => {
-            const b = new Buffer.DataBuffer(10, 10);
-            b.fill('A', 0xf00, 0x00f);
-            // combines
-            b.mix('green', 50);
-            expect(b.get(0, 0)).toEqual({ glyph: 65, fg: 0x880, bg: 0x088 });
+        // test('mix', () => {
+        //     const b = new Buffer.DataBuffer(10, 10);
+        //     b.fill('A', 0xf00, 0x00f);
+        //     // combines
+        //     b.mix('green', 50);
+        //     expect(b.get(0, 0)).toEqual({ glyph: 65, fg: 0x880, bg: 0x088 });
 
-            b.mix(0xfff, 50);
-            expect(b.get(0, 0)).toEqual({ glyph: 65, fg: 0xcc8, bg: 0x8cc });
-        });
+        //     b.mix(0xfff, 50);
+        //     expect(b.get(0, 0)).toEqual({ glyph: 65, fg: 0xcc8, bg: 0x8cc });
+        // });
 
         test('dump', () => {
             const b = new Buffer.DataBuffer(5, 5);

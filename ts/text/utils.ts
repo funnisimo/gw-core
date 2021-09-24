@@ -1,4 +1,3 @@
-
 import * as Config from './config';
 
 export function length(text: string) {
@@ -13,50 +12,48 @@ export function length(text: string) {
         if (ch == CS) {
             const end = text.indexOf(CS, i + 1);
             i = end;
-        }
-        else if (ch == CE) {
+        } else if (ch == CE) {
             // skip
-        }
-        else {
+        } else {
             ++len;
         }
     }
     return len;
 }
 
-
+let inColor = false;
 export function advanceChars(text: string, start: number, count: number) {
     const CS = Config.options.colorStart;
     const CE = Config.options.colorEnd;
 
+    inColor = false;
     let i = start;
-    while (count > 0) {
+    while (count > 0 && i < text.length) {
         const ch = text[i];
         if (ch === CS) {
             ++i;
             if (text[i] === CS) {
                 --count;
-            }
-            else {
+            } else {
                 while (text[i] !== CS) ++i;
+                inColor = true;
             }
             ++i;
-        }
-        else if (ch === CE) {
+        } else if (ch === CE) {
             if (text[i + 1] === CE) {
                 --count;
                 ++i;
+            } else {
+                inColor = false;
             }
             ++i;
-        }
-        else {
+        } else {
             --count;
             ++i;
         }
     }
     return i;
 }
-
 
 export function firstChar(text: string) {
     const CS = Config.options.colorStart;
@@ -70,26 +67,27 @@ export function firstChar(text: string) {
             ++i;
             while (text[i] !== CS) ++i;
             ++i;
-        }
-        else if (ch === CE) {
+        } else if (ch === CE) {
             if (text[i + 1] === CE) return CE;
             ++i;
-        }
-        else {
+        } else {
             return ch;
         }
     }
     return null;
 }
 
-
 export function padStart(text: string, width: number, pad: string = ' ') {
-    const colorLen = text.length - length(text);
+    const len = length(text);
+    if (len >= width) return text;
+    const colorLen = text.length - len;
     return text.padStart(width + colorLen, pad);
 }
 
 export function padEnd(text: string, width: number, pad: string = ' ') {
-    const colorLen = text.length - length(text);
+    const len = length(text);
+    if (len >= width) return text;
+    const colorLen = text.length - len;
     return text.padEnd(width + colorLen, pad);
 }
 
@@ -104,6 +102,17 @@ export function center(text: string, width: number, pad: string = ' ') {
     return text.padStart(rawLen + left, pad).padEnd(rawLen + padLen, pad);
 }
 
+export function truncate(text: string, width: number): string {
+    const len = length(text);
+    if (len <= width) return text;
+
+    const index = advanceChars(text, 0, width);
+    if (!inColor) return text.substring(0, index);
+
+    const CE = Config.options.colorEnd;
+    return text.substring(0, index) + CE;
+}
+
 export function capitalize(text: string) {
     const CS = Config.options.colorStart;
     const CE = Config.options.colorEnd;
@@ -116,24 +125,21 @@ export function capitalize(text: string) {
                 ++i;
             }
             ++i;
-        }
-        else if (ch == CE) {
+        } else if (ch == CE) {
             ++i;
             while (text[i] == CE && i < text.length) {
                 ++i;
             }
-        }
-        else if (/[A-Za-z]/.test(ch)) {
-            return text.substring(0, i) + ch.toUpperCase() + text.substring(i + 1);
-        }
-        else {
+        } else if (/[A-Za-z]/.test(ch)) {
+            return (
+                text.substring(0, i) + ch.toUpperCase() + text.substring(i + 1)
+            );
+        } else {
             ++i;
         }
     }
     return text;
 }
-
-
 
 export function removeColors(text: string) {
     const CS = Config.options.colorStart;
@@ -154,8 +160,7 @@ export function removeColors(text: string) {
                 ++i;
             }
             start = i + 1;
-        }
-        else if (k === CE) {
+        } else if (k === CE) {
             if (text[i + 1] == CE) {
                 ++i;
                 continue;
@@ -168,4 +173,3 @@ export function removeColors(text: string) {
     out += text.substring(start);
     return out;
 }
-
