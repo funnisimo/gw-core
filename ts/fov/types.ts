@@ -34,9 +34,9 @@ export interface FovSite {
 
     blocksVision(x: number, y: number): boolean;
 
-    onCellRevealed(x: number, y: number): void;
-    redrawCell(x: number, y: number, clearMemory?: boolean): void;
-    storeMemory(x: number, y: number): void;
+    // onCellRevealed(x: number, y: number): void;
+    // redrawCell(x: number, y: number, clearMemory?: boolean): void;
+    // storeMemory(x: number, y: number): void;
 }
 
 export interface FovSystemType {
@@ -48,7 +48,6 @@ export interface FovSystemType {
     fovChanged(x: number, y: number): boolean;
 
     changed: boolean;
-    readonly isEnabled: boolean;
     needsUpdate: boolean;
     copy(other: FovSystemType): void;
 

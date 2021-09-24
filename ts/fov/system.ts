@@ -1,4 +1,4 @@
-// import * as GW from 'gw-utils';
+// import * as GWU from 'gw-utils';
 // import * as Flags from './mapFlags';
 // import * as Cell from './cell';
 // import * as Map from './map';
@@ -7,11 +7,19 @@ import { FovFlags } from './flags';
 import * as Grid from '../grid';
 import * as FOV from './fov';
 import * as TYPES from './types';
+import { NOOP } from '../utils';
+import * as XY from '../xy';
+
+export type FovChangeFn = (x: number, y: number, isVisible: boolean) => void;
+export interface FovNotice {
+    onFovChange: FovChangeFn;
+}
 
 export interface FovSystemOptions {
     revealed: boolean;
     visible: boolean;
-    fov: boolean;
+    alwaysVisible: boolean;
+    onFovChange: FovChangeFn | FovNotice;
 }
 
 export class FovSystem implements TYPES.FovSystemType {
@@ -20,26 +28,25 @@ export class FovSystem implements TYPES.FovSystemType {
     fov: FOV.FOV;
     needsUpdate: boolean;
     protected _changed: boolean;
-    isEnabled = false;
+    onFovChange: FovNotice = { onFovChange: NOOP };
 
     constructor(site: TYPES.FovSite, opts: Partial<FovSystemOptions> = {}) {
         this.site = site;
 
         let flag = 0;
-        if (opts.revealed) flag |= FovFlags.REVEALED;
-        if (opts.visible) flag |= FovFlags.VISIBLE;
-        if (
-            flag === 0 &&
-            opts.fov !== true &&
-            opts.revealed === undefined &&
-            opts.visible === undefined
-        ) {
-            flag = FovFlags.VISIBLE | FovFlags.REVEALED;
-        }
+        const visible = opts.visible || opts.alwaysVisible;
+        if (opts.revealed || (visible && opts.revealed !== false))
+            flag |= FovFlags.REVEALED;
+        if (visible) flag |= FovFlags.VISIBLE;
 
         this.flags = Grid.make(site.width, site.height, flag);
         this.needsUpdate = true;
         this._changed = true;
+        if (typeof opts.onFovChange === 'function') {
+            this.onFovChange.onFovChange = opts.onFovChange;
+        } else if (opts.onFovChange) {
+            this.onFovChange = opts.onFovChange;
+        }
 
         this.fov = new FOV.FOV({
             isBlocked(x: number, y: number): boolean {
@@ -51,14 +58,14 @@ export class FovSystem implements TYPES.FovSystemType {
         });
 
         // we want fov, so do not reveal the map initially
-        if (opts.fov === true) {
-            this.isEnabled = true;
+        if (opts.alwaysVisible) {
+            this.makeAlwaysVisible();
         }
 
-        if (opts.visible && opts.fov !== true) {
-            this.makeAlwaysVisible();
-        } else if (opts.visible === false) {
-            this.isEnabled = true;
+        if (opts.visible || opts.alwaysVisible) {
+            XY.forRect(site.width, site.height, (x, y) =>
+                this.onFovChange.onFovChange(x, y, true)
+            );
         }
     }
 
@@ -180,50 +187,11 @@ export class FovSystem implements TYPES.FovSystemType {
             // }
         } else if (isVisible && !wasVisible) {
             // if the cell became visible this move
-            if (!(flag & FovFlags.REVEALED) /* && DATA.automationActive */) {
-                this.site.onCellRevealed(x, y);
-                // if (cell.item) {
-                //     const theItem: GW.types.ItemType = cell.item;
-                //     if (
-                //         theItem.hasLayerFlag(ObjectFlags.L_INTERRUPT_WHEN_SEEN)
-                //     ) {
-                //         GW.message.add(
-                //             '§you§ §see§ ΩitemMessageColorΩ§item§∆.',
-                //             {
-                //                 item: theItem,
-                //                 actor: DATA.player,
-                //             }
-                //         );
-                //     }
-                // }
-                // if (
-                //     !(flag & FovFlags.MAGIC_MAPPED) &&
-                //     this.site.hasObjectFlag(
-                //         x,
-                //         y,
-                //         ObjectFlags.L_INTERRUPT_WHEN_SEEN
-                //     )
-                // ) {
-                //     const tile = cell.tileWithLayerFlag(
-                //         ObjectFlags.L_INTERRUPT_WHEN_SEEN
-                //     );
-                //     if (tile) {
-                //         GW.message.add(
-                //             '§you§ §see§ ΩbackgroundMessageColorΩ§item§∆.',
-                //             {
-                //                 actor: DATA.player,
-                //                 item: tile.name,
-                //             }
-                //         );
-                //     }
-                // }
-                this.flags[x][y] |= FovFlags.REVEALED;
-            }
-            this.site.redrawCell(x, y);
+            this.flags[x][y] |= FovFlags.REVEALED;
+            this.onFovChange.onFovChange(x, y, isVisible);
         } else if (!isVisible && wasVisible) {
             // if the cell ceased being visible this move
-            this.site.storeMemory(x, y);
-            // this.site.redrawCell(x, y);
+            this.onFovChange.onFovChange(x, y, isVisible);
         }
         return isVisible;
     }
@@ -242,11 +210,10 @@ export class FovSystem implements TYPES.FovSystemType {
             // }
         } else if (!isClairy && wasClairy) {
             // ceased being clairvoyantly visible
-            this.site.storeMemory(x, y);
-            // this.site.redrawCell(x, y);
+            this.onFovChange.onFovChange(x, y, isClairy);
         } else if (!wasClairy && isClairy) {
             // became clairvoyantly visible
-            this.site.redrawCell(x, y, true);
+            this.onFovChange.onFovChange(x, y, isClairy);
         }
 
         return isClairy;
@@ -262,17 +229,10 @@ export class FovSystem implements TYPES.FovSystemType {
             // }
         } else if (!isTele && wasTele) {
             // ceased being telepathically visible
-            this.site.storeMemory(x, y);
-            // this.site.redrawCell(x, y);
+            this.onFovChange.onFovChange(x, y, isTele);
         } else if (!wasTele && isTele) {
             // became telepathically visible
-            // if (
-            //     !(flag & FovFlags.REVEALED) &&
-            //     !cell.hasTileFlag(Flags.Tile.T_PATHING_BLOCKER)
-            // ) {
-            //     DATA.xpxpThisTurn++;
-            // }
-            this.site.redrawCell(x, y, true);
+            this.onFovChange.onFovChange(x, y, isTele);
         }
         return isTele;
     }
@@ -287,12 +247,10 @@ export class FovSystem implements TYPES.FovSystemType {
             // }
         } else if (!isMonst && wasMonst) {
             // ceased being detected visible
-            this.site.redrawCell(x, y, true);
-            // cell.storeMemory();
+            this.onFovChange.onFovChange(x, y, isMonst);
         } else if (!wasMonst && isMonst) {
             // became detected visible
-            this.site.redrawCell(x, y, true);
-            // cell.storeMemory();
+            this.onFovChange.onFovChange(x, y, isMonst);
         }
         return isMonst;
     }
@@ -324,7 +282,6 @@ export class FovSystem implements TYPES.FovSystemType {
             return false;
         }
 
-        this.isEnabled = true; // you called update so you must want it enabled...
         this.needsUpdate = false;
         this._changed = false;
         this.flags.update(this.demoteCellVisibility.bind(this));

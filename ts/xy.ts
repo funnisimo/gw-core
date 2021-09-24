@@ -311,8 +311,8 @@ export function forLineBetween(
     fromY: number,
     toX: number,
     toY: number,
-    stepFn: (x: number, y: number) => boolean
-) {
+    stepFn: (x: number, y: number) => boolean | void
+): boolean {
     let targetVector = [],
         error = [],
         currentVector = [],
@@ -323,7 +323,7 @@ export function forLineBetween(
         previousLoc: Loc = [-1, -1];
 
     if (fromX == toX && fromY == toY) {
-        return;
+        return true;
     }
 
     const originLoc: Loc = [fromX, fromY];
@@ -370,9 +370,10 @@ export function forLineBetween(
             );
         }
 
-        if (stepFn(...currentLoc)) {
-            break;
+        if (stepFn(...currentLoc) === false) {
+            return false;
         }
+        if (currentLoc[0] === toX && currentLoc[1] === toY) return true;
     } while (true);
 }
 
@@ -392,7 +393,6 @@ export function getLine(
 
     forLineBetween(fromX, fromY, toX, toY, (x: number, y: number) => {
         line.push([x, y]);
-        return x == toX && y == toY;
     });
 
     return line;
@@ -415,9 +415,8 @@ export function getLineThru(
     const line: Array<Loc> = [];
 
     forLineBetween(fromX, fromY, toX, toY, (x: number, y: number) => {
-        if (x < 0 || y < 0 || x >= width || y >= height) return true;
+        if (x < 0 || y < 0 || x >= width || y >= height) return false;
         line.push([x, y]);
-        return false;
     });
 
     return line;

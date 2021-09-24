@@ -55,6 +55,13 @@ export function arraysIntersect(a: any[], b: any[]) {
     return a.some((av) => b.includes(av));
 }
 
+export function arrayDelete<T>(a: T[], b: T) {
+    const index = a.indexOf(b);
+    if (index < 0) return false;
+    a.splice(index, 1);
+    return true;
+}
+
 export function sum(arr: number[]) {
     return arr.reduce((a, b) => a + b);
 }

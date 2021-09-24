@@ -22,6 +22,7 @@ declare function ERROR(message: string): void;
 declare function WARN(...args: string[]): void;
 declare function first(...args: any[]): any;
 declare function arraysIntersect(a: any[], b: any[]): boolean;
+declare function arrayDelete<T>(a: T[], b: T): boolean;
 declare function sum(arr: number[]): number;
 
 declare type ColorData = [number, number, number] | [number, number, number, number, number, number, number] | [number, number, number, number, number, number, number, boolean];
@@ -232,7 +233,7 @@ declare function isSameDir(a: Loc$1, b: Loc$1): boolean;
 declare function dirSpread(dir: Loc$1): Loc$1[];
 declare function stepFromTo(a: XY | Loc$1, b: XY | Loc$1, fn: (x: number, y: number) => any): void;
 declare function forLine(x: number, y: number, dir: Loc$1, length: number, fn: (x: number, y: number) => any): void;
-declare function forLineBetween(fromX: number, fromY: number, toX: number, toY: number, stepFn: (x: number, y: number) => boolean): void;
+declare function forLineBetween(fromX: number, fromY: number, toX: number, toY: number, stepFn: (x: number, y: number) => boolean | void): boolean;
 declare function getLine(fromX: number, fromY: number, toX: number, toY: number): Loc$1[];
 declare function getLineThru(fromX: number, fromY: number, toX: number, toY: number, width: number, height: number): Loc$1[];
 declare function forCircle(x: number, y: number, radius: number, fn: XYFunc): void;
@@ -864,9 +865,6 @@ interface FovSite {
     lightingChanged(): boolean;
     hasVisibleLight(x: number, y: number): boolean;
     blocksVision(x: number, y: number): boolean;
-    onCellRevealed(x: number, y: number): void;
-    redrawCell(x: number, y: number, clearMemory?: boolean): void;
-    storeMemory(x: number, y: number): void;
 }
 interface FovSystemType {
     isAnyKindOfVisible(x: number, y: number): boolean;
@@ -876,7 +874,6 @@ interface FovSystemType {
     isRevealed(x: number, y: number): boolean;
     fovChanged(x: number, y: number): boolean;
     changed: boolean;
-    readonly isEnabled: boolean;
     needsUpdate: boolean;
     copy(other: FovSystemType): void;
     makeAlwaysVisible(): void;
@@ -903,10 +900,15 @@ declare class FOV {
     castLight(row: number, startSlope: number, endSlope: number, xx: number, xy: number, yx: number, yy: number): void;
 }
 
+declare type FovChangeFn = (x: number, y: number, isVisible: boolean) => void;
+interface FovNotice {
+    onFovChange: FovChangeFn;
+}
 interface FovSystemOptions {
     revealed: boolean;
     visible: boolean;
-    fov: boolean;
+    alwaysVisible: boolean;
+    onFovChange: FovChangeFn | FovNotice;
 }
 declare class FovSystem implements FovSystemType {
     site: FovSite;
@@ -914,7 +916,7 @@ declare class FovSystem implements FovSystemType {
     fov: FOV;
     needsUpdate: boolean;
     protected _changed: boolean;
-    isEnabled: boolean;
+    onFovChange: FovNotice;
     constructor(site: FovSite, opts?: Partial<FovSystemOptions>);
     isVisible(x: number, y: number): boolean;
     isAnyKindOfVisible(x: number, y: number): boolean;
@@ -951,6 +953,8 @@ type index_d$4_FovSite = FovSite;
 type index_d$4_FovSystemType = FovSystemType;
 type index_d$4_FOV = FOV;
 declare const index_d$4_FOV: typeof FOV;
+type index_d$4_FovChangeFn = FovChangeFn;
+type index_d$4_FovNotice = FovNotice;
 type index_d$4_FovSystemOptions = FovSystemOptions;
 type index_d$4_FovSystem = FovSystem;
 declare const index_d$4_FovSystem: typeof FovSystem;
@@ -963,6 +967,8 @@ declare namespace index_d$4 {
     index_d$4_FovSite as FovSite,
     index_d$4_FovSystemType as FovSystemType,
     index_d$4_FOV as FOV,
+    index_d$4_FovChangeFn as FovChangeFn,
+    index_d$4_FovNotice as FovNotice,
     index_d$4_FovSystemOptions as FovSystemOptions,
     index_d$4_FovSystem as FovSystem,
   };
@@ -1809,4 +1815,4 @@ declare namespace index_d {
   };
 }
 
-export { ERROR, FALSE, IDENTITY, IS_NONZERO, IS_ZERO, NOOP, ONE, TRUE, WARN, ZERO, arraysIntersect, blob_d as blob, index_d$3 as canvas, clamp, index_d$5 as color, colors, config$1 as config, data, events_d as events, first, flag_d as flag, index_d$4 as fov, frequency_d as frequency, grid_d as grid, io_d as io, index_d as light, list_d as list, loop, message_d as message, object_d as object, path_d as path, range_d as range, rng_d as rng, scheduler_d as scheduler, index_d$2 as sprite, sprites, sum, index_d$1 as text, types_d as types, xy_d as xy };
+export { ERROR, FALSE, IDENTITY, IS_NONZERO, IS_ZERO, NOOP, ONE, TRUE, WARN, ZERO, arrayDelete, arraysIntersect, blob_d as blob, index_d$3 as canvas, clamp, index_d$5 as color, colors, config$1 as config, data, events_d as events, first, flag_d as flag, index_d$4 as fov, frequency_d as frequency, grid_d as grid, io_d as io, index_d as light, list_d as list, loop, message_d as message, object_d as object, path_d as path, range_d as range, rng_d as rng, scheduler_d as scheduler, index_d$2 as sprite, sprites, sum, index_d$1 as text, types_d as types, xy_d as xy };
