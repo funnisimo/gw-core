@@ -68,7 +68,7 @@ void main() {
 
     // const uint mask = uint(0xFF000000);
     uint style = fs_style; // uint(0x1FF000F);
-    uint glyph = uint(1); // (style) >> 24;
+    uint glyph = (style) >> 24;
 	uint glyphX = (glyph & uint(0x0F));
 	uint glyphY = (glyph& uint(0xF0)) >> 4;
 	vec2 fontPos = vec2(glyphX, glyphY) / 16.0;
@@ -134,8 +134,8 @@ function updateStyleData(data, w, h) {
   for(let x = 0; x < w; ++x) {
   for(let y = 0; y < h; ++y) {
     
-    const ch = 0; (x + y * w) % 256;
-    const fg = (x + y * w) % 0x1000; // rand(0x1000);
+    const ch = (x + y * w) % 256;
+    const fg = rand(0x1000);
     const bg = 0; // rand(0x1000);
     
     const c = (ch * (1<< 24)) + (bg * (1<< 12)) + fg;
