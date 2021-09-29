@@ -22,7 +22,7 @@ export interface FovSystemOptions {
     onFovChange: FovChangeFn | FovNotice;
 }
 
-export class FovSystem implements TYPES.FovSystemType {
+export class FovSystem implements TYPES.FovTracker {
     site: TYPES.FovSite;
     flags: Grid.NumGrid; // FovFlags
     fov: FOV.FOV;
@@ -67,6 +67,10 @@ export class FovSystem implements TYPES.FovSystemType {
                 this.onFovChange.onFovChange(x, y, true)
             );
         }
+    }
+
+    getFlag(x: number, y: number): FovFlags {
+        return this.flags[x][y];
     }
 
     isVisible(x: number, y: number): boolean {
@@ -242,8 +246,8 @@ export class FovSystem implements TYPES.FovSystemType {
     }
 
     protected updateCellDetect(flag: number, x: number, y: number): boolean {
-        const isMonst = !!(flag & FovFlags.MONSTER_DETECTED);
-        const wasMonst = !!(flag & FovFlags.WAS_MONSTER_DETECTED);
+        const isMonst = !!(flag & FovFlags.ACTOR_DETECTED);
+        const wasMonst = !!(flag & FovFlags.WAS_ACTOR_DETECTED);
 
         if (isMonst && wasMonst) {
             // if (this.site.lightChanged(x, y)) {
@@ -276,14 +280,19 @@ export class FovSystem implements TYPES.FovSystemType {
 
     update(): boolean;
     update(x: number, y: number, r?: number): boolean;
-    update(cx?: number, cy?: number, cr = 10): boolean {
+    update(cx?: number, cy?: number, cr?: number): boolean {
         // if (!this.site.usesFov()) return false;
+
         if (
             !this.needsUpdate &&
             cx === undefined &&
             !this.site.lightingChanged()
         ) {
             return false;
+        }
+
+        if (cr === undefined) {
+            cr = this.site.width + this.site.height;
         }
 
         this.needsUpdate = false;

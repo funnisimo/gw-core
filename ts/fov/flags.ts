@@ -9,11 +9,11 @@ export enum FovFlags {
     WAS_TELEPATHIC_VISIBLE = Fl(5), // potions of telepathy let you see through other creatures' eyes
     ITEM_DETECTED = Fl(6),
     WAS_ITEM_DETECTED = Fl(7),
-    MONSTER_DETECTED = Fl(8),
-    WAS_MONSTER_DETECTED = Fl(9),
+    ACTOR_DETECTED = Fl(8),
+    WAS_ACTOR_DETECTED = Fl(9),
 
     REVEALED = Fl(10),
-    MAGIC_MAPPED = Fl(11),
+    MAGIC_MAPPED = Fl(11), // TODO - REMOVE !?!?
 
     IN_FOV = Fl(12), // player has unobstructed line of sight whether or not there is enough light
     WAS_IN_FOV = Fl(13),
@@ -33,6 +33,9 @@ export enum FovFlags {
         WAS_CLAIRVOYANT_VISIBLE |
         WAS_TELEPATHIC_VISIBLE,
 
+    WAS_DETECTED = WAS_ITEM_DETECTED | WAS_ACTOR_DETECTED,
+    IS_DETECTED = ITEM_DETECTED | ACTOR_DETECTED,
+
     PLAYER = IN_FOV,
     CLAIRVOYANT = CLAIRVOYANT_VISIBLE,
     TELEPATHIC = TELEPATHIC_VISIBLE,
@@ -41,5 +44,5 @@ export enum FovFlags {
         CLAIRVOYANT |
         TELEPATHIC |
         ITEM_DETECTED |
-        MONSTER_DETECTED,
+        ACTOR_DETECTED,
 }

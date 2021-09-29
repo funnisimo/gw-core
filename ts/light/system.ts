@@ -109,6 +109,12 @@ export class LightSystem implements LightSystemType, PaintSite {
     getLight(x: number, y: number): Color.LightValue {
         return this.light[x][y];
     }
+    setLight(x: number, y: number, light: Color.LightValue) {
+        const val = this.light[x][y];
+        for (let i = 0; i < 3; ++i) {
+            val[i] = light[i];
+        }
+    }
 
     isLit(x: number, y: number): boolean {
         return !!(this.flags[x][y] & LightFlags.LIT);

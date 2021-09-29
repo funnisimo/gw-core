@@ -111,6 +111,7 @@ export interface LightSystemType {
     removeStatic(x: number, y: number, light?: LightType): void;
 
     getLight(x: number, y: number): LightValue;
+    setLight(x: number, y: number, light: LightValue): void;
     lightChanged(x: number, y: number): boolean;
 
     isLit(x: number, y: number): boolean;

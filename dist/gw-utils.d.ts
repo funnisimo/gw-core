@@ -147,6 +147,10 @@ interface XY {
     x: number;
     y: number;
 }
+interface Size {
+    width: number;
+    height: number;
+}
 interface SpriteData$1 {
     readonly ch?: string | null;
     readonly fg?: Color | ColorBase;
@@ -165,6 +169,7 @@ interface WeightedObject {
 }
 
 type types_d_XY = XY;
+type types_d_Size = Size;
 type types_d_EachCb<_0> = EachCb<_0>;
 type types_d_RandomFunction = RandomFunction;
 type types_d_SeedFunction = SeedFunction;
@@ -175,6 +180,7 @@ declare namespace types_d {
   export {
     Loc$1 as Loc,
     types_d_XY as XY,
+    types_d_Size as Size,
     SpriteData$1 as SpriteData,
     types_d_EachCb as EachCb,
     types_d_RandomFunction as RandomFunction,
@@ -198,6 +204,7 @@ declare const LEFT_UP = 7;
 declare const CLOCK_DIRS: Loc$1[];
 declare function x(src: XY | Loc$1): any;
 declare function y(src: XY | Loc$1): any;
+declare function contains(size: Size, x: number, y: number): boolean;
 declare class Bounds {
     x: number;
     y: number;
@@ -244,6 +251,7 @@ declare function forBorder(x: number, y: number, width: number, height: number, 
 declare function arcCount(x: number, y: number, testFn: XYMatchFunc): number;
 
 type xy_d_XY = XY;
+type xy_d_Size = Size;
 declare const xy_d_DIRS: typeof DIRS;
 declare const xy_d_NO_DIRECTION: typeof NO_DIRECTION;
 declare const xy_d_UP: typeof UP;
@@ -257,6 +265,7 @@ declare const xy_d_LEFT_UP: typeof LEFT_UP;
 declare const xy_d_CLOCK_DIRS: typeof CLOCK_DIRS;
 declare const xy_d_x: typeof x;
 declare const xy_d_y: typeof y;
+declare const xy_d_contains: typeof contains;
 type xy_d_Bounds = Bounds;
 declare const xy_d_Bounds: typeof Bounds;
 declare const xy_d_copyXY: typeof copyXY;
@@ -291,6 +300,7 @@ declare namespace xy_d {
   export {
     Loc$1 as Loc,
     xy_d_XY as XY,
+    xy_d_Size as Size,
     xy_d_DIRS as DIRS,
     xy_d_NO_DIRECTION as NO_DIRECTION,
     xy_d_UP as UP,
@@ -304,6 +314,7 @@ declare namespace xy_d {
     xy_d_CLOCK_DIRS as CLOCK_DIRS,
     xy_d_x as x,
     xy_d_y as y,
+    xy_d_contains as contains,
     xy_d_Bounds as Bounds,
     xy_d_copyXY as copyXY,
     xy_d_addXY as addXY,
@@ -834,8 +845,8 @@ declare enum FovFlags {
     WAS_TELEPATHIC_VISIBLE,
     ITEM_DETECTED,
     WAS_ITEM_DETECTED,
-    MONSTER_DETECTED,
-    WAS_MONSTER_DETECTED,
+    ACTOR_DETECTED,
+    WAS_ACTOR_DETECTED,
     REVEALED,
     MAGIC_MAPPED,
     IN_FOV,
@@ -844,6 +855,8 @@ declare enum FovFlags {
     ANY_KIND_OF_VISIBLE,
     IS_WAS_ANY_KIND_OF_VISIBLE,
     WAS_ANY_KIND_OF_VISIBLE,
+    WAS_DETECTED,
+    IS_DETECTED,
     PLAYER,
     CLAIRVOYANT,
     TELEPATHIC,
@@ -866,16 +879,13 @@ interface FovSite {
     hasVisibleLight(x: number, y: number): boolean;
     blocksVision(x: number, y: number): boolean;
 }
-interface FovSystemType {
+interface FovTracker {
     isAnyKindOfVisible(x: number, y: number): boolean;
     isInFov(x: number, y: number): boolean;
     isDirectlyVisible(x: number, y: number): boolean;
     isMagicMapped(x: number, y: number): boolean;
     isRevealed(x: number, y: number): boolean;
-    fovChanged(x: number, y: number): boolean;
-    changed: boolean;
-    needsUpdate: boolean;
-    copy(other: FovSystemType): void;
+    getFlag(x: number, y: number): FovFlags;
     makeAlwaysVisible(): void;
     makeCellAlwaysVisible(x: number, y: number): void;
     revealAll(): void;
@@ -910,7 +920,7 @@ interface FovSystemOptions {
     alwaysVisible: boolean;
     onFovChange: FovChangeFn | FovNotice;
 }
-declare class FovSystem implements FovSystemType {
+declare class FovSystem implements FovTracker {
     site: FovSite;
     flags: NumGrid;
     fov: FOV;
@@ -918,6 +928,7 @@ declare class FovSystem implements FovSystemType {
     protected _changed: boolean;
     onFovChange: FovNotice;
     constructor(site: FovSite, opts?: Partial<FovSystemOptions>);
+    getFlag(x: number, y: number): FovFlags;
     isVisible(x: number, y: number): boolean;
     isAnyKindOfVisible(x: number, y: number): boolean;
     isInFov(x: number, y: number): boolean;
@@ -951,7 +962,7 @@ type index_d$4_FovStrategy = FovStrategy;
 type index_d$4_SetVisibleFn = SetVisibleFn;
 type index_d$4_ViewportCb = ViewportCb;
 type index_d$4_FovSite = FovSite;
-type index_d$4_FovSystemType = FovSystemType;
+type index_d$4_FovTracker = FovTracker;
 type index_d$4_FOV = FOV;
 declare const index_d$4_FOV: typeof FOV;
 type index_d$4_FovChangeFn = FovChangeFn;
@@ -966,7 +977,7 @@ declare namespace index_d$4 {
     index_d$4_SetVisibleFn as SetVisibleFn,
     index_d$4_ViewportCb as ViewportCb,
     index_d$4_FovSite as FovSite,
-    index_d$4_FovSystemType as FovSystemType,
+    index_d$4_FovTracker as FovTracker,
     index_d$4_FOV as FOV,
     index_d$4_FovChangeFn as FovChangeFn,
     index_d$4_FovNotice as FovNotice,
@@ -1690,6 +1701,7 @@ interface LightSystemType {
     addStatic(x: number, y: number, light: LightType): void;
     removeStatic(x: number, y: number, light?: LightType): void;
     getLight(x: number, y: number): LightValue;
+    setLight(x: number, y: number, light: LightValue): void;
     lightChanged(x: number, y: number): boolean;
     isLit(x: number, y: number): boolean;
     isDark(x: number, y: number): boolean;
@@ -1749,6 +1761,7 @@ declare class LightSystem implements LightSystemType, PaintSite {
     setAmbient(light: LightValue | ColorBase): void;
     get needsUpdate(): boolean;
     getLight(x: number, y: number): LightValue;
+    setLight(x: number, y: number, light: LightValue): void;
     isLit(x: number, y: number): boolean;
     isDark(x: number, y: number): boolean;
     isInShadow(x: number, y: number): boolean;

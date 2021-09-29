@@ -1,7 +1,7 @@
 import { clamp } from './utils';
-import { Loc, XY } from './types';
+import { Loc, XY, Size } from './types';
 
-export { Loc, XY };
+export { Loc, XY, Size };
 
 // DIRS are organized clockwise
 // - first 4 are arrow directions
@@ -54,6 +54,10 @@ export function x(src: XY | Loc) {
 export function y(src: XY | Loc) {
     // @ts-ignore
     return src.y || src[1] || 0;
+}
+
+export function contains(size: Size, x: number, y: number) {
+    return x >= 0 && y >= 0 && x < size.width && y < size.height;
 }
 
 export class Bounds {

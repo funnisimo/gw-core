@@ -10,6 +10,10 @@ export interface XY {
     x: number;
     y: number;
 }
+export interface Size {
+    width: number;
+    height: number;
+}
 
 export interface SpriteData {
     readonly ch?: string | null;

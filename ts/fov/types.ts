@@ -1,3 +1,5 @@
+import { FovFlags } from './flags';
+
 export interface FovStrategy {
     isBlocked(x: number, y: number): boolean;
     calcRadius?(x: number, y: number): number;
@@ -39,17 +41,19 @@ export interface FovSite {
     // storeMemory(x: number, y: number): void;
 }
 
-export interface FovSystemType {
+export interface FovTracker {
     isAnyKindOfVisible(x: number, y: number): boolean;
     isInFov(x: number, y: number): boolean;
     isDirectlyVisible(x: number, y: number): boolean;
     isMagicMapped(x: number, y: number): boolean;
     isRevealed(x: number, y: number): boolean;
-    fovChanged(x: number, y: number): boolean;
 
-    changed: boolean;
-    needsUpdate: boolean;
-    copy(other: FovSystemType): void;
+    getFlag(x: number, y: number): FovFlags;
+    // fovChanged(x: number, y: number): boolean;
+
+    // changed: boolean;
+    // needsUpdate: boolean;
+    // copy(other: FovSystemType): void;
 
     makeAlwaysVisible(): void;
     makeCellAlwaysVisible(x: number, y: number): void;
