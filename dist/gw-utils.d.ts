@@ -879,7 +879,13 @@ interface FovSite {
     hasVisibleLight(x: number, y: number): boolean;
     blocksVision(x: number, y: number): boolean;
 }
+interface FovSubject {
+    readonly x: number;
+    readonly y: number;
+    readonly visionDistance: number;
+}
 interface FovTracker {
+    follow: FovSubject | null;
     isAnyKindOfVisible(x: number, y: number): boolean;
     isInFov(x: number, y: number): boolean;
     isDirectlyVisible(x: number, y: number): boolean;
@@ -893,6 +899,7 @@ interface FovTracker {
     hideCell(x: number, y: number): void;
     magicMapCell(x: number, y: number): void;
     update(): boolean;
+    updateFor(subject: FovSubject): boolean;
     update(x: number, y: number, r?: number): boolean;
 }
 
@@ -927,6 +934,7 @@ declare class FovSystem implements FovTracker {
     needsUpdate: boolean;
     protected _changed: boolean;
     onFovChange: FovNotice;
+    follow: FovSubject | null;
     constructor(site: FovSite, opts?: Partial<FovSystemOptions>);
     getFlag(x: number, y: number): FovFlags;
     isVisible(x: number, y: number): boolean;
@@ -952,6 +960,7 @@ declare class FovSystem implements FovTracker {
     protected updateCellTelepathy(flag: number, x: number, y: number): boolean;
     protected updateCellDetect(flag: number, x: number, y: number): boolean;
     protected promoteCellVisibility(flag: number, x: number, y: number): void;
+    updateFor(subject: FovSubject): boolean;
     update(): boolean;
     update(x: number, y: number, r?: number): boolean;
 }
@@ -962,6 +971,7 @@ type index_d$4_FovStrategy = FovStrategy;
 type index_d$4_SetVisibleFn = SetVisibleFn;
 type index_d$4_ViewportCb = ViewportCb;
 type index_d$4_FovSite = FovSite;
+type index_d$4_FovSubject = FovSubject;
 type index_d$4_FovTracker = FovTracker;
 type index_d$4_FOV = FOV;
 declare const index_d$4_FOV: typeof FOV;
@@ -977,6 +987,7 @@ declare namespace index_d$4 {
     index_d$4_SetVisibleFn as SetVisibleFn,
     index_d$4_ViewportCb as ViewportCb,
     index_d$4_FovSite as FovSite,
+    index_d$4_FovSubject as FovSubject,
     index_d$4_FovTracker as FovTracker,
     index_d$4_FOV as FOV,
     index_d$4_FovChangeFn as FovChangeFn,

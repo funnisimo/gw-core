@@ -9,6 +9,7 @@ import * as FOV from './fov';
 import * as TYPES from './types';
 import { NOOP } from '../utils';
 import * as XY from '../xy';
+import { FovSubject } from '.';
 
 export type FovChangeFn = (x: number, y: number, isVisible: boolean) => void;
 export interface FovNotice {
@@ -29,6 +30,7 @@ export class FovSystem implements TYPES.FovTracker {
     needsUpdate: boolean;
     protected _changed: boolean;
     onFovChange: FovNotice = { onFovChange: NOOP };
+    follow: FovSubject | null = null;
 
     constructor(site: TYPES.FovSite, opts: Partial<FovSystemOptions> = {}) {
         this.site = site;
@@ -278,10 +280,18 @@ export class FovSystem implements TYPES.FovTracker {
         if (this.updateCellDetect(flag, x, y)) return;
     }
 
+    updateFor(subject: FovSubject): boolean {
+        return this.update(subject.x, subject.y, subject.visionDistance);
+    }
+
     update(): boolean;
     update(x: number, y: number, r?: number): boolean;
     update(cx?: number, cy?: number, cr?: number): boolean {
         // if (!this.site.usesFov()) return false;
+
+        if (arguments.length == 0 && this.follow) {
+            return this.updateFor(this.follow);
+        }
 
         if (
             !this.needsUpdate &&

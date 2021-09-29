@@ -41,7 +41,15 @@ export interface FovSite {
     // storeMemory(x: number, y: number): void;
 }
 
+export interface FovSubject {
+    readonly x: number;
+    readonly y: number;
+    readonly visionDistance: number;
+}
+
 export interface FovTracker {
+    follow: FovSubject | null;
+
     isAnyKindOfVisible(x: number, y: number): boolean;
     isInFov(x: number, y: number): boolean;
     isDirectlyVisible(x: number, y: number): boolean;
@@ -49,11 +57,6 @@ export interface FovTracker {
     isRevealed(x: number, y: number): boolean;
 
     getFlag(x: number, y: number): FovFlags;
-    // fovChanged(x: number, y: number): boolean;
-
-    // changed: boolean;
-    // needsUpdate: boolean;
-    // copy(other: FovSystemType): void;
 
     makeAlwaysVisible(): void;
     makeCellAlwaysVisible(x: number, y: number): void;
@@ -64,5 +67,6 @@ export interface FovTracker {
     magicMapCell(x: number, y: number): void;
 
     update(): boolean; // didSomething
+    updateFor(subject: FovSubject): boolean; // didSomething
     update(x: number, y: number, r?: number): boolean; // didSomething
 }

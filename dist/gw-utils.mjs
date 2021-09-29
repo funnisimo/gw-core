@@ -2457,6 +2457,7 @@ class FOV {
 class FovSystem {
     constructor(site, opts = {}) {
         this.onFovChange = { onFovChange: NOOP };
+        this.follow = null;
         this.site = site;
         let flag = 0;
         const visible = opts.visible || opts.alwaysVisible;
@@ -2659,8 +2660,14 @@ class FovSystem {
         if (this.updateCellDetect(flag, x, y))
             return;
     }
+    updateFor(subject) {
+        return this.update(subject.x, subject.y, subject.visionDistance);
+    }
     update(cx, cy, cr) {
         // if (!this.site.usesFov()) return false;
+        if (arguments.length == 0 && this.follow) {
+            return this.updateFor(this.follow);
+        }
         if (!this.needsUpdate &&
             cx === undefined &&
             !this.site.lightingChanged()) {
