@@ -62,6 +62,17 @@ export function arrayDelete<T>(a: T[], b: T) {
     return true;
 }
 
+export function arrayFindRight<T>(
+    a: T[],
+    fn: (t: T) => boolean
+): T | undefined {
+    for (let i = a.length - 1; i >= 0; --i) {
+        const e = a[i];
+        if (fn(e)) return e;
+    }
+    return undefined;
+}
+
 export function sum(arr: number[]) {
     return arr.reduce((a, b) => a + b);
 }

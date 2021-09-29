@@ -151,11 +151,54 @@ export class FovSystem implements TYPES.FovTracker {
         this.needsUpdate = this.needsUpdate || v;
     }
 
+    // CURSOR
+
+    setCursor(x: number, y: number, keep = false) {
+        if (!keep) {
+            this.flags.update((f) => f & ~FovFlags.IS_CURSOR);
+        }
+        this.flags[x][y] |= FovFlags.IS_CURSOR;
+    }
+    clearCursor(x?: number, y?: number) {
+        if (x === undefined || y === undefined) {
+            this.flags.update((f) => f & ~FovFlags.IS_CURSOR);
+        } else {
+            this.flags[x][y] &= ~FovFlags.IS_CURSOR;
+        }
+    }
+    isCursor(x: number, y: number): boolean {
+        return !!(this.flags[x][y] & FovFlags.IS_CURSOR);
+    }
+
+    // HIGHLIGHT
+
+    setHighlight(x: number, y: number, keep = false) {
+        if (!keep) {
+            this.flags.update((f) => f & ~FovFlags.IS_HIGHLIGHTED);
+        }
+        this.flags[x][y] |= FovFlags.IS_HIGHLIGHTED;
+    }
+    clearHighlight(x?: number, y?: number) {
+        if (x === undefined || y === undefined) {
+            this.flags.update((f) => f & ~FovFlags.IS_HIGHLIGHTED);
+        } else {
+            this.flags[x][y] &= ~FovFlags.IS_HIGHLIGHTED;
+        }
+    }
+    isHighlight(x: number, y: number): boolean {
+        return !!(this.flags[x][y] & FovFlags.IS_HIGHLIGHTED);
+    }
+
+    // COPY
+
     copy(other: FovSystem) {
         this.flags.copy(other.flags);
         this.needsUpdate = other.needsUpdate;
         this._changed = other._changed;
     }
+
+    //////////////////////////
+    // UPDATE
 
     protected demoteCellVisibility(flag: number): number {
         flag &= ~(FovFlags.WAS_ANY_KIND_OF_VISIBLE | FovFlags.WAS_IN_FOV);

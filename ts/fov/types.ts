@@ -61,6 +61,14 @@ export interface FovTracker {
     makeAlwaysVisible(): void;
     makeCellAlwaysVisible(x: number, y: number): void;
 
+    setCursor(x: number, y: number, keep?: boolean): void;
+    clearCursor(x?: number, y?: number): void;
+    isCursor(x: number, y: number): boolean;
+
+    setHighlight(x: number, y: number, keep?: boolean): void;
+    clearHighlight(x?: number, y?: number): void;
+    isHighlight(x: number, y: number): boolean;
+
     revealAll(): void;
     revealCell(x: number, y: number, isMagicMapped: boolean): void;
     hideCell(x: number, y: number): void;

@@ -23,6 +23,7 @@ declare function WARN(...args: string[]): void;
 declare function first(...args: any[]): any;
 declare function arraysIntersect(a: any[], b: any[]): boolean;
 declare function arrayDelete<T>(a: T[], b: T): boolean;
+declare function arrayFindRight<T>(a: T[], fn: (t: T) => boolean): T | undefined;
 declare function sum(arr: number[]): number;
 
 declare type ColorData = [number, number, number] | [number, number, number, number, number, number, number] | [number, number, number, number, number, number, number, boolean];
@@ -852,6 +853,8 @@ declare enum FovFlags {
     IN_FOV,
     WAS_IN_FOV,
     ALWAYS_VISIBLE,
+    IS_CURSOR,
+    IS_HIGHLIGHTED,
     ANY_KIND_OF_VISIBLE,
     IS_WAS_ANY_KIND_OF_VISIBLE,
     WAS_ANY_KIND_OF_VISIBLE,
@@ -894,6 +897,12 @@ interface FovTracker {
     getFlag(x: number, y: number): FovFlags;
     makeAlwaysVisible(): void;
     makeCellAlwaysVisible(x: number, y: number): void;
+    setCursor(x: number, y: number, keep?: boolean): void;
+    clearCursor(x?: number, y?: number): void;
+    isCursor(x: number, y: number): boolean;
+    setHighlight(x: number, y: number, keep?: boolean): void;
+    clearHighlight(x?: number, y?: number): void;
+    isHighlight(x: number, y: number): boolean;
     revealAll(): void;
     revealCell(x: number, y: number, isMagicMapped: boolean): void;
     hideCell(x: number, y: number): void;
@@ -953,6 +962,12 @@ declare class FovSystem implements FovTracker {
     reset(): void;
     get changed(): boolean;
     set changed(v: boolean);
+    setCursor(x: number, y: number, keep?: boolean): void;
+    clearCursor(x?: number, y?: number): void;
+    isCursor(x: number, y: number): boolean;
+    setHighlight(x: number, y: number, keep?: boolean): void;
+    clearHighlight(x?: number, y?: number): void;
+    isHighlight(x: number, y: number): boolean;
     copy(other: FovSystem): void;
     protected demoteCellVisibility(flag: number): number;
     protected updateCellVisibility(flag: number, x: number, y: number): boolean;
@@ -1839,4 +1854,4 @@ declare namespace index_d {
   };
 }
 
-export { ERROR, FALSE, IDENTITY, IS_NONZERO, IS_ZERO, NOOP, ONE, TRUE, WARN, ZERO, arrayDelete, arraysIntersect, blob_d as blob, index_d$3 as canvas, clamp, index_d$5 as color, colors, config$1 as config, data, events_d as events, first, flag_d as flag, index_d$4 as fov, frequency_d as frequency, grid_d as grid, io_d as io, index_d as light, list_d as list, loop, message_d as message, object_d as object, path_d as path, range_d as range, rng_d as rng, scheduler_d as scheduler, index_d$2 as sprite, sprites, sum, index_d$1 as text, types_d as types, xy_d as xy };
+export { ERROR, FALSE, IDENTITY, IS_NONZERO, IS_ZERO, NOOP, ONE, TRUE, WARN, ZERO, arrayDelete, arrayFindRight, arraysIntersect, blob_d as blob, index_d$3 as canvas, clamp, index_d$5 as color, colors, config$1 as config, data, events_d as events, first, flag_d as flag, index_d$4 as fov, frequency_d as frequency, grid_d as grid, io_d as io, index_d as light, list_d as list, loop, message_d as message, object_d as object, path_d as path, range_d as range, rng_d as rng, scheduler_d as scheduler, index_d$2 as sprite, sprites, sum, index_d$1 as text, types_d as types, xy_d as xy };
