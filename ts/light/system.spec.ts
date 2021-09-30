@@ -122,6 +122,12 @@ describe('light system', () => {
         expect(system.changed).toBeFalsy();
     });
 
+    test('setLight', () => {
+        expect(system.getLight(5, 5)).toEqual([100, 100, 100]);
+        system.setLight(5, 5, [50, 50, 50]);
+        expect(system.getLight(5, 5)).toEqual([50, 50, 50]);
+    });
+
     describe('updateLighting', () => {
         test('defaults to having white light', () => {
             XY.forRect(site.width, site.height, (x, y) => {

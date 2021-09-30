@@ -57,9 +57,12 @@ export function from<T>(obj: T, ...args: (FlagBase | undefined)[]): number {
             value.forEach((v) => {
                 if (typeof v == 'string') {
                     v = v.trim();
-                    if (v.startsWith('!')) {
+                    const parts = v.split(/[,|]/);
+                    if (parts.length > 1) {
+                        result = from(obj, result, parts);
+                    } else if (v.startsWith('!')) {
                         // @ts-ignore
-                        const f = obj[v.substring(1) as string];
+                        const f = obj[v.substring(1)];
                         result &= ~f;
                     } else {
                         const n = Number.parseInt(v);
@@ -90,21 +93,7 @@ export function make(obj: Record<string, FlagBase>): Record<string, number> {
     const out: Record<string, number> = {};
 
     Object.entries(obj).forEach(([key, value]) => {
-        if (typeof value === 'string') {
-            const parts = value.split(/[,|]/).map((t) => t.trim());
-            const flag = parts.reduce((result, id) => result | out[id], 0);
-            out[key] = flag;
-        } else if (Array.isArray(value)) {
-            const flag = value.reduce((result: number, v: FlagSource) => {
-                if (typeof v === 'string') {
-                    return result | out[v];
-                }
-                return result | v;
-            }, 0);
-            out[key] = flag;
-        } else if (value) {
-            out[key] = value;
-        }
+        out[key] = from(out, value);
     });
 
     return out;
