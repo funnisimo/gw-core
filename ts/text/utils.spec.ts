@@ -25,6 +25,12 @@ describe('padStart', () => {
     test('colors', () => {
         expect(Utils.padStart('ΩredΩtest∆', 10)).toEqual('      ΩredΩtest∆');
     });
+
+    test('too long', () => {
+        expect(Utils.padStart('testing a long message', 10)).toEqual(
+            'testing a long message'
+        );
+    });
 });
 
 describe('padEnd', () => {
@@ -34,6 +40,12 @@ describe('padEnd', () => {
 
     test('colors', () => {
         expect(Utils.padEnd('ΩredΩtest∆', 10)).toEqual('ΩredΩtest∆      ');
+    });
+
+    test('too long', () => {
+        expect(Utils.padEnd('testing a long message', 10)).toEqual(
+            'testing a long message'
+        );
     });
 });
 
