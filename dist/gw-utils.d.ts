@@ -1326,6 +1326,7 @@ declare class DataBuffer {
     fillRect(x: number, y: number, w: number, h: number, ch?: string | number | null, fg?: ColorBase | null, bg?: ColorBase | null): this;
     blackOutRect(x: number, y: number, w: number, h: number, bg?: ColorBase): this;
     highlight(x: number, y: number, color: ColorBase, strength: number): this;
+    mix(color: ColorBase, percent: number): this;
     dump(): void;
 }
 declare function makeDataBuffer(width: number, height: number): DataBuffer;

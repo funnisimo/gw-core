@@ -272,20 +272,20 @@ export class DataBuffer {
         return this;
     }
 
-    // mix(color: Color.ColorBase, percent: number) {
-    //     if (typeof color !== 'number') color = Color.from(color);
-    //     const mixer = new Mixer();
-    //     for (let x = 0; x < this.width; ++x) {
-    //         for (let y = 0; y < this.height; ++y) {
-    //             const data = this.get(x, y);
-    //             mixer.drawSprite(data);
-    //             mixer.fg.mix(color, percent);
-    //             mixer.bg.mix(color, percent);
-    //             this.drawSprite(x, y, mixer);
-    //         }
-    //     }
-    //     return this;
-    // }
+    mix(color: Color.ColorBase, percent: number) {
+        color = Color.from(color);
+        const mixer = new Mixer();
+        for (let x = 0; x < this.width; ++x) {
+            for (let y = 0; y < this.height; ++y) {
+                const data = this.get(x, y);
+                mixer.drawSprite(data);
+                mixer.fg.mix(color, percent);
+                mixer.bg.mix(color, percent);
+                this.drawSprite(x, y, mixer);
+            }
+        }
+        return this;
+    }
 
     dump() {
         const data = [];
