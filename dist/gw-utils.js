@@ -2246,12 +2246,14 @@
             this._stopTicks();
         }
         stop() {
+            this.clearEvents();
             this.running = false;
             this.pushEvent(makeStopEvent());
             if (this.interval) {
                 clearInterval(this.interval);
                 this.interval = 0;
             }
+            this.CURRENT_HANDLER = null;
         }
         pauseEvents() {
             if (this.PAUSED)
