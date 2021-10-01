@@ -18,14 +18,17 @@ export interface Event {
     dt: number;
 }
 
-export type CommandFn = (event: Event) => Promise<boolean>;
+export type CommandFn = (
+    event: Event
+) => boolean | void | Promise<boolean | void>;
+export type ControlFn = () => any | Promise<any>;
 export var commands: Record<string, CommandFn> = {};
 
 export function addCommand(id: string, fn: CommandFn) {
     commands[id] = fn;
 }
 
-export type KeyMap = Record<string, CommandFn | boolean>;
+export type KeyMap = Record<string, ControlFn | CommandFn | boolean>;
 export type EventMatchFn = (event: Event) => boolean;
 
 let KEYMAP: KeyMap = {};
@@ -37,6 +40,7 @@ export const MOUSEMOVE = 'mousemove';
 export const CLICK = 'click';
 export const TICK = 'tick';
 export const MOUSEUP = 'mouseup';
+export const STOP = 'stop';
 
 const CONTROL_CODES = [
     'ShiftLeft',
@@ -60,6 +64,11 @@ export async function dispatchEvent(ev: Event, km?: KeyMap | CommandFn) {
     let command;
 
     km = km || KEYMAP;
+
+    if (ev.type === STOP) {
+        recycleEvent(ev);
+        return true; // Should stop loops, etc...
+    }
 
     if (typeof km === 'function') {
         command = km;
@@ -92,6 +101,14 @@ export async function dispatchEvent(ev: Event, km?: KeyMap | CommandFn) {
 
 function recycleEvent(ev: Event) {
     DEAD_EVENTS.push(ev);
+}
+
+// STOP
+
+export function makeStopEvent() {
+    const ev: Event = makeTickEvent(0);
+    ev.type = STOP;
+    return ev;
 }
 
 // TICK
@@ -203,15 +220,21 @@ export function makeMouseEvent(e: MouseEvent, x: number, y: number) {
 }
 
 export class Loop {
-    public running = false;
+    public running = true;
     public events: Event[] = [];
     public mouse: XY.XY = { x: -1, y: -1 };
 
     protected CURRENT_HANDLER: EventHandler | null = null;
     protected PAUSED: EventHandler | null = null;
     protected LAST_CLICK: XY.XY = { x: -1, y: -1 };
+    protected interval: number;
 
-    constructor() {}
+    constructor() {
+        this.interval = (setInterval(() => {
+            const e = makeTickEvent(16);
+            this.pushEvent(e);
+        }, 16) as unknown) as number;
+    }
 
     hasEvents() {
         return this.events.length;
@@ -296,7 +319,9 @@ export class Loop {
         if (ms == 0) return Promise.resolve(null);
 
         if (this.CURRENT_HANDLER) {
-            console.warn('OVERWRITE HANDLER - nextEvent');
+            console.warn(
+                'OVERWRITE HANDLER -- Check for a missing await around GWU.io.* function calls.'
+            );
         } else if (this.events.length) {
             console.warn('SET HANDLER WITH QUEUED EVENTS - nextEvent');
         }
@@ -323,38 +348,36 @@ export class Loop {
     }
 
     async run(keymap: KeyMap, ms = -1) {
-        const interval = (setInterval(() => {
-            const e = makeTickEvent(16);
-            this.pushEvent(e);
-        }, 16) as unknown) as number;
+        this.running = true;
+        this.clearEvents(); // ??? Should we do this?
 
         if (keymap.start && typeof keymap.start === 'function') {
-            // @ts-ignore
-            await keymap.start();
+            await (<ControlFn>keymap.start)();
         }
 
-        this.running = true;
-        while (this.running) {
+        let running = true;
+        while (this.running && running) {
             const ev = await this.nextEvent(ms);
             if (ev && (await dispatchEvent(ev, keymap))) {
-                this.running = false;
+                running = false;
             }
             if (keymap.draw && typeof keymap.draw === 'function') {
-                // @ts-ignore
-                keymap.draw();
+                (<ControlFn>keymap.draw)();
             }
         }
 
         if (keymap.stop && typeof keymap.stop === 'function') {
-            // @ts-ignore
-            await keymap.stop();
+            await (<ControlFn>keymap.stop)();
         }
-
-        clearInterval(interval);
     }
 
     stop() {
         this.running = false;
+        this.pushEvent(makeStopEvent());
+        if (this.interval) {
+            clearInterval(this.interval);
+            this.interval = 0;
+        }
     }
 
     pauseEvents() {
