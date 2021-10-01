@@ -2104,10 +2104,8 @@
             this.CURRENT_HANDLER = null;
             this.PAUSED = null;
             this.LAST_CLICK = { x: -1, y: -1 };
-            this.interval = setInterval(() => {
-                const e = makeTickEvent(16);
-                this.pushEvent(e);
-            }, 16);
+            this.interval = 0;
+            this.intervalCount = 0;
         }
         hasEvents() {
             return this.events.length;
@@ -2117,6 +2115,22 @@
                 const ev = this.events.shift();
                 DEAD_EVENTS.push(ev);
             }
+        }
+        _startTicks() {
+            ++this.intervalCount;
+            if (this.interval)
+                return;
+            this.interval = setInterval(() => {
+                const e = makeTickEvent(16);
+                this.pushEvent(e);
+            }, 16);
+        }
+        _stopTicks() {
+            --this.intervalCount;
+            if (this.intervalCount)
+                return;
+            clearInterval(this.interval);
+            this.interval = 0;
         }
         pushEvent(ev) {
             if (this.PAUSED) {
@@ -2212,6 +2226,7 @@
         async run(keymap, ms = -1) {
             this.running = true;
             this.clearEvents(); // ??? Should we do this?
+            this._startTicks();
             if (keymap.start && typeof keymap.start === 'function') {
                 await keymap.start();
             }
@@ -2228,6 +2243,7 @@
             if (keymap.stop && typeof keymap.stop === 'function') {
                 await keymap.stop();
             }
+            this._stopTicks();
         }
         stop() {
             this.running = false;

@@ -227,14 +227,10 @@ export class Loop {
     protected CURRENT_HANDLER: EventHandler | null = null;
     protected PAUSED: EventHandler | null = null;
     protected LAST_CLICK: XY.XY = { x: -1, y: -1 };
-    protected interval: number;
+    protected interval = 0;
+    protected intervalCount = 0;
 
-    constructor() {
-        this.interval = (setInterval(() => {
-            const e = makeTickEvent(16);
-            this.pushEvent(e);
-        }, 16) as unknown) as number;
-    }
+    constructor() {}
 
     hasEvents() {
         return this.events.length;
@@ -245,6 +241,22 @@ export class Loop {
             const ev = this.events.shift()!;
             DEAD_EVENTS.push(ev);
         }
+    }
+
+    protected _startTicks() {
+        ++this.intervalCount;
+        if (this.interval) return;
+        this.interval = (setInterval(() => {
+            const e = makeTickEvent(16);
+            this.pushEvent(e);
+        }, 16) as unknown) as number;
+    }
+
+    protected _stopTicks() {
+        --this.intervalCount;
+        if (this.intervalCount) return;
+        clearInterval(this.interval);
+        this.interval = 0;
     }
 
     pushEvent(ev: Event) {
@@ -350,6 +362,7 @@ export class Loop {
     async run(keymap: KeyMap, ms = -1) {
         this.running = true;
         this.clearEvents(); // ??? Should we do this?
+        this._startTicks();
 
         if (keymap.start && typeof keymap.start === 'function') {
             await (<ControlFn>keymap.start)();
@@ -368,6 +381,8 @@ export class Loop {
         if (keymap.stop && typeof keymap.stop === 'function') {
             await (<ControlFn>keymap.stop)();
         }
+
+        this._stopTicks();
     }
 
     stop() {

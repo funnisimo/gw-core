@@ -776,9 +776,12 @@ declare class Loop {
     protected PAUSED: EventHandler | null;
     protected LAST_CLICK: XY;
     protected interval: number;
+    protected intervalCount: number;
     constructor();
     hasEvents(): number;
     clearEvents(): void;
+    protected _startTicks(): void;
+    protected _stopTicks(): void;
     pushEvent(ev: Event$1): void;
     nextEvent(ms?: number, match?: EventMatchFn): Promise<Event$1 | null>;
     run(keymap: KeyMap, ms?: number): Promise<void>;
