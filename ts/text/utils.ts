@@ -173,3 +173,14 @@ export function removeColors(text: string) {
     out += text.substring(start);
     return out;
 }
+
+export function spliceRaw(
+    msg: string,
+    begin: number,
+    length: number,
+    add = ''
+) {
+    const preText = msg.substring(0, begin);
+    const postText = msg.substring(begin + length);
+    return preText + add + postText;
+}

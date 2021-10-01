@@ -1539,6 +1539,7 @@ declare function padEnd(text: string, width: number, pad?: string): string;
 declare function center(text: string, width: number, pad?: string): string;
 declare function capitalize(text: string): string;
 declare function removeColors(text: string): string;
+declare function spliceRaw(msg: string, begin: number, length: number, add?: string): string;
 
 declare function wordWrap(text: string, width: number, indent?: number): string;
 declare function splitIntoLines(source: string, width: number, indent?: number): string[];
@@ -1577,6 +1578,7 @@ declare const index_d$1_configure: typeof configure;
 declare const index_d$1_addHelper: typeof addHelper;
 declare const index_d$1_options: typeof options;
 type index_d$1_Template = Template;
+declare const index_d$1_spliceRaw: typeof spliceRaw;
 declare namespace index_d$1 {
   export {
     index_d$1_compile as compile,
@@ -1595,6 +1597,7 @@ declare namespace index_d$1 {
     index_d$1_addHelper as addHelper,
     index_d$1_options as options,
     index_d$1_Template as Template,
+    index_d$1_spliceRaw as spliceRaw,
   };
 }
 

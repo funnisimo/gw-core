@@ -331,8 +331,8 @@ export class Loop {
         if (ms == 0) return Promise.resolve(null);
 
         if (this.CURRENT_HANDLER) {
-            console.warn(
-                'OVERWRITE HANDLER -- Check for a missing await around GWU.io.* function calls.'
+            throw new Error(
+                'OVERWRITE HANDLER -- Check for a missing await around Loop function calls.'
             );
         } else if (this.events.length) {
             console.warn('SET HANDLER WITH QUEUED EVENTS - nextEvent');

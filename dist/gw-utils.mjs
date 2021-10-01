@@ -2193,7 +2193,7 @@ class Loop {
         if (ms == 0)
             return Promise.resolve(null);
         if (this.CURRENT_HANDLER) {
-            console.warn('OVERWRITE HANDLER -- Check for a missing await around GWU.io.* function calls.');
+            throw new Error('OVERWRITE HANDLER -- Check for a missing await around Loop function calls.');
         }
         else if (this.events.length) {
             console.warn('SET HANDLER WITH QUEUED EVENTS - nextEvent');
@@ -4816,6 +4816,11 @@ function removeColors(text) {
     out += text.substring(start);
     return out;
 }
+function spliceRaw(msg, begin, length, add = '') {
+    const preText = msg.substring(0, begin);
+    const postText = msg.substring(begin + length);
+    return preText + add + postText;
+}
 
 function nextBreak(text, start) {
     const CS = options.colorStart;
@@ -5026,7 +5031,8 @@ var index$3 = /*#__PURE__*/Object.freeze({
     splitIntoLines: splitIntoLines,
     configure: configure,
     addHelper: addHelper,
-    options: options
+    options: options,
+    spliceRaw: spliceRaw
 });
 
 class DataBuffer {
