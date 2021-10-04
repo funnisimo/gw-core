@@ -1538,6 +1538,7 @@ declare function firstChar(text: string): string | null;
 declare function padStart(text: string, width: number, pad?: string): string;
 declare function padEnd(text: string, width: number, pad?: string): string;
 declare function center(text: string, width: number, pad?: string): string;
+declare function truncate(text: string, width: number): string;
 declare function capitalize(text: string): string;
 declare function removeColors(text: string): string;
 declare function spliceRaw(msg: string, begin: number, length: number, add?: string): string;
@@ -1580,6 +1581,7 @@ declare const index_d$1_addHelper: typeof addHelper;
 declare const index_d$1_options: typeof options;
 type index_d$1_Template = Template;
 declare const index_d$1_spliceRaw: typeof spliceRaw;
+declare const index_d$1_truncate: typeof truncate;
 declare namespace index_d$1 {
   export {
     index_d$1_compile as compile,
@@ -1599,12 +1601,14 @@ declare namespace index_d$1 {
     index_d$1_options as options,
     index_d$1_Template as Template,
     index_d$1_spliceRaw as spliceRaw,
+    index_d$1_truncate as truncate,
   };
 }
 
 declare const templates: Record<string, Template>;
 declare function install$1(id: string, msg: string): Template;
 declare function installAll$1(config: Record<string, string>): void;
+declare function get(msgOrId: string): Template | null;
 interface MessageHandler {
     addMessage(x: number, y: number, msg: string): void;
     addCombatMessage(x: number, y: number, msg: string): void;
@@ -1640,6 +1644,7 @@ declare class MessageCache implements MessageHandler {
 }
 
 declare const message_d_templates: typeof templates;
+declare const message_d_get: typeof get;
 type message_d_MessageHandler = MessageHandler;
 declare const message_d_handlers: typeof handlers;
 declare const message_d_add: typeof add;
@@ -1654,6 +1659,7 @@ declare namespace message_d {
     message_d_templates as templates,
     install$1 as install,
     installAll$1 as installAll,
+    message_d_get as get,
     message_d_MessageHandler as MessageHandler,
     message_d_handlers as handlers,
     message_d_add as add,

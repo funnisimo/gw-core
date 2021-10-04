@@ -9,6 +9,7 @@ import {
     removeColors,
     firstChar,
     spliceRaw,
+    truncate,
 } from './utils';
 import { wordWrap, splitIntoLines } from './lines';
 
@@ -58,4 +59,5 @@ export {
     options,
     Template,
     spliceRaw,
+    truncate,
 };

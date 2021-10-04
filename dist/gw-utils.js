@@ -4684,9 +4684,11 @@ void main() {
         }
         return len;
     }
+    let inColor = false;
     function advanceChars(text, start, count) {
         const CS = options.colorStart;
         const CE = options.colorEnd;
+        inColor = false;
         let i = start;
         while (count > 0 && i < text.length) {
             const ch = text[i];
@@ -4698,6 +4700,7 @@ void main() {
                 else {
                     while (text[i] !== CS)
                         ++i;
+                    inColor = true;
                 }
                 ++i;
             }
@@ -4705,6 +4708,9 @@ void main() {
                 if (text[i + 1] === CE) {
                     --count;
                     ++i;
+                }
+                else {
+                    inColor = false;
                 }
                 ++i;
             }
@@ -4762,6 +4768,16 @@ void main() {
             return text;
         const left = Math.floor(padLen / 2);
         return text.padStart(rawLen + left, pad).padEnd(rawLen + padLen, pad);
+    }
+    function truncate(text, width) {
+        const len = length(text);
+        if (len <= width)
+            return text;
+        const index = advanceChars(text, 0, width);
+        if (!inColor)
+            return text.substring(0, index);
+        const CE = options.colorEnd;
+        return text.substring(0, index) + CE;
     }
     function capitalize(text) {
         const CS = options.colorStart;
@@ -5040,7 +5056,8 @@ void main() {
         configure: configure,
         addHelper: addHelper,
         options: options,
-        spliceRaw: spliceRaw
+        spliceRaw: spliceRaw,
+        truncate: truncate
     });
 
     class DataBuffer {
@@ -5969,6 +5986,9 @@ void main() {
     function installAll$1(config) {
         Object.entries(config).forEach(([id, msg]) => install$1(id, msg));
     }
+    function get(msgOrId) {
+        return templates[msgOrId] || null;
+    }
     const handlers = [];
     function add(msg, args) {
         return addAt(-1, -1, msg, args);
@@ -6100,6 +6120,7 @@ void main() {
         templates: templates,
         install: install$1,
         installAll: installAll$1,
+        get: get,
         handlers: handlers,
         add: add,
         addAt: addAt,

@@ -15,6 +15,10 @@ export function installAll(config: Record<string, string>) {
     Object.entries(config).forEach(([id, msg]) => install(id, msg));
 }
 
+export function get(msgOrId: string): Text.Template | null {
+    return templates[msgOrId] || null;
+}
+
 ////////////////////////////////////
 // Messages
 
