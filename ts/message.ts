@@ -179,4 +179,17 @@ export class MessageCache implements MessageHandler {
             if (fn(msg, this.CONFIRMED[n], i) === false) return;
         }
     }
+
+    get length(): number {
+        let count = 0;
+        for (let i = 0; i < this.ARCHIVE_LINES; ++i) {
+            const n =
+                (this.ARCHIVE_LINES - i + this.NEXT_WRITE_INDEX - 1) %
+                this.ARCHIVE_LINES;
+            const msg = this.ARCHIVE[n];
+            if (!msg) return count;
+            ++count;
+        }
+        return count;
+    }
 }

@@ -283,16 +283,39 @@ export class DataBuffer {
         return this;
     }
 
-    mix(color: Color.ColorBase, percent: number): this {
+    mix(color: Color.ColorBase, percent: number): this;
+    mix(color: Color.ColorBase, percent: number, x: number, y: number): this;
+    mix(
+        color: Color.ColorBase,
+        percent: number,
+        x: number,
+        y: number,
+        width: number,
+        height: number
+    ): this;
+    mix(
+        color: Color.ColorBase,
+        percent: number,
+        x = 0,
+        y = 0,
+        width = 0,
+        height = 0
+    ): this {
         color = Color.from(color);
         const mixer = new Mixer();
-        for (let x = 0; x < this.width; ++x) {
-            for (let y = 0; y < this.height; ++y) {
-                const data = this.get(x, y);
+
+        if (x && !width) width = 1;
+        if (y && !height) height = 1;
+
+        const endX = width ? width + x : this.width;
+        const endY = height ? height + y : this.height;
+        for (let i = 0; i < endX; ++i) {
+            for (let j = 0; j < endY; ++j) {
+                const data = this.get(i, j);
                 mixer.drawSprite(data);
                 mixer.fg.mix(color, percent);
                 mixer.bg.mix(color, percent);
-                this.drawSprite(x, y, mixer);
+                this.drawSprite(i, j, mixer);
             }
         }
         return this;

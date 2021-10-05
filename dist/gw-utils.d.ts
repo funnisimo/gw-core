@@ -1328,6 +1328,8 @@ declare class DataBuffer {
     blackOutRect(x: number, y: number, w: number, h: number, bg?: ColorBase): this;
     highlight(x: number, y: number, color: ColorBase, strength: number): this;
     mix(color: ColorBase, percent: number): this;
+    mix(color: ColorBase, percent: number, x: number, y: number): this;
+    mix(color: ColorBase, percent: number, x: number, y: number, width: number, height: number): this;
     dump(): void;
 }
 declare function makeDataBuffer(width: number, height: number): DataBuffer;
@@ -1644,6 +1646,7 @@ declare class MessageCache implements MessageHandler {
     commitCombatMessage(): boolean;
     confirmAll(): void;
     forEach(fn: EachMsgFn): void;
+    get length(): number;
 }
 
 declare const message_d_templates: typeof templates;

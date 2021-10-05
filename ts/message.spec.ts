@@ -17,6 +17,8 @@ describe('message', () => {
     test('match', () => {
         const match = jest.fn().mockReturnValue(true);
         const handler = new MSG.MessageCache({ match });
+        expect(handler.length).toEqual(0);
+
         expect(count(handler)).toEqual(0);
         MSG.add('test');
         expect(count(handler)).toEqual(1);
@@ -47,5 +49,7 @@ describe('message', () => {
         MSG.addCombat(3, 1, 'test');
         expect(count(handler)).toEqual(3);
         expect(match).toHaveBeenCalledWith(3, 1);
+
+        expect(handler.length).toEqual(3);
     });
 });

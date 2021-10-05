@@ -5261,16 +5261,22 @@ void main() {
             this.drawSprite(x, y, mixer);
             return this;
         }
-        mix(color, percent) {
+        mix(color, percent, x = 0, y = 0, width = 0, height = 0) {
             color = from$2(color);
             const mixer = new Mixer();
-            for (let x = 0; x < this.width; ++x) {
-                for (let y = 0; y < this.height; ++y) {
-                    const data = this.get(x, y);
+            if (x && !width)
+                width = 1;
+            if (y && !height)
+                height = 1;
+            const endX = width ? width + x : this.width;
+            const endY = height ? height + y : this.height;
+            for (let i = 0; i < endX; ++i) {
+                for (let j = 0; j < endY; ++j) {
+                    const data = this.get(i, j);
                     mixer.drawSprite(data);
                     mixer.fg.mix(color, percent);
                     mixer.bg.mix(color, percent);
-                    this.drawSprite(x, y, mixer);
+                    this.drawSprite(i, j, mixer);
                 }
             }
             return this;
@@ -6137,6 +6143,18 @@ void main() {
                 if (fn(msg, this.CONFIRMED[n], i) === false)
                     return;
             }
+        }
+        get length() {
+            let count = 0;
+            for (let i = 0; i < this.ARCHIVE_LINES; ++i) {
+                const n = (this.ARCHIVE_LINES - i + this.NEXT_WRITE_INDEX - 1) %
+                    this.ARCHIVE_LINES;
+                const msg = this.ARCHIVE[n];
+                if (!msg)
+                    return count;
+                ++count;
+            }
+            return count;
         }
     }
 
