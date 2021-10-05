@@ -216,6 +216,7 @@ declare class Bounds {
     get right(): number;
     get top(): number;
     get bottom(): number;
+    clone(): Bounds;
     contains(x: number, y: number): boolean;
     contains(loc: Loc$1 | XY): boolean;
     toString(): string;

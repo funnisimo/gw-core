@@ -139,6 +139,9 @@ class Bounds {
     get bottom() {
         return this.y + this.height - 1;
     }
+    clone() {
+        return new Bounds(this.x, this.y, this.width, this.height);
+    }
     contains(...args) {
         let i = args[0];
         let j = args[1];
@@ -5183,12 +5186,16 @@ class DataBuffer {
         if (typeof bg !== 'number')
             bg = from$2(bg);
         maxWidth = maxWidth || this.width;
+        const len = length(text);
+        if (len > maxWidth) {
+            text = truncate(text, len);
+        }
         eachChar(text, (ch, fg0, bg0, i) => {
             if (x + i >= this.width || i > maxWidth)
                 return;
             this.draw(i + x, y, ch, fg0, bg0);
         }, fg, bg);
-        return ++y;
+        return 1; // used 1 line
     }
     wrapText(x, y, width, text, fg = 0xfff, bg = -1, indent = 0) {
         if (typeof fg !== 'number')
@@ -5197,22 +5204,23 @@ class DataBuffer {
             bg = from$2(bg);
         width = Math.min(width, this.width - x);
         text = wordWrap(text, width, indent);
+        let lineCount = 0;
         let xi = x;
         eachChar(text, (ch, fg0, bg0) => {
             if (ch == '\n') {
                 while (xi < x + width) {
-                    this.draw(xi++, y, 0, 0x000, bg0);
+                    this.draw(xi++, y + lineCount, 0, 0x000, bg0);
                 }
-                ++y;
+                ++lineCount;
                 xi = x + indent;
                 return;
             }
-            this.draw(xi++, y, ch, fg0, bg0);
+            this.draw(xi++, y + lineCount, ch, fg0, bg0);
         }, fg, bg);
         while (xi < x + width) {
-            this.draw(xi++, y, 0, 0x000, bg);
+            this.draw(xi++, y + lineCount, 0, 0x000, bg);
         }
-        return ++y;
+        return lineCount + 1;
     }
     fillRect(x, y, w, h, ch = -1, fg = -1, bg = -1) {
         if (ch === null)
