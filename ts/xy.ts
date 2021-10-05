@@ -86,6 +86,10 @@ export class Bounds {
         return this.y + this.height - 1;
     }
 
+    clone(): Bounds {
+        return new Bounds(this.x, this.y, this.width, this.height);
+    }
+
     contains(x: number, y: number): boolean;
     contains(loc: Loc | XY): boolean;
     contains(...args: any[]) {

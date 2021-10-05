@@ -114,7 +114,7 @@ describe('buffer', () => {
                 bg: 0,
             });
 
-            expect(b.drawText(0, 1, 'test', 'red', 'green')).toEqual(2);
+            expect(b.drawText(0, 1, 'test', 'red', 'green')).toEqual(1);
             expect(b.get(0, 1)).toEqual({
                 glyph: 't'.charCodeAt(0),
                 fg: 0xf00,
@@ -137,7 +137,7 @@ describe('buffer', () => {
             });
 
             // it will not wrap
-            expect(b.drawText(8, 2, 'test', '#f00', '#0F0')).toEqual(3);
+            expect(b.drawText(8, 2, 'test', '#f00', '#0F0')).toEqual(1);
             expect(b.get(8, 2)).toEqual({
                 glyph: 't'.charCodeAt(0),
                 fg: 0xf00,
@@ -186,7 +186,7 @@ describe('buffer', () => {
                     'red',
                     'blue'
                 )
-            ).toEqual(9);
+            ).toEqual(4);
             expect(extractText(b, 0, 5, 10)).toEqual('testing a');
             expect(extractText(b, 0, 6, 10)).toEqual('wrapped');
             expect(extractText(b, 0, 7, 10)).toEqual('text');
