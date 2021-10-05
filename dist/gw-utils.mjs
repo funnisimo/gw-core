@@ -4834,9 +4834,15 @@ function removeColors(text) {
     out += text.substring(start);
     return out;
 }
-function spliceRaw(msg, begin, length, add = '') {
+function spliceRaw(msg, begin, deleteLength, add = '') {
+    const maxLen = msg.length;
+    if (begin >= maxLen)
+        return msg;
     const preText = msg.substring(0, begin);
-    const postText = msg.substring(begin + length);
+    if (begin + deleteLength >= maxLen) {
+        return preText;
+    }
+    const postText = msg.substring(begin + deleteLength);
     return preText + add + postText;
 }
 

@@ -115,3 +115,13 @@ describe('truncate', () => {
         ).toEqual('1ΩredΩ2∆3ΩredΩ4∆5ΩredΩ6∆7ΩredΩ8∆9ΩredΩ0∆');
     });
 });
+
+describe('spliceRaw', () => {
+    test('basic', () => {
+        expect(Utils.spliceRaw('testing', 8, 3)).toEqual('testing');
+        expect(Utils.spliceRaw('testing', 4, 4)).toEqual('test');
+        expect(Utils.spliceRaw('123456789012345678901234567890', 10, 5, 'TACO')).toEqual(
+            '1234567890TACO678901234567890'
+        );
+    });
+});

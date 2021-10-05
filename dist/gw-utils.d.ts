@@ -1541,7 +1541,7 @@ declare function center(text: string, width: number, pad?: string): string;
 declare function truncate(text: string, width: number): string;
 declare function capitalize(text: string): string;
 declare function removeColors(text: string): string;
-declare function spliceRaw(msg: string, begin: number, length: number, add?: string): string;
+declare function spliceRaw(msg: string, begin: number, deleteLength: number, add?: string): string;
 
 declare function wordWrap(text: string, width: number, indent?: number): string;
 declare function splitIntoLines(source: string, width: number, indent?: number): string[];
