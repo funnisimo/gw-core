@@ -1621,6 +1621,7 @@ declare function addCombat(x: number, y: number, msg: string, args?: any): void;
 interface CacheOptions {
     length: number;
     width: number;
+    match?: XYMatchFunc;
 }
 declare type EachMsgFn = (msg: string, confirmed: boolean, i: number) => any;
 declare class MessageCache implements MessageHandler {
@@ -1631,14 +1632,15 @@ declare class MessageCache implements MessageHandler {
     NEXT_WRITE_INDEX: number;
     NEEDS_UPDATE: boolean;
     COMBAT_MESSAGE: string | null;
+    matchFn: XYMatchFunc;
     constructor(opts?: Partial<CacheOptions>);
     get needsUpdate(): boolean;
     set needsUpdate(needs: boolean);
-    addMessageLine(msg: string): void;
-    addMessage(_x: number, _y: number, msg: string): void;
-    _addMessage(msg: string): void;
-    addCombatMessage(_x: number, _y: number, msg: string): void;
-    _addCombatMessage(msg: string): void;
+    protected _addMessageLine(msg: string): void;
+    addMessage(x: number, y: number, msg: string): void;
+    protected _addMessage(msg: string): void;
+    addCombatMessage(x: number, y: number, msg: string): void;
+    protected _addCombatMessage(msg: string): void;
     commitCombatMessage(): boolean;
     confirmAll(): void;
     forEach(fn: EachMsgFn): void;

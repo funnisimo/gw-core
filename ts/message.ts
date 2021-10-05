@@ -1,5 +1,7 @@
 import * as Text from './text/index';
 import * as GW from './gw';
+import * as XY from './xy';
+import { TRUE } from './utils';
 
 export const templates: Record<string, Text.Template> = {};
 
@@ -56,6 +58,7 @@ export function addCombat(x: number, y: number, msg: string, args?: any) {
 export interface CacheOptions {
     length: number;
     width: number;
+    match?: XY.XYMatchFunc;
 }
 
 export type EachMsgFn = (msg: string, confirmed: boolean, i: number) => any;
@@ -68,8 +71,10 @@ export class MessageCache implements MessageHandler {
     NEXT_WRITE_INDEX = 0;
     NEEDS_UPDATE = true;
     COMBAT_MESSAGE: string | null = null;
+    matchFn: XY.XYMatchFunc;
 
     constructor(opts: Partial<CacheOptions> = {}) {
+        this.matchFn = opts.match || TRUE;
         this.ARCHIVE_LINES = opts.length || 30;
         this.MSG_WIDTH = opts.width || 80;
         for (let i = 0; i < this.ARCHIVE_LINES; ++i) {
@@ -87,7 +92,7 @@ export class MessageCache implements MessageHandler {
     }
 
     // function messageWithoutCaps(msg, requireAcknowledgment) {
-    addMessageLine(msg: string) {
+    protected _addMessageLine(msg: string) {
         if (!Text.length(msg)) {
             return;
         }
@@ -99,13 +104,13 @@ export class MessageCache implements MessageHandler {
             (this.NEXT_WRITE_INDEX + 1) % this.ARCHIVE_LINES;
     }
 
-    addMessage(_x: number, _y: number, msg: string) {
+    addMessage(x: number, y: number, msg: string) {
+        if (!this.matchFn(x, y)) return;
+        this.commitCombatMessage();
         this._addMessage(msg);
     }
 
-    _addMessage(msg: string) {
-        this.commitCombatMessage();
-
+    protected _addMessage(msg: string) {
         msg = Text.capitalize(msg);
 
         // // Implement the American quotation mark/period/comma ordering rule.
@@ -124,7 +129,7 @@ export class MessageCache implements MessageHandler {
         if (GW.config.message?.reverseMultiLine) {
             lines.reverse();
         }
-        lines.forEach((l) => this.addMessageLine(l));
+        lines.forEach((l) => this._addMessageLine(l));
 
         // display the message:
         this.NEEDS_UPDATE = true;
@@ -134,11 +139,12 @@ export class MessageCache implements MessageHandler {
         // }
     }
 
-    addCombatMessage(_x: number, _y: number, msg: string) {
+    addCombatMessage(x: number, y: number, msg: string) {
+        if (!this.matchFn(x, y)) return;
         this._addCombatMessage(msg);
     }
 
-    _addCombatMessage(msg: string) {
+    protected _addCombatMessage(msg: string) {
         if (!this.COMBAT_MESSAGE) {
             this.COMBAT_MESSAGE = msg;
         } else {

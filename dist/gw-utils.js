@@ -6042,6 +6042,7 @@ void main() {
             this.NEXT_WRITE_INDEX = 0;
             this.NEEDS_UPDATE = true;
             this.COMBAT_MESSAGE = null;
+            this.matchFn = opts.match || TRUE;
             this.ARCHIVE_LINES = opts.length || 30;
             this.MSG_WIDTH = opts.width || 80;
             for (let i = 0; i < this.ARCHIVE_LINES; ++i) {
@@ -6057,7 +6058,7 @@ void main() {
             this.NEEDS_UPDATE = needs;
         }
         // function messageWithoutCaps(msg, requireAcknowledgment) {
-        addMessageLine(msg) {
+        _addMessageLine(msg) {
             if (!length(msg)) {
                 return;
             }
@@ -6067,12 +6068,14 @@ void main() {
             this.NEXT_WRITE_INDEX =
                 (this.NEXT_WRITE_INDEX + 1) % this.ARCHIVE_LINES;
         }
-        addMessage(_x, _y, msg) {
+        addMessage(x, y, msg) {
+            if (!this.matchFn(x, y))
+                return;
+            this.commitCombatMessage();
             this._addMessage(msg);
         }
         _addMessage(msg) {
             var _a;
-            this.commitCombatMessage();
             msg = capitalize(msg);
             // // Implement the American quotation mark/period/comma ordering rule.
             // for (i=0; text.text[i] && text.text[i+1]; i++) {
@@ -6089,14 +6092,16 @@ void main() {
             if ((_a = config$1.message) === null || _a === void 0 ? void 0 : _a.reverseMultiLine) {
                 lines.reverse();
             }
-            lines.forEach((l) => this.addMessageLine(l));
+            lines.forEach((l) => this._addMessageLine(l));
             // display the message:
             this.NEEDS_UPDATE = true;
             // if (GAME.playbackMode) {
             // 	GAME.playbackDelayThisTurn += GAME.playbackDelayPerTurn * 5;
             // }
         }
-        addCombatMessage(_x, _y, msg) {
+        addCombatMessage(x, y, msg) {
+            if (!this.matchFn(x, y))
+                return;
             this._addCombatMessage(msg);
         }
         _addCombatMessage(msg) {
