@@ -969,7 +969,7 @@ declare class FovSystem implements FovTracker {
     makeAlwaysVisible(): void;
     makeCellAlwaysVisible(x: number, y: number): void;
     revealAll(makeVisibleToo?: boolean): void;
-    revealCell(x: number, y: number): void;
+    revealCell(x: number, y: number, makeVisibleToo?: boolean): void;
     hideCell(x: number, y: number): void;
     magicMapCell(x: number, y: number): void;
     reset(): void;

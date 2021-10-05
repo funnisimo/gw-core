@@ -2520,7 +2520,6 @@
                     return x >= 0 && y >= 0 && x < site.width && y < site.height;
                 },
             });
-            // we want fov, so do not reveal the map initially
             if (opts.alwaysVisible) {
                 this.makeAlwaysVisible();
             }
@@ -2559,20 +2558,24 @@
         makeAlwaysVisible() {
             this.flags.update((v) => v |
                 (FovFlags.ALWAYS_VISIBLE | FovFlags.REVEALED | FovFlags.VISIBLE));
+            // TODO - onFovChange?
             this.changed = true;
         }
         makeCellAlwaysVisible(x, y) {
-            this.flags[x][y] |= FovFlags.ALWAYS_VISIBLE | FovFlags.REVEALED;
+            this.flags[x][y] |= FovFlags.ALWAYS_VISIBLE | FovFlags.REVEALED | FovFlags.VISIBLE;
+            // TODO - onFovChange?
             this.changed = true;
         }
         revealAll(makeVisibleToo = true) {
             const flag = FovFlags.REVEALED | (makeVisibleToo ? FovFlags.VISIBLE : 0);
             this.flags.update((v) => v | flag);
+            // TODO - onFovChange?
             this.changed = true;
         }
-        revealCell(x, y) {
-            const flag = FovFlags.REVEALED;
+        revealCell(x, y, makeVisibleToo = true) {
+            const flag = FovFlags.REVEALED | (makeVisibleToo ? FovFlags.VISIBLE : 0);
             this.flags[x][y] |= flag;
+            // TODO - onFovChange?
             this.changed = true;
         }
         hideCell(x, y) {
@@ -2580,15 +2583,18 @@
                 FovFlags.REVEALED |
                 FovFlags.ALWAYS_VISIBLE);
             this.flags[x][y] = this.demoteCellVisibility(this.flags[x][y]); // clears visible, etc...
+            // TODO - onFovChange?
             this.changed = true;
         }
         magicMapCell(x, y) {
             this.flags[x][y] |= FovFlags.MAGIC_MAPPED;
             this.changed = true;
+            // TODO - onFovChange?
         }
         reset() {
             this.flags.fill(0);
             this.changed = true;
+            // TODO - onFovChange?
         }
         get changed() {
             return this._changed;
