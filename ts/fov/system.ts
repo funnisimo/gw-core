@@ -59,7 +59,6 @@ export class FovSystem implements TYPES.FovTracker {
             },
         });
 
-        // we want fov, so do not reveal the map initially
         if (opts.alwaysVisible) {
             this.makeAlwaysVisible();
         }
@@ -107,10 +106,12 @@ export class FovSystem implements TYPES.FovTracker {
                 v |
                 (FovFlags.ALWAYS_VISIBLE | FovFlags.REVEALED | FovFlags.VISIBLE)
         );
+        // TODO - onFovChange?
         this.changed = true;
     }
     makeCellAlwaysVisible(x: number, y: number) {
-        this.flags[x][y] |= FovFlags.ALWAYS_VISIBLE | FovFlags.REVEALED;
+        this.flags[x][y] |= FovFlags.ALWAYS_VISIBLE | FovFlags.REVEALED | FovFlags.VISIBLE;
+        // TODO - onFovChange?
         this.changed = true;
     }
 
@@ -118,11 +119,13 @@ export class FovSystem implements TYPES.FovTracker {
         const flag =
             FovFlags.REVEALED | (makeVisibleToo ? FovFlags.VISIBLE : 0);
         this.flags.update((v) => v | flag);
+        // TODO - onFovChange?
         this.changed = true;
     }
-    revealCell(x: number, y: number) {
-        const flag = FovFlags.REVEALED;
+    revealCell(x: number, y: number, makeVisibleToo=true) {
+        const flag = FovFlags.REVEALED | (makeVisibleToo ? FovFlags.VISIBLE : 0);
         this.flags[x][y] |= flag;
+        // TODO - onFovChange?
         this.changed = true;
     }
     hideCell(x: number, y: number): void {
@@ -132,15 +135,18 @@ export class FovSystem implements TYPES.FovTracker {
             FovFlags.ALWAYS_VISIBLE
         );
         this.flags[x][y] = this.demoteCellVisibility(this.flags[x][y]); // clears visible, etc...
+        // TODO - onFovChange?
         this.changed = true;
     }
     magicMapCell(x: number, y: number): void {
         this.flags[x][y] |= FovFlags.MAGIC_MAPPED;
         this.changed = true;
+        // TODO - onFovChange?
     }
     reset() {
         this.flags.fill(0);
         this.changed = true;
+        // TODO - onFovChange?
     }
 
     get changed(): boolean {

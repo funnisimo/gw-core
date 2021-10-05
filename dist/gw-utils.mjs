@@ -2514,7 +2514,6 @@ class FovSystem {
                 return x >= 0 && y >= 0 && x < site.width && y < site.height;
             },
         });
-        // we want fov, so do not reveal the map initially
         if (opts.alwaysVisible) {
             this.makeAlwaysVisible();
         }
@@ -2553,20 +2552,24 @@ class FovSystem {
     makeAlwaysVisible() {
         this.flags.update((v) => v |
             (FovFlags.ALWAYS_VISIBLE | FovFlags.REVEALED | FovFlags.VISIBLE));
+        // TODO - onFovChange?
         this.changed = true;
     }
     makeCellAlwaysVisible(x, y) {
-        this.flags[x][y] |= FovFlags.ALWAYS_VISIBLE | FovFlags.REVEALED;
+        this.flags[x][y] |= FovFlags.ALWAYS_VISIBLE | FovFlags.REVEALED | FovFlags.VISIBLE;
+        // TODO - onFovChange?
         this.changed = true;
     }
     revealAll(makeVisibleToo = true) {
         const flag = FovFlags.REVEALED | (makeVisibleToo ? FovFlags.VISIBLE : 0);
         this.flags.update((v) => v | flag);
+        // TODO - onFovChange?
         this.changed = true;
     }
-    revealCell(x, y) {
-        const flag = FovFlags.REVEALED;
+    revealCell(x, y, makeVisibleToo = true) {
+        const flag = FovFlags.REVEALED | (makeVisibleToo ? FovFlags.VISIBLE : 0);
         this.flags[x][y] |= flag;
+        // TODO - onFovChange?
         this.changed = true;
     }
     hideCell(x, y) {
@@ -2574,15 +2577,18 @@ class FovSystem {
             FovFlags.REVEALED |
             FovFlags.ALWAYS_VISIBLE);
         this.flags[x][y] = this.demoteCellVisibility(this.flags[x][y]); // clears visible, etc...
+        // TODO - onFovChange?
         this.changed = true;
     }
     magicMapCell(x, y) {
         this.flags[x][y] |= FovFlags.MAGIC_MAPPED;
         this.changed = true;
+        // TODO - onFovChange?
     }
     reset() {
         this.flags.fill(0);
         this.changed = true;
+        // TODO - onFovChange?
     }
     get changed() {
         return this._changed;
@@ -4834,9 +4840,15 @@ function removeColors(text) {
     out += text.substring(start);
     return out;
 }
-function spliceRaw(msg, begin, length, add = '') {
+function spliceRaw(msg, begin, deleteLength, add = '') {
+    const maxLen = msg.length;
+    if (begin >= maxLen)
+        return msg;
     const preText = msg.substring(0, begin);
-    const postText = msg.substring(begin + length);
+    if (begin + deleteLength >= maxLen) {
+        return preText;
+    }
+    const postText = msg.substring(begin + deleteLength);
     return preText + add + postText;
 }
 

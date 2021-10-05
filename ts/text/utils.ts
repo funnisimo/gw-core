@@ -177,10 +177,15 @@ export function removeColors(text: string) {
 export function spliceRaw(
     msg: string,
     begin: number,
-    length: number,
+    deleteLength: number,
     add = ''
 ) {
+    const maxLen = msg.length;
+    if (begin >= maxLen) return msg;
     const preText = msg.substring(0, begin);
-    const postText = msg.substring(begin + length);
+    if (begin + deleteLength >= maxLen) {
+        return preText;
+    }
+    const postText = msg.substring(begin + deleteLength);
     return preText + add + postText;
 }

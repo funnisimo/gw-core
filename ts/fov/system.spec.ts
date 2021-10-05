@@ -65,7 +65,9 @@ describe('FOV System', () => {
     });
 
     test('constructor - revealed', () => {
-        system = new FOV.FovSystem(site, { revealed: true });
+        const changeFn = jest.fn();
+
+        system = new FOV.FovSystem(site, { revealed: true, onFovChange: changeFn });
 
         // system.flags.dump((v) =>
         //     v & FOV.FovFlags.ANY_KIND_OF_VISIBLE ? '!' : ' '
@@ -76,7 +78,8 @@ describe('FOV System', () => {
     });
 
     test('constructor - visible', () => {
-        system = new FOV.FovSystem(site, { visible: true });
+        const changeObj = { onFovChange: jest.fn() };
+        system = new FOV.FovSystem(site, { visible: true, onFovChange: changeObj });
         expect(system.isAnyKindOfVisible(5, 5)).toBeTruthy();
         expect(system.isVisible(5, 5)).toBeTruthy();
         expect(system.isDirectlyVisible(5, 5)).toBeFalsy(); // no FOV calculated
@@ -96,4 +99,91 @@ describe('FOV System', () => {
         expect(system.isAnyKindOfVisible(5, 5)).toBeFalsy();
         expect(system.isRevealed(5, 5)).toBeFalsy();
     });
+
+    test('constructor - always visible', () => {
+        system = new FOV.FovSystem(site, { alwaysVisible: true });
+        expect(system.isAnyKindOfVisible(5, 5)).toBeTruthy();
+        expect(system.isRevealed(5, 5)).toBeTruthy();
+        expect(system.isInFov(5, 5)).toBeFalsy();
+        expect(system.fovChanged(5, 5)).toBeTruthy();
+
+        system.update(5, 5, 5);
+        expect(system.isAnyKindOfVisible(5, 5)).toBeTruthy();
+        expect(system.isRevealed(5, 5)).toBeTruthy();
+        expect(system.isInFov(5, 5)).toBeTruthy();
+        expect(system.fovChanged(5, 5)).toBeFalsy();    // visible -> visible
+
+        expect(system.isAnyKindOfVisible(19, 19)).toBeTruthy();
+        expect(system.isInFov(19, 10)).toBeFalsy();
+        expect(system.fovChanged(19, 19)).toBeFalsy();  // not -> not
+
+        expect(system.getFlag(19, 19) & FOV.FovFlags.ALWAYS_VISIBLE).toBeTruthy();
+    });
+
+    test('magic Mapped', () => {
+        system = new FOV.FovSystem(site);
+        expect(system.isAnyKindOfVisible(5, 5)).toBeFalsy();
+        expect(system.isRevealed(5, 5)).toBeFalsy();
+        expect(system.isInFov(5, 5)).toBeFalsy();
+        expect(system.isMagicMapped(5, 5)).toBeFalsy();
+
+        system.magicMapCell(5, 5);
+        expect(system.isAnyKindOfVisible(5, 5)).toBeFalsy();
+        expect(system.isRevealed(5, 5)).toBeFalsy();
+        expect(system.isInFov(5, 5)).toBeFalsy();
+        expect(system.isMagicMapped(5, 5)).toBeTruthy();
+    });
+
+
+    test('revealAll', () => {
+        system = new FOV.FovSystem(site);
+        expect(system.isAnyKindOfVisible(5, 5)).toBeFalsy();
+        expect(system.isRevealed(5, 5)).toBeFalsy();
+
+        system.revealAll();
+        expect(system.isAnyKindOfVisible(5, 5)).toBeTruthy();
+        expect(system.isRevealed(5, 5)).toBeTruthy();
+    });
+
+    test('cell functions', () => {
+        system = new FOV.FovSystem(site);
+        expect(system.isAnyKindOfVisible(5, 5)).toBeFalsy();
+        expect(system.isRevealed(5, 5)).toBeFalsy();
+
+        system.makeCellAlwaysVisible(5, 5);
+        expect(system.isAnyKindOfVisible(5, 5)).toBeTruthy();
+        expect(system.isRevealed(5, 5)).toBeTruthy();
+
+        system.revealCell(6, 6);
+        expect(system.isAnyKindOfVisible(6, 6)).toBeTruthy();
+        expect(system.isRevealed(6, 6)).toBeTruthy();
+
+        system.revealCell(7, 7, false);
+        expect(system.isAnyKindOfVisible(7, 7)).toBeFalsy();
+        expect(system.isRevealed(7, 7)).toBeTruthy();
+
+        system.magicMapCell(8, 8);
+        expect(system.isAnyKindOfVisible(8, 8)).toBeFalsy();
+        expect(system.isRevealed(8, 8)).toBeFalsy();
+        expect(system.isMagicMapped(8, 8)).toBeTruthy();
+
+        system.hideCell(5, 5);
+        expect(system.isAnyKindOfVisible(5, 5)).toBeFalsy();
+        expect(system.isRevealed(5, 5)).toBeFalsy();
+
+        system.hideCell(6, 6);
+        expect(system.isAnyKindOfVisible(6, 6)).toBeFalsy();
+        expect(system.isRevealed(6, 6)).toBeFalsy();
+
+        system.hideCell(7, 7);
+        expect(system.isAnyKindOfVisible(7, 7)).toBeFalsy();
+        expect(system.isRevealed(7, 7)).toBeFalsy();
+
+        system.hideCell(8, 8);
+        expect(system.isAnyKindOfVisible(8, 8)).toBeFalsy();
+        expect(system.isRevealed(8, 8)).toBeFalsy();
+        expect(system.isMagicMapped(8, 8)).toBeFalsy();
+
+    });
+
 });
