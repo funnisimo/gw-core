@@ -262,7 +262,7 @@ export class DataBuffer {
         bg: Color.ColorBase = 0
     ): this {
         if (typeof bg !== 'number') bg = Color.from(bg);
-        return this.fillRect(x, y, w, h, 0, 0, bg);
+        return this.fillRect(x, y, w, h, 0, bg, bg);
     }
 
     highlight(

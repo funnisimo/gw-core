@@ -68,6 +68,26 @@ function arrayFindRight(a, fn) {
 function sum(arr) {
     return arr.reduce((a, b) => a + b);
 }
+function arrayNext(a, current, fn, wrap = true, forward = true) {
+    const len = a.length;
+    if (len <= 1)
+        return undefined;
+    const startIndex = a.indexOf(current);
+    if (startIndex < 0)
+        return undefined;
+    const dx = forward ? 1 : -1;
+    let startI = wrap ? (startIndex + dx) % len : startIndex + dx;
+    let endI = wrap ? startIndex : forward ? len : -1;
+    for (let index = startI; index !== endI; index = wrap ? (len + index + dx) % len : index + dx) {
+        const e = a[index];
+        if (fn(e))
+            return e;
+    }
+    return undefined;
+}
+function arrayPrev(a, current, fn, wrap = true) {
+    return arrayNext(a, current, fn, wrap, false);
+}
 
 // DIRS are organized clockwise
 // - first 4 are arrow directions
@@ -2123,9 +2143,11 @@ class Loop {
         }, 16);
     }
     _stopTicks() {
+        if (!this.intervalCount)
+            return; // too many calls to stop
         --this.intervalCount;
         if (this.intervalCount)
-            return;
+            return; // still have a loop running
         clearInterval(this.interval);
         this.interval = 0;
     }
@@ -5241,7 +5263,7 @@ class DataBuffer {
     blackOutRect(x, y, w, h, bg = 0) {
         if (typeof bg !== 'number')
             bg = from$2(bg);
-        return this.fillRect(x, y, w, h, 0, 0, bg);
+        return this.fillRect(x, y, w, h, 0, bg, bg);
     }
     highlight(x, y, color, strength) {
         if (typeof color !== 'number') {
@@ -6140,14 +6162,7 @@ class MessageCache {
     }
     get length() {
         let count = 0;
-        for (let i = 0; i < this.ARCHIVE_LINES; ++i) {
-            const n = (this.ARCHIVE_LINES - i + this.NEXT_WRITE_INDEX - 1) %
-                this.ARCHIVE_LINES;
-            const msg = this.ARCHIVE[n];
-            if (!msg)
-                return count;
-            ++count;
-        }
+        this.forEach(() => ++count);
         return count;
     }
 }
@@ -6745,4 +6760,4 @@ var index = /*#__PURE__*/Object.freeze({
     LightSystem: LightSystem
 });
 
-export { ERROR, FALSE, IDENTITY, IS_NONZERO, IS_ZERO, NOOP, ONE, TRUE, WARN, ZERO, arrayDelete, arrayFindRight, arraysIntersect, blob, index$2 as canvas, clamp, index$4 as color, colors, config$1 as config, data, events, first, flag, index$5 as fov, frequency, grid, io, index as light, list, loop, message, object, path, range, rng, scheduler, index$1 as sprite, sprites, sum, index$3 as text, types, xy };
+export { ERROR, FALSE, IDENTITY, IS_NONZERO, IS_ZERO, NOOP, ONE, TRUE, WARN, ZERO, arrayDelete, arrayFindRight, arrayNext, arrayPrev, arraysIntersect, blob, index$2 as canvas, clamp, index$4 as color, colors, config$1 as config, data, events, first, flag, index$5 as fov, frequency, grid, io, index as light, list, loop, message, object, path, range, rng, scheduler, index$1 as sprite, sprites, sum, index$3 as text, types, xy };

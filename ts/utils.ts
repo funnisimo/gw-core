@@ -76,3 +76,40 @@ export function arrayFindRight<T>(
 export function sum(arr: number[]) {
     return arr.reduce((a, b) => a + b);
 }
+
+export function arrayNext<T>(
+    a: T[],
+    current: T,
+    fn: (t: T) => boolean,
+    wrap = true,
+    forward = true
+): T | undefined {
+    const len = a.length;
+    if (len <= 1) return undefined;
+    const startIndex = a.indexOf(current);
+    if (startIndex < 0) return undefined;
+    const dx = forward ? 1 : -1;
+
+    let startI = wrap ? (startIndex + dx) % len : startIndex + dx;
+    let endI = wrap ? startIndex : forward ? len : -1;
+
+    for (
+        let index = startI;
+        index !== endI;
+        index = wrap ? (len + index + dx) % len : index + dx
+    ) {
+        const e = a[index];
+        if (fn(e)) return e;
+    }
+
+    return undefined;
+}
+
+export function arrayPrev<T>(
+    a: T[],
+    current: T,
+    fn: (t: T) => boolean,
+    wrap = true
+): T | undefined {
+    return arrayNext(a, current, fn, wrap, false);
+}

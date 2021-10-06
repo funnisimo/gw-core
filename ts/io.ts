@@ -253,8 +253,9 @@ export class Loop {
     }
 
     protected _stopTicks() {
+        if (!this.intervalCount) return; // too many calls to stop
         --this.intervalCount;
-        if (this.intervalCount) return;
+        if (this.intervalCount) return; // still have a loop running
         clearInterval(this.interval);
         this.interval = 0;
     }

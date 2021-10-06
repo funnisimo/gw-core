@@ -74,6 +74,26 @@
     function sum(arr) {
         return arr.reduce((a, b) => a + b);
     }
+    function arrayNext(a, current, fn, wrap = true, forward = true) {
+        const len = a.length;
+        if (len <= 1)
+            return undefined;
+        const startIndex = a.indexOf(current);
+        if (startIndex < 0)
+            return undefined;
+        const dx = forward ? 1 : -1;
+        let startI = wrap ? (startIndex + dx) % len : startIndex + dx;
+        let endI = wrap ? startIndex : forward ? len : -1;
+        for (let index = startI; index !== endI; index = wrap ? (len + index + dx) % len : index + dx) {
+            const e = a[index];
+            if (fn(e))
+                return e;
+        }
+        return undefined;
+    }
+    function arrayPrev(a, current, fn, wrap = true) {
+        return arrayNext(a, current, fn, wrap, false);
+    }
 
     // DIRS are organized clockwise
     // - first 4 are arrow directions
@@ -2129,9 +2149,11 @@
             }, 16);
         }
         _stopTicks() {
+            if (!this.intervalCount)
+                return; // too many calls to stop
             --this.intervalCount;
             if (this.intervalCount)
-                return;
+                return; // still have a loop running
             clearInterval(this.interval);
             this.interval = 0;
         }
@@ -5247,7 +5269,7 @@ void main() {
         blackOutRect(x, y, w, h, bg = 0) {
             if (typeof bg !== 'number')
                 bg = from$2(bg);
-            return this.fillRect(x, y, w, h, 0, 0, bg);
+            return this.fillRect(x, y, w, h, 0, bg, bg);
         }
         highlight(x, y, color, strength) {
             if (typeof color !== 'number') {
@@ -6146,14 +6168,7 @@ void main() {
         }
         get length() {
             let count = 0;
-            for (let i = 0; i < this.ARCHIVE_LINES; ++i) {
-                const n = (this.ARCHIVE_LINES - i + this.NEXT_WRITE_INDEX - 1) %
-                    this.ARCHIVE_LINES;
-                const msg = this.ARCHIVE[n];
-                if (!msg)
-                    return count;
-                ++count;
-            }
+            this.forEach(() => ++count);
             return count;
         }
     }
@@ -6763,6 +6778,8 @@ void main() {
     exports.ZERO = ZERO;
     exports.arrayDelete = arrayDelete;
     exports.arrayFindRight = arrayFindRight;
+    exports.arrayNext = arrayNext;
+    exports.arrayPrev = arrayPrev;
     exports.arraysIntersect = arraysIntersect;
     exports.blob = blob;
     exports.canvas = index$2;

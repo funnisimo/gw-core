@@ -63,8 +63,17 @@ describe('buffer', () => {
             b.drawSprite(1, 2, { ch: 'A', fg: 0xf00, bg: 0x0f0 });
             expect(b.get(1, 2)).toEqual({ glyph: 65, fg: 0xf00, bg: 0x0f0 });
 
+            b.fill('A', 0x321, 0x987);
+            expect(b.get(0, 0)).toEqual({ glyph: 65, fg: 0x321, bg: 0x987 });
+            expect(b.get(0, 7)).toEqual({ glyph: 65, fg: 0x321, bg: 0x987 });
+            expect(b.get(9, 7)).toEqual({ glyph: 65, fg: 0x321, bg: 0x987 });
+            expect(b.get(9, 0)).toEqual({ glyph: 65, fg: 0x321, bg: 0x987 });
+
             b.blackOut();
-            expect(b.get(1, 2)).toEqual({ glyph: 0, fg: 0, bg: 0 });
+            expect(b.get(0, 0)).toEqual({ glyph: 0, fg: 0, bg: 0 });
+            expect(b.get(0, 7)).toEqual({ glyph: 0, fg: 0, bg: 0 });
+            expect(b.get(9, 7)).toEqual({ glyph: 0, fg: 0, bg: 0 });
+            expect(b.get(9, 0)).toEqual({ glyph: 0, fg: 0, bg: 0 });
         });
 
         test('fill', () => {
@@ -73,6 +82,7 @@ describe('buffer', () => {
 
             b.fill('A', 0x321, 0x987);
             expect(b.get(1, 2)).toEqual({ glyph: 65, fg: 0x321, bg: 0x987 });
+            expect(b.get(9, 7)).toEqual({ glyph: 65, fg: 0x321, bg: 0x987 });
 
             b.fill();
             expect(b.get(1, 2)).toEqual({ glyph: 0, fg: 0xfff, bg: 0x000 });
@@ -231,8 +241,8 @@ describe('buffer', () => {
             b.blackOutRect(2, 2, 2, 2, 'green');
             expect(b.get(0, 0)).toEqual({ glyph: 65, fg: 0xf00, bg: 0x00f });
             expect(b.get(1, 1)).toEqual({ glyph: 0, fg: 0, bg: 0 });
-            expect(b.get(2, 2)).toEqual({ glyph: 0, fg: 0, bg: 0x0f0 });
-            expect(b.get(3, 3)).toEqual({ glyph: 0, fg: 0, bg: 0x0f0 });
+            expect(b.get(2, 2)).toEqual({ glyph: 0, fg: 0x0f0, bg: 0x0f0 });
+            expect(b.get(3, 3)).toEqual({ glyph: 0, fg: 0x0f0, bg: 0x0f0 });
         });
 
         test('highlight', () => {

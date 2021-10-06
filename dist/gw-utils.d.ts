@@ -25,6 +25,8 @@ declare function arraysIntersect(a: any[], b: any[]): boolean;
 declare function arrayDelete<T>(a: T[], b: T): boolean;
 declare function arrayFindRight<T>(a: T[], fn: (t: T) => boolean): T | undefined;
 declare function sum(arr: number[]): number;
+declare function arrayNext<T>(a: T[], current: T, fn: (t: T) => boolean, wrap?: boolean, forward?: boolean): T | undefined;
+declare function arrayPrev<T>(a: T[], current: T, fn: (t: T) => boolean, wrap?: boolean): T | undefined;
 
 declare type ColorData = [number, number, number] | [number, number, number, number, number, number, number] | [number, number, number, number, number, number, number, boolean];
 declare type ColorBase = string | number | ColorData | Color;
@@ -1883,4 +1885,4 @@ declare namespace index_d {
   };
 }
 
-export { ERROR, FALSE, IDENTITY, IS_NONZERO, IS_ZERO, NOOP, ONE, TRUE, WARN, ZERO, arrayDelete, arrayFindRight, arraysIntersect, blob_d as blob, index_d$3 as canvas, clamp, index_d$5 as color, colors, config$1 as config, data, events_d as events, first, flag_d as flag, index_d$4 as fov, frequency_d as frequency, grid_d as grid, io_d as io, index_d as light, list_d as list, loop, message_d as message, object_d as object, path_d as path, range_d as range, rng_d as rng, scheduler_d as scheduler, index_d$2 as sprite, sprites, sum, index_d$1 as text, types_d as types, xy_d as xy };
+export { ERROR, FALSE, IDENTITY, IS_NONZERO, IS_ZERO, NOOP, ONE, TRUE, WARN, ZERO, arrayDelete, arrayFindRight, arrayNext, arrayPrev, arraysIntersect, blob_d as blob, index_d$3 as canvas, clamp, index_d$5 as color, colors, config$1 as config, data, events_d as events, first, flag_d as flag, index_d$4 as fov, frequency_d as frequency, grid_d as grid, io_d as io, index_d as light, list_d as list, loop, message_d as message, object_d as object, path_d as path, range_d as range, rng_d as rng, scheduler_d as scheduler, index_d$2 as sprite, sprites, sum, index_d$1 as text, types_d as types, xy_d as xy };
