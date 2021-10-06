@@ -76,14 +76,26 @@ export class Bounds {
     get left() {
         return this.x;
     }
+    set left(v: number) {
+        this.x = v;
+    }
     get right() {
         return this.x + this.width - 1;
+    }
+    set right(v: number) {
+        this.x = v - this.width + 1;
     }
     get top() {
         return this.y;
     }
+    set top(v: number) {
+        this.y = v;
+    }
     get bottom() {
         return this.y + this.height - 1;
+    }
+    set bottom(v: number) {
+        this.y = v - this.height + 1;
     }
 
     clone(): Bounds {

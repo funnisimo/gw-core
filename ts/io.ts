@@ -229,6 +229,7 @@ export class Loop {
     protected LAST_CLICK: XY.XY = { x: -1, y: -1 };
     protected interval = 0;
     protected intervalCount = 0;
+    protected ended = false;
 
     constructor() {}
 
@@ -261,6 +262,8 @@ export class Loop {
     }
 
     pushEvent(ev: Event) {
+        if (this.ended) return;
+
         if (this.PAUSED) {
             console.log('PAUSED EVENT', ev.type);
         }
@@ -329,7 +332,7 @@ export class Loop {
         if (ms === undefined) {
             ms = -1; // wait forever
         }
-        if (ms == 0) return Promise.resolve(null);
+        if (ms == 0 || this.ended) return Promise.resolve(null);
 
         if (this.CURRENT_HANDLER) {
             throw new Error(
@@ -361,6 +364,8 @@ export class Loop {
     }
 
     async run(keymap: KeyMap, ms = -1) {
+        if (this.ended) return;
+
         this.running = true;
         this.clearEvents(); // ??? Should we do this?
         this._startTicks();
@@ -395,6 +400,14 @@ export class Loop {
             this.interval = 0;
         }
         this.CURRENT_HANDLER = null;
+    }
+
+    end() {
+        this.stop();
+        this.ended = true;
+    }
+    start() {
+        this.ended = false;
     }
 
     pauseEvents() {

@@ -156,14 +156,26 @@
         get left() {
             return this.x;
         }
+        set left(v) {
+            this.x = v;
+        }
         get right() {
             return this.x + this.width - 1;
+        }
+        set right(v) {
+            this.x = v - this.width + 1;
         }
         get top() {
             return this.y;
         }
+        set top(v) {
+            this.y = v;
+        }
         get bottom() {
             return this.y + this.height - 1;
+        }
+        set bottom(v) {
+            this.y = v - this.height + 1;
         }
         clone() {
             return new Bounds(this.x, this.y, this.width, this.height);
@@ -2129,6 +2141,7 @@
             this.LAST_CLICK = { x: -1, y: -1 };
             this.interval = 0;
             this.intervalCount = 0;
+            this.ended = false;
         }
         hasEvents() {
             return this.events.length;
@@ -2158,6 +2171,8 @@
             this.interval = 0;
         }
         pushEvent(ev) {
+            if (this.ended)
+                return;
             if (this.PAUSED) {
                 console.log('PAUSED EVENT', ev.type);
             }
@@ -2221,7 +2236,7 @@
             if (ms === undefined) {
                 ms = -1; // wait forever
             }
-            if (ms == 0)
+            if (ms == 0 || this.ended)
                 return Promise.resolve(null);
             if (this.CURRENT_HANDLER) {
                 throw new Error('OVERWRITE HANDLER -- Check for a missing await around Loop function calls.');
@@ -2249,6 +2264,8 @@
             return new Promise((resolve) => (done = resolve));
         }
         async run(keymap, ms = -1) {
+            if (this.ended)
+                return;
             this.running = true;
             this.clearEvents(); // ??? Should we do this?
             this._startTicks();
@@ -2279,6 +2296,13 @@
                 this.interval = 0;
             }
             this.CURRENT_HANDLER = null;
+        }
+        end() {
+            this.stop();
+            this.ended = true;
+        }
+        start() {
+            this.ended = false;
         }
         pauseEvents() {
             if (this.PAUSED)
@@ -4457,7 +4481,7 @@ void main() {
         defaultBg: null,
     };
     // const RE_RGB = /^[a-fA-F0-9]*$/;
-    // 
+    //
     // export function parseColor(color:string) {
     //   if (color.startsWith('#')) {
     //     color = color.substring(1);
@@ -4482,12 +4506,12 @@ void main() {
     //   return 0xFFF;
     // }
     var helpers = {
-        eachColor: (() => { }),
-        default: ((name, _, value) => {
+        eachColor: () => { },
+        default: (name, _, value) => {
             if (value !== undefined)
                 return `${value}.!!${name}!!`;
             return `!!${name}!!`;
-        }),
+        },
     };
     function addHelper(name, fn) {
         helpers[name] = fn;

@@ -215,9 +215,13 @@ declare class Bounds {
     height: number;
     constructor(x: number, y: number, w: number, h: number);
     get left(): number;
+    set left(v: number);
     get right(): number;
+    set right(v: number);
     get top(): number;
+    set top(v: number);
     get bottom(): number;
+    set bottom(v: number);
     clone(): Bounds;
     contains(x: number, y: number): boolean;
     contains(loc: Loc$1 | XY): boolean;
@@ -780,6 +784,7 @@ declare class Loop {
     protected LAST_CLICK: XY;
     protected interval: number;
     protected intervalCount: number;
+    protected ended: boolean;
     constructor();
     hasEvents(): number;
     clearEvents(): void;
@@ -789,6 +794,8 @@ declare class Loop {
     nextEvent(ms?: number, match?: EventMatchFn): Promise<Event$1 | null>;
     run(keymap: KeyMap, ms?: number): Promise<void>;
     stop(): void;
+    end(): void;
+    start(): void;
     pauseEvents(): void;
     resumeEvents(): void;
     tickMs(ms?: number): Promise<unknown>;
