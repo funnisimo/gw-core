@@ -5286,8 +5286,8 @@ class DataBuffer {
             height = 1;
         const endX = width ? width + x : this.width;
         const endY = height ? height + y : this.height;
-        for (let i = 0; i < endX; ++i) {
-            for (let j = 0; j < endY; ++j) {
+        for (let i = x; i < endX; ++i) {
+            for (let j = y; j < endY; ++j) {
                 const data = this.get(i, j);
                 mixer.drawSprite(data);
                 mixer.fg.mix(color, percent);
