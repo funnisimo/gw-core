@@ -2428,7 +2428,7 @@ var FovFlags;
     FovFlags[FovFlags["PLAYER"] = FovFlags.IN_FOV] = "PLAYER";
     FovFlags[FovFlags["CLAIRVOYANT"] = FovFlags.CLAIRVOYANT_VISIBLE] = "CLAIRVOYANT";
     FovFlags[FovFlags["TELEPATHIC"] = FovFlags.TELEPATHIC_VISIBLE] = "TELEPATHIC";
-    FovFlags[FovFlags["VIEWPORT_TYPES"] = FovFlags.PLAYER |
+    FovFlags[FovFlags["VIEWPORT_TYPES"] = FovFlags.PLAYER | FovFlags.VISIBLE |
         FovFlags.CLAIRVOYANT |
         FovFlags.TELEPATHIC |
         FovFlags.ITEM_DETECTED |
@@ -2534,6 +2534,8 @@ class FOV {
 // import * as GWU from 'gw-utils';
 class FovSystem {
     constructor(site, opts = {}) {
+        // needsUpdate: boolean;
+        // protected _changed: boolean;
         this.onFovChange = { onFovChange: NOOP };
         this.follow = null;
         this.site = site;
@@ -2544,8 +2546,8 @@ class FovSystem {
         if (visible)
             flag |= FovFlags.VISIBLE;
         this.flags = make$7(site.width, site.height, flag);
-        this.needsUpdate = true;
-        this._changed = true;
+        // this.needsUpdate = true;
+        // this._changed = true;
         if (typeof opts.onFovChange === 'function') {
             this.onFovChange.onFovChange = opts.onFovChange;
         }
@@ -2553,11 +2555,11 @@ class FovSystem {
             this.onFovChange = opts.onFovChange;
         }
         this.fov = new FOV({
-            isBlocked(x, y) {
-                return site.blocksVision(x, y);
+            isBlocked: (x, y) => {
+                return this.site.blocksVision(x, y);
             },
-            hasXY(x, y) {
-                return x >= 0 && y >= 0 && x < site.width && y < site.height;
+            hasXY: (x, y) => {
+                return x >= 0 && y >= 0 && x < this.site.width && y < this.site.height;
             },
         });
         if (opts.alwaysVisible) {
@@ -2575,6 +2577,12 @@ class FovSystem {
     }
     isAnyKindOfVisible(x, y) {
         return !!((this.flags.get(x, y) || 0) & FovFlags.ANY_KIND_OF_VISIBLE);
+    }
+    isClairvoyantVisible(x, y) {
+        return !!((this.flags.get(x, y) || 0) & FovFlags.CLAIRVOYANT_VISIBLE);
+    }
+    isTelepathicVisible(x, y) {
+        return !!((this.flags.get(x, y) || 0) & FovFlags.TELEPATHIC_VISIBLE);
     }
     isInFov(x, y) {
         return !!((this.flags.get(x, y) || 0) & FovFlags.IN_FOV);
@@ -2595,28 +2603,31 @@ class FovSystem {
         const wasVisible = !!(flags & FovFlags.WAS_ANY_KIND_OF_VISIBLE);
         return isVisible !== wasVisible;
     }
+    wasAnyKindOfVisible(x, y) {
+        return !!((this.flags.get(x, y) || 0) & FovFlags.WAS_ANY_KIND_OF_VISIBLE);
+    }
     makeAlwaysVisible() {
         this.flags.update((v) => v |
             (FovFlags.ALWAYS_VISIBLE | FovFlags.REVEALED | FovFlags.VISIBLE));
         // TODO - onFovChange?
-        this.changed = true;
+        // this.changed = true;
     }
     makeCellAlwaysVisible(x, y) {
         this.flags[x][y] |= FovFlags.ALWAYS_VISIBLE | FovFlags.REVEALED | FovFlags.VISIBLE;
         // TODO - onFovChange?
-        this.changed = true;
+        // this.changed = true;
     }
     revealAll(makeVisibleToo = true) {
         const flag = FovFlags.REVEALED | (makeVisibleToo ? FovFlags.VISIBLE : 0);
         this.flags.update((v) => v | flag);
         // TODO - onFovChange?
-        this.changed = true;
+        // this.changed = true;
     }
     revealCell(x, y, makeVisibleToo = true) {
         const flag = FovFlags.REVEALED | (makeVisibleToo ? FovFlags.VISIBLE : 0);
         this.flags[x][y] |= flag;
         // TODO - onFovChange?
-        this.changed = true;
+        // this.changed = true;
     }
     hideCell(x, y) {
         this.flags[x][y] &= ~(FovFlags.MAGIC_MAPPED |
@@ -2624,30 +2635,30 @@ class FovSystem {
             FovFlags.ALWAYS_VISIBLE);
         this.flags[x][y] = this.demoteCellVisibility(this.flags[x][y]); // clears visible, etc...
         // TODO - onFovChange?
-        this.changed = true;
+        // this.changed = true;
     }
     magicMapCell(x, y) {
         this.flags[x][y] |= FovFlags.MAGIC_MAPPED;
-        this.changed = true;
+        // this.changed = true;
         // TODO - onFovChange?
     }
     reset() {
         this.flags.fill(0);
-        this.changed = true;
+        // this.changed = true;
         // TODO - onFovChange?
     }
-    get changed() {
-        return this._changed;
-    }
-    set changed(v) {
-        this._changed = v;
-        this.needsUpdate = this.needsUpdate || v;
-    }
+    // get changed(): boolean {
+    //     return this._changed;
+    // }
+    // set changed(v: boolean) {
+    //     this._changed = v;
+    //     this.needsUpdate = this.needsUpdate || v;
+    // }
     // CURSOR
-    setCursor(x, y, keep = false) {
-        if (!keep) {
-            this.flags.update((f) => f & ~FovFlags.IS_CURSOR);
-        }
+    setCursor(x, y) {
+        // if (!keep) {
+        //     this.flags.update((f) => f & ~FovFlags.IS_CURSOR);
+        // }
         this.flags[x][y] |= FovFlags.IS_CURSOR;
     }
     clearCursor(x, y) {
@@ -2662,10 +2673,10 @@ class FovSystem {
         return !!(this.flags[x][y] & FovFlags.IS_CURSOR);
     }
     // HIGHLIGHT
-    setHighlight(x, y, keep = false) {
-        if (!keep) {
-            this.flags.update((f) => f & ~FovFlags.IS_HIGHLIGHTED);
-        }
+    setHighlight(x, y) {
+        // if (!keep) {
+        //     this.flags.update((f) => f & ~FovFlags.IS_HIGHLIGHTED);
+        // }
         this.flags[x][y] |= FovFlags.IS_HIGHLIGHTED;
     }
     clearHighlight(x, y) {
@@ -2680,11 +2691,15 @@ class FovSystem {
         return !!(this.flags[x][y] & FovFlags.IS_HIGHLIGHTED);
     }
     // COPY
-    copy(other) {
-        this.flags.copy(other.flags);
-        this.needsUpdate = other.needsUpdate;
-        this._changed = other._changed;
-    }
+    // copy(other: FovSystem) {
+    //     this.site = other.site;
+    //     this.flags.copy(other.flags);
+    //     this.fov = other.fov;
+    //     this.follow = other.follow; 
+    //     this.onFovChange = other.onFovChange;
+    //     // this.needsUpdate = other.needsUpdate;
+    //     // this._changed = other._changed;
+    // }
     //////////////////////////
     // UPDATE
     demoteCellVisibility(flag) {
@@ -2753,7 +2768,7 @@ class FovSystem {
         }
         return isTele;
     }
-    updateCellDetect(flag, x, y) {
+    updateActorDetect(flag, x, y) {
         const isMonst = !!(flag & FovFlags.ACTOR_DETECTED);
         const wasMonst = !!(flag & FovFlags.WAS_ACTOR_DETECTED);
         if (isMonst && wasMonst) ;
@@ -2766,6 +2781,20 @@ class FovSystem {
             this.onFovChange.onFovChange(x, y, isMonst);
         }
         return isMonst;
+    }
+    updateItemDetect(flag, x, y) {
+        const isItem = !!(flag & FovFlags.ITEM_DETECTED);
+        const wasItem = !!(flag & FovFlags.WAS_ITEM_DETECTED);
+        if (isItem && wasItem) ;
+        else if (!isItem && wasItem) {
+            // ceased being detected visible
+            this.onFovChange.onFovChange(x, y, isItem);
+        }
+        else if (!wasItem && isItem) {
+            // became detected visible
+            this.onFovChange.onFovChange(x, y, isItem);
+        }
+        return isItem;
     }
     promoteCellVisibility(flag, x, y) {
         if (flag & FovFlags.IN_FOV &&
@@ -2780,32 +2809,39 @@ class FovSystem {
             return;
         if (this.updateCellTelepathy(flag, x, y))
             return;
-        if (this.updateCellDetect(flag, x, y))
+        if (this.updateActorDetect(flag, x, y))
+            return;
+        if (this.updateItemDetect(flag, x, y))
             return;
     }
     updateFor(subject) {
         return this.update(subject.x, subject.y, subject.visionDistance);
     }
     update(cx, cy, cr) {
-        // if (!this.site.usesFov()) return false;
-        if (arguments.length == 0 && this.follow) {
-            return this.updateFor(this.follow);
+        if (cx === undefined) {
+            if (this.follow) {
+                return this.updateFor(this.follow);
+            }
         }
-        if (!this.needsUpdate &&
-            cx === undefined &&
-            !this.site.lightingChanged()) {
-            return false;
-        }
+        // if (
+        //     // !this.needsUpdate &&
+        //     cx === undefined &&
+        //     !this.site.lightingChanged()
+        // ) {
+        //     return false;
+        // }
         if (cr === undefined) {
             cr = this.site.width + this.site.height;
         }
-        this.needsUpdate = false;
-        this._changed = false;
+        // this.needsUpdate = false;
+        // this._changed = false;
         this.flags.update(this.demoteCellVisibility.bind(this));
         this.site.eachViewport((x, y, radius, type) => {
-            const flag = type & FovFlags.VIEWPORT_TYPES;
+            let flag = (type & FovFlags.VIEWPORT_TYPES);
             if (!flag)
-                throw new Error('Received invalid viewport type: ' + type);
+                flag = FovFlags.VISIBLE;
+            // if (!flag)
+            //     throw new Error('Received invalid viewport type: ' + Flag.toString(FovFlags, type));
             if (radius == 0) {
                 this.flags[x][y] |= flag;
                 return;

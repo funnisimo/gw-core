@@ -10,6 +10,7 @@ import * as TYPES from './types';
 import { NOOP } from '../utils';
 import * as XY from '../xy';
 import { FovSubject } from '.';
+// import * as Flag from '../flag';
 
 export type FovChangeFn = (x: number, y: number, isVisible: boolean) => void;
 export interface FovNotice {
@@ -27,8 +28,8 @@ export class FovSystem implements TYPES.FovTracker {
     site: TYPES.FovSite;
     flags: Grid.NumGrid; // FovFlags
     fov: FOV.FOV;
-    needsUpdate: boolean;
-    protected _changed: boolean;
+    // needsUpdate: boolean;
+    // protected _changed: boolean;
     onFovChange: FovNotice = { onFovChange: NOOP };
     follow: FovSubject | null = null;
 
@@ -42,8 +43,8 @@ export class FovSystem implements TYPES.FovTracker {
         if (visible) flag |= FovFlags.VISIBLE;
 
         this.flags = Grid.make(site.width, site.height, flag);
-        this.needsUpdate = true;
-        this._changed = true;
+        // this.needsUpdate = true;
+        // this._changed = true;
         if (typeof opts.onFovChange === 'function') {
             this.onFovChange.onFovChange = opts.onFovChange;
         } else if (opts.onFovChange) {
@@ -51,11 +52,11 @@ export class FovSystem implements TYPES.FovTracker {
         }
 
         this.fov = new FOV.FOV({
-            isBlocked(x: number, y: number): boolean {
-                return site.blocksVision(x, y);
+            isBlocked: (x: number, y: number): boolean => {
+                return this.site.blocksVision(x, y);
             },
-            hasXY(x: number, y: number): boolean {
-                return x >= 0 && y >= 0 && x < site.width && y < site.height;
+            hasXY: (x: number, y: number): boolean => {
+                return x >= 0 && y >= 0 && x < this.site.width && y < this.site.height;
             },
         });
 
@@ -80,6 +81,12 @@ export class FovSystem implements TYPES.FovTracker {
     isAnyKindOfVisible(x: number, y: number): boolean {
         return !!((this.flags.get(x, y) || 0) & FovFlags.ANY_KIND_OF_VISIBLE);
     }
+    isClairvoyantVisible(x: number, y: number): boolean {
+        return !!((this.flags.get(x, y) || 0) & FovFlags.CLAIRVOYANT_VISIBLE);
+    }
+    isTelepathicVisible(x: number, y: number): boolean {
+        return !!((this.flags.get(x, y) || 0) & FovFlags.TELEPATHIC_VISIBLE);
+    }
     isInFov(x: number, y: number): boolean {
         return !!((this.flags.get(x, y) || 0) & FovFlags.IN_FOV);
     }
@@ -99,6 +106,9 @@ export class FovSystem implements TYPES.FovTracker {
         const wasVisible = !!(flags & FovFlags.WAS_ANY_KIND_OF_VISIBLE);
         return isVisible !== wasVisible;
     }
+    wasAnyKindOfVisible(x: number, y: number): boolean {
+        return !!((this.flags.get(x, y) || 0) & FovFlags.WAS_ANY_KIND_OF_VISIBLE);
+    }
 
     makeAlwaysVisible() {
         this.flags.update(
@@ -107,12 +117,12 @@ export class FovSystem implements TYPES.FovTracker {
                 (FovFlags.ALWAYS_VISIBLE | FovFlags.REVEALED | FovFlags.VISIBLE)
         );
         // TODO - onFovChange?
-        this.changed = true;
+        // this.changed = true;
     }
     makeCellAlwaysVisible(x: number, y: number) {
         this.flags[x][y] |= FovFlags.ALWAYS_VISIBLE | FovFlags.REVEALED | FovFlags.VISIBLE;
         // TODO - onFovChange?
-        this.changed = true;
+        // this.changed = true;
     }
 
     revealAll(makeVisibleToo = true): void {
@@ -120,13 +130,13 @@ export class FovSystem implements TYPES.FovTracker {
             FovFlags.REVEALED | (makeVisibleToo ? FovFlags.VISIBLE : 0);
         this.flags.update((v) => v | flag);
         // TODO - onFovChange?
-        this.changed = true;
+        // this.changed = true;
     }
     revealCell(x: number, y: number, makeVisibleToo=true) {
         const flag = FovFlags.REVEALED | (makeVisibleToo ? FovFlags.VISIBLE : 0);
         this.flags[x][y] |= flag;
         // TODO - onFovChange?
-        this.changed = true;
+        // this.changed = true;
     }
     hideCell(x: number, y: number): void {
         this.flags[x][y] &= ~(
@@ -136,33 +146,33 @@ export class FovSystem implements TYPES.FovTracker {
         );
         this.flags[x][y] = this.demoteCellVisibility(this.flags[x][y]); // clears visible, etc...
         // TODO - onFovChange?
-        this.changed = true;
+        // this.changed = true;
     }
     magicMapCell(x: number, y: number): void {
         this.flags[x][y] |= FovFlags.MAGIC_MAPPED;
-        this.changed = true;
+        // this.changed = true;
         // TODO - onFovChange?
     }
     reset() {
         this.flags.fill(0);
-        this.changed = true;
+        // this.changed = true;
         // TODO - onFovChange?
     }
 
-    get changed(): boolean {
-        return this._changed;
-    }
-    set changed(v: boolean) {
-        this._changed = v;
-        this.needsUpdate = this.needsUpdate || v;
-    }
+    // get changed(): boolean {
+    //     return this._changed;
+    // }
+    // set changed(v: boolean) {
+    //     this._changed = v;
+    //     this.needsUpdate = this.needsUpdate || v;
+    // }
 
     // CURSOR
 
-    setCursor(x: number, y: number, keep = false) {
-        if (!keep) {
-            this.flags.update((f) => f & ~FovFlags.IS_CURSOR);
-        }
+    setCursor(x: number, y: number) {
+        // if (!keep) {
+        //     this.flags.update((f) => f & ~FovFlags.IS_CURSOR);
+        // }
         this.flags[x][y] |= FovFlags.IS_CURSOR;
     }
     clearCursor(x?: number, y?: number) {
@@ -178,10 +188,10 @@ export class FovSystem implements TYPES.FovTracker {
 
     // HIGHLIGHT
 
-    setHighlight(x: number, y: number, keep = false) {
-        if (!keep) {
-            this.flags.update((f) => f & ~FovFlags.IS_HIGHLIGHTED);
-        }
+    setHighlight(x: number, y: number) {
+        // if (!keep) {
+        //     this.flags.update((f) => f & ~FovFlags.IS_HIGHLIGHTED);
+        // }
         this.flags[x][y] |= FovFlags.IS_HIGHLIGHTED;
     }
     clearHighlight(x?: number, y?: number) {
@@ -197,11 +207,15 @@ export class FovSystem implements TYPES.FovTracker {
 
     // COPY
 
-    copy(other: FovSystem) {
-        this.flags.copy(other.flags);
-        this.needsUpdate = other.needsUpdate;
-        this._changed = other._changed;
-    }
+    // copy(other: FovSystem) {
+    //     this.site = other.site;
+    //     this.flags.copy(other.flags);
+    //     this.fov = other.fov;
+    //     this.follow = other.follow; 
+    //     this.onFovChange = other.onFovChange;
+    //     // this.needsUpdate = other.needsUpdate;
+    //     // this._changed = other._changed;
+    // }
 
     //////////////////////////
     // UPDATE
@@ -296,7 +310,7 @@ export class FovSystem implements TYPES.FovTracker {
         return isTele;
     }
 
-    protected updateCellDetect(flag: number, x: number, y: number): boolean {
+    protected updateActorDetect(flag: number, x: number, y: number): boolean {
         const isMonst = !!(flag & FovFlags.ACTOR_DETECTED);
         const wasMonst = !!(flag & FovFlags.WAS_ACTOR_DETECTED);
 
@@ -314,6 +328,24 @@ export class FovSystem implements TYPES.FovTracker {
         return isMonst;
     }
 
+    protected updateItemDetect(flag: number, x: number, y: number): boolean {
+        const isItem = !!(flag & FovFlags.ITEM_DETECTED);
+        const wasItem = !!(flag & FovFlags.WAS_ITEM_DETECTED);
+
+        if (isItem && wasItem) {
+            // if (this.site.lightChanged(x, y)) {
+            //     this.site.redrawCell(x, y);
+            // }
+        } else if (!isItem && wasItem) {
+            // ceased being detected visible
+            this.onFovChange.onFovChange(x, y, isItem);
+        } else if (!wasItem && isItem) {
+            // became detected visible
+            this.onFovChange.onFovChange(x, y, isItem);
+        }
+        return isItem;
+    }
+
     protected promoteCellVisibility(flag: number, x: number, y: number) {
         if (
             flag & FovFlags.IN_FOV &&
@@ -326,7 +358,8 @@ export class FovSystem implements TYPES.FovTracker {
         if (this.updateCellVisibility(flag, x, y)) return;
         if (this.updateCellClairyvoyance(flag, x, y)) return;
         if (this.updateCellTelepathy(flag, x, y)) return;
-        if (this.updateCellDetect(flag, x, y)) return;
+        if (this.updateActorDetect(flag, x, y)) return;
+        if (this.updateItemDetect(flag, x, y)) return;
     }
 
     updateFor(subject: FovSubject): boolean {
@@ -334,34 +367,34 @@ export class FovSystem implements TYPES.FovTracker {
     }
 
     update(): boolean;
-    update(x: number, y: number, r?: number): boolean;
-    update(cx?: number, cy?: number, cr?: number): boolean {
-        // if (!this.site.usesFov()) return false;
+    update(cx: number, cy: number, cr?:number): boolean;
+    update(cx?: number, cy?: number, cr?:number): boolean {
 
-        if (arguments.length == 0 && this.follow) {
-            return this.updateFor(this.follow);
+        if (cx === undefined) {
+            if (this.follow) {return this.updateFor(this.follow);}
         }
 
-        if (
-            !this.needsUpdate &&
-            cx === undefined &&
-            !this.site.lightingChanged()
-        ) {
-            return false;
-        }
+        // if (
+        //     // !this.needsUpdate &&
+        //     cx === undefined &&
+        //     !this.site.lightingChanged()
+        // ) {
+        //     return false;
+        // }
 
         if (cr === undefined) {
             cr = this.site.width + this.site.height;
         }
 
-        this.needsUpdate = false;
-        this._changed = false;
+        // this.needsUpdate = false;
+        // this._changed = false;
         this.flags.update(this.demoteCellVisibility.bind(this));
 
         this.site.eachViewport((x, y, radius, type) => {
-            const flag = type & FovFlags.VIEWPORT_TYPES;
-            if (!flag)
-                throw new Error('Received invalid viewport type: ' + type);
+            let flag = (type & FovFlags.VIEWPORT_TYPES);
+            if (!flag) flag = FovFlags.VISIBLE;
+            // if (!flag)
+            //     throw new Error('Received invalid viewport type: ' + Flag.toString(FovFlags, type));
 
             if (radius == 0) {
                 this.flags[x][y] |= flag;
