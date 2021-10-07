@@ -8,8 +8,8 @@ export interface Event {
     metaKey: boolean;
 
     type: string;
-    key: string | null;
-    code: string | null;
+    key: string;
+    code: string;
     x: number;
     y: number;
     clientX: number;
@@ -18,20 +18,25 @@ export interface Event {
     dt: number;
 }
 
-export type CommandFn = (
+// export type CommandFn = (
+//     event: Event
+// ) => boolean | void | Promise<boolean | void>;
+// export var commands: Record<string, CommandFn> = {};
+
+// export function addCommand(id: string, fn: CommandFn) {
+//     commands[id] = fn;
+// }
+
+export type ControlFn = () => void | Promise<void>;
+
+export type EventFn = (
     event: Event
 ) => boolean | void | Promise<boolean | void>;
-export type ControlFn = () => any | Promise<any>;
-export var commands: Record<string, CommandFn> = {};
 
-export function addCommand(id: string, fn: CommandFn) {
-    commands[id] = fn;
-}
-
-export type KeyMap = Record<string, ControlFn | CommandFn | boolean>;
+export type IOMap = Record<string, EventFn | ControlFn>;
 export type EventMatchFn = (event: Event) => boolean;
 
-let KEYMAP: KeyMap = {};
+let IOMAP: IOMap = {};
 
 const DEAD_EVENTS: Event[] = [];
 
@@ -55,45 +60,51 @@ const CONTROL_CODES = [
 
 type EventHandler = (event: Event) => void;
 
-export function setKeymap(keymap: KeyMap) {
-    KEYMAP = keymap;
+export function setKeymap(keymap: IOMap) {
+    IOMAP = keymap;
 }
 
-export async function dispatchEvent(ev: Event, km?: KeyMap | CommandFn) {
-    let result;
-    let command;
+export function handlerFor(ev: Event, km: IOMap): EventFn | ControlFn | null {
+    let c;
+    if (ev.dir) {
+        c = km.dir || km.keypress;
+    } else if (ev.type === KEYPRESS) {
+        c = km[ev.key] || km[ev.code] || km.keypress;
+    } else if (km[ev.type]) {
+        c = km[ev.type];
+    }
+    if (!c) {
+        c = km.dispatch;
+    }
+    return c || null;
+}
 
-    km = km || KEYMAP;
+export async function dispatchEvent(ev: Event, km?: IOMap) {
+    let result;
+
+    km = km || IOMAP;
 
     if (ev.type === STOP) {
         recycleEvent(ev);
         return true; // Should stop loops, etc...
     }
 
-    if (typeof km === 'function') {
-        command = km;
-    } else if (ev.dir) {
-        command = km.dir;
-    } else if (ev.type === KEYPRESS) {
-        // @ts-ignore
-        command = km[ev.key] || km[ev.code] || km.keypress;
-    } else if (km[ev.type]) {
-        command = km[ev.type];
+    const handler = handlerFor(ev, km);
+
+    if (handler) {
+        // if (typeof c === 'function') {
+        result = await handler.call(km, ev);
+        // } else if (commands[c]) {
+        //     result = await commands[c](ev);
+        // } else {
+        //     Utils.WARN('No command found: ' + c);
+        // }
     }
 
-    if (command) {
-        if (typeof command === 'function') {
-            result = await command.call(km, ev);
-        } else if (commands[command]) {
-            result = await commands[command](ev);
-        } else {
-            Utils.WARN('No command found: ' + command);
-        }
-    }
-
-    if ('next' in km && km.next === false) {
-        result = false;
-    }
+    // TODO - what is this here for?
+    // if ('next' in km && km.next === false) {
+    //     result = false;
+    // }
 
     recycleEvent(ev);
     return result;
@@ -122,8 +133,8 @@ export function makeTickEvent(dt: number) {
     ev.metaKey = false;
 
     ev.type = TICK;
-    ev.key = null;
-    ev.code = null;
+    ev.key = '';
+    ev.code = '';
     ev.x = -1;
     ev.y = -1;
     ev.dir = null;
@@ -207,8 +218,8 @@ export function makeMouseEvent(e: MouseEvent, x: number, y: number) {
     if (e.buttons && e.type !== 'mouseup') {
         ev.type = CLICK;
     }
-    ev.key = null;
-    ev.code = null;
+    ev.key = '';
+    ev.code = '';
     ev.x = x;
     ev.y = y;
     ev.clientX = e.clientX;
@@ -363,7 +374,7 @@ export class Loop {
         return new Promise((resolve) => (done = resolve));
     }
 
-    async run(keymap: KeyMap, ms = -1) {
+    async run(keymap: IOMap, ms = -1) {
         if (this.ended) return;
 
         this.running = true;

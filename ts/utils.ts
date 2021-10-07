@@ -90,7 +90,7 @@ export function arrayNext<T>(
     if (startIndex < 0) return undefined;
     const dx = forward ? 1 : -1;
 
-    let startI = wrap ? (startIndex + dx) % len : startIndex + dx;
+    let startI = wrap ? (len + startIndex + dx) % len : startIndex + dx;
     let endI = wrap ? startIndex : forward ? len : -1;
 
     for (

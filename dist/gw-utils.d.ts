@@ -745,8 +745,8 @@ interface Event$1 {
     altKey: boolean;
     metaKey: boolean;
     type: string;
-    key: string | null;
-    code: string | null;
+    key: string;
+    code: string;
     x: number;
     y: number;
     clientX: number;
@@ -754,11 +754,9 @@ interface Event$1 {
     dir: Loc$1 | null;
     dt: number;
 }
-declare type CommandFn = (event: Event$1) => boolean | void | Promise<boolean | void>;
-declare type ControlFn = () => any | Promise<any>;
-declare var commands: Record<string, CommandFn>;
-declare function addCommand(id: string, fn: CommandFn): void;
-declare type KeyMap = Record<string, ControlFn | CommandFn | boolean>;
+declare type ControlFn = () => void | Promise<void>;
+declare type EventFn$2 = (event: Event$1) => boolean | void | Promise<boolean | void>;
+declare type IOMap = Record<string, EventFn$2 | ControlFn>;
 declare type EventMatchFn = (event: Event$1) => boolean;
 declare const KEYPRESS = "keypress";
 declare const MOUSEMOVE = "mousemove";
@@ -767,8 +765,9 @@ declare const TICK = "tick";
 declare const MOUSEUP = "mouseup";
 declare const STOP = "stop";
 declare type EventHandler = (event: Event$1) => void;
-declare function setKeymap(keymap: KeyMap): void;
-declare function dispatchEvent(ev: Event$1, km?: KeyMap | CommandFn): Promise<any>;
+declare function setKeymap(keymap: IOMap): void;
+declare function handlerFor(ev: Event$1, km: IOMap): EventFn$2 | ControlFn | null;
+declare function dispatchEvent(ev: Event$1, km?: IOMap): Promise<boolean | void>;
 declare function makeStopEvent(): Event$1;
 declare function makeTickEvent(dt: number): Event$1;
 declare function makeKeyEvent(e: KeyboardEvent): Event$1;
@@ -792,7 +791,7 @@ declare class Loop {
     protected _stopTicks(): void;
     pushEvent(ev: Event$1): void;
     nextEvent(ms?: number, match?: EventMatchFn): Promise<Event$1 | null>;
-    run(keymap: KeyMap, ms?: number): Promise<void>;
+    run(keymap: IOMap, ms?: number): Promise<void>;
     stop(): void;
     end(): void;
     start(): void;
@@ -808,11 +807,8 @@ declare class Loop {
 declare function make$5(): Loop;
 declare const loop: Loop;
 
-type io_d_CommandFn = CommandFn;
 type io_d_ControlFn = ControlFn;
-declare const io_d_commands: typeof commands;
-declare const io_d_addCommand: typeof addCommand;
-type io_d_KeyMap = KeyMap;
+type io_d_IOMap = IOMap;
 type io_d_EventMatchFn = EventMatchFn;
 declare const io_d_KEYPRESS: typeof KEYPRESS;
 declare const io_d_MOUSEMOVE: typeof MOUSEMOVE;
@@ -821,6 +817,7 @@ declare const io_d_TICK: typeof TICK;
 declare const io_d_MOUSEUP: typeof MOUSEUP;
 declare const io_d_STOP: typeof STOP;
 declare const io_d_setKeymap: typeof setKeymap;
+declare const io_d_handlerFor: typeof handlerFor;
 declare const io_d_dispatchEvent: typeof dispatchEvent;
 declare const io_d_makeStopEvent: typeof makeStopEvent;
 declare const io_d_makeTickEvent: typeof makeTickEvent;
@@ -834,11 +831,9 @@ declare const io_d_loop: typeof loop;
 declare namespace io_d {
   export {
     Event$1 as Event,
-    io_d_CommandFn as CommandFn,
     io_d_ControlFn as ControlFn,
-    io_d_commands as commands,
-    io_d_addCommand as addCommand,
-    io_d_KeyMap as KeyMap,
+    EventFn$2 as EventFn,
+    io_d_IOMap as IOMap,
     io_d_EventMatchFn as EventMatchFn,
     io_d_KEYPRESS as KEYPRESS,
     io_d_MOUSEMOVE as MOUSEMOVE,
@@ -847,6 +842,7 @@ declare namespace io_d {
     io_d_MOUSEUP as MOUSEUP,
     io_d_STOP as STOP,
     io_d_setKeymap as setKeymap,
+    io_d_handlerFor as handlerFor,
     io_d_dispatchEvent as dispatchEvent,
     io_d_makeStopEvent as makeStopEvent,
     io_d_makeTickEvent as makeTickEvent,

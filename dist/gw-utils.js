@@ -82,7 +82,7 @@
         if (startIndex < 0)
             return undefined;
         const dx = forward ? 1 : -1;
-        let startI = wrap ? (startIndex + dx) % len : startIndex + dx;
+        let startI = wrap ? (len + startIndex + dx) % len : startIndex + dx;
         let endI = wrap ? startIndex : forward ? len : -1;
         for (let index = startI; index !== endI; index = wrap ? (len + index + dx) % len : index + dx) {
             const e = a[index];
@@ -1968,11 +1968,7 @@
         unite: unite
     });
 
-    var commands = {};
-    function addCommand(id, fn) {
-        commands[id] = fn;
-    }
-    let KEYMAP = {};
+    let IOMAP = {};
     const DEAD_EVENTS = [];
     const KEYPRESS = 'keypress';
     const MOUSEMOVE = 'mousemove';
@@ -1991,43 +1987,45 @@
         'MetaRight',
     ];
     function setKeymap(keymap) {
-        KEYMAP = keymap;
+        IOMAP = keymap;
+    }
+    function handlerFor(ev, km) {
+        let c;
+        if (ev.dir) {
+            c = km.dir || km.keypress;
+        }
+        else if (ev.type === KEYPRESS) {
+            c = km[ev.key] || km[ev.code] || km.keypress;
+        }
+        else if (km[ev.type]) {
+            c = km[ev.type];
+        }
+        if (!c) {
+            c = km.dispatch;
+        }
+        return c || null;
     }
     async function dispatchEvent(ev, km) {
         let result;
-        let command;
-        km = km || KEYMAP;
+        km = km || IOMAP;
         if (ev.type === STOP) {
             recycleEvent(ev);
             return true; // Should stop loops, etc...
         }
-        if (typeof km === 'function') {
-            command = km;
+        const handler = handlerFor(ev, km);
+        if (handler) {
+            // if (typeof c === 'function') {
+            result = await handler.call(km, ev);
+            // } else if (commands[c]) {
+            //     result = await commands[c](ev);
+            // } else {
+            //     Utils.WARN('No command found: ' + c);
+            // }
         }
-        else if (ev.dir) {
-            command = km.dir;
-        }
-        else if (ev.type === KEYPRESS) {
-            // @ts-ignore
-            command = km[ev.key] || km[ev.code] || km.keypress;
-        }
-        else if (km[ev.type]) {
-            command = km[ev.type];
-        }
-        if (command) {
-            if (typeof command === 'function') {
-                result = await command.call(km, ev);
-            }
-            else if (commands[command]) {
-                result = await commands[command](ev);
-            }
-            else {
-                WARN('No command found: ' + command);
-            }
-        }
-        if ('next' in km && km.next === false) {
-            result = false;
-        }
+        // TODO - what is this here for?
+        // if ('next' in km && km.next === false) {
+        //     result = false;
+        // }
         recycleEvent(ev);
         return result;
     }
@@ -2048,8 +2046,8 @@
         ev.altKey = false;
         ev.metaKey = false;
         ev.type = TICK;
-        ev.key = null;
-        ev.code = null;
+        ev.key = '';
+        ev.code = '';
         ev.x = -1;
         ev.y = -1;
         ev.dir = null;
@@ -2121,8 +2119,8 @@
         if (e.buttons && e.type !== 'mouseup') {
             ev.type = CLICK;
         }
-        ev.key = null;
-        ev.code = null;
+        ev.key = '';
+        ev.code = '';
         ev.x = x;
         ev.y = y;
         ev.clientX = e.clientX;
@@ -2382,8 +2380,6 @@
 
     var io = /*#__PURE__*/Object.freeze({
         __proto__: null,
-        commands: commands,
-        addCommand: addCommand,
         KEYPRESS: KEYPRESS,
         MOUSEMOVE: MOUSEMOVE,
         CLICK: CLICK,
@@ -2391,6 +2387,7 @@
         MOUSEUP: MOUSEUP,
         STOP: STOP,
         setKeymap: setKeymap,
+        handlerFor: handlerFor,
         dispatchEvent: dispatchEvent,
         makeStopEvent: makeStopEvent,
         makeTickEvent: makeTickEvent,

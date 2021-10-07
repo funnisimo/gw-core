@@ -2,14 +2,14 @@ import 'jest-extended';
 import * as IO from './io';
 
 describe('IO', () => {
-    test('addCommand', () => {
-        async function handler(_: IO.Event) {
-            return true;
-        }
+    // test('addCommand', () => {
+    //     async function handler(_: IO.Event) {
+    //         return true;
+    //     }
 
-        IO.addCommand('test', handler);
-        expect(IO.commands.test).toBe(handler);
-    });
+    //     IO.addCommand('test', handler);
+    //     expect(IO.commands.test).toBe(handler);
+    // });
 
     test('loop', async () => {
         const handler = jest.fn().mockResolvedValue(true);
@@ -55,5 +55,15 @@ describe('IO', () => {
         );
 
         await p;
+    });
+
+    test('custom event dispatch', async () => {
+        const event = { type: 'ACTION', key: 'test' } as IO.Event;
+
+        const handler = jest.fn();
+
+        await IO.dispatchEvent(event, { ACTION: handler });
+
+        expect(handler).toHaveBeenCalledWith(event);
     });
 });
