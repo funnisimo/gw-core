@@ -47,13 +47,14 @@ describe('FOV System', () => {
     test('player only', () => {
         system = new FOV.FovSystem(site);
 
-        site.viewports.push({
+        const player = {
             x: 10,
             y: 10,
             radius: 5,
             type: FOV.FovFlags.PLAYER,
-        });
-        system.needsUpdate = true;
+        };
+        site.viewports.push(player);
+        // system.needsUpdate = true;
 
         expect(system.isDirectlyVisible(10, 10)).toBeFalsy();
         expect(system.update()).toBeTruthy();
@@ -62,6 +63,161 @@ describe('FOV System', () => {
         expect(system.isDirectlyVisible(4, 10)).toBeFalsy();
         expect(system.isDirectlyVisible(10, 5)).toBeTruthy();
         expect(system.isDirectlyVisible(10, 4)).toBeFalsy();
+
+        player.radius = 0;  // blind
+        expect(system.update()).toBeTruthy();
+        expect(system.isDirectlyVisible(10, 10)).toBeTruthy();
+        expect(system.isDirectlyVisible(5, 10)).toBeFalsy();
+        expect(system.wasAnyKindOfVisible(5, 10)).toBeTruthy();
+        expect(system.isDirectlyVisible(4, 10)).toBeFalsy();
+        expect(system.wasAnyKindOfVisible(4, 10)).toBeFalsy();
+        expect(system.isDirectlyVisible(10, 5)).toBeFalsy();
+        expect(system.wasAnyKindOfVisible(10, 5)).toBeTruthy();
+        expect(system.isDirectlyVisible(10, 4)).toBeFalsy();
+
+        system.reset();
+        expect(system.isRevealed(10, 10)).toBeFalsy();
+        expect(system.isAnyKindOfVisible(5,5)).toBeFalsy();
+    });
+
+
+    test('follow player', () => {
+        system = new FOV.FovSystem(site);
+
+        const player = {
+            x: 10,
+            y: 10,
+            visionDistance: 5,
+            type: FOV.FovFlags.PLAYER,
+        };
+        system.follow = player;
+        // system.needsUpdate = true;
+
+        expect(system.isDirectlyVisible(10, 10)).toBeFalsy();
+        expect(system.update()).toBeTruthy();
+        expect(system.isDirectlyVisible(10, 10)).toBeTruthy();
+        expect(system.isDirectlyVisible(5, 10)).toBeTruthy();
+        expect(system.isDirectlyVisible(4, 10)).toBeFalsy();
+        expect(system.isDirectlyVisible(10, 5)).toBeTruthy();
+        expect(system.isDirectlyVisible(10, 4)).toBeFalsy();
+
+    });
+
+    test('visible only', () => {
+        system = new FOV.FovSystem(site);
+
+        const viewport = {
+            x: 10,
+            y: 10,
+            radius: 5,
+            type: 0,    // FovFlags.VISIBLE
+        };
+        site.viewports.push(viewport);
+        // system.needsUpdate = true;
+
+        expect(system.isDirectlyVisible(10, 10)).toBeFalsy();
+        expect(system.update()).toBeTruthy();
+        expect(system.isDirectlyVisible(10, 10)).toBeFalsy();
+        expect(system.isVisible(10, 10)).toBeTruthy();
+
+        expect(system.isDirectlyVisible(5, 10)).toBeFalsy();
+        expect(system.isVisible(5, 10)).toBeTruthy();
+
+        expect(system.isVisible(4, 10)).toBeFalsy();
+        expect(system.isVisible(10, 5)).toBeTruthy();
+        expect(system.isVisible(10, 4)).toBeFalsy();
+
+        system.reset();
+        expect(system.isRevealed(10, 10)).toBeFalsy();
+        expect(system.isAnyKindOfVisible(5,5)).toBeFalsy();
+    });
+
+    test('clairvoyant', () => {
+        system = new FOV.FovSystem(site);
+
+        const clairvoyant = {
+            x: 10,
+            y: 10,
+            radius: 5,
+            type: FOV.FovFlags.CLAIRVOYANT,
+        };
+
+        site.viewports.push(clairvoyant);
+        // system.needsUpdate = true;
+
+        expect(system.isDirectlyVisible(9, 9)).toBeFalsy();
+        expect(system.isClairvoyantVisible(9, 9)).toBeFalsy();
+
+        expect(system.update()).toBeTruthy();
+        expect(system.isDirectlyVisible(9, 9)).toBeFalsy();
+        expect(system.isClairvoyantVisible(9, 9)).toBeTruthy();
+        expect(system.isAnyKindOfVisible(9, 9)).toBeTruthy();
+        
+        expect(system.isClairvoyantVisible(5, 10)).toBeTruthy();
+        expect(system.isAnyKindOfVisible(4, 10)).toBeFalsy();
+        expect(system.isClairvoyantVisible(10, 5)).toBeTruthy();
+        expect(system.isAnyKindOfVisible(10, 4)).toBeFalsy();
+
+        clairvoyant.x = 15;
+        expect(system.update()).toBeTruthy();
+        expect(system.isDirectlyVisible(9, 9)).toBeFalsy();
+        expect(system.isClairvoyantVisible(9, 9)).toBeFalsy();
+        expect(system.isAnyKindOfVisible(9, 9)).toBeFalsy();
+        expect(system.wasAnyKindOfVisible(9, 9)).toBeTruthy();
+
+        expect(system.isDirectlyVisible(12, 12)).toBeFalsy();
+        expect(system.isClairvoyantVisible(12, 12)).toBeTruthy();
+        expect(system.isAnyKindOfVisible(12, 12)).toBeTruthy();
+
+        system.reset();
+        expect(system.isRevealed(10, 10)).toBeFalsy();
+        expect(system.isClairvoyantVisible(12,12)).toBeFalsy();
+        expect(system.wasAnyKindOfVisible(12, 12)).toBeFalsy();
+
+    });
+
+    test('telepathic', () => {
+        system = new FOV.FovSystem(site);
+
+        const telepathic = {
+            x: 10,
+            y: 10,
+            radius: 5,
+            type: FOV.FovFlags.TELEPATHIC,
+        };
+
+        site.viewports.push(telepathic);
+        // system.needsUpdate = true;
+
+        expect(system.isDirectlyVisible(9, 9)).toBeFalsy();
+        expect(system.isTelepathicVisible(9, 9)).toBeFalsy();
+
+        expect(system.update()).toBeTruthy();
+        expect(system.isDirectlyVisible(9, 9)).toBeFalsy();
+        expect(system.isTelepathicVisible(9, 9)).toBeTruthy();
+        expect(system.isAnyKindOfVisible(9, 9)).toBeTruthy();
+        
+        expect(system.isTelepathicVisible(5, 10)).toBeTruthy();
+        expect(system.isAnyKindOfVisible(4, 10)).toBeFalsy();
+        expect(system.isTelepathicVisible(10, 5)).toBeTruthy();
+        expect(system.isAnyKindOfVisible(10, 4)).toBeFalsy();
+
+        telepathic.x = 15;
+        expect(system.update()).toBeTruthy();
+        expect(system.isDirectlyVisible(9, 9)).toBeFalsy();
+        expect(system.isTelepathicVisible(9, 9)).toBeFalsy();
+        expect(system.isAnyKindOfVisible(9, 9)).toBeFalsy();
+        expect(system.wasAnyKindOfVisible(9, 9)).toBeTruthy();
+
+        expect(system.isDirectlyVisible(12, 12)).toBeFalsy();
+        expect(system.isTelepathicVisible(12, 12)).toBeTruthy();
+        expect(system.isAnyKindOfVisible(12, 12)).toBeTruthy();
+
+        system.reset();
+        expect(system.isRevealed(10, 10)).toBeFalsy();
+        expect(system.isTelepathicVisible(12,12)).toBeFalsy();
+        expect(system.wasAnyKindOfVisible(12, 12)).toBeFalsy();
+
     });
 
     test('constructor - revealed', () => {
@@ -183,6 +339,66 @@ describe('FOV System', () => {
         expect(system.isAnyKindOfVisible(8, 8)).toBeFalsy();
         expect(system.isRevealed(8, 8)).toBeFalsy();
         expect(system.isMagicMapped(8, 8)).toBeFalsy();
+
+    });
+
+    test('cursor', () => {
+
+        system = new FOV.FovSystem(site);
+
+        system.update(10, 10, 10);
+        expect(system.isAnyKindOfVisible(7, 7)).toBeTruthy();
+
+        system.setCursor(7, 7);
+        expect(system.isCursor(7, 7)).toBeTruthy();
+        expect(system.isCursor(8, 8)).toBeFalsy();
+
+        system.update(5, 5, 5);
+
+        system.setCursor(8, 8);
+        expect(system.isCursor(7, 7)).toBeTruthy();
+        expect(system.isCursor(8, 8)).toBeTruthy();
+
+        system.update(15, 15, 5);
+
+        system.clearCursor(7, 7);
+        expect(system.isCursor(7, 7)).toBeFalsy();
+        expect(system.isCursor(8, 8)).toBeTruthy();
+
+        system.update(15, 15, 3);
+
+        system.clearCursor();
+        expect(system.isCursor(8, 8)).toBeFalsy();
+
+    });
+
+    test('highlight', () => {
+
+        system = new FOV.FovSystem(site);
+
+        system.update(10, 10, 10);
+        expect(system.isAnyKindOfVisible(7, 7)).toBeTruthy();
+
+        system.setHighlight(7, 7);
+        expect(system.isHighlight(7, 7)).toBeTruthy();
+        expect(system.isHighlight(8, 8)).toBeFalsy();
+
+        system.update(5, 5, 5);
+
+        system.setHighlight(8, 8);
+        expect(system.isHighlight(7, 7)).toBeTruthy();
+        expect(system.isHighlight(8, 8)).toBeTruthy();
+
+        system.update(15, 15, 5);
+
+        system.clearHighlight(7, 7);
+        expect(system.isHighlight(7, 7)).toBeFalsy();
+        expect(system.isHighlight(8, 8)).toBeTruthy();
+
+        system.update(15, 15, 3);
+
+        system.clearHighlight();
+        expect(system.isHighlight(8, 8)).toBeFalsy();
 
     });
 
