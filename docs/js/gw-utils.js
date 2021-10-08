@@ -2542,7 +2542,7 @@
         constructor(site, opts = {}) {
             // needsUpdate: boolean;
             this.changed = true;
-            this.onFovChange = { onFovChange: NOOP };
+            this._callback = NOOP;
             this.follow = null;
             this.site = site;
             let flag = 0;
@@ -2553,11 +2553,8 @@
                 flag |= FovFlags.VISIBLE;
             this.flags = make$7(site.width, site.height, flag);
             // this.needsUpdate = true;
-            if (typeof opts.onFovChange === 'function') {
-                this.onFovChange.onFovChange = opts.onFovChange;
-            }
-            else if (opts.onFovChange) {
-                this.onFovChange = opts.onFovChange;
+            if (opts.callback) {
+                this.callback = opts.callback;
             }
             this.fov = new FOV({
                 isBlocked: (x, y) => {
@@ -2574,7 +2571,21 @@
                 this.makeAlwaysVisible();
             }
             if (opts.visible || opts.alwaysVisible) {
-                forRect(site.width, site.height, (x, y) => this.onFovChange.onFovChange(x, y, true));
+                forRect(site.width, site.height, (x, y) => this._callback(x, y, true));
+            }
+        }
+        get callback() {
+            return this._callback;
+        }
+        set callback(v) {
+            if (!v) {
+                this._callback = NOOP;
+            }
+            else if (typeof v === 'function') {
+                this._callback = v;
+            }
+            else {
+                this._callback = v.onFovChange.bind(v);
             }
         }
         getFlag(x, y) {
@@ -2745,11 +2756,11 @@
             else if (isVisible && !wasVisible) {
                 // if the cell became visible this move
                 this.flags[x][y] |= FovFlags.REVEALED;
-                this.onFovChange.onFovChange(x, y, isVisible);
+                this._callback(x, y, isVisible);
             }
             else if (!isVisible && wasVisible) {
                 // if the cell ceased being visible this move
-                this.onFovChange.onFovChange(x, y, isVisible);
+                this._callback(x, y, isVisible);
             }
             return isVisible;
         }
@@ -2759,11 +2770,11 @@
             if (isClairy && wasClairy) ;
             else if (!isClairy && wasClairy) {
                 // ceased being clairvoyantly visible
-                this.onFovChange.onFovChange(x, y, isClairy);
+                this._callback(x, y, isClairy);
             }
             else if (!wasClairy && isClairy) {
                 // became clairvoyantly visible
-                this.onFovChange.onFovChange(x, y, isClairy);
+                this._callback(x, y, isClairy);
             }
             return isClairy;
         }
@@ -2773,11 +2784,11 @@
             if (isTele && wasTele) ;
             else if (!isTele && wasTele) {
                 // ceased being telepathically visible
-                this.onFovChange.onFovChange(x, y, isTele);
+                this._callback(x, y, isTele);
             }
             else if (!wasTele && isTele) {
                 // became telepathically visible
-                this.onFovChange.onFovChange(x, y, isTele);
+                this._callback(x, y, isTele);
             }
             return isTele;
         }
@@ -2787,11 +2798,11 @@
             if (isMonst && wasMonst) ;
             else if (!isMonst && wasMonst) {
                 // ceased being detected visible
-                this.onFovChange.onFovChange(x, y, isMonst);
+                this._callback(x, y, isMonst);
             }
             else if (!wasMonst && isMonst) {
                 // became detected visible
-                this.onFovChange.onFovChange(x, y, isMonst);
+                this._callback(x, y, isMonst);
             }
             return isMonst;
         }
@@ -2801,11 +2812,11 @@
             if (isItem && wasItem) ;
             else if (!isItem && wasItem) {
                 // ceased being detected visible
-                this.onFovChange.onFovChange(x, y, isItem);
+                this._callback(x, y, isItem);
             }
             else if (!wasItem && isItem) {
                 // became detected visible
-                this.onFovChange.onFovChange(x, y, isItem);
+                this._callback(x, y, isItem);
             }
             return isItem;
         }

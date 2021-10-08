@@ -946,23 +946,25 @@ declare class FOV {
 }
 
 declare type FovChangeFn = (x: number, y: number, isVisible: boolean) => void;
-interface FovNotice {
+interface FovNoticer {
     onFovChange: FovChangeFn;
 }
 interface FovSystemOptions {
     revealed: boolean;
     visible: boolean;
     alwaysVisible: boolean;
-    onFovChange: FovChangeFn | FovNotice;
+    callback: FovChangeFn | FovNoticer;
 }
 declare class FovSystem implements FovTracker {
     site: FovSite;
     flags: NumGrid;
     fov: FOV;
     changed: boolean;
-    onFovChange: FovNotice;
+    protected _callback: FovChangeFn;
     follow: FovSubject | null;
     constructor(site: FovSite, opts?: Partial<FovSystemOptions>);
+    get callback(): FovChangeFn;
+    set callback(v: FovChangeFn | FovNoticer | null);
     getFlag(x: number, y: number): FovFlags;
     isVisible(x: number, y: number): boolean;
     isAnyKindOfVisible(x: number, y: number): boolean;
@@ -1010,7 +1012,7 @@ type index_d$4_FovTracker = FovTracker;
 type index_d$4_FOV = FOV;
 declare const index_d$4_FOV: typeof FOV;
 type index_d$4_FovChangeFn = FovChangeFn;
-type index_d$4_FovNotice = FovNotice;
+type index_d$4_FovNoticer = FovNoticer;
 type index_d$4_FovSystemOptions = FovSystemOptions;
 type index_d$4_FovSystem = FovSystem;
 declare const index_d$4_FovSystem: typeof FovSystem;
@@ -1025,7 +1027,7 @@ declare namespace index_d$4 {
     index_d$4_FovTracker as FovTracker,
     index_d$4_FOV as FOV,
     index_d$4_FovChangeFn as FovChangeFn,
-    index_d$4_FovNotice as FovNotice,
+    index_d$4_FovNoticer as FovNoticer,
     index_d$4_FovSystemOptions as FovSystemOptions,
     index_d$4_FovSystem as FovSystem,
   };

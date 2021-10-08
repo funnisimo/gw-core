@@ -64,7 +64,7 @@ describe('FOV System', () => {
         expect(system.isDirectlyVisible(10, 5)).toBeTruthy();
         expect(system.isDirectlyVisible(10, 4)).toBeFalsy();
 
-        player.radius = 0;  // blind
+        player.radius = 0; // blind
         expect(system.update()).toBeTruthy();
         expect(system.isDirectlyVisible(10, 10)).toBeTruthy();
         expect(system.isDirectlyVisible(5, 10)).toBeFalsy();
@@ -77,9 +77,8 @@ describe('FOV System', () => {
 
         system.reset();
         expect(system.isRevealed(10, 10)).toBeFalsy();
-        expect(system.isAnyKindOfVisible(5,5)).toBeFalsy();
+        expect(system.isAnyKindOfVisible(5, 5)).toBeFalsy();
     });
-
 
     test('follow player', () => {
         system = new FOV.FovSystem(site);
@@ -100,7 +99,6 @@ describe('FOV System', () => {
         expect(system.isDirectlyVisible(4, 10)).toBeFalsy();
         expect(system.isDirectlyVisible(10, 5)).toBeTruthy();
         expect(system.isDirectlyVisible(10, 4)).toBeFalsy();
-
     });
 
     test('visible only', () => {
@@ -110,7 +108,7 @@ describe('FOV System', () => {
             x: 10,
             y: 10,
             radius: 5,
-            type: 0,    // FovFlags.VISIBLE
+            type: 0, // FovFlags.VISIBLE
         };
         site.viewports.push(viewport);
         // system.needsUpdate = true;
@@ -129,7 +127,7 @@ describe('FOV System', () => {
 
         system.reset();
         expect(system.isRevealed(10, 10)).toBeFalsy();
-        expect(system.isAnyKindOfVisible(5,5)).toBeFalsy();
+        expect(system.isAnyKindOfVisible(5, 5)).toBeFalsy();
     });
 
     test('clairvoyant', () => {
@@ -152,7 +150,7 @@ describe('FOV System', () => {
         expect(system.isDirectlyVisible(9, 9)).toBeFalsy();
         expect(system.isClairvoyantVisible(9, 9)).toBeTruthy();
         expect(system.isAnyKindOfVisible(9, 9)).toBeTruthy();
-        
+
         expect(system.isClairvoyantVisible(5, 10)).toBeTruthy();
         expect(system.isAnyKindOfVisible(4, 10)).toBeFalsy();
         expect(system.isClairvoyantVisible(10, 5)).toBeTruthy();
@@ -171,9 +169,8 @@ describe('FOV System', () => {
 
         system.reset();
         expect(system.isRevealed(10, 10)).toBeFalsy();
-        expect(system.isClairvoyantVisible(12,12)).toBeFalsy();
+        expect(system.isClairvoyantVisible(12, 12)).toBeFalsy();
         expect(system.wasAnyKindOfVisible(12, 12)).toBeFalsy();
-
     });
 
     test('telepathic', () => {
@@ -196,7 +193,7 @@ describe('FOV System', () => {
         expect(system.isDirectlyVisible(9, 9)).toBeFalsy();
         expect(system.isTelepathicVisible(9, 9)).toBeTruthy();
         expect(system.isAnyKindOfVisible(9, 9)).toBeTruthy();
-        
+
         expect(system.isTelepathicVisible(5, 10)).toBeTruthy();
         expect(system.isAnyKindOfVisible(4, 10)).toBeFalsy();
         expect(system.isTelepathicVisible(10, 5)).toBeTruthy();
@@ -215,15 +212,17 @@ describe('FOV System', () => {
 
         system.reset();
         expect(system.isRevealed(10, 10)).toBeFalsy();
-        expect(system.isTelepathicVisible(12,12)).toBeFalsy();
+        expect(system.isTelepathicVisible(12, 12)).toBeFalsy();
         expect(system.wasAnyKindOfVisible(12, 12)).toBeFalsy();
-
     });
 
     test('constructor - revealed', () => {
         const changeFn = jest.fn();
 
-        system = new FOV.FovSystem(site, { revealed: true, onFovChange: changeFn });
+        system = new FOV.FovSystem(site, {
+            revealed: true,
+            callback: changeFn,
+        });
 
         // system.flags.dump((v) =>
         //     v & FOV.FovFlags.ANY_KIND_OF_VISIBLE ? '!' : ' '
@@ -235,7 +234,10 @@ describe('FOV System', () => {
 
     test('constructor - visible', () => {
         const changeObj = { onFovChange: jest.fn() };
-        system = new FOV.FovSystem(site, { visible: true, onFovChange: changeObj });
+        system = new FOV.FovSystem(site, {
+            visible: true,
+            callback: changeObj,
+        });
         expect(system.isAnyKindOfVisible(5, 5)).toBeTruthy();
         expect(system.isVisible(5, 5)).toBeTruthy();
         expect(system.isDirectlyVisible(5, 5)).toBeFalsy(); // no FOV calculated
@@ -267,13 +269,15 @@ describe('FOV System', () => {
         expect(system.isAnyKindOfVisible(5, 5)).toBeTruthy();
         expect(system.isRevealed(5, 5)).toBeTruthy();
         expect(system.isInFov(5, 5)).toBeTruthy();
-        expect(system.fovChanged(5, 5)).toBeFalsy();    // visible -> visible
+        expect(system.fovChanged(5, 5)).toBeFalsy(); // visible -> visible
 
         expect(system.isAnyKindOfVisible(19, 19)).toBeTruthy();
         expect(system.isInFov(19, 10)).toBeFalsy();
-        expect(system.fovChanged(19, 19)).toBeFalsy();  // not -> not
+        expect(system.fovChanged(19, 19)).toBeFalsy(); // not -> not
 
-        expect(system.getFlag(19, 19) & FOV.FovFlags.ALWAYS_VISIBLE).toBeTruthy();
+        expect(
+            system.getFlag(19, 19) & FOV.FovFlags.ALWAYS_VISIBLE
+        ).toBeTruthy();
     });
 
     test('magic Mapped', () => {
@@ -289,7 +293,6 @@ describe('FOV System', () => {
         expect(system.isInFov(5, 5)).toBeFalsy();
         expect(system.isMagicMapped(5, 5)).toBeTruthy();
     });
-
 
     test('revealAll', () => {
         system = new FOV.FovSystem(site);
@@ -339,11 +342,9 @@ describe('FOV System', () => {
         expect(system.isAnyKindOfVisible(8, 8)).toBeFalsy();
         expect(system.isRevealed(8, 8)).toBeFalsy();
         expect(system.isMagicMapped(8, 8)).toBeFalsy();
-
     });
 
     test('cursor', () => {
-
         system = new FOV.FovSystem(site);
 
         system.update(10, 10, 10);
@@ -369,11 +370,9 @@ describe('FOV System', () => {
 
         system.clearCursor();
         expect(system.isCursor(8, 8)).toBeFalsy();
-
     });
 
     test('highlight', () => {
-
         system = new FOV.FovSystem(site);
 
         system.update(10, 10, 10);
@@ -399,7 +398,5 @@ describe('FOV System', () => {
 
         system.clearHighlight();
         expect(system.isHighlight(8, 8)).toBeFalsy();
-
     });
-
 });

@@ -13,7 +13,7 @@ import { FovSubject } from '.';
 // import * as Flag from '../flag';
 
 export type FovChangeFn = (x: number, y: number, isVisible: boolean) => void;
-export interface FovNotice {
+export interface FovNoticer {
     onFovChange: FovChangeFn;
 }
 
@@ -21,7 +21,7 @@ export interface FovSystemOptions {
     revealed: boolean;
     visible: boolean;
     alwaysVisible: boolean;
-    onFovChange: FovChangeFn | FovNotice;
+    callback: FovChangeFn | FovNoticer;
 }
 
 export class FovSystem implements TYPES.FovTracker {
@@ -30,7 +30,7 @@ export class FovSystem implements TYPES.FovTracker {
     fov: FOV.FOV;
     // needsUpdate: boolean;
     changed = true;
-    onFovChange: FovNotice = { onFovChange: NOOP };
+    protected _callback: FovChangeFn = NOOP;
     follow: FovSubject | null = null;
 
     constructor(site: TYPES.FovSite, opts: Partial<FovSystemOptions> = {}) {
@@ -44,10 +44,8 @@ export class FovSystem implements TYPES.FovTracker {
 
         this.flags = Grid.make(site.width, site.height, flag);
         // this.needsUpdate = true;
-        if (typeof opts.onFovChange === 'function') {
-            this.onFovChange.onFovChange = opts.onFovChange;
-        } else if (opts.onFovChange) {
-            this.onFovChange = opts.onFovChange;
+        if (opts.callback) {
+            this.callback = opts.callback;
         }
 
         this.fov = new FOV.FOV({
@@ -70,8 +68,21 @@ export class FovSystem implements TYPES.FovTracker {
 
         if (opts.visible || opts.alwaysVisible) {
             XY.forRect(site.width, site.height, (x, y) =>
-                this.onFovChange.onFovChange(x, y, true)
+                this._callback(x, y, true)
             );
+        }
+    }
+
+    get callback(): FovChangeFn {
+        return this._callback;
+    }
+    set callback(v: FovChangeFn | FovNoticer | null) {
+        if (!v) {
+            this._callback = NOOP;
+        } else if (typeof v === 'function') {
+            this._callback = v;
+        } else {
+            this._callback = v.onFovChange.bind(v);
         }
     }
 
@@ -273,10 +284,10 @@ export class FovSystem implements TYPES.FovTracker {
         } else if (isVisible && !wasVisible) {
             // if the cell became visible this move
             this.flags[x][y] |= FovFlags.REVEALED;
-            this.onFovChange.onFovChange(x, y, isVisible);
+            this._callback(x, y, isVisible);
         } else if (!isVisible && wasVisible) {
             // if the cell ceased being visible this move
-            this.onFovChange.onFovChange(x, y, isVisible);
+            this._callback(x, y, isVisible);
         }
         return isVisible;
     }
@@ -295,10 +306,10 @@ export class FovSystem implements TYPES.FovTracker {
             // }
         } else if (!isClairy && wasClairy) {
             // ceased being clairvoyantly visible
-            this.onFovChange.onFovChange(x, y, isClairy);
+            this._callback(x, y, isClairy);
         } else if (!wasClairy && isClairy) {
             // became clairvoyantly visible
-            this.onFovChange.onFovChange(x, y, isClairy);
+            this._callback(x, y, isClairy);
         }
 
         return isClairy;
@@ -314,10 +325,10 @@ export class FovSystem implements TYPES.FovTracker {
             // }
         } else if (!isTele && wasTele) {
             // ceased being telepathically visible
-            this.onFovChange.onFovChange(x, y, isTele);
+            this._callback(x, y, isTele);
         } else if (!wasTele && isTele) {
             // became telepathically visible
-            this.onFovChange.onFovChange(x, y, isTele);
+            this._callback(x, y, isTele);
         }
         return isTele;
     }
@@ -332,10 +343,10 @@ export class FovSystem implements TYPES.FovTracker {
             // }
         } else if (!isMonst && wasMonst) {
             // ceased being detected visible
-            this.onFovChange.onFovChange(x, y, isMonst);
+            this._callback(x, y, isMonst);
         } else if (!wasMonst && isMonst) {
             // became detected visible
-            this.onFovChange.onFovChange(x, y, isMonst);
+            this._callback(x, y, isMonst);
         }
         return isMonst;
     }
@@ -350,10 +361,10 @@ export class FovSystem implements TYPES.FovTracker {
             // }
         } else if (!isItem && wasItem) {
             // ceased being detected visible
-            this.onFovChange.onFovChange(x, y, isItem);
+            this._callback(x, y, isItem);
         } else if (!wasItem && isItem) {
             // became detected visible
-            this.onFovChange.onFovChange(x, y, isItem);
+            this._callback(x, y, isItem);
         }
         return isItem;
     }
