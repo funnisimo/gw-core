@@ -4581,6 +4581,9 @@ void main() {
             return makeVariable(part);
         });
         return function (args = {}) {
+            if (typeof args === 'string') {
+                args = { value: args };
+            }
             return sections.map((f) => f(args)).join('');
         };
     }

@@ -1541,12 +1541,12 @@ declare namespace index_d$2 {
 }
 
 declare type Args = Record<string, any>;
-declare type Template = (args: Args) => any;
+declare type Template = (args: Args | string) => string;
 interface CompileOptions {
     field?: string;
 }
 declare function compile(template: string, opts?: CompileOptions): Template;
-declare function apply(template: string, args?: {}): any;
+declare function apply(template: string, args?: Args | string): string;
 
 interface Colors {
     fg: ColorBase | null;

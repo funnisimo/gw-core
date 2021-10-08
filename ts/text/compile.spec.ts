@@ -30,6 +30,11 @@ describe('compile', () => {
         );
     });
 
+    test('simple string data', () => {
+        const template = Compile.compile('My name is §value§.');
+        expect(template('Henry')).toEqual('My name is Henry.');
+    });
+
     test('invalid format', () => {
         const t = Compile.compile('Test §a%4r§!');
         expect(t({ a: 4 })).toEqual('Test 4!');

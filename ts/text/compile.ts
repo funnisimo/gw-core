@@ -2,7 +2,9 @@ import * as Config from './config';
 
 export type Args = Record<string, any>;
 
-export type Template = (args: Args) => any;
+export type Template = (args: Args | string) => string;
+
+export type FieldFn = (args: Args) => any;
 
 export interface CompileOptions {
     field?: string;
@@ -18,12 +20,15 @@ export function compile(template: string, opts: CompileOptions = {}): Template {
         return makeVariable(part);
     });
 
-    return function (args: Args = {}) {
-        return sections.map((f) => f(args)).join('');
+    return function (args: Args | string = {}) {
+        if (typeof args === 'string') {
+            args = { value: args };
+        }
+        return sections.map((f) => f(args as Args)).join('');
     };
 }
 
-export function apply(template: string, args = {}) {
+export function apply(template: string, args: Args | string = {}) {
     const fn = compile(template);
     const result = fn(args);
     return result;
@@ -33,7 +38,7 @@ export function textSegment(value: string) {
     return () => value;
 }
 
-export function baseValue(name: string) {
+export function baseValue(name: string): FieldFn {
     return function (args: Args) {
         let h = Config.helpers[name];
         if (h) {
@@ -51,7 +56,7 @@ export function baseValue(name: string) {
     };
 }
 
-export function fieldValue(name: string, source: Template) {
+export function fieldValue(name: string, source: FieldFn): FieldFn {
     return function (args: Args) {
         const obj = source(args);
         if (!obj) return Config.helpers.default(name, args, obj);
@@ -61,7 +66,7 @@ export function fieldValue(name: string, source: Template) {
     };
 }
 
-export function helperValue(name: string, source: Template) {
+export function helperValue(name: string, source: FieldFn): FieldFn {
     const helper = Config.helpers[name] || Config.helpers.default;
 
     return function (args: Args) {
@@ -70,7 +75,7 @@ export function helperValue(name: string, source: Template) {
     };
 }
 
-export function stringFormat(format: string, source: Template) {
+export function stringFormat(format: string, source: FieldFn): FieldFn {
     const data = /%(-?\d*)s/.exec(format) || [];
     const length = Number.parseInt(data[1] || '0');
 
@@ -85,7 +90,7 @@ export function stringFormat(format: string, source: Template) {
     };
 }
 
-export function intFormat(format: string, source: Template) {
+export function intFormat(format: string, source: FieldFn): FieldFn {
     const data = /%([\+-]*)(\d*)d/.exec(format) || ['', '', '0'];
     let length = Number.parseInt(data[2] || '0');
     const wantSign = data[1].includes('+');
@@ -106,7 +111,7 @@ export function intFormat(format: string, source: Template) {
     };
 }
 
-export function floatFormat(format: string, source: Template) {
+export function floatFormat(format: string, source: FieldFn): FieldFn {
     const data = /%([\+-]*)(\d*)(\.(\d+))?f/.exec(format) || ['', '', '0'];
     let length = Number.parseInt(data[2] || '0');
     const wantSign = data[1].includes('+');
@@ -133,7 +138,7 @@ export function floatFormat(format: string, source: Template) {
     };
 }
 
-export function makeVariable(pattern: string) {
+export function makeVariable(pattern: string): FieldFn {
     const data =
         /((\w+) )?(\w+)(\.(\w+))?(%[\+\.\-\d]*[dsf])?/.exec(pattern) || [];
     const helper = data[2];
