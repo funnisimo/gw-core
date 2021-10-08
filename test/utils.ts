@@ -5,7 +5,8 @@ export function extractBufferText(
     buffer: DataBuffer,
     x: number,
     y: number,
-    width: number
+    width: number,
+    trim = true
 ) {
     let output = '';
     for (let i = x; i < x + width; ++i) {
@@ -13,6 +14,7 @@ export function extractBufferText(
         const ch = String.fromCharCode(data.glyph || 32);
         output += ch;
     }
+    if (!trim) return output;
     return output.trim();
 }
 

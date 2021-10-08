@@ -171,8 +171,21 @@ describe('buffer', () => {
             expect(extractBufferText(b, 0, 3, 40)).toEqual('testing lo');
         });
 
+        test('drawText - align', () => {
+            const b = new Buffer.DataBuffer(20, 10);
+
+            b.drawText(0, 0, 'Test', 'white', 'black', 10);
+            expect(extractBufferText(b, 0, 0, 10, false)).toEqual('Test      ');
+
+            b.drawText(0, 1, 'Test', 'white', 'black', 10, 'right');
+            expect(extractBufferText(b, 0, 1, 10, false)).toEqual('      Test');
+
+            b.drawText(0, 2, 'Test', 'white', 'black', 10, 'center');
+            expect(extractBufferText(b, 0, 2, 10, false)).toEqual('   Test   ');
+        });
+
         test('wrapText', () => {
-            const b = new Buffer.DataBuffer(10, 10);
+            const b = new Buffer.DataBuffer(20, 10);
             expect(
                 b.wrapText(0, 0, 10, 'testing a wrapped text string')
             ).toEqual(4);

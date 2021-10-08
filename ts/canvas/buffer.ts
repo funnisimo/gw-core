@@ -8,6 +8,8 @@ export interface DrawData {
     bg: number;
 }
 
+export type TextAlign = 'left' | 'center' | 'right';
+
 export interface BufferTarget {
     readonly width: number;
     readonly height: number;
@@ -168,11 +170,20 @@ export class DataBuffer {
         text: string,
         fg: Color.ColorBase = 0xfff,
         bg: Color.ColorBase = -1,
-        maxWidth = 0
+        maxWidth = 0,
+        align: TextAlign = 'left'
     ): number {
         if (typeof fg !== 'number') fg = Color.from(fg);
         if (typeof bg !== 'number') bg = Color.from(bg);
         maxWidth = maxWidth || this.width;
+
+        if (align == 'right') {
+            const len = Text.length(text);
+            x += maxWidth - len;
+        } else if (align == 'center') {
+            const len = Text.length(text);
+            x += Math.floor((maxWidth - len) / 2);
+        }
 
         Text.eachChar(
             text,

@@ -5285,12 +5285,20 @@ class DataBuffer {
         this._data.set(other._data);
         return this;
     }
-    drawText(x, y, text, fg = 0xfff, bg = -1, maxWidth = 0) {
+    drawText(x, y, text, fg = 0xfff, bg = -1, maxWidth = 0, align = 'left') {
         if (typeof fg !== 'number')
             fg = from$2(fg);
         if (typeof bg !== 'number')
             bg = from$2(bg);
         maxWidth = maxWidth || this.width;
+        if (align == 'right') {
+            const len = length(text);
+            x += maxWidth - len;
+        }
+        else if (align == 'center') {
+            const len = length(text);
+            x += Math.floor((maxWidth - len) / 2);
+        }
         eachChar(text, (ch, fg0, bg0, i) => {
             if (x + i >= this.width || i >= maxWidth)
                 return;

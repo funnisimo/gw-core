@@ -1308,6 +1308,7 @@ interface DrawData {
     fg: number;
     bg: number;
 }
+declare type TextAlign = 'left' | 'center' | 'right';
 interface BufferTarget {
     readonly width: number;
     readonly height: number;
@@ -1334,7 +1335,7 @@ declare class DataBuffer {
     fill(color: ColorBase): this;
     fill(glyph?: number | string, fg?: ColorBase, bg?: ColorBase): this;
     copy(other: DataBuffer): this;
-    drawText(x: number, y: number, text: string, fg?: ColorBase, bg?: ColorBase, maxWidth?: number): number;
+    drawText(x: number, y: number, text: string, fg?: ColorBase, bg?: ColorBase, maxWidth?: number, align?: TextAlign): number;
     wrapText(x: number, y: number, width: number, text: string, fg?: ColorBase, bg?: ColorBase, indent?: number): number;
     fillRect(x: number, y: number, w: number, h: number, ch?: string | number | null, fg?: ColorBase | null, bg?: ColorBase | null): this;
     blackOutRect(x: number, y: number, w: number, h: number, bg?: ColorBase): this;
@@ -1453,6 +1454,7 @@ type index_d$3_GlyphOptions = GlyphOptions;
 type index_d$3_Glyphs = Glyphs;
 declare const index_d$3_Glyphs: typeof Glyphs;
 type index_d$3_DrawData = DrawData;
+type index_d$3_TextAlign = TextAlign;
 type index_d$3_BufferTarget = BufferTarget;
 type index_d$3_DataBuffer = DataBuffer;
 declare const index_d$3_DataBuffer: typeof DataBuffer;
@@ -1472,6 +1474,7 @@ declare namespace index_d$3 {
     index_d$3_GlyphOptions as GlyphOptions,
     index_d$3_Glyphs as Glyphs,
     index_d$3_DrawData as DrawData,
+    index_d$3_TextAlign as TextAlign,
     index_d$3_BufferTarget as BufferTarget,
     index_d$3_DataBuffer as DataBuffer,
     index_d$3_makeDataBuffer as makeDataBuffer,
