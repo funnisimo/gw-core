@@ -959,6 +959,7 @@ declare class FovSystem implements FovTracker {
     site: FovSite;
     flags: NumGrid;
     fov: FOV;
+    changed: boolean;
     onFovChange: FovNotice;
     follow: FovSubject | null;
     constructor(site: FovSite, opts?: Partial<FovSystemOptions>);

@@ -2535,7 +2535,7 @@ class FOV {
 class FovSystem {
     constructor(site, opts = {}) {
         // needsUpdate: boolean;
-        // protected _changed: boolean;
+        this.changed = true;
         this.onFovChange = { onFovChange: NOOP };
         this.follow = null;
         this.site = site;
@@ -2547,7 +2547,6 @@ class FovSystem {
             flag |= FovFlags.VISIBLE;
         this.flags = make$7(site.width, site.height, flag);
         // this.needsUpdate = true;
-        // this._changed = true;
         if (typeof opts.onFovChange === 'function') {
             this.onFovChange.onFovChange = opts.onFovChange;
         }
@@ -2559,7 +2558,10 @@ class FovSystem {
                 return this.site.blocksVision(x, y);
             },
             hasXY: (x, y) => {
-                return x >= 0 && y >= 0 && x < this.site.width && y < this.site.height;
+                return (x >= 0 &&
+                    y >= 0 &&
+                    x < this.site.width &&
+                    y < this.site.height);
             },
         });
         if (opts.alwaysVisible) {
@@ -2610,24 +2612,25 @@ class FovSystem {
         this.flags.update((v) => v |
             (FovFlags.ALWAYS_VISIBLE | FovFlags.REVEALED | FovFlags.VISIBLE));
         // TODO - onFovChange?
-        // this.changed = true;
+        this.changed = true;
     }
     makeCellAlwaysVisible(x, y) {
-        this.flags[x][y] |= FovFlags.ALWAYS_VISIBLE | FovFlags.REVEALED | FovFlags.VISIBLE;
+        this.flags[x][y] |=
+            FovFlags.ALWAYS_VISIBLE | FovFlags.REVEALED | FovFlags.VISIBLE;
         // TODO - onFovChange?
-        // this.changed = true;
+        this.changed = true;
     }
     revealAll(makeVisibleToo = true) {
         const flag = FovFlags.REVEALED | (makeVisibleToo ? FovFlags.VISIBLE : 0);
         this.flags.update((v) => v | flag);
         // TODO - onFovChange?
-        // this.changed = true;
+        this.changed = true;
     }
     revealCell(x, y, makeVisibleToo = true) {
         const flag = FovFlags.REVEALED | (makeVisibleToo ? FovFlags.VISIBLE : 0);
         this.flags[x][y] |= flag;
         // TODO - onFovChange?
-        // this.changed = true;
+        this.changed = true;
     }
     hideCell(x, y) {
         this.flags[x][y] &= ~(FovFlags.MAGIC_MAPPED |
@@ -2635,16 +2638,16 @@ class FovSystem {
             FovFlags.ALWAYS_VISIBLE);
         this.flags[x][y] = this.demoteCellVisibility(this.flags[x][y]); // clears visible, etc...
         // TODO - onFovChange?
-        // this.changed = true;
+        this.changed = true;
     }
     magicMapCell(x, y) {
         this.flags[x][y] |= FovFlags.MAGIC_MAPPED;
-        // this.changed = true;
+        this.changed = true;
         // TODO - onFovChange?
     }
     reset() {
         this.flags.fill(0);
-        // this.changed = true;
+        this.changed = true;
         // TODO - onFovChange?
     }
     // get changed(): boolean {
@@ -2660,6 +2663,7 @@ class FovSystem {
         //     this.flags.update((f) => f & ~FovFlags.IS_CURSOR);
         // }
         this.flags[x][y] |= FovFlags.IS_CURSOR;
+        this.changed = true;
     }
     clearCursor(x, y) {
         if (x === undefined || y === undefined) {
@@ -2668,6 +2672,7 @@ class FovSystem {
         else {
             this.flags[x][y] &= ~FovFlags.IS_CURSOR;
         }
+        this.changed = true;
     }
     isCursor(x, y) {
         return !!(this.flags[x][y] & FovFlags.IS_CURSOR);
@@ -2678,6 +2683,7 @@ class FovSystem {
         //     this.flags.update((f) => f & ~FovFlags.IS_HIGHLIGHTED);
         // }
         this.flags[x][y] |= FovFlags.IS_HIGHLIGHTED;
+        this.changed = true;
     }
     clearHighlight(x, y) {
         if (x === undefined || y === undefined) {
@@ -2686,6 +2692,7 @@ class FovSystem {
         else {
             this.flags[x][y] &= ~FovFlags.IS_HIGHLIGHTED;
         }
+        this.changed = true;
     }
     isHighlight(x, y) {
         return !!(this.flags[x][y] & FovFlags.IS_HIGHLIGHTED);
@@ -2695,7 +2702,7 @@ class FovSystem {
     //     this.site = other.site;
     //     this.flags.copy(other.flags);
     //     this.fov = other.fov;
-    //     this.follow = other.follow; 
+    //     this.follow = other.follow;
     //     this.onFovChange = other.onFovChange;
     //     // this.needsUpdate = other.needsUpdate;
     //     // this._changed = other._changed;
@@ -2834,10 +2841,10 @@ class FovSystem {
             cr = this.site.width + this.site.height;
         }
         // this.needsUpdate = false;
-        // this._changed = false;
+        this.changed = true; // we updated something...
         this.flags.update(this.demoteCellVisibility.bind(this));
         this.site.eachViewport((x, y, radius, type) => {
-            let flag = (type & FovFlags.VIEWPORT_TYPES);
+            let flag = type & FovFlags.VIEWPORT_TYPES;
             if (!flag)
                 flag = FovFlags.VISIBLE;
             // if (!flag)
