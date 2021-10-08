@@ -1,5 +1,5 @@
-import { compile, apply, Template } from './compile';
-import { eachChar } from './each';
+import { compile, apply, Template, CompileOptions } from './compile';
+import { eachChar, EachOptions } from './each';
 import {
     length,
     padStart,
@@ -60,4 +60,6 @@ export {
     Template,
     spliceRaw,
     truncate,
+    CompileOptions,
+    EachOptions,
 };

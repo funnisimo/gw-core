@@ -20,6 +20,17 @@ export function length<T extends ListItem<T>>(root: ListEntry<T>): number {
     return count;
 }
 
+export function at<T extends ListItem<T>>(
+    root: ListEntry<T>,
+    index: number
+): T | null {
+    while (root && index) {
+        root = root.next;
+        --index;
+    }
+    return root;
+}
+
 export function includes<T extends ListItem<T>>(
     root: ListEntry<T>,
     entry: T

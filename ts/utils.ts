@@ -113,3 +113,22 @@ export function arrayPrev<T>(
 ): T | undefined {
     return arrayNext(a, current, fn, wrap, false);
 }
+
+export function nextIndex(index: number, length: number, wrap = true): number {
+    ++index;
+    if (index >= length) {
+        if (wrap) return index % length;
+        return -1;
+    }
+    return index;
+}
+
+export function prevIndex(index: number, length: number, wrap = true): number {
+    if (index < 0) return length - 1; // start in back
+    --index;
+    if (index < 0) {
+        if (wrap) return length - 1;
+        return -1;
+    }
+    return index;
+}

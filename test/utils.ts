@@ -1,6 +1,12 @@
 // import { Random } from '../ts/random';
+import { DataBuffer } from '../ts/canvas/buffer';
 
-export function extractText(buffer: any, x: any, y: any, width: any) {
+export function extractBufferText(
+    buffer: DataBuffer,
+    x: number,
+    y: number,
+    width: number
+) {
     let output = '';
     for (let i = x; i < x + width; ++i) {
         const data = buffer.get(i, y);

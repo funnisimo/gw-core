@@ -27,6 +27,8 @@ declare function arrayFindRight<T>(a: T[], fn: (t: T) => boolean): T | undefined
 declare function sum(arr: number[]): number;
 declare function arrayNext<T>(a: T[], current: T, fn: (t: T) => boolean, wrap?: boolean, forward?: boolean): T | undefined;
 declare function arrayPrev<T>(a: T[], current: T, fn: (t: T) => boolean, wrap?: boolean): T | undefined;
+declare function nextIndex(index: number, length: number, wrap?: boolean): number;
+declare function prevIndex(index: number, length: number, wrap?: boolean): number;
 
 declare type ColorData = [number, number, number] | [number, number, number, number, number, number, number] | [number, number, number, number, number, number, number, boolean];
 declare type ColorBase = string | number | ColorData | Color;
@@ -365,6 +367,7 @@ declare type ListMatch<T> = (val: T) => boolean;
 declare type ListEachFn<T> = (val: T, index: number) => any;
 declare type ListReduceFn<T> = (out: any, t: T) => any;
 declare function length$1<T extends ListItem<T>>(root: ListEntry<T>): number;
+declare function at<T extends ListItem<T>>(root: ListEntry<T>, index: number): T | null;
 declare function includes<T extends ListItem<T>>(root: ListEntry<T>, entry: T): boolean;
 declare function forEach<T extends ListItem<T>>(root: T | null, fn: ListEachFn<T>): number;
 declare function push<T extends ListItem<T>>(obj: ListObject, name: string, entry: ListItem<T>): boolean;
@@ -382,6 +385,7 @@ type list_d_ListSort<_0> = ListSort<_0>;
 type list_d_ListMatch<_0> = ListMatch<_0>;
 type list_d_ListEachFn<_0> = ListEachFn<_0>;
 type list_d_ListReduceFn<_0> = ListReduceFn<_0>;
+declare const list_d_at: typeof at;
 declare const list_d_includes: typeof includes;
 declare const list_d_forEach: typeof forEach;
 declare const list_d_push: typeof push;
@@ -401,6 +405,7 @@ declare namespace list_d {
     list_d_ListEachFn as ListEachFn,
     list_d_ListReduceFn as ListReduceFn,
     length$1 as length,
+    list_d_at as at,
     list_d_includes as includes,
     list_d_forEach as forEach,
     list_d_push as push,
@@ -1537,11 +1542,26 @@ declare namespace index_d$2 {
 
 declare type Args = Record<string, any>;
 declare type Template = (args: Args) => any;
-declare function compile(template: string): Template;
+interface CompileOptions {
+    field?: string;
+}
+declare function compile(template: string, opts?: CompileOptions): Template;
 declare function apply(template: string, args?: {}): any;
 
+interface Colors {
+    fg: ColorBase | null;
+    bg: ColorBase | null;
+}
+declare type ColorFunction = (colors: Colors) => void;
 declare type EachFn = (ch: string, fg: any, bg: any, i: number, n: number) => void;
-declare function eachChar(text: string, fn: EachFn, fg?: any, bg?: any): void;
+interface EachOptions {
+    fg?: ColorBase;
+    bg?: ColorBase;
+    eachColor?: ColorFunction;
+    colorStart?: string;
+    colorEnd?: string;
+}
+declare function eachChar(text: string, fn: EachFn, opts?: EachOptions): void;
 
 declare function length(text: string): number;
 declare function firstChar(text: string): string | null;
@@ -1563,7 +1583,8 @@ declare var options: {
     defaultFg: null;
     defaultBg: null;
 };
-declare function addHelper(name: string, fn: Function): void;
+declare type HelperFn = (name: string, data?: Record<string, any>, obj?: any) => string;
+declare function addHelper(name: string, fn: HelperFn): void;
 
 interface Options {
     fg?: any;
@@ -1592,6 +1613,8 @@ declare const index_d$1_options: typeof options;
 type index_d$1_Template = Template;
 declare const index_d$1_spliceRaw: typeof spliceRaw;
 declare const index_d$1_truncate: typeof truncate;
+type index_d$1_CompileOptions = CompileOptions;
+type index_d$1_EachOptions = EachOptions;
 declare namespace index_d$1 {
   export {
     index_d$1_compile as compile,
@@ -1612,6 +1635,8 @@ declare namespace index_d$1 {
     index_d$1_Template as Template,
     index_d$1_spliceRaw as spliceRaw,
     index_d$1_truncate as truncate,
+    index_d$1_CompileOptions as CompileOptions,
+    index_d$1_EachOptions as EachOptions,
   };
 }
 
@@ -1890,4 +1915,4 @@ declare namespace index_d {
   };
 }
 
-export { ERROR, FALSE, IDENTITY, IS_NONZERO, IS_ZERO, NOOP, ONE, TRUE, WARN, ZERO, arrayDelete, arrayFindRight, arrayNext, arrayPrev, arraysIntersect, blob_d as blob, index_d$3 as canvas, clamp, index_d$5 as color, colors, config$1 as config, data, events_d as events, first, flag_d as flag, index_d$4 as fov, frequency_d as frequency, grid_d as grid, io_d as io, index_d as light, list_d as list, loop, message_d as message, object_d as object, path_d as path, range_d as range, rng_d as rng, scheduler_d as scheduler, index_d$2 as sprite, sprites, sum, index_d$1 as text, types_d as types, xy_d as xy };
+export { ERROR, FALSE, IDENTITY, IS_NONZERO, IS_ZERO, NOOP, ONE, TRUE, WARN, ZERO, arrayDelete, arrayFindRight, arrayNext, arrayPrev, arraysIntersect, blob_d as blob, index_d$3 as canvas, clamp, index_d$5 as color, colors, config$1 as config, data, events_d as events, first, flag_d as flag, index_d$4 as fov, frequency_d as frequency, grid_d as grid, io_d as io, index_d as light, list_d as list, loop, message_d as message, nextIndex, object_d as object, path_d as path, prevIndex, range_d as range, rng_d as rng, scheduler_d as scheduler, index_d$2 as sprite, sprites, sum, index_d$1 as text, types_d as types, xy_d as xy };

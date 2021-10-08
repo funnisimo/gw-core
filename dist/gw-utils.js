@@ -94,6 +94,26 @@
     function arrayPrev(a, current, fn, wrap = true) {
         return arrayNext(a, current, fn, wrap, false);
     }
+    function nextIndex(index, length, wrap = true) {
+        ++index;
+        if (index >= length) {
+            if (wrap)
+                return index % length;
+            return -1;
+        }
+        return index;
+    }
+    function prevIndex(index, length, wrap = true) {
+        if (index < 0)
+            return length - 1; // start in back
+        --index;
+        if (index < 0) {
+            if (wrap)
+                return length - 1;
+            return -1;
+        }
+        return index;
+    }
 
     // DIRS are organized clockwise
     // - first 4 are arrow directions
@@ -550,6 +570,13 @@
         }
         return count;
     }
+    function at(root, index) {
+        while (root && index) {
+            root = root.next;
+            --index;
+        }
+        return root;
+    }
     function includes(root, entry) {
         while (root && root !== entry) {
             root = root.next;
@@ -655,6 +682,7 @@
     var list = /*#__PURE__*/Object.freeze({
         __proto__: null,
         length: length$1,
+        at: at,
         includes: includes,
         forEach: forEach,
         push: push,
@@ -4531,33 +4559,7 @@ void main() {
         defaultFg: null,
         defaultBg: null,
     };
-    // const RE_RGB = /^[a-fA-F0-9]*$/;
-    //
-    // export function parseColor(color:string) {
-    //   if (color.startsWith('#')) {
-    //     color = color.substring(1);
-    //   }
-    //   else if (color.startsWith('0x')) {
-    //     color = color.substring(2);
-    //   }
-    //   if (color.length == 3) {
-    //     if (RE_RGB.test(color)) {
-    //       return Number.parseInt(color, 16);
-    //     }
-    //   }
-    //   if (color.length == 6) {
-    //     if (RE_RGB.test(color)) {
-    //       const v = Number.parseInt(color, 16);
-    //       const r = Math.round( ((v & 0xFF0000) >> 16) / 17);
-    //       const g = Math.round( ((v & 0xFF00) >> 8) / 17);
-    //       const b = Math.round((v & 0xFF) / 17);
-    //       return (r << 8) + (g << 4) + b;
-    //     }
-    //   }
-    //   return 0xFFF;
-    // }
     var helpers = {
-        eachColor: () => { },
         default: (name, _, value) => {
             if (value !== undefined)
                 return `${value}.!!${name}!!`;
@@ -4568,8 +4570,8 @@ void main() {
         helpers[name] = fn;
     }
 
-    function compile(template) {
-        const F = options.field;
+    function compile(template, opts = {}) {
+        const F = opts.field || options.field;
         const parts = template.split(F);
         const sections = parts.map((part, i) => {
             if (i % 2 == 0)
@@ -4579,7 +4581,7 @@ void main() {
             return makeVariable(part);
         });
         return function (args = {}) {
-            return sections.map((f) => f(args)).join("");
+            return sections.map((f) => f(args)).join('');
         };
     }
     function apply(template, args = {}) {
@@ -4592,13 +4594,18 @@ void main() {
     }
     function baseValue(name) {
         return function (args) {
-            const h = helpers[name];
-            if (h)
+            let h = helpers[name];
+            if (h) {
                 return h(name, args);
+            }
             const v = args[name];
             if (v !== undefined)
                 return v;
-            return helpers.default(name, args);
+            h = helpers.default;
+            if (h) {
+                return h(name, args);
+            }
+            return '!!!ERROR!!!';
         };
     }
     function fieldValue(name, source) {
@@ -4621,9 +4628,9 @@ void main() {
     }
     function stringFormat(format, source) {
         const data = /%(-?\d*)s/.exec(format) || [];
-        const length = Number.parseInt(data[1] || "0");
+        const length = Number.parseInt(data[1] || '0');
         return function (args) {
-            let text = "" + source(args);
+            let text = '' + source(args);
             if (length < 0) {
                 text = text.padEnd(-length);
             }
@@ -4634,15 +4641,15 @@ void main() {
         };
     }
     function intFormat(format, source) {
-        const data = /%([\+-]*)(\d*)d/.exec(format) || ["", "", "0"];
-        let length = Number.parseInt(data[2] || "0");
-        const wantSign = data[1].includes("+");
-        const left = data[1].includes("-");
+        const data = /%([\+-]*)(\d*)d/.exec(format) || ['', '', '0'];
+        let length = Number.parseInt(data[2] || '0');
+        const wantSign = data[1].includes('+');
+        const left = data[1].includes('-');
         return function (args) {
             const value = Number.parseInt(source(args) || 0);
-            let text = "" + value;
+            let text = '' + value;
             if (value > 0 && wantSign) {
-                text = "+" + text;
+                text = '+' + text;
             }
             if (length && left) {
                 return text.padEnd(length);
@@ -4654,10 +4661,10 @@ void main() {
         };
     }
     function floatFormat(format, source) {
-        const data = /%([\+-]*)(\d*)(\.(\d+))?f/.exec(format) || ["", "", "0"];
-        let length = Number.parseInt(data[2] || "0");
-        const wantSign = data[1].includes("+");
-        const left = data[1].includes("-");
+        const data = /%([\+-]*)(\d*)(\.(\d+))?f/.exec(format) || ['', '', '0'];
+        let length = Number.parseInt(data[2] || '0');
+        const wantSign = data[1].includes('+');
+        const left = data[1].includes('-');
         const fixed = Number.parseInt(data[4]) || 0;
         return function (args) {
             const value = Number.parseFloat(source(args) || 0);
@@ -4666,10 +4673,10 @@ void main() {
                 text = value.toFixed(fixed);
             }
             else {
-                text = "" + value;
+                text = '' + value;
             }
             if (value > 0 && wantSign) {
-                text = "+" + text;
+                text = '+' + text;
             }
             if (length && left) {
                 return text.padEnd(length);
@@ -4694,10 +4701,10 @@ void main() {
             result = helperValue(helper, result);
         }
         if (format && format.length) {
-            if (format.endsWith("s")) {
+            if (format.endsWith('s')) {
                 result = stringFormat(format, result);
             }
-            else if (format.endsWith("d")) {
+            else if (format.endsWith('d')) {
                 result = intFormat(format, result);
             }
             else {
@@ -4707,26 +4714,24 @@ void main() {
         return result;
     }
 
-    function eachChar(text, fn, fg, bg) {
+    function eachChar(text, fn, opts = {}) {
         if (text === null || text === undefined)
             return;
         if (!fn)
             return;
-        text = "" + text; // force string
+        text = '' + text; // force string
         if (!text.length)
             return;
         const colors = [];
-        const colorFn = helpers.eachColor;
-        if (fg === undefined)
-            fg = options.defaultFg;
-        if (bg === undefined)
-            bg = options.defaultBg;
+        const colorFn = opts.eachColor || NOOP;
+        let fg = opts.fg || options.defaultFg;
+        let bg = opts.bg || options.defaultBg;
         const ctx = {
             fg,
             bg,
         };
-        const CS = options.colorStart;
-        const CE = options.colorEnd;
+        const CS = opts.colorStart || options.colorStart;
+        const CE = opts.colorEnd || options.colorEnd;
         colorFn(ctx);
         let n = 0;
         for (let i = 0; i < text.length; ++i) {
@@ -4747,7 +4752,7 @@ void main() {
                 else {
                     colors.push([ctx.fg, ctx.bg]);
                     const color = text.substring(i + 1, j);
-                    const newColors = color.split("|");
+                    const newColors = color.split('|');
                     ctx.fg = newColors[0] || ctx.fg;
                     ctx.bg = newColors[1] || ctx.bg;
                     colorFn(ctx);
@@ -5289,15 +5294,11 @@ void main() {
             if (typeof bg !== 'number')
                 bg = from$2(bg);
             maxWidth = maxWidth || this.width;
-            const len = length(text);
-            if (len > maxWidth) {
-                text = truncate(text, len);
-            }
             eachChar(text, (ch, fg0, bg0, i) => {
-                if (x + i >= this.width || i > maxWidth)
+                if (x + i >= this.width || i >= maxWidth)
                     return;
                 this.draw(i + x, y, ch, fg0, bg0);
-            }, fg, bg);
+            }, { fg, bg });
             return 1; // used 1 line
         }
         wrapText(x, y, width, text, fg = 0xfff, bg = -1, indent = 0) {
@@ -5319,7 +5320,7 @@ void main() {
                     return;
                 }
                 this.draw(xi++, y + lineCount, ch, fg0, bg0);
-            }, fg, bg);
+            }, { fg, bg });
             while (xi < x + width) {
                 this.draw(xi++, y + lineCount, 0, 0x000, bg);
             }
@@ -6874,8 +6875,10 @@ void main() {
     exports.list = list;
     exports.loop = loop;
     exports.message = message;
+    exports.nextIndex = nextIndex;
     exports.object = object;
     exports.path = path;
+    exports.prevIndex = prevIndex;
     exports.range = range;
     exports.rng = rng;
     exports.scheduler = scheduler;

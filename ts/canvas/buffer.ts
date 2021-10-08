@@ -174,19 +174,13 @@ export class DataBuffer {
         if (typeof bg !== 'number') bg = Color.from(bg);
         maxWidth = maxWidth || this.width;
 
-        const len = Text.length(text);
-        if (len > maxWidth) {
-            text = Text.truncate(text, len);
-        }
-
         Text.eachChar(
             text,
             (ch, fg0, bg0, i) => {
-                if (x + i >= this.width || i > maxWidth) return;
+                if (x + i >= this.width || i >= maxWidth) return;
                 this.draw(i + x, y, ch, fg0, bg0);
             },
-            fg,
-            bg
+            { fg, bg }
         );
         return 1; // used 1 line
     }
@@ -221,8 +215,7 @@ export class DataBuffer {
                 }
                 this.draw(xi++, y + lineCount, ch, fg0, bg0);
             },
-            fg,
-            bg
+            { fg, bg }
         );
 
         while (xi < x + width) {

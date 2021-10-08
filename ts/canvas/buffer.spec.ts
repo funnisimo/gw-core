@@ -1,5 +1,5 @@
 import 'jest-extended';
-import { extractText } from '../../test/utils';
+import { extractBufferText } from '../../test/utils';
 
 import * as Buffer from './buffer';
 import { colors } from '../color';
@@ -101,7 +101,7 @@ describe('buffer', () => {
         });
 
         test('drawText', () => {
-            const b = new Buffer.DataBuffer(10, 8);
+            const b = new Buffer.DataBuffer(50, 10);
             expect(b.drawText(0, 0, 'test')).toEqual(1);
             expect(b.get(0, 0)).toEqual({
                 glyph: 't'.charCodeAt(0),
@@ -159,6 +159,16 @@ describe('buffer', () => {
                 bg: 0x0f0,
             });
             expect(b.get(0, 3)).toEqual({ glyph: 0, fg: 0, bg: 0 });
+
+            b.drawText(
+                0,
+                3,
+                'testing longer values that should be truncated',
+                'white',
+                'black',
+                10
+            );
+            expect(extractBufferText(b, 0, 3, 40)).toEqual('testing lo');
         });
 
         test('wrapText', () => {
@@ -197,10 +207,10 @@ describe('buffer', () => {
                     'blue'
                 )
             ).toEqual(4);
-            expect(extractText(b, 0, 5, 10)).toEqual('testing a');
-            expect(extractText(b, 0, 6, 10)).toEqual('wrapped');
-            expect(extractText(b, 0, 7, 10)).toEqual('text');
-            expect(extractText(b, 0, 8, 10)).toEqual('string');
+            expect(extractBufferText(b, 0, 5, 10)).toEqual('testing a');
+            expect(extractBufferText(b, 0, 6, 10)).toEqual('wrapped');
+            expect(extractBufferText(b, 0, 7, 10)).toEqual('text');
+            expect(extractBufferText(b, 0, 8, 10)).toEqual('string');
             // it fills out the line to the full width with the bg color
             expect(b.get(9, 5)).toEqual({ glyph: 0, fg: 0, bg: 0x00f });
             expect(b.get(9, 6)).toEqual({ glyph: 0, fg: 0, bg: 0x00f });
@@ -211,15 +221,15 @@ describe('buffer', () => {
         test('fillRect', () => {
             const b = new Buffer.DataBuffer(10, 10);
             b.fillRect(2, 3, 3, 2, 'A', 'red', 'blue');
-            expect(extractText(b, 2, 3, 6)).toEqual('AAA');
-            expect(extractText(b, 2, 4, 6)).toEqual('AAA');
-            expect(extractText(b, 2, 5, 6)).toEqual('');
+            expect(extractBufferText(b, 2, 3, 6)).toEqual('AAA');
+            expect(extractBufferText(b, 2, 4, 6)).toEqual('AAA');
+            expect(extractBufferText(b, 2, 5, 6)).toEqual('');
             expect(b.get(2, 3)).toEqual({ glyph: 65, fg: 0xf00, bg: 0x00f });
 
             b.fillRect(2, 3, 3, 2, null, null, null);
-            expect(extractText(b, 2, 3, 6)).toEqual('AAA');
-            expect(extractText(b, 2, 4, 6)).toEqual('AAA');
-            expect(extractText(b, 2, 5, 6)).toEqual('');
+            expect(extractBufferText(b, 2, 3, 6)).toEqual('AAA');
+            expect(extractBufferText(b, 2, 4, 6)).toEqual('AAA');
+            expect(extractBufferText(b, 2, 5, 6)).toEqual('');
             expect(b.get(2, 3)).toEqual({ glyph: 65, fg: 0xf00, bg: 0x00f });
 
             b.fillRect(2, 3, 3, 2, null, 0x0f0, null);
