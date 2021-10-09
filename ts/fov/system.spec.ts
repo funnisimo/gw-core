@@ -356,7 +356,7 @@ describe('FOV System', () => {
 
         system.update(5, 5, 5);
 
-        system.setCursor(8, 8);
+        system.setCursor(8, 8, true);
         expect(system.isCursor(7, 7)).toBeTruthy();
         expect(system.isCursor(8, 8)).toBeTruthy();
 
@@ -384,7 +384,7 @@ describe('FOV System', () => {
 
         system.update(5, 5, 5);
 
-        system.setHighlight(8, 8);
+        system.setHighlight(8, 8, true);
         expect(system.isHighlight(7, 7)).toBeTruthy();
         expect(system.isHighlight(8, 8)).toBeTruthy();
 

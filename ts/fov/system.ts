@@ -188,10 +188,10 @@ export class FovSystem implements TYPES.FovTracker {
 
     // CURSOR
 
-    setCursor(x: number, y: number) {
-        // if (!keep) {
-        //     this.flags.update((f) => f & ~FovFlags.IS_CURSOR);
-        // }
+    setCursor(x: number, y: number, keep = false) {
+        if (!keep) {
+            this.flags.update((f) => f & ~FovFlags.IS_CURSOR);
+        }
         this.flags[x][y] |= FovFlags.IS_CURSOR;
         this.changed = true;
     }
@@ -209,10 +209,10 @@ export class FovSystem implements TYPES.FovTracker {
 
     // HIGHLIGHT
 
-    setHighlight(x: number, y: number) {
-        // if (!keep) {
-        //     this.flags.update((f) => f & ~FovFlags.IS_HIGHLIGHTED);
-        // }
+    setHighlight(x: number, y: number, keep = false) {
+        if (!keep) {
+            this.flags.update((f) => f & ~FovFlags.IS_HIGHLIGHTED);
+        }
         this.flags[x][y] |= FovFlags.IS_HIGHLIGHTED;
         this.changed = true;
     }

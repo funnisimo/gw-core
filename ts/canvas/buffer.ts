@@ -20,15 +20,16 @@ export interface BufferTarget {
     //     fg: number,
     //     bg: number
     // ): DrawTarget;
-    copyTo(dest: Uint32Array): void;
-    copy(src: Uint32Array): void;
+    copyTo(dest: DataBuffer): void;
+    copy(src: DataBuffer): void;
     toGlyph(ch: string | number): number;
 }
 
 export class DataBuffer {
-    protected _data: Uint32Array;
+    _data: Uint32Array;
     private _width: number;
     private _height: number;
+    changed = false;
 
     constructor(width: number, height: number) {
         this._width = width;
@@ -60,6 +61,7 @@ export class DataBuffer {
         } else {
             this._data = orig.slice(width * height);
         }
+        this.changed = true;
     }
 
     get(x: number, y: number): DrawData {
@@ -101,6 +103,7 @@ export class DataBuffer {
         fg = fg >= 0 ? fg & 0xfff : current & 0xfff;
         const style = (glyph << 24) + (bg << 12) + fg;
         this._data[index] = style;
+        if (style !== current) this.changed = true;
         return this;
     }
 
@@ -156,11 +159,16 @@ export class DataBuffer {
         bg = bg & 0xfff;
         const style = (glyph << 24) + (bg << 12) + fg;
         this._data.fill(style);
+        this.changed = true;
+
         return this;
     }
 
     copy(other: DataBuffer): this {
+        this._width = other._width;
+        this._height = other._height;
         this._data.set(other._data);
+        this.changed = true;
         return this;
     }
 
@@ -359,7 +367,7 @@ export class Buffer extends DataBuffer {
     constructor(canvas: BufferTarget) {
         super(canvas.width, canvas.height);
         this._target = canvas;
-        canvas.copyTo(this._data);
+        canvas.copyTo(this);
     }
 
     // get canvas() { return this._target; }
@@ -375,12 +383,12 @@ export class Buffer extends DataBuffer {
     }
 
     render() {
-        this._target.copy(this._data);
+        this._target.copy(this);
         return this;
     }
 
     load() {
-        this._target.copyTo(this._data);
+        this._target.copyTo(this);
         return this;
     }
 }

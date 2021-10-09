@@ -988,10 +988,10 @@ declare class FovSystem implements FovTracker {
     hideCell(x: number, y: number): void;
     magicMapCell(x: number, y: number): void;
     reset(): void;
-    setCursor(x: number, y: number): void;
+    setCursor(x: number, y: number, keep?: boolean): void;
     clearCursor(x?: number, y?: number): void;
     isCursor(x: number, y: number): boolean;
-    setHighlight(x: number, y: number): void;
+    setHighlight(x: number, y: number, keep?: boolean): void;
     clearHighlight(x?: number, y?: number): void;
     isHighlight(x: number, y: number): boolean;
     protected demoteCellVisibility(flag: number): number;

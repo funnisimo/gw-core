@@ -2697,10 +2697,10 @@ class FovSystem {
     //     this.needsUpdate = this.needsUpdate || v;
     // }
     // CURSOR
-    setCursor(x, y) {
-        // if (!keep) {
-        //     this.flags.update((f) => f & ~FovFlags.IS_CURSOR);
-        // }
+    setCursor(x, y, keep = false) {
+        if (!keep) {
+            this.flags.update((f) => f & ~FovFlags.IS_CURSOR);
+        }
         this.flags[x][y] |= FovFlags.IS_CURSOR;
         this.changed = true;
     }
@@ -2717,10 +2717,10 @@ class FovSystem {
         return !!(this.flags[x][y] & FovFlags.IS_CURSOR);
     }
     // HIGHLIGHT
-    setHighlight(x, y) {
-        // if (!keep) {
-        //     this.flags.update((f) => f & ~FovFlags.IS_HIGHLIGHTED);
-        // }
+    setHighlight(x, y, keep = false) {
+        if (!keep) {
+            this.flags.update((f) => f & ~FovFlags.IS_HIGHLIGHTED);
+        }
         this.flags[x][y] |= FovFlags.IS_HIGHLIGHTED;
         this.changed = true;
     }

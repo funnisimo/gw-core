@@ -1,6 +1,6 @@
 import * as shaders from './shaders';
 import { Glyphs, GlyphOptions } from './glyphs';
-import { BufferTarget, Buffer } from './buffer';
+import { BufferTarget, Buffer, DataBuffer } from './buffer';
 import * as IO from '../io';
 import * as Utils from '../utils';
 import * as XY from '../xy';
@@ -173,13 +173,16 @@ export abstract class BaseCanvas implements BufferTarget {
     //     return false;
     // }
 
-    copy(data: Uint32Array) {
-        this._data.set(data);
+    copy(data: DataBuffer): boolean {
+        if (!data.changed) return false;
+        data.changed = false;
+        this._data.set(data._data);
         this._requestRender();
+        return true;
     }
 
-    copyTo(data: Uint32Array) {
-        data.set(this._data);
+    copyTo(data: DataBuffer) {
+        data._data.set(this._data);
     }
 
     render(): void {
@@ -392,20 +395,23 @@ export class Canvas extends BaseCanvas {
     //     return false;
     // }
 
-    copy(data: Uint32Array) {
-        data.forEach((style, i) => {
+    copy(data: DataBuffer): boolean {
+        if (!data.changed) return false;
+        data._data.forEach((style, i) => {
             const index = i * VERTICES_PER_TILE;
             this._data[index + 2] = style;
             this._data[index + 5] = style;
         });
         this._requestRender();
+        data.changed = false;
+        return true;
     }
 
-    copyTo(data: Uint32Array) {
+    copyTo(data: DataBuffer) {
         const n = this.width * this.height;
         for (let i = 0; i < n; ++i) {
             const index = i * VERTICES_PER_TILE;
-            data[i] = this._data[index + 2];
+            data._data[i] = this._data[index + 2];
         }
     }
 
@@ -460,14 +466,17 @@ export class Canvas2D extends BaseCanvas {
         this._changed = new Int8Array(width * height);
     }
 
-    copy(data: Uint32Array) {
+    copy(data: DataBuffer): boolean {
+        if (!data.changed) return false;
+        data.changed = false;
         for (let i = 0; i < this._data.length; ++i) {
-            if (this._data[i] !== data[i]) {
-                this._data[i] = data[i];
+            if (this._data[i] !== data._data[i]) {
+                this._data[i] = data._data[i];
                 this._changed[i] = 1;
             }
         }
         this._requestRender();
+        return true;
     }
 
     _render() {
