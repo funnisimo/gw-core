@@ -3,7 +3,7 @@
 The Blob class allows you to generate random blob shapes.
 
 ```js
-const canvas = GW.canvas.make({
+const canvas = GWU.canvas.make({
     font: 'monospace',
     width: 50,
     height: 30,
@@ -12,7 +12,7 @@ const canvas = GW.canvas.make({
 SHOW(canvas.node);
 const buffer = canvas.buffer;
 
-const blob = GW.blob.make({
+const blob = GWU.blob.make({
     minWidth: 5,
     maxWidth: 30,
     minHeight: 5,

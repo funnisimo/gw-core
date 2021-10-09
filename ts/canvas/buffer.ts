@@ -27,14 +27,18 @@ export interface BufferTarget {
 
 export class DataBuffer {
     _data: Uint32Array;
-    private _width: number;
-    private _height: number;
+    protected _width: number;
+    protected _height: number;
     changed = false;
 
     constructor(width: number, height: number) {
         this._width = width;
         this._height = height;
-        this._data = new Uint32Array(width * height);
+        this._data = this._makeData();
+    }
+
+    protected _makeData(): Uint32Array {
+        return new Uint32Array(this.width * this.height);
     }
 
     get width(): number {
@@ -64,13 +68,31 @@ export class DataBuffer {
         this.changed = true;
     }
 
-    get(x: number, y: number): DrawData {
-        let index = y * this.width + x;
-        const style = this._data[index] || 0;
+    protected _index(x: number, y: number): number {
+        return y * this.width + x;
+    }
+
+    get(x: number, y: number): number {
+        let index = this._index(x, y);
+        return this._data[index] || 0;
+    }
+
+    info(x: number, y: number): DrawData {
+        const style = this.get(x, y);
         const glyph = style >> 24;
         const bg = (style >> 12) & 0xfff;
         const fg = style & 0xfff;
         return { glyph, fg, bg };
+    }
+
+    set(x: number, y: number, style: number) {
+        let index = this._index(x, y);
+        const current = this._data[index];
+        if (current !== style) {
+            this._data[index] = style;
+            return true;
+        }
+        return false;
     }
 
     toGlyph(ch: string | number): number {
@@ -86,8 +108,7 @@ export class DataBuffer {
         fg: Color.ColorBase = -1, // TODO - White?
         bg: Color.ColorBase = -1 // TODO - Black?
     ): this {
-        let index = y * this.width + x;
-        const current = this._data[index] || 0;
+        const current = this.get(x, y);
 
         if (typeof glyph !== 'number') {
             glyph = this.toGlyph(glyph);
@@ -102,7 +123,7 @@ export class DataBuffer {
         bg = bg >= 0 ? bg & 0xfff : (current >> 12) & 0xfff;
         fg = fg >= 0 ? fg & 0xfff : current & 0xfff;
         const style = (glyph << 24) + (bg << 12) + fg;
-        this._data[index] = style;
+        this.set(x, y, style);
         if (style !== current) this.changed = true;
         return this;
     }
@@ -287,7 +308,7 @@ export class DataBuffer {
             color = Color.from(color);
         }
         const mixer = new Mixer();
-        const data = this.get(x, y);
+        const data = this.info(x, y);
         mixer.drawSprite(data);
         mixer.fg.add(color, strength);
         mixer.bg.add(color, strength);
@@ -323,7 +344,7 @@ export class DataBuffer {
         const endY = height ? height + y : this.height;
         for (let i = x; i < endX; ++i) {
             for (let j = y; j < endY; ++j) {
-                const data = this.get(i, j);
+                const data = this.info(i, j);
                 mixer.drawSprite(data);
                 mixer.fg.mix(color, percent);
                 mixer.bg.mix(color, percent);
@@ -347,7 +368,7 @@ export class DataBuffer {
             let line = `${('' + y).padStart(2)}] `;
             for (let x = 0; x < this.width; ++x) {
                 if (x % 10 == 0) line += ' ';
-                const data = this.get(x, y);
+                const data = this.info(x, y);
                 const glyph = data.glyph;
                 line += String.fromCharCode(glyph || 32);
             }
@@ -355,10 +376,6 @@ export class DataBuffer {
         }
         console.log(data.join('\n'));
     }
-}
-
-export function makeDataBuffer(width: number, height: number) {
-    return new DataBuffer(width, height);
 }
 
 export class Buffer extends DataBuffer {
@@ -372,8 +389,10 @@ export class Buffer extends DataBuffer {
 
     // get canvas() { return this._target; }
 
-    clone(): Buffer {
-        const other = new Buffer(this._target);
+    clone(): this {
+        const other = new (<new (canvas: BufferTarget) => this>(
+            this.constructor
+        ))(this._target);
         other.copy(this);
         return other;
     }
@@ -391,17 +410,4 @@ export class Buffer extends DataBuffer {
         this._target.copyTo(this);
         return this;
     }
-}
-
-// Make.buffer = function (canvas: BufferTarget) {
-//     return new Buffer(canvas);
-// };
-
-export function makeBuffer(width: number, height: number): DataBuffer;
-export function makeBuffer(canvas: BufferTarget): Buffer;
-export function makeBuffer(...args: any[]): Buffer | DataBuffer {
-    if (args.length == 1) {
-        return new Buffer(args[0]);
-    }
-    return new DataBuffer(args[0], args[1]);
 }

@@ -11,6 +11,7 @@ LOOP.run(
     },
     1000
 );
+SHOW('Click on me and type any key.');
 ```
 
 You can also trap specific key combinations.
@@ -22,15 +23,21 @@ LOOP.run(
             SHOW('lowercase : ' + e.key);
         },
         T(e) {
-            SHOW('uppercase : ' + e.key);
+            SHOW('uppercase(shift) : ' + e.key);
         },
         '^t': (e) => {
             SHOW('control : ' + e.key);
         },
         '^T': (e) => {
-            SHOW('uppercase control : ' + e.key);
+            SHOW('uppercase(shift) control : ' + e.key);
+        },
+        keypress(e) {
+            SHOW(
+                `Not a "T", but... : key=${e.key}, shift=${e.shiftKey}, control=${e.ctrlKey}, alt=${e.altKey}, meta=${e.metaKey}`
+            );
         },
     },
     1000
 );
+SHOW('Click on me and type the letter "T".');
 ```

@@ -1235,40 +1235,6 @@ declare namespace scheduler_d {
   };
 }
 
-declare type CTX = CanvasRenderingContext2D;
-declare type DrawFunction = (ctx: CTX, x: number, y: number, width: number, height: number) => void;
-declare type DrawType = string | DrawFunction;
-interface GlyphOptions {
-    font: string;
-    fontSize: number;
-    size: number;
-    tileWidth: number;
-    tileHeight: number;
-    basicOnly: boolean;
-    basic: boolean;
-}
-declare class Glyphs {
-    private _node;
-    private _ctx;
-    private _tileWidth;
-    private _tileHeight;
-    needsUpdate: boolean;
-    private _map;
-    static fromImage(src: string | HTMLImageElement): Glyphs;
-    static fromFont(src: Partial<GlyphOptions> | string): Glyphs;
-    private constructor();
-    get node(): HTMLCanvasElement;
-    get ctx(): CanvasRenderingContext2D;
-    get tileWidth(): number;
-    get tileHeight(): number;
-    get pxWidth(): number;
-    get pxHeight(): number;
-    forChar(ch: string): number;
-    private _configure;
-    draw(n: number, ch: DrawType): void;
-    _initGlyphs(basicOnly?: boolean): void;
-}
-
 interface DrawInfo {
     ch: string | number | null;
     fg: ColorBase;
@@ -1318,15 +1284,19 @@ interface BufferTarget {
 }
 declare class DataBuffer {
     _data: Uint32Array;
-    private _width;
-    private _height;
+    protected _width: number;
+    protected _height: number;
     changed: boolean;
     constructor(width: number, height: number);
+    protected _makeData(): Uint32Array;
     get width(): number;
     get height(): number;
     clone(): DataBuffer;
     resize(width: number, height: number): void;
-    get(x: number, y: number): DrawData;
+    protected _index(x: number, y: number): number;
+    get(x: number, y: number): number;
+    info(x: number, y: number): DrawData;
+    set(x: number, y: number, style: number): boolean;
     toGlyph(ch: string | number): number;
     draw(x: number, y: number, glyph?: number | string, fg?: ColorBase, // TODO - White?
     bg?: ColorBase): this;
@@ -1346,17 +1316,48 @@ declare class DataBuffer {
     mix(color: ColorBase, percent: number, x: number, y: number, width: number, height: number): this;
     dump(): void;
 }
-declare function makeDataBuffer(width: number, height: number): DataBuffer;
 declare class Buffer extends DataBuffer {
     private _target;
     constructor(canvas: BufferTarget);
-    clone(): Buffer;
+    clone(): this;
     toGlyph(ch: string | number): number;
     render(): this;
     load(): this;
 }
-declare function makeBuffer(width: number, height: number): DataBuffer;
-declare function makeBuffer(canvas: BufferTarget): Buffer;
+
+declare type CTX = CanvasRenderingContext2D;
+declare type DrawFunction = (ctx: CTX, x: number, y: number, width: number, height: number) => void;
+declare type DrawType = string | DrawFunction;
+interface GlyphOptions {
+    font: string;
+    fontSize: number;
+    size: number;
+    tileWidth: number;
+    tileHeight: number;
+    basicOnly: boolean;
+    basic: boolean;
+}
+declare class Glyphs {
+    private _node;
+    private _ctx;
+    private _tileWidth;
+    private _tileHeight;
+    needsUpdate: boolean;
+    private _map;
+    static fromImage(src: string | HTMLImageElement): Glyphs;
+    static fromFont(src: Partial<GlyphOptions> | string): Glyphs;
+    private constructor();
+    get node(): HTMLCanvasElement;
+    get ctx(): CanvasRenderingContext2D;
+    get tileWidth(): number;
+    get tileHeight(): number;
+    get pxWidth(): number;
+    get pxHeight(): number;
+    forChar(ch: string): number;
+    private _configure;
+    draw(n: number, ch: DrawType): void;
+    _initGlyphs(basicOnly?: boolean): void;
+}
 
 declare type EventFn = (ev: Event$1) => void;
 interface BaseOptions {
@@ -1374,7 +1375,6 @@ declare class NotSupportedError extends Error {
 }
 declare abstract class BaseCanvas implements BufferTarget {
     mouse: XY;
-    protected _data: Uint32Array;
     protected _renderRequested: boolean;
     protected _glyphs: Glyphs;
     protected _node: HTMLCanvasElement;
@@ -1382,6 +1382,7 @@ declare abstract class BaseCanvas implements BufferTarget {
     protected _height: number;
     protected _buffer: Buffer;
     constructor(width: number, height: number, glyphs: Glyphs);
+    protected _createBuffer(): Buffer;
     get node(): HTMLCanvasElement;
     get width(): number;
     get height(): number;
@@ -1411,75 +1412,86 @@ declare abstract class BaseCanvas implements BufferTarget {
     protected _toX(offsetX: number): number;
     protected _toY(offsetY: number): number;
 }
-declare class Canvas extends BaseCanvas {
-    private _gl;
-    private _buffers;
-    private _attribs;
-    private _uniforms;
-    private _texture;
-    constructor(width: number, height: number, glyphs: Glyphs);
-    protected _createContext(): void;
-    private _createGeometry;
-    private _createData;
-    protected _setGlyphs(glyphs: Glyphs): boolean;
-    _uploadGlyphs(): void;
-    resize(width: number, height: number): void;
-    copy(data: DataBuffer): boolean;
-    copyTo(data: DataBuffer): void;
-    _render(): void;
-}
 declare class Canvas2D extends BaseCanvas {
     private _ctx;
     private _changed;
     constructor(width: number, height: number, glyphs: Glyphs);
     protected _createContext(): void;
     resize(width: number, height: number): void;
-    copy(data: DataBuffer): boolean;
+    draw(data: DataBuffer): boolean;
     _render(): void;
     protected _renderCell(index: number): void;
 }
+
+declare class BufferGL extends Buffer {
+    constructor(canvas: BufferTarget);
+    protected _makeData(): Uint32Array;
+    protected _index(x: number, y: number): number;
+    set(x: number, y: number, style: number): boolean;
+    copy(other: DataBuffer): this;
+}
+declare class CanvasGL extends BaseCanvas {
+    private _gl;
+    private _buffers;
+    private _attribs;
+    private _uniforms;
+    private _texture;
+    constructor(width: number, height: number, glyphs: Glyphs);
+    _createBuffer(): BufferGL;
+    protected _createContext(): void;
+    private _createGeometry;
+    private _createData;
+    protected _setGlyphs(glyphs: Glyphs): boolean;
+    _uploadGlyphs(): void;
+    resize(width: number, height: number): void;
+    draw(data: DataBuffer): boolean;
+    _render(): void;
+}
+
 declare function make$3(opts: Partial<CanvasOptions>): BaseCanvas;
 declare function make$3(width: number, height: number, opts?: Partial<CanvasOptions>): BaseCanvas;
+declare function makeBuffer(width: number, height: number): DataBuffer;
 
+type index_d$3_DrawData = DrawData;
+type index_d$3_TextAlign = TextAlign;
+type index_d$3_BufferTarget = BufferTarget;
+type index_d$3_DataBuffer = DataBuffer;
+declare const index_d$3_DataBuffer: typeof DataBuffer;
+type index_d$3_Buffer = Buffer;
+declare const index_d$3_Buffer: typeof Buffer;
+type index_d$3_GlyphOptions = GlyphOptions;
+type index_d$3_Glyphs = Glyphs;
+declare const index_d$3_Glyphs: typeof Glyphs;
 type index_d$3_EventFn = EventFn;
 type index_d$3_CanvasOptions = CanvasOptions;
 type index_d$3_NotSupportedError = NotSupportedError;
 declare const index_d$3_NotSupportedError: typeof NotSupportedError;
 type index_d$3_BaseCanvas = BaseCanvas;
 declare const index_d$3_BaseCanvas: typeof BaseCanvas;
-type index_d$3_Canvas = Canvas;
-declare const index_d$3_Canvas: typeof Canvas;
 type index_d$3_Canvas2D = Canvas2D;
 declare const index_d$3_Canvas2D: typeof Canvas2D;
-type index_d$3_GlyphOptions = GlyphOptions;
-type index_d$3_Glyphs = Glyphs;
-declare const index_d$3_Glyphs: typeof Glyphs;
-type index_d$3_DrawData = DrawData;
-type index_d$3_TextAlign = TextAlign;
-type index_d$3_BufferTarget = BufferTarget;
-type index_d$3_DataBuffer = DataBuffer;
-declare const index_d$3_DataBuffer: typeof DataBuffer;
-declare const index_d$3_makeDataBuffer: typeof makeDataBuffer;
-type index_d$3_Buffer = Buffer;
-declare const index_d$3_Buffer: typeof Buffer;
+type index_d$3_BufferGL = BufferGL;
+declare const index_d$3_BufferGL: typeof BufferGL;
+type index_d$3_CanvasGL = CanvasGL;
+declare const index_d$3_CanvasGL: typeof CanvasGL;
 declare const index_d$3_makeBuffer: typeof makeBuffer;
 declare namespace index_d$3 {
   export {
-    index_d$3_EventFn as EventFn,
-    index_d$3_CanvasOptions as CanvasOptions,
-    index_d$3_NotSupportedError as NotSupportedError,
-    index_d$3_BaseCanvas as BaseCanvas,
-    index_d$3_Canvas as Canvas,
-    index_d$3_Canvas2D as Canvas2D,
-    make$3 as make,
-    index_d$3_GlyphOptions as GlyphOptions,
-    index_d$3_Glyphs as Glyphs,
     index_d$3_DrawData as DrawData,
     index_d$3_TextAlign as TextAlign,
     index_d$3_BufferTarget as BufferTarget,
     index_d$3_DataBuffer as DataBuffer,
-    index_d$3_makeDataBuffer as makeDataBuffer,
     index_d$3_Buffer as Buffer,
+    index_d$3_GlyphOptions as GlyphOptions,
+    index_d$3_Glyphs as Glyphs,
+    index_d$3_EventFn as EventFn,
+    index_d$3_CanvasOptions as CanvasOptions,
+    index_d$3_NotSupportedError as NotSupportedError,
+    index_d$3_BaseCanvas as BaseCanvas,
+    index_d$3_Canvas2D as Canvas2D,
+    index_d$3_BufferGL as BufferGL,
+    index_d$3_CanvasGL as CanvasGL,
+    make$3 as make,
     index_d$3_makeBuffer as makeBuffer,
   };
 }

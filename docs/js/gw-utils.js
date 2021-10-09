@@ -3502,355 +3502,6 @@
         Scheduler: Scheduler
     });
 
-    // Based on: https://github.com/ondras/fastiles/blob/master/ts/shaders.ts (v2.1.0)
-    const VS = `
-#version 300 es
-in uvec2 position;
-in uvec2 uv;
-in uint style;
-out vec2 fsUv;
-flat out uint fsStyle;
-uniform highp uvec2 tileSize;
-uniform uvec2 viewportSize;
-void main() {
-	ivec2 positionPx = ivec2(position * tileSize);
-	vec2 positionNdc = (vec2(positionPx * 2) / vec2(viewportSize))-1.0;
-	positionNdc.y *= -1.0;
-	gl_Position = vec4(positionNdc, 0.0, 1.0);
-	fsUv = vec2(uv);
-	fsStyle = style;
-}`.trim();
-    const FS = `
-#version 300 es
-precision highp float;
-in vec2 fsUv;
-flat in uint fsStyle;
-out vec4 fragColor;
-uniform sampler2D font;
-uniform highp uvec2 tileSize;
-void main() {
-	uvec2 fontTiles = uvec2(textureSize(font, 0)) / tileSize;
-
-	uint glyph = (fsStyle & uint(0xFF000000)) >> 24;
-	uint glyphX = (glyph & uint(0xF));
-	uint glyphY = (glyph >> 4);
-	uvec2 fontPosition = uvec2(glyphX, glyphY);
-
-	uvec2 fontPx = (tileSize * fontPosition) + uvec2(vec2(tileSize) * fsUv);
-	vec3 texel = texelFetch(font, ivec2(fontPx), 0).rgb;
-
-	float s = 15.0;
-	uint fr = (fsStyle & uint(0xF00)) >> 8;
-	uint fg = (fsStyle & uint(0x0F0)) >> 4;
-	uint fb = (fsStyle & uint(0x00F)) >> 0;
-	vec3 fgRgb = vec3(fr, fg, fb) / s;
-  
-	uint br = (fsStyle & uint(0xF00000)) >> 20;
-	uint bg = (fsStyle & uint(0x0F0000)) >> 16;
-	uint bb = (fsStyle & uint(0x00F000)) >> 12;
-	vec3 bgRgb = vec3(br, bg, bb) / s;
-  
-	fragColor = vec4(mix(bgRgb, fgRgb, texel), 1.0);
-}`.trim();
-
-    class Glyphs {
-        constructor(opts = {}) {
-            this._tileWidth = 12;
-            this._tileHeight = 16;
-            this.needsUpdate = true;
-            this._map = {};
-            opts.font = opts.font || 'monospace';
-            this._node = document.createElement('canvas');
-            this._ctx = this.node.getContext('2d');
-            this._configure(opts);
-        }
-        static fromImage(src) {
-            if (typeof src === 'string') {
-                if (src.startsWith('data:'))
-                    throw new Error('Glyph: You must load a data string into an image element and use that.');
-                const el = document.getElementById(src);
-                if (!el)
-                    throw new Error('Glyph: Failed to find image element with id:' + src);
-                src = el;
-            }
-            const glyph = new this({
-                tileWidth: src.width / 16,
-                tileHeight: src.height / 16,
-            });
-            glyph._ctx.drawImage(src, 0, 0);
-            return glyph;
-        }
-        static fromFont(src) {
-            if (typeof src === 'string') {
-                src = { font: src };
-            }
-            const glyphs = new this(src);
-            const basicOnly = src.basicOnly || src.basic || false;
-            glyphs._initGlyphs(basicOnly);
-            return glyphs;
-        }
-        get node() {
-            return this._node;
-        }
-        get ctx() {
-            return this._ctx;
-        }
-        get tileWidth() {
-            return this._tileWidth;
-        }
-        get tileHeight() {
-            return this._tileHeight;
-        }
-        get pxWidth() {
-            return this._node.width;
-        }
-        get pxHeight() {
-            return this._node.height;
-        }
-        forChar(ch) {
-            if (!ch || !ch.length)
-                return -1;
-            return this._map[ch] || -1;
-        }
-        _configure(opts) {
-            this._tileWidth = opts.tileWidth || this.tileWidth;
-            this._tileHeight = opts.tileHeight || this.tileHeight;
-            this.node.width = 16 * this.tileWidth;
-            this.node.height = 16 * this.tileHeight;
-            this._ctx.fillStyle = 'black';
-            this._ctx.fillRect(0, 0, this.pxWidth, this.pxHeight);
-            const size = opts.fontSize ||
-                opts.size ||
-                Math.max(this.tileWidth, this.tileHeight);
-            this._ctx.font = '' + size + 'px ' + opts.font;
-            this._ctx.textAlign = 'center';
-            this._ctx.textBaseline = 'middle';
-            this._ctx.fillStyle = 'white';
-        }
-        draw(n, ch) {
-            if (n > 256)
-                throw new Error('Cannot draw more than 256 glyphs.');
-            const x = (n % 16) * this.tileWidth;
-            const y = Math.floor(n / 16) * this.tileHeight;
-            const cx = x + Math.floor(this.tileWidth / 2);
-            const cy = y + Math.floor(this.tileHeight / 2);
-            this._ctx.save();
-            this._ctx.beginPath();
-            this._ctx.rect(x, y, this.tileWidth, this.tileHeight);
-            this._ctx.clip();
-            this._ctx.fillStyle = 'black';
-            this._ctx.fillRect(x, y, this.tileWidth, this.tileHeight);
-            this._ctx.fillStyle = 'white';
-            if (typeof ch === 'function') {
-                ch(this._ctx, x, y, this.tileWidth, this.tileHeight);
-            }
-            else {
-                if (this._map[ch] === undefined)
-                    this._map[ch] = n;
-                this._ctx.fillText(ch, cx, cy);
-            }
-            this._ctx.restore();
-            this.needsUpdate = true;
-        }
-        _initGlyphs(basicOnly = false) {
-            for (let i = 32; i < 127; ++i) {
-                this.draw(i, String.fromCharCode(i));
-            }
-            [
-                ' ',
-                '\u263a',
-                '\u263b',
-                '\u2665',
-                '\u2666',
-                '\u2663',
-                '\u2660',
-                '\u263c',
-                '\u2600',
-                '\u2605',
-                '\u2606',
-                '\u2642',
-                '\u2640',
-                '\u266a',
-                '\u266b',
-                '\u2638',
-                '\u25b6',
-                '\u25c0',
-                '\u2195',
-                '\u203c',
-                '\u204b',
-                '\u262f',
-                '\u2318',
-                '\u2616',
-                '\u2191',
-                '\u2193',
-                '\u2192',
-                '\u2190',
-                '\u2126',
-                '\u2194',
-                '\u25b2',
-                '\u25bc',
-            ].forEach((ch, i) => {
-                this.draw(i, ch);
-            });
-            if (!basicOnly) {
-                // [
-                // '\u2302',
-                // '\u2b09', '\u272a', '\u2718', '\u2610', '\u2611', '\u25ef', '\u25ce', '\u2690',
-                // '\u2691', '\u2598', '\u2596', '\u259d', '\u2597', '\u2744', '\u272d', '\u2727',
-                // '\u25e3', '\u25e4', '\u25e2', '\u25e5', '\u25a8', '\u25a7', '\u259a', '\u265f',
-                // '\u265c', '\u265e', '\u265d', '\u265b', '\u265a', '\u301c', '\u2694', '\u2692',
-                // '\u25b6', '\u25bc', '\u25c0', '\u25b2', '\u25a4', '\u25a5', '\u25a6', '\u257a',
-                // '\u257b', '\u2578', '\u2579', '\u2581', '\u2594', '\u258f', '\u2595', '\u272d',
-                // '\u2591', '\u2592', '\u2593', '\u2503', '\u252b', '\u2561', '\u2562', '\u2556',
-                // '\u2555', '\u2563', '\u2551', '\u2557', '\u255d', '\u255c', '\u255b', '\u2513',
-                // '\u2517', '\u253b', '\u2533', '\u2523', '\u2501', '\u254b', '\u255e', '\u255f',
-                // '\u255a', '\u2554', '\u2569', '\u2566', '\u2560', '\u2550', '\u256c', '\u2567',
-                // '\u2568', '\u2564', '\u2565', '\u2559', '\u2558', '\u2552', '\u2553', '\u256b',
-                // '\u256a', '\u251b', '\u250f', '\u2588', '\u2585', '\u258c', '\u2590', '\u2580',
-                // '\u03b1', '\u03b2', '\u0393', '\u03c0', '\u03a3', '\u03c3', '\u03bc', '\u03c4',
-                // '\u03a6', '\u03b8', '\u03a9', '\u03b4', '\u221e', '\u03b8', '\u03b5', '\u03b7',
-                // '\u039e', '\u00b1', '\u2265', '\u2264', '\u2234', '\u2237', '\u00f7', '\u2248',
-                // '\u22c4', '\u22c5', '\u2217', '\u27b5', '\u2620', '\u2625', '\u25fc', '\u25fb'
-                // ].forEach( (ch, i) => {
-                //   this.draw(i + 127, ch);
-                // });
-                [
-                    '\u2302',
-                    '\u00C7',
-                    '\u00FC',
-                    '\u00E9',
-                    '\u00E2',
-                    '\u00E4',
-                    '\u00E0',
-                    '\u00E5',
-                    '\u00E7',
-                    '\u00EA',
-                    '\u00EB',
-                    '\u00E8',
-                    '\u00EF',
-                    '\u00EE',
-                    '\u00EC',
-                    '\u00C4',
-                    '\u00C5',
-                    '\u00C9',
-                    '\u00E6',
-                    '\u00C6',
-                    '\u00F4',
-                    '\u00F6',
-                    '\u00F2',
-                    '\u00FB',
-                    '\u00F9',
-                    '\u00FF',
-                    '\u00D6',
-                    '\u00DC',
-                    '\u00A2',
-                    '\u00A3',
-                    '\u00A5',
-                    '\u20A7',
-                    '\u0192',
-                    '\u00E1',
-                    '\u00ED',
-                    '\u00F3',
-                    '\u00FA',
-                    '\u00F1',
-                    '\u00D1',
-                    '\u00AA',
-                    '\u00BA',
-                    '\u00BF',
-                    '\u2310',
-                    '\u00AC',
-                    '\u00BD',
-                    '\u00BC',
-                    '\u00A1',
-                    '\u00AB',
-                    '\u00BB',
-                    '\u2591',
-                    '\u2592',
-                    '\u2593',
-                    '\u2502',
-                    '\u2524',
-                    '\u2561',
-                    '\u2562',
-                    '\u2556',
-                    '\u2555',
-                    '\u2563',
-                    '\u2551',
-                    '\u2557',
-                    '\u255D',
-                    '\u255C',
-                    '\u255B',
-                    '\u2510',
-                    '\u2514',
-                    '\u2534',
-                    '\u252C',
-                    '\u251C',
-                    '\u2500',
-                    '\u253C',
-                    '\u255E',
-                    '\u255F',
-                    '\u255A',
-                    '\u2554',
-                    '\u2569',
-                    '\u2566',
-                    '\u2560',
-                    '\u2550',
-                    '\u256C',
-                    '\u2567',
-                    '\u2568',
-                    '\u2564',
-                    '\u2565',
-                    '\u2559',
-                    '\u2558',
-                    '\u2552',
-                    '\u2553',
-                    '\u256B',
-                    '\u256A',
-                    '\u2518',
-                    '\u250C',
-                    '\u2588',
-                    '\u2584',
-                    '\u258C',
-                    '\u2590',
-                    '\u2580',
-                    '\u03B1',
-                    '\u00DF',
-                    '\u0393',
-                    '\u03C0',
-                    '\u03A3',
-                    '\u03C3',
-                    '\u00B5',
-                    '\u03C4',
-                    '\u03A6',
-                    '\u0398',
-                    '\u03A9',
-                    '\u03B4',
-                    '\u221E',
-                    '\u03C6',
-                    '\u03B5',
-                    '\u2229',
-                    '\u2261',
-                    '\u00B1',
-                    '\u2265',
-                    '\u2264',
-                    '\u2320',
-                    '\u2321',
-                    '\u00F7',
-                    '\u2248',
-                    '\u00B0',
-                    '\u2219',
-                    '\u00B7',
-                    '\u221A',
-                    '\u207F',
-                    '\u00B2',
-                    '\u25A0',
-                    '\u00A0',
-                ].forEach((ch, i) => {
-                    this.draw(i + 127, ch);
-                });
-            }
-        }
-    }
-
     function toColorInt(r, g, b, base256) {
         if (base256) {
             r = Math.max(0, Math.min(255, Math.round(r * 2.550001)));
@@ -5185,7 +4836,10 @@ void main() {
             this.changed = false;
             this._width = width;
             this._height = height;
-            this._data = new Uint32Array(width * height);
+            this._data = this._makeData();
+        }
+        _makeData() {
+            return new Uint32Array(this.width * this.height);
         }
         get width() {
             return this._width;
@@ -5211,13 +4865,28 @@ void main() {
             }
             this.changed = true;
         }
+        _index(x, y) {
+            return y * this.width + x;
+        }
         get(x, y) {
-            let index = y * this.width + x;
-            const style = this._data[index] || 0;
+            let index = this._index(x, y);
+            return this._data[index] || 0;
+        }
+        info(x, y) {
+            const style = this.get(x, y);
             const glyph = style >> 24;
             const bg = (style >> 12) & 0xfff;
             const fg = style & 0xfff;
             return { glyph, fg, bg };
+        }
+        set(x, y, style) {
+            let index = this._index(x, y);
+            const current = this._data[index];
+            if (current !== style) {
+                this._data[index] = style;
+                return true;
+            }
+            return false;
         }
         toGlyph(ch) {
             if (typeof ch === 'number')
@@ -5229,8 +4898,7 @@ void main() {
         draw(x, y, glyph = -1, fg = -1, // TODO - White?
         bg = -1 // TODO - Black?
         ) {
-            let index = y * this.width + x;
-            const current = this._data[index] || 0;
+            const current = this.get(x, y);
             if (typeof glyph !== 'number') {
                 glyph = this.toGlyph(glyph);
             }
@@ -5244,7 +4912,7 @@ void main() {
             bg = bg >= 0 ? bg & 0xfff : (current >> 12) & 0xfff;
             fg = fg >= 0 ? fg & 0xfff : current & 0xfff;
             const style = (glyph << 24) + (bg << 12) + fg;
-            this._data[index] = style;
+            this.set(x, y, style);
             if (style !== current)
                 this.changed = true;
             return this;
@@ -5371,7 +5039,7 @@ void main() {
                 color = from$2(color);
             }
             const mixer = new Mixer();
-            const data = this.get(x, y);
+            const data = this.info(x, y);
             mixer.drawSprite(data);
             mixer.fg.add(color, strength);
             mixer.bg.add(color, strength);
@@ -5389,7 +5057,7 @@ void main() {
             const endY = height ? height + y : this.height;
             for (let i = x; i < endX; ++i) {
                 for (let j = y; j < endY; ++j) {
-                    const data = this.get(i, j);
+                    const data = this.info(i, j);
                     mixer.drawSprite(data);
                     mixer.fg.mix(color, percent);
                     mixer.bg.mix(color, percent);
@@ -5413,7 +5081,7 @@ void main() {
                 for (let x = 0; x < this.width; ++x) {
                     if (x % 10 == 0)
                         line += ' ';
-                    const data = this.get(x, y);
+                    const data = this.info(x, y);
                     const glyph = data.glyph;
                     line += String.fromCharCode(glyph || 32);
                 }
@@ -5421,9 +5089,6 @@ void main() {
             }
             console.log(data.join('\n'));
         }
-    }
-    function makeDataBuffer(width, height) {
-        return new DataBuffer(width, height);
     }
     class Buffer extends DataBuffer {
         constructor(canvas) {
@@ -5433,7 +5098,7 @@ void main() {
         }
         // get canvas() { return this._target; }
         clone() {
-            const other = new Buffer(this._target);
+            const other = new (this.constructor)(this._target);
             other.copy(this);
             return other;
         }
@@ -5449,14 +5114,305 @@ void main() {
             return this;
         }
     }
-    function makeBuffer(...args) {
-        if (args.length == 1) {
-            return new Buffer(args[0]);
+
+    class Glyphs {
+        constructor(opts = {}) {
+            this._tileWidth = 12;
+            this._tileHeight = 16;
+            this.needsUpdate = true;
+            this._map = {};
+            opts.font = opts.font || 'monospace';
+            this._node = document.createElement('canvas');
+            this._ctx = this.node.getContext('2d');
+            this._configure(opts);
         }
-        return new DataBuffer(args[0], args[1]);
+        static fromImage(src) {
+            if (typeof src === 'string') {
+                if (src.startsWith('data:'))
+                    throw new Error('Glyph: You must load a data string into an image element and use that.');
+                const el = document.getElementById(src);
+                if (!el)
+                    throw new Error('Glyph: Failed to find image element with id:' + src);
+                src = el;
+            }
+            const glyph = new this({
+                tileWidth: src.width / 16,
+                tileHeight: src.height / 16,
+            });
+            glyph._ctx.drawImage(src, 0, 0);
+            return glyph;
+        }
+        static fromFont(src) {
+            if (typeof src === 'string') {
+                src = { font: src };
+            }
+            const glyphs = new this(src);
+            const basicOnly = src.basicOnly || src.basic || false;
+            glyphs._initGlyphs(basicOnly);
+            return glyphs;
+        }
+        get node() {
+            return this._node;
+        }
+        get ctx() {
+            return this._ctx;
+        }
+        get tileWidth() {
+            return this._tileWidth;
+        }
+        get tileHeight() {
+            return this._tileHeight;
+        }
+        get pxWidth() {
+            return this._node.width;
+        }
+        get pxHeight() {
+            return this._node.height;
+        }
+        forChar(ch) {
+            if (!ch || !ch.length)
+                return -1;
+            return this._map[ch] || -1;
+        }
+        _configure(opts) {
+            this._tileWidth = opts.tileWidth || this.tileWidth;
+            this._tileHeight = opts.tileHeight || this.tileHeight;
+            this.node.width = 16 * this.tileWidth;
+            this.node.height = 16 * this.tileHeight;
+            this._ctx.fillStyle = 'black';
+            this._ctx.fillRect(0, 0, this.pxWidth, this.pxHeight);
+            const size = opts.fontSize ||
+                opts.size ||
+                Math.max(this.tileWidth, this.tileHeight);
+            this._ctx.font = '' + size + 'px ' + opts.font;
+            this._ctx.textAlign = 'center';
+            this._ctx.textBaseline = 'middle';
+            this._ctx.fillStyle = 'white';
+        }
+        draw(n, ch) {
+            if (n > 256)
+                throw new Error('Cannot draw more than 256 glyphs.');
+            const x = (n % 16) * this.tileWidth;
+            const y = Math.floor(n / 16) * this.tileHeight;
+            const cx = x + Math.floor(this.tileWidth / 2);
+            const cy = y + Math.floor(this.tileHeight / 2);
+            this._ctx.save();
+            this._ctx.beginPath();
+            this._ctx.rect(x, y, this.tileWidth, this.tileHeight);
+            this._ctx.clip();
+            this._ctx.fillStyle = 'black';
+            this._ctx.fillRect(x, y, this.tileWidth, this.tileHeight);
+            this._ctx.fillStyle = 'white';
+            if (typeof ch === 'function') {
+                ch(this._ctx, x, y, this.tileWidth, this.tileHeight);
+            }
+            else {
+                if (this._map[ch] === undefined)
+                    this._map[ch] = n;
+                this._ctx.fillText(ch, cx, cy);
+            }
+            this._ctx.restore();
+            this.needsUpdate = true;
+        }
+        _initGlyphs(basicOnly = false) {
+            for (let i = 32; i < 127; ++i) {
+                this.draw(i, String.fromCharCode(i));
+            }
+            [
+                ' ',
+                '\u263a',
+                '\u263b',
+                '\u2665',
+                '\u2666',
+                '\u2663',
+                '\u2660',
+                '\u263c',
+                '\u2600',
+                '\u2605',
+                '\u2606',
+                '\u2642',
+                '\u2640',
+                '\u266a',
+                '\u266b',
+                '\u2638',
+                '\u25b6',
+                '\u25c0',
+                '\u2195',
+                '\u203c',
+                '\u204b',
+                '\u262f',
+                '\u2318',
+                '\u2616',
+                '\u2191',
+                '\u2193',
+                '\u2192',
+                '\u2190',
+                '\u2126',
+                '\u2194',
+                '\u25b2',
+                '\u25bc',
+            ].forEach((ch, i) => {
+                this.draw(i, ch);
+            });
+            if (!basicOnly) {
+                // [
+                // '\u2302',
+                // '\u2b09', '\u272a', '\u2718', '\u2610', '\u2611', '\u25ef', '\u25ce', '\u2690',
+                // '\u2691', '\u2598', '\u2596', '\u259d', '\u2597', '\u2744', '\u272d', '\u2727',
+                // '\u25e3', '\u25e4', '\u25e2', '\u25e5', '\u25a8', '\u25a7', '\u259a', '\u265f',
+                // '\u265c', '\u265e', '\u265d', '\u265b', '\u265a', '\u301c', '\u2694', '\u2692',
+                // '\u25b6', '\u25bc', '\u25c0', '\u25b2', '\u25a4', '\u25a5', '\u25a6', '\u257a',
+                // '\u257b', '\u2578', '\u2579', '\u2581', '\u2594', '\u258f', '\u2595', '\u272d',
+                // '\u2591', '\u2592', '\u2593', '\u2503', '\u252b', '\u2561', '\u2562', '\u2556',
+                // '\u2555', '\u2563', '\u2551', '\u2557', '\u255d', '\u255c', '\u255b', '\u2513',
+                // '\u2517', '\u253b', '\u2533', '\u2523', '\u2501', '\u254b', '\u255e', '\u255f',
+                // '\u255a', '\u2554', '\u2569', '\u2566', '\u2560', '\u2550', '\u256c', '\u2567',
+                // '\u2568', '\u2564', '\u2565', '\u2559', '\u2558', '\u2552', '\u2553', '\u256b',
+                // '\u256a', '\u251b', '\u250f', '\u2588', '\u2585', '\u258c', '\u2590', '\u2580',
+                // '\u03b1', '\u03b2', '\u0393', '\u03c0', '\u03a3', '\u03c3', '\u03bc', '\u03c4',
+                // '\u03a6', '\u03b8', '\u03a9', '\u03b4', '\u221e', '\u03b8', '\u03b5', '\u03b7',
+                // '\u039e', '\u00b1', '\u2265', '\u2264', '\u2234', '\u2237', '\u00f7', '\u2248',
+                // '\u22c4', '\u22c5', '\u2217', '\u27b5', '\u2620', '\u2625', '\u25fc', '\u25fb'
+                // ].forEach( (ch, i) => {
+                //   this.draw(i + 127, ch);
+                // });
+                [
+                    '\u2302',
+                    '\u00C7',
+                    '\u00FC',
+                    '\u00E9',
+                    '\u00E2',
+                    '\u00E4',
+                    '\u00E0',
+                    '\u00E5',
+                    '\u00E7',
+                    '\u00EA',
+                    '\u00EB',
+                    '\u00E8',
+                    '\u00EF',
+                    '\u00EE',
+                    '\u00EC',
+                    '\u00C4',
+                    '\u00C5',
+                    '\u00C9',
+                    '\u00E6',
+                    '\u00C6',
+                    '\u00F4',
+                    '\u00F6',
+                    '\u00F2',
+                    '\u00FB',
+                    '\u00F9',
+                    '\u00FF',
+                    '\u00D6',
+                    '\u00DC',
+                    '\u00A2',
+                    '\u00A3',
+                    '\u00A5',
+                    '\u20A7',
+                    '\u0192',
+                    '\u00E1',
+                    '\u00ED',
+                    '\u00F3',
+                    '\u00FA',
+                    '\u00F1',
+                    '\u00D1',
+                    '\u00AA',
+                    '\u00BA',
+                    '\u00BF',
+                    '\u2310',
+                    '\u00AC',
+                    '\u00BD',
+                    '\u00BC',
+                    '\u00A1',
+                    '\u00AB',
+                    '\u00BB',
+                    '\u2591',
+                    '\u2592',
+                    '\u2593',
+                    '\u2502',
+                    '\u2524',
+                    '\u2561',
+                    '\u2562',
+                    '\u2556',
+                    '\u2555',
+                    '\u2563',
+                    '\u2551',
+                    '\u2557',
+                    '\u255D',
+                    '\u255C',
+                    '\u255B',
+                    '\u2510',
+                    '\u2514',
+                    '\u2534',
+                    '\u252C',
+                    '\u251C',
+                    '\u2500',
+                    '\u253C',
+                    '\u255E',
+                    '\u255F',
+                    '\u255A',
+                    '\u2554',
+                    '\u2569',
+                    '\u2566',
+                    '\u2560',
+                    '\u2550',
+                    '\u256C',
+                    '\u2567',
+                    '\u2568',
+                    '\u2564',
+                    '\u2565',
+                    '\u2559',
+                    '\u2558',
+                    '\u2552',
+                    '\u2553',
+                    '\u256B',
+                    '\u256A',
+                    '\u2518',
+                    '\u250C',
+                    '\u2588',
+                    '\u2584',
+                    '\u258C',
+                    '\u2590',
+                    '\u2580',
+                    '\u03B1',
+                    '\u00DF',
+                    '\u0393',
+                    '\u03C0',
+                    '\u03A3',
+                    '\u03C3',
+                    '\u00B5',
+                    '\u03C4',
+                    '\u03A6',
+                    '\u0398',
+                    '\u03A9',
+                    '\u03B4',
+                    '\u221E',
+                    '\u03C6',
+                    '\u03B5',
+                    '\u2229',
+                    '\u2261',
+                    '\u00B1',
+                    '\u2265',
+                    '\u2264',
+                    '\u2320',
+                    '\u2321',
+                    '\u00F7',
+                    '\u2248',
+                    '\u00B0',
+                    '\u2219',
+                    '\u00B7',
+                    '\u221A',
+                    '\u207F',
+                    '\u00B2',
+                    '\u25A0',
+                    '\u00A0',
+                ].forEach((ch, i) => {
+                    this.draw(i + 127, ch);
+                });
+            }
+        }
     }
 
-    const VERTICES_PER_TILE = 6;
     class NotSupportedError extends Error {
         constructor(...params) {
             // Pass remaining arguments (including vendor specific ones) to parent constructor
@@ -5473,13 +5429,17 @@ void main() {
     class BaseCanvas {
         constructor(width, height, glyphs) {
             this.mouse = { x: -1, y: -1 };
+            // protected _data!: Uint32Array;
             this._renderRequested = false;
             this._width = 50;
             this._height = 25;
             this._node = this._createNode();
             this._createContext();
             this._configure(width, height, glyphs);
-            this._buffer = new Buffer(this);
+            this._buffer = this._createBuffer();
+        }
+        _createBuffer() {
+            return new Buffer(this);
         }
         get node() {
             return this._node;
@@ -5541,58 +5501,26 @@ void main() {
             node.width = this._width * this.tileWidth;
             node.height = this._height * this.tileHeight;
         }
-        // draw(x: number, y: number, glyph: number, fg: number, bg: number) {
-        //     glyph = glyph & 0xff;
-        //     bg = bg & 0xfff;
-        //     fg = fg & 0xfff;
-        //     const style = glyph * (1 << 24) + bg * (1 << 12) + fg;
-        //     this._set(x, y, style);
-        //     return this;
-        // }
-        // fill(bg: number): this;
-        // fill(glyph: number, fg: number, bg: number): this;
-        // fill(...args: number[]): this {
-        //     let g = 0,
-        //         fg = 0,
-        //         bg = 0;
-        //     if (args.length == 1) {
-        //         bg = args[0];
-        //     } else if (args.length == 3) {
-        //         [g, fg, bg] = args;
-        //     }
-        //     for (let x = 0; x < this._width; ++x) {
-        //         for (let y = 0; y < this._height; ++y) {
-        //             this.draw(x, y, g, fg, bg);
-        //         }
-        //     }
-        //     return this;
-        // }
         _requestRender() {
             if (this._renderRequested)
                 return;
             this._renderRequested = true;
             requestAnimationFrame(() => this._render());
         }
-        // protected _set(x: number, y: number, style: number) {
-        //     let index = y * this.width + x;
-        //     const current = this._data[index];
-        //     if (current !== style) {
-        //         this._data[index] = style;
-        //         this._requestRender();
-        //         return true;
-        //     }
-        //     return false;
-        // }
         copy(data) {
-            if (!data.changed)
+            if (data.width !== this.width || data.height !== this.height)
+                throw new Error('Buffer is not same size as canvas!');
+            if (!data.changed && !this.buffer.changed)
                 return false;
             data.changed = false;
-            this._data.set(data._data);
+            this.buffer.copy(data);
             this._requestRender();
             return true;
         }
         copyTo(data) {
-            data._data.set(this._data);
+            if (!this.buffer)
+                return; // startup/constructor
+            data.copy(this.buffer);
         }
         render() {
             this.buffer.render();
@@ -5662,10 +5590,223 @@ void main() {
             return clamp(Math.floor(this.height * (offsetY / this.node.clientHeight)), 0, this.height - 1);
         }
     }
-    // Based on: https://github.com/ondras/fastiles/blob/master/ts/scene.ts (v2.1.0)
-    class Canvas extends BaseCanvas {
+    class Canvas2D extends BaseCanvas {
         constructor(width, height, glyphs) {
             super(width, height, glyphs);
+        }
+        _createContext() {
+            const ctx = this.node.getContext('2d');
+            if (!ctx) {
+                throw new NotSupportedError('2d context not supported!');
+            }
+            this._ctx = ctx;
+        }
+        // protected _set(x: number, y: number, style: number) {
+        //     const result = super._set(x, y, style);
+        //     if (result) {
+        //         this._changed[y * this.width + x] = 1;
+        //     }
+        //     return result;
+        // }
+        resize(width, height) {
+            super.resize(width, height);
+            // this._data = new Uint32Array(width * height);
+            this._changed = new Int8Array(width * height);
+        }
+        draw(data) {
+            if (!data.changed)
+                return false;
+            data.changed = false;
+            let changed = false;
+            const raw = this.buffer._data;
+            for (let i = 0; i < raw.length; ++i) {
+                if (raw[i] !== data._data[i]) {
+                    raw[i] = data._data[i];
+                    this._changed[i] = 1;
+                    changed = true;
+                }
+            }
+            if (!changed)
+                return false;
+            this.buffer.changed = true;
+            this._requestRender();
+            return true;
+        }
+        _render() {
+            this._renderRequested = false;
+            for (let i = 0; i < this._changed.length; ++i) {
+                if (this._changed[i])
+                    this._renderCell(i);
+                this._changed[i] = 0;
+            }
+            this.buffer.changed = false;
+        }
+        _renderCell(index) {
+            const x = index % this.width;
+            const y = Math.floor(index / this.width);
+            const style = this.buffer._data[index];
+            const glyph = (style / (1 << 24)) >> 0;
+            const bg = (style >> 12) & 0xfff;
+            const fg = style & 0xfff;
+            const px = x * this.tileWidth;
+            const py = y * this.tileHeight;
+            const gx = (glyph % 16) * this.tileWidth;
+            const gy = Math.floor(glyph / 16) * this.tileHeight;
+            const d = this.glyphs.ctx.getImageData(gx, gy, this.tileWidth, this.tileHeight);
+            for (let di = 0; di < d.width * d.height; ++di) {
+                const pct = d.data[di * 4] / 255;
+                const inv = 1.0 - pct;
+                d.data[di * 4 + 0] =
+                    pct * (((fg & 0xf00) >> 8) * 17) +
+                        inv * (((bg & 0xf00) >> 8) * 17);
+                d.data[di * 4 + 1] =
+                    pct * (((fg & 0xf0) >> 4) * 17) +
+                        inv * (((bg & 0xf0) >> 4) * 17);
+                d.data[di * 4 + 2] =
+                    pct * ((fg & 0xf) * 17) + inv * ((bg & 0xf) * 17);
+                d.data[di * 4 + 3] = 255; // not transparent anymore
+            }
+            this._ctx.putImageData(d, px, py);
+        }
+    }
+    // export function withImage(image: ImageOptions | HTMLImageElement | string) {
+    //     let opts = {} as CanvasOptions;
+    //     if (typeof image === 'string') {
+    //         opts.glyphs = Glyphs.fromImage(image);
+    //     } else if (image instanceof HTMLImageElement) {
+    //         opts.glyphs = Glyphs.fromImage(image);
+    //     } else {
+    //         if (!image.image) throw new Error('You must supply the image.');
+    //         Object.assign(opts, image);
+    //         opts.glyphs = Glyphs.fromImage(image.image);
+    //     }
+    //     let canvas;
+    //     try {
+    //         canvas = new Canvas(opts);
+    //     } catch (e) {
+    //         if (!(e instanceof NotSupportedError)) throw e;
+    //     }
+    //     if (!canvas) {
+    //         canvas = new Canvas2D(opts);
+    //     }
+    //     return canvas;
+    // }
+    // export function withFont(src: FontOptions | string) {
+    //     if (typeof src === 'string') {
+    //         src = { font: src } as FontOptions;
+    //     }
+    //     src.glyphs = Glyphs.fromFont(src);
+    //     let canvas;
+    //     try {
+    //         canvas = new Canvas(src);
+    //     } catch (e) {
+    //         if (!(e instanceof NotSupportedError)) throw e;
+    //     }
+    //     if (!canvas) {
+    //         canvas = new Canvas2D(src);
+    //     }
+    //     return canvas;
+    // }
+
+    // Based on: https://github.com/ondras/fastiles/blob/master/ts/shaders.ts (v2.1.0)
+    const VS = `
+#version 300 es
+in uvec2 position;
+in uvec2 uv;
+in uint style;
+out vec2 fsUv;
+flat out uint fsStyle;
+uniform highp uvec2 tileSize;
+uniform uvec2 viewportSize;
+void main() {
+	ivec2 positionPx = ivec2(position * tileSize);
+	vec2 positionNdc = (vec2(positionPx * 2) / vec2(viewportSize))-1.0;
+	positionNdc.y *= -1.0;
+	gl_Position = vec4(positionNdc, 0.0, 1.0);
+	fsUv = vec2(uv);
+	fsStyle = style;
+}`.trim();
+    const FS = `
+#version 300 es
+precision highp float;
+in vec2 fsUv;
+flat in uint fsStyle;
+out vec4 fragColor;
+uniform sampler2D font;
+uniform highp uvec2 tileSize;
+void main() {
+	uvec2 fontTiles = uvec2(textureSize(font, 0)) / tileSize;
+
+	uint glyph = (fsStyle & uint(0xFF000000)) >> 24;
+	uint glyphX = (glyph & uint(0xF));
+	uint glyphY = (glyph >> 4);
+	uvec2 fontPosition = uvec2(glyphX, glyphY);
+
+	uvec2 fontPx = (tileSize * fontPosition) + uvec2(vec2(tileSize) * fsUv);
+	vec3 texel = texelFetch(font, ivec2(fontPx), 0).rgb;
+
+	float s = 15.0;
+	uint fr = (fsStyle & uint(0xF00)) >> 8;
+	uint fg = (fsStyle & uint(0x0F0)) >> 4;
+	uint fb = (fsStyle & uint(0x00F)) >> 0;
+	vec3 fgRgb = vec3(fr, fg, fb) / s;
+  
+	uint br = (fsStyle & uint(0xF00000)) >> 20;
+	uint bg = (fsStyle & uint(0x0F0000)) >> 16;
+	uint bb = (fsStyle & uint(0x00F000)) >> 12;
+	vec3 bgRgb = vec3(br, bg, bb) / s;
+  
+	fragColor = vec4(mix(bgRgb, fgRgb, texel), 1.0);
+}`.trim();
+
+    const VERTICES_PER_TILE = 6;
+    class BufferGL extends Buffer {
+        constructor(canvas) {
+            super(canvas);
+        }
+        _makeData() {
+            return new Uint32Array(this.width * this.height * VERTICES_PER_TILE);
+        }
+        _index(x, y) {
+            let index = y * this.width + x;
+            index *= VERTICES_PER_TILE;
+            return index;
+        }
+        set(x, y, style) {
+            let index = this._index(x, y);
+            const current = this._data[index + 2];
+            if (current !== style) {
+                this._data[index + 2] = style;
+                this._data[index + 5] = style;
+                this.changed = true;
+                return true;
+            }
+            return false;
+        }
+        copy(other) {
+            if (this.height !== other.height || this.width !== other.width)
+                throw new Error('Buffers must be same size!');
+            if (this._data.length === other._data.length) {
+                this._data.set(other._data);
+            }
+            else {
+                for (let x = 0; x < this.width; ++x) {
+                    for (let y = 0; y < this.width; ++y) {
+                        this.set(x, y, other.get(x, y));
+                    }
+                }
+            }
+            this.changed = true;
+            return this;
+        }
+    }
+    // Based on: https://github.com/ondras/fastiles/blob/master/ts/scene.ts (v2.1.0)
+    class CanvasGL extends BaseCanvas {
+        constructor(width, height, glyphs) {
+            super(width, height, glyphs);
+        }
+        _createBuffer() {
+            return new BufferGL(this);
         }
         _createContext() {
             let gl = this.node.getContext('webgl2');
@@ -5702,9 +5843,9 @@ void main() {
         _createData() {
             const gl = this._gl;
             const attribs = this._attribs;
-            const tileCount = this.width * this.height;
+            // const tileCount = this.width * this.height;
             this._buffers.style && gl.deleteBuffer(this._buffers.style);
-            this._data = new Uint32Array(tileCount * VERTICES_PER_TILE);
+            // this._data = new Uint32Array(tileCount * VERTICES_PER_TILE);
             const style = gl.createBuffer();
             gl.bindBuffer(gl.ARRAY_BUFFER, style);
             gl.vertexAttribIPointer(attribs['style'], 1, gl.UNSIGNED_INT, 0, 0);
@@ -5750,25 +5891,29 @@ void main() {
         //     }
         //     return false;
         // }
-        copy(data) {
+        draw(data) {
             if (!data.changed)
                 return false;
-            data._data.forEach((style, i) => {
-                const index = i * VERTICES_PER_TILE;
-                this._data[index + 2] = style;
-                this._data[index + 5] = style;
-            });
+            // data._data.forEach((style, i) => {
+            //     const index = i * VERTICES_PER_TILE;
+            //     this.buffer._data[index + 2] = style;
+            //     this.buffer._data[index + 5] = style;
+            // });
+            this.buffer.copy(data);
             this._requestRender();
             data.changed = false;
             return true;
         }
-        copyTo(data) {
-            const n = this.width * this.height;
-            for (let i = 0; i < n; ++i) {
-                const index = i * VERTICES_PER_TILE;
-                data._data[i] = this._data[index + 2];
-            }
-        }
+        // copyTo(data: Buffer.DataBuffer) {
+        //     if (!this.buffer) return; // startup
+        //     data.copy(this.buffer);
+        //     data.changed = false;
+        //     // const n = this.width * this.height;
+        //     // for (let i = 0; i < n; ++i) {
+        //     //     const index = i * VERTICES_PER_TILE;
+        //     //     data._data[i] = this._data[index + 2];
+        //     // }
+        // }
         _render() {
             const gl = this._gl;
             if (this._glyphs.needsUpdate) {
@@ -5780,172 +5925,11 @@ void main() {
             }
             this._renderRequested = false;
             gl.bindBuffer(gl.ARRAY_BUFFER, this._buffers.style);
-            gl.bufferData(gl.ARRAY_BUFFER, this._data, gl.DYNAMIC_DRAW);
+            gl.bufferData(gl.ARRAY_BUFFER, this.buffer._data, gl.DYNAMIC_DRAW);
             gl.drawArrays(gl.TRIANGLES, 0, this._width * this._height * VERTICES_PER_TILE);
+            this.buffer.changed = false;
         }
     }
-    class Canvas2D extends BaseCanvas {
-        constructor(width, height, glyphs) {
-            super(width, height, glyphs);
-        }
-        _createContext() {
-            const ctx = this.node.getContext('2d');
-            if (!ctx) {
-                throw new NotSupportedError('2d context not supported!');
-            }
-            this._ctx = ctx;
-        }
-        // protected _set(x: number, y: number, style: number) {
-        //     const result = super._set(x, y, style);
-        //     if (result) {
-        //         this._changed[y * this.width + x] = 1;
-        //     }
-        //     return result;
-        // }
-        resize(width, height) {
-            super.resize(width, height);
-            this._data = new Uint32Array(width * height);
-            this._changed = new Int8Array(width * height);
-        }
-        copy(data) {
-            if (!data.changed)
-                return false;
-            data.changed = false;
-            for (let i = 0; i < this._data.length; ++i) {
-                if (this._data[i] !== data._data[i]) {
-                    this._data[i] = data._data[i];
-                    this._changed[i] = 1;
-                }
-            }
-            this._requestRender();
-            return true;
-        }
-        _render() {
-            this._renderRequested = false;
-            for (let i = 0; i < this._changed.length; ++i) {
-                if (this._changed[i])
-                    this._renderCell(i);
-                this._changed[i] = 0;
-            }
-        }
-        _renderCell(index) {
-            const x = index % this.width;
-            const y = Math.floor(index / this.width);
-            const style = this._data[index];
-            const glyph = (style / (1 << 24)) >> 0;
-            const bg = (style >> 12) & 0xfff;
-            const fg = style & 0xfff;
-            const px = x * this.tileWidth;
-            const py = y * this.tileHeight;
-            const gx = (glyph % 16) * this.tileWidth;
-            const gy = Math.floor(glyph / 16) * this.tileHeight;
-            const d = this.glyphs.ctx.getImageData(gx, gy, this.tileWidth, this.tileHeight);
-            for (let di = 0; di < d.width * d.height; ++di) {
-                const pct = d.data[di * 4] / 255;
-                const inv = 1.0 - pct;
-                d.data[di * 4 + 0] =
-                    pct * (((fg & 0xf00) >> 8) * 17) +
-                        inv * (((bg & 0xf00) >> 8) * 17);
-                d.data[di * 4 + 1] =
-                    pct * (((fg & 0xf0) >> 4) * 17) +
-                        inv * (((bg & 0xf0) >> 4) * 17);
-                d.data[di * 4 + 2] =
-                    pct * ((fg & 0xf) * 17) + inv * ((bg & 0xf) * 17);
-                d.data[di * 4 + 3] = 255; // not transparent anymore
-            }
-            this._ctx.putImageData(d, px, py);
-        }
-    }
-    function make$3(...args) {
-        let width = args[0];
-        let height = args[1];
-        let opts = args[2];
-        if (args.length == 1) {
-            opts = args[0];
-            height = opts.height || 34;
-            width = opts.width || 80;
-        }
-        opts = opts || { font: 'monospace' };
-        let glyphs;
-        if (opts.image) {
-            glyphs = Glyphs.fromImage(opts.image);
-        }
-        else {
-            glyphs = Glyphs.fromFont(opts);
-        }
-        let canvas;
-        try {
-            canvas = new Canvas(width, height, glyphs);
-        }
-        catch (e) {
-            if (!(e instanceof NotSupportedError))
-                throw e;
-        }
-        if (!canvas) {
-            canvas = new Canvas2D(width, height, glyphs);
-        }
-        if (opts.div) {
-            let el;
-            if (typeof opts.div === 'string') {
-                el = document.getElementById(opts.div);
-                if (!el) {
-                    console.warn('Failed to find parent element by ID: ' + opts.div);
-                }
-            }
-            else {
-                el = opts.div;
-            }
-            if (el && el.appendChild) {
-                el.appendChild(canvas.node);
-            }
-        }
-        if (opts.io || opts.loop) {
-            let loop$1 = opts.loop || loop;
-            canvas.onclick = (e) => loop$1.pushEvent(e);
-            canvas.onmousemove = (e) => loop$1.pushEvent(e);
-            canvas.onmouseup = (e) => loop$1.pushEvent(e);
-            // canvas.onkeydown = (e) => loop.pushEvent(e); // Keyboard events require tabindex to be set, better to let user do this.
-        }
-        return canvas;
-    }
-    // export function withImage(image: ImageOptions | HTMLImageElement | string) {
-    //     let opts = {} as CanvasOptions;
-    //     if (typeof image === 'string') {
-    //         opts.glyphs = Glyphs.fromImage(image);
-    //     } else if (image instanceof HTMLImageElement) {
-    //         opts.glyphs = Glyphs.fromImage(image);
-    //     } else {
-    //         if (!image.image) throw new Error('You must supply the image.');
-    //         Object.assign(opts, image);
-    //         opts.glyphs = Glyphs.fromImage(image.image);
-    //     }
-    //     let canvas;
-    //     try {
-    //         canvas = new Canvas(opts);
-    //     } catch (e) {
-    //         if (!(e instanceof NotSupportedError)) throw e;
-    //     }
-    //     if (!canvas) {
-    //         canvas = new Canvas2D(opts);
-    //     }
-    //     return canvas;
-    // }
-    // export function withFont(src: FontOptions | string) {
-    //     if (typeof src === 'string') {
-    //         src = { font: src } as FontOptions;
-    //     }
-    //     src.glyphs = Glyphs.fromFont(src);
-    //     let canvas;
-    //     try {
-    //         canvas = new Canvas(src);
-    //     } catch (e) {
-    //         if (!(e instanceof NotSupportedError)) throw e;
-    //     }
-    //     if (!canvas) {
-    //         canvas = new Canvas2D(src);
-    //     }
-    //     return canvas;
-    // }
     // Copy of: https://github.com/ondras/fastiles/blob/master/ts/utils.ts (v2.1.0)
     const QUAD = [0, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 1];
     function createProgram(gl, ...sources) {
@@ -5997,17 +5981,73 @@ void main() {
         return { position, uv };
     }
 
+    function make$3(...args) {
+        let width = args[0];
+        let height = args[1];
+        let opts = args[2];
+        if (args.length == 1) {
+            opts = args[0];
+            height = opts.height || 34;
+            width = opts.width || 80;
+        }
+        opts = opts || { font: 'monospace' };
+        let glyphs;
+        if (opts.image) {
+            glyphs = Glyphs.fromImage(opts.image);
+        }
+        else {
+            glyphs = Glyphs.fromFont(opts);
+        }
+        let canvas;
+        try {
+            canvas = new CanvasGL(width, height, glyphs);
+        }
+        catch (e) {
+            if (!(e instanceof NotSupportedError))
+                throw e;
+        }
+        if (!canvas) {
+            canvas = new Canvas2D(width, height, glyphs);
+        }
+        if (opts.div) {
+            let el;
+            if (typeof opts.div === 'string') {
+                el = document.getElementById(opts.div);
+                if (!el) {
+                    console.warn('Failed to find parent element by ID: ' + opts.div);
+                }
+            }
+            else {
+                el = opts.div;
+            }
+            if (el && el.appendChild) {
+                el.appendChild(canvas.node);
+            }
+        }
+        if (opts.io || opts.loop) {
+            let loop$1 = opts.loop || loop;
+            canvas.onclick = (e) => loop$1.pushEvent(e);
+            canvas.onmousemove = (e) => loop$1.pushEvent(e);
+            canvas.onmouseup = (e) => loop$1.pushEvent(e);
+            // canvas.onkeydown = (e) => loop.pushEvent(e); // Keyboard events require tabindex to be set, better to let user do this.
+        }
+        return canvas;
+    }
+    function makeBuffer(width, height) {
+        return new DataBuffer(width, height);
+    }
+
     var index$2 = /*#__PURE__*/Object.freeze({
         __proto__: null,
+        DataBuffer: DataBuffer,
+        Buffer: Buffer,
+        Glyphs: Glyphs,
         NotSupportedError: NotSupportedError,
         BaseCanvas: BaseCanvas,
-        Canvas: Canvas,
         Canvas2D: Canvas2D,
+        BufferGL: BufferGL,
+        CanvasGL: CanvasGL,
         make: make$3,
-        Glyphs: Glyphs,
-        DataBuffer: DataBuffer,
-        makeDataBuffer: makeDataBuffer,
-        Buffer: Buffer,
         makeBuffer: makeBuffer
     });
 

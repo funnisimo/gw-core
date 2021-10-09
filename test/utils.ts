@@ -10,7 +10,7 @@ export function extractBufferText(
 ) {
     let output = '';
     for (let i = x; i < x + width; ++i) {
-        const data = buffer.get(i, y);
+        const data = buffer.info(i, y);
         const ch = String.fromCharCode(data.glyph || 32);
         output += ch;
     }
