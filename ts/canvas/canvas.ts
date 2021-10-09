@@ -36,7 +36,7 @@ export class NotSupportedError extends Error {
 
 export abstract class BaseCanvas implements BufferTarget {
     public mouse: XY.XY = { x: -1, y: -1 };
-    // protected _data!: Uint32Array;
+    protected _data!: Uint32Array;
     protected _renderRequested: boolean = false;
     protected _glyphs!: Glyphs;
     protected _node: HTMLCanvasElement;
@@ -50,11 +50,7 @@ export abstract class BaseCanvas implements BufferTarget {
         this._createContext();
         this._configure(width, height, glyphs);
 
-        this._buffer = this._createBuffer();
-    }
-
-    protected _createBuffer(): Buffer {
-        return new Buffer(this);
+        this._buffer = new Buffer(this);
     }
 
     get node(): HTMLCanvasElement {
@@ -134,17 +130,7 @@ export abstract class BaseCanvas implements BufferTarget {
         requestAnimationFrame(() => this._render());
     }
 
-    copy(data: DataBuffer): boolean {
-        if (data.width !== this.width || data.height !== this.height)
-            throw new Error('Buffer is not same size as canvas!');
-
-        if (!data.changed && !this.buffer.changed) return false;
-
-        data.changed = false;
-        this.buffer.copy(data);
-        this._requestRender();
-        return true;
-    }
+    abstract draw(data: DataBuffer): boolean;
 
     copyTo(data: DataBuffer) {
         if (!this.buffer) return; // startup/constructor
@@ -258,7 +244,7 @@ export class Canvas2D extends BaseCanvas {
 
     resize(width: number, height: number) {
         super.resize(width, height);
-        // this._data = new Uint32Array(width * height);
+        this._data = new Uint32Array(width * height);
         this._changed = new Int8Array(width * height);
     }
 
@@ -266,10 +252,11 @@ export class Canvas2D extends BaseCanvas {
         if (!data.changed) return false;
         data.changed = false;
         let changed = false;
-        const raw = this.buffer._data;
+        const src = data._data;
+        const raw = this._data;
         for (let i = 0; i < raw.length; ++i) {
-            if (raw[i] !== data._data[i]) {
-                raw[i] = data._data[i];
+            if (raw[i] !== src[i]) {
+                raw[i] = src[i];
                 this._changed[i] = 1;
                 changed = true;
             }
@@ -293,7 +280,7 @@ export class Canvas2D extends BaseCanvas {
         const x = index % this.width;
         const y = Math.floor(index / this.width);
 
-        const style = this.buffer._data[index];
+        const style = this._data[index];
         const glyph = (style / (1 << 24)) >> 0;
         const bg = (style >> 12) & 0xfff;
         const fg = style & 0xfff;

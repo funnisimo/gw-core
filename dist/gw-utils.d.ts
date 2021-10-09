@@ -1279,7 +1279,7 @@ interface BufferTarget {
     readonly width: number;
     readonly height: number;
     copyTo(dest: DataBuffer): void;
-    copy(src: DataBuffer): void;
+    draw(src: DataBuffer): void;
     toGlyph(ch: string | number): number;
 }
 declare class DataBuffer {
@@ -1375,6 +1375,7 @@ declare class NotSupportedError extends Error {
 }
 declare abstract class BaseCanvas implements BufferTarget {
     mouse: XY;
+    protected _data: Uint32Array;
     protected _renderRequested: boolean;
     protected _glyphs: Glyphs;
     protected _node: HTMLCanvasElement;
@@ -1382,7 +1383,6 @@ declare abstract class BaseCanvas implements BufferTarget {
     protected _height: number;
     protected _buffer: Buffer;
     constructor(width: number, height: number, glyphs: Glyphs);
-    protected _createBuffer(): Buffer;
     get node(): HTMLCanvasElement;
     get width(): number;
     get height(): number;
@@ -1400,7 +1400,7 @@ declare abstract class BaseCanvas implements BufferTarget {
     protected _setGlyphs(glyphs: Glyphs): boolean;
     resize(width: number, height: number): void;
     protected _requestRender(): void;
-    copy(data: DataBuffer): boolean;
+    abstract draw(data: DataBuffer): boolean;
     copyTo(data: DataBuffer): void;
     render(): void;
     abstract _render(): void;
@@ -1423,13 +1423,6 @@ declare class Canvas2D extends BaseCanvas {
     protected _renderCell(index: number): void;
 }
 
-declare class BufferGL extends Buffer {
-    constructor(canvas: BufferTarget);
-    protected _makeData(): Uint32Array;
-    protected _index(x: number, y: number): number;
-    set(x: number, y: number, style: number): boolean;
-    copy(other: DataBuffer): this;
-}
 declare class CanvasGL extends BaseCanvas {
     private _gl;
     private _buffers;
@@ -1437,7 +1430,6 @@ declare class CanvasGL extends BaseCanvas {
     private _uniforms;
     private _texture;
     constructor(width: number, height: number, glyphs: Glyphs);
-    _createBuffer(): BufferGL;
     protected _createContext(): void;
     private _createGeometry;
     private _createData;
@@ -1445,6 +1437,7 @@ declare class CanvasGL extends BaseCanvas {
     _uploadGlyphs(): void;
     resize(width: number, height: number): void;
     draw(data: DataBuffer): boolean;
+    copyTo(data: DataBuffer): void;
     _render(): void;
 }
 
@@ -1470,8 +1463,6 @@ type index_d$3_BaseCanvas = BaseCanvas;
 declare const index_d$3_BaseCanvas: typeof BaseCanvas;
 type index_d$3_Canvas2D = Canvas2D;
 declare const index_d$3_Canvas2D: typeof Canvas2D;
-type index_d$3_BufferGL = BufferGL;
-declare const index_d$3_BufferGL: typeof BufferGL;
 type index_d$3_CanvasGL = CanvasGL;
 declare const index_d$3_CanvasGL: typeof CanvasGL;
 declare const index_d$3_makeBuffer: typeof makeBuffer;
@@ -1489,7 +1480,6 @@ declare namespace index_d$3 {
     index_d$3_NotSupportedError as NotSupportedError,
     index_d$3_BaseCanvas as BaseCanvas,
     index_d$3_Canvas2D as Canvas2D,
-    index_d$3_BufferGL as BufferGL,
     index_d$3_CanvasGL as CanvasGL,
     make$3 as make,
     index_d$3_makeBuffer as makeBuffer,

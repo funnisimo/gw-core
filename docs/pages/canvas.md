@@ -66,6 +66,8 @@ setInterval(draw, 500);
 
 Here we create a buffer and draw on it. Notice that you must now call `canvas.draw` instead of `buffer.render`. That is because the created buffer is not associated with the canvas.
 
+**NOTE** - Keep in mind that the canvas.buffer no longer has the same data as what has been rendered.
+
 ```js
 const canvas = GWU.canvas.make({
     font: 'monospace',

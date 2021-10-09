@@ -305,18 +305,19 @@ describe('buffer', () => {
     });
 
     describe('Buffer', () => {
-        let target: Buffer.BufferTarget;
+        let target = makeTarget();
 
-        beforeEach(() => {
-            target = {
+        function makeTarget() {
+            return {
                 width: 10,
                 height: 8,
-                // draw: jest.fn(),
                 copyTo: jest.fn(),
-                copy: jest.fn(),
+                draw: jest.fn(),
                 toGlyph: jest.fn().mockImplementation((ch) => ch.charCodeAt(0)),
             };
-        });
+        }
+
+        beforeEach(() => {});
 
         test('basics', () => {
             const b = new Buffer.Buffer(target);
@@ -324,18 +325,14 @@ describe('buffer', () => {
             expect(b.height).toEqual(target.height);
             expect(target.copyTo).toHaveBeenCalled();
 
-            // @ts-ignore
             target.copyTo.mockClear();
-            // @ts-ignore
-            target.copy.mockClear();
+            target.draw.mockClear();
 
             b.render();
-            expect(target.copy).toHaveBeenCalled();
+            expect(target.draw).toHaveBeenCalled();
 
-            // @ts-ignore
             target.copyTo.mockClear();
-            // @ts-ignore
-            target.copy.mockClear();
+            target.draw.mockClear();
 
             b.load();
             expect(target.copyTo).toHaveBeenCalled();

@@ -7,51 +7,51 @@ import * as Canvas from './canvas';
 type GL = WebGL2RenderingContext;
 const VERTICES_PER_TILE = 6;
 
-export class BufferGL extends Buffer.Buffer {
-    constructor(canvas: Buffer.BufferTarget) {
-        super(canvas);
-    }
+// export class BufferGL extends Buffer.Buffer {
+//     constructor(canvas: Buffer.BufferTarget) {
+//         super(canvas);
+//     }
 
-    protected _makeData(): Uint32Array {
-        return new Uint32Array(this.width * this.height * VERTICES_PER_TILE);
-    }
+//     protected _makeData(): Uint32Array {
+//         return new Uint32Array(this.width * this.height * VERTICES_PER_TILE);
+//     }
 
-    protected _index(x: number, y: number): number {
-        let index = y * this.width + x;
-        index *= VERTICES_PER_TILE;
-        return index;
-    }
+//     protected _index(x: number, y: number): number {
+//         let index = y * this.width + x;
+//         index *= VERTICES_PER_TILE;
+//         return index;
+//     }
 
-    set(x: number, y: number, style: number): boolean {
-        let index = this._index(x, y);
-        const current = this._data[index + 2];
-        if (current !== style) {
-            this._data[index + 2] = style;
-            this._data[index + 5] = style;
-            this.changed = true;
-            return true;
-        }
-        return false;
-    }
+//     set(x: number, y: number, style: number): boolean {
+//         let index = this._index(x, y);
+//         const current = this._data[index + 2];
+//         if (current !== style) {
+//             this._data[index + 2] = style;
+//             this._data[index + 5] = style;
+//             this.changed = true;
+//             return true;
+//         }
+//         return false;
+//     }
 
-    copy(other: Buffer.DataBuffer): this {
-        if (this.height !== other.height || this.width !== other.width)
-            throw new Error('Buffers must be same size!');
+//     copy(other: Buffer.DataBuffer): this {
+//         if (this.height !== other.height || this.width !== other.width)
+//             throw new Error('Buffers must be same size!');
 
-        if (this._data.length === other._data.length) {
-            this._data.set(other._data);
-        } else {
-            for (let x = 0; x < this.width; ++x) {
-                for (let y = 0; y < this.width; ++y) {
-                    this.set(x, y, other.get(x, y));
-                }
-            }
-        }
+//         if (this._data.length === other._data.length) {
+//             this._data.set(other._data);
+//         } else {
+//             for (let x = 0; x < this.width; ++x) {
+//                 for (let y = 0; y < this.width; ++y) {
+//                     this.set(x, y, other.get(x, y));
+//                 }
+//             }
+//         }
 
-        this.changed = true;
-        return this;
-    }
-}
+//         this.changed = true;
+//         return this;
+//     }
+// }
 
 // Based on: https://github.com/ondras/fastiles/blob/master/ts/scene.ts (v2.1.0)
 
@@ -70,9 +70,9 @@ export class CanvasGL extends Canvas.BaseCanvas {
         super(width, height, glyphs);
     }
 
-    _createBuffer() {
-        return new BufferGL(this);
-    }
+    // _createBuffer() {
+    //     return new BufferGL(this);
+    // }
 
     protected _createContext() {
         let gl = this.node.getContext('webgl2');
@@ -120,9 +120,9 @@ export class CanvasGL extends Canvas.BaseCanvas {
     private _createData() {
         const gl = this._gl;
         const attribs = this._attribs;
-        // const tileCount = this.width * this.height;
+        const tileCount = this.width * this.height;
         this._buffers.style && gl.deleteBuffer(this._buffers.style);
-        // this._data = new Uint32Array(tileCount * VERTICES_PER_TILE);
+        this._data = new Uint32Array(tileCount * VERTICES_PER_TILE);
         const style = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, style);
         gl.vertexAttribIPointer(attribs['style'], 1, gl.UNSIGNED_INT, 0, 0);
@@ -167,7 +167,7 @@ export class CanvasGL extends Canvas.BaseCanvas {
             this.node.width,
             this.node.height
         );
-
+        // this._data = new Uint32Array(width * height * VERTICES_PER_TILE);
         this._createGeometry();
         this._createData();
     }
@@ -188,28 +188,24 @@ export class CanvasGL extends Canvas.BaseCanvas {
 
     draw(data: Buffer.DataBuffer): boolean {
         if (!data.changed) return false;
-        // data._data.forEach((style, i) => {
-        //     const index = i * VERTICES_PER_TILE;
-        //     this.buffer._data[index + 2] = style;
-        //     this.buffer._data[index + 5] = style;
-        // });
-        this.buffer.copy(data);
+        data._data.forEach((style, i) => {
+            const index = i * VERTICES_PER_TILE;
+            this._data[index + 2] = style;
+            this._data[index + 5] = style;
+        });
         this._requestRender();
         data.changed = false;
         return true;
     }
 
-    // copyTo(data: Buffer.DataBuffer) {
-    //     if (!this.buffer) return; // startup
-
-    //     data.copy(this.buffer);
-    //     data.changed = false;
-    //     // const n = this.width * this.height;
-    //     // for (let i = 0; i < n; ++i) {
-    //     //     const index = i * VERTICES_PER_TILE;
-    //     //     data._data[i] = this._data[index + 2];
-    //     // }
-    // }
+    copyTo(data: Buffer.DataBuffer) {
+        data.changed = false;
+        const n = this.width * this.height;
+        for (let i = 0; i < n; ++i) {
+            const index = i * VERTICES_PER_TILE;
+            data._data[i] = this._data[index + 2];
+        }
+    }
 
     _render() {
         const gl = this._gl;
@@ -223,7 +219,7 @@ export class CanvasGL extends Canvas.BaseCanvas {
 
         this._renderRequested = false;
         gl.bindBuffer(gl.ARRAY_BUFFER, this._buffers.style!);
-        gl.bufferData(gl.ARRAY_BUFFER, this.buffer._data, gl.DYNAMIC_DRAW);
+        gl.bufferData(gl.ARRAY_BUFFER, this._data, gl.DYNAMIC_DRAW);
         gl.drawArrays(
             gl.TRIANGLES,
             0,

@@ -21,7 +21,7 @@ export interface BufferTarget {
     //     bg: number
     // ): DrawTarget;
     copyTo(dest: DataBuffer): void;
-    copy(src: DataBuffer): void;
+    draw(src: DataBuffer): void;
     toGlyph(ch: string | number): number;
 }
 
@@ -402,7 +402,7 @@ export class Buffer extends DataBuffer {
     }
 
     render() {
-        this._target.copy(this);
+        this._target.draw(this);
         return this;
     }
 

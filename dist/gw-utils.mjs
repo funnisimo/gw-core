@@ -5100,7 +5100,7 @@ class Buffer extends DataBuffer {
         return this._target.toGlyph(ch);
     }
     render() {
-        this._target.copy(this);
+        this._target.draw(this);
         return this;
     }
     load() {
@@ -5423,17 +5423,13 @@ class NotSupportedError extends Error {
 class BaseCanvas {
     constructor(width, height, glyphs) {
         this.mouse = { x: -1, y: -1 };
-        // protected _data!: Uint32Array;
         this._renderRequested = false;
         this._width = 50;
         this._height = 25;
         this._node = this._createNode();
         this._createContext();
         this._configure(width, height, glyphs);
-        this._buffer = this._createBuffer();
-    }
-    _createBuffer() {
-        return new Buffer(this);
+        this._buffer = new Buffer(this);
     }
     get node() {
         return this._node;
@@ -5500,16 +5496,6 @@ class BaseCanvas {
             return;
         this._renderRequested = true;
         requestAnimationFrame(() => this._render());
-    }
-    copy(data) {
-        if (data.width !== this.width || data.height !== this.height)
-            throw new Error('Buffer is not same size as canvas!');
-        if (!data.changed && !this.buffer.changed)
-            return false;
-        data.changed = false;
-        this.buffer.copy(data);
-        this._requestRender();
-        return true;
     }
     copyTo(data) {
         if (!this.buffer)
@@ -5604,7 +5590,7 @@ class Canvas2D extends BaseCanvas {
     // }
     resize(width, height) {
         super.resize(width, height);
-        // this._data = new Uint32Array(width * height);
+        this._data = new Uint32Array(width * height);
         this._changed = new Int8Array(width * height);
     }
     draw(data) {
@@ -5612,10 +5598,11 @@ class Canvas2D extends BaseCanvas {
             return false;
         data.changed = false;
         let changed = false;
-        const raw = this.buffer._data;
+        const src = data._data;
+        const raw = this._data;
         for (let i = 0; i < raw.length; ++i) {
-            if (raw[i] !== data._data[i]) {
-                raw[i] = data._data[i];
+            if (raw[i] !== src[i]) {
+                raw[i] = src[i];
                 this._changed[i] = 1;
                 changed = true;
             }
@@ -5638,7 +5625,7 @@ class Canvas2D extends BaseCanvas {
     _renderCell(index) {
         const x = index % this.width;
         const y = Math.floor(index / this.width);
-        const style = this.buffer._data[index];
+        const style = this._data[index];
         const glyph = (style / (1 << 24)) >> 0;
         const bg = (style >> 12) & 0xfff;
         const fg = style & 0xfff;
@@ -5754,54 +5741,53 @@ void main() {
 }`.trim();
 
 const VERTICES_PER_TILE = 6;
-class BufferGL extends Buffer {
-    constructor(canvas) {
-        super(canvas);
-    }
-    _makeData() {
-        return new Uint32Array(this.width * this.height * VERTICES_PER_TILE);
-    }
-    _index(x, y) {
-        let index = y * this.width + x;
-        index *= VERTICES_PER_TILE;
-        return index;
-    }
-    set(x, y, style) {
-        let index = this._index(x, y);
-        const current = this._data[index + 2];
-        if (current !== style) {
-            this._data[index + 2] = style;
-            this._data[index + 5] = style;
-            this.changed = true;
-            return true;
-        }
-        return false;
-    }
-    copy(other) {
-        if (this.height !== other.height || this.width !== other.width)
-            throw new Error('Buffers must be same size!');
-        if (this._data.length === other._data.length) {
-            this._data.set(other._data);
-        }
-        else {
-            for (let x = 0; x < this.width; ++x) {
-                for (let y = 0; y < this.width; ++y) {
-                    this.set(x, y, other.get(x, y));
-                }
-            }
-        }
-        this.changed = true;
-        return this;
-    }
-}
+// export class BufferGL extends Buffer.Buffer {
+//     constructor(canvas: Buffer.BufferTarget) {
+//         super(canvas);
+//     }
+//     protected _makeData(): Uint32Array {
+//         return new Uint32Array(this.width * this.height * VERTICES_PER_TILE);
+//     }
+//     protected _index(x: number, y: number): number {
+//         let index = y * this.width + x;
+//         index *= VERTICES_PER_TILE;
+//         return index;
+//     }
+//     set(x: number, y: number, style: number): boolean {
+//         let index = this._index(x, y);
+//         const current = this._data[index + 2];
+//         if (current !== style) {
+//             this._data[index + 2] = style;
+//             this._data[index + 5] = style;
+//             this.changed = true;
+//             return true;
+//         }
+//         return false;
+//     }
+//     copy(other: Buffer.DataBuffer): this {
+//         if (this.height !== other.height || this.width !== other.width)
+//             throw new Error('Buffers must be same size!');
+//         if (this._data.length === other._data.length) {
+//             this._data.set(other._data);
+//         } else {
+//             for (let x = 0; x < this.width; ++x) {
+//                 for (let y = 0; y < this.width; ++y) {
+//                     this.set(x, y, other.get(x, y));
+//                 }
+//             }
+//         }
+//         this.changed = true;
+//         return this;
+//     }
+// }
 // Based on: https://github.com/ondras/fastiles/blob/master/ts/scene.ts (v2.1.0)
 class CanvasGL extends BaseCanvas {
     constructor(width, height, glyphs) {
         super(width, height, glyphs);
     }
-    _createBuffer() {
-        return new BufferGL(this);
-    }
+    // _createBuffer() {
+    //     return new BufferGL(this);
+    // }
     _createContext() {
         let gl = this.node.getContext('webgl2');
         if (!gl) {
@@ -5837,9 +5823,9 @@ class CanvasGL extends BaseCanvas {
     _createData() {
         const gl = this._gl;
         const attribs = this._attribs;
-        // const tileCount = this.width * this.height;
+        const tileCount = this.width * this.height;
         this._buffers.style && gl.deleteBuffer(this._buffers.style);
-        // this._data = new Uint32Array(tileCount * VERTICES_PER_TILE);
+        this._data = new Uint32Array(tileCount * VERTICES_PER_TILE);
         const style = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, style);
         gl.vertexAttribIPointer(attribs['style'], 1, gl.UNSIGNED_INT, 0, 0);
@@ -5870,6 +5856,7 @@ class CanvasGL extends BaseCanvas {
         const uniforms = this._uniforms;
         gl.viewport(0, 0, this.node.width, this.node.height);
         gl.uniform2ui(uniforms['viewportSize'], this.node.width, this.node.height);
+        // this._data = new Uint32Array(width * height * VERTICES_PER_TILE);
         this._createGeometry();
         this._createData();
     }
@@ -5888,26 +5875,23 @@ class CanvasGL extends BaseCanvas {
     draw(data) {
         if (!data.changed)
             return false;
-        // data._data.forEach((style, i) => {
-        //     const index = i * VERTICES_PER_TILE;
-        //     this.buffer._data[index + 2] = style;
-        //     this.buffer._data[index + 5] = style;
-        // });
-        this.buffer.copy(data);
+        data._data.forEach((style, i) => {
+            const index = i * VERTICES_PER_TILE;
+            this._data[index + 2] = style;
+            this._data[index + 5] = style;
+        });
         this._requestRender();
         data.changed = false;
         return true;
     }
-    // copyTo(data: Buffer.DataBuffer) {
-    //     if (!this.buffer) return; // startup
-    //     data.copy(this.buffer);
-    //     data.changed = false;
-    //     // const n = this.width * this.height;
-    //     // for (let i = 0; i < n; ++i) {
-    //     //     const index = i * VERTICES_PER_TILE;
-    //     //     data._data[i] = this._data[index + 2];
-    //     // }
-    // }
+    copyTo(data) {
+        data.changed = false;
+        const n = this.width * this.height;
+        for (let i = 0; i < n; ++i) {
+            const index = i * VERTICES_PER_TILE;
+            data._data[i] = this._data[index + 2];
+        }
+    }
     _render() {
         const gl = this._gl;
         if (this._glyphs.needsUpdate) {
@@ -5919,7 +5903,7 @@ class CanvasGL extends BaseCanvas {
         }
         this._renderRequested = false;
         gl.bindBuffer(gl.ARRAY_BUFFER, this._buffers.style);
-        gl.bufferData(gl.ARRAY_BUFFER, this.buffer._data, gl.DYNAMIC_DRAW);
+        gl.bufferData(gl.ARRAY_BUFFER, this._data, gl.DYNAMIC_DRAW);
         gl.drawArrays(gl.TRIANGLES, 0, this._width * this._height * VERTICES_PER_TILE);
         this.buffer.changed = false;
     }
@@ -6039,7 +6023,6 @@ var index$2 = /*#__PURE__*/Object.freeze({
     NotSupportedError: NotSupportedError,
     BaseCanvas: BaseCanvas,
     Canvas2D: Canvas2D,
-    BufferGL: BufferGL,
     CanvasGL: CanvasGL,
     make: make$3,
     makeBuffer: makeBuffer
