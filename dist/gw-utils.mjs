@@ -5176,6 +5176,7 @@ var index$3 = /*#__PURE__*/Object.freeze({
 
 class DataBuffer {
     constructor(width, height) {
+        this.changed = false;
         this._width = width;
         this._height = height;
         this._data = new Uint32Array(width * height);
@@ -5202,6 +5203,7 @@ class DataBuffer {
         else {
             this._data = orig.slice(width * height);
         }
+        this.changed = true;
     }
     get(x, y) {
         let index = y * this.width + x;
@@ -5237,6 +5239,8 @@ class DataBuffer {
         fg = fg >= 0 ? fg & 0xfff : current & 0xfff;
         const style = (glyph << 24) + (bg << 12) + fg;
         this._data[index] = style;
+        if (style !== current)
+            this.changed = true;
         return this;
     }
     // This is without opacity - opacity must be done in Mixer
@@ -5279,10 +5283,14 @@ class DataBuffer {
         bg = bg & 0xfff;
         const style = (glyph << 24) + (bg << 12) + fg;
         this._data.fill(style);
+        this.changed = true;
         return this;
     }
     copy(other) {
+        this._width = other._width;
+        this._height = other._height;
         this._data.set(other._data);
+        this.changed = true;
         return this;
     }
     drawText(x, y, text, fg = 0xfff, bg = -1, maxWidth = 0, align = 'left') {
@@ -5415,7 +5423,7 @@ class Buffer extends DataBuffer {
     constructor(canvas) {
         super(canvas.width, canvas.height);
         this._target = canvas;
-        canvas.copyTo(this._data);
+        canvas.copyTo(this);
     }
     // get canvas() { return this._target; }
     clone() {
@@ -5427,11 +5435,11 @@ class Buffer extends DataBuffer {
         return this._target.toGlyph(ch);
     }
     render() {
-        this._target.copy(this._data);
+        this._target.copy(this);
         return this;
     }
     load() {
-        this._target.copyTo(this._data);
+        this._target.copyTo(this);
         return this;
     }
 }
@@ -5570,11 +5578,15 @@ class BaseCanvas {
     //     return false;
     // }
     copy(data) {
-        this._data.set(data);
+        if (!data.changed)
+            return false;
+        data.changed = false;
+        this._data.set(data._data);
         this._requestRender();
+        return true;
     }
     copyTo(data) {
-        data.set(this._data);
+        data._data.set(this._data);
     }
     render() {
         this.buffer.render();
@@ -5733,18 +5745,22 @@ class Canvas extends BaseCanvas {
     //     return false;
     // }
     copy(data) {
-        data.forEach((style, i) => {
+        if (!data.changed)
+            return false;
+        data._data.forEach((style, i) => {
             const index = i * VERTICES_PER_TILE;
             this._data[index + 2] = style;
             this._data[index + 5] = style;
         });
         this._requestRender();
+        data.changed = false;
+        return true;
     }
     copyTo(data) {
         const n = this.width * this.height;
         for (let i = 0; i < n; ++i) {
             const index = i * VERTICES_PER_TILE;
-            data[i] = this._data[index + 2];
+            data._data[i] = this._data[index + 2];
         }
     }
     _render() {
@@ -5786,13 +5802,17 @@ class Canvas2D extends BaseCanvas {
         this._changed = new Int8Array(width * height);
     }
     copy(data) {
+        if (!data.changed)
+            return false;
+        data.changed = false;
         for (let i = 0; i < this._data.length; ++i) {
-            if (this._data[i] !== data[i]) {
-                this._data[i] = data[i];
+            if (this._data[i] !== data._data[i]) {
+                this._data[i] = data._data[i];
                 this._changed[i] = 1;
             }
         }
         this._requestRender();
+        return true;
     }
     _render() {
         this._renderRequested = false;

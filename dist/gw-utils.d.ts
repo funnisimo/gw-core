@@ -1312,14 +1312,15 @@ declare type TextAlign = 'left' | 'center' | 'right';
 interface BufferTarget {
     readonly width: number;
     readonly height: number;
-    copyTo(dest: Uint32Array): void;
-    copy(src: Uint32Array): void;
+    copyTo(dest: DataBuffer): void;
+    copy(src: DataBuffer): void;
     toGlyph(ch: string | number): number;
 }
 declare class DataBuffer {
-    protected _data: Uint32Array;
+    _data: Uint32Array;
     private _width;
     private _height;
+    changed: boolean;
     constructor(width: number, height: number);
     get width(): number;
     get height(): number;
@@ -1398,8 +1399,8 @@ declare abstract class BaseCanvas implements BufferTarget {
     protected _setGlyphs(glyphs: Glyphs): boolean;
     resize(width: number, height: number): void;
     protected _requestRender(): void;
-    copy(data: Uint32Array): void;
-    copyTo(data: Uint32Array): void;
+    copy(data: DataBuffer): boolean;
+    copyTo(data: DataBuffer): void;
     render(): void;
     abstract _render(): void;
     hasXY(x: number, y: number): boolean;
@@ -1423,8 +1424,8 @@ declare class Canvas extends BaseCanvas {
     protected _setGlyphs(glyphs: Glyphs): boolean;
     _uploadGlyphs(): void;
     resize(width: number, height: number): void;
-    copy(data: Uint32Array): void;
-    copyTo(data: Uint32Array): void;
+    copy(data: DataBuffer): boolean;
+    copyTo(data: DataBuffer): void;
     _render(): void;
 }
 declare class Canvas2D extends BaseCanvas {
@@ -1433,7 +1434,7 @@ declare class Canvas2D extends BaseCanvas {
     constructor(width: number, height: number, glyphs: Glyphs);
     protected _createContext(): void;
     resize(width: number, height: number): void;
-    copy(data: Uint32Array): void;
+    copy(data: DataBuffer): boolean;
     _render(): void;
     protected _renderCell(index: number): void;
 }
