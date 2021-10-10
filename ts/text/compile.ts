@@ -49,10 +49,7 @@ export function baseValue(name: string): FieldFn {
         if (v !== undefined) return v;
 
         h = Config.helpers.default;
-        if (h) {
-            return h(name, args);
-        }
-        return '!!!ERROR!!!';
+        return h(name, args);
     };
 }
 

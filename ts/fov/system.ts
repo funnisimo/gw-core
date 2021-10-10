@@ -109,6 +109,12 @@ export class FovSystem implements TYPES.FovTracker {
         const flags = FovFlags.VISIBLE | FovFlags.IN_FOV;
         return ((this.flags.get(x, y) || 0) & flags) === flags;
     }
+    isActorDetected(x: number, y: number): boolean {
+        return !!((this.flags.get(x, y) || 0) & FovFlags.ACTOR_DETECTED);
+    }
+    isItemDetected(x: number, y: number): boolean {
+        return !!((this.flags.get(x, y) || 0) & FovFlags.ITEM_DETECTED);
+    }
     isMagicMapped(x: number, y: number): boolean {
         return !!((this.flags.get(x, y) || 0) & FovFlags.MAGIC_MAPPED);
     }
@@ -244,7 +250,7 @@ export class FovSystem implements TYPES.FovTracker {
     // UPDATE
 
     protected demoteCellVisibility(flag: number): number {
-        flag &= ~(FovFlags.WAS_ANY_KIND_OF_VISIBLE | FovFlags.WAS_IN_FOV);
+        flag &= ~(FovFlags.WAS_ANY_KIND_OF_VISIBLE | FovFlags.WAS_IN_FOV | FovFlags.WAS_DETECTED);
 
         if (flag & FovFlags.IN_FOV) {
             flag &= ~FovFlags.IN_FOV;
@@ -265,6 +271,14 @@ export class FovSystem implements TYPES.FovTracker {
         if (flag & FovFlags.ALWAYS_VISIBLE) {
             flag |= FovFlags.VISIBLE;
         }
+        if (flag & FovFlags.ITEM_DETECTED) {
+            flag &= ~FovFlags.ITEM_DETECTED;
+            flag |= FovFlags.WAS_ITEM_DETECTED;
+        }
+        if (flag & FovFlags.ACTOR_DETECTED) {
+            flag &= ~FovFlags.ACTOR_DETECTED;
+            flag |= FovFlags.WAS_ACTOR_DETECTED;
+        }
 
         return flag;
     }
@@ -274,7 +288,7 @@ export class FovSystem implements TYPES.FovTracker {
         x: number,
         y: number
     ): boolean {
-        const isVisible = !!(flag & FovFlags.VISIBLE);
+        const isVisible = !!(flag & FovFlags.ANY_KIND_OF_VISIBLE);
         const wasVisible = !!(flag & FovFlags.WAS_ANY_KIND_OF_VISIBLE);
 
         if (isVisible && wasVisible) {
@@ -283,7 +297,7 @@ export class FovSystem implements TYPES.FovTracker {
             // }
         } else if (isVisible && !wasVisible) {
             // if the cell became visible this move
-            this.flags[x][y] |= FovFlags.REVEALED;
+                this.flags[x][y] |= FovFlags.REVEALED;
             this._callback(x, y, isVisible);
         } else if (!isVisible && wasVisible) {
             // if the cell ceased being visible this move
@@ -292,82 +306,82 @@ export class FovSystem implements TYPES.FovTracker {
         return isVisible;
     }
 
-    protected updateCellClairyvoyance(
-        flag: number,
-        x: number,
-        y: number
-    ): boolean {
-        const isClairy = !!(flag & FovFlags.CLAIRVOYANT_VISIBLE);
-        const wasClairy = !!(flag & FovFlags.WAS_CLAIRVOYANT_VISIBLE);
+    // protected updateCellClairyvoyance(
+    //     flag: number,
+    //     x: number,
+    //     y: number
+    // ): boolean {
+    //     const isClairy = !!(flag & FovFlags.CLAIRVOYANT_VISIBLE);
+    //     const wasClairy = !!(flag & FovFlags.WAS_CLAIRVOYANT_VISIBLE);
 
-        if (isClairy && wasClairy) {
+    //     if (isClairy && wasClairy) {
+    //         // if (this.site.lightChanged(x, y)) {
+    //         //     this.site.redrawCell(x, y);
+    //         // }
+    //     } else if (!isClairy && wasClairy) {
+    //         // ceased being clairvoyantly visible
+    //         this._callback(x, y, isClairy);
+    //     } else if (!wasClairy && isClairy) {
+    //         // became clairvoyantly visible
+    //         this._callback(x, y, isClairy);
+    //     }
+
+    //     return isClairy;
+    // }
+
+    // protected updateCellTelepathy(flag: number, x: number, y: number): boolean {
+    //     const isTele = !!(flag & FovFlags.TELEPATHIC_VISIBLE);
+    //     const wasTele = !!(flag & FovFlags.WAS_TELEPATHIC_VISIBLE);
+
+    //     if (isTele && wasTele) {
+    //         // if (this.site.lightChanged(x, y)) {
+    //         //     this.site.redrawCell(x, y);
+    //         // }
+    //     } else if (!isTele && wasTele) {
+    //         // ceased being telepathically visible
+    //         this._callback(x, y, isTele);
+    //     } else if (!wasTele && isTele) {
+    //         // became telepathically visible
+    //         this._callback(x, y, isTele);
+    //     }
+    //     return isTele;
+    // }
+
+    protected updateCellDetect(flag: number, x: number, y: number): boolean {
+        const isDetect = !!(flag & FovFlags.IS_DETECTED);
+        const wasDetect = !!(flag & FovFlags.WAS_DETECTED);
+
+        if (isDetect && wasDetect) {
             // if (this.site.lightChanged(x, y)) {
             //     this.site.redrawCell(x, y);
             // }
-        } else if (!isClairy && wasClairy) {
-            // ceased being clairvoyantly visible
-            this._callback(x, y, isClairy);
-        } else if (!wasClairy && isClairy) {
-            // became clairvoyantly visible
-            this._callback(x, y, isClairy);
-        }
-
-        return isClairy;
-    }
-
-    protected updateCellTelepathy(flag: number, x: number, y: number): boolean {
-        const isTele = !!(flag & FovFlags.TELEPATHIC_VISIBLE);
-        const wasTele = !!(flag & FovFlags.WAS_TELEPATHIC_VISIBLE);
-
-        if (isTele && wasTele) {
-            // if (this.site.lightChanged(x, y)) {
-            //     this.site.redrawCell(x, y);
-            // }
-        } else if (!isTele && wasTele) {
-            // ceased being telepathically visible
-            this._callback(x, y, isTele);
-        } else if (!wasTele && isTele) {
-            // became telepathically visible
-            this._callback(x, y, isTele);
-        }
-        return isTele;
-    }
-
-    protected updateActorDetect(flag: number, x: number, y: number): boolean {
-        const isMonst = !!(flag & FovFlags.ACTOR_DETECTED);
-        const wasMonst = !!(flag & FovFlags.WAS_ACTOR_DETECTED);
-
-        if (isMonst && wasMonst) {
-            // if (this.site.lightChanged(x, y)) {
-            //     this.site.redrawCell(x, y);
-            // }
-        } else if (!isMonst && wasMonst) {
+        } else if (!isDetect && wasDetect) {
             // ceased being detected visible
-            this._callback(x, y, isMonst);
-        } else if (!wasMonst && isMonst) {
+            this._callback(x, y, isDetect);
+        } else if (!wasDetect && isDetect) {
             // became detected visible
-            this._callback(x, y, isMonst);
+            this._callback(x, y, isDetect);
         }
-        return isMonst;
+        return isDetect;
     }
 
-    protected updateItemDetect(flag: number, x: number, y: number): boolean {
-        const isItem = !!(flag & FovFlags.ITEM_DETECTED);
-        const wasItem = !!(flag & FovFlags.WAS_ITEM_DETECTED);
+    // protected updateItemDetect(flag: number, x: number, y: number): boolean {
+    //     const isItem = !!(flag & FovFlags.ITEM_DETECTED);
+    //     const wasItem = !!(flag & FovFlags.WAS_ITEM_DETECTED);
 
-        if (isItem && wasItem) {
-            // if (this.site.lightChanged(x, y)) {
-            //     this.site.redrawCell(x, y);
-            // }
-        } else if (!isItem && wasItem) {
-            // ceased being detected visible
-            this._callback(x, y, isItem);
-        } else if (!wasItem && isItem) {
-            // became detected visible
-            this._callback(x, y, isItem);
-        }
-        return isItem;
-    }
+    //     if (isItem && wasItem) {
+    //         // if (this.site.lightChanged(x, y)) {
+    //         //     this.site.redrawCell(x, y);
+    //         // }
+    //     } else if (!isItem && wasItem) {
+    //         // ceased being detected visible
+    //         this._callback(x, y, isItem);
+    //     } else if (!wasItem && isItem) {
+    //         // became detected visible
+    //         this._callback(x, y, isItem);
+    //     }
+    //     return isItem;
+    // }
 
     protected promoteCellVisibility(flag: number, x: number, y: number) {
         if (
@@ -379,10 +393,10 @@ export class FovSystem implements TYPES.FovTracker {
         }
 
         if (this.updateCellVisibility(flag, x, y)) return;
-        if (this.updateCellClairyvoyance(flag, x, y)) return;
-        if (this.updateCellTelepathy(flag, x, y)) return;
-        if (this.updateActorDetect(flag, x, y)) return;
-        if (this.updateItemDetect(flag, x, y)) return;
+        // if (this.updateCellClairyvoyance(flag, x, y)) return;
+        // if (this.updateCellTelepathy(flag, x, y)) return;
+        if (this.updateCellDetect(flag, x, y)) return;
+        // if (this.updateItemDetect(flag, x, y)) return;
     }
 
     updateFor(subject: FovSubject): boolean {

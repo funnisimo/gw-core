@@ -1,4 +1,5 @@
 import * as FOV from './index';
+import * as UTILS from '../utils';
 
 interface ViewportInfo {
     x: number;
@@ -399,4 +400,106 @@ describe('FOV System', () => {
         system.clearHighlight();
         expect(system.isHighlight(8, 8)).toBeFalsy();
     });
+
+    test('callback', () => {
+        system = new FOV.FovSystem(site);
+        expect(system.callback).toBe(UTILS.NOOP);
+        const fn = jest.fn();
+        system.callback = fn;
+        expect(system.callback).toBe(fn);
+        system.callback = null;
+        expect(system.callback).toBe(UTILS.NOOP);
+
+        const obj = { onFovChange: fn };
+        system.callback = obj;
+        expect(system.callback).not.toBe(fn);
+        system.callback(1, 2, true);
+        expect(fn).toHaveBeenCalledWith(1, 2, true);
+    });
+
+    test('Actor detected', () => {
+        system = new FOV.FovSystem(site);
+
+        const actor = {
+            x: 10,
+            y: 10,
+            radius: 0,
+            type: FOV.FovFlags.ACTOR_DETECTED,
+        };
+
+        site.viewports.push(actor);
+        // system.needsUpdate = true;
+
+        expect(system.isDirectlyVisible(10,10)).toBeFalsy();
+        expect(system.isAnyKindOfVisible(10,10)).toBeFalsy();
+        expect(system.isActorDetected(10, 10)).toBeFalsy();
+
+        expect(system.update()).toBeTruthy();
+        expect(system.isDirectlyVisible(10,10)).toBeFalsy();
+        expect(system.isAnyKindOfVisible(10,10)).toBeFalsy();
+        expect(system.isActorDetected(10, 10)).toBeTruthy();
+        expect(system.isActorDetected(11, 10)).toBeFalsy();
+        expect(system.isActorDetected(10, 11)).toBeFalsy();
+
+        actor.x = 15;
+        actor.y = 15;
+        expect(system.update()).toBeTruthy();
+        expect(system.isDirectlyVisible(10,10)).toBeFalsy();
+        expect(system.isAnyKindOfVisible(10,10)).toBeFalsy();
+        expect(system.isActorDetected(10, 10)).toBeFalsy();
+        expect(system.isActorDetected(11, 10)).toBeFalsy();
+        expect(system.isActorDetected(10, 11)).toBeFalsy();
+
+        expect(system.isDirectlyVisible(15, 15)).toBeFalsy();
+        expect(system.isAnyKindOfVisible(15, 15)).toBeFalsy();
+        expect(system.isActorDetected(15, 15)).toBeTruthy();
+
+        system.reset();
+        expect(system.isDirectlyVisible(15,15)).toBeFalsy();
+        expect(system.isAnyKindOfVisible(15,15)).toBeFalsy();
+        expect(system.isActorDetected(15, 15)).toBeFalsy();
+    });
+
+    test('Item detected', () => {
+        system = new FOV.FovSystem(site);
+
+        const item = {
+            x: 10,
+            y: 10,
+            radius: 0,
+            type: FOV.FovFlags.ITEM_DETECTED,
+        };
+
+        site.viewports.push(item);
+        // system.needsUpdate = true;
+
+        expect(system.isDirectlyVisible(10,10)).toBeFalsy();
+        expect(system.isAnyKindOfVisible(10,10)).toBeFalsy();
+        expect(system.isItemDetected(10, 10)).toBeFalsy();
+
+        expect(system.update()).toBeTruthy();
+        expect(system.isDirectlyVisible(10,10)).toBeFalsy();
+        expect(system.isAnyKindOfVisible(10,10)).toBeFalsy();
+        expect(system.isItemDetected(10, 10)).toBeTruthy();
+        expect(system.isItemDetected(11, 10)).toBeFalsy();
+        expect(system.isItemDetected(10, 11)).toBeFalsy();
+
+        item.x = 15;
+        item.y = 15;
+        expect(system.update()).toBeTruthy();
+        expect(system.isDirectlyVisible(10,10)).toBeFalsy();
+        expect(system.isAnyKindOfVisible(10,10)).toBeFalsy();
+        expect(system.isItemDetected(10, 10)).toBeFalsy();
+        expect(system.isItemDetected(11, 10)).toBeFalsy();
+        expect(system.isItemDetected(10, 11)).toBeFalsy();
+
+        expect(system.isDirectlyVisible(15, 15)).toBeFalsy();
+        expect(system.isAnyKindOfVisible(15, 15)).toBeFalsy();
+        expect(system.isItemDetected(15, 15)).toBeTruthy();
+
+        system.reset();
+        expect(system.isDirectlyVisible(15,15)).toBeFalsy();
+        expect(system.isAnyKindOfVisible(15,15)).toBeFalsy();
+        expect(system.isItemDetected(15, 15)).toBeFalsy();
+    });    
 });
