@@ -6,6 +6,9 @@ export var options = {
     defaultBg: null,
 };
 
+export type Align = 'left' | 'center' | 'right';
+export type VAlign = 'top' | 'middle' | 'bottom';
+
 // const RE_RGB = /^[a-fA-F0-9]*$/;
 //
 // export function parseColor(color:string) {

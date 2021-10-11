@@ -167,7 +167,7 @@
         return x >= 0 && y >= 0 && x < size.width && y < size.height;
     }
     class Bounds {
-        constructor(x, y, w, h) {
+        constructor(x = 0, y = 0, w = 0, h = 0) {
             this.x = x;
             this.y = y;
             this.width = w;
@@ -2638,6 +2638,12 @@
             const flags = FovFlags.VISIBLE | FovFlags.IN_FOV;
             return ((this.flags.get(x, y) || 0) & flags) === flags;
         }
+        isActorDetected(x, y) {
+            return !!((this.flags.get(x, y) || 0) & FovFlags.ACTOR_DETECTED);
+        }
+        isItemDetected(x, y) {
+            return !!((this.flags.get(x, y) || 0) & FovFlags.ITEM_DETECTED);
+        }
         isMagicMapped(x, y) {
             return !!((this.flags.get(x, y) || 0) & FovFlags.MAGIC_MAPPED);
         }
@@ -2755,7 +2761,7 @@
         //////////////////////////
         // UPDATE
         demoteCellVisibility(flag) {
-            flag &= ~(FovFlags.WAS_ANY_KIND_OF_VISIBLE | FovFlags.WAS_IN_FOV);
+            flag &= ~(FovFlags.WAS_ANY_KIND_OF_VISIBLE | FovFlags.WAS_IN_FOV | FovFlags.WAS_DETECTED);
             if (flag & FovFlags.IN_FOV) {
                 flag &= ~FovFlags.IN_FOV;
                 flag |= FovFlags.WAS_IN_FOV;
@@ -2775,10 +2781,18 @@
             if (flag & FovFlags.ALWAYS_VISIBLE) {
                 flag |= FovFlags.VISIBLE;
             }
+            if (flag & FovFlags.ITEM_DETECTED) {
+                flag &= ~FovFlags.ITEM_DETECTED;
+                flag |= FovFlags.WAS_ITEM_DETECTED;
+            }
+            if (flag & FovFlags.ACTOR_DETECTED) {
+                flag &= ~FovFlags.ACTOR_DETECTED;
+                flag |= FovFlags.WAS_ACTOR_DETECTED;
+            }
             return flag;
         }
         updateCellVisibility(flag, x, y) {
-            const isVisible = !!(flag & FovFlags.VISIBLE);
+            const isVisible = !!(flag & FovFlags.ANY_KIND_OF_VISIBLE);
             const wasVisible = !!(flag & FovFlags.WAS_ANY_KIND_OF_VISIBLE);
             if (isVisible && wasVisible) ;
             else if (isVisible && !wasVisible) {
@@ -2792,62 +2806,72 @@
             }
             return isVisible;
         }
-        updateCellClairyvoyance(flag, x, y) {
-            const isClairy = !!(flag & FovFlags.CLAIRVOYANT_VISIBLE);
-            const wasClairy = !!(flag & FovFlags.WAS_CLAIRVOYANT_VISIBLE);
-            if (isClairy && wasClairy) ;
-            else if (!isClairy && wasClairy) {
-                // ceased being clairvoyantly visible
-                this._callback(x, y, isClairy);
-            }
-            else if (!wasClairy && isClairy) {
-                // became clairvoyantly visible
-                this._callback(x, y, isClairy);
-            }
-            return isClairy;
-        }
-        updateCellTelepathy(flag, x, y) {
-            const isTele = !!(flag & FovFlags.TELEPATHIC_VISIBLE);
-            const wasTele = !!(flag & FovFlags.WAS_TELEPATHIC_VISIBLE);
-            if (isTele && wasTele) ;
-            else if (!isTele && wasTele) {
-                // ceased being telepathically visible
-                this._callback(x, y, isTele);
-            }
-            else if (!wasTele && isTele) {
-                // became telepathically visible
-                this._callback(x, y, isTele);
-            }
-            return isTele;
-        }
-        updateActorDetect(flag, x, y) {
-            const isMonst = !!(flag & FovFlags.ACTOR_DETECTED);
-            const wasMonst = !!(flag & FovFlags.WAS_ACTOR_DETECTED);
-            if (isMonst && wasMonst) ;
-            else if (!isMonst && wasMonst) {
+        // protected updateCellClairyvoyance(
+        //     flag: number,
+        //     x: number,
+        //     y: number
+        // ): boolean {
+        //     const isClairy = !!(flag & FovFlags.CLAIRVOYANT_VISIBLE);
+        //     const wasClairy = !!(flag & FovFlags.WAS_CLAIRVOYANT_VISIBLE);
+        //     if (isClairy && wasClairy) {
+        //         // if (this.site.lightChanged(x, y)) {
+        //         //     this.site.redrawCell(x, y);
+        //         // }
+        //     } else if (!isClairy && wasClairy) {
+        //         // ceased being clairvoyantly visible
+        //         this._callback(x, y, isClairy);
+        //     } else if (!wasClairy && isClairy) {
+        //         // became clairvoyantly visible
+        //         this._callback(x, y, isClairy);
+        //     }
+        //     return isClairy;
+        // }
+        // protected updateCellTelepathy(flag: number, x: number, y: number): boolean {
+        //     const isTele = !!(flag & FovFlags.TELEPATHIC_VISIBLE);
+        //     const wasTele = !!(flag & FovFlags.WAS_TELEPATHIC_VISIBLE);
+        //     if (isTele && wasTele) {
+        //         // if (this.site.lightChanged(x, y)) {
+        //         //     this.site.redrawCell(x, y);
+        //         // }
+        //     } else if (!isTele && wasTele) {
+        //         // ceased being telepathically visible
+        //         this._callback(x, y, isTele);
+        //     } else if (!wasTele && isTele) {
+        //         // became telepathically visible
+        //         this._callback(x, y, isTele);
+        //     }
+        //     return isTele;
+        // }
+        updateCellDetect(flag, x, y) {
+            const isDetect = !!(flag & FovFlags.IS_DETECTED);
+            const wasDetect = !!(flag & FovFlags.WAS_DETECTED);
+            if (isDetect && wasDetect) ;
+            else if (!isDetect && wasDetect) {
                 // ceased being detected visible
-                this._callback(x, y, isMonst);
+                this._callback(x, y, isDetect);
             }
-            else if (!wasMonst && isMonst) {
+            else if (!wasDetect && isDetect) {
                 // became detected visible
-                this._callback(x, y, isMonst);
+                this._callback(x, y, isDetect);
             }
-            return isMonst;
+            return isDetect;
         }
-        updateItemDetect(flag, x, y) {
-            const isItem = !!(flag & FovFlags.ITEM_DETECTED);
-            const wasItem = !!(flag & FovFlags.WAS_ITEM_DETECTED);
-            if (isItem && wasItem) ;
-            else if (!isItem && wasItem) {
-                // ceased being detected visible
-                this._callback(x, y, isItem);
-            }
-            else if (!wasItem && isItem) {
-                // became detected visible
-                this._callback(x, y, isItem);
-            }
-            return isItem;
-        }
+        // protected updateItemDetect(flag: number, x: number, y: number): boolean {
+        //     const isItem = !!(flag & FovFlags.ITEM_DETECTED);
+        //     const wasItem = !!(flag & FovFlags.WAS_ITEM_DETECTED);
+        //     if (isItem && wasItem) {
+        //         // if (this.site.lightChanged(x, y)) {
+        //         //     this.site.redrawCell(x, y);
+        //         // }
+        //     } else if (!isItem && wasItem) {
+        //         // ceased being detected visible
+        //         this._callback(x, y, isItem);
+        //     } else if (!wasItem && isItem) {
+        //         // became detected visible
+        //         this._callback(x, y, isItem);
+        //     }
+        //     return isItem;
+        // }
         promoteCellVisibility(flag, x, y) {
             if (flag & FovFlags.IN_FOV &&
                 this.site.hasVisibleLight(x, y) // &&
@@ -2857,14 +2881,11 @@
             }
             if (this.updateCellVisibility(flag, x, y))
                 return;
-            if (this.updateCellClairyvoyance(flag, x, y))
+            // if (this.updateCellClairyvoyance(flag, x, y)) return;
+            // if (this.updateCellTelepathy(flag, x, y)) return;
+            if (this.updateCellDetect(flag, x, y))
                 return;
-            if (this.updateCellTelepathy(flag, x, y))
-                return;
-            if (this.updateActorDetect(flag, x, y))
-                return;
-            if (this.updateItemDetect(flag, x, y))
-                return;
+            // if (this.updateItemDetect(flag, x, y)) return;
         }
         updateFor(subject) {
             return this.update(subject.x, subject.y, subject.visionDistance);
@@ -4256,10 +4277,7 @@
             if (v !== undefined)
                 return v;
             h = helpers.default;
-            if (h) {
-                return h(name, args);
-            }
-            return '!!!ERROR!!!';
+            return h(name, args);
         };
     }
     function fieldValue(name, source) {
@@ -4625,17 +4643,17 @@
         let count = true;
         while (i < text.length) {
             const ch = text[i];
-            if (ch == " ") {
-                while (text[i + 1] == " ") {
+            if (ch == ' ') {
+                while (text[i + 1] == ' ') {
                     ++i;
                     ++l; // need to count the extra spaces as part of the word
                 }
                 return [i, l];
             }
-            if (ch == "-") {
+            if (ch == '-') {
                 return [i, l];
             }
-            if (ch == "\n") {
+            if (ch == '\n') {
                 return [i, l];
             }
             if (ch == CS) {
@@ -4661,34 +4679,44 @@
         }
         return [i, l];
     }
-    function splice(text, start, len, add = "") {
+    function splice(text, start, len, add = '') {
         return text.substring(0, start) + add + text.substring(start + len);
     }
-    function hyphenate(text, width, start, end, wordWidth, spaceLeftOnLine) {
-        // do not need to hyphenate
-        if (spaceLeftOnLine >= wordWidth)
-            return [text, end];
-        // do not have a strategy for this right now...
-        if (wordWidth + 1 > width * 2) {
-            throw new Error("Cannot hyphenate - word length > 2 * width");
+    function hyphenate(text, lineWidth, start, end, wordWidth, spaceLeftOnLine) {
+        while (start < end) {
+            // do not need to hyphenate
+            if (spaceLeftOnLine >= wordWidth)
+                return [text, end];
+            // not much room left and word fits on next line
+            if (spaceLeftOnLine < 4 && wordWidth <= lineWidth) {
+                text = splice(text, start - 1, 1, '\n');
+                return [text, end + 1];
+            }
+            // if will fit on this line and next...
+            if (wordWidth < spaceLeftOnLine + lineWidth) {
+                const w = advanceChars(text, start, spaceLeftOnLine - 1);
+                text = splice(text, w, 0, '-\n');
+                return [text, end + 2];
+            }
+            if (spaceLeftOnLine < 5) {
+                text = splice(text, start - 1, 1, '\n');
+                spaceLeftOnLine = lineWidth;
+                continue;
+            }
+            // one hyphen will work...
+            // if (spaceLeftOnLine + width > wordWidth) {
+            const hyphenAt = Math.min(spaceLeftOnLine - 1, Math.floor(wordWidth / 2));
+            const w = advanceChars(text, start, hyphenAt);
+            text = splice(text, w, 0, '-\n');
+            start = w + 2;
+            end += 2;
+            wordWidth -= hyphenAt;
         }
-        // not much room left and word fits on next line
-        if (spaceLeftOnLine < 4 && wordWidth <= width) {
-            text = splice(text, start - 1, 1, "\n");
-            return [text, end + 1];
-        }
-        // will not fit on this line + next, but will fit on next 2 lines...
-        // so end this line and reset for placing on next 2 lines.
-        if (spaceLeftOnLine + width <= wordWidth) {
-            text = splice(text, start - 1, 1, "\n");
-            spaceLeftOnLine = width;
-        }
-        // one hyphen will work...
-        // if (spaceLeftOnLine + width > wordWidth) {
-        const hyphenAt = Math.min(Math.floor(wordWidth / 2), spaceLeftOnLine - 1);
-        const w = advanceChars(text, start, hyphenAt);
-        text = splice(text, w, 0, "-\n");
-        return [text, end + 2];
+        return [text, end];
+        // // do not have a strategy for this right now...
+        // if (wordWidth + 1 > width * 2) {
+        //     throw new Error('Cannot hyphenate - word length > 2 * width');
+        // }
         // }
         // if (width >= wordWidth) {
         //     return [text, end];
@@ -4705,17 +4733,17 @@
     }
     function wordWrap(text, width, indent = 0) {
         if (!width)
-            throw new Error("Need string and width");
+            throw new Error('Need string and width');
         if (text.length < width)
             return text;
         if (length(text) < width)
             return text;
-        if (text.indexOf("\n") == -1) {
+        if (text.indexOf('\n') == -1) {
             return wrapLine(text, width, indent);
         }
-        const lines = text.split("\n");
+        const lines = text.split('\n');
         const split = lines.map((line, i) => wrapLine(line, width, i ? indent : 0));
-        return split.join("\n");
+        return split.join('\n');
     }
     // Returns the number of lines, including the newlines already in the text.
     // Puts the output in "to" only if we receive a "to" -- can make it null and just get a line count.
@@ -4736,7 +4764,7 @@
             // w indicates the position of the space or newline or null terminator that terminates the word.
             let [w, wordWidth] = nextBreak(printString, i + (removeSpace ? 1 : 0));
             let hyphen = false;
-            if (printString[w] == "-") {
+            if (printString[w] == '-') {
                 w++;
                 wordWidth++;
                 hyphen = true;
@@ -4746,7 +4774,7 @@
                 [printString, w] = hyphenate(printString, width, i + 1, w, wordWidth, spaceLeftOnLine);
             }
             else if (wordWidth == spaceLeftOnLine) {
-                const nl = w < printString.length ? "\n" : "";
+                const nl = w < printString.length ? '\n' : '';
                 const remove = hyphen ? 0 : 1;
                 printString = splice(printString, w, remove, nl); // [i] = '\n';
                 w += 1 - remove; // if we change the length we need to advance our pointer
@@ -4754,7 +4782,7 @@
             }
             else if (wordWidth > spaceLeftOnLine) {
                 const remove = removeSpace ? 1 : 0;
-                printString = splice(printString, i, remove, "\n"); // [i] = '\n';
+                printString = splice(printString, i, remove, '\n'); // [i] = '\n';
                 w += 1 - remove; // if we change the length we need to advance our pointer
                 const extra = hyphen ? 0 : 1;
                 spaceLeftOnLine = width - wordWidth - extra; // line width minus the width of the word we just wrapped and the space
@@ -4771,7 +4799,7 @@
     }
     // Returns the number of lines, including the newlines already in the text.
     // Puts the output in "to" only if we receive a "to" -- can make it null and just get a line count.
-    function splitIntoLines(source, width, indent = 0) {
+    function splitIntoLines(source, width = 200, indent = 0) {
         const CS = options.colorStart;
         const output = [];
         let text = wordWrap(source, width, indent);
@@ -4779,16 +4807,20 @@
         let fg0 = null;
         let bg0 = null;
         eachChar(text, (ch, fg, bg, _, n) => {
-            if (ch == "\n") {
-                let color = fg0 || bg0 ? `${CS}${fg0 ? fg0 : ""}${bg0 ? "|" + bg0 : ""}${CS}` : "";
+            if (ch == '\n') {
+                let color = fg0 || bg0
+                    ? `${CS}${fg0 ? fg0 : ''}${bg0 ? '|' + bg0 : ''}${CS}`
+                    : '';
                 output.push(color + text.substring(start, n));
                 start = n + 1;
                 fg0 = fg;
                 bg0 = bg;
             }
         });
-        let color = fg0 || bg0 ? `${CS}${fg0 ? fg0 : ""}${bg0 ? "|" + bg0 : ""}${CS}` : "";
-        output.push(color + text.substring(start));
+        let color = fg0 || bg0 ? `${CS}${fg0 ? fg0 : ''}${bg0 ? '|' + bg0 : ''}${CS}` : '';
+        if (start < text.length - 1) {
+            output.push(color + text.substring(start));
+        }
         return output;
     }
 

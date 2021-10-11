@@ -13,7 +13,7 @@ import {
 } from './utils';
 import { wordWrap, splitIntoLines } from './lines';
 
-import { addHelper, options } from './config';
+import { addHelper, options, Align, VAlign } from './config';
 
 interface Options {
     fg?: any;
@@ -62,4 +62,6 @@ export {
     truncate,
     CompileOptions,
     EachOptions,
+    Align,
+    VAlign,
 };

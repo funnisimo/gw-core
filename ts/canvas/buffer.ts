@@ -8,18 +8,9 @@ export interface DrawData {
     bg: number;
 }
 
-export type TextAlign = 'left' | 'center' | 'right';
-
 export interface BufferTarget {
     readonly width: number;
     readonly height: number;
-    // draw(
-    //     x: number,
-    //     y: number,
-    //     glyph: number,
-    //     fg: number,
-    //     bg: number
-    // ): DrawTarget;
     copyTo(dest: DataBuffer): void;
     draw(src: DataBuffer): void;
     toGlyph(ch: string | number): number;
@@ -200,7 +191,7 @@ export class DataBuffer {
         fg: Color.ColorBase = 0xfff,
         bg: Color.ColorBase = -1,
         maxWidth = 0,
-        align: TextAlign = 'left'
+        align: Text.Align = 'left'
     ): number {
         if (typeof fg !== 'number') fg = Color.from(fg);
         if (typeof bg !== 'number') bg = Color.from(bg);
