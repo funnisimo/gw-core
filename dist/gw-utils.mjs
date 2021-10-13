@@ -174,10 +174,10 @@ class Bounds {
         this.x = v;
     }
     get right() {
-        return this.x + (this.width ? this.width - 1 : 0);
+        return this.x + this.width;
     }
     set right(v) {
-        this.x = (v ? v + 1 : 0) - this.width;
+        this.x = v - this.width;
     }
     get top() {
         return this.y;
@@ -186,10 +186,10 @@ class Bounds {
         this.y = v;
     }
     get bottom() {
-        return this.y + (this.height ? this.height - 1 : 0);
+        return this.y + this.height;
     }
     set bottom(v) {
-        this.y = (v ? v + 1 : 0) - this.height;
+        this.y = v - this.height;
     }
     clone() {
         return new Bounds(this.x, this.y, this.width, this.height);
