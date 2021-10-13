@@ -1,6 +1,75 @@
 import * as XY from './xy';
 
 describe('XY', () => {
+    describe('Bounds', () => {
+        test('empty', () => {
+            const b = new XY.Bounds();
+            expect(b).toMatchObject({ x: 0, y: 0, width: 0, height: 0 });
+            expect(b.top).toEqual(0);
+            expect(b.bottom).toEqual(0);
+            expect(b.left).toEqual(0);
+            expect(b.right).toEqual(0);
+            expect(b.contains(0, 0)).toBeFalsy(); // really a point at this juncture
+
+            b.right = 3;
+            expect(b).toMatchObject({ x: 3, y: 0, width: 0, height: 0 });
+            expect(b.left).toEqual(3);
+            expect(b.right).toEqual(3);
+
+            b.left = 0;
+            expect(b).toMatchObject({ x: 0, y: 0, width: 0, height: 0 });
+            expect(b.left).toEqual(0);
+            expect(b.right).toEqual(0);
+
+            b.bottom = 3;
+            expect(b).toMatchObject({ x: 0, y: 3, width: 0, height: 0 });
+            expect(b.top).toEqual(3);
+            expect(b.bottom).toEqual(3);
+
+            b.top = 0;
+            expect(b).toMatchObject({ x: 0, y: 0, width: 0, height: 0 });
+            expect(b.top).toEqual(0);
+            expect(b.bottom).toEqual(0);
+
+            b.height = 1;
+            b.width = 1;
+            expect(b).toMatchObject({ x: 0, y: 0, width: 1, height: 1 });
+            expect(b.top).toEqual(0);
+            expect(b.bottom).toEqual(1);
+            expect(b.left).toEqual(0);
+            expect(b.right).toEqual(1);
+
+            b.right = 3;
+            expect(b).toMatchObject({ x: 2, y: 0, width: 1, height: 1 });
+            expect(b.left).toEqual(2);
+            expect(b.right).toEqual(3);
+
+            b.bottom = 3;
+            expect(b).toMatchObject({ x: 2, y: 2, width: 1, height: 1 });
+            expect(b.top).toEqual(2);
+            expect(b.bottom).toEqual(3);
+
+            b.left = 3;
+            expect(b).toMatchObject({ x: 3, y: 2, width: 1, height: 1 });
+            expect(b.left).toEqual(3);
+            expect(b.right).toEqual(4);
+
+            b.top = 3;
+            expect(b).toMatchObject({ x: 3, y: 3, width: 1, height: 1 });
+            expect(b.top).toEqual(3);
+            expect(b.bottom).toEqual(4);
+
+            expect(b.contains(b.x, b.y)).toBeTruthy();
+            expect(b.contains(b.left, b.top)).toBeTruthy();
+
+            expect(b.contains(b.right, b.top)).toBeFalsy();
+            expect(b.contains(b.left, b.bottom)).toBeFalsy();
+            expect(b.contains(b.right, b.bottom)).toBeFalsy();
+
+            expect(b.contains(b.right - 1, b.bottom - 1)).toBeTruthy();
+        });
+    });
+
     test('copyXY', () => {
         const dest = { x: 0, y: 0 };
 
