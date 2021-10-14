@@ -39,6 +39,10 @@ export class DataBuffer {
         return this._height;
     }
 
+    hasXY(x: number, y: number): boolean {
+        return x >= 0 && y >= 0 && x < this.width && y < this.height;
+    }
+
     clone(): DataBuffer {
         const other = new DataBuffer(this._width, this._height);
         other.copy(this);
@@ -64,6 +68,8 @@ export class DataBuffer {
     }
 
     get(x: number, y: number): number {
+        if (!this.hasXY(x, y)) return 0;
+
         let index = this._index(x, y);
         return this._data[index] || 0;
     }
@@ -77,6 +83,7 @@ export class DataBuffer {
     }
 
     set(x: number, y: number, style: number) {
+        if (!this.hasXY(x, y)) return;
         let index = this._index(x, y);
         const current = this._data[index];
         if (current !== style) {
@@ -99,6 +106,8 @@ export class DataBuffer {
         fg: Color.ColorBase = -1, // TODO - White?
         bg: Color.ColorBase = -1 // TODO - Black?
     ): this {
+        if (!this.hasXY(x, y)) return this;
+
         const current = this.get(x, y);
 
         if (typeof glyph !== 'number') {
@@ -193,9 +202,11 @@ export class DataBuffer {
         maxWidth = 0,
         align: Text.Align = 'left'
     ): number {
+        if (!this.hasXY(x, y)) return 0;
+
         if (typeof fg !== 'number') fg = Color.from(fg);
         if (typeof bg !== 'number') bg = Color.from(bg);
-        maxWidth = maxWidth || this.width;
+        maxWidth = Math.min(maxWidth || this.width, this.width - x);
 
         if (align == 'right') {
             const len = Text.length(text);
@@ -225,6 +236,8 @@ export class DataBuffer {
         bg: Color.ColorBase = -1,
         indent = 0
     ): number {
+        if (!this.hasXY(x, y)) return 0;
+
         if (typeof fg !== 'number') fg = Color.from(fg);
         if (typeof bg !== 'number') bg = Color.from(bg);
 
@@ -270,8 +283,10 @@ export class DataBuffer {
         if (typeof fg !== 'number') fg = Color.from(fg).toInt();
         if (typeof bg !== 'number') bg = Color.from(bg).toInt();
 
-        for (let i = x; i < x + w; ++i) {
-            for (let j = y; j < y + h; ++j) {
+        const xw = Math.min(x + w, this.width);
+        const yh = Math.min(y + h, this.height);
+        for (let i = x; i < xw; ++i) {
+            for (let j = y; j < yh; ++j) {
                 this.draw(i, j, ch, fg, bg);
             }
         }
@@ -295,6 +310,8 @@ export class DataBuffer {
         color: Color.ColorBase,
         strength: number
     ): this {
+        if (!this.hasXY(x, y)) return this;
+
         if (typeof color !== 'number') {
             color = Color.from(color);
         }
@@ -328,11 +345,12 @@ export class DataBuffer {
         color = Color.from(color);
         const mixer = new Mixer();
 
-        if (x && !width) width = 1;
-        if (y && !height) height = 1;
+        if (!width) width = x ? 1 : this.width;
+        if (!height) height = y ? 1 : this.height;
 
-        const endX = width ? width + x : this.width;
-        const endY = height ? height + y : this.height;
+        const endX = Math.min(width + x, this.width);
+        const endY = Math.min(height + y, this.height);
+
         for (let i = x; i < endX; ++i) {
             for (let j = y; j < endY; ++j) {
                 const data = this.info(i, j);

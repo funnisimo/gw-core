@@ -1395,12 +1395,13 @@ declare class DataBuffer {
     protected _makeData(): Uint32Array;
     get width(): number;
     get height(): number;
+    hasXY(x: number, y: number): boolean;
     clone(): DataBuffer;
     resize(width: number, height: number): void;
     protected _index(x: number, y: number): number;
     get(x: number, y: number): number;
     info(x: number, y: number): DrawData;
-    set(x: number, y: number, style: number): boolean;
+    set(x: number, y: number, style: number): boolean | undefined;
     toGlyph(ch: string | number): number;
     draw(x: number, y: number, glyph?: number | string, fg?: ColorBase, // TODO - White?
     bg?: ColorBase): this;
