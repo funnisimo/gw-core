@@ -2056,23 +2056,31 @@ function recycleEvent(ev) {
 }
 // STOP
 function makeStopEvent() {
-    const ev = makeTickEvent(0);
-    ev.type = STOP;
-    return ev;
+    return makeCustomEvent(STOP);
 }
-// TICK
-function makeTickEvent(dt) {
+// CUSTOM
+function makeCustomEvent(type, opts) {
     const ev = DEAD_EVENTS.pop() || {};
     ev.shiftKey = false;
     ev.ctrlKey = false;
     ev.altKey = false;
     ev.metaKey = false;
-    ev.type = TICK;
     ev.key = '';
     ev.code = '';
     ev.x = -1;
     ev.y = -1;
     ev.dir = null;
+    ev.dt = 0;
+    ev.target = null;
+    if (opts) {
+        Object.assign(ev, opts);
+    }
+    ev.type = type;
+    return ev;
+}
+// TICK
+function makeTickEvent(dt) {
+    const ev = makeCustomEvent(TICK);
     ev.dt = dt;
     return ev;
 }
@@ -2109,6 +2117,7 @@ function makeKeyEvent(e) {
     ev.clientY = -1;
     ev.dir = keyCodeDirection(e.code);
     ev.dt = 0;
+    ev.target = null;
     return ev;
 }
 function keyCodeDirection(key) {
@@ -2149,6 +2158,7 @@ function makeMouseEvent(e, x, y) {
     ev.clientY = e.clientY;
     ev.dir = null;
     ev.dt = 0;
+    ev.target = null;
     return ev;
 }
 class Loop {
@@ -2412,6 +2422,7 @@ var io = /*#__PURE__*/Object.freeze({
     handlerFor: handlerFor,
     dispatchEvent: dispatchEvent,
     makeStopEvent: makeStopEvent,
+    makeCustomEvent: makeCustomEvent,
     makeTickEvent: makeTickEvent,
     makeKeyEvent: makeKeyEvent,
     keyCodeDirection: keyCodeDirection,

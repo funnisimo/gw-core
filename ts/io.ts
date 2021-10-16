@@ -16,6 +16,8 @@ export interface Event {
     clientY: number;
     dir: XY.Loc | null;
     dt: number;
+
+    target: any;
 }
 
 // export type CommandFn = (
@@ -117,14 +119,12 @@ function recycleEvent(ev: Event) {
 // STOP
 
 export function makeStopEvent() {
-    const ev: Event = makeTickEvent(0);
-    ev.type = STOP;
-    return ev;
+    return makeCustomEvent(STOP);
 }
 
-// TICK
+// CUSTOM
 
-export function makeTickEvent(dt: number) {
+export function makeCustomEvent(type: string, opts?: Partial<Event>): Event {
     const ev: Event = DEAD_EVENTS.pop() || ({} as Event);
 
     ev.shiftKey = false;
@@ -132,14 +132,28 @@ export function makeTickEvent(dt: number) {
     ev.altKey = false;
     ev.metaKey = false;
 
-    ev.type = TICK;
     ev.key = '';
     ev.code = '';
     ev.x = -1;
     ev.y = -1;
     ev.dir = null;
-    ev.dt = dt;
+    ev.dt = 0;
+    ev.target = null;
 
+    if (opts) {
+        Object.assign(ev, opts);
+    }
+
+    ev.type = type;
+
+    return ev;
+}
+
+// TICK
+
+export function makeTickEvent(dt: number): Event {
+    const ev = makeCustomEvent(TICK);
+    ev.dt = dt;
     return ev;
 }
 
@@ -181,6 +195,7 @@ export function makeKeyEvent(e: KeyboardEvent) {
     ev.clientY = -1;
     ev.dir = keyCodeDirection(e.code);
     ev.dt = 0;
+    ev.target = null;
 
     return ev;
 }
@@ -226,6 +241,7 @@ export function makeMouseEvent(e: MouseEvent, x: number, y: number) {
     ev.clientY = e.clientY;
     ev.dir = null;
     ev.dt = 0;
+    ev.target = null;
 
     return ev;
 }

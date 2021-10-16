@@ -758,6 +758,7 @@ interface Event$1 {
     clientY: number;
     dir: Loc$1 | null;
     dt: number;
+    target: any;
 }
 declare type ControlFn = () => void | Promise<void>;
 declare type EventFn$2 = (event: Event$1) => boolean | void | Promise<boolean | void>;
@@ -774,6 +775,7 @@ declare function setKeymap(keymap: IOMap): void;
 declare function handlerFor(ev: Event$1, km: IOMap): EventFn$2 | ControlFn | null;
 declare function dispatchEvent(ev: Event$1, km?: IOMap): Promise<boolean | void>;
 declare function makeStopEvent(): Event$1;
+declare function makeCustomEvent(type: string, opts?: Partial<Event$1>): Event$1;
 declare function makeTickEvent(dt: number): Event$1;
 declare function makeKeyEvent(e: KeyboardEvent): Event$1;
 declare function keyCodeDirection(key: string): Loc$1 | null;
@@ -825,6 +827,7 @@ declare const io_d_setKeymap: typeof setKeymap;
 declare const io_d_handlerFor: typeof handlerFor;
 declare const io_d_dispatchEvent: typeof dispatchEvent;
 declare const io_d_makeStopEvent: typeof makeStopEvent;
+declare const io_d_makeCustomEvent: typeof makeCustomEvent;
 declare const io_d_makeTickEvent: typeof makeTickEvent;
 declare const io_d_makeKeyEvent: typeof makeKeyEvent;
 declare const io_d_keyCodeDirection: typeof keyCodeDirection;
@@ -850,6 +853,7 @@ declare namespace io_d {
     io_d_handlerFor as handlerFor,
     io_d_dispatchEvent as dispatchEvent,
     io_d_makeStopEvent as makeStopEvent,
+    io_d_makeCustomEvent as makeCustomEvent,
     io_d_makeTickEvent as makeTickEvent,
     io_d_makeKeyEvent as makeKeyEvent,
     io_d_keyCodeDirection as keyCodeDirection,
