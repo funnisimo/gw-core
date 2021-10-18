@@ -215,7 +215,9 @@ function wrapLine(text: string, width: number, indent: number) {
 // Puts the output in "to" only if we receive a "to" -- can make it null and just get a line count.
 export function splitIntoLines(source: string, width = 200, indent = 0) {
     const CS = Config.options.colorStart;
-    const output = [];
+    const output: string[] = [];
+    if (!source) return output;
+    if (width <= 0) width = 200;
     let text = wordWrap(source, width, indent);
 
     let start = 0;

@@ -190,6 +190,15 @@ describe('wordWrap', () => {
 
     describe('splitIntoLines', () => {
         test('basic', () => {
+            // @ts-ignore
+            expect(Lines.splitIntoLines(undefined, 10)).toEqual([]);
+            expect(Lines.splitIntoLines('', 10)).toEqual([]);
+            expect(Lines.splitIntoLines('\n', 10)).toEqual(['']);
+
+            expect(Lines.splitIntoLines('reallyreally', 0)).toEqual([
+                'reallyreally',
+            ]);
+
             expect(Lines.splitIntoLines('reallyreally', 10)).toEqual([
                 'reallyrea-',
                 'lly',
