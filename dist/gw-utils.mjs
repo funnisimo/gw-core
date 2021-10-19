@@ -4827,7 +4827,7 @@ function splitIntoLines(source, width = 200, indent = 0) {
         }
     });
     let color = fg0 || bg0 ? `${CS}${fg0 ? fg0 : ''}${bg0 ? '|' + bg0 : ''}${CS}` : '';
-    if (start < text.length - 1) {
+    if (start < text.length) {
         output.push(color + text.substring(start));
     }
     return output;

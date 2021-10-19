@@ -194,6 +194,7 @@ describe('wordWrap', () => {
             expect(Lines.splitIntoLines(undefined, 10)).toEqual([]);
             expect(Lines.splitIntoLines('', 10)).toEqual([]);
             expect(Lines.splitIntoLines('\n', 10)).toEqual(['']);
+            expect(Lines.splitIntoLines('a')).toEqual(['a']);
 
             expect(Lines.splitIntoLines('reallyreally', 0)).toEqual([
                 'reallyreally',
