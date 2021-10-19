@@ -117,7 +117,7 @@ export class Glyphs {
     }
 
     draw(n: number, ch: DrawType) {
-        if (n > 256) throw new Error('Cannot draw more than 256 glyphs.');
+        if (n >= 256) throw new Error('Cannot draw more than 256 glyphs.');
         const x = (n % 16) * this.tileWidth;
         const y = Math.floor(n / 16) * this.tileHeight;
         const cx = x + Math.floor(this.tileWidth / 2);

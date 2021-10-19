@@ -5248,7 +5248,7 @@ class Glyphs {
         this._ctx.fillStyle = 'white';
     }
     draw(n, ch) {
-        if (n > 256)
+        if (n >= 256)
             throw new Error('Cannot draw more than 256 glyphs.');
         const x = (n % 16) * this.tileWidth;
         const y = Math.floor(n / 16) * this.tileHeight;
