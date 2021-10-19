@@ -150,37 +150,39 @@ export class Glyphs {
 
         [
             ' ',
-            '\u263a',
-            '\u263b',
-            '\u2665',
-            '\u2666',
-            '\u2663',
-            '\u2660',
-            '\u263c',
-            '\u2600',
-            '\u2605',
-            '\u2606',
-            '\u2642',
-            '\u2640',
-            '\u266a',
-            '\u266b',
-            '\u2638',
-            '\u25b6',
-            '\u25c0',
-            '\u2195',
-            '\u203c',
-            '\u204b',
-            '\u262f',
-            '\u2318',
-            '\u2616',
-            '\u2191',
-            '\u2193',
-            '\u2192',
-            '\u2190',
-            '\u2126',
-            '\u2194',
-            '\u25b2',
-            '\u25bc',
+            '\u263a', // smiley hollow
+            '\u263b', // smiley filled
+            '\u2665', // hearts
+            '\u2666', // diamonds
+            '\u2663', // clubs
+            '\u2660', // spades
+            '\u263c', // sun hollow
+            '\u2600', // sun filled
+            '\u2606', // star hollow
+            '\u2605', // star filled
+            '\u2642', // male
+            '\u2640', // female
+            '\u266a', // music 1 note
+            '\u266b', // music 2 notes
+            '\u2690', // flag hollow
+
+            '\u2691', // flag filled
+            '\u2610', // unchecked
+            '\u2611', // checked
+            '\u2612', // checked - with X
+            '\u26ac', // radio - off
+            '\u29bf', // radio - on
+
+            '\u2191', // up arrow
+            '\u2192', // right arrow
+            '\u2193', // down arrow
+            '\u2190', // left arrow
+            '\u2194', // left+right arrow
+            '\u2195', // up+down arrow
+            '\u25b2', // big up arrow
+            '\u25b6', // big right arrow
+            '\u25bc', // big down arrow
+            '\u25c0', // bug left arrow
         ].forEach((ch, i) => {
             this.draw(i, ch);
         });
