@@ -23,15 +23,12 @@ describe('Color', () => {
         // @ts-ignore
         expect(() => Color.make({})).toThrow();
 
-        // @ts-ignore
         const e = Color.make();
         expect(e.isNull()).toBeTruthy();
 
-        // @ts-ignore
         const f = Color.make(null);
         expect(f.isNull()).toBeTruthy();
 
-        // @ts-ignore
         const g = Color.make(undefined);
         expect(g.isNull()).toBeTruthy();
 
@@ -177,6 +174,17 @@ describe('Color', () => {
         const a = new Color.Color(100, 50, 0);
         const b = a.clone();
         expect(a.equals(b)).toBeTruthy();
+    });
+
+    test('set', () => {
+        const a = new Color.Color();
+        a.set('red');
+        expect(a.equals([100, 0, 0])).toBeTruthy();
+        expect(a.dances).toBeFalsy();
+
+        a.set(Color.colors.blue);
+        expect(a.equals([0, 0, 100])).toBeTruthy();
+        expect(a.dances).toBeFalsy();
     });
 
     test('assign', () => {
@@ -417,7 +425,7 @@ describe('Color', () => {
     test('css', () => {
         const c = Color.from(-1);
         expect(c.css()).toEqual('transparent');
-    })
+    });
 
     test('rgb hsl', () => {
         const c = Color.fromCss('#f80');
@@ -575,11 +583,10 @@ describe('Color', () => {
         expect(Color.smoothScalar(100, 100)).toEqual(0);
         expect(Color.smoothScalar(50, 100)).toEqual(100);
         expect(Color.smoothScalar(0, 100)).toEqual(0);
-
     });
 
     test('toLight', () => {
         const c = Color.from('#f00');
-        expect(c.toLight()).toEqual([100,0,0]);
+        expect(c.toLight()).toEqual([100, 0, 0]);
     });
 });

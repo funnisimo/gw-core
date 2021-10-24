@@ -96,7 +96,7 @@ export class Light implements Types.LightType {
             );
             for (k = 0; k < 3; ++k) {
                 lightValue[k] = Math.floor(
-                    (LIGHT_COMPONENTS[k] * lightMultiplier) / 100
+                    (LIGHT_COMPONENTS._data[k] * lightMultiplier) / 100
                 );
             }
             site.addCellLight(i, j, lightValue, dispelShadows);
@@ -122,7 +122,11 @@ export class Light implements Types.LightType {
 }
 
 export function intensity(light: Color.Color | Color.LightValue) {
-    return Math.max(light[0], light[1], light[2]);
+    let data: number[] | Int16Array = light as number[];
+    if (light instanceof Color.Color) {
+        data = light._data;
+    }
+    return Math.max(data[0], data[1], data[2]);
 }
 
 export function isDarkLight(

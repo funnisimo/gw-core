@@ -94,7 +94,7 @@ export class LightSystem implements LightSystemType, PaintSite {
         if (light instanceof Color.Color) {
             light = light.toLight();
         } else if (!Array.isArray(light)) {
-            light = Color.from(light);
+            light = Color.from(light).toLight();
         }
         for (let i = 0; i < 3; ++i) {
             this.ambient[i] = light[i] as number;

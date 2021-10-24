@@ -24,7 +24,8 @@ function toColorInt(r: number, g: number, b: number, base256: boolean) {
 
 export const colors: Record<string, Color> = {};
 
-export class Color extends Int16Array {
+export class Color {
+    _data: Int16Array;
     public dances = false;
     public name?: string;
 
@@ -38,52 +39,59 @@ export class Color extends Int16Array {
         blueRand = 0,
         dances = false
     ) {
-        super(7);
-        this.set([r, g, b, rand, redRand, greenRand, blueRand]);
+        this._data = new Int16Array([
+            r,
+            g,
+            b,
+            rand,
+            redRand,
+            greenRand,
+            blueRand,
+        ]);
         this.dances = dances;
     }
 
     get r() {
-        return Math.round(this[0] * 2.550001);
+        return Math.round(this._data[0] * 2.550001);
     }
     protected get _r() {
-        return this[0];
+        return this._data[0];
     }
     protected set _r(v: number) {
-        this[0] = v;
+        this._data[0] = v;
     }
 
     get g() {
-        return Math.round(this[1] * 2.550001);
+        return Math.round(this._data[1] * 2.550001);
     }
     protected get _g() {
-        return this[1];
+        return this._data[1];
     }
     protected set _g(v: number) {
-        this[1] = v;
+        this._data[1] = v;
     }
 
     get b() {
-        return Math.round(this[2] * 2.550001);
+        return Math.round(this._data[2] * 2.550001);
     }
     protected get _b() {
-        return this[2];
+        return this._data[2];
     }
     protected set _b(v: number) {
-        this[2] = v;
+        this._data[2] = v;
     }
 
     protected get _rand() {
-        return this[3];
+        return this._data[3];
     }
     protected get _redRand() {
-        return this[4];
+        return this._data[4];
     }
     protected get _greenRand() {
-        return this[5];
+        return this._data[5];
     }
     protected get _blueRand() {
-        return this[6];
+        return this._data[6];
     }
 
     // luminosity (0-100)
@@ -139,12 +147,12 @@ export class Color extends Int16Array {
         }
         const O = from(other);
         if (this.isNull()) return O.isNull();
-        return this.every((v: number, i: number) => {
-            return v == O[i];
+        return this._data.every((v: number, i: number) => {
+            return v == O._data[i];
         });
     }
 
-    copy(other: Color | ColorBase) {
+    copy(other: Color | ColorBase): this {
         if (other instanceof Color) {
             this.dances = other.dances;
         } else if (Array.isArray(other)) {
@@ -155,15 +163,22 @@ export class Color extends Int16Array {
             other = from(other);
             this.dances = other.dances;
         }
-        for (let i = 0; i < this.length; ++i) {
-            this[i] = (other[i] as number) || 0;
-        }
         if (other instanceof Color) {
             this.name = other.name;
+            for (let i = 0; i < this._data.length; ++i) {
+                this._data[i] = (other._data[i] as number) || 0;
+            }
         } else {
+            for (let i = 0; i < this._data.length; ++i) {
+                this._data[i] = (other[i] as number) || 0;
+            }
             this._changed();
         }
         return this;
+    }
+
+    set(other: Color | ColorBase): this {
+        return this.copy(other);
     }
 
     protected _changed() {
@@ -188,8 +203,8 @@ export class Color extends Int16Array {
         _blueRand = 0,
         dances?: boolean
     ) {
-        for (let i = 0; i < this.length; ++i) {
-            this[i] = arguments[i] || 0;
+        for (let i = 0; i < this._data.length; ++i) {
+            this._data[i] = arguments[i] || 0;
         }
         if (dances !== undefined) {
             this.dances = dances;
@@ -207,8 +222,8 @@ export class Color extends Int16Array {
         _blueRand = 0,
         dances?: boolean
     ) {
-        for (let i = 0; i < this.length; ++i) {
-            this[i] = Math.round((arguments[i] || 0) / 2.55);
+        for (let i = 0; i < this._data.length; ++i) {
+            this._data[i] = Math.round((arguments[i] || 0) / 2.55);
         }
         if (dances !== undefined) {
             this.dances = dances;
@@ -217,14 +232,14 @@ export class Color extends Int16Array {
     }
 
     nullify() {
-        this[0] = -1;
+        this._data[0] = -1;
         this.dances = false;
         return this._changed();
     }
 
     blackOut() {
-        for (let i = 0; i < this.length; ++i) {
-            this[i] = 0;
+        for (let i = 0; i < this._data.length; ++i) {
+            this._data[i] = 0;
         }
         this.dances = false;
         return this._changed();
@@ -266,37 +281,43 @@ export class Color extends Int16Array {
         }
         percent = Math.min(100, Math.max(0, percent));
         const keepPct = 100 - percent;
-        for (let i = 0; i < this.length; ++i) {
-            this[i] = Math.round((this[i] * keepPct + O[i] * percent) / 100);
+        for (let i = 0; i < this._data.length; ++i) {
+            this._data[i] = Math.round(
+                (this._data[i] * keepPct + O._data[i] * percent) / 100
+            );
         }
         this.dances = this.dances || O.dances;
         return this._changed();
     }
 
     // Only adjusts r,g,b
-    lighten(percent: number) {
+    lighten(percent: number): this {
         if (this.isNull()) return this;
 
         percent = Math.min(100, Math.max(0, percent));
-        if (percent <= 0) return;
+        if (percent <= 0) return this;
 
         const keepPct = 100 - percent;
         for (let i = 0; i < 3; ++i) {
-            this[i] = Math.round((this[i] * keepPct + 100 * percent) / 100);
+            this._data[i] = Math.round(
+                (this._data[i] * keepPct + 100 * percent) / 100
+            );
         }
         return this._changed();
     }
 
     // Only adjusts r,g,b
-    darken(percent: number) {
+    darken(percent: number): this {
         if (this.isNull()) return this;
 
         percent = Math.min(100, Math.max(0, percent));
-        if (percent <= 0) return;
+        if (percent <= 0) return this;
 
         const keepPct = 100 - percent;
         for (let i = 0; i < 3; ++i) {
-            this[i] = Math.round((this[i] * keepPct + 0 * percent) / 100);
+            this._data[i] = Math.round(
+                (this._data[i] * keepPct + 0 * percent) / 100
+            );
         }
         return this._changed();
     }
@@ -307,7 +328,7 @@ export class Color extends Int16Array {
         if (this.dances && !clearDancing) return;
         this.dances = false;
 
-        const d = this;
+        const d = this._data;
         if (d[3] + d[4] + d[5] + d[6]) {
             const rand = cosmetic.number(this._rand);
             const redRand = cosmetic.number(this._redRand);
@@ -316,8 +337,8 @@ export class Color extends Int16Array {
             this._r += rand + redRand;
             this._g += rand + greenRand;
             this._b += rand + blueRand;
-            for (let i = 3; i < this.length; ++i) {
-                this[i] = 0;
+            for (let i = 3; i < d.length; ++i) {
+                d[i] = 0;
             }
             return this._changed();
         }
@@ -332,8 +353,8 @@ export class Color extends Int16Array {
             this.blackOut();
         }
 
-        for (let i = 0; i < this.length; ++i) {
-            this[i] += Math.round((O[i] * percent) / 100);
+        for (let i = 0; i < this._data.length; ++i) {
+            this._data[i] += Math.round((O._data[i] * percent) / 100);
         }
         this.dances = this.dances || O.dances;
         return this._changed();
@@ -343,23 +364,25 @@ export class Color extends Int16Array {
         if (this.isNull() || percent == 100) return this;
 
         percent = Math.max(0, percent);
-        for (let i = 0; i < this.length; ++i) {
-            this[i] = Math.round((this[i] * percent) / 100);
+        for (let i = 0; i < this._data.length; ++i) {
+            this._data[i] = Math.round((this._data[i] * percent) / 100);
         }
         return this._changed();
     }
 
     multiply(other: ColorData | Color) {
         if (this.isNull()) return this;
-        let data = other as Int16Array;
-        if (!Array.isArray(other)) {
+        let data: number[] | Int16Array;
+        if (Array.isArray(other)) {
+            data = other as number[];
+        } else {
             if (other.isNull()) return this;
-            data = other;
+            data = other._data;
         }
 
-        const len = Math.max(3, Math.min(this.length, data.length));
+        const len = Math.max(3, Math.min(this._data.length, data.length));
         for (let i = 0; i < len; ++i) {
-            this[i] = Math.round((this[i] * (data[i] || 0)) / 100);
+            this._data[i] = Math.round((this._data[i] * (data[i] || 0)) / 100);
         }
         return this._changed();
     }
@@ -433,10 +456,7 @@ export function fromName(name: string) {
 }
 
 export function fromNumber(val: number, base256 = false) {
-    const c = new Color();
-    for (let i = 0; i < c.length; ++i) {
-        c[i] = 0;
-    }
+    const c = new Color(0, 0, 0);
     if (val < 0) {
         c.assign(-1);
     } else if (base256 || val > 0xfff) {

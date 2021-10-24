@@ -34,7 +34,8 @@ declare type ColorData = [number, number, number] | [number, number, number, num
 declare type ColorBase = string | number | ColorData | Color;
 declare type LightValue = [number, number, number];
 declare const colors: Record<string, Color>;
-declare class Color extends Int16Array {
+declare class Color {
+    _data: Int16Array;
     dances: boolean;
     name?: string;
     constructor(r?: number, g?: number, b?: number, rand?: number, redRand?: number, greenRand?: number, blueRand?: number, dances?: boolean);
@@ -57,6 +58,7 @@ declare class Color extends Int16Array {
     isNull(): boolean;
     equals(other: Color | ColorBase): boolean;
     copy(other: Color | ColorBase): this;
+    set(other: Color | ColorBase): this;
     protected _changed(): this;
     clone(): any;
     assign(_r?: number, _g?: number, _b?: number, _rand?: number, _redRand?: number, _greenRand?: number, _blueRand?: number, dances?: boolean): this;
@@ -67,8 +69,8 @@ declare class Color extends Int16Array {
     toLight(): LightValue;
     clamp(): this;
     mix(other: ColorBase, percent: number): this;
-    lighten(percent: number): this | undefined;
-    darken(percent: number): this | undefined;
+    lighten(percent: number): this;
+    darken(percent: number): this;
     bake(clearDancing?: boolean): this | undefined;
     add(other: ColorBase, percent?: number): this;
     scale(percent: number): this;

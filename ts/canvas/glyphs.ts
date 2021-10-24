@@ -160,10 +160,10 @@ export class Glyphs {
             '\u2600', // sun filled
             '\u2606', // star hollow
             '\u2605', // star filled
-            '\u2642', // male
-            '\u2640', // female
-            '\u266a', // music 1 note
-            '\u266b', // music 2 notes
+            '\u2023', // bullet triangle
+            '\u2219', // bullet square
+            '\u2043', // bullet hyphen
+            '\u2022', // bullet circle
             '\u2690', // flag hollow
 
             '\u2691', // flag filled
