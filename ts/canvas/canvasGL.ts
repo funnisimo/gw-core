@@ -187,7 +187,15 @@ export class CanvasGL extends Canvas.BaseCanvas {
     // }
 
     draw(data: Buffer.DataBuffer): boolean {
-        if (!data.changed) return false;
+        // TODO - remove?
+        if (
+            data._data.every((style, i) => {
+                const index = 2 + i * VERTICES_PER_TILE;
+                return style === this._data[index];
+            })
+        ) {
+            return false;
+        }
         data._data.forEach((style, i) => {
             const index = i * VERTICES_PER_TILE;
             this._data[index + 2] = style;

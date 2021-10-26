@@ -56,22 +56,23 @@ declare class Color {
     get s(): number;
     get h(): number;
     isNull(): boolean;
+    isConst(): boolean;
     equals(other: Color | ColorBase): boolean;
     copy(other: Color | ColorBase): this;
     set(other: Color | ColorBase): this;
     protected _changed(): this;
     clone(): any;
-    assign(_r?: number, _g?: number, _b?: number, _rand?: number, _redRand?: number, _greenRand?: number, _blueRand?: number, dances?: boolean): this;
-    assignRGB(_r?: number, _g?: number, _b?: number, _rand?: number, _redRand?: number, _greenRand?: number, _blueRand?: number, dances?: boolean): this;
-    nullify(): this;
-    blackOut(): this;
+    assign(_r?: number, _g?: number, _b?: number, _rand?: number, _redRand?: number, _greenRand?: number, _blueRand?: number, dances?: boolean): any;
+    assignRGB(_r?: number, _g?: number, _b?: number, _rand?: number, _redRand?: number, _greenRand?: number, _blueRand?: number, dances?: boolean): any;
+    nullify(): any;
+    blackOut(): any;
     toInt(base256?: boolean): number;
     toLight(): LightValue;
-    clamp(): this;
-    mix(other: ColorBase, percent: number): this;
+    clamp(): any;
+    mix(other: ColorBase, percent: number): any;
     lighten(percent: number): this;
     darken(percent: number): this;
-    bake(clearDancing?: boolean): this | undefined;
+    bake(clearDancing?: boolean): this;
     add(other: ColorBase, percent?: number): this;
     scale(percent: number): this;
     multiply(other: ColorData | Color): this;
@@ -746,21 +747,25 @@ declare namespace grid_d {
   };
 }
 
-interface Event$1 {
+declare class Event$1 {
+    type: string;
+    target: any;
+    defaultPrevented: boolean;
+    key: string;
+    code: string;
     shiftKey: boolean;
     ctrlKey: boolean;
     altKey: boolean;
     metaKey: boolean;
-    type: string;
-    key: string;
-    code: string;
+    dir: Loc$1 | null;
     x: number;
     y: number;
     clientX: number;
     clientY: number;
-    dir: Loc$1 | null;
     dt: number;
-    target: any;
+    constructor(type: string, opts?: Partial<Event$1>);
+    preventDefault(): void;
+    reset(type: string, opts?: Partial<Event$1>): void;
 }
 declare type ControlFn = () => void | Promise<void>;
 declare type EventFn$2 = (event: Event$1) => boolean | void | Promise<boolean | void>;

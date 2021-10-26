@@ -1994,6 +1994,51 @@ var grid = /*#__PURE__*/Object.freeze({
     unite: unite
 });
 
+class Event {
+    constructor(type, opts) {
+        this.target = null;
+        this.defaultPrevented = false;
+        // Key Event
+        this.key = '';
+        this.code = '';
+        this.shiftKey = false;
+        this.ctrlKey = false;
+        this.altKey = false;
+        this.metaKey = false;
+        // Dir Event extends KeyEvent
+        this.dir = null;
+        // Mouse Event
+        this.x = -1;
+        this.y = -1;
+        this.clientX = -1;
+        this.clientY = -1;
+        // Tick Event
+        this.dt = 0;
+        this.reset(type, opts);
+    }
+    preventDefault() {
+        this.defaultPrevented = true;
+    }
+    reset(type, opts) {
+        this.type = type;
+        this.target = null;
+        this.defaultPrevented = false;
+        this.shiftKey = false;
+        this.ctrlKey = false;
+        this.altKey = false;
+        this.metaKey = false;
+        this.key = '';
+        this.code = '';
+        this.x = -1;
+        this.y = -1;
+        this.dir = null;
+        this.dt = 0;
+        this.target = null;
+        if (opts) {
+            Object.assign(this, opts);
+        }
+    }
+}
 let IOMAP = {};
 const DEAD_EVENTS = [];
 const KEYPRESS = 'keypress';
@@ -2064,22 +2109,10 @@ function makeStopEvent() {
 }
 // CUSTOM
 function makeCustomEvent(type, opts) {
-    const ev = DEAD_EVENTS.pop() || {};
-    ev.shiftKey = false;
-    ev.ctrlKey = false;
-    ev.altKey = false;
-    ev.metaKey = false;
-    ev.key = '';
-    ev.code = '';
-    ev.x = -1;
-    ev.y = -1;
-    ev.dir = null;
-    ev.dt = 0;
-    ev.target = null;
-    if (opts) {
-        Object.assign(ev, opts);
-    }
-    ev.type = type;
+    const ev = DEAD_EVENTS.pop() || null;
+    if (!ev)
+        return new Event(type, opts);
+    ev.reset(type, opts);
     return ev;
 }
 // TICK
@@ -2107,7 +2140,7 @@ function makeKeyEvent(e) {
     if (e.altKey) {
         code = '/' + code;
     }
-    const ev = DEAD_EVENTS.pop() || {};
+    const ev = DEAD_EVENTS.pop() || new Event(KEYPRESS);
     ev.shiftKey = e.shiftKey;
     ev.ctrlKey = e.ctrlKey;
     ev.altKey = e.altKey;
@@ -2145,7 +2178,7 @@ function ignoreKeyEvent(e) {
 }
 // MOUSE
 function makeMouseEvent(e, x, y) {
-    const ev = DEAD_EVENTS.pop() || {};
+    const ev = DEAD_EVENTS.pop() || new Event(e.type);
     ev.shiftKey = e.shiftKey;
     ev.ctrlKey = e.ctrlKey;
     ev.altKey = e.altKey;
@@ -2416,6 +2449,7 @@ const loop = make$6();
 
 var io = /*#__PURE__*/Object.freeze({
     __proto__: null,
+    Event: Event,
     KEYPRESS: KEYPRESS,
     MOUSEMOVE: MOUSEMOVE,
     CLICK: CLICK,
@@ -3642,6 +3676,9 @@ class Color {
     isNull() {
         return this._r < 0;
     }
+    isConst() {
+        return !!this.name;
+    }
     equals(other) {
         if (typeof other === 'string') {
             if (!other.startsWith('#'))
@@ -3659,6 +3696,8 @@ class Color {
         });
     }
     copy(other) {
+        if (this.isConst())
+            return this.clone().copy(other);
         if (other instanceof Color) {
             this.dances = other.dances;
         }
@@ -3672,7 +3711,7 @@ class Color {
             this.dances = other.dances;
         }
         if (other instanceof Color) {
-            this.name = other.name;
+            // this.name = other.name;
             for (let i = 0; i < this._data.length; ++i) {
                 this._data[i] = other._data[i] || 0;
             }
@@ -3686,6 +3725,8 @@ class Color {
         return this;
     }
     set(other) {
+        if (this.isConst())
+            return this.clone().set(other);
         return this.copy(other);
     }
     _changed() {
@@ -3696,9 +3737,12 @@ class Color {
         // @ts-ignore
         const other = new this.constructor();
         other.copy(this);
+        other.name = undefined; // no longer a named color (not const);
         return other;
     }
     assign(_r = -1, _g = 0, _b = 0, _rand = 0, _redRand = 0, _greenRand = 0, _blueRand = 0, dances) {
+        if (this.isConst())
+            return this.clone().assign(...arguments);
         for (let i = 0; i < this._data.length; ++i) {
             this._data[i] = arguments[i] || 0;
         }
@@ -3708,6 +3752,8 @@ class Color {
         return this._changed();
     }
     assignRGB(_r = -1, _g = 0, _b = 0, _rand = 0, _redRand = 0, _greenRand = 0, _blueRand = 0, dances) {
+        if (this.isConst())
+            return this.clone().assignRGB(...arguments);
         for (let i = 0; i < this._data.length; ++i) {
             this._data[i] = Math.round((arguments[i] || 0) / 2.55);
         }
@@ -3717,11 +3763,15 @@ class Color {
         return this._changed();
     }
     nullify() {
+        if (this.isConst())
+            return this.clone().nullify();
         this._data[0] = -1;
         this.dances = false;
         return this._changed();
     }
     blackOut() {
+        if (this.isConst())
+            return this.clone().blackOut();
         for (let i = 0; i < this._data.length; ++i) {
             this._data[i] = 0;
         }
@@ -3749,12 +3799,16 @@ class Color {
     clamp() {
         if (this.isNull())
             return this;
+        if (this.isConst())
+            return this.clone().clamp();
         this._r = Math.min(100, Math.max(0, this._r));
         this._g = Math.min(100, Math.max(0, this._g));
         this._b = Math.min(100, Math.max(0, this._b));
         return this._changed();
     }
     mix(other, percent) {
+        if (this.isConst())
+            return this.clone().mix(other, percent);
         const O = from$2(other);
         if (O.isNull())
             return this;
@@ -3773,6 +3827,8 @@ class Color {
     lighten(percent) {
         if (this.isNull())
             return this;
+        if (this.isConst())
+            return this.clone().lighten(percent);
         percent = Math.min(100, Math.max(0, percent));
         if (percent <= 0)
             return this;
@@ -3786,6 +3842,8 @@ class Color {
     darken(percent) {
         if (this.isNull())
             return this;
+        if (this.isConst())
+            return this.clone().darken(percent);
         percent = Math.min(100, Math.max(0, percent));
         if (percent <= 0)
             return this;
@@ -3798,8 +3856,10 @@ class Color {
     bake(clearDancing = false) {
         if (this.isNull())
             return this;
+        if (this.isConst())
+            return this.clone().bake(clearDancing);
         if (this.dances && !clearDancing)
-            return;
+            return this;
         this.dances = false;
         const d = this._data;
         if (d[3] + d[4] + d[5] + d[6]) {
@@ -3819,6 +3879,8 @@ class Color {
     }
     // Adds a color to this one
     add(other, percent = 100) {
+        if (this.isConst())
+            return this.clone().add(other, percent);
         const O = from$2(other);
         if (O.isNull())
             return this;
@@ -3834,6 +3896,8 @@ class Color {
     scale(percent) {
         if (this.isNull() || percent == 100)
             return this;
+        if (this.isConst())
+            return this.clone().scale(percent);
         percent = Math.max(0, percent);
         for (let i = 0; i < this._data.length; ++i) {
             this._data[i] = Math.round((this._data[i] * percent) / 100);
@@ -3843,6 +3907,8 @@ class Color {
     multiply(other) {
         if (this.isNull())
             return this;
+        if (this.isConst())
+            return this.clone().multiply(other);
         let data;
         if (Array.isArray(other)) {
             data = other;
@@ -3862,6 +3928,8 @@ class Color {
     normalize() {
         if (this.isNull())
             return this;
+        if (this.isConst())
+            return this.clone().normalize();
         const max = Math.max(this._r, this._g, this._b);
         if (max <= 100)
             return this;
@@ -5675,7 +5743,8 @@ class Canvas2D extends BaseCanvas {
         this._changed = new Int8Array(width * height);
     }
     draw(data) {
-        if (!data.changed)
+        // TODO - Remove?
+        if (data._data.every((style, i) => style === this._data[i]))
             return false;
         data.changed = false;
         let changed = false;
@@ -5954,8 +6023,13 @@ class CanvasGL extends BaseCanvas {
     //     return false;
     // }
     draw(data) {
-        if (!data.changed)
+        // TODO - remove?
+        if (data._data.every((style, i) => {
+            const index = 2 + i * VERTICES_PER_TILE;
+            return style === this._data[index];
+        })) {
             return false;
+        }
         data._data.forEach((style, i) => {
             const index = i * VERTICES_PER_TILE;
             this._data[index + 2] = style;

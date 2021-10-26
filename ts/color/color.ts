@@ -27,6 +27,7 @@ export const colors: Record<string, Color> = {};
 export class Color {
     _data: Int16Array;
     public dances = false;
+    protected _const = false;
     public name?: string;
 
     constructor(
@@ -137,6 +138,9 @@ export class Color {
     isNull() {
         return this._r < 0;
     }
+    isConst(): boolean {
+        return this._const;
+    }
 
     equals(other: Color | ColorBase) {
         if (typeof other === 'string') {
@@ -153,6 +157,8 @@ export class Color {
     }
 
     copy(other: Color | ColorBase): this {
+        if (this.isConst()) return this.clone().copy(other);
+
         if (other instanceof Color) {
             this.dances = other.dances;
         } else if (Array.isArray(other)) {
@@ -178,6 +184,7 @@ export class Color {
     }
 
     set(other: Color | ColorBase): this {
+        if (this.isConst()) return this.clone().set(other);
         return this.copy(other);
     }
 
@@ -203,6 +210,8 @@ export class Color {
         _blueRand = 0,
         dances?: boolean
     ) {
+        if (this.isConst()) return this.clone().assign(...arguments);
+
         for (let i = 0; i < this._data.length; ++i) {
             this._data[i] = arguments[i] || 0;
         }
@@ -222,6 +231,8 @@ export class Color {
         _blueRand = 0,
         dances?: boolean
     ) {
+        if (this.isConst()) return this.clone().assignRGB(...arguments);
+
         for (let i = 0; i < this._data.length; ++i) {
             this._data[i] = Math.round((arguments[i] || 0) / 2.55);
         }
@@ -232,12 +243,16 @@ export class Color {
     }
 
     nullify() {
+        if (this.isConst()) return this.clone().nullify();
+
         this._data[0] = -1;
         this.dances = false;
         return this._changed();
     }
 
     blackOut() {
+        if (this.isConst()) return this.clone().blackOut();
+
         for (let i = 0; i < this._data.length; ++i) {
             this._data[i] = 0;
         }
@@ -266,6 +281,7 @@ export class Color {
 
     clamp() {
         if (this.isNull()) return this;
+        if (this.isConst()) return this.clone().clamp();
 
         this._r = Math.min(100, Math.max(0, this._r));
         this._g = Math.min(100, Math.max(0, this._g));
@@ -274,6 +290,8 @@ export class Color {
     }
 
     mix(other: ColorBase, percent: number) {
+        if (this.isConst()) return this.clone().mix(other, percent);
+
         const O = from(other);
         if (O.isNull()) return this;
         if (this.isNull()) {
@@ -293,6 +311,7 @@ export class Color {
     // Only adjusts r,g,b
     lighten(percent: number): this {
         if (this.isNull()) return this;
+        if (this.isConst()) return this.clone().lighten(percent);
 
         percent = Math.min(100, Math.max(0, percent));
         if (percent <= 0) return this;
@@ -309,6 +328,7 @@ export class Color {
     // Only adjusts r,g,b
     darken(percent: number): this {
         if (this.isNull()) return this;
+        if (this.isConst()) return this.clone().darken(percent);
 
         percent = Math.min(100, Math.max(0, percent));
         if (percent <= 0) return this;
@@ -322,10 +342,11 @@ export class Color {
         return this._changed();
     }
 
-    bake(clearDancing = false) {
+    bake(clearDancing = false): this {
         if (this.isNull()) return this;
+        if (this.isConst()) return this.clone().bake(clearDancing);
 
-        if (this.dances && !clearDancing) return;
+        if (this.dances && !clearDancing) return this;
         this.dances = false;
 
         const d = this._data;
@@ -346,7 +367,9 @@ export class Color {
     }
 
     // Adds a color to this one
-    add(other: ColorBase, percent: number = 100) {
+    add(other: ColorBase, percent: number = 100): this {
+        if (this.isConst()) return this.clone().add(other, percent);
+
         const O = from(other);
         if (O.isNull()) return this;
         if (this.isNull()) {
@@ -360,8 +383,9 @@ export class Color {
         return this._changed();
     }
 
-    scale(percent: number) {
+    scale(percent: number): this {
         if (this.isNull() || percent == 100) return this;
+        if (this.isConst()) return this.clone().scale(percent);
 
         percent = Math.max(0, percent);
         for (let i = 0; i < this._data.length; ++i) {
@@ -370,8 +394,10 @@ export class Color {
         return this._changed();
     }
 
-    multiply(other: ColorData | Color) {
+    multiply(other: ColorData | Color): this {
         if (this.isNull()) return this;
+        if (this.isConst()) return this.clone().multiply(other);
+
         let data: number[] | Int16Array;
         if (Array.isArray(other)) {
             data = other as number[];
@@ -388,8 +414,10 @@ export class Color {
     }
 
     // scales rgb down to a max of 100
-    normalize() {
+    normalize(): this {
         if (this.isNull()) return this;
+        if (this.isConst()) return this.clone().normalize();
+
         const max = Math.max(this._r, this._g, this._b);
         if (max <= 100) return this;
         this._r = Math.round((100 * this._r) / max);
@@ -402,13 +430,13 @@ export class Color {
      * Returns the css code for the current RGB values of the color.
      * @param base256 - Show in base 256 (#abcdef) instead of base 16 (#abc)
      */
-    css(base256 = false) {
+    css(base256 = false): string {
         const v = this.toInt(base256);
         if (v < 0) return 'transparent';
         return '#' + v.toString(16).padStart(base256 ? 6 : 3, '0');
     }
 
-    toString(base256 = false) {
+    toString(base256 = false): string {
         if (this.name) return this.name;
         if (this.isNull()) return 'null color';
         return this.css(base256);
@@ -600,6 +628,8 @@ export function install(name: string, ...args: any[]) {
         info = args[0];
     }
     const c = info instanceof Color ? info : make(info as ColorBase);
+    // @ts-ignore
+    c._const = true;
     colors[name] = c;
     c.name = name;
     return c;

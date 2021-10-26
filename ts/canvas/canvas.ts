@@ -249,7 +249,9 @@ export class Canvas2D extends BaseCanvas {
     }
 
     draw(data: DataBuffer): boolean {
-        if (!data.changed) return false;
+        // TODO - Remove?
+        if (data._data.every((style, i) => style === this._data[i]))
+            return false;
         data.changed = false;
         let changed = false;
         const src = data._data;

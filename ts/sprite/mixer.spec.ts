@@ -279,7 +279,7 @@ describe('Mixer', () => {
     test('toString', () => {
         const mixer = new Mixer({ ch: '@', fg: 'red', bg: 'black' });
         expect(mixer.fg).not.toBe(Color.colors.red);
-        expect(mixer.fg).toEqual(Color.colors.red);
+        expect(mixer.fg.equals(Color.colors.red)).toBeTruthy();
         expect(mixer.fg.name).toEqual('red');
         expect(mixer.toString()).toEqual('{ ch: @, fg: red, bg: black }');
     });

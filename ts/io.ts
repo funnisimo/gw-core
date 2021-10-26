@@ -1,23 +1,60 @@
 import * as Utils from './utils';
 import * as XY from './xy';
 
-export interface Event {
-    shiftKey: boolean;
-    ctrlKey: boolean;
-    altKey: boolean;
-    metaKey: boolean;
+export class Event {
+    type!: string;
+    target: any = null;
+    defaultPrevented = false;
 
-    type: string;
-    key: string;
-    code: string;
-    x: number;
-    y: number;
-    clientX: number;
-    clientY: number;
-    dir: XY.Loc | null;
-    dt: number;
+    // Key Event
+    key = '';
+    code = '';
+    shiftKey = false;
+    ctrlKey = false;
+    altKey = false;
+    metaKey = false;
 
-    target: any;
+    // Dir Event extends KeyEvent
+    dir: XY.Loc | null = null;
+
+    // Mouse Event
+    x = -1;
+    y = -1;
+    clientX = -1;
+    clientY = -1;
+
+    // Tick Event
+    dt = 0;
+
+    constructor(type: string, opts?: Partial<Event>) {
+        this.reset(type, opts);
+    }
+
+    preventDefault() {
+        this.defaultPrevented = true;
+    }
+
+    reset(type: string, opts?: Partial<Event>) {
+        this.type = type;
+        this.target = null;
+        this.defaultPrevented = false;
+
+        this.shiftKey = false;
+        this.ctrlKey = false;
+        this.altKey = false;
+        this.metaKey = false;
+
+        this.key = '';
+        this.code = '';
+        this.x = -1;
+        this.y = -1;
+        this.dir = null;
+        this.dt = 0;
+        this.target = null;
+        if (opts) {
+            Object.assign(this, opts);
+        }
+    }
 }
 
 // export type CommandFn = (
@@ -125,27 +162,10 @@ export function makeStopEvent() {
 // CUSTOM
 
 export function makeCustomEvent(type: string, opts?: Partial<Event>): Event {
-    const ev: Event = DEAD_EVENTS.pop() || ({} as Event);
+    const ev = DEAD_EVENTS.pop() || null;
+    if (!ev) return new Event(type, opts);
 
-    ev.shiftKey = false;
-    ev.ctrlKey = false;
-    ev.altKey = false;
-    ev.metaKey = false;
-
-    ev.key = '';
-    ev.code = '';
-    ev.x = -1;
-    ev.y = -1;
-    ev.dir = null;
-    ev.dt = 0;
-    ev.target = null;
-
-    if (opts) {
-        Object.assign(ev, opts);
-    }
-
-    ev.type = type;
-
+    ev.reset(type, opts);
     return ev;
 }
 
@@ -179,7 +199,7 @@ export function makeKeyEvent(e: KeyboardEvent) {
         code = '/' + code;
     }
 
-    const ev: Event = DEAD_EVENTS.pop() || ({} as Event);
+    const ev: Event = DEAD_EVENTS.pop() || new Event(KEYPRESS);
 
     ev.shiftKey = e.shiftKey;
     ev.ctrlKey = e.ctrlKey;
@@ -222,7 +242,7 @@ export function ignoreKeyEvent(e: KeyboardEvent) {
 // MOUSE
 
 export function makeMouseEvent(e: MouseEvent, x: number, y: number) {
-    const ev: Event = DEAD_EVENTS.pop() || ({} as Event);
+    const ev: Event = DEAD_EVENTS.pop() || new Event(e.type);
 
     ev.shiftKey = e.shiftKey;
     ev.ctrlKey = e.ctrlKey;
