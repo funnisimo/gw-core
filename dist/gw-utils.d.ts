@@ -37,6 +37,7 @@ declare const colors: Record<string, Color>;
 declare class Color {
     _data: Int16Array;
     dances: boolean;
+    protected _const: boolean;
     name?: string;
     constructor(r?: number, g?: number, b?: number, rand?: number, redRand?: number, greenRand?: number, blueRand?: number, dances?: boolean);
     get r(): number;

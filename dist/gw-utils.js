@@ -3588,6 +3588,7 @@
     class Color {
         constructor(r = -1, g = 0, b = 0, rand = 0, redRand = 0, greenRand = 0, blueRand = 0, dances = false) {
             this.dances = false;
+            this._const = false;
             this._data = new Int16Array([
                 r,
                 g,
@@ -3683,7 +3684,7 @@
             return this._r < 0;
         }
         isConst() {
-            return !!this.name;
+            return this._const;
         }
         equals(other) {
             if (typeof other === 'string') {
@@ -3717,7 +3718,7 @@
                 this.dances = other.dances;
             }
             if (other instanceof Color) {
-                // this.name = other.name;
+                this.name = other.name;
                 for (let i = 0; i < this._data.length; ++i) {
                     this._data[i] = other._data[i] || 0;
                 }
@@ -3743,7 +3744,6 @@
             // @ts-ignore
             const other = new this.constructor();
             other.copy(this);
-            other.name = undefined; // no longer a named color (not const);
             return other;
         }
         assign(_r = -1, _g = 0, _b = 0, _rand = 0, _redRand = 0, _greenRand = 0, _blueRand = 0, dances) {
@@ -4112,6 +4112,8 @@
             info = args[0];
         }
         const c = info instanceof Color ? info : make$4(info);
+        // @ts-ignore
+        c._const = true;
         colors[name] = c;
         c.name = name;
         return c;
