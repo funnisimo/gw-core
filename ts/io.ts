@@ -207,6 +207,7 @@ export function makeKeyEvent(e: KeyboardEvent) {
     ev.metaKey = e.metaKey;
 
     ev.type = KEYPRESS;
+    ev.defaultPrevented = false;
     ev.key = key;
     ev.code = code;
     ev.x = -1;
@@ -253,6 +254,7 @@ export function makeMouseEvent(e: MouseEvent, x: number, y: number) {
     if (e.buttons && e.type !== 'mouseup') {
         ev.type = CLICK;
     }
+    ev.defaultPrevented = false;
     ev.key = '';
     ev.code = '';
     ev.x = x;

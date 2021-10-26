@@ -2152,6 +2152,7 @@
         ev.altKey = e.altKey;
         ev.metaKey = e.metaKey;
         ev.type = KEYPRESS;
+        ev.defaultPrevented = false;
         ev.key = key;
         ev.code = code;
         ev.x = -1;
@@ -2193,6 +2194,7 @@
         if (e.buttons && e.type !== 'mouseup') {
             ev.type = CLICK;
         }
+        ev.defaultPrevented = false;
         ev.key = '';
         ev.code = '';
         ev.x = x;
