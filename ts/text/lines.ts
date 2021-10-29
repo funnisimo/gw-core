@@ -91,7 +91,6 @@ export function hyphenate(
         }
 
         // one hyphen will work...
-        // if (spaceLeftOnLine + width > wordWidth) {
         const hyphenAt = Math.min(
             spaceLeftOnLine - 1,
             Math.floor(wordWidth / 2)
@@ -104,29 +103,6 @@ export function hyphenate(
     }
 
     return [text, end];
-
-    // // do not have a strategy for this right now...
-    // if (wordWidth + 1 > width * 2) {
-    //     throw new Error('Cannot hyphenate - word length > 2 * width');
-    // }
-
-    // }
-
-    // if (width >= wordWidth) {
-    //     return [text, end];
-    // }
-
-    // console.log('hyphenate', { text, start, end, width, wordWidth, spaceLeftOnLine });
-    // throw new Error('Did not expect to get here...');
-
-    // wordWidth >= spaceLeftOnLine + width
-    // text = splice(text, start - 1, 1, "\n");
-    // spaceLeftOnLine = width;
-    // const hyphenAt = Math.min(wordWidth, width - 1);
-    // const w = Utils.advanceChars(text, start, hyphenAt);
-    // text = splice(text, w, 0, "-\n");
-
-    // return [text, end + 2];
 }
 
 export function wordWrap(text: string, width: number, indent = 0) {

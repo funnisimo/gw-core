@@ -141,6 +141,10 @@ describe('wordWrap', () => {
             ).toEqual(['testing\nreallyreally', 22]);
 
             expect(
+                Lines.hyphenate('some long text', 14, 14, 14, 0, 10)
+            ).toEqual(['some long text', 14]);
+
+            expect(
                 Lines.hyphenate('testing reallyreallylong', 12, 8, 25, 16, 3)
             ).toEqual(['testing\nreallyreall-\nylong', 27]);
 
