@@ -305,6 +305,16 @@ describe('FOV System', () => {
         expect(system.isRevealed(5, 5)).toBeTruthy();
     });
 
+    test('revealAll - not visible', () => {
+        system = new FOV.FovSystem(site);
+        expect(system.isAnyKindOfVisible(5, 5)).toBeFalsy();
+        expect(system.isRevealed(5, 5)).toBeFalsy();
+
+        system.revealAll(false);
+        expect(system.isAnyKindOfVisible(5, 5)).toBeFalsy();
+        expect(system.isRevealed(5, 5)).toBeTruthy();
+    });
+
     test('cell functions', () => {
         system = new FOV.FovSystem(site);
         expect(system.isAnyKindOfVisible(5, 5)).toBeFalsy();
@@ -430,13 +440,13 @@ describe('FOV System', () => {
         site.viewports.push(actor);
         // system.needsUpdate = true;
 
-        expect(system.isDirectlyVisible(10,10)).toBeFalsy();
-        expect(system.isAnyKindOfVisible(10,10)).toBeFalsy();
+        expect(system.isDirectlyVisible(10, 10)).toBeFalsy();
+        expect(system.isAnyKindOfVisible(10, 10)).toBeFalsy();
         expect(system.isActorDetected(10, 10)).toBeFalsy();
 
         expect(system.update()).toBeTruthy();
-        expect(system.isDirectlyVisible(10,10)).toBeFalsy();
-        expect(system.isAnyKindOfVisible(10,10)).toBeFalsy();
+        expect(system.isDirectlyVisible(10, 10)).toBeFalsy();
+        expect(system.isAnyKindOfVisible(10, 10)).toBeFalsy();
         expect(system.isActorDetected(10, 10)).toBeTruthy();
         expect(system.isActorDetected(11, 10)).toBeFalsy();
         expect(system.isActorDetected(10, 11)).toBeFalsy();
@@ -444,8 +454,19 @@ describe('FOV System', () => {
         actor.x = 15;
         actor.y = 15;
         expect(system.update()).toBeTruthy();
-        expect(system.isDirectlyVisible(10,10)).toBeFalsy();
-        expect(system.isAnyKindOfVisible(10,10)).toBeFalsy();
+        expect(system.isDirectlyVisible(10, 10)).toBeFalsy();
+        expect(system.isAnyKindOfVisible(10, 10)).toBeFalsy();
+        expect(system.isActorDetected(10, 10)).toBeFalsy();
+        expect(system.isActorDetected(11, 10)).toBeFalsy();
+        expect(system.isActorDetected(10, 11)).toBeFalsy();
+
+        expect(system.isDirectlyVisible(15, 15)).toBeFalsy();
+        expect(system.isAnyKindOfVisible(15, 15)).toBeFalsy();
+        expect(system.isActorDetected(15, 15)).toBeTruthy();
+
+        expect(system.update()).toBeTruthy();
+        expect(system.isDirectlyVisible(10, 10)).toBeFalsy();
+        expect(system.isAnyKindOfVisible(10, 10)).toBeFalsy();
         expect(system.isActorDetected(10, 10)).toBeFalsy();
         expect(system.isActorDetected(11, 10)).toBeFalsy();
         expect(system.isActorDetected(10, 11)).toBeFalsy();
@@ -455,8 +476,8 @@ describe('FOV System', () => {
         expect(system.isActorDetected(15, 15)).toBeTruthy();
 
         system.reset();
-        expect(system.isDirectlyVisible(15,15)).toBeFalsy();
-        expect(system.isAnyKindOfVisible(15,15)).toBeFalsy();
+        expect(system.isDirectlyVisible(15, 15)).toBeFalsy();
+        expect(system.isAnyKindOfVisible(15, 15)).toBeFalsy();
         expect(system.isActorDetected(15, 15)).toBeFalsy();
     });
 
@@ -473,13 +494,13 @@ describe('FOV System', () => {
         site.viewports.push(item);
         // system.needsUpdate = true;
 
-        expect(system.isDirectlyVisible(10,10)).toBeFalsy();
-        expect(system.isAnyKindOfVisible(10,10)).toBeFalsy();
+        expect(system.isDirectlyVisible(10, 10)).toBeFalsy();
+        expect(system.isAnyKindOfVisible(10, 10)).toBeFalsy();
         expect(system.isItemDetected(10, 10)).toBeFalsy();
 
         expect(system.update()).toBeTruthy();
-        expect(system.isDirectlyVisible(10,10)).toBeFalsy();
-        expect(system.isAnyKindOfVisible(10,10)).toBeFalsy();
+        expect(system.isDirectlyVisible(10, 10)).toBeFalsy();
+        expect(system.isAnyKindOfVisible(10, 10)).toBeFalsy();
         expect(system.isItemDetected(10, 10)).toBeTruthy();
         expect(system.isItemDetected(11, 10)).toBeFalsy();
         expect(system.isItemDetected(10, 11)).toBeFalsy();
@@ -487,8 +508,8 @@ describe('FOV System', () => {
         item.x = 15;
         item.y = 15;
         expect(system.update()).toBeTruthy();
-        expect(system.isDirectlyVisible(10,10)).toBeFalsy();
-        expect(system.isAnyKindOfVisible(10,10)).toBeFalsy();
+        expect(system.isDirectlyVisible(10, 10)).toBeFalsy();
+        expect(system.isAnyKindOfVisible(10, 10)).toBeFalsy();
         expect(system.isItemDetected(10, 10)).toBeFalsy();
         expect(system.isItemDetected(11, 10)).toBeFalsy();
         expect(system.isItemDetected(10, 11)).toBeFalsy();
@@ -498,8 +519,13 @@ describe('FOV System', () => {
         expect(system.isItemDetected(15, 15)).toBeTruthy();
 
         system.reset();
-        expect(system.isDirectlyVisible(15,15)).toBeFalsy();
-        expect(system.isAnyKindOfVisible(15,15)).toBeFalsy();
+        expect(system.isDirectlyVisible(15, 15)).toBeFalsy();
+        expect(system.isAnyKindOfVisible(15, 15)).toBeFalsy();
         expect(system.isItemDetected(15, 15)).toBeFalsy();
-    });    
+    });
+
+    test('out of bounds', () => {
+        system = new FOV.FovSystem(site);
+        expect(system.fovChanged(-1, -1)).toBeFalsy();
+    });
 });
