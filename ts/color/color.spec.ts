@@ -170,6 +170,17 @@ describe('Color', () => {
         expect(b.css()).toEqual('#f00');
     });
 
+    test('copy - const', () => {
+        const a = Color.colors.red;
+        expect(a.isConst()).toBeTruthy();
+
+        const b = new Color.Color(100, 50, 0);
+        expect(a.equals(b)).toBeFalsy();
+        const r = a.copy(b);
+        expect(a.equals(b)).toBeFalsy();
+        expect(r.equals(b)).toBeTruthy();
+    });
+
     test('clone', () => {
         const a = new Color.Color(100, 50, 0);
         const b = a.clone();
@@ -187,6 +198,14 @@ describe('Color', () => {
         expect(a.dances).toBeFalsy();
     });
 
+    test('set - const', () => {
+        const a = Color.colors.blue;
+        expect(a.isConst()).toBeTruthy();
+        const r = a.set('red');
+        expect(a.equals([100, 0, 0])).toBeFalsy();
+        expect(r.equals([100, 0, 0])).toBeTruthy();
+    });
+
     test('assign', () => {
         const a = new Color.Color();
         a.assign(100, 50, 0);
@@ -200,6 +219,14 @@ describe('Color', () => {
         a.assign();
         expect(a.toString()).toEqual('#000');
         expect(a.dances).toBeTruthy(); // does not change (should it?)
+    });
+
+    test('assign - const', () => {
+        const a = Color.colors.red;
+        expect(a.isConst()).toBeTruthy();
+        const r = a.assign(100, 50, 0);
+        expect(a.equals([100, 50, 0])).toBeFalsy();
+        expect(r.equals([100, 50, 0])).toBeTruthy();
     });
 
     test('assignRGB', () => {
@@ -217,6 +244,14 @@ describe('Color', () => {
         expect(a.dances).toBeTruthy(); // does not change (should it?)
     });
 
+    test('assignRGB - const', () => {
+        const a = Color.colors.red;
+        expect(a.isConst()).toBeTruthy();
+        const r = a.assignRGB(255, 128, 0);
+        expect(a.equals([100, 50, 0])).toBeFalsy();
+        expect(r.equals([100, 50, 0])).toBeTruthy();
+    });
+
     test('nullify', () => {
         const c = Color.fromNumber(0xff0);
         expect(c.isNull()).toBeFalsy();
@@ -224,11 +259,29 @@ describe('Color', () => {
         expect(c.isNull()).toBeTruthy();
     });
 
+    test('nullify - const', () => {
+        const c = Color.colors.yellow;
+        expect(c.isConst()).toBeTruthy();
+        expect(c.isNull()).toBeFalsy();
+        const r = c.nullify();
+        expect(c.isNull()).toBeFalsy();
+        expect(r.isNull()).toBeTruthy();
+    });
+
     test('blackOut', () => {
         const a = new Color.Color(100, 50, 0);
         expect(a.toInt()).toEqual(0xf80);
         a.blackOut();
         expect(a.toInt()).toEqual(0x000);
+    });
+
+    test('blackOut - const', () => {
+        const a = Color.colors.yellow;
+        expect(a.isConst()).toBeTruthy();
+        expect(a.toInt()).toEqual(0xff0);
+        const r = a.blackOut();
+        expect(a.toInt()).toEqual(0xff0);
+        expect(r.toInt()).toEqual(0x000);
     });
 
     test('toInt', () => {
@@ -267,6 +320,13 @@ describe('Color', () => {
         expect(c.equals([100, 0, 50])).toBeTruthy();
     });
 
+    test('clamp - const', () => {
+        const c = Color.colors.blue;
+        expect(c.isConst()).toBeTruthy();
+        const r = c.clamp();
+        expect(r).not.toBe(c);
+    });
+
     test('mix', () => {
         const c = new Color.Color();
         const white = new Color.Color(100, 100, 100);
@@ -292,6 +352,16 @@ describe('Color', () => {
         expect(c.toString()).toEqual('#319');
     });
 
+    test('mix - const', () => {
+        const c = Color.colors.yellow;
+        expect(c.isConst()).toBeTruthy();
+        const white = new Color.Color(100, 100, 100);
+
+        const r = c.mix(white, 50);
+        expect(c.equals([100, 100, 0])).toBeTruthy();
+        expect(r.equals([100, 100, 50])).toBeTruthy();
+    });
+
     test('lighten', () => {
         const c = Color.fromNumber(0x840);
         c.lighten(0);
@@ -305,6 +375,14 @@ describe('Color', () => {
         expect(d.isNull()).toBeTruthy();
     });
 
+    test('lighten - const', () => {
+        const c = Color.colors.yellow;
+        expect(c.isConst()).toBeTruthy();
+        const r = c.lighten(50);
+        expect(c.toString()).toEqual('yellow');
+        expect(r.toString()).toEqual('#ff8');
+    });
+
     test('darken', () => {
         const c = Color.fromNumber(0x8bf);
         c.darken(0);
@@ -316,6 +394,14 @@ describe('Color', () => {
         expect(d.isNull()).toBeTruthy();
         d.darken(50);
         expect(d.isNull()).toBeTruthy();
+    });
+
+    test('darken - const', () => {
+        const c = Color.colors.yellow;
+        expect(c.isConst()).toBeTruthy();
+        const r = c.darken(50);
+        expect(c.toString()).toEqual('yellow');
+        expect(r.toString()).toEqual('#880');
     });
 
     test('bake', () => {
@@ -347,6 +433,13 @@ describe('Color', () => {
         expect(f.b).toEqual(128);
     });
 
+    test('bake - const', () => {
+        const c = Color.colors.yellow;
+        expect(c.isConst()).toBeTruthy();
+        const r = c.bake();
+        expect(r).not.toBe(c);
+    });
+
     test('add', () => {
         const c = Color.fromNumber(0x444);
         const nullColor = new Color.Color();
@@ -367,6 +460,16 @@ describe('Color', () => {
         expect(e.isNull()).toBeFalsy();
     });
 
+    test('add - const', () => {
+        const c = Color.colors.blue;
+        expect(c.isConst()).toBeTruthy();
+
+        const d = Color.fromNumber(0x222);
+        const r = c.add(d);
+        expect(c.toString()).toEqual('blue');
+        expect(r.toString()).toEqual('#22f');
+    });
+
     test('scale', () => {
         const c = Color.fromNumber(0x222);
         c.scale(200);
@@ -376,6 +479,14 @@ describe('Color', () => {
         expect(d.isNull()).toBeTruthy();
         d.scale(200);
         expect(d.isNull()).toBeTruthy();
+    });
+
+    test('scale - const', () => {
+        const c = Color.colors.yellow;
+        expect(c.isConst()).toBeTruthy();
+        const r = c.scale(50);
+        expect(c.toString()).toEqual('yellow');
+        expect(r.toString()).toEqual('#880');
     });
 
     test('multiply', () => {
@@ -396,6 +507,14 @@ describe('Color', () => {
         expect(e.isNull()).toBeTruthy();
     });
 
+    test('multiply - const', () => {
+        const c = Color.colors.gray;
+
+        const r = c.multiply([200, 50, 100]);
+        expect(c.toString()).toEqual('gray');
+        expect(r.toString()).toEqual('#f48');
+    });
+
     test('normalize', () => {
         const c = Color.fromArray([200, 100, 50]);
         expect(c.toString()).toEqual('#ff8');
@@ -410,6 +529,13 @@ describe('Color', () => {
         const e = new Color.Color(50, 50, 50);
         e.normalize();
         expect(e.toString()).toEqual('#888');
+    });
+
+    test('normalize - const', () => {
+        const c = Color.colors.yellow;
+        expect(c.isConst()).toBeTruthy();
+        const r = c.normalize();
+        expect(r).not.toBe(c);
     });
 
     test('toString', () => {
