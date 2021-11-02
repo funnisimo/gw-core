@@ -35,6 +35,17 @@ describe('GW.grid', () => {
 
         expect(() => GW.grid.alloc(0, 4)).toThrow();
         expect(() => GW.grid.alloc(4, 0)).toThrow();
+
+        // @ts-ignore
+        GW.grid.free(null);
+
+        GW.grid.free(a);
+        a = GW.grid.alloc(8, 8, () => 2);
+        expect(a.count(2)).toEqual(64);
+
+        const d = GW.grid.alloc(6, 6, 2);
+        expect(d.count(2)).toEqual(36);
+        GW.grid.free(d);
     });
 
     test('get/set', () => {
@@ -114,6 +125,8 @@ describe('GW.grid', () => {
         });
 
         a[3][3] = 1;
+        a[4][4] = 1;
+        a[5][3] = 1;
         a[5][5] = 1;
         expect(a.calcBounds()).toEqual({
             left: 3,
@@ -121,6 +134,15 @@ describe('GW.grid', () => {
             right: 5,
             bottom: 5,
         });
+    });
+
+    test('forEachAsync', async () => {
+        const fn = jest.fn().mockResolvedValue(true);
+
+        a = GW.grid.alloc(10, 10, 0);
+
+        await a.forEachAsync(fn);
+        expect(fn).toHaveBeenCalledTimes(100);
     });
 
     test('eachNeighbor', () => {
@@ -140,6 +162,23 @@ describe('GW.grid', () => {
         fn.mockClear();
     });
 
+    test('eachNeighborAsync', async () => {
+        a = GW.grid.alloc(10, 10, 0);
+        const fn = jest.fn().mockResolvedValue(true);
+
+        await a.eachNeighborAsync(0, 0, fn);
+        expect(fn).toHaveBeenCalledTimes(3);
+        fn.mockClear();
+
+        await a.eachNeighborAsync(1, 1, fn);
+        expect(fn).toHaveBeenCalledTimes(8);
+        fn.mockClear();
+
+        await a.eachNeighborAsync(1, 1, fn, true);
+        expect(fn).toHaveBeenCalledTimes(4);
+        fn.mockClear();
+    });
+
     test('forRect', () => {
         a = GW.grid.alloc(10, 10, 0);
         const fn = jest.fn();
@@ -151,6 +190,25 @@ describe('GW.grid', () => {
         a.forRect(1, 1, 3, 3, fn);
         expect(fn).toHaveBeenCalledTimes(9);
         fn.mockClear();
+
+        a.forRect(-1, -1, 3, 3, fn);
+        expect(fn).toHaveBeenCalledTimes(4);
+    });
+
+    test('randomEach', () => {
+        GW.rng.random.seed(12345);
+        const fn = jest.fn().mockReturnValue(false);
+
+        a = GW.grid.alloc(10, 10);
+
+        expect(a.randomEach(fn)).toBeFalsy();
+        expect(fn).toHaveBeenCalledTimes(100);
+
+        fn.mockClear();
+        fn.mockImplementation((_v, x, y) => x === 3 && y === 5);
+
+        expect(a.randomEach(fn)).toBeTruthy();
+        expect(fn).toHaveBeenCalledTimes(11);
     });
 
     test('map', () => {
@@ -160,6 +218,17 @@ describe('GW.grid', () => {
         const b = a.map(fn);
         expect(fn).toHaveBeenCalledTimes(100);
         expect(b.count(3)).toEqual(100);
+    });
+
+    test('some', () => {
+        a = GW.grid.alloc(10, 10);
+        a[3][7] = 1;
+
+        const fn = jest.fn().mockImplementation((v) => v === 1);
+        expect(a.some(fn)).toBeTruthy();
+
+        fn.mockReturnValue(false);
+        expect(a.some(fn)).toBeFalsy();
     });
 
     test('forCircle', () => {
@@ -175,6 +244,17 @@ describe('GW.grid', () => {
         expect(a[4][0]).toEqual(4);
         expect(a[8][4]).toEqual(4);
         expect(a[4][8]).toEqual(4);
+
+        fn.mockClear();
+        a.forCircle(-1, -1, 3, fn);
+        expect(fn).toHaveBeenCalledTimes(6);
+    });
+
+    test('update', () => {
+        a = GW.grid.alloc(10, 10);
+
+        a.update(() => 2);
+        expect(a[2][2]).toEqual(2);
     });
 
     test('updateRect', () => {
@@ -182,6 +262,11 @@ describe('GW.grid', () => {
         const fn = jest.fn().mockReturnValue(3);
         a.updateRect(2, 2, 3, 3, fn);
         expect(a.count(3)).toEqual(9);
+        expect(fn).toHaveBeenCalledTimes(9);
+
+        fn.mockClear();
+        a.updateRect(-1, -1, 3, 3, fn);
+        expect(fn).toHaveBeenCalledTimes(4);
     });
 
     test('updateCircle', () => {
@@ -189,6 +274,10 @@ describe('GW.grid', () => {
         const fn = jest.fn().mockReturnValue(3);
         a.updateCircle(4, 4, 3, fn);
         expect(a.count(3)).toEqual(37);
+
+        fn.mockClear();
+        a.updateCircle(-1, -1, 3, fn);
+        expect(fn).toHaveBeenCalledTimes(6);
     });
 
     test('fill', () => {
@@ -196,6 +285,10 @@ describe('GW.grid', () => {
         expect(a.count(0)).toEqual(0);
         a.fill(0);
         expect(a.count(0)).toEqual(100);
+
+        const fn = jest.fn().mockReturnValue(2);
+        a.fill(fn);
+        expect(a.count(2)).toEqual(100);
     });
 
     test('fillRect', () => {
@@ -222,6 +315,25 @@ describe('GW.grid', () => {
         expect(a[3][3]).toEqual(4);
         a.replace(4, 5);
         expect(a[3][3]).toEqual(5);
+    });
+
+    test('count', () => {
+        a = GW.grid.alloc(10, 10);
+        a[2][5] = 1;
+
+        expect(a.count(1)).toEqual(1);
+        expect(a.count((v) => !!v)).toEqual(1);
+    });
+
+    test('find', () => {
+        a = GW.grid.alloc(10, 10);
+        a[3][7] = 1;
+        expect(a.find(1)).toEqual([3, 7]);
+        expect(a.find(2)).toBeNull();
+        const fn = jest.fn().mockImplementation((v) => v === 1);
+        expect(a.find(fn)).toEqual([3, 7]);
+        fn.mockReturnValue(false);
+        expect(a.find(fn)).toBeFalsy();
     });
 
     test('dump', () => {
@@ -287,6 +399,19 @@ describe('GW.grid', () => {
         expect(a.count(1)).toEqual(400);
         a.floodFill(0, 0, 1, 2);
         expect(a.count(2)).toEqual(400);
+
+        a.fillRect(2, 5, 9, 9, 3);
+        expect(a.count(3)).toEqual(81);
+        a.floodFill(5, 5, 3, 4);
+        expect(a.count(4)).toEqual(81);
+
+        a.floodFill(
+            6,
+            5,
+            (v) => v === 4,
+            () => 5
+        );
+        expect(a.count(5)).toEqual(81);
     });
 
     test('closestMatchingLoc', () => {
@@ -304,6 +429,11 @@ describe('GW.grid', () => {
         expect(a.closestMatchingLoc(4, 4, one)).toEqual([2, 3]);
         expect(a.closestMatchingLoc(4, 2, one)).toEqual([4, 1]);
         expect(a.closestMatchingLoc(3, 2, one)).toEqual([4, 1]);
+
+        expect(a.closestMatchingLoc(2, 2, 1)).toEqual([2, 3]);
+        expect(a.closestMatchingLoc(4, 4, 1)).toEqual([2, 3]);
+        expect(a.closestMatchingLoc(4, 2, 1)).toEqual([4, 1]);
+        expect(a.closestMatchingLoc(3, 2, 1)).toEqual([4, 1]);
     });
 
     test('firstMatchingLoc', () => {
@@ -315,10 +445,13 @@ describe('GW.grid', () => {
             return v == 1;
         }
         expect(a.firstMatchingLoc(one)).toEqual([2, 3]);
+        expect(a.firstMatchingLoc(1)).toEqual([2, 3]);
+
         function two(v: number) {
             return v == 2;
         }
         expect(a.firstMatchingLoc(two)).toEqual([-1, -1]);
+        expect(a.firstMatchingLoc(2)).toEqual([-1, -1]);
     });
 
     test('randomMatchingLoc', () => {
@@ -522,11 +655,37 @@ describe('GW.grid', () => {
         expect(a.randomLeastPositiveLoc()).toEqual([8, 9]);
     });
 
+    test('valueBounds', () => {
+        a = GW.grid.alloc(10, 10);
+
+        a.fillRect(3, 3, 4, 4, 1);
+        const b = new GW.xy.Bounds();
+        expect(a.valueBounds(1, b)).toBe(b);
+        expect(b).toMatchObject({
+            x: 3,
+            y: 3,
+            width: 4,
+            height: 4,
+        });
+        expect(a.valueBounds(1)).toMatchObject({
+            x: 3,
+            y: 3,
+            width: 4,
+            height: 4,
+        });
+    });
+
     test('make', () => {
         const g = GW.grid.make(5, 6, () => 'taco');
         expect(g.width).toEqual(5);
         expect(g.height).toEqual(6);
         expect(g[0][0]).toEqual('taco');
+
+        const v = GW.grid.make(3, 4, 6);
+        expect(v[0][0]).toEqual(6);
+
+        const u = GW.grid.make(10, 10);
+        expect(u[0][0]).toEqual(0);
     });
 
     test('offsetZip', () => {
@@ -564,5 +723,18 @@ describe('GW.grid', () => {
         expect(b[4][4]).toEqual(2);
         expect(b[2][2]).toEqual(1);
         expect(b[5][5]).toEqual(2);
+    });
+});
+
+describe('Array', () => {
+    test('makeArray', () => {
+        const a = GW.grid.makeArray(10);
+        expect(a).toEqual([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+
+        const b = GW.grid.makeArray(10, 1);
+        expect(b).toEqual([1, 1, 1, 1, 1, 1, 1, 1, 1, 1]);
+
+        const c = GW.grid.makeArray(10, () => 2);
+        expect(c).toEqual([2, 2, 2, 2, 2, 2, 2, 2, 2, 2]);
     });
 });

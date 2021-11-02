@@ -13,10 +13,15 @@ export type ArrayInit<T> = (i: number) => T;
 
 export function makeArray<T>(l: number, fn?: T | ArrayInit<T>): Array<T> {
     if (fn === undefined) return new Array(l).fill(0);
-    fn = (fn as ArrayInit<T>) || (() => 0);
+    let initFn: ArrayInit<T>;
+    if (typeof fn !== 'function') {
+        initFn = () => fn;
+    } else {
+        initFn = fn as ArrayInit<T>;
+    }
     const arr = new Array(l);
     for (let i = 0; i < l; ++i) {
-        arr[i] = fn(i);
+        arr[i] = initFn(i);
     }
     return arr;
 }
@@ -167,13 +172,15 @@ export class Grid<T> extends Array<Array<T>> {
         });
     }
 
-    randomEach(fn: GridEach<T>) {
+    randomEach(fn: GridEach<T>): boolean {
         const sequence = random.sequence(this.width * this.height);
-        sequence.forEach((n) => {
+        for (let i = 0; i < sequence.length; ++i) {
+            const n = sequence[i];
             const x = n % this.width;
             const y = Math.floor(n / this.width);
-            fn(this[x][y], x, y, this);
-        });
+            if (fn(this[x][y], x, y, this) === true) return true;
+        }
+        return false;
     }
 
     /**
@@ -244,7 +251,7 @@ export class Grid<T> extends Array<Array<T>> {
 
     update(fn: GridUpdate<T>) {
         XY.forRect(this.width, this.height, (i, j) => {
-            if (this.hasXY(i, j)) this[i][j] = fn(this[i][j], i, j, this);
+            this[i][j] = fn(this[i][j], i, j, this);
         });
     }
 
@@ -524,7 +531,7 @@ export class NumGrid extends Grid<number> {
     protected _resize(
         width: number,
         height: number,
-        v: GridInit<number> | number = 0
+        v: GridInit<number> | number
     ) {
         const fn: GridInit<number> =
             typeof v === 'function' ? (v as GridInit<number>) : () => v;
@@ -567,9 +574,9 @@ export class NumGrid extends Grid<number> {
     floodFillRange(
         x: number,
         y: number,
-        eligibleValueMin = 0,
-        eligibleValueMax = 0,
-        fillValue = 0
+        eligibleValueMin: number,
+        eligibleValueMax: number,
+        fillValue: number
     ) {
         let dir;
         let newX,
