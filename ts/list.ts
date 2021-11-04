@@ -112,7 +112,7 @@ export function insert<T extends ListItem<T>>(
     sort = sort || (() => -1); // always insert first
 
     if (!root || sort(root, entry) < 0) {
-        obj.next = root;
+        entry.next = root;
         obj[name] = entry;
         return true;
     }
@@ -120,7 +120,7 @@ export function insert<T extends ListItem<T>>(
     let prev = root;
     let current = root.next;
 
-    while (current && sort(current, entry) < 0) {
+    while (current && sort(current, entry) > 0) {
         prev = current;
         current = current.next;
     }
@@ -136,9 +136,13 @@ export function reduce<T extends ListItem<T>>(
     out?: any
 ): any {
     let current = root;
-    if (!current) return out;
 
     if (out === undefined) {
+        if (!current)
+            throw new TypeError(
+                'Empty list reduce without initial value not allowed.'
+            );
+
         out = current;
         current = current.next;
     }
