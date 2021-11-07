@@ -120,8 +120,17 @@ describe('spliceRaw', () => {
     test('basic', () => {
         expect(Utils.spliceRaw('testing', 8, 3)).toEqual('testing');
         expect(Utils.spliceRaw('testing', 4, 4)).toEqual('test');
-        expect(Utils.spliceRaw('123456789012345678901234567890', 10, 5, 'TACO')).toEqual(
-            '1234567890TACO678901234567890'
-        );
+        expect(
+            Utils.spliceRaw('123456789012345678901234567890', 10, 5, 'TACO')
+        ).toEqual('1234567890TACO678901234567890');
+    });
+});
+
+describe('hash', () => {
+    test('basic', () => {
+        expect(Utils.hash('')).toEqual(0);
+        expect(Utils.hash('taco')).toEqual(3552153);
+        expect(Utils.hash('tacos')).toEqual(110116858);
+        expect(Utils.hash('ΩredΩtacos∆')).toEqual(1055045869);
     });
 });

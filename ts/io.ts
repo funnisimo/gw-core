@@ -4,7 +4,11 @@ import * as XY from './xy';
 export class Event {
     type!: string;
     target: any = null;
+
+    // Used in UI
     defaultPrevented = false;
+    propagationStopped = false;
+    immediatePropagationStopped = false;
 
     // Key Event
     key = '';
@@ -32,6 +36,14 @@ export class Event {
 
     preventDefault() {
         this.defaultPrevented = true;
+    }
+
+    stopPropagation() {
+        this.propagationStopped = true;
+    }
+
+    stopImmediatePropagation() {
+        this.immediatePropagationStopped = true;
     }
 
     reset(type: string, opts?: Partial<Event>) {
@@ -359,7 +371,7 @@ export class Loop {
         }
     }
 
-    nextEvent(ms?: number, match?: EventMatchFn): Promise<Event | null> {
+    nextEvent(ms = -1, match?: EventMatchFn): Promise<Event | null> {
         match = match || Utils.TRUE;
         let elapsed = 0;
 
@@ -378,9 +390,6 @@ export class Loop {
 
         let done: Function;
 
-        if (ms === undefined) {
-            ms = -1; // wait forever
-        }
         if (ms == 0 || this.ended) return Promise.resolve(null);
 
         if (this.CURRENT_HANDLER) {
@@ -402,10 +411,10 @@ export class Loop {
                 if (elapsed < ms!) {
                     return;
                 }
+                e.dt = elapsed;
             } else if (!match!(e)) return;
 
             this.CURRENT_HANDLER = null;
-            e.dt = elapsed;
             done(e);
         };
 
@@ -443,10 +452,12 @@ export class Loop {
     stop() {
         this.clearEvents();
         this.running = false;
-        this.pushEvent(makeStopEvent());
         if (this.interval) {
             clearInterval(this.interval);
             this.interval = 0;
+        }
+        if (this.CURRENT_HANDLER) {
+            this.pushEvent(makeStopEvent());
         }
         this.CURRENT_HANDLER = null;
     }

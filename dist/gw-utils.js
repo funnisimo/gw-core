@@ -56,12 +56,28 @@
     function arraysIntersect(a, b) {
         return a.some((av) => b.includes(av));
     }
+    function arrayIncludesAll(a, b) {
+        return b.every((av) => a.includes(av));
+    }
     function arrayDelete(a, b) {
         const index = a.indexOf(b);
         if (index < 0)
             return false;
         a.splice(index, 1);
         return true;
+    }
+    function arrayInsert(a, b, beforeFn) {
+        if (!beforeFn) {
+            a.push(b);
+            return;
+        }
+        const index = a.findIndex(beforeFn);
+        if (index < 0) {
+            a.push(b);
+        }
+        else {
+            a.splice(index, 0, b);
+        }
     }
     function arrayFindRight(a, fn) {
         for (let i = a.length - 1; i >= 0; --i) {
@@ -632,13 +648,13 @@
         let root = obj[name];
         sort = sort || (() => -1); // always insert first
         if (!root || sort(root, entry) < 0) {
-            obj.next = root;
+            entry.next = root;
             obj[name] = entry;
             return true;
         }
         let prev = root;
         let current = root.next;
-        while (current && sort(current, entry) < 0) {
+        while (current && sort(current, entry) > 0) {
             prev = current;
             current = current.next;
         }
@@ -648,9 +664,9 @@
     }
     function reduce(root, cb, out) {
         let current = root;
-        if (!current)
-            return out;
         if (out === undefined) {
+            if (!current)
+                throw new TypeError('Empty list reduce without initial value not allowed.');
             out = current;
             current = current.next;
         }
@@ -1408,10 +1424,16 @@
     function makeArray(l, fn) {
         if (fn === undefined)
             return new Array(l).fill(0);
-        fn = fn || (() => 0);
+        let initFn;
+        if (typeof fn !== 'function') {
+            initFn = () => fn;
+        }
+        else {
+            initFn = fn;
+        }
         const arr = new Array(l);
         for (let i = 0; i < l; ++i) {
-            arr[i] = fn(i);
+            arr[i] = initFn(i);
         }
         return arr;
     }
@@ -1521,11 +1543,14 @@
         }
         randomEach(fn) {
             const sequence = random.sequence(this.width * this.height);
-            sequence.forEach((n) => {
+            for (let i = 0; i < sequence.length; ++i) {
+                const n = sequence[i];
                 const x = n % this.width;
                 const y = Math.floor(n / this.width);
-                fn(this[x][y], x, y, this);
-            });
+                if (fn(this[x][y], x, y, this) === true)
+                    return true;
+            }
+            return false;
         }
         /**
          * Returns a new Grid with the cells mapped according to the supplied function.
@@ -1591,8 +1616,7 @@
         }
         update(fn) {
             forRect(this.width, this.height, (i, j) => {
-                if (this.hasXY(i, j))
-                    this[i][j] = fn(this[i][j], i, j, this);
+                this[i][j] = fn(this[i][j], i, j, this);
             });
         }
         updateRect(x, y, width, height, fn) {
@@ -1794,7 +1818,7 @@
                 --stats.active;
             }
         }
-        _resize(width, height, v = 0) {
+        _resize(width, height, v) {
             const fn = typeof v === 'function' ? v : () => v;
             while (this.length < width)
                 this.push([]);
@@ -1825,7 +1849,7 @@
         }
         // Flood-fills the grid from (x, y) along cells that are within the eligible range.
         // Returns the total count of filled cells.
-        floodFillRange(x, y, eligibleValueMin = 0, eligibleValueMax = 0, fillValue = 0) {
+        floodFillRange(x, y, eligibleValueMin, eligibleValueMax, fillValue) {
             let dir;
             let newX, newY, fillCount = 1;
             if (fillValue >= eligibleValueMin && fillValue <= eligibleValueMax) {
@@ -2003,7 +2027,10 @@
     class Event {
         constructor(type, opts) {
             this.target = null;
+            // Used in UI
             this.defaultPrevented = false;
+            this.propagationStopped = false;
+            this.immediatePropagationStopped = false;
             // Key Event
             this.key = '';
             this.code = '';
@@ -2024,6 +2051,12 @@
         }
         preventDefault() {
             this.defaultPrevented = true;
+        }
+        stopPropagation() {
+            this.propagationStopped = true;
+        }
+        stopImmediatePropagation() {
+            this.immediatePropagationStopped = true;
         }
         reset(type, opts) {
             this.type = type;
@@ -2293,7 +2326,7 @@
                 this.events.push(ev);
             }
         }
-        nextEvent(ms, match) {
+        nextEvent(ms = -1, match) {
             match = match || TRUE;
             let elapsed = 0;
             while (this.events.length) {
@@ -2308,9 +2341,6 @@
                 recycleEvent(e);
             }
             let done;
-            if (ms === undefined) {
-                ms = -1; // wait forever
-            }
             if (ms == 0 || this.ended)
                 return Promise.resolve(null);
             if (this.CURRENT_HANDLER) {
@@ -2329,11 +2359,11 @@
                     if (elapsed < ms) {
                         return;
                     }
+                    e.dt = elapsed;
                 }
                 else if (!match(e))
                     return;
                 this.CURRENT_HANDLER = null;
-                e.dt = elapsed;
                 done(e);
             };
             return new Promise((resolve) => (done = resolve));
@@ -2365,10 +2395,12 @@
         stop() {
             this.clearEvents();
             this.running = false;
-            this.pushEvent(makeStopEvent());
             if (this.interval) {
                 clearInterval(this.interval);
                 this.interval = 0;
+            }
+            if (this.CURRENT_HANDLER) {
+                this.pushEvent(makeStopEvent());
             }
             this.CURRENT_HANDLER = null;
         }
@@ -4804,7 +4836,6 @@
                 continue;
             }
             // one hyphen will work...
-            // if (spaceLeftOnLine + width > wordWidth) {
             const hyphenAt = Math.min(spaceLeftOnLine - 1, Math.floor(wordWidth / 2));
             const w = advanceChars(text, start, hyphenAt);
             text = splice(text, w, 0, '-\n');
@@ -4813,23 +4844,6 @@
             wordWidth -= hyphenAt;
         }
         return [text, end];
-        // // do not have a strategy for this right now...
-        // if (wordWidth + 1 > width * 2) {
-        //     throw new Error('Cannot hyphenate - word length > 2 * width');
-        // }
-        // }
-        // if (width >= wordWidth) {
-        //     return [text, end];
-        // }
-        // console.log('hyphenate', { text, start, end, width, wordWidth, spaceLeftOnLine });
-        // throw new Error('Did not expect to get here...');
-        // wordWidth >= spaceLeftOnLine + width
-        // text = splice(text, start - 1, 1, "\n");
-        // spaceLeftOnLine = width;
-        // const hyphenAt = Math.min(wordWidth, width - 1);
-        // const w = Utils.advanceChars(text, start, hyphenAt);
-        // text = splice(text, w, 0, "-\n");
-        // return [text, end + 2];
     }
     function wordWrap(text, width, indent = 0) {
         if (!width)
@@ -5403,7 +5417,7 @@
                 '\u25b2',
                 '\u25b6',
                 '\u25bc',
-                '\u25c0', // bug left arrow
+                '\u25c0', // big left arrow
             ].forEach((ch, i) => {
                 this.draw(i, ch);
             });
@@ -7071,6 +7085,8 @@ void main() {
     exports.ZERO = ZERO;
     exports.arrayDelete = arrayDelete;
     exports.arrayFindRight = arrayFindRight;
+    exports.arrayIncludesAll = arrayIncludesAll;
+    exports.arrayInsert = arrayInsert;
     exports.arrayNext = arrayNext;
     exports.arrayPrev = arrayPrev;
     exports.arraysIntersect = arraysIntersect;

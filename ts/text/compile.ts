@@ -1,8 +1,8 @@
 import * as Config from './config';
 
-export type Args = Record<string, any>;
+export type Args = any;
 
-export type Template = (args: Args | string) => string;
+export type Template = (args: Args) => string;
 
 export type FieldFn = (args: Args) => any;
 

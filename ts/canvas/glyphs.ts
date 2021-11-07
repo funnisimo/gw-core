@@ -182,7 +182,7 @@ export class Glyphs {
             '\u25b2', // big up arrow
             '\u25b6', // big right arrow
             '\u25bc', // big down arrow
-            '\u25c0', // bug left arrow
+            '\u25c0', // big left arrow
         ].forEach((ch, i) => {
             this.draw(i, ch);
         });

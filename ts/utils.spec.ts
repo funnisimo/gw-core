@@ -42,4 +42,22 @@ describe('Utils', () => {
         expect(Utils.arrayPrev([], 5, () => true)).toBeUndefined();
         expect(Utils.arrayPrev(arr, 10, () => true)).toBeUndefined();
     });
+
+    test('arrayInsert', () => {
+        const arr: number[] = [];
+        Utils.arrayInsert(arr, 4, (o) => o > 4);
+        expect(arr).toEqual([4]);
+
+        Utils.arrayInsert(arr, 3, (o) => o > 3);
+        expect(arr).toEqual([3, 4]);
+
+        Utils.arrayInsert(arr, 5);
+        expect(arr).toEqual([3, 4, 5]);
+
+        Utils.arrayInsert(arr, 6, (o) => o > 6);
+        expect(arr).toEqual([3, 4, 5, 6]);
+
+        Utils.arrayInsert(arr, 4, (o) => o > 4);
+        expect(arr).toEqual([3, 4, 4, 5, 6]);
+    });
 });

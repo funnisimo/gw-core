@@ -22,7 +22,9 @@ declare function ERROR(message: string): void;
 declare function WARN(...args: string[]): void;
 declare function first(...args: any[]): any;
 declare function arraysIntersect(a: any[], b: any[]): boolean;
+declare function arrayIncludesAll(a: any[], b: any[]): boolean;
 declare function arrayDelete<T>(a: T[], b: T): boolean;
+declare function arrayInsert<T>(a: T[], b: T, beforeFn?: (t: T) => boolean): void;
 declare function arrayFindRight<T>(a: T[], fn: (t: T) => boolean): T | undefined;
 declare function sum(arr: number[]): number;
 declare function arrayNext<T>(a: T[], current: T, fn: (t: T) => boolean, wrap?: boolean, forward?: boolean): T | undefined;
@@ -603,7 +605,7 @@ declare class Grid<T> extends Array<Array<T>> {
     eachNeighbor(x: number, y: number, fn: GridEach<T>, only4dirs?: boolean): void;
     eachNeighborAsync(x: number, y: number, fn: AsyncGridEach<T>, only4dirs?: boolean): Promise<void>;
     forRect(x: number, y: number, w: number, h: number, fn: GridEach<T>): void;
-    randomEach(fn: GridEach<T>): void;
+    randomEach(fn: GridEach<T>): boolean;
     /**
      * Returns a new Grid with the cells mapped according to the supplied function.
      * @param fn - The function that maps the cell values
@@ -688,9 +690,9 @@ declare class NumGrid extends Grid<number> {
     static alloc(source: NumGrid): NumGrid;
     static free(grid: NumGrid): void;
     constructor(w: number, h: number, v?: GridInit<number> | number);
-    protected _resize(width: number, height: number, v?: GridInit<number> | number): void;
+    protected _resize(width: number, height: number, v: GridInit<number> | number): void;
     findReplaceRange(findValueMin: number, findValueMax: number, fillValue: number): void;
-    floodFillRange(x: number, y: number, eligibleValueMin?: number, eligibleValueMax?: number, fillValue?: number): number;
+    floodFillRange(x: number, y: number, eligibleValueMin: number, eligibleValueMax: number, fillValue: number): number;
     invert(): void;
     leastPositiveValue(): number;
     randomLeastPositiveLoc(): Loc;
@@ -752,6 +754,8 @@ declare class Event$1 {
     type: string;
     target: any;
     defaultPrevented: boolean;
+    propagationStopped: boolean;
+    immediatePropagationStopped: boolean;
     key: string;
     code: string;
     shiftKey: boolean;
@@ -766,6 +770,8 @@ declare class Event$1 {
     dt: number;
     constructor(type: string, opts?: Partial<Event$1>);
     preventDefault(): void;
+    stopPropagation(): void;
+    stopImmediatePropagation(): void;
     reset(type: string, opts?: Partial<Event$1>): void;
 }
 declare type ControlFn = () => void | Promise<void>;
@@ -1280,8 +1286,8 @@ declare class Mixer implements DrawInfo {
 }
 declare function makeMixer(base?: Partial<DrawInfo>): Mixer;
 
-declare type Args = Record<string, any>;
-declare type Template = (args: Args | string) => string;
+declare type Args = any;
+declare type Template = (args: Args) => string;
 interface CompileOptions {
     field?: string;
 }
@@ -1936,4 +1942,4 @@ declare namespace index_d {
   };
 }
 
-export { ERROR, FALSE, IDENTITY, IS_NONZERO, IS_ZERO, NOOP, ONE, TRUE, WARN, ZERO, arrayDelete, arrayFindRight, arrayNext, arrayPrev, arraysIntersect, blob_d as blob, index_d$2 as canvas, clamp, index_d$5 as color, colors, config$1 as config, data, events_d as events, first, flag_d as flag, index_d$4 as fov, frequency_d as frequency, grid_d as grid, io_d as io, index_d as light, list_d as list, loop, message_d as message, nextIndex, object_d as object, path_d as path, prevIndex, range_d as range, rng_d as rng, scheduler_d as scheduler, index_d$1 as sprite, sprites, sum, index_d$3 as text, types_d as types, xy_d as xy };
+export { ERROR, FALSE, IDENTITY, IS_NONZERO, IS_ZERO, NOOP, ONE, TRUE, WARN, ZERO, arrayDelete, arrayFindRight, arrayIncludesAll, arrayInsert, arrayNext, arrayPrev, arraysIntersect, blob_d as blob, index_d$2 as canvas, clamp, index_d$5 as color, colors, config$1 as config, data, events_d as events, first, flag_d as flag, index_d$4 as fov, frequency_d as frequency, grid_d as grid, io_d as io, index_d as light, list_d as list, loop, message_d as message, nextIndex, object_d as object, path_d as path, prevIndex, range_d as range, rng_d as rng, scheduler_d as scheduler, index_d$1 as sprite, sprites, sum, index_d$3 as text, types_d as types, xy_d as xy };

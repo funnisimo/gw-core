@@ -55,11 +55,29 @@ export function arraysIntersect(a: any[], b: any[]) {
     return a.some((av) => b.includes(av));
 }
 
+export function arrayIncludesAll(a: any[], b: any[]) {
+    return b.every((av) => a.includes(av));
+}
+
 export function arrayDelete<T>(a: T[], b: T) {
     const index = a.indexOf(b);
     if (index < 0) return false;
     a.splice(index, 1);
     return true;
+}
+
+export function arrayInsert<T>(a: T[], b: T, beforeFn?: (t: T) => boolean) {
+    if (!beforeFn) {
+        a.push(b);
+        return;
+    }
+
+    const index = a.findIndex(beforeFn);
+    if (index < 0) {
+        a.push(b);
+    } else {
+        a.splice(index, 0, b);
+    }
 }
 
 export function arrayFindRight<T>(
