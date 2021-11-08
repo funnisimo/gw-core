@@ -84,7 +84,7 @@ export function remove<T extends ListItem<T>>(
             current = prev.next;
         }
         if (current === entry) {
-            prev.next = current.next || null;
+            prev.next = current.next;
             entry.next = null;
             return true;
         }

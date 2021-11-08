@@ -132,23 +132,46 @@ describe('list', () => {
         expect(f.next).toBeNull();
 
         // middle item
-        sortFn.mockReturnValueOnce(1).mockReturnValueOnce(1).mockReturnValueOnce(-1);
+        sortFn
+            .mockReturnValueOnce(1)
+            .mockReturnValueOnce(1)
+            .mockReturnValueOnce(-1);
         List.insert(obj, 'chain', e, sortFn);
         expect(a.next).toBe(e);
         expect(e.next).toBe(f);
     });
 
     test('reduce', () => {
-        let count = 0;
         expect(List.reduce(obj.chain, (out) => out + 1, 0)).toEqual(6);
 
-        while(obj.chain) {
+        expect(List.reduce(obj.chain, (out, v) => out + v.id, '')).toEqual(
+            'fedcba'
+        );
+
+        expect(
+            List.reduce(obj.chain, (a, b) => (a.id < b.id ? a : b))
+        ).toMatchObject({ id: 'a' });
+
+        while (obj.chain) {
             List.remove(obj, 'chain', obj.chain);
         }
 
         // empty
-        expect( () => List.reduce(null, Utils.TRUE, false)).toThrow();
+        expect(() => List.reduce(null, Utils.TRUE)).toThrow();
+        expect(List.reduce(null, Utils.TRUE, false)).toBeFalsy();
+    });
 
+    test('some', () => {
+        expect(List.some(obj.chain, (a) => a.id == 'b')).toBeTruthy();
+        expect(List.some(obj.chain, (a) => a.id === 'fred')).toBeFalsy();
 
+        expect(List.some(null, Utils.TRUE)).toBeFalsy();
+    });
+
+    test('every', () => {
+        expect(List.every(obj.chain, (a) => a.id >= 'a')).toBeTruthy();
+        expect(List.every(obj.chain, (a) => a.id < 'c')).toBeFalsy();
+
+        expect(List.every(null, Utils.FALSE)).toBeTruthy();
     });
 });
