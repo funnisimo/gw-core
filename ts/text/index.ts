@@ -10,6 +10,7 @@ import {
     firstChar,
     spliceRaw,
     truncate,
+    hash,
 } from './utils';
 import { wordWrap, splitIntoLines } from './lines';
 
@@ -64,4 +65,5 @@ export {
     EachOptions,
     Align,
     VAlign,
+    hash,
 };

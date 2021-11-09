@@ -322,14 +322,14 @@ function dirIndex(dir) {
     return DIRS$2.findIndex((a) => a[0] == x0 && a[1] == y0);
 }
 function isOppositeDir(a, b) {
-    if (a[0] + b[0] != 0)
+    if (Math.sign(a[0]) + Math.sign(b[0]) != 0)
         return false;
-    if (a[1] + b[1] != 0)
+    if (Math.sign(a[1]) + Math.sign(b[1]) != 0)
         return false;
     return true;
 }
 function isSameDir(a, b) {
-    return a[0] == b[0] && a[1] == b[1];
+    return (Math.sign(a[0]) == Math.sign(b[0]) && Math.sign(a[1]) == Math.sign(b[1]));
 }
 function dirSpread(dir) {
     const result = [dir];
@@ -435,8 +435,6 @@ function getLine(fromX, fromY, toX, toY) {
 // Simple line algorithm (maybe this is Bresenham?) that returns a list of coordinates
 // that extends all the way to the edge of the map based on an originLoc (which is not included
 // in the list of coordinates) and a targetLoc.
-// Returns the number of entries in the list, and includes (-1, -1) as an additional
-// terminus indicator after the end of the list.
 function getLineThru(fromX, fromY, toX, toY, width, height) {
     const line = [];
     forLineBetween(fromX, fromY, toX, toY, (x, y) => {
@@ -625,7 +623,7 @@ function remove(obj, name, entry) {
             current = prev.next;
         }
         if (current === entry) {
-            prev.next = current.next || null;
+            prev.next = current.next;
             entry.next = null;
             return true;
         }
@@ -4760,6 +4758,16 @@ function spliceRaw(msg, begin, deleteLength, add = '') {
     const postText = msg.substring(begin + deleteLength);
     return preText + add + postText;
 }
+// https://stackoverflow.com/questions/7616461/generate-a-hash-from-string-in-javascript
+function hash(str) {
+    let hash = 0;
+    const len = str.length;
+    for (let i = 0; i < len; i++) {
+        hash = (hash << 5) - hash + str.charCodeAt(i);
+        hash |= 0; // Convert to 32bit integer
+    }
+    return hash;
+}
 
 function nextBreak(text, start) {
     const CS = options.colorStart;
@@ -4972,7 +4980,8 @@ var index$3 = /*#__PURE__*/Object.freeze({
     addHelper: addHelper,
     options: options,
     spliceRaw: spliceRaw,
-    truncate: truncate
+    truncate: truncate,
+    hash: hash
 });
 
 class DataBuffer {

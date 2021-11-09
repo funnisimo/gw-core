@@ -1318,6 +1318,7 @@ declare function truncate(text: string, width: number): string;
 declare function capitalize(text: string): string;
 declare function removeColors(text: string): string;
 declare function spliceRaw(msg: string, begin: number, deleteLength: number, add?: string): string;
+declare function hash(str: string): number;
 
 declare function wordWrap(text: string, width: number, indent?: number): string;
 declare function splitIntoLines(source: string, width?: number, indent?: number): string[];
@@ -1365,6 +1366,7 @@ type index_d$3_CompileOptions = CompileOptions;
 type index_d$3_EachOptions = EachOptions;
 type index_d$3_Align = Align;
 type index_d$3_VAlign = VAlign;
+declare const index_d$3_hash: typeof hash;
 declare namespace index_d$3 {
   export {
     index_d$3_compile as compile,
@@ -1389,6 +1391,7 @@ declare namespace index_d$3 {
     index_d$3_EachOptions as EachOptions,
     index_d$3_Align as Align,
     index_d$3_VAlign as VAlign,
+    index_d$3_hash as hash,
   };
 }
 
