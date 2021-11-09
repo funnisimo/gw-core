@@ -1,6 +1,22 @@
 import * as XY from './xy';
 
 describe('XY', () => {
+    test('contains', () => {
+        expect(XY.contains({ width: 10, height: 10 }, 5, 5)).toBeTruthy();
+        expect(XY.contains({ width: 10, height: 10 }, 0, 5)).toBeTruthy();
+        expect(XY.contains({ width: 10, height: 10 }, 5, 9)).toBeTruthy();
+        expect(XY.contains({ width: 10, height: 10 }, 5, 0)).toBeTruthy();
+        expect(XY.contains({ width: 10, height: 10 }, 9, 5)).toBeTruthy();
+
+        expect(XY.contains({ width: 10, height: 10 }, 10, 5)).toBeFalsy();
+        expect(XY.contains({ width: 10, height: 10 }, 5, 10)).toBeFalsy();
+
+        expect(XY.contains({ width: 10, height: 10 }, -1, 5)).toBeFalsy();
+        expect(XY.contains({ width: 10, height: 10 }, 15, 5)).toBeFalsy();
+        expect(XY.contains({ width: 10, height: 10 }, 5, -1)).toBeFalsy();
+        expect(XY.contains({ width: 10, height: 10 }, 5, 15)).toBeFalsy();
+    });
+
     describe('Bounds', () => {
         test('empty', () => {
             const b = new XY.Bounds();
@@ -68,6 +84,27 @@ describe('XY', () => {
 
             expect(b.contains(b.right - 1, b.bottom - 1)).toBeTruthy();
         });
+
+        test('clone', () => {
+            const b = new XY.Bounds(5, 6, 7, 8);
+            const c = b.clone();
+            expect(c.x).toEqual(b.x);
+            expect(c.y).toEqual(b.y);
+            expect(c.width).toEqual(b.width);
+            expect(c.height).toEqual(b.height);
+        });
+
+        test('contains', () => {
+            const b = new XY.Bounds(5, 6, 7, 8);
+            expect(b.contains(5, 6)).toBeTruthy();
+            expect(b.contains([5, 6])).toBeTruthy();
+            expect(b.contains({ x: 5, y: 6 })).toBeTruthy();
+        });
+
+        test('toString', () => {
+            const b = new XY.Bounds(5, 6, 7, 8);
+            expect(b.toString()).toEqual('[5,6 -> 12,14]');
+        });
     });
 
     test('copyXY', () => {
@@ -104,10 +141,69 @@ describe('XY', () => {
         expect(XY.equalsXY(dest, [2, 3])).toBeTruthy();
     });
 
+    test('lerpXY', () => {
+        const a: XY.Loc = [5, 5];
+        const b: XY.Loc = [10, 10];
+
+        expect(XY.lerpXY(a, b, 0)).toEqual(a);
+        expect(XY.lerpXY(a, b, 100)).toEqual(b);
+        expect(XY.lerpXY(a, b, 50)).toEqual([7, 7]);
+    });
+
+    test('eachNeighbor', () => {
+        const fn = jest.fn();
+
+        XY.eachNeighbor(1, 1, fn, true);
+        expect(fn).toHaveBeenCalledTimes(4);
+
+        fn.mockClear();
+        XY.eachNeighbor(1, 1, fn);
+        expect(fn).toHaveBeenCalledTimes(8);
+    });
+
+    test('eachNeighborAsync', async () => {
+        const fn = jest.fn().mockResolvedValue(1);
+
+        const p = XY.eachNeighborAsync(1, 1, fn, true);
+        expect(fn).toHaveBeenCalledTimes(1);
+        await p;
+        expect(fn).toHaveBeenCalledTimes(4);
+
+        fn.mockClear();
+        await XY.eachNeighborAsync(1, 1, fn);
+        expect(fn).toHaveBeenCalledTimes(8);
+
+        fn.mockClear();
+        await XY.eachNeighborAsync(1, 1, fn, false);
+        expect(fn).toHaveBeenCalledTimes(8);
+    });
+
+    test('matchingNeighbor', () => {
+        const fn = jest.fn().mockReturnValue(true);
+        expect(XY.matchingNeighbor(5, 5, fn, true)).toEqual([5, 4]);
+
+        fn.mockImplementation((x, y) => x == 6 && y == 6);
+        expect(XY.matchingNeighbor(5, 5, fn, true)).toEqual([-1, -1]);
+        expect(XY.matchingNeighbor(5, 5, fn)).toEqual([6, 6]);
+    });
+
+    test('straightDistanceBetween', () => {
+        expect(XY.straightDistanceBetween(5, 5, 6, 6)).toEqual(2);
+        expect(XY.straightDistanceBetween(5, 0, 10, 0)).toEqual(5);
+        expect(XY.straightDistanceBetween(0, 5, 0, 10)).toEqual(5);
+        expect(XY.straightDistanceBetween(5, 5, 10, 10)).toEqual(10);
+    });
+
     test('distanceBetween', () => {
         expect(XY.distanceBetween(5, 0, 10, 0)).toEqual(5);
         expect(XY.distanceBetween(0, 5, 0, 10)).toEqual(5);
         expect(XY.distanceBetween(5, 5, 10, 10)).toEqual(5 * 1.4);
+    });
+
+    test('calcRadius', () => {
+        expect(XY.calcRadius(1, 1)).toEqual(1.4);
+        expect(XY.calcRadius(2, 0)).toEqual(2);
+        expect(XY.calcRadius(0, 2)).toEqual(2);
     });
 
     test('distanceFromTo', () => {
@@ -134,6 +230,43 @@ describe('XY', () => {
         expect(XY.dirIndex([-1, 1])).toEqual(XY.LEFT_DOWN);
     });
 
+    test('isOppositeDir', () => {
+        expect(XY.isOppositeDir([1, 0], [-1, 0])).toBeTruthy();
+        expect(XY.isOppositeDir([0, 1], [0, -1])).toBeTruthy();
+
+        expect(XY.isOppositeDir([1, 0], [-2, 0])).toBeTruthy();
+        expect(XY.isOppositeDir([0, 1], [0, -2])).toBeTruthy();
+
+        expect(XY.isOppositeDir([1, 0], [0, -1])).toBeFalsy();
+        expect(XY.isOppositeDir([1, 0], [0, 1])).toBeFalsy();
+    });
+
+    test('isSameDir', () => {
+        expect(XY.isSameDir([1, 0], [3, 0])).toBeTruthy();
+        expect(XY.isSameDir([0, -3], [0, -1])).toBeTruthy();
+
+        expect(XY.isSameDir([1, 0], [0, 1])).toBeFalsy();
+        expect(XY.isSameDir([0, 3], [0, -1])).toBeFalsy();
+    });
+
+    test('dirSpread', () => {
+        expect(XY.dirSpread([0, 1])).toEqual([
+            [0, 1],
+            [1, 1],
+            [-1, 1],
+        ]);
+        expect(XY.dirSpread([1, 0])).toEqual([
+            [1, 0],
+            [1, 1],
+            [1, -1],
+        ]);
+        expect(XY.dirSpread([1, 1])).toEqual([
+            [1, 1],
+            [1, 0],
+            [0, 1],
+        ]);
+    });
+
     test('stepFromTo', () => {
         const fn = jest.fn();
         XY.stepFromTo([0, 0], [2, 4], fn);
@@ -143,6 +276,38 @@ describe('XY', () => {
         expect(fn).toHaveBeenCalledWith(1, 3);
         expect(fn).toHaveBeenCalledWith(2, 4);
         expect(fn).toHaveBeenCalledTimes(5);
+    });
+
+    test('forLine', () => {
+        const fn = jest.fn();
+        XY.forLine(0, 0, [1, 0], 5, fn);
+        expect(fn).toHaveBeenCalledTimes(5);
+        expect(fn).toHaveBeenCalledWith(0, 0);
+        expect(fn).toHaveBeenCalledWith(1, 0);
+        expect(fn).toHaveBeenCalledWith(2, 0);
+        expect(fn).toHaveBeenCalledWith(3, 0);
+        expect(fn).toHaveBeenCalledWith(4, 0);
+    });
+
+    describe('forLineBetween', () => {
+        test('same loc', () => {
+            const fn = jest.fn();
+            XY.forLineBetween(2, 2, 2, 2, fn);
+            expect(fn).toHaveBeenCalledTimes(0);
+        });
+
+        test('stop', () => {
+            const fn = jest.fn();
+            expect(XY.forLineBetween(2, 2, 7, 3, fn)).toBeTruthy();
+            expect(fn).toHaveBeenCalledTimes(5);
+
+            fn.mockClear();
+            fn.mockReturnValueOnce(true)
+                .mockReturnValueOnce(true)
+                .mockReturnValue(false);
+            expect(XY.forLineBetween(2, 2, 7, 3, fn)).toBeFalsy();
+            expect(fn).toHaveBeenCalledTimes(3);
+        });
     });
 
     describe('getLine', () => {
@@ -252,4 +417,6 @@ describe('XY', () => {
             ]);
         });
     });
+
+    
 });

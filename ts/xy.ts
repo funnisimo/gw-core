@@ -262,13 +262,15 @@ export function dirIndex(dir: XY | Loc) {
 }
 
 export function isOppositeDir(a: Loc, b: Loc) {
-    if (a[0] + b[0] != 0) return false;
-    if (a[1] + b[1] != 0) return false;
+    if (Math.sign(a[0]) + Math.sign(b[0]) != 0) return false;
+    if (Math.sign(a[1]) + Math.sign(b[1]) != 0) return false;
     return true;
 }
 
 export function isSameDir(a: Loc, b: Loc) {
-    return a[0] == b[0] && a[1] == b[1];
+    return (
+        Math.sign(a[0]) == Math.sign(b[0]) && Math.sign(a[1]) == Math.sign(b[1])
+    );
 }
 
 export function dirSpread(dir: Loc) {
@@ -422,8 +424,6 @@ export function getLine(
 // Simple line algorithm (maybe this is Bresenham?) that returns a list of coordinates
 // that extends all the way to the edge of the map based on an originLoc (which is not included
 // in the list of coordinates) and a targetLoc.
-// Returns the number of entries in the list, and includes (-1, -1) as an additional
-// terminus indicator after the end of the list.
 export function getLineThru(
     fromX: number,
     fromY: number,
