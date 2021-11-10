@@ -91,11 +91,11 @@ declare function fromArray(vals: ColorData, base256?: boolean): Color;
 declare function fromCss(css: string): Color;
 declare function fromName(name: string): Color;
 declare function fromNumber(val: number, base256?: boolean): Color;
-declare function make$a(): Color;
-declare function make$a(rgb: number, base256?: boolean): Color;
-declare function make$a(color?: ColorBase | null): Color;
-declare function make$a(arrayLike: ColorData, base256?: boolean): Color;
-declare function make$a(...rgb: number[]): Color;
+declare function make$b(): Color;
+declare function make$b(rgb: number, base256?: boolean): Color;
+declare function make$b(color?: ColorBase | null): Color;
+declare function make$b(arrayLike: ColorData, base256?: boolean): Color;
+declare function make$b(...rgb: number[]): Color;
 declare function from$4(): Color;
 declare function from$4(rgb: number, base256?: boolean): Color;
 declare function from$4(color?: ColorBase | null): Color;
@@ -140,7 +140,7 @@ declare namespace index_d$5 {
     index_d$5_fromCss as fromCss,
     index_d$5_fromName as fromName,
     index_d$5_fromNumber as fromNumber,
-    make$a as make,
+    make$b as make,
     from$4 as from,
     index_d$5_separate as separate,
     index_d$5_swap as swap,
@@ -502,7 +502,7 @@ declare class Random {
 }
 declare const random: Random;
 declare const cosmetic: Random;
-declare function make$9(seed?: number): Random;
+declare function make$a(seed?: number): Random;
 
 type rng_d_WeightedArray = WeightedArray;
 type rng_d_WeightedObject = WeightedObject;
@@ -524,7 +524,7 @@ declare namespace rng_d {
     rng_d_Random as Random,
     rng_d_random as random,
     rng_d_cosmetic as cosmetic,
-    make$9 as make,
+    make$a as make,
   };
 }
 
@@ -539,8 +539,8 @@ declare class Range {
     copy(other: Range): this;
     toString(): string;
 }
-declare function make$8(config: RangeBase | null): Range;
-declare const from$3: typeof make$8;
+declare function make$9(config: RangeBase | null): Range;
+declare const from$3: typeof make$9;
 declare function asFn(config: RangeBase | null): () => number;
 
 type range_d_RangeBase = RangeBase;
@@ -551,7 +551,7 @@ declare namespace range_d {
   export {
     range_d_RangeBase as RangeBase,
     range_d_Range as Range,
-    make$8 as make,
+    make$9 as make,
     from$3 as from,
     range_d_asFn as asFn,
   };
@@ -562,7 +562,7 @@ declare type FlagBase = FlagSource | FlagSource[] | null;
 declare function fl(N: number): number;
 declare function toString<T>(flagObj: T, value: number): string;
 declare function from$2<T>(obj: T, ...args: (FlagBase | undefined)[]): number;
-declare function make$7(obj: Record<string, FlagBase>): Record<string, number>;
+declare function make$8(obj: Record<string, FlagBase>): Record<string, number>;
 
 type flag_d_FlagBase = FlagBase;
 declare const flag_d_fl: typeof fl;
@@ -573,7 +573,7 @@ declare namespace flag_d {
     flag_d_fl as fl,
     flag_d_toString as toString,
     from$2 as from,
-    make$7 as make,
+    make$8 as make,
   };
 }
 
@@ -701,8 +701,8 @@ declare class NumGrid extends Grid<number> {
 }
 declare const alloc: typeof NumGrid.alloc;
 declare const free: typeof NumGrid.free;
-declare function make$6<T>(w: number, h: number, v?: number | GridInit<number>): NumGrid;
-declare function make$6<T>(w: number, h: number, v?: T | GridInit<T>): Grid<T>;
+declare function make$7<T>(w: number, h: number, v?: number | GridInit<number>): NumGrid;
+declare function make$7<T>(w: number, h: number, v?: T | GridInit<T>): Grid<T>;
 declare type GridZip<T, U> = (destVal: T, sourceVal: U, destX: number, destY: number, sourceX: number, sourceY: number, destGrid: Grid<T>, sourceGrid: Grid<U>) => void;
 declare function offsetZip<T, U>(destGrid: Grid<T>, srcGrid: Grid<U>, srcToDestX: number, srcToDestY: number, value: T | GridZip<T, U>): void;
 declare function intersection(onto: NumGrid, a: NumGrid, b?: NumGrid): void;
@@ -742,11 +742,209 @@ declare namespace grid_d {
     grid_d_NumGrid as NumGrid,
     grid_d_alloc as alloc,
     grid_d_free as free,
-    make$6 as make,
+    make$7 as make,
     grid_d_GridZip as GridZip,
     grid_d_offsetZip as offsetZip,
     grid_d_intersection as intersection,
     grid_d_unite as unite,
+  };
+}
+
+interface DrawInfo {
+    ch: string | number | null;
+    fg: ColorBase;
+    bg: ColorBase;
+}
+declare class Mixer implements DrawInfo {
+    ch: string | number;
+    fg: Color;
+    bg: Color;
+    constructor(base?: Partial<DrawInfo>);
+    protected _changed(): this;
+    copy(other: Partial<DrawInfo>): this;
+    clone(): Mixer;
+    equals(other: Mixer): boolean;
+    get dances(): boolean;
+    nullify(): this;
+    blackOut(): this;
+    draw(ch?: string | number, fg?: ColorBase, bg?: ColorBase): this;
+    drawSprite(src: SpriteData$1 | Mixer, opacity?: number): this | undefined;
+    invert(): this;
+    multiply(color: ColorBase, fg?: boolean, bg?: boolean): this;
+    scale(multiplier: number, fg?: boolean, bg?: boolean): this;
+    mix(color: ColorBase, fg?: number, bg?: number): this;
+    add(color: ColorBase, fg?: number, bg?: number): this;
+    separate(): this;
+    bake(clearDancing?: boolean): {
+        ch: string | number;
+        fg: number;
+        bg: number;
+    };
+    toString(): string;
+}
+declare function makeMixer(base?: Partial<DrawInfo>): Mixer;
+
+declare type Args = any;
+declare type Template = (args: Args) => string;
+interface CompileOptions {
+    field?: string;
+    debug?: boolean;
+}
+declare function compile(template: string, opts?: CompileOptions): Template;
+declare function apply(template: string, args?: Args | string): string;
+
+interface Colors {
+    fg: ColorBase | null;
+    bg: ColorBase | null;
+}
+declare type ColorFunction = (colors: Colors) => void;
+declare type EachFn = (ch: string, fg: any, bg: any, i: number, n: number) => void;
+interface EachOptions {
+    fg?: ColorBase;
+    bg?: ColorBase;
+    eachColor?: ColorFunction;
+    colorStart?: string;
+    colorEnd?: string;
+}
+declare function eachChar(text: string, fn: EachFn, opts?: EachOptions): void;
+
+declare function length(text: string): number;
+declare function advanceChars(text: string, start: number, count: number): number;
+declare function firstChar(text: string): string | null;
+declare function padStart(text: string, width: number, pad?: string): string;
+declare function padEnd(text: string, width: number, pad?: string): string;
+declare function center(text: string, width: number, pad?: string): string;
+declare function truncate(text: string, width: number): string;
+declare function capitalize(text: string): string;
+declare function removeColors(text: string): string;
+declare function spliceRaw(msg: string, begin: number, deleteLength: number, add?: string): string;
+declare function hash(str: string): number;
+
+declare function wordWrap(text: string, width: number, indent?: number): string;
+declare function splitIntoLines(source: string, width?: number, indent?: number): string[];
+
+declare var options: {
+    colorStart: string;
+    colorEnd: string;
+    field: string;
+    defaultFg: null;
+    defaultBg: null;
+};
+declare type Align = 'left' | 'center' | 'right';
+declare type VAlign = 'top' | 'middle' | 'bottom';
+declare type HelperFn = (name: string, data?: Record<string, any>, obj?: any) => string;
+declare function addHelper(name: string, fn: HelperFn): void;
+
+interface Options {
+    fg?: any;
+    bg?: any;
+    colorStart?: string;
+    colorEnd?: string;
+    field?: string;
+}
+declare function configure(opts?: Options): void;
+
+declare const index_d$4_configure: typeof configure;
+declare const index_d$4_compile: typeof compile;
+declare const index_d$4_apply: typeof apply;
+type index_d$4_Template = Template;
+type index_d$4_CompileOptions = CompileOptions;
+declare const index_d$4_eachChar: typeof eachChar;
+type index_d$4_EachOptions = EachOptions;
+declare const index_d$4_wordWrap: typeof wordWrap;
+declare const index_d$4_splitIntoLines: typeof splitIntoLines;
+declare const index_d$4_addHelper: typeof addHelper;
+declare const index_d$4_options: typeof options;
+type index_d$4_Align = Align;
+type index_d$4_VAlign = VAlign;
+declare const index_d$4_length: typeof length;
+declare const index_d$4_advanceChars: typeof advanceChars;
+declare const index_d$4_firstChar: typeof firstChar;
+declare const index_d$4_padStart: typeof padStart;
+declare const index_d$4_padEnd: typeof padEnd;
+declare const index_d$4_center: typeof center;
+declare const index_d$4_truncate: typeof truncate;
+declare const index_d$4_capitalize: typeof capitalize;
+declare const index_d$4_removeColors: typeof removeColors;
+declare const index_d$4_spliceRaw: typeof spliceRaw;
+declare const index_d$4_hash: typeof hash;
+declare namespace index_d$4 {
+  export {
+    index_d$4_configure as configure,
+    index_d$4_compile as compile,
+    index_d$4_apply as apply,
+    index_d$4_Template as Template,
+    index_d$4_CompileOptions as CompileOptions,
+    index_d$4_eachChar as eachChar,
+    index_d$4_EachOptions as EachOptions,
+    index_d$4_wordWrap as wordWrap,
+    index_d$4_splitIntoLines as splitIntoLines,
+    index_d$4_addHelper as addHelper,
+    index_d$4_options as options,
+    index_d$4_Align as Align,
+    index_d$4_VAlign as VAlign,
+    index_d$4_length as length,
+    index_d$4_advanceChars as advanceChars,
+    index_d$4_firstChar as firstChar,
+    index_d$4_padStart as padStart,
+    index_d$4_padEnd as padEnd,
+    index_d$4_center as center,
+    index_d$4_truncate as truncate,
+    index_d$4_capitalize as capitalize,
+    index_d$4_removeColors as removeColors,
+    index_d$4_spliceRaw as spliceRaw,
+    index_d$4_hash as hash,
+  };
+}
+
+interface DrawData {
+    glyph: number;
+    fg: number;
+    bg: number;
+}
+declare class Buffer$1 {
+    _data: Uint32Array;
+    protected _width: number;
+    protected _height: number;
+    changed: boolean;
+    constructor(width: number, height: number);
+    protected _makeData(): Uint32Array;
+    get width(): number;
+    get height(): number;
+    hasXY(x: number, y: number): boolean;
+    clone(): Buffer$1;
+    resize(width: number, height: number): void;
+    protected _index(x: number, y: number): number;
+    get(x: number, y: number): number;
+    info(x: number, y: number): DrawData;
+    set(x: number, y: number, style: number): boolean | undefined;
+    toGlyph(ch: string | number): number;
+    draw(x: number, y: number, glyph?: number | string, fg?: ColorBase, // TODO - White?
+    bg?: ColorBase): this;
+    drawSprite(x: number, y: number, sprite: Partial<DrawInfo>): this;
+    blackOut(x: number, y: number): void;
+    blackOut(): void;
+    fill(color: ColorBase): this;
+    fill(glyph?: number | string, fg?: ColorBase, bg?: ColorBase): this;
+    copy(other: Buffer$1): this;
+    drawText(x: number, y: number, text: string, fg?: ColorBase, bg?: ColorBase, maxWidth?: number, align?: Align): number;
+    wrapText(x: number, y: number, width: number, text: string, fg?: ColorBase, bg?: ColorBase, indent?: number): number;
+    fillRect(x: number, y: number, w: number, h: number, ch?: string | number | null, fg?: ColorBase | null, bg?: ColorBase | null): this;
+    blackOutRect(x: number, y: number, w: number, h: number, bg?: ColorBase): this;
+    highlight(x: number, y: number, color: ColorBase, strength: number): this;
+    mix(color: ColorBase, percent: number): this;
+    mix(color: ColorBase, percent: number, x: number, y: number): this;
+    mix(color: ColorBase, percent: number, x: number, y: number, width: number, height: number): this;
+    dump(): void;
+}
+declare function make$6(width: number, height: number): Buffer$1;
+
+type buffer_d_DrawData = DrawData;
+declare namespace buffer_d {
+  export {
+    buffer_d_DrawData as DrawData,
+    Buffer$1 as Buffer,
+    make$6 as make,
   };
 }
 
@@ -1023,35 +1221,35 @@ declare class FovSystem implements FovTracker {
     update(cx: number, cy: number, cr?: number): boolean;
 }
 
-type index_d$4_FovFlags = FovFlags;
-declare const index_d$4_FovFlags: typeof FovFlags;
-type index_d$4_FovStrategy = FovStrategy;
-type index_d$4_SetVisibleFn = SetVisibleFn;
-type index_d$4_ViewportCb = ViewportCb;
-type index_d$4_FovSite = FovSite;
-type index_d$4_FovSubject = FovSubject;
-type index_d$4_FovTracker = FovTracker;
-type index_d$4_FOV = FOV;
-declare const index_d$4_FOV: typeof FOV;
-type index_d$4_FovChangeFn = FovChangeFn;
-type index_d$4_FovNoticer = FovNoticer;
-type index_d$4_FovSystemOptions = FovSystemOptions;
-type index_d$4_FovSystem = FovSystem;
-declare const index_d$4_FovSystem: typeof FovSystem;
-declare namespace index_d$4 {
+type index_d$3_FovFlags = FovFlags;
+declare const index_d$3_FovFlags: typeof FovFlags;
+type index_d$3_FovStrategy = FovStrategy;
+type index_d$3_SetVisibleFn = SetVisibleFn;
+type index_d$3_ViewportCb = ViewportCb;
+type index_d$3_FovSite = FovSite;
+type index_d$3_FovSubject = FovSubject;
+type index_d$3_FovTracker = FovTracker;
+type index_d$3_FOV = FOV;
+declare const index_d$3_FOV: typeof FOV;
+type index_d$3_FovChangeFn = FovChangeFn;
+type index_d$3_FovNoticer = FovNoticer;
+type index_d$3_FovSystemOptions = FovSystemOptions;
+type index_d$3_FovSystem = FovSystem;
+declare const index_d$3_FovSystem: typeof FovSystem;
+declare namespace index_d$3 {
   export {
-    index_d$4_FovFlags as FovFlags,
-    index_d$4_FovStrategy as FovStrategy,
-    index_d$4_SetVisibleFn as SetVisibleFn,
-    index_d$4_ViewportCb as ViewportCb,
-    index_d$4_FovSite as FovSite,
-    index_d$4_FovSubject as FovSubject,
-    index_d$4_FovTracker as FovTracker,
-    index_d$4_FOV as FOV,
-    index_d$4_FovChangeFn as FovChangeFn,
-    index_d$4_FovNoticer as FovNoticer,
-    index_d$4_FovSystemOptions as FovSystemOptions,
-    index_d$4_FovSystem as FovSystem,
+    index_d$3_FovFlags as FovFlags,
+    index_d$3_FovStrategy as FovStrategy,
+    index_d$3_SetVisibleFn as SetVisibleFn,
+    index_d$3_ViewportCb as ViewportCb,
+    index_d$3_FovSite as FovSite,
+    index_d$3_FovSubject as FovSubject,
+    index_d$3_FovTracker as FovTracker,
+    index_d$3_FOV as FOV,
+    index_d$3_FovChangeFn as FovChangeFn,
+    index_d$3_FovNoticer as FovNoticer,
+    index_d$3_FovSystemOptions as FovSystemOptions,
+    index_d$3_FovSystem as FovSystem,
   };
 }
 
@@ -1252,201 +1450,14 @@ declare namespace scheduler_d {
   };
 }
 
-interface DrawInfo {
-    ch: string | number | null;
-    fg: ColorBase;
-    bg: ColorBase;
-}
-declare class Mixer implements DrawInfo {
-    ch: string | number;
-    fg: Color;
-    bg: Color;
-    constructor(base?: Partial<DrawInfo>);
-    protected _changed(): this;
-    copy(other: Partial<DrawInfo>): this;
-    clone(): Mixer;
-    equals(other: Mixer): boolean;
-    get dances(): boolean;
-    nullify(): this;
-    blackOut(): this;
-    draw(ch?: string | number, fg?: ColorBase, bg?: ColorBase): this;
-    drawSprite(src: SpriteData$1 | Mixer, opacity?: number): this | undefined;
-    invert(): this;
-    multiply(color: ColorBase, fg?: boolean, bg?: boolean): this;
-    scale(multiplier: number, fg?: boolean, bg?: boolean): this;
-    mix(color: ColorBase, fg?: number, bg?: number): this;
-    add(color: ColorBase, fg?: number, bg?: number): this;
-    separate(): this;
-    bake(clearDancing?: boolean): {
-        ch: string | number;
-        fg: number;
-        bg: number;
-    };
-    toString(): string;
-}
-declare function makeMixer(base?: Partial<DrawInfo>): Mixer;
-
-declare type Args = any;
-declare type Template = (args: Args) => string;
-interface CompileOptions {
-    field?: string;
-    debug?: boolean;
-}
-declare function compile(template: string, opts?: CompileOptions): Template;
-declare function apply(template: string, args?: Args | string): string;
-
-interface Colors {
-    fg: ColorBase | null;
-    bg: ColorBase | null;
-}
-declare type ColorFunction = (colors: Colors) => void;
-declare type EachFn = (ch: string, fg: any, bg: any, i: number, n: number) => void;
-interface EachOptions {
-    fg?: ColorBase;
-    bg?: ColorBase;
-    eachColor?: ColorFunction;
-    colorStart?: string;
-    colorEnd?: string;
-}
-declare function eachChar(text: string, fn: EachFn, opts?: EachOptions): void;
-
-declare function length(text: string): number;
-declare function advanceChars(text: string, start: number, count: number): number;
-declare function firstChar(text: string): string | null;
-declare function padStart(text: string, width: number, pad?: string): string;
-declare function padEnd(text: string, width: number, pad?: string): string;
-declare function center(text: string, width: number, pad?: string): string;
-declare function truncate(text: string, width: number): string;
-declare function capitalize(text: string): string;
-declare function removeColors(text: string): string;
-declare function spliceRaw(msg: string, begin: number, deleteLength: number, add?: string): string;
-declare function hash(str: string): number;
-
-declare function wordWrap(text: string, width: number, indent?: number): string;
-declare function splitIntoLines(source: string, width?: number, indent?: number): string[];
-
-declare var options: {
-    colorStart: string;
-    colorEnd: string;
-    field: string;
-    defaultFg: null;
-    defaultBg: null;
-};
-declare type Align = 'left' | 'center' | 'right';
-declare type VAlign = 'top' | 'middle' | 'bottom';
-declare type HelperFn = (name: string, data?: Record<string, any>, obj?: any) => string;
-declare function addHelper(name: string, fn: HelperFn): void;
-
-interface Options {
-    fg?: any;
-    bg?: any;
-    colorStart?: string;
-    colorEnd?: string;
-    field?: string;
-}
-declare function configure(opts?: Options): void;
-
-declare const index_d$3_configure: typeof configure;
-declare const index_d$3_compile: typeof compile;
-declare const index_d$3_apply: typeof apply;
-type index_d$3_Template = Template;
-type index_d$3_CompileOptions = CompileOptions;
-declare const index_d$3_eachChar: typeof eachChar;
-type index_d$3_EachOptions = EachOptions;
-declare const index_d$3_wordWrap: typeof wordWrap;
-declare const index_d$3_splitIntoLines: typeof splitIntoLines;
-declare const index_d$3_addHelper: typeof addHelper;
-declare const index_d$3_options: typeof options;
-type index_d$3_Align = Align;
-type index_d$3_VAlign = VAlign;
-declare const index_d$3_length: typeof length;
-declare const index_d$3_advanceChars: typeof advanceChars;
-declare const index_d$3_firstChar: typeof firstChar;
-declare const index_d$3_padStart: typeof padStart;
-declare const index_d$3_padEnd: typeof padEnd;
-declare const index_d$3_center: typeof center;
-declare const index_d$3_truncate: typeof truncate;
-declare const index_d$3_capitalize: typeof capitalize;
-declare const index_d$3_removeColors: typeof removeColors;
-declare const index_d$3_spliceRaw: typeof spliceRaw;
-declare const index_d$3_hash: typeof hash;
-declare namespace index_d$3 {
-  export {
-    index_d$3_configure as configure,
-    index_d$3_compile as compile,
-    index_d$3_apply as apply,
-    index_d$3_Template as Template,
-    index_d$3_CompileOptions as CompileOptions,
-    index_d$3_eachChar as eachChar,
-    index_d$3_EachOptions as EachOptions,
-    index_d$3_wordWrap as wordWrap,
-    index_d$3_splitIntoLines as splitIntoLines,
-    index_d$3_addHelper as addHelper,
-    index_d$3_options as options,
-    index_d$3_Align as Align,
-    index_d$3_VAlign as VAlign,
-    index_d$3_length as length,
-    index_d$3_advanceChars as advanceChars,
-    index_d$3_firstChar as firstChar,
-    index_d$3_padStart as padStart,
-    index_d$3_padEnd as padEnd,
-    index_d$3_center as center,
-    index_d$3_truncate as truncate,
-    index_d$3_capitalize as capitalize,
-    index_d$3_removeColors as removeColors,
-    index_d$3_spliceRaw as spliceRaw,
-    index_d$3_hash as hash,
-  };
-}
-
-interface DrawData {
-    glyph: number;
-    fg: number;
-    bg: number;
-}
 interface BufferTarget {
     readonly width: number;
     readonly height: number;
-    copyTo(dest: DataBuffer): void;
-    draw(src: DataBuffer): void;
+    copyTo(dest: Buffer$1): void;
+    draw(src: Buffer$1): void;
     toGlyph(ch: string | number): number;
 }
-declare class DataBuffer {
-    _data: Uint32Array;
-    protected _width: number;
-    protected _height: number;
-    changed: boolean;
-    constructor(width: number, height: number);
-    protected _makeData(): Uint32Array;
-    get width(): number;
-    get height(): number;
-    hasXY(x: number, y: number): boolean;
-    clone(): DataBuffer;
-    resize(width: number, height: number): void;
-    protected _index(x: number, y: number): number;
-    get(x: number, y: number): number;
-    info(x: number, y: number): DrawData;
-    set(x: number, y: number, style: number): boolean | undefined;
-    toGlyph(ch: string | number): number;
-    draw(x: number, y: number, glyph?: number | string, fg?: ColorBase, // TODO - White?
-    bg?: ColorBase): this;
-    drawSprite(x: number, y: number, sprite: Partial<DrawInfo>): this;
-    blackOut(x: number, y: number): void;
-    blackOut(): void;
-    fill(color: ColorBase): this;
-    fill(glyph?: number | string, fg?: ColorBase, bg?: ColorBase): this;
-    copy(other: DataBuffer): this;
-    drawText(x: number, y: number, text: string, fg?: ColorBase, bg?: ColorBase, maxWidth?: number, align?: Align): number;
-    wrapText(x: number, y: number, width: number, text: string, fg?: ColorBase, bg?: ColorBase, indent?: number): number;
-    fillRect(x: number, y: number, w: number, h: number, ch?: string | number | null, fg?: ColorBase | null, bg?: ColorBase | null): this;
-    blackOutRect(x: number, y: number, w: number, h: number, bg?: ColorBase): this;
-    highlight(x: number, y: number, color: ColorBase, strength: number): this;
-    mix(color: ColorBase, percent: number): this;
-    mix(color: ColorBase, percent: number, x: number, y: number): this;
-    mix(color: ColorBase, percent: number, x: number, y: number, width: number, height: number): this;
-    dump(): void;
-}
-declare class Buffer extends DataBuffer {
+declare class Buffer extends Buffer$1 {
     private _target;
     constructor(canvas: BufferTarget);
     clone(): this;
@@ -1530,8 +1541,8 @@ declare abstract class BaseCanvas implements BufferTarget {
     protected _setGlyphs(glyphs: Glyphs): boolean;
     resize(width: number, height: number): void;
     protected _requestRender(): void;
-    abstract draw(data: DataBuffer): boolean;
-    copyTo(data: DataBuffer): void;
+    abstract draw(data: Buffer$1): boolean;
+    copyTo(data: Buffer$1): void;
     render(): void;
     abstract _render(): void;
     hasXY(x: number, y: number): boolean;
@@ -1548,7 +1559,7 @@ declare class Canvas2D extends BaseCanvas {
     constructor(width: number, height: number, glyphs: Glyphs);
     protected _createContext(): void;
     resize(width: number, height: number): void;
-    draw(data: DataBuffer): boolean;
+    draw(data: Buffer$1): boolean;
     _render(): void;
     protected _renderCell(index: number): void;
 }
@@ -1566,19 +1577,15 @@ declare class CanvasGL extends BaseCanvas {
     protected _setGlyphs(glyphs: Glyphs): boolean;
     _uploadGlyphs(): void;
     resize(width: number, height: number): void;
-    draw(data: DataBuffer): boolean;
-    copyTo(data: DataBuffer): void;
+    draw(data: Buffer$1): boolean;
+    copyTo(data: Buffer$1): void;
     _render(): void;
 }
 
 declare function make$3(opts: Partial<CanvasOptions>): BaseCanvas;
 declare function make$3(width: number, height: number, opts?: Partial<CanvasOptions>): BaseCanvas;
-declare function makeBuffer(width: number, height: number): DataBuffer;
 
-type index_d$2_DrawData = DrawData;
 type index_d$2_BufferTarget = BufferTarget;
-type index_d$2_DataBuffer = DataBuffer;
-declare const index_d$2_DataBuffer: typeof DataBuffer;
 type index_d$2_Buffer = Buffer;
 declare const index_d$2_Buffer: typeof Buffer;
 type index_d$2_GlyphOptions = GlyphOptions;
@@ -1594,12 +1601,9 @@ type index_d$2_Canvas2D = Canvas2D;
 declare const index_d$2_Canvas2D: typeof Canvas2D;
 type index_d$2_CanvasGL = CanvasGL;
 declare const index_d$2_CanvasGL: typeof CanvasGL;
-declare const index_d$2_makeBuffer: typeof makeBuffer;
 declare namespace index_d$2 {
   export {
-    index_d$2_DrawData as DrawData,
     index_d$2_BufferTarget as BufferTarget,
-    index_d$2_DataBuffer as DataBuffer,
     index_d$2_Buffer as Buffer,
     index_d$2_GlyphOptions as GlyphOptions,
     index_d$2_Glyphs as Glyphs,
@@ -1610,7 +1614,6 @@ declare namespace index_d$2 {
     index_d$2_Canvas2D as Canvas2D,
     index_d$2_CanvasGL as CanvasGL,
     make$3 as make,
-    index_d$2_makeBuffer as makeBuffer,
   };
 }
 
@@ -1949,4 +1952,4 @@ declare namespace index_d {
   };
 }
 
-export { ERROR, FALSE, IDENTITY, IS_NONZERO, IS_ZERO, NOOP, ONE, TRUE, WARN, ZERO, arrayDelete, arrayFindRight, arrayIncludesAll, arrayInsert, arrayNext, arrayPrev, arraysIntersect, blob_d as blob, index_d$2 as canvas, clamp, index_d$5 as color, colors, config$1 as config, data, events_d as events, first, flag_d as flag, index_d$4 as fov, frequency_d as frequency, grid_d as grid, io_d as io, index_d as light, list_d as list, loop, message_d as message, nextIndex, object_d as object, path_d as path, prevIndex, range_d as range, rng_d as rng, scheduler_d as scheduler, index_d$1 as sprite, sprites, sum, index_d$3 as text, types_d as types, xy_d as xy };
+export { ERROR, FALSE, IDENTITY, IS_NONZERO, IS_ZERO, NOOP, ONE, TRUE, WARN, ZERO, arrayDelete, arrayFindRight, arrayIncludesAll, arrayInsert, arrayNext, arrayPrev, arraysIntersect, blob_d as blob, buffer_d as buffer, index_d$2 as canvas, clamp, index_d$5 as color, colors, config$1 as config, data, events_d as events, first, flag_d as flag, index_d$3 as fov, frequency_d as frequency, grid_d as grid, io_d as io, index_d as light, list_d as list, loop, message_d as message, nextIndex, object_d as object, path_d as path, prevIndex, range_d as range, rng_d as rng, scheduler_d as scheduler, index_d$1 as sprite, sprites, sum, index_d$4 as text, types_d as types, xy_d as xy };

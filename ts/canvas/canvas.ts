@@ -1,5 +1,6 @@
 import { Glyphs, GlyphOptions } from './glyphs';
-import { BufferTarget, Buffer, DataBuffer } from './buffer';
+import { BufferTarget, Buffer as CanvasBuffer } from './buffer';
+import * as Buffer from '../buffer';
 import * as IO from '../io';
 import * as Utils from '../utils';
 import * as XY from '../xy';
@@ -43,14 +44,14 @@ export abstract class BaseCanvas implements BufferTarget {
 
     protected _width: number = 50;
     protected _height: number = 25;
-    protected _buffer: Buffer;
+    protected _buffer: CanvasBuffer;
 
     constructor(width: number, height: number, glyphs: Glyphs) {
         this._node = this._createNode();
         this._createContext();
         this._configure(width, height, glyphs);
 
-        this._buffer = new Buffer(this);
+        this._buffer = new CanvasBuffer(this);
     }
 
     get node(): HTMLCanvasElement {
@@ -130,9 +131,9 @@ export abstract class BaseCanvas implements BufferTarget {
         requestAnimationFrame(() => this._render());
     }
 
-    abstract draw(data: DataBuffer): boolean;
+    abstract draw(data: Buffer.Buffer): boolean;
 
-    copyTo(data: DataBuffer) {
+    copyTo(data: Buffer.Buffer) {
         if (!this.buffer) return; // startup/constructor
         data.copy(this.buffer);
     }
@@ -248,7 +249,7 @@ export class Canvas2D extends BaseCanvas {
         this._changed = new Int8Array(width * height);
     }
 
-    draw(data: DataBuffer): boolean {
+    draw(data: Buffer.Buffer): boolean {
         // TODO - Remove?
         if (data._data.every((style, i) => style === this._data[i]))
             return false;

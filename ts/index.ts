@@ -5,6 +5,7 @@ export * as object from './object';
 export * as range from './range';
 export * as flag from './flag';
 export * as grid from './grid';
+export * as buffer from './buffer';
 export * as io from './io';
 export * as fov from './fov';
 export * as path from './path';

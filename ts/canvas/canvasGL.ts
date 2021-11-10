@@ -1,7 +1,7 @@
 import * as shaders from './shaders';
 import { Glyphs } from './glyphs';
 
-import * as Buffer from './buffer';
+import * as Buffer from '../buffer';
 import * as Canvas from './canvas';
 
 type GL = WebGL2RenderingContext;
@@ -186,7 +186,7 @@ export class CanvasGL extends Canvas.BaseCanvas {
     //     return false;
     // }
 
-    draw(data: Buffer.DataBuffer): boolean {
+    draw(data: Buffer.Buffer): boolean {
         // TODO - remove?
         if (
             data._data.every((style, i) => {
@@ -206,7 +206,7 @@ export class CanvasGL extends Canvas.BaseCanvas {
         return true;
     }
 
-    copyTo(data: Buffer.DataBuffer) {
+    copyTo(data: Buffer.Buffer) {
         data.changed = false;
         const n = this.width * this.height;
         for (let i = 0; i < n; ++i) {

@@ -1,8 +1,8 @@
 // import { Random } from '../ts/random';
-import { DataBuffer } from '../ts/canvas/buffer';
+import { Buffer } from '../ts/buffer';
 
 export function extractBufferText(
-    buffer: DataBuffer,
+    buffer: Buffer,
     x: number,
     y: number,
     width: number,

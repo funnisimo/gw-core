@@ -1,5 +1,4 @@
 import { Glyphs } from './glyphs';
-import { DataBuffer } from './buffer';
 import {
     CanvasOptions,
     BaseCanvas,
@@ -69,8 +68,4 @@ export function make(...args: any[]): BaseCanvas {
     }
 
     return canvas;
-}
-
-export function makeBuffer(width: number, height: number): DataBuffer {
-    return new DataBuffer(width, height);
 }
