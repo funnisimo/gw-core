@@ -42,7 +42,10 @@ export type HelperFn = (
 ) => string;
 
 export var helpers: Record<string, HelperFn> = {
-    default: (name: string, _?: Record<string, any>, value?: any) => {
+    default: (_name: string, _?: Record<string, any>, _value?: any) => {
+        return '';
+    },
+    debug: (name: string, _?: Record<string, any>, value?: any) => {
         if (value !== undefined) return `${value}.!!${name}!!`;
         return `!!${name}!!`;
     },

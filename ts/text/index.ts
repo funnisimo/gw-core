@@ -1,20 +1,9 @@
-import { compile, apply, Template, CompileOptions } from './compile';
-import { eachChar, EachOptions } from './each';
-import {
-    length,
-    padStart,
-    padEnd,
-    center,
-    capitalize,
-    removeColors,
-    firstChar,
-    spliceRaw,
-    truncate,
-    hash,
-} from './utils';
-import { wordWrap, splitIntoLines } from './lines';
+export { compile, apply, Template, CompileOptions } from './compile';
+export { eachChar, EachOptions } from './each';
+export * from './utils';
+export { wordWrap, splitIntoLines } from './lines';
 
-import { addHelper, options, Align, VAlign } from './config';
+export { addHelper, options, Align, VAlign } from './config';
 
 interface Options {
     fg?: any;
@@ -24,7 +13,9 @@ interface Options {
     field?: string;
 }
 
-function configure(opts: Options = {}) {
+import { options } from './config';
+
+export function configure(opts: Options = {}) {
     if (opts.fg !== undefined) {
         options.defaultFg = opts.fg;
     }
@@ -41,29 +32,3 @@ function configure(opts: Options = {}) {
         options.field = opts.field;
     }
 }
-
-export {
-    compile,
-    apply,
-    eachChar,
-    length,
-    padStart,
-    padEnd,
-    center,
-    firstChar,
-    capitalize,
-    removeColors,
-    wordWrap,
-    splitIntoLines,
-    configure,
-    addHelper,
-    options,
-    Template,
-    spliceRaw,
-    truncate,
-    CompileOptions,
-    EachOptions,
-    Align,
-    VAlign,
-    hash,
-};

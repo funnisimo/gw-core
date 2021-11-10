@@ -43,7 +43,18 @@ describe('compile', () => {
     test('base value', () => {
         let base = Compile.baseValue('field');
 
-        expect(Config.helpers.default('field')).toEqual('!!field!!');
+        expect(Config.helpers.default('field')).toEqual('');
+
+        expect(base({})).toEqual('');
+        expect(base({ field: 'test' })).toEqual('test');
+        expect(base({ field: 3 })).toEqual(3);
+        expect(base({ field: { obj: true } })).toEqual({ obj: true });
+    });
+
+    test('base value - debug', () => {
+        let base = Compile.baseValue('field', true);
+
+        expect(Config.helpers.debug('field')).toEqual('!!field!!');
 
         expect(base({})).toEqual('!!field!!');
         expect(base({ field: 'test' })).toEqual('test');
@@ -55,6 +66,15 @@ describe('compile', () => {
         test('field from object', () => {
             const base = jest.fn().mockImplementation((a) => a);
             let field = Compile.fieldValue('field', base);
+            expect(field({})).toEqual('');
+            expect(field({ field: 'test' })).toEqual('test');
+            expect(field({ field: 3 })).toEqual(3);
+            expect(field({ field: { obj: true } })).toEqual({ obj: true });
+        });
+
+        test('field from object - debug', () => {
+            const base = jest.fn().mockImplementation((a) => a);
+            let field = Compile.fieldValue('field', base, true);
             expect(field({})).toEqual('[object Object].!!field!!');
             expect(field({ field: 'test' })).toEqual('test');
             expect(field({ field: 3 })).toEqual(3);
@@ -64,6 +84,15 @@ describe('compile', () => {
         test('field from types', () => {
             const base = jest.fn().mockImplementation((a) => a.test);
             let field = Compile.fieldValue('field', base);
+            expect(field({ test: 4 })).toEqual('');
+            expect(field({ test: 'taco' })).toEqual('');
+            expect(field({ test: null })).toEqual('');
+            expect(field({ test: [1, 2, 3] })).toEqual('');
+        });
+
+        test('field from types - debug', () => {
+            const base = jest.fn().mockImplementation((a) => a.test);
+            let field = Compile.fieldValue('field', base, true);
             expect(field({ test: 4 })).toEqual('4.!!field!!');
             expect(field({ test: 'taco' })).toEqual('taco.!!field!!');
             expect(field({ test: null })).toEqual('null.!!field!!');
@@ -75,6 +104,12 @@ describe('compile', () => {
         test('missing helper', () => {
             const base = jest.fn().mockReturnValue('value');
             const helper = Compile.helperValue('missing', base);
+            expect(helper({})).toEqual('');
+        });
+
+        test('missing helper - debug', () => {
+            const base = jest.fn().mockReturnValue('value');
+            const helper = Compile.helperValue('missing', base, true);
             expect(helper({})).toEqual('value.!!missing!!');
         });
 
@@ -219,27 +254,37 @@ describe('compile', () => {
 
         test('empty', () => {
             const fn = Compile.makeVariable('');
+            expect(fn({})).toEqual('');
+        });
+
+        test('empty - debug', () => {
+            const fn = Compile.makeVariable('', { debug: true });
             expect(fn({})).toEqual('!!undefined!!');
         });
 
         test('invalid format', () => {
             const fn = Compile.makeVariable('test%4r');
+            expect(fn({})).toEqual('');
+        });
+
+        test('invalid format - debug', () => {
+            const fn = Compile.makeVariable('test%4r', { debug: true });
             expect(fn({})).toEqual('!!test!!');
         });
     });
 
     describe('default helper', () => {
-        let original: Config.HelperFn;
+        let original: Record<string, Config.HelperFn>;
 
         beforeAll(() => {
-            original = Config.helpers.default;
+            original = Object.assign({}, Config.helpers);
         });
 
         afterEach(() => {
             for (let key in Config.helpers) {
                 delete Config.helpers[key];
             }
-            Config.helpers.default = original;
+            Object.assign(Config.helpers, original);
         });
 
         test('custom default', () => {
@@ -309,12 +354,18 @@ describe('compile', () => {
 
     test('apply', () => {
         expect(Compile.apply('a §test§!', { test: 'taco' })).toEqual('a taco!');
-        expect(Compile.apply('a §test§!')).toEqual('a !!test!!!');
+        expect(Compile.apply('a §test§!')).toEqual('a !'); // cannot debug with apply - only compile
     });
 
     describe('options', () => {
         test('custom field marker', () => {
             const a = Compile.compile('a ^test^!', { field: '^' });
+            expect(a({ test: 'taco' })).toEqual('a taco!');
+            expect(a({})).toEqual('a !');
+        });
+
+        test('custom field marker - debug', () => {
+            const a = Compile.compile('a ^test^!', { field: '^', debug: true });
             expect(a({ test: 'taco' })).toEqual('a taco!');
             expect(a({})).toEqual('a !!test!!!');
         });

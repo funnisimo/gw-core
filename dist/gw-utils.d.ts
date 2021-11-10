@@ -1290,6 +1290,7 @@ declare type Args = any;
 declare type Template = (args: Args) => string;
 interface CompileOptions {
     field?: string;
+    debug?: boolean;
 }
 declare function compile(template: string, opts?: CompileOptions): Template;
 declare function apply(template: string, args?: Args | string): string;
@@ -1310,6 +1311,7 @@ interface EachOptions {
 declare function eachChar(text: string, fn: EachFn, opts?: EachOptions): void;
 
 declare function length(text: string): number;
+declare function advanceChars(text: string, start: number, count: number): number;
 declare function firstChar(text: string): string | null;
 declare function padStart(text: string, width: number, pad?: string): string;
 declare function padEnd(text: string, width: number, pad?: string): string;
@@ -1344,53 +1346,55 @@ interface Options {
 }
 declare function configure(opts?: Options): void;
 
+declare const index_d$3_configure: typeof configure;
 declare const index_d$3_compile: typeof compile;
 declare const index_d$3_apply: typeof apply;
+type index_d$3_Template = Template;
+type index_d$3_CompileOptions = CompileOptions;
 declare const index_d$3_eachChar: typeof eachChar;
+type index_d$3_EachOptions = EachOptions;
+declare const index_d$3_wordWrap: typeof wordWrap;
+declare const index_d$3_splitIntoLines: typeof splitIntoLines;
+declare const index_d$3_addHelper: typeof addHelper;
+declare const index_d$3_options: typeof options;
+type index_d$3_Align = Align;
+type index_d$3_VAlign = VAlign;
 declare const index_d$3_length: typeof length;
+declare const index_d$3_advanceChars: typeof advanceChars;
+declare const index_d$3_firstChar: typeof firstChar;
 declare const index_d$3_padStart: typeof padStart;
 declare const index_d$3_padEnd: typeof padEnd;
 declare const index_d$3_center: typeof center;
-declare const index_d$3_firstChar: typeof firstChar;
+declare const index_d$3_truncate: typeof truncate;
 declare const index_d$3_capitalize: typeof capitalize;
 declare const index_d$3_removeColors: typeof removeColors;
-declare const index_d$3_wordWrap: typeof wordWrap;
-declare const index_d$3_splitIntoLines: typeof splitIntoLines;
-declare const index_d$3_configure: typeof configure;
-declare const index_d$3_addHelper: typeof addHelper;
-declare const index_d$3_options: typeof options;
-type index_d$3_Template = Template;
 declare const index_d$3_spliceRaw: typeof spliceRaw;
-declare const index_d$3_truncate: typeof truncate;
-type index_d$3_CompileOptions = CompileOptions;
-type index_d$3_EachOptions = EachOptions;
-type index_d$3_Align = Align;
-type index_d$3_VAlign = VAlign;
 declare const index_d$3_hash: typeof hash;
 declare namespace index_d$3 {
   export {
+    index_d$3_configure as configure,
     index_d$3_compile as compile,
     index_d$3_apply as apply,
+    index_d$3_Template as Template,
+    index_d$3_CompileOptions as CompileOptions,
     index_d$3_eachChar as eachChar,
+    index_d$3_EachOptions as EachOptions,
+    index_d$3_wordWrap as wordWrap,
+    index_d$3_splitIntoLines as splitIntoLines,
+    index_d$3_addHelper as addHelper,
+    index_d$3_options as options,
+    index_d$3_Align as Align,
+    index_d$3_VAlign as VAlign,
     index_d$3_length as length,
+    index_d$3_advanceChars as advanceChars,
+    index_d$3_firstChar as firstChar,
     index_d$3_padStart as padStart,
     index_d$3_padEnd as padEnd,
     index_d$3_center as center,
-    index_d$3_firstChar as firstChar,
+    index_d$3_truncate as truncate,
     index_d$3_capitalize as capitalize,
     index_d$3_removeColors as removeColors,
-    index_d$3_wordWrap as wordWrap,
-    index_d$3_splitIntoLines as splitIntoLines,
-    index_d$3_configure as configure,
-    index_d$3_addHelper as addHelper,
-    index_d$3_options as options,
-    index_d$3_Template as Template,
     index_d$3_spliceRaw as spliceRaw,
-    index_d$3_truncate as truncate,
-    index_d$3_CompileOptions as CompileOptions,
-    index_d$3_EachOptions as EachOptions,
-    index_d$3_Align as Align,
-    index_d$3_VAlign as VAlign,
     index_d$3_hash as hash,
   };
 }

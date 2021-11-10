@@ -12,6 +12,11 @@ describe('Config', () => {
 
     test('default helper', () => {
         expect(Config.helpers.default).toBeFunction();
-        expect(Config.helpers.default('test')).toEqual('!!test!!');
+        expect(Config.helpers.default('test')).toEqual('');
+    });
+
+    test('debug helper', () => {
+        expect(Config.helpers.debug).toBeFunction();
+        expect(Config.helpers.debug('test')).toEqual('!!test!!');
     });
 });

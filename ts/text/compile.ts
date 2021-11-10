@@ -8,6 +8,7 @@ export type FieldFn = (args: Args) => any;
 
 export interface CompileOptions {
     field?: string;
+    debug?: boolean;
 }
 
 export function compile(template: string, opts: CompileOptions = {}): Template {
@@ -17,7 +18,7 @@ export function compile(template: string, opts: CompileOptions = {}): Template {
     const sections = parts.map((part, i) => {
         if (i % 2 == 0) return textSegment(part);
         if (part.length == 0) return textSegment(F);
-        return makeVariable(part);
+        return makeVariable(part, opts);
     });
 
     return function (args: Args | string = {}) {
@@ -38,7 +39,7 @@ export function textSegment(value: string) {
     return () => value;
 }
 
-export function baseValue(name: string): FieldFn {
+export function baseValue(name: string, debug = false): FieldFn {
     return function (args: Args) {
         let h = Config.helpers[name];
         if (h) {
@@ -48,23 +49,34 @@ export function baseValue(name: string): FieldFn {
         const v = args[name];
         if (v !== undefined) return v;
 
-        h = Config.helpers.default;
+        h = debug ? Config.helpers.debug : Config.helpers.default;
         return h(name, args);
     };
 }
 
-export function fieldValue(name: string, source: FieldFn): FieldFn {
+export function fieldValue(
+    name: string,
+    source: FieldFn,
+    debug = false
+): FieldFn {
+    const helper = debug ? Config.helpers.debug : Config.helpers.default;
     return function (args: Args) {
         const obj = source(args);
-        if (!obj) return Config.helpers.default(name, args, obj);
+        if (!obj) return helper(name, args, obj);
         const value = obj[name];
-        if (value === undefined) return Config.helpers.default(name, args, obj);
+        if (value === undefined) return helper(name, args, obj);
         return value;
     };
 }
 
-export function helperValue(name: string, source: FieldFn): FieldFn {
-    const helper = Config.helpers[name] || Config.helpers.default;
+export function helperValue(
+    name: string,
+    source: FieldFn,
+    debug = false
+): FieldFn {
+    const helper =
+        Config.helpers[name] ||
+        (debug ? Config.helpers.debug : Config.helpers.default);
 
     return function (args: Args) {
         const base = source(args);
@@ -135,7 +147,10 @@ export function floatFormat(format: string, source: FieldFn): FieldFn {
     };
 }
 
-export function makeVariable(pattern: string): FieldFn {
+export function makeVariable(
+    pattern: string,
+    opts: CompileOptions = {}
+): FieldFn {
     const data =
         /((\w+) )?(\w+)(\.(\w+))?(%[\+\.\-\d]*[dsf])?/.exec(pattern) || [];
     const helper = data[2];
@@ -143,12 +158,12 @@ export function makeVariable(pattern: string): FieldFn {
     const field = data[5];
     const format = data[6];
 
-    let result = baseValue(base);
+    let result = baseValue(base, opts.debug);
     if (field && field.length) {
-        result = fieldValue(field, result);
+        result = fieldValue(field, result, opts.debug);
     }
     if (helper && helper.length) {
-        result = helperValue(helper, result);
+        result = helperValue(helper, result, opts.debug);
     }
     if (format && format.length) {
         if (format.endsWith('s')) {
