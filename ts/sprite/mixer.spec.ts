@@ -247,12 +247,13 @@ describe('Mixer', () => {
         mixer.draw(
             '@',
             0xd73,
-            Color.fromArray([50, 50, 50, 50, 10, 10, 10, true])
+            Color.fromArray([50, 50, 50]).dance(50, 10, 10, 10)
         );
         expect(mixer.ch).toEqual('@');
         expect(mixer.fg.css()).toEqual('#d73');
-        expect(mixer.bg.css()).toEqual('#ccc');
+        expect(mixer.bg.rgb()).toEqual([128, 128, 128, 100]);
         expect(mixer.dances).toBeTruthy();
+        expect(mixer.bg.css()).toEqual('#ccc');
 
         const data = mixer.bake();
         expect(data.ch).toEqual('@');
@@ -278,8 +279,7 @@ describe('Mixer', () => {
 
     test('toString', () => {
         const mixer = new Mixer({ ch: '@', fg: 'red', bg: 'black' });
-        expect(mixer.fg).not.toBe(Color.colors.red);
-        expect(mixer.fg.equals(Color.colors.red)).toBeTruthy();
+        expect(mixer.fg).toBe(Color.colors.red); // colors are const
         expect(mixer.fg.name).toEqual('red');
         expect(mixer.toString()).toEqual('{ ch: @, fg: red, bg: black }');
     });

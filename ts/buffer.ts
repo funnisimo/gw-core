@@ -105,15 +105,29 @@ export class Buffer {
         if (typeof glyph !== 'number') {
             glyph = this.toGlyph(glyph);
         }
-        if (typeof fg !== 'number') {
-            fg = Color.from(fg).toInt();
-        }
-        if (typeof bg !== 'number') {
-            bg = Color.from(bg).toInt();
-        }
+
         glyph = glyph >= 0 ? glyph & 0xff : current >> 24;
-        bg = bg >= 0 ? bg & 0xfff : (current >> 12) & 0xfff;
-        fg = fg >= 0 ? fg & 0xfff : current & 0xfff;
+
+        if (typeof fg !== 'number') {
+            fg = Color.from(current & 0xfff)
+                .blend(fg)
+                .toInt();
+        } else if (fg < 0) {
+            fg = current & 0xfff;
+        } else {
+            fg = fg & 0xfff;
+        }
+
+        if (typeof bg !== 'number') {
+            bg = Color.from((current >> 12) & 0xfff)
+                .blend(bg)
+                .toInt();
+        } else if (bg < 0) {
+            bg = (current >> 12) & 0xfff;
+        } else {
+            bg = bg & 0xfff;
+        }
+
         const style = (glyph << 24) + (bg << 12) + fg;
         this.set(x, y, style);
         if (style !== current) this.changed = true;
@@ -149,32 +163,19 @@ export class Buffer {
         bg: Color.ColorBase = 0
     ): this {
         if (arguments.length == 1) {
-            bg = Color.from(glyph).toInt();
+            bg = Color.from(glyph);
             glyph = 0;
             fg = 0;
-        } else {
-            if (typeof glyph !== 'number') {
-                if (typeof glyph === 'string') {
-                    glyph = this.toGlyph(glyph);
-                } else {
-                    throw new Error('glyph must be number or char');
-                }
-            }
-            if (typeof fg !== 'number') {
-                fg = Color.from(fg).toInt();
-            }
-            if (typeof bg !== 'number') {
-                bg = Color.from(bg).toInt();
-            }
         }
-        glyph = glyph & 0xff;
-        fg = fg & 0xfff;
-        bg = bg & 0xfff;
-        const style = (glyph << 24) + (bg << 12) + fg;
-        this._data.fill(style);
-        this.changed = true;
-
-        return this;
+        return this.fillRect(
+            0,
+            0,
+            this.width,
+            this.height,
+            glyph as string | number,
+            fg,
+            bg
+        );
     }
 
     copy(other: Buffer): this {
@@ -272,8 +273,8 @@ export class Buffer {
     ): this {
         if (ch === null) ch = -1;
         if (typeof ch !== 'number') ch = this.toGlyph(ch);
-        if (typeof fg !== 'number') fg = Color.from(fg).toInt();
-        if (typeof bg !== 'number') bg = Color.from(bg).toInt();
+        if (typeof fg !== 'number') fg = Color.from(fg);
+        if (typeof bg !== 'number') bg = Color.from(bg);
 
         const xw = Math.min(x + w, this.width);
         const yh = Math.min(y + h, this.height);
@@ -310,8 +311,8 @@ export class Buffer {
         const mixer = new Mixer();
         const data = this.info(x, y);
         mixer.drawSprite(data);
-        mixer.fg.add(color, strength);
-        mixer.bg.add(color, strength);
+        mixer.fg = mixer.fg.add(color, strength);
+        mixer.bg = mixer.bg.add(color, strength);
         this.drawSprite(x, y, mixer);
         return this;
     }
@@ -335,6 +336,7 @@ export class Buffer {
         height = 0
     ): this {
         color = Color.from(color);
+        if (color.isNull()) return this;
         const mixer = new Mixer();
 
         if (!width) width = x ? 1 : this.width;
@@ -347,8 +349,40 @@ export class Buffer {
             for (let j = y; j < endY; ++j) {
                 const data = this.info(i, j);
                 mixer.drawSprite(data);
-                mixer.fg.mix(color, percent);
-                mixer.bg.mix(color, percent);
+                mixer.fg = mixer.fg.mix(color, percent);
+                mixer.bg = mixer.bg.mix(color, percent);
+                this.drawSprite(i, j, mixer);
+            }
+        }
+        return this;
+    }
+
+    blend(color: Color.ColorBase): this;
+    blend(color: Color.ColorBase, x: number, y: number): this;
+    blend(
+        color: Color.ColorBase,
+        x: number,
+        y: number,
+        width: number,
+        height: number
+    ): this;
+    blend(color: Color.ColorBase, x = 0, y = 0, width = 0, height = 0): this {
+        color = Color.from(color);
+        if (color.isNull()) return this;
+        const mixer = new Mixer();
+
+        if (!width) width = x ? 1 : this.width;
+        if (!height) height = y ? 1 : this.height;
+
+        const endX = Math.min(width + x, this.width);
+        const endY = Math.min(height + y, this.height);
+
+        for (let i = x; i < endX; ++i) {
+            for (let j = y; j < endY; ++j) {
+                const data = this.info(i, j);
+                mixer.drawSprite(data);
+                mixer.fg = mixer.fg.blend(color);
+                mixer.bg = mixer.bg.blend(color);
                 this.drawSprite(i, j, mixer);
             }
         }

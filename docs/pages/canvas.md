@@ -78,7 +78,7 @@ const canvas = GWU.canvas.make({
 SHOW(canvas.node);
 SHOW(canvas.glyphs.node);
 
-const buffer = GWU.canvas.makeBuffer(canvas.width, canvas.height);
+const buffer = GWU.buffer.make(canvas.width, canvas.height);
 
 function draw() {
     GWU.xy.forRect(buffer.width, buffer.height, (x, y) => {

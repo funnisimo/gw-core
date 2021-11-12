@@ -13,7 +13,7 @@ export const config = (CONFIG.light = {
     INTENSITY_SHADOW: 50,
 }); // less than 20% for highest color in rgb
 
-const LIGHT_COMPONENTS = Color.make();
+let LIGHT_COMPONENTS = Color.make();
 
 export class Light implements Types.LightType {
     public color: Color.Color;
@@ -65,7 +65,7 @@ export class Light implements Types.LightType {
         if (outerRadius < 1) return false;
 
         // calcLightComponents(colorComponents, this);
-        LIGHT_COMPONENTS.copy(this.color).bake();
+        LIGHT_COMPONENTS = this.color.bake();
 
         // console.log('paint', LIGHT_COMPONENTS.toString(true), x, y, outerRadius);
 

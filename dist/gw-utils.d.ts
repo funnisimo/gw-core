@@ -32,54 +32,48 @@ declare function arrayPrev<T>(a: T[], current: T, fn: (t: T) => boolean, wrap?: 
 declare function nextIndex(index: number, length: number, wrap?: boolean): number;
 declare function prevIndex(index: number, length: number, wrap?: boolean): number;
 
-declare type ColorData = [number, number, number] | [number, number, number, number, number, number, number] | [number, number, number, number, number, number, number, boolean];
+declare type ColorData = [number, number, number] | [number, number, number, number];
 declare type ColorBase = string | number | ColorData | Color;
 declare type LightValue = [number, number, number];
 declare const colors: Record<string, Color>;
 declare class Color {
-    _data: Int16Array;
+    _data: [number, number, number, number];
+    _rand: [number, number, number, number] | null;
     dances: boolean;
-    protected _const: boolean;
     name?: string;
-    constructor(r?: number, g?: number, b?: number, rand?: number, redRand?: number, greenRand?: number, blueRand?: number, dances?: boolean);
+    constructor(r?: number, g?: number, b?: number, a?: number);
+    rgb(): number[];
     get r(): number;
-    protected get _r(): number;
-    protected set _r(v: number);
+    get _r(): number;
+    get _ra(): number;
     get g(): number;
-    protected get _g(): number;
-    protected set _g(v: number);
+    get _g(): number;
+    get _ga(): number;
     get b(): number;
-    protected get _b(): number;
-    protected set _b(v: number);
-    protected get _rand(): number;
-    protected get _redRand(): number;
-    protected get _greenRand(): number;
-    protected get _blueRand(): number;
+    get _b(): number;
+    get _ba(): number;
+    get a(): number;
+    get _a(): number;
+    rand(all: number, r?: number, g?: number, b?: number): this;
+    dance(all: number, r?: number, g?: number, b?: number): this;
+    isNull(): boolean;
+    alpha(v: number): Color;
     get l(): number;
     get s(): number;
     get h(): number;
-    isNull(): boolean;
-    isConst(): boolean;
     equals(other: Color | ColorBase): boolean;
-    copy(other: Color | ColorBase): this;
-    set(other: Color | ColorBase): this;
-    protected _changed(): this;
-    clone(): any;
-    assign(_r?: number, _g?: number, _b?: number, _rand?: number, _redRand?: number, _greenRand?: number, _blueRand?: number, dances?: boolean): any;
-    assignRGB(_r?: number, _g?: number, _b?: number, _rand?: number, _redRand?: number, _greenRand?: number, _blueRand?: number, dances?: boolean): any;
-    nullify(): any;
-    blackOut(): any;
     toInt(base256?: boolean): number;
     toLight(): LightValue;
-    clamp(): any;
-    mix(other: ColorBase, percent: number): any;
-    lighten(percent: number): this;
-    darken(percent: number): this;
-    bake(clearDancing?: boolean): this;
-    add(other: ColorBase, percent?: number): this;
-    scale(percent: number): this;
-    multiply(other: ColorData | Color): this;
-    normalize(): this;
+    clamp(): Color;
+    blend(other: ColorBase): Color;
+    mix(other: ColorBase, percent: number): Color;
+    lighten(percent: number): Color;
+    darken(percent: number): Color;
+    bake(clearDancing?: boolean): Color;
+    add(other: ColorBase, percent?: number): Color;
+    scale(percent: number): Color;
+    multiply(other: ColorData | Color): Color;
+    normalize(): Color;
     /**
      * Returns the css code for the current RGB values of the color.
      * @param base256 - Show in base 256 (#abcdef) instead of base 16 (#abc)
@@ -101,8 +95,7 @@ declare function from$4(rgb: number, base256?: boolean): Color;
 declare function from$4(color?: ColorBase | null): Color;
 declare function from$4(arrayLike: ColorData, base256?: boolean): Color;
 declare function from$4(...rgb: number[]): Color;
-declare function separate(a: Color, b: Color): void;
-declare function swap(a: Color, b: Color): void;
+declare function separate(a: Color, b: Color): [Color, Color];
 declare function relativeLuminance(a: Color, b: Color): number;
 declare function distance(a: Color, b: Color): number;
 declare function smoothScalar(rgb: number, maxRgb?: number): number;
@@ -111,6 +104,8 @@ declare function install$3(name: string, ...rgb: ColorData): Color;
 declare function installSpread(name: string, info: ColorBase): Color;
 declare function installSpread(name: string, ...rgb: ColorData): Color;
 declare const NONE: Color;
+declare const BLACK: Color;
+declare const WHITE: Color;
 
 type index_d$5_ColorData = ColorData;
 type index_d$5_ColorBase = ColorBase;
@@ -123,12 +118,13 @@ declare const index_d$5_fromCss: typeof fromCss;
 declare const index_d$5_fromName: typeof fromName;
 declare const index_d$5_fromNumber: typeof fromNumber;
 declare const index_d$5_separate: typeof separate;
-declare const index_d$5_swap: typeof swap;
 declare const index_d$5_relativeLuminance: typeof relativeLuminance;
 declare const index_d$5_distance: typeof distance;
 declare const index_d$5_smoothScalar: typeof smoothScalar;
 declare const index_d$5_installSpread: typeof installSpread;
 declare const index_d$5_NONE: typeof NONE;
+declare const index_d$5_BLACK: typeof BLACK;
+declare const index_d$5_WHITE: typeof WHITE;
 declare namespace index_d$5 {
   export {
     index_d$5_ColorData as ColorData,
@@ -143,13 +139,14 @@ declare namespace index_d$5 {
     make$b as make,
     from$4 as from,
     index_d$5_separate as separate,
-    index_d$5_swap as swap,
     index_d$5_relativeLuminance as relativeLuminance,
     index_d$5_distance as distance,
     index_d$5_smoothScalar as smoothScalar,
     install$3 as install,
     index_d$5_installSpread as installSpread,
     index_d$5_NONE as NONE,
+    index_d$5_BLACK as BLACK,
+    index_d$5_WHITE as WHITE,
   };
 }
 
@@ -935,6 +932,9 @@ declare class Buffer$1 {
     mix(color: ColorBase, percent: number): this;
     mix(color: ColorBase, percent: number, x: number, y: number): this;
     mix(color: ColorBase, percent: number, x: number, y: number, width: number, height: number): this;
+    blend(color: ColorBase): this;
+    blend(color: ColorBase, x: number, y: number): this;
+    blend(color: ColorBase, x: number, y: number, width: number, height: number): this;
     dump(): void;
 }
 declare function make$6(width: number, height: number): Buffer$1;
