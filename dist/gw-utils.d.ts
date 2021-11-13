@@ -482,6 +482,13 @@ declare class Random {
     number(max?: number): number;
     int(max?: number): number;
     range(lo: number, hi: number): number;
+    /**
+     * @param mean Mean value
+     * @param stddev Standard deviation. ~95% of the absolute values will be lower than 2*stddev.
+     * @returns A normally distributed pseudorandom value
+     * @see: https://github.com/ondras/rot.js/blob/v2.2.0/src/rng.ts
+     */
+    normal(mean?: number, stddev?: number): number;
     dice(count: number, sides: number, addend?: number): number;
     weighted(weights: WeightedArray): number;
     weighted(weights: WeightedObject): string;

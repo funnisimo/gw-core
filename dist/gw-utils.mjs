@@ -1041,6 +1041,22 @@ class Random {
         const diff = hi - lo + 1;
         return lo + this.number(diff);
     }
+    /**
+     * @param mean Mean value
+     * @param stddev Standard deviation. ~95% of the absolute values will be lower than 2*stddev.
+     * @returns A normally distributed pseudorandom value
+     * @see: https://github.com/ondras/rot.js/blob/v2.2.0/src/rng.ts
+     */
+    normal(mean = 0, stddev = 1) {
+        let u, v, r;
+        do {
+            u = 2 * this.value() - 1;
+            v = 2 * this.value() - 1;
+            r = u * u + v * v;
+        } while (r > 1 || r == 0);
+        let gauss = u * Math.sqrt(-2 * Math.log(r) / r);
+        return mean + gauss * stddev;
+    }
     dice(count, sides, addend = 0) {
         let total = 0;
         let mult = 1;
