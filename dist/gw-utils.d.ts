@@ -85,11 +85,11 @@ declare function fromArray(vals: ColorData, base256?: boolean): Color;
 declare function fromCss(css: string): Color;
 declare function fromName(name: string): Color;
 declare function fromNumber(val: number, base256?: boolean): Color;
-declare function make$b(): Color;
-declare function make$b(rgb: number, base256?: boolean): Color;
-declare function make$b(color?: ColorBase | null): Color;
-declare function make$b(arrayLike: ColorData, base256?: boolean): Color;
-declare function make$b(...rgb: number[]): Color;
+declare function make$c(): Color;
+declare function make$c(rgb: number, base256?: boolean): Color;
+declare function make$c(color?: ColorBase | null): Color;
+declare function make$c(arrayLike: ColorData, base256?: boolean): Color;
+declare function make$c(...rgb: number[]): Color;
 declare function from$4(): Color;
 declare function from$4(rgb: number, base256?: boolean): Color;
 declare function from$4(color?: ColorBase | null): Color;
@@ -136,7 +136,7 @@ declare namespace index_d$5 {
     index_d$5_fromCss as fromCss,
     index_d$5_fromName as fromName,
     index_d$5_fromNumber as fromNumber,
-    make$b as make,
+    make$c as make,
     from$4 as from,
     index_d$5_separate as separate,
     index_d$5_relativeLuminance as relativeLuminance,
@@ -506,7 +506,7 @@ declare class Random {
 }
 declare const random: Random;
 declare const cosmetic: Random;
-declare function make$a(seed?: number): Random;
+declare function make$b(seed?: number): Random;
 
 type rng_d_WeightedArray = WeightedArray;
 type rng_d_WeightedObject = WeightedObject;
@@ -528,7 +528,7 @@ declare namespace rng_d {
     rng_d_Random as Random,
     rng_d_random as random,
     rng_d_cosmetic as cosmetic,
-    make$a as make,
+    make$b as make,
   };
 }
 
@@ -543,8 +543,8 @@ declare class Range {
     copy(other: Range): this;
     toString(): string;
 }
-declare function make$9(config: RangeBase | null): Range;
-declare const from$3: typeof make$9;
+declare function make$a(config: RangeBase | null): Range;
+declare const from$3: typeof make$a;
 declare function asFn(config: RangeBase | null): () => number;
 
 type range_d_RangeBase = RangeBase;
@@ -555,7 +555,7 @@ declare namespace range_d {
   export {
     range_d_RangeBase as RangeBase,
     range_d_Range as Range,
-    make$9 as make,
+    make$a as make,
     from$3 as from,
     range_d_asFn as asFn,
   };
@@ -566,7 +566,7 @@ declare type FlagBase = FlagSource | FlagSource[] | null;
 declare function fl(N: number): number;
 declare function toString<T>(flagObj: T, value: number): string;
 declare function from$2<T>(obj: T, ...args: (FlagBase | undefined)[]): number;
-declare function make$8(obj: Record<string, FlagBase>): Record<string, number>;
+declare function make$9(obj: Record<string, FlagBase>): Record<string, number>;
 
 type flag_d_FlagBase = FlagBase;
 declare const flag_d_fl: typeof fl;
@@ -577,7 +577,7 @@ declare namespace flag_d {
     flag_d_fl as fl,
     flag_d_toString as toString,
     from$2 as from,
-    make$8 as make,
+    make$9 as make,
   };
 }
 
@@ -705,8 +705,8 @@ declare class NumGrid extends Grid<number> {
 }
 declare const alloc: typeof NumGrid.alloc;
 declare const free: typeof NumGrid.free;
-declare function make$7<T>(w: number, h: number, v?: number | GridInit<number>): NumGrid;
-declare function make$7<T>(w: number, h: number, v?: T | GridInit<T>): Grid<T>;
+declare function make$8<T>(w: number, h: number, v?: number | GridInit<number>): NumGrid;
+declare function make$8<T>(w: number, h: number, v?: T | GridInit<T>): Grid<T>;
 declare type GridZip<T, U> = (destVal: T, sourceVal: U, destX: number, destY: number, sourceX: number, sourceY: number, destGrid: Grid<T>, sourceGrid: Grid<U>) => void;
 declare function offsetZip<T, U>(destGrid: Grid<T>, srcGrid: Grid<U>, srcToDestX: number, srcToDestY: number, value: T | GridZip<T, U>): void;
 declare function intersection(onto: NumGrid, a: NumGrid, b?: NumGrid): void;
@@ -746,7 +746,7 @@ declare namespace grid_d {
     grid_d_NumGrid as NumGrid,
     grid_d_alloc as alloc,
     grid_d_free as free,
-    make$7 as make,
+    make$8 as make,
     grid_d_GridZip as GridZip,
     grid_d_offsetZip as offsetZip,
     grid_d_intersection as intersection,
@@ -944,14 +944,14 @@ declare class Buffer$1 {
     blend(color: ColorBase, x: number, y: number, width: number, height: number): this;
     dump(): void;
 }
-declare function make$6(width: number, height: number): Buffer$1;
+declare function make$7(width: number, height: number): Buffer$1;
 
 type buffer_d_DrawData = DrawData;
 declare namespace buffer_d {
   export {
     buffer_d_DrawData as DrawData,
     Buffer$1 as Buffer,
-    make$6 as make,
+    make$7 as make,
   };
 }
 
@@ -1030,7 +1030,7 @@ declare class Loop {
     waitForAck(): Promise<boolean | null>;
     onkeydown(e: KeyboardEvent): void;
 }
-declare function make$5(): Loop;
+declare function make$6(): Loop;
 declare const loop: Loop;
 
 type io_d_ControlFn = ControlFn;
@@ -1079,7 +1079,7 @@ declare namespace io_d {
     io_d_ignoreKeyEvent as ignoreKeyEvent,
     io_d_makeMouseEvent as makeMouseEvent,
     io_d_Loop as Loop,
-    make$5 as make,
+    make$6 as make,
     io_d_loop as loop,
   };
 }
@@ -1418,7 +1418,7 @@ declare namespace events_d {
 
 declare type FrequencyFn = (danger: number) => number;
 declare type FrequencyConfig = FrequencyFn | number | string | Record<string, number> | null;
-declare function make$4(v?: FrequencyConfig): FrequencyFn;
+declare function make$5(v?: FrequencyConfig): FrequencyFn;
 
 type frequency_d_FrequencyFn = FrequencyFn;
 type frequency_d_FrequencyConfig = FrequencyConfig;
@@ -1426,7 +1426,7 @@ declare namespace frequency_d {
   export {
     frequency_d_FrequencyFn as FrequencyFn,
     frequency_d_FrequencyConfig as FrequencyConfig,
-    make$4 as make,
+    make$5 as make,
   };
 }
 
@@ -1589,8 +1589,8 @@ declare class CanvasGL extends BaseCanvas {
     _render(): void;
 }
 
-declare function make$3(opts: Partial<CanvasOptions>): BaseCanvas;
-declare function make$3(width: number, height: number, opts?: Partial<CanvasOptions>): BaseCanvas;
+declare function make$4(opts: Partial<CanvasOptions>): BaseCanvas;
+declare function make$4(width: number, height: number, opts?: Partial<CanvasOptions>): BaseCanvas;
 
 type index_d$2_BufferTarget = BufferTarget;
 type index_d$2_Buffer = Buffer;
@@ -1620,7 +1620,7 @@ declare namespace index_d$2 {
     index_d$2_BaseCanvas as BaseCanvas,
     index_d$2_Canvas2D as Canvas2D,
     index_d$2_CanvasGL as CanvasGL,
-    make$3 as make,
+    make$4 as make,
   };
 }
 
@@ -1641,11 +1641,11 @@ declare class Sprite implements SpriteData$1 {
     toString(): string;
 }
 declare const sprites: Record<string, Sprite>;
-declare function make$2(): Sprite;
-declare function make$2(bg: ColorBase, opacity?: number): Sprite;
-declare function make$2(ch: string | null, fg: ColorBase | null, bg: ColorBase | null, opacity?: number): Sprite;
-declare function make$2(args: any[]): Sprite;
-declare function make$2(info: Partial<SpriteConfig>): Sprite;
+declare function make$3(): Sprite;
+declare function make$3(bg: ColorBase, opacity?: number): Sprite;
+declare function make$3(ch: string | null, fg: ColorBase | null, bg: ColorBase | null, opacity?: number): Sprite;
+declare function make$3(args: any[]): Sprite;
+declare function make$3(info: Partial<SpriteConfig>): Sprite;
 declare function from$1(name: string): Sprite;
 declare function from$1(config: Partial<SpriteConfig>): Sprite;
 declare function install$2(name: string, bg: ColorBase, opacity?: number): Sprite;
@@ -1674,7 +1674,7 @@ declare namespace index_d$1 {
     index_d$1_SpriteConfig as SpriteConfig,
     index_d$1_Sprite as Sprite,
     index_d$1_sprites as sprites,
-    make$2 as make,
+    make$3 as make,
     from$1 as from,
     install$2 as install,
     index_d$1_DrawInfo as DrawInfo,
@@ -1774,7 +1774,7 @@ declare class Blob {
     _cellularAutomataRound(grid: NumGrid): boolean;
 }
 declare function fillBlob(grid: NumGrid, opts?: Partial<BlobConfig>): Bounds;
-declare function make$1(opts?: Partial<BlobConfig>): Blob;
+declare function make$2(opts?: Partial<BlobConfig>): Blob;
 
 type blob_d_BlobConfig = BlobConfig;
 type blob_d_Blob = Blob;
@@ -1785,7 +1785,7 @@ declare namespace blob_d {
     blob_d_BlobConfig as BlobConfig,
     blob_d_Blob as Blob,
     blob_d_fillBlob as fillBlob,
-    make$1 as make,
+    make$2 as make,
   };
 }
 
@@ -1857,8 +1857,8 @@ declare class Light implements LightType {
 declare function intensity(light: Color | LightValue): number;
 declare function isDarkLight(light: Color | LightValue, threshold?: number): boolean;
 declare function isShadowLight(light: Color | LightValue, threshold?: number): boolean;
-declare function make(color: ColorBase, radius?: RangeBase, fadeTo?: number, pass?: boolean): Light;
-declare function make(light: LightBase): Light;
+declare function make$1(color: ColorBase, radius?: RangeBase, fadeTo?: number, pass?: boolean): Light;
+declare function make$1(light: LightBase): Light;
 declare const lights: Record<string, Light>;
 declare function from(light: LightBase | LightType): Light;
 declare function install(id: string, color: ColorBase, radius: RangeBase, fadeTo?: number, pass?: boolean): Light;
@@ -1925,7 +1925,6 @@ declare const index_d_Light: typeof Light;
 declare const index_d_intensity: typeof intensity;
 declare const index_d_isDarkLight: typeof isDarkLight;
 declare const index_d_isShadowLight: typeof isShadowLight;
-declare const index_d_make: typeof make;
 declare const index_d_lights: typeof lights;
 declare const index_d_from: typeof from;
 declare const index_d_install: typeof install;
@@ -1948,7 +1947,7 @@ declare namespace index_d {
     index_d_intensity as intensity,
     index_d_isDarkLight as isDarkLight,
     index_d_isShadowLight as isShadowLight,
-    index_d_make as make,
+    make$1 as make,
     index_d_lights as lights,
     index_d_from as from,
     index_d_install as install,
@@ -1959,4 +1958,76 @@ declare namespace index_d {
   };
 }
 
-export { ERROR, FALSE, IDENTITY, IS_NONZERO, IS_ZERO, NOOP, ONE, TRUE, WARN, ZERO, arrayDelete, arrayFindRight, arrayIncludesAll, arrayInsert, arrayNext, arrayPrev, arraysIntersect, blob_d as blob, buffer_d as buffer, index_d$2 as canvas, clamp, index_d$5 as color, colors, config$1 as config, data, events_d as events, first, flag_d as flag, index_d$3 as fov, frequency_d as frequency, grid_d as grid, io_d as io, index_d as light, list_d as list, loop, message_d as message, nextIndex, object_d as object, path_d as path, prevIndex, range_d as range, rng_d as rng, scheduler_d as scheduler, index_d$1 as sprite, sprites, sum, index_d$4 as text, types_d as types, xy_d as xy };
+declare type Prop = number;
+declare type Props = Record<string, Prop>;
+declare type TweenCb<T extends Props> = (obj: T, dt: number) => any;
+declare type EasingFn = (v: number) => number;
+declare type InterpolateFn = (start: any, goal: any, pct: number) => any;
+declare class Tween<T extends Props> {
+    _obj: T;
+    _repeat: number;
+    _count: number;
+    _duration: number;
+    _delay: number;
+    _repeatDelay: number;
+    _yoyo: boolean;
+    _time: number;
+    _startTime: number;
+    _goal: Props;
+    _start: Props;
+    _startCb: TweenCb<T> | null;
+    _updateCb: TweenCb<T> | null;
+    _repeatCb: TweenCb<T> | null;
+    _finishCb: TweenCb<T> | null;
+    _easing: EasingFn;
+    _interpolate: InterpolateFn;
+    constructor(src: T);
+    isRunning(): boolean;
+    onStart(cb: TweenCb<T>): this;
+    onUpdate(cb: TweenCb<T>): this;
+    onRepeat(cb: TweenCb<T>): this;
+    onFinish(cb: TweenCb<T>): this;
+    to(goal: Props, duration?: number): this;
+    duration(): number;
+    duration(v: number): this;
+    repeat(): number;
+    repeat(v: number): this;
+    delay(): number;
+    delay(v: number): this;
+    repeatDelay(): number;
+    repeatDelay(v: number): this;
+    yoyo(): boolean;
+    yoyo(v: boolean): this;
+    start(): this;
+    tick(dt: number): this;
+    _updateProperties(obj: T, start: Props, goal: Props, pct: number): boolean;
+}
+declare function make<T extends Props>(src: T): Tween<T>;
+declare function linear(pct: number): number;
+declare function interpolate(start: any, goal: any, pct: number): any;
+
+type tween_d_Prop = Prop;
+type tween_d_Props = Props;
+type tween_d_TweenCb<_0> = TweenCb<_0>;
+type tween_d_EasingFn = EasingFn;
+type tween_d_InterpolateFn = InterpolateFn;
+type tween_d_Tween<_0> = Tween<_0>;
+declare const tween_d_Tween: typeof Tween;
+declare const tween_d_make: typeof make;
+declare const tween_d_linear: typeof linear;
+declare const tween_d_interpolate: typeof interpolate;
+declare namespace tween_d {
+  export {
+    tween_d_Prop as Prop,
+    tween_d_Props as Props,
+    tween_d_TweenCb as TweenCb,
+    tween_d_EasingFn as EasingFn,
+    tween_d_InterpolateFn as InterpolateFn,
+    tween_d_Tween as Tween,
+    tween_d_make as make,
+    tween_d_linear as linear,
+    tween_d_interpolate as interpolate,
+  };
+}
+
+export { ERROR, FALSE, IDENTITY, IS_NONZERO, IS_ZERO, NOOP, ONE, TRUE, WARN, ZERO, arrayDelete, arrayFindRight, arrayIncludesAll, arrayInsert, arrayNext, arrayPrev, arraysIntersect, blob_d as blob, buffer_d as buffer, index_d$2 as canvas, clamp, index_d$5 as color, colors, config$1 as config, data, events_d as events, first, flag_d as flag, index_d$3 as fov, frequency_d as frequency, grid_d as grid, io_d as io, index_d as light, list_d as list, loop, message_d as message, nextIndex, object_d as object, path_d as path, prevIndex, range_d as range, rng_d as rng, scheduler_d as scheduler, index_d$1 as sprite, sprites, sum, index_d$4 as text, tween_d as tween, types_d as types, xy_d as xy };

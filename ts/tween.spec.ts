@@ -196,4 +196,25 @@ describe('Tween', () => {
 
         expect(totalTime).toEqual(0 + 1000 + 500 + 1000 + 500 + 1000);
     });
+
+    test('yoyo', () => {
+        const obj = { x: 0, y: 0 };
+        const tween = Tween.make(obj)
+            .to({
+                x: 10,
+            })
+            .duration(1000)
+            .repeat(2)
+            .yoyo(true)
+            .start();
+
+        expect(tween.yoyo()).toBeTruthy();
+
+        while (tween.isRunning()) {
+            tween.tick(100);
+        }
+
+        // end up back where we started
+        expect(obj.x).toEqual(0);
+    });
 });

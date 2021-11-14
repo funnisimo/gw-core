@@ -17,7 +17,8 @@ export class Tween<T extends Props> {
 
     _duration = 0;
     _delay = 0;
-    _repeatDelay = 0;
+    _repeatDelay = -1;
+    _yoyo = false;
 
     _time = Number.MAX_SAFE_INTEGER;
     _startTime = 0;
@@ -99,7 +100,13 @@ export class Tween<T extends Props> {
         return this;
     }
 
-    // TODO - yoyo
+    yoyo(): boolean;
+    yoyo(v: boolean): this;
+    yoyo(v?: boolean): this | boolean {
+        if (v === undefined) return this._yoyo;
+        this._yoyo = v;
+        return this;
+    }
 
     start(): this {
         this._time = 0;
@@ -149,8 +156,12 @@ export class Tween<T extends Props> {
                     (<Props>this._obj)[key] = value;
                 });
                 this._time -= this._duration;
-                this._startTime = this._repeatDelay;
+                this._startTime =
+                    this._repeatDelay > -1 ? this._repeatDelay : this._delay;
                 ++this._count;
+                if (this._yoyo) {
+                    [this._start, this._goal] = [this._goal, this._start];
+                }
                 if (this._repeatCb) this._repeatCb(this._obj, this._count);
             } else if (this._finishCb) this._finishCb(this._obj, 1);
         }

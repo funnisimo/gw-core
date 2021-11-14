@@ -26,3 +26,4 @@ export * from './gw';
 export { loop } from './io';
 export * as blob from './blob';
 export * as light from './light';
+export * as tween from './tween';
