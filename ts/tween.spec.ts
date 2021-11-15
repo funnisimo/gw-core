@@ -217,4 +217,30 @@ describe('Tween', () => {
         // end up back where we started
         expect(obj.x).toEqual(0);
     });
+
+    test('from', () => {
+        const obj = { x: 0, y: 0 };
+        const tween = Tween.make(obj)
+            .from(
+                {
+                    x: 10,
+                },
+                1000
+            )
+            .start();
+
+        expect(tween.isRunning()).toBeTruthy();
+        expect(obj.x).toEqual(10);
+
+        tween.tick(50);
+        expect(obj.x).toEqual(9);
+        tween.tick(50);
+        expect(obj.x).toEqual(9);
+        tween.tick(400);
+        expect(obj.x).toEqual(5);
+        tween.tick(500);
+        expect(obj.x).toEqual(0);
+
+        expect(tween.isRunning()).toBeFalsy();
+    });
 });

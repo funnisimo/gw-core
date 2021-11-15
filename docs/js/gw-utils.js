@@ -2,7 +2,7 @@
     typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
     typeof define === 'function' && define.amd ? define(['exports'], factory) :
     (global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global.GWU = {}));
-}(this, (function (exports) { 'use strict';
+})(this, (function (exports) { 'use strict';
 
     /**
      * GW.utils
@@ -7037,6 +7037,7 @@ void main() {
         constructor(src) {
             this._repeat = 0;
             this._count = 0;
+            this._from = false;
             this._duration = 0;
             this._delay = 0;
             this._repeatDelay = -1;
@@ -7074,6 +7075,14 @@ void main() {
         }
         to(goal, duration) {
             this._goal = goal;
+            this._from = false;
+            if (duration !== undefined)
+                this._duration = duration;
+            return this;
+        }
+        from(start, duration) {
+            this._start = start;
+            this._from = true;
             if (duration !== undefined)
                 this._duration = duration;
             return this;
@@ -7112,8 +7121,15 @@ void main() {
             this._time = 0;
             this._startTime = this._delay;
             this._count = 0;
-            this._start = {};
-            Object.keys(this._goal).forEach((key) => (this._start[key] = this._obj[key]));
+            if (this._from) {
+                this._goal = {};
+                Object.keys(this._start).forEach((key) => (this._goal[key] = this._obj[key]));
+                this._updateProperties(this._obj, this._start, this._goal, 0);
+            }
+            else {
+                this._start = {};
+                Object.keys(this._goal).forEach((key) => (this._start[key] = this._obj[key]));
+            }
             return this;
         }
         tick(dt) {
@@ -7129,13 +7145,13 @@ void main() {
             if (this._count === 0) {
                 this._count = 1;
                 if (this._startCb) {
-                    this._startCb(this._obj, 0);
+                    this._startCb.call(this, this._obj, 0);
                 }
             }
             const pct = this._easing(this._time / this._duration);
             let madeChange = this._updateProperties(this._obj, this._start, this._goal, pct);
             if (madeChange && this._updateCb) {
-                this._updateCb(this._obj, pct);
+                this._updateCb.call(this, this._obj, pct);
             }
             if (this._time >= this._duration) {
                 if (this._repeat > this._count) {
@@ -7151,10 +7167,10 @@ void main() {
                         [this._start, this._goal] = [this._goal, this._start];
                     }
                     if (this._repeatCb)
-                        this._repeatCb(this._obj, this._count);
+                        this._repeatCb.call(this, this._obj, this._count);
                 }
                 else if (this._finishCb)
-                    this._finishCb(this._obj, 1);
+                    this._finishCb.call(this, this._obj, 1);
             }
             return this;
         }
@@ -7244,5 +7260,5 @@ void main() {
 
     Object.defineProperty(exports, '__esModule', { value: true });
 
-})));
+}));
 //# sourceMappingURL=gw-utils.js.map

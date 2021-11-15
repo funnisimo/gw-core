@@ -1,19 +1,18 @@
 // Tweeing API based on - http://tweenjs.github.io/tween.js/
 import * as Utils from './utils';
 
-export type Prop = number;
-export type Props = Record<string, Prop>;
-
-export type TweenCb<T extends Props> = (obj: T, dt: number) => any;
+export type AnyObj = Record<string, any>;
+export type TweenCb = (obj: AnyObj, dt: number) => any;
 
 export type EasingFn = (v: number) => number;
 export type InterpolateFn = (start: any, goal: any, pct: number) => any;
 
-export class Tween<T extends Props> {
-    _obj: T;
+export class Tween {
+    _obj: AnyObj;
 
     _repeat = 0;
     _count = 0;
+    _from = false;
 
     _duration = 0;
     _delay = 0;
@@ -23,18 +22,18 @@ export class Tween<T extends Props> {
     _time = Number.MAX_SAFE_INTEGER;
     _startTime = 0;
 
-    _goal: Props = {};
-    _start: Props = {};
+    _goal: AnyObj = {};
+    _start: AnyObj = {};
 
-    _startCb: TweenCb<T> | null = null;
-    _updateCb: TweenCb<T> | null = null;
-    _repeatCb: TweenCb<T> | null = null;
-    _finishCb: TweenCb<T> | null = null;
+    _startCb: TweenCb | null = null;
+    _updateCb: TweenCb | null = null;
+    _repeatCb: TweenCb | null = null;
+    _finishCb: TweenCb | null = null;
 
     _easing: EasingFn = linear;
     _interpolate: InterpolateFn = interpolate;
 
-    constructor(src: T) {
+    constructor(src: AnyObj) {
         this._obj = src;
     }
 
@@ -42,28 +41,36 @@ export class Tween<T extends Props> {
         return this._time < this._duration;
     }
 
-    onStart(cb: TweenCb<T>): this {
+    onStart(cb: TweenCb): this {
         this._startCb = cb;
         return this;
     }
 
-    onUpdate(cb: TweenCb<T>): this {
+    onUpdate(cb: TweenCb): this {
         this._updateCb = cb;
         return this;
     }
 
-    onRepeat(cb: TweenCb<T>): this {
+    onRepeat(cb: TweenCb): this {
         this._repeatCb = cb;
         return this;
     }
 
-    onFinish(cb: TweenCb<T>): this {
+    onFinish(cb: TweenCb): this {
         this._finishCb = cb;
         return this;
     }
 
-    to(goal: Props, duration?: number): this {
+    to(goal: AnyObj, duration?: number): this {
         this._goal = goal;
+        this._from = false;
+        if (duration !== undefined) this._duration = duration;
+        return this;
+    }
+
+    from(start: AnyObj, duration?: number): this {
+        this._start = start;
+        this._from = true;
         if (duration !== undefined) this._duration = duration;
         return this;
     }
@@ -112,10 +119,19 @@ export class Tween<T extends Props> {
         this._time = 0;
         this._startTime = this._delay;
         this._count = 0;
-        this._start = {};
-        Object.keys(this._goal).forEach(
-            (key) => (this._start[key] = this._obj[key])
-        );
+        if (this._from) {
+            this._goal = {};
+            Object.keys(this._start).forEach(
+                (key) => (this._goal[key] = this._obj[key])
+            );
+            this._updateProperties(this._obj, this._start, this._goal, 0);
+        } else {
+            this._start = {};
+            Object.keys(this._goal).forEach(
+                (key) => (this._start[key] = this._obj[key])
+            );
+        }
+
         return this;
     }
 
@@ -132,7 +148,7 @@ export class Tween<T extends Props> {
         if (this._count === 0) {
             this._count = 1;
             if (this._startCb) {
-                this._startCb(this._obj, 0);
+                this._startCb.call(this, this._obj, 0);
             }
         }
 
@@ -146,14 +162,14 @@ export class Tween<T extends Props> {
         );
 
         if (madeChange && this._updateCb) {
-            this._updateCb(this._obj, pct);
+            this._updateCb.call(this, this._obj, pct);
         }
 
         if (this._time >= this._duration) {
             if (this._repeat > this._count) {
                 // reset starting values
                 Object.entries(this._start).forEach(([key, value]) => {
-                    (<Props>this._obj)[key] = value;
+                    this._obj[key] = value;
                 });
                 this._time -= this._duration;
                 this._startTime =
@@ -162,20 +178,26 @@ export class Tween<T extends Props> {
                 if (this._yoyo) {
                     [this._start, this._goal] = [this._goal, this._start];
                 }
-                if (this._repeatCb) this._repeatCb(this._obj, this._count);
-            } else if (this._finishCb) this._finishCb(this._obj, 1);
+                if (this._repeatCb)
+                    this._repeatCb.call(this, this._obj, this._count);
+            } else if (this._finishCb) this._finishCb.call(this, this._obj, 1);
         }
         return this;
     }
 
-    _updateProperties(obj: T, start: Props, goal: Props, pct: number): boolean {
+    _updateProperties(
+        obj: AnyObj,
+        start: AnyObj,
+        goal: AnyObj,
+        pct: number
+    ): boolean {
         let madeChange = false;
         Object.entries(goal).forEach(([field, goalV]) => {
             const currentV = obj[field];
             const startV = start[field];
             const updatedV = this._interpolate(startV, goalV, pct);
             if (updatedV !== currentV) {
-                (<Props>obj)[field] = updatedV;
+                obj[field] = updatedV;
                 madeChange = true;
             }
         });
@@ -183,7 +205,7 @@ export class Tween<T extends Props> {
     }
 }
 
-export function make<T extends Props>(src: T): Tween<T> {
+export function make(src: AnyObj): Tween {
     return new Tween(src);
 }
 
