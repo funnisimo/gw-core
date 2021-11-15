@@ -3475,8 +3475,7 @@
             return this;
         }
         drawText(x, y, text, fg = 0xfff, bg = -1, maxWidth = 0, align = 'left') {
-            if (!this.hasXY(x, y))
-                return 0;
+            // if (!this.hasXY(x, y)) return 0;
             if (typeof fg !== 'number')
                 fg = from$2(fg);
             if (typeof bg !== 'number')
@@ -3498,8 +3497,7 @@
             return 1; // used 1 line
         }
         wrapText(x, y, width, text, fg = 0xfff, bg = -1, indent = 0) {
-            if (!this.hasXY(x, y))
-                return 0;
+            // if (!this.hasXY(x, y)) return 0;
             if (typeof fg !== 'number')
                 fg = from$2(fg);
             if (typeof bg !== 'number')

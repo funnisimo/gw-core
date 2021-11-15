@@ -195,7 +195,7 @@ export class Buffer {
         maxWidth = 0,
         align: Text.Align = 'left'
     ): number {
-        if (!this.hasXY(x, y)) return 0;
+        // if (!this.hasXY(x, y)) return 0;
 
         if (typeof fg !== 'number') fg = Color.from(fg);
         if (typeof bg !== 'number') bg = Color.from(bg);
@@ -229,7 +229,7 @@ export class Buffer {
         bg: Color.ColorBase = -1,
         indent = 0
     ): number {
-        if (!this.hasXY(x, y)) return 0;
+        // if (!this.hasXY(x, y)) return 0;
 
         if (typeof fg !== 'number') fg = Color.from(fg);
         if (typeof bg !== 'number') bg = Color.from(bg);
