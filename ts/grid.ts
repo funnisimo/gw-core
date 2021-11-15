@@ -1,4 +1,4 @@
-import { xy } from '.';
+import * as xy from './xy';
 import { random } from './rng';
 import * as Utils from './utils';
 import * as XY from './xy';
