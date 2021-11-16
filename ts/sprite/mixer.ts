@@ -1,10 +1,9 @@
-import * as Color from "../color";
-import { SpriteType } from "../types";
-import * as Utils from "../utils";
-import { make } from "../gw";
+import * as Color from '../color';
+import { SpriteData } from '../types';
+import * as Utils from '../utils';
 
 export interface DrawInfo {
-    ch: string | number;
+    ch: string | number | null;
     fg: Color.ColorBase;
     bg: Color.ColorBase;
 }
@@ -16,18 +15,18 @@ export class Mixer implements DrawInfo {
 
     constructor(base?: Partial<DrawInfo>) {
         this.ch = Utils.first(base?.ch, -1);
-        this.fg = Color.from(base?.fg);
-        this.bg = Color.from(base?.bg);
+        this.fg = Color.make(base?.fg);
+        this.bg = Color.make(base?.bg);
     }
 
     protected _changed() {
         return this;
     }
 
-    copy(other: DrawInfo) {
-        this.ch = other.ch;
-        this.fg.copy(other.fg);
-        this.bg.copy(other.bg);
+    copy(other: Partial<DrawInfo>) {
+        this.ch = other.ch || -1;
+        this.fg = Color.from(other.fg);
+        this.bg = Color.from(other.bg);
         return this._changed();
     }
 
@@ -45,17 +44,21 @@ export class Mixer implements DrawInfo {
         );
     }
 
+    get dances(): boolean {
+        return this.fg.dances || this.bg.dances;
+    }
+
     nullify() {
         this.ch = -1;
-        this.fg.nullify();
-        this.bg.nullify();
+        this.fg = Color.NONE;
+        this.bg = Color.NONE;
         return this._changed();
     }
 
     blackOut() {
-        this.ch = 0;
-        this.fg.blackOut();
-        this.bg.blackOut();
+        this.ch = -1;
+        this.fg = Color.BLACK;
+        this.bg = Color.BLACK;
         return this._changed();
     }
 
@@ -69,25 +72,28 @@ export class Mixer implements DrawInfo {
         }
         if (fg !== -1 && fg !== null) {
             fg = Color.from(fg);
-            this.fg.copy(fg);
+            this.fg = this.fg.blend(fg);
         }
         if (bg !== -1 && bg !== null) {
             bg = Color.from(bg);
-            this.bg.copy(bg);
+            this.bg = this.bg.blend(bg);
         }
         return this._changed();
     }
 
-    drawSprite(info: SpriteType, opacity?: number) {
-        if (opacity === undefined) opacity = info.opacity;
+    drawSprite(src: SpriteData | Mixer, opacity?: number) {
+        if (src === this) return this;
+
+        // @ts-ignore
+        if (opacity === undefined) opacity = src.opacity;
         if (opacity === undefined) opacity = 100;
         if (opacity <= 0) return;
 
-        if ((info.ch && info.ch !== -1) || info.ch === 0) this.ch = info.ch;
-        if ((info.fg && info.fg !== -1) || info.fg === 0)
-            this.fg.mix(info.fg, opacity);
-        if ((info.bg && info.bg !== -1) || info.bg === 0)
-            this.bg.mix(info.bg, opacity);
+        if (src.ch) this.ch = src.ch;
+        if ((src.fg && src.fg !== -1) || src.fg === 0)
+            this.fg = this.fg.mix(src.fg, opacity);
+        if ((src.bg && src.bg !== -1) || src.bg === 0)
+            this.bg = this.bg.mix(src.bg, opacity);
         return this._changed();
     }
 
@@ -99,21 +105,27 @@ export class Mixer implements DrawInfo {
     multiply(color: Color.ColorBase, fg = true, bg = true) {
         color = Color.from(color);
         if (fg) {
-            this.fg.multiply(color);
+            this.fg = this.fg.multiply(color);
         }
         if (bg) {
-            this.bg.multiply(color);
+            this.bg = this.bg.multiply(color);
         }
+        return this._changed();
+    }
+
+    scale(multiplier: number, fg = true, bg = true) {
+        if (fg) this.fg = this.fg.scale(multiplier);
+        if (bg) this.bg = this.bg.scale(multiplier);
         return this._changed();
     }
 
     mix(color: Color.ColorBase, fg = 50, bg = fg) {
         color = Color.from(color);
         if (fg > 0) {
-            this.fg.mix(color, fg);
+            this.fg = this.fg.mix(color, fg);
         }
         if (bg > 0) {
-            this.bg.mix(color, bg);
+            this.bg = this.bg.mix(color, bg);
         }
         return this._changed();
     }
@@ -121,22 +133,22 @@ export class Mixer implements DrawInfo {
     add(color: Color.ColorBase, fg = 100, bg = fg) {
         color = Color.from(color);
         if (fg > 0) {
-            this.fg.add(color, fg);
+            this.fg = this.fg.add(color, fg);
         }
         if (bg > 0) {
-            this.bg.add(color, bg);
+            this.bg = this.bg.add(color, bg);
         }
         return this._changed();
     }
 
     separate() {
-        Color.separate(this.fg, this.bg);
+        [this.fg, this.bg] = Color.separate(this.fg, this.bg);
         return this._changed();
     }
 
     bake(clearDancing = false) {
-        this.fg.bake(clearDancing);
-        this.bg.bake(clearDancing);
+        this.fg = this.fg.bake(clearDancing);
+        this.bg = this.bg.bake(clearDancing);
         this._changed();
         return {
             ch: this.ch,
@@ -151,6 +163,6 @@ export class Mixer implements DrawInfo {
     }
 }
 
-make.mixer = function (base?: Partial<DrawInfo>) {
+export function makeMixer(base?: Partial<DrawInfo>) {
     return new Mixer(base);
-};
+}

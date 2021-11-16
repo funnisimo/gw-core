@@ -1,18 +1,16 @@
-
-
-
-
-
 export var options = {
-  colorStart: 'Ω',
-  colorEnd: '∆',
-  field: '§',
-  defaultFg: null,
-  defaultBg: null,
+    colorStart: 'Ω', // alt-z
+    colorEnd: '∆', // alt-j
+    field: '§', // alt-6
+    defaultFg: null,
+    defaultBg: null,
 };
 
+export type Align = 'left' | 'center' | 'right';
+export type VAlign = 'top' | 'middle' | 'bottom';
+
 // const RE_RGB = /^[a-fA-F0-9]*$/;
-// 
+//
 // export function parseColor(color:string) {
 //   if (color.startsWith('#')) {
 //     color = color.substring(1);
@@ -37,14 +35,22 @@ export var options = {
 //   return 0xFFF;
 // }
 
-export var helpers: Record<string,Function> = {
-  eachColor: (() => {}),
-  default: ((name:string, _:Record<string,any>, value:any) => {
-    if (value !== undefined) return `${value}.!!${name}!!`;
-    return `!!${name}!!`;
-  }),
+export type HelperFn = (
+    name: string,
+    data?: Record<string, any>,
+    obj?: any
+) => string;
+
+export var helpers: Record<string, HelperFn> = {
+    default: (_name: string, _?: Record<string, any>, _value?: any) => {
+        return '';
+    },
+    debug: (name: string, _?: Record<string, any>, value?: any) => {
+        if (value !== undefined) return `${value}.!!${name}!!`;
+        return `!!${name}!!`;
+    },
 };
 
-export function addHelper(name: string, fn: Function) {
-  helpers[name] = fn;
+export function addHelper(name: string, fn: HelperFn) {
+    helpers[name] = fn;
 }

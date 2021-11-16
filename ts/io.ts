@@ -1,34 +1,93 @@
 import * as Utils from './utils';
-import { make as Make } from './gw';
+import * as XY from './xy';
 
-export interface Event {
-    shiftKey: boolean;
-    ctrlKey: boolean;
-    altKey: boolean;
-    metaKey: boolean;
+export class Event {
+    type!: string;
+    target: any = null;
 
-    type: string;
-    key: string | null;
-    code: string | null;
-    x: number;
-    y: number;
-    clientX: number;
-    clientY: number;
-    dir: Utils.Loc | null;
-    dt: number;
+    // Used in UI
+    defaultPrevented = false;
+    propagationStopped = false;
+    immediatePropagationStopped = false;
+
+    // Key Event
+    key = '';
+    code = '';
+    shiftKey = false;
+    ctrlKey = false;
+    altKey = false;
+    metaKey = false;
+
+    // Dir Event extends KeyEvent
+    dir: XY.Loc | null = null;
+
+    // Mouse Event
+    x = -1;
+    y = -1;
+    clientX = -1;
+    clientY = -1;
+
+    // Tick Event
+    dt = 0;
+
+    constructor(type: string, opts?: Partial<Event>) {
+        this.reset(type, opts);
+    }
+
+    preventDefault() {
+        this.defaultPrevented = true;
+    }
+
+    stopPropagation() {
+        this.propagationStopped = true;
+    }
+
+    stopImmediatePropagation() {
+        this.immediatePropagationStopped = true;
+    }
+
+    reset(type: string, opts?: Partial<Event>) {
+        this.type = type;
+        this.target = null;
+        this.defaultPrevented = false;
+
+        this.shiftKey = false;
+        this.ctrlKey = false;
+        this.altKey = false;
+        this.metaKey = false;
+
+        this.key = '';
+        this.code = '';
+        this.x = -1;
+        this.y = -1;
+        this.dir = null;
+        this.dt = 0;
+        this.target = null;
+        if (opts) {
+            Object.assign(this, opts);
+        }
+    }
 }
 
-export type CommandFn = (event: Event) => Promise<boolean>;
-export var commands: Record<string, CommandFn> = {};
+// export type CommandFn = (
+//     event: Event
+// ) => boolean | void | Promise<boolean | void>;
+// export var commands: Record<string, CommandFn> = {};
 
-export function addCommand(id: string, fn: CommandFn) {
-    commands[id] = fn;
-}
+// export function addCommand(id: string, fn: CommandFn) {
+//     commands[id] = fn;
+// }
 
-export type KeyMap = Record<string, CommandFn | boolean>;
+export type ControlFn = () => void | Promise<void>;
+
+export type EventFn = (
+    event: Event
+) => boolean | void | Promise<boolean | void>;
+
+export type IOMap = Record<string, EventFn | ControlFn>;
 export type EventMatchFn = (event: Event) => boolean;
 
-let KEYMAP: KeyMap = {};
+let IOMAP: IOMap = {};
 
 const DEAD_EVENTS: Event[] = [];
 
@@ -37,6 +96,7 @@ export const MOUSEMOVE = 'mousemove';
 export const CLICK = 'click';
 export const TICK = 'tick';
 export const MOUSEUP = 'mouseup';
+export const STOP = 'stop';
 
 const CONTROL_CODES = [
     'ShiftLeft',
@@ -51,40 +111,51 @@ const CONTROL_CODES = [
 
 type EventHandler = (event: Event) => void;
 
-export function setKeymap(keymap: KeyMap) {
-    KEYMAP = keymap;
+export function setKeymap(keymap: IOMap) {
+    IOMAP = keymap;
 }
 
-export async function dispatchEvent(ev: Event, km?: KeyMap | CommandFn) {
-    let result;
-    let command;
-
-    km = km || KEYMAP;
-
-    if (typeof km === 'function') {
-        command = km;
-    } else if (ev.dir) {
-        command = km.dir;
+export function handlerFor(ev: Event, km: IOMap): EventFn | ControlFn | null {
+    let c;
+    if (ev.dir) {
+        c = km.dir || km.keypress;
     } else if (ev.type === KEYPRESS) {
-        // @ts-ignore
-        command = km[ev.key] || km[ev.code] || km.keypress;
+        c = km[ev.key] || km[ev.code] || km.keypress;
     } else if (km[ev.type]) {
-        command = km[ev.type];
+        c = km[ev.type];
+    }
+    if (!c) {
+        c = km.dispatch;
+    }
+    return c || null;
+}
+
+export async function dispatchEvent(ev: Event, km?: IOMap) {
+    let result;
+
+    km = km || IOMAP;
+
+    if (ev.type === STOP) {
+        recycleEvent(ev);
+        return true; // Should stop loops, etc...
     }
 
-    if (command) {
-        if (typeof command === 'function') {
-            result = await command.call(km, ev);
-        } else if (commands[command]) {
-            result = await commands[command](ev);
-        } else {
-            Utils.WARN('No command found: ' + command);
-        }
+    const handler = handlerFor(ev, km);
+
+    if (handler) {
+        // if (typeof c === 'function') {
+        result = await handler.call(km, ev);
+        // } else if (commands[c]) {
+        //     result = await commands[c](ev);
+        // } else {
+        //     Utils.WARN('No command found: ' + c);
+        // }
     }
 
-    if ('next' in km && km.next === false) {
-        result = false;
-    }
+    // TODO - what is this here for?
+    // if ('next' in km && km.next === false) {
+    //     result = false;
+    // }
 
     recycleEvent(ev);
     return result;
@@ -94,24 +165,27 @@ function recycleEvent(ev: Event) {
     DEAD_EVENTS.push(ev);
 }
 
+// STOP
+
+export function makeStopEvent() {
+    return makeCustomEvent(STOP);
+}
+
+// CUSTOM
+
+export function makeCustomEvent(type: string, opts?: Partial<Event>): Event {
+    const ev = DEAD_EVENTS.pop() || null;
+    if (!ev) return new Event(type, opts);
+
+    ev.reset(type, opts);
+    return ev;
+}
+
 // TICK
 
-export function makeTickEvent(dt: number) {
-    const ev: Event = DEAD_EVENTS.pop() || ({} as Event);
-
-    ev.shiftKey = false;
-    ev.ctrlKey = false;
-    ev.altKey = false;
-    ev.metaKey = false;
-
-    ev.type = TICK;
-    ev.key = null;
-    ev.code = null;
-    ev.x = -1;
-    ev.y = -1;
-    ev.dir = null;
+export function makeTickEvent(dt: number): Event {
+    const ev = makeCustomEvent(TICK);
     ev.dt = dt;
-
     return ev;
 }
 
@@ -137,7 +211,7 @@ export function makeKeyEvent(e: KeyboardEvent) {
         code = '/' + code;
     }
 
-    const ev: Event = DEAD_EVENTS.pop() || ({} as Event);
+    const ev: Event = DEAD_EVENTS.pop() || new Event(KEYPRESS);
 
     ev.shiftKey = e.shiftKey;
     ev.ctrlKey = e.ctrlKey;
@@ -145,6 +219,7 @@ export function makeKeyEvent(e: KeyboardEvent) {
     ev.metaKey = e.metaKey;
 
     ev.type = KEYPRESS;
+    ev.defaultPrevented = false;
     ev.key = key;
     ev.code = code;
     ev.x = -1;
@@ -153,11 +228,12 @@ export function makeKeyEvent(e: KeyboardEvent) {
     ev.clientY = -1;
     ev.dir = keyCodeDirection(e.code);
     ev.dt = 0;
+    ev.target = null;
 
     return ev;
 }
 
-export function keyCodeDirection(key: string): Utils.Loc | null {
+export function keyCodeDirection(key: string): XY.Loc | null {
     const lowerKey = key.toLowerCase();
 
     if (lowerKey === 'arrowup') {
@@ -179,7 +255,7 @@ export function ignoreKeyEvent(e: KeyboardEvent) {
 // MOUSE
 
 export function makeMouseEvent(e: MouseEvent, x: number, y: number) {
-    const ev: Event = DEAD_EVENTS.pop() || ({} as Event);
+    const ev: Event = DEAD_EVENTS.pop() || new Event(e.type);
 
     ev.shiftKey = e.shiftKey;
     ev.ctrlKey = e.ctrlKey;
@@ -190,26 +266,31 @@ export function makeMouseEvent(e: MouseEvent, x: number, y: number) {
     if (e.buttons && e.type !== 'mouseup') {
         ev.type = CLICK;
     }
-    ev.key = null;
-    ev.code = null;
+    ev.defaultPrevented = false;
+    ev.key = '';
+    ev.code = '';
     ev.x = x;
     ev.y = y;
     ev.clientX = e.clientX;
     ev.clientY = e.clientY;
     ev.dir = null;
     ev.dt = 0;
+    ev.target = null;
 
     return ev;
 }
 
 export class Loop {
-    public running = false;
+    public running = true;
     public events: Event[] = [];
-    public mouse: Utils.XY = { x: -1, y: -1 };
+    public mouse: XY.XY = { x: -1, y: -1 };
 
     protected CURRENT_HANDLER: EventHandler | null = null;
     protected PAUSED: EventHandler | null = null;
-    protected LAST_CLICK: Utils.XY = { x: -1, y: -1 };
+    protected LAST_CLICK: XY.XY = { x: -1, y: -1 };
+    protected interval = 0;
+    protected intervalCount = 0;
+    protected ended = false;
 
     constructor() {}
 
@@ -224,7 +305,26 @@ export class Loop {
         }
     }
 
+    protected _startTicks() {
+        ++this.intervalCount;
+        if (this.interval) return;
+        this.interval = (setInterval(() => {
+            const e = makeTickEvent(16);
+            this.pushEvent(e);
+        }, 16) as unknown) as number;
+    }
+
+    protected _stopTicks() {
+        if (!this.intervalCount) return; // too many calls to stop
+        --this.intervalCount;
+        if (this.intervalCount) return; // still have a loop running
+        clearInterval(this.interval);
+        this.interval = 0;
+    }
+
     pushEvent(ev: Event) {
+        if (this.ended) return;
+
         if (this.PAUSED) {
             console.log('PAUSED EVENT', ev.type);
         }
@@ -271,7 +371,7 @@ export class Loop {
         }
     }
 
-    nextEvent(ms?: number, match?: EventMatchFn): Promise<Event | null> {
+    nextEvent(ms = -1, match?: EventMatchFn): Promise<Event | null> {
         match = match || Utils.TRUE;
         let elapsed = 0;
 
@@ -290,13 +390,12 @@ export class Loop {
 
         let done: Function;
 
-        if (ms === undefined) {
-            ms = -1; // wait forever
-        }
-        if (ms == 0) return Promise.resolve(null);
+        if (ms == 0 || this.ended) return Promise.resolve(null);
 
         if (this.CURRENT_HANDLER) {
-            console.warn('OVERWRITE HANDLER - nextEvent');
+            throw new Error(
+                'OVERWRITE HANDLER -- Check for a missing await around Loop function calls.'
+            );
         } else if (this.events.length) {
             console.warn('SET HANDLER WITH QUEUED EVENTS - nextEvent');
         }
@@ -312,39 +411,63 @@ export class Loop {
                 if (elapsed < ms!) {
                     return;
                 }
+                e.dt = elapsed;
             } else if (!match!(e)) return;
 
             this.CURRENT_HANDLER = null;
-            e.dt = elapsed;
             done(e);
         };
 
         return new Promise((resolve) => (done = resolve));
     }
 
-    async run(keymap: KeyMap, ms = -1) {
-        const interval = (setInterval(() => {
-            const e = makeTickEvent(16);
-            this.pushEvent(e);
-        }, 16) as unknown) as number;
+    async run(keymap: IOMap, ms = -1) {
+        if (this.ended) return;
 
         this.running = true;
-        while (this.running) {
+        this.clearEvents(); // ??? Should we do this?
+        this._startTicks();
+
+        if (keymap.start && typeof keymap.start === 'function') {
+            await (<ControlFn>keymap.start)();
+        }
+        let running = true;
+        while (this.running && running) {
+            if (keymap.draw && typeof keymap.draw === 'function') {
+                (<ControlFn>keymap.draw)();
+            }
             const ev = await this.nextEvent(ms);
             if (ev && (await dispatchEvent(ev, keymap))) {
-                this.running = false;
-            }
-            if (keymap.draw && typeof keymap.draw === 'function') {
-                // @ts-ignore
-                keymap.draw();
+                running = false;
             }
         }
 
-        clearInterval(interval);
+        if (keymap.stop && typeof keymap.stop === 'function') {
+            await (<ControlFn>keymap.stop)();
+        }
+
+        this._stopTicks();
     }
 
     stop() {
+        this.clearEvents();
         this.running = false;
+        if (this.interval) {
+            clearInterval(this.interval);
+            this.interval = 0;
+        }
+        if (this.CURRENT_HANDLER) {
+            this.pushEvent(makeStopEvent());
+        }
+        this.CURRENT_HANDLER = null;
+    }
+
+    end() {
+        this.stop();
+        this.ended = true;
+    }
+    start() {
+        this.ended = false;
     }
 
     pauseEvents() {
@@ -410,13 +533,24 @@ export class Loop {
     waitForAck() {
         return this.pause(5 * 60 * 1000); // 5 min
     }
+
+    onkeydown(e: KeyboardEvent) {
+        if (ignoreKeyEvent(e)) return;
+
+        if (e.code === 'Escape') {
+            this.clearEvents(); // clear all current events, then push on the escape
+        }
+
+        const ev = makeKeyEvent(e);
+        this.pushEvent(ev);
+
+        e.preventDefault();
+    }
 }
 
 export function make() {
     return new Loop();
 }
-
-Make.loop = make;
 
 // Makes a default global loop that you access through these funcitons...
 export const loop = make();

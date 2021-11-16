@@ -1,148 +1,188 @@
-import * as Text from "./text/index";
-import * as Types from "./types";
+import * as Text from './text/index';
+import * as GW from './gw';
+import * as XY from './xy';
+import { TRUE } from './utils';
 
 export const templates: Record<string, Text.Template> = {};
 
+GW.config.message = GW.config.message || {};
+
 export function install(id: string, msg: string) {
-  const template = Text.compile(msg);
-  templates[id] = template;
+    const template = Text.compile(msg);
+    templates[id] = template;
+    return template;
 }
 
 export function installAll(config: Record<string, string>) {
-  Object.entries(config).forEach(([id, msg]) => install(id, msg));
+    Object.entries(config).forEach(([id, msg]) => install(id, msg));
 }
 
-// messages
-const ARCHIVE: (string | null)[] = [];
-const CONFIRMED: boolean[] = [];
-var ARCHIVE_LINES = 30;
-var MSG_WIDTH = 80;
-var CURRENT_ARCHIVE_POS = 0;
-var NEEDS_UPDATE = false;
-let COMBAT_MESSAGE: string | null = null;
-
-export function needsUpdate(needs?: boolean) {
-  if (needs) {
-    NEEDS_UPDATE = true;
-  }
-  return NEEDS_UPDATE;
-}
-
-export interface MessageOptions {
-  length: number;
-  width: number;
-}
-
-export function configure(opts: Partial<MessageOptions>) {
-  if (!opts) opts = {};
-  ARCHIVE_LINES = opts.length || 30;
-  MSG_WIDTH = opts.width || 80;
-  for (let i = 0; i < ARCHIVE_LINES; ++i) {
-    ARCHIVE[i] = null;
-    CONFIRMED[i] = false;
-  }
+export function get(msgOrId: string): Text.Template | null {
+    return templates[msgOrId] || null;
 }
 
 ////////////////////////////////////
 // Messages
 
+export interface MessageHandler {
+    addMessage(x: number, y: number, msg: string): void;
+    addCombatMessage(x: number, y: number, msg: string): void;
+}
+
+export const handlers: MessageHandler[] = [];
+
 export function add(msg: string, args?: any) {
-  const template = templates[msg];
-  if (template) {
-    msg = template(args);
-  } else if (args) {
-    msg = Text.apply(msg, args);
-  }
-  commitCombatMessage();
-  addMessage(msg);
+    return addAt(-1, -1, msg, args);
 }
 
-export function fromActor(actor: Types.ActorType, msg: string, args?: any) {
-  if (actor.isPlayer() || actor.isVisible()) {
-    add(msg, args);
-  }
-}
-
-export function addCombat(actor: Types.ActorType, msg: string, args?: any) {
-  if (actor.isPlayer() || actor.isVisible()) {
+export function addAt(x: number, y: number, msg: string, args?: any) {
     const template = templates[msg];
     if (template) {
-      msg = template(args);
+        msg = template(args);
     } else if (args) {
-      msg = Text.apply(msg, args);
+        msg = Text.apply(msg, args);
     }
-    addCombatMessage(msg);
-  }
+    handlers.forEach((h) => h.addMessage(x, y, msg));
 }
 
-// function messageWithoutCaps(msg, requireAcknowledgment) {
-function addMessageLine(msg: string) {
-  if (!Text.length(msg)) {
-    return;
-  }
-
-  // Add the message to the archive.
-  ARCHIVE[CURRENT_ARCHIVE_POS] = msg;
-  CONFIRMED[CURRENT_ARCHIVE_POS] = false;
-  CURRENT_ARCHIVE_POS = (CURRENT_ARCHIVE_POS + 1) % ARCHIVE_LINES;
+export function addCombat(x: number, y: number, msg: string, args?: any) {
+    const template = templates[msg];
+    if (template) {
+        msg = template(args);
+    } else if (args) {
+        msg = Text.apply(msg, args);
+    }
+    handlers.forEach((h) => h.addCombatMessage(x, y, msg));
 }
 
-function addMessage(msg: string) {
-  msg = Text.capitalize(msg);
-
-  // // Implement the American quotation mark/period/comma ordering rule.
-  // for (i=0; text.text[i] && text.text[i+1]; i++) {
-  //     if (text.charCodeAt(i) === COLOR_ESCAPE) {
-  //         i += 4;
-  //     } else if (text.text[i] === '"'
-  //                && (text.text[i+1] === '.' || text.text[i+1] === ','))
-  // 		{
-  // 			const replace = text.text[i+1] + '"';
-  // 			text.spliceRaw(i, 2, replace);
-  //     }
-  // }
-
-  const lines = Text.splitIntoLines(msg, MSG_WIDTH);
-  lines.forEach((l) => addMessageLine(l));
-
-  // display the message:
-  NEEDS_UPDATE = true;
-
-  // if (GAME.playbackMode) {
-  // 	GAME.playbackDelayThisTurn += GAME.playbackDelayPerTurn * 5;
-  // }
-}
-
-function addCombatMessage(msg: string) {
-  if (!COMBAT_MESSAGE) {
-    COMBAT_MESSAGE = msg;
-  } else {
-    COMBAT_MESSAGE += ", " + Text.capitalize(msg);
-  }
-  NEEDS_UPDATE = true;
-}
-
-function commitCombatMessage() {
-  if (!COMBAT_MESSAGE) return false;
-  addMessage(COMBAT_MESSAGE + ".");
-  COMBAT_MESSAGE = null;
-  return true;
-}
-
-export function confirmAll() {
-  for (let i = 0; i < CONFIRMED.length; i++) {
-    CONFIRMED[i] = true;
-  }
-  NEEDS_UPDATE = true;
+export interface CacheOptions {
+    length: number;
+    width: number;
+    match?: XY.XYMatchFunc;
 }
 
 export type EachMsgFn = (msg: string, confirmed: boolean, i: number) => any;
 
-export function forEach(fn: EachMsgFn) {
-  for (let i = 0; i < ARCHIVE_LINES; ++i) {
-    const n = (i + CURRENT_ARCHIVE_POS - 1) % ARCHIVE_LINES;
-    const msg = ARCHIVE[n];
-    if (!msg) return;
-    if (fn(msg, CONFIRMED[n], i) === false) return;
-  }
+export class MessageCache implements MessageHandler {
+    ARCHIVE: (string | null)[] = [];
+    CONFIRMED: boolean[] = [];
+    ARCHIVE_LINES = 30;
+    MSG_WIDTH = 80;
+    NEXT_WRITE_INDEX = 0;
+    NEEDS_UPDATE = true;
+    COMBAT_MESSAGE: string | null = null;
+    matchFn: XY.XYMatchFunc;
+
+    constructor(opts: Partial<CacheOptions> = {}) {
+        this.matchFn = opts.match || TRUE;
+        this.ARCHIVE_LINES = opts.length || 30;
+        this.MSG_WIDTH = opts.width || 80;
+        for (let i = 0; i < this.ARCHIVE_LINES; ++i) {
+            this.ARCHIVE[i] = null;
+            this.CONFIRMED[i] = false;
+        }
+        handlers.push(this);
+    }
+
+    get needsUpdate(): boolean {
+        return this.NEEDS_UPDATE;
+    }
+    set needsUpdate(needs: boolean) {
+        this.NEEDS_UPDATE = needs;
+    }
+
+    // function messageWithoutCaps(msg, requireAcknowledgment) {
+    protected _addMessageLine(msg: string) {
+        if (!Text.length(msg)) {
+            return;
+        }
+
+        // Add the message to the archive.
+        this.ARCHIVE[this.NEXT_WRITE_INDEX] = msg;
+        this.CONFIRMED[this.NEXT_WRITE_INDEX] = false;
+        this.NEXT_WRITE_INDEX =
+            (this.NEXT_WRITE_INDEX + 1) % this.ARCHIVE_LINES;
+    }
+
+    addMessage(x: number, y: number, msg: string) {
+        if (!this.matchFn(x, y)) return;
+        this.commitCombatMessage();
+        this._addMessage(msg);
+    }
+
+    protected _addMessage(msg: string) {
+        msg = Text.capitalize(msg);
+
+        // // Implement the American quotation mark/period/comma ordering rule.
+        // for (i=0; text.text[i] && text.text[i+1]; i++) {
+        //     if (text.charCodeAt(i) === COLOR_ESCAPE) {
+        //         i += 4;
+        //     } else if (text.text[i] === '"'
+        //                && (text.text[i+1] === '.' || text.text[i+1] === ','))
+        // 		{
+        // 			const replace = text.text[i+1] + '"';
+        // 			text.spliceRaw(i, 2, replace);
+        //     }
+        // }
+
+        const lines = Text.splitIntoLines(msg, this.MSG_WIDTH);
+        if (GW.config.message?.reverseMultiLine) {
+            lines.reverse();
+        }
+        lines.forEach((l) => this._addMessageLine(l));
+
+        // display the message:
+        this.NEEDS_UPDATE = true;
+
+        // if (GAME.playbackMode) {
+        // 	GAME.playbackDelayThisTurn += GAME.playbackDelayPerTurn * 5;
+        // }
+    }
+
+    addCombatMessage(x: number, y: number, msg: string) {
+        if (!this.matchFn(x, y)) return;
+        this._addCombatMessage(msg);
+    }
+
+    protected _addCombatMessage(msg: string) {
+        if (!this.COMBAT_MESSAGE) {
+            this.COMBAT_MESSAGE = msg;
+        } else {
+            this.COMBAT_MESSAGE += ', ' + Text.capitalize(msg);
+        }
+        this.NEEDS_UPDATE = true;
+    }
+
+    commitCombatMessage() {
+        if (!this.COMBAT_MESSAGE) return false;
+        this._addMessage(this.COMBAT_MESSAGE + '.');
+        this.COMBAT_MESSAGE = null;
+        return true;
+    }
+
+    confirmAll() {
+        for (let i = 0; i < this.CONFIRMED.length; i++) {
+            this.CONFIRMED[i] = true;
+        }
+        this.NEEDS_UPDATE = true;
+    }
+
+    forEach(fn: EachMsgFn) {
+        this.commitCombatMessage();
+
+        for (let i = 0; i < this.ARCHIVE_LINES; ++i) {
+            const n =
+                (this.ARCHIVE_LINES - i + this.NEXT_WRITE_INDEX - 1) %
+                this.ARCHIVE_LINES;
+            const msg = this.ARCHIVE[n];
+            if (!msg) return;
+            if (fn(msg, this.CONFIRMED[n], i) === false) return;
+        }
+    }
+
+    get length(): number {
+        let count = 0;
+        this.forEach(() => ++count);
+        return count;
+    }
 }
