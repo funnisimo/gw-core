@@ -239,6 +239,7 @@ export class Color {
         const O = from(other);
         if (O.isNull()) return this;
 
+        if (percent >= 100) return O;
         const pct = clamp(percent, 0, 100) / 100;
         const keepPct = 1 - pct;
 

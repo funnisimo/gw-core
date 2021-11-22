@@ -1,5 +1,6 @@
 import * as Utils from './utils';
 import * as XY from './xy';
+import { Animator, Animation } from './tween';
 
 export class Event {
     type!: string;
@@ -280,7 +281,7 @@ export function makeMouseEvent(e: MouseEvent, x: number, y: number) {
     return ev;
 }
 
-export class Loop {
+export class Loop implements Animator {
     public running = true;
     public events: Event[] = [];
     public mouse: XY.XY = { x: -1, y: -1 };
@@ -291,6 +292,7 @@ export class Loop {
     protected interval = 0;
     protected intervalCount = 0;
     protected ended = false;
+    _animations: (Animation | null)[] = [];
 
     constructor() {}
 
@@ -436,9 +438,19 @@ export class Loop {
             if (keymap.draw && typeof keymap.draw === 'function') {
                 (<ControlFn>keymap.draw)();
             }
-            const ev = await this.nextEvent(ms);
-            if (ev && (await dispatchEvent(ev, keymap))) {
-                running = false;
+            if (this._animations.length) {
+                const ev = await this.nextTick();
+                if (ev && ev.dt) {
+                    this._animations.forEach((a) => a && a.tick(ev.dt));
+                    this._animations = this._animations.filter(
+                        (a) => a && a.isRunning()
+                    );
+                }
+            } else {
+                const ev = await this.nextEvent(ms);
+                if (ev && (await dispatchEvent(ev, keymap))) {
+                    running = false;
+                }
             }
         }
 
@@ -505,6 +517,10 @@ export class Loop {
         return new Promise((resolve) => (done = resolve));
     }
 
+    async nextTick(ms = -1) {
+        return this.nextEvent(ms, (e) => e && e.type === TICK);
+    }
+
     async nextKeyPress(ms?: number, match?: EventMatchFn) {
         if (ms === undefined) ms = -1;
         match = match || Utils.TRUE;
@@ -545,6 +561,15 @@ export class Loop {
         this.pushEvent(ev);
 
         e.preventDefault();
+    }
+
+    // Animator
+
+    addAnimation(a: Animation): void {
+        this._animations.push(a);
+    }
+    removeAnimation(a: Animation): void {
+        Utils.arrayNullify(this._animations, a);
     }
 }
 

@@ -7,7 +7,23 @@ export type TweenCb = (obj: AnyObj, dt: number) => any;
 export type EasingFn = (v: number) => number;
 export type InterpolateFn = (start: any, goal: any, pct: number) => any;
 
-export class Tween {
+export interface Animation {
+    isRunning(): boolean;
+
+    start(): void;
+
+    tick(dt: number): boolean;
+    gameTick(dt: number): boolean;
+
+    stop(): void;
+}
+
+export interface Animator {
+    addAnimation(a: Animation): void;
+    removeAnimation(a: Animation): void;
+}
+
+export class Tween implements Animation {
     _obj: AnyObj;
 
     _repeat = 0;
@@ -29,6 +45,7 @@ export class Tween {
     _updateCb: TweenCb | null = null;
     _repeatCb: TweenCb | null = null;
     _finishCb: TweenCb | null = null;
+    _resolveCb: null | ((v?: any) => void) = null;
 
     _easing: EasingFn = linear;
     _interpolate: InterpolateFn = interpolate;
@@ -115,7 +132,7 @@ export class Tween {
         return this;
     }
 
-    start(): this {
+    start(): Promise<boolean> {
         this._time = 0;
         this._startTime = this._delay;
         this._count = 0;
@@ -132,24 +149,24 @@ export class Tween {
             );
         }
 
-        return this;
+        return new Promise((resolve) => {
+            this._resolveCb = resolve;
+        });
     }
 
-    tick(dt: number): this {
-        if (!this.isRunning()) return this;
+    tick(dt: number): boolean {
+        if (!this.isRunning()) return false;
 
         this._time += dt;
         if (this._startTime) {
-            if (this._startTime > this._time) return this;
+            if (this._startTime > this._time) return true;
             this._time -= this._startTime;
             this._startTime = 0;
+            if (this._count > 0) this._restart();
         }
 
         if (this._count === 0) {
-            this._count = 1;
-            if (this._startCb) {
-                this._startCb.call(this, this._obj, 0);
-            }
+            this._restart();
         }
 
         const pct = this._easing(this._time / this._duration);
@@ -167,22 +184,46 @@ export class Tween {
 
         if (this._time >= this._duration) {
             if (this._repeat > this._count) {
-                // reset starting values
-                Object.entries(this._start).forEach(([key, value]) => {
-                    this._obj[key] = value;
-                });
                 this._time -= this._duration;
                 this._startTime =
                     this._repeatDelay > -1 ? this._repeatDelay : this._delay;
-                ++this._count;
                 if (this._yoyo) {
                     [this._start, this._goal] = [this._goal, this._start];
                 }
-                if (this._repeatCb)
-                    this._repeatCb.call(this, this._obj, this._count);
-            } else if (this._finishCb) this._finishCb.call(this, this._obj, 1);
+                if (!this._startTime) {
+                    this._restart();
+                }
+            } else {
+                this.stop(true);
+            }
         }
-        return this;
+        return true;
+    }
+
+    _restart() {
+        ++this._count;
+
+        // reset starting values
+        Object.entries(this._start).forEach(([key, value]) => {
+            this._obj[key] = value;
+        });
+        if (this._count == 1) {
+            if (this._startCb) {
+                this._startCb.call(this, this._obj, 0);
+            }
+        } else if (this._repeatCb) {
+            this._repeatCb.call(this, this._obj, this._count);
+        }
+    }
+
+    gameTick(_dt: number): boolean {
+        return false;
+    }
+
+    stop(success = false): void {
+        this._time = Number.MAX_SAFE_INTEGER;
+        if (this._finishCb) this._finishCb.call(this, this._obj, 1);
+        if (this._resolveCb) this._resolveCb(success);
     }
 
     _updateProperties(
@@ -215,5 +256,8 @@ export function linear(pct: number): number {
 
 // TODO - string, bool, Color
 export function interpolate(start: any, goal: any, pct: number): any {
+    if (typeof start === 'boolean' || typeof goal === 'boolean') {
+        return Math.floor(pct) == 0 ? start : goal;
+    }
     return Math.floor((goal - start) * pct) + start;
 }

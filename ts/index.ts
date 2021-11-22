@@ -27,3 +27,5 @@ export { loop } from './io';
 export * as blob from './blob';
 export * as light from './light';
 export * as tween from './tween';
+export * as ui from './ui';
+export * as widget from './widget';

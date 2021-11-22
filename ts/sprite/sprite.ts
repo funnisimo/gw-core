@@ -3,10 +3,10 @@ import { SpriteData } from '../types';
 import { clamp } from '../utils';
 
 export interface SpriteConfig {
-    ch: string | null;
-    fg: Color.ColorBase | null;
-    bg: Color.ColorBase | null;
-    opacity: number;
+    ch?: string | null;
+    fg?: Color.ColorBase | null;
+    bg?: Color.ColorBase | null;
+    opacity?: number;
 }
 
 export class Sprite implements SpriteData {
@@ -49,13 +49,13 @@ export const sprites: Record<string, Sprite> = {};
 export function make(): Sprite;
 export function make(bg: Color.ColorBase, opacity?: number): Sprite;
 export function make(
-    ch: string | null,
-    fg: Color.ColorBase | null,
-    bg: Color.ColorBase | null,
+    ch?: string | null,
+    fg?: Color.ColorBase | null,
+    bg?: Color.ColorBase | null,
     opacity?: number
 ): Sprite;
 export function make(args: any[]): Sprite;
-export function make(info: Partial<SpriteConfig>): Sprite;
+export function make(info: SpriteConfig): Sprite;
 export function make(...args: any[]) {
     let ch = null,
         fg: Color.ColorBase | null = -1,
@@ -112,14 +112,14 @@ export function make(...args: any[]) {
 }
 
 export function from(name: string): Sprite;
-export function from(config: Partial<SpriteConfig>): Sprite;
-export function from(...args: any[]): Sprite {
-    if (args.length == 1 && typeof args[0] === 'string') {
-        const sprite = sprites[args[0]];
-        if (!sprite) throw new Error('Failed to find sprite: ' + args[0]);
+export function from(config: SpriteConfig): Sprite;
+export function from(config: string | SpriteConfig): Sprite {
+    if (typeof config === 'string') {
+        const sprite = sprites[config];
+        if (!sprite) throw new Error('Failed to find sprite: ' + config);
         return sprite;
     }
-    return make(args);
+    return make(config);
 }
 
 export function install(
@@ -135,7 +135,7 @@ export function install(
     opacity?: number
 ): Sprite;
 export function install(name: string, args: any[]): Sprite;
-export function install(name: string, info: Partial<SpriteConfig>): Sprite;
+export function install(name: string, info: SpriteConfig): Sprite;
 export function install(name: string, ...args: any[]) {
     let sprite;
     // @ts-ignore

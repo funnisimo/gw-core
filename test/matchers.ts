@@ -1,39 +1,20 @@
-// import { jsxEmptyExpression, JSXEmptyExpression } from "@babel/types";
+const diff = require('jest-diff').diff;
 
-// declare namespace global {
-//   namespace jest {
-//     interface Matchers<R> {
-//       toFloatEqual(value: number): R;
-//     }
-//   }
-// }
-
-// expect.extend({
-//   toFloatEqual(received: number, expected: number): jest.CustomMatcherResult {
-//     const pass: boolean = Math.abs(received - expected) < 0.00001;
-//     const message: () => string = () =>
-//       pass
-//         ? ""
-//         : `Received float (${received}) is not the same as expected (${expected})`;
-
-//     return {
-//       message,
-//       pass,
-//     };
-//   },
-// });
-
-// ensure this is parsed as a module.
 export {};
 
 declare global {
     namespace jest {
         interface Matchers<R> {
             toFloatEqual(value: number): CustomMatcherResult;
+            toBeInteger(): CustomMatcherResult;
+            toBeInRange(lo: number, hi: number): CustomMatcherResult;
             toBeAtXY(x: number, y: number): CustomMatcherResult;
+            toBakeFrom(expected: any): CustomMatcherResult;
+            toEqual(other: any): CustomMatcherResult;
         }
     }
 }
+
 function toFloatEqual(received: number, expected: number) {
     if (typeof expected !== 'number') {
         return {
@@ -61,6 +42,50 @@ function toFloatEqual(received: number, expected: number) {
         : {
               pass: false,
               message: () => `Expected ${received} to float equal ${expected}`,
+          };
+}
+
+function toBeInteger(received: any) {
+    if (typeof received !== 'number') {
+        throw new Error('expected value to be a number');
+    }
+
+    let success = Math.floor(received) == received;
+
+    return success
+        ? {
+              pass: true,
+              message: () => `Expected ${received} not to be an integer`,
+          }
+        : {
+              pass: false,
+              message: () => `Expected ${received} to be an integer`,
+          };
+}
+
+function toBeInRange(received: any, lo: number, hi: number) {
+    if (typeof lo !== 'number') {
+        throw new Error('expected lo to be a number');
+    }
+    if (typeof hi !== 'number') {
+        throw new Error('expected hi to be a number');
+    }
+    if (typeof received !== 'number') {
+        throw new Error('expected value to be a number');
+    }
+
+    let success = received >= lo && received <= hi;
+
+    return success
+        ? {
+              pass: true,
+              message: () =>
+                  `Expected ${received} not to be in range [${lo}-${hi}]`,
+          }
+        : {
+              pass: false,
+              message: () =>
+                  `Expected ${received} to be in range [${lo}-${hi}]`,
           };
 }
 
@@ -94,7 +119,130 @@ function toBeAtXY(received: any, x: number, y: number) {
           };
 }
 
+function toBakeFrom(received: any, expected: any) {
+    const options = {
+        comment: 'toBakeFrom',
+        // @ts-ignore
+        isNot: this.isNot,
+        // @ts-ignore
+        promise: this.promise,
+    };
+
+    let pass = false;
+    let e = expected;
+
+    if (received) {
+        let r = received;
+
+        pass = r[0] >= e[0] && r[0] <= e[0] + e[3] + e[4];
+        pass = pass && r[1] >= e[1] && r[1] <= e[1] + e[3] + e[5];
+        pass = pass && r[2] >= e[2] && r[2] <= e[2] + e[3] + e[6];
+    }
+
+    const message = pass
+        ? () =>
+              // @ts-ignore
+              this.utils.matcherHint(
+                  'toBakeFrom',
+                  undefined,
+                  undefined,
+                  options
+              ) +
+              '\n\n' +
+              // @ts-ignore
+              `Expected: not ${this.utils.printExpected(expected)}\n` +
+              // @ts-ignore
+              `Received: ${this.utils.printReceived(received)}`
+        : () => {
+              const diffString = diff(expected, received, {
+                  // @ts-ignore
+                  expand: this.expand,
+              });
+              return (
+                  // @ts-ignore
+                  this.utils.matcherHint(
+                      'toBakeFrom',
+                      undefined,
+                      undefined,
+                      options
+                  ) +
+                  '\n\n' +
+                  (diffString && diffString.includes('- Expect')
+                      ? `Difference:\n\n${diffString}`
+                      : // @ts-ignore
+                        `Expected: ${this.utils.printExpected(expected)}\n` +
+                        // @ts-ignore
+                        `Received: ${this.utils.printReceived(received)}`)
+              );
+          };
+
+    return { actual: received, message, pass };
+}
+
+function toEqual(received: any, expected: any) {
+    const options = {
+        comment: 'toEqual',
+        // @ts-ignore
+        isNot: this.isNot,
+        // @ts-ignore
+        promise: this.promise,
+    };
+
+    let matchType = 'equals';
+    let pass = false;
+    if (received && received.equals) {
+        pass = received.equals(expected);
+        // console.log('received.equals', pass, received.toString(true), expected.toString(true));
+    } else if (expected && expected.equals) {
+        pass = expected.equals(received);
+        // console.log('expected.equals', pass, received.toString(true), expected.toString(true));
+    } else {
+        matchType = 'deep equals';
+        // @ts-ignore
+        pass = this.equals(received, expected);
+        // console.log('this.equals', pass, received.toString(true), expected.toString(true));
+    }
+
+    const message = pass
+        ? () =>
+              // @ts-ignore
+              this.utils.matcherHint(matchType, undefined, undefined, options) +
+              '\n\n' +
+              // @ts-ignore
+              `Expected: not ${this.utils.printExpected(expected)}\n` +
+              // @ts-ignore
+              `Received: ${this.utils.printReceived(received)}`
+        : () => {
+              const diffString = diff(expected, received, {
+                  // @ts-ignore
+                  expand: this.expand,
+              });
+              return (
+                  // @ts-ignore
+                  this.utils.matcherHint(
+                      matchType,
+                      undefined,
+                      undefined,
+                      options
+                  ) +
+                  '\n\n' +
+                  (diffString && diffString.includes('- Expect')
+                      ? `Difference:\n\n${diffString}`
+                      : // @ts-ignore
+                        `Expected: ${this.utils.printExpected(expected)}\n` +
+                        // @ts-ignore
+                        `Received: ${this.utils.printReceived(received)}`)
+              );
+          };
+
+    return { actual: received, message, pass };
+}
+
 expect.extend({
     toFloatEqual,
+    toEqual,
+    toBakeFrom,
     toBeAtXY,
+    toBeInRange,
+    toBeInteger,
 });

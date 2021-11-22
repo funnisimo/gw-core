@@ -39,6 +39,12 @@ export function clamp(v: number, min: number, max: number) {
     return v;
 }
 
+export function lerp(from: number, to: number, pct: number) {
+    if (pct > 1) pct = 1;
+    if (pct < 0) pct = 0;
+    return Math.floor(from + (to - from) * pct);
+}
+
 export function ERROR(message: string) {
     throw new Error(message);
 }
@@ -63,6 +69,13 @@ export function arrayDelete<T>(a: T[], b: T) {
     const index = a.indexOf(b);
     if (index < 0) return false;
     a.splice(index, 1);
+    return true;
+}
+
+export function arrayNullify<T>(a: (T | null)[], b: T) {
+    const index = a.indexOf(b);
+    if (index < 0) return false;
+    a[index] = null;
     return true;
 }
 

@@ -46,6 +46,19 @@ export const CLOCK_DIRS: Loc[] = [
     [-1, 1],
 ];
 
+export function isLoc(a: any): a is Loc {
+    return (
+        Array.isArray(a) &&
+        a.length == 2 &&
+        typeof a[0] === 'number' &&
+        typeof a[1] === 'number'
+    );
+}
+
+export function isXY(a: any): a is XY {
+    return a && typeof a.x === 'number' && typeof a.y === 'number';
+}
+
 export function x(src: XY | Loc) {
     // @ts-ignore
     return src.x || src[0] || 0;
@@ -214,6 +227,23 @@ export function straightDistanceBetween(
     const x = Math.abs(x1 - x2);
     const y = Math.abs(y1 - y2);
     return x + y;
+}
+
+export function maxAxisFromTo(a: XY | Loc, b: XY | Loc): number {
+    const xa = Math.abs(x(a) - x(b));
+    const ya = Math.abs(y(a) - y(b));
+    return Math.max(xa, ya);
+}
+
+export function maxAxisBetween(
+    x1: number,
+    y1: number,
+    x2: number,
+    y2: number
+): number {
+    const xa = Math.abs(x1 - x2);
+    const ya = Math.abs(y1 - y2);
+    return Math.max(xa, ya);
 }
 
 export function distanceBetween(
@@ -391,12 +421,25 @@ export function forLineBetween(
                 quadrantTransform[i] * currentVector[i] + originLoc[i]
             );
         }
-
-        if (stepFn(...currentLoc) === false) {
+        const r = stepFn(...currentLoc);
+        if (r === false) {
             return false;
+        } else if (
+            r !== true &&
+            currentLoc[0] === toX &&
+            currentLoc[1] === toY
+        ) {
+            return true;
         }
-        if (currentLoc[0] === toX && currentLoc[1] === toY) return true;
     } while (true);
+}
+
+export function forLineFromTo(
+    a: XY | Loc,
+    b: XY | Loc,
+    stepFn: (x: number, y: number) => boolean | void
+) {
+    return forLineBetween(x(a), y(a), x(b), y(b), stepFn);
 }
 
 // ADAPTED FROM BROGUE 1.7.5
@@ -437,6 +480,7 @@ export function getLineThru(
     forLineBetween(fromX, fromY, toX, toY, (x: number, y: number) => {
         if (x < 0 || y < 0 || x >= width || y >= height) return false;
         line.push([x, y]);
+        return true;
     });
 
     return line;

@@ -1,3 +1,4 @@
+import 'jest-extended';
 import * as Tween from './tween';
 
 describe('Tween', () => {
@@ -58,8 +59,8 @@ describe('Tween', () => {
                 x: 10,
             })
             .duration(1000)
-            .onUpdate(updateCb)
-            .start();
+            .onUpdate(updateCb);
+        tween.start();
 
         while (tween.isRunning()) {
             tween.tick(50);
@@ -71,7 +72,8 @@ describe('Tween', () => {
 
     test('start twice', () => {
         const obj = { x: 0, y: 0 };
-        const tw = Tween.make(obj).to({ x: 10 }, 100).start();
+        const tw = Tween.make(obj).to({ x: 10 }, 100);
+        tw.start();
 
         while (tw.isRunning()) {
             tw.tick(50);
@@ -183,8 +185,8 @@ describe('Tween', () => {
             .duration(1000)
             .delay(0)
             .repeat(3)
-            .repeatDelay(500)
-            .start();
+            .repeatDelay(500);
+        tween.start();
 
         expect(tween.repeatDelay()).toEqual(500);
 
@@ -205,8 +207,8 @@ describe('Tween', () => {
             })
             .duration(1000)
             .repeat(2)
-            .yoyo(true)
-            .start();
+            .yoyo(true);
+        tween.start();
 
         expect(tween.yoyo()).toBeTruthy();
 
@@ -220,14 +222,13 @@ describe('Tween', () => {
 
     test('from', () => {
         const obj = { x: 0, y: 0 };
-        const tween = Tween.make(obj)
-            .from(
-                {
-                    x: 10,
-                },
-                1000
-            )
-            .start();
+        const tween = Tween.make(obj).from(
+            {
+                x: 10,
+            },
+            1000
+        );
+        tween.start();
 
         expect(tween.isRunning()).toBeTruthy();
         expect(obj.x).toEqual(10);
@@ -241,6 +242,52 @@ describe('Tween', () => {
         tween.tick(500);
         expect(obj.x).toEqual(0);
 
+        expect(tween.isRunning()).toBeFalsy();
+    });
+
+    test('blink - boolean', () => {
+        const obj = { visible: true };
+        const tween = Tween.make(obj)
+            .to({ visible: false })
+            .repeat(3)
+            .repeatDelay(100)
+            .duration(100);
+        tween.start();
+
+        expect(tween.isRunning()).toBeTruthy();
+        expect(obj.visible).toBeTrue();
+
+        // Repeat 1
+        tween.tick(90);
+        expect(obj.visible).toBeTrue();
+        tween.tick(10);
+        expect(obj.visible).toBeFalse();
+
+        // Delay 1
+        tween.tick(90);
+        expect(obj.visible).toBeFalse();
+        tween.tick(10);
+        expect(obj.visible).toBeTrue();
+
+        // Repeat 2
+        tween.tick(90);
+        expect(obj.visible).toBeTrue();
+        tween.tick(10);
+        expect(obj.visible).toBeFalse();
+
+        // Delay 2
+        tween.tick(90);
+        expect(obj.visible).toBeFalse();
+        tween.tick(10);
+        expect(obj.visible).toBeTrue();
+
+        // Repeat 3
+        tween.tick(90);
+        expect(obj.visible).toBeTrue();
+        tween.tick(10);
+        expect(obj.visible).toBeFalse();
+
+        // done
         expect(tween.isRunning()).toBeFalsy();
     });
 });

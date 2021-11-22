@@ -8,13 +8,13 @@ import * as XY from '../xy';
 export type EventFn = (ev: IO.Event) => void;
 
 interface BaseOptions {
-    width: number;
-    height: number;
-    glyphs: Glyphs;
-    div: HTMLElement | string;
-    io: boolean; // if true, hookup events to standard IO loop.
-    loop: IO.Loop; // if provided, hookup events to this loop.
-    image: HTMLImageElement | string;
+    width?: number;
+    height?: number;
+    glyphs?: Glyphs;
+    div?: HTMLElement | string;
+    io?: boolean; // if true, hookup events to standard IO loop.
+    loop?: IO.Loop; // if provided, hookup events to this loop.
+    image?: HTMLImageElement | string;
 }
 
 export type CanvasOptions = BaseOptions & GlyphOptions;
@@ -42,8 +42,8 @@ export abstract class BaseCanvas implements BufferTarget {
     protected _glyphs!: Glyphs;
     protected _node: HTMLCanvasElement;
 
-    protected _width: number = 50;
-    protected _height: number = 25;
+    protected _width: number = 100;
+    protected _height: number = 38;
     protected _buffer: CanvasBuffer;
 
     constructor(width: number, height: number, glyphs: Glyphs) {

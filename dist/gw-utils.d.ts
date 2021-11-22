@@ -18,12 +18,14 @@ declare function IS_NONZERO(x: number): boolean;
  * @returns {Number} the clamped value
  */
 declare function clamp(v: number, min: number, max: number): number;
+declare function lerp(from: number, to: number, pct: number): number;
 declare function ERROR(message: string): void;
 declare function WARN(...args: string[]): void;
 declare function first(...args: any[]): any;
 declare function arraysIntersect(a: any[], b: any[]): boolean;
 declare function arrayIncludesAll(a: any[], b: any[]): boolean;
 declare function arrayDelete<T>(a: T[], b: T): boolean;
+declare function arrayNullify<T>(a: (T | null)[], b: T): boolean;
 declare function arrayInsert<T>(a: T[], b: T, beforeFn?: (t: T) => boolean): void;
 declare function arrayFindRight<T>(a: T[], fn: (t: T) => boolean): T | undefined;
 declare function sum(arr: number[]): number;
@@ -107,46 +109,46 @@ declare const NONE: Color;
 declare const BLACK: Color;
 declare const WHITE: Color;
 
-type index_d$5_ColorData = ColorData;
-type index_d$5_ColorBase = ColorBase;
-type index_d$5_LightValue = LightValue;
-declare const index_d$5_colors: typeof colors;
-type index_d$5_Color = Color;
-declare const index_d$5_Color: typeof Color;
-declare const index_d$5_fromArray: typeof fromArray;
-declare const index_d$5_fromCss: typeof fromCss;
-declare const index_d$5_fromName: typeof fromName;
-declare const index_d$5_fromNumber: typeof fromNumber;
-declare const index_d$5_separate: typeof separate;
-declare const index_d$5_relativeLuminance: typeof relativeLuminance;
-declare const index_d$5_distance: typeof distance;
-declare const index_d$5_smoothScalar: typeof smoothScalar;
-declare const index_d$5_installSpread: typeof installSpread;
-declare const index_d$5_NONE: typeof NONE;
-declare const index_d$5_BLACK: typeof BLACK;
-declare const index_d$5_WHITE: typeof WHITE;
-declare namespace index_d$5 {
+type index_d$7_ColorData = ColorData;
+type index_d$7_ColorBase = ColorBase;
+type index_d$7_LightValue = LightValue;
+declare const index_d$7_colors: typeof colors;
+type index_d$7_Color = Color;
+declare const index_d$7_Color: typeof Color;
+declare const index_d$7_fromArray: typeof fromArray;
+declare const index_d$7_fromCss: typeof fromCss;
+declare const index_d$7_fromName: typeof fromName;
+declare const index_d$7_fromNumber: typeof fromNumber;
+declare const index_d$7_separate: typeof separate;
+declare const index_d$7_relativeLuminance: typeof relativeLuminance;
+declare const index_d$7_distance: typeof distance;
+declare const index_d$7_smoothScalar: typeof smoothScalar;
+declare const index_d$7_installSpread: typeof installSpread;
+declare const index_d$7_NONE: typeof NONE;
+declare const index_d$7_BLACK: typeof BLACK;
+declare const index_d$7_WHITE: typeof WHITE;
+declare namespace index_d$7 {
   export {
-    index_d$5_ColorData as ColorData,
-    index_d$5_ColorBase as ColorBase,
-    index_d$5_LightValue as LightValue,
-    index_d$5_colors as colors,
-    index_d$5_Color as Color,
-    index_d$5_fromArray as fromArray,
-    index_d$5_fromCss as fromCss,
-    index_d$5_fromName as fromName,
-    index_d$5_fromNumber as fromNumber,
+    index_d$7_ColorData as ColorData,
+    index_d$7_ColorBase as ColorBase,
+    index_d$7_LightValue as LightValue,
+    index_d$7_colors as colors,
+    index_d$7_Color as Color,
+    index_d$7_fromArray as fromArray,
+    index_d$7_fromCss as fromCss,
+    index_d$7_fromName as fromName,
+    index_d$7_fromNumber as fromNumber,
     make$c as make,
     from$4 as from,
-    index_d$5_separate as separate,
-    index_d$5_relativeLuminance as relativeLuminance,
-    index_d$5_distance as distance,
-    index_d$5_smoothScalar as smoothScalar,
+    index_d$7_separate as separate,
+    index_d$7_relativeLuminance as relativeLuminance,
+    index_d$7_distance as distance,
+    index_d$7_smoothScalar as smoothScalar,
     install$3 as install,
-    index_d$5_installSpread as installSpread,
-    index_d$5_NONE as NONE,
-    index_d$5_BLACK as BLACK,
-    index_d$5_WHITE as WHITE,
+    index_d$7_installSpread as installSpread,
+    index_d$7_NONE as NONE,
+    index_d$7_BLACK as BLACK,
+    index_d$7_WHITE as WHITE,
   };
 }
 
@@ -155,7 +157,7 @@ interface XY {
     x: number;
     y: number;
 }
-interface Size {
+interface Size$1 {
     width: number;
     height: number;
 }
@@ -177,7 +179,6 @@ interface WeightedObject {
 }
 
 type types_d_XY = XY;
-type types_d_Size = Size;
 type types_d_EachCb<_0> = EachCb<_0>;
 type types_d_RandomFunction = RandomFunction;
 type types_d_SeedFunction = SeedFunction;
@@ -188,7 +189,7 @@ declare namespace types_d {
   export {
     Loc$1 as Loc,
     types_d_XY as XY,
-    types_d_Size as Size,
+    Size$1 as Size,
     SpriteData$1 as SpriteData,
     types_d_EachCb as EachCb,
     types_d_RandomFunction as RandomFunction,
@@ -210,9 +211,11 @@ declare const RIGHT_DOWN = 5;
 declare const LEFT_DOWN = 6;
 declare const LEFT_UP = 7;
 declare const CLOCK_DIRS: Loc$1[];
+declare function isLoc(a: any): a is Loc$1;
+declare function isXY(a: any): a is XY;
 declare function x(src: XY | Loc$1): any;
 declare function y(src: XY | Loc$1): any;
-declare function contains(size: Size, x: number, y: number): boolean;
+declare function contains(size: Size$1, x: number, y: number): boolean;
 declare class Bounds {
     x: number;
     y: number;
@@ -242,6 +245,8 @@ declare function eachNeighborAsync(x: number, y: number, fn: XYFunc, only4dirs?:
 declare type XYMatchFunc = (x: number, y: number) => boolean;
 declare function matchingNeighbor(x: number, y: number, matchFn: XYMatchFunc, only4dirs?: boolean): Loc$1;
 declare function straightDistanceBetween(x1: number, y1: number, x2: number, y2: number): number;
+declare function maxAxisFromTo(a: XY | Loc$1, b: XY | Loc$1): number;
+declare function maxAxisBetween(x1: number, y1: number, x2: number, y2: number): number;
 declare function distanceBetween(x1: number, y1: number, x2: number, y2: number): number;
 declare function distanceFromTo(a: XY | Loc$1, b: XY | Loc$1): number;
 declare function calcRadius(x: number, y: number): number;
@@ -254,6 +259,7 @@ declare function dirSpread(dir: Loc$1): Loc$1[];
 declare function stepFromTo(a: XY | Loc$1, b: XY | Loc$1, fn: (x: number, y: number) => any): void;
 declare function forLine(x: number, y: number, dir: Loc$1, length: number, fn: (x: number, y: number) => any): void;
 declare function forLineBetween(fromX: number, fromY: number, toX: number, toY: number, stepFn: (x: number, y: number) => boolean | void): boolean;
+declare function forLineFromTo(a: XY | Loc$1, b: XY | Loc$1, stepFn: (x: number, y: number) => boolean | void): boolean;
 declare function getLine(fromX: number, fromY: number, toX: number, toY: number): Loc$1[];
 declare function getLineThru(fromX: number, fromY: number, toX: number, toY: number, width: number, height: number): Loc$1[];
 declare function forCircle(x: number, y: number, radius: number, fn: XYFunc): void;
@@ -264,7 +270,6 @@ declare function forBorder(x: number, y: number, width: number, height: number, 
 declare function arcCount(x: number, y: number, testFn: XYMatchFunc): number;
 
 type xy_d_XY = XY;
-type xy_d_Size = Size;
 declare const xy_d_DIRS: typeof DIRS;
 declare const xy_d_NO_DIRECTION: typeof NO_DIRECTION;
 declare const xy_d_UP: typeof UP;
@@ -276,6 +281,8 @@ declare const xy_d_RIGHT_DOWN: typeof RIGHT_DOWN;
 declare const xy_d_LEFT_DOWN: typeof LEFT_DOWN;
 declare const xy_d_LEFT_UP: typeof LEFT_UP;
 declare const xy_d_CLOCK_DIRS: typeof CLOCK_DIRS;
+declare const xy_d_isLoc: typeof isLoc;
+declare const xy_d_isXY: typeof isXY;
 declare const xy_d_x: typeof x;
 declare const xy_d_y: typeof y;
 declare const xy_d_contains: typeof contains;
@@ -291,6 +298,8 @@ declare const xy_d_eachNeighborAsync: typeof eachNeighborAsync;
 type xy_d_XYMatchFunc = XYMatchFunc;
 declare const xy_d_matchingNeighbor: typeof matchingNeighbor;
 declare const xy_d_straightDistanceBetween: typeof straightDistanceBetween;
+declare const xy_d_maxAxisFromTo: typeof maxAxisFromTo;
+declare const xy_d_maxAxisBetween: typeof maxAxisBetween;
 declare const xy_d_distanceBetween: typeof distanceBetween;
 declare const xy_d_distanceFromTo: typeof distanceFromTo;
 declare const xy_d_calcRadius: typeof calcRadius;
@@ -303,6 +312,7 @@ declare const xy_d_dirSpread: typeof dirSpread;
 declare const xy_d_stepFromTo: typeof stepFromTo;
 declare const xy_d_forLine: typeof forLine;
 declare const xy_d_forLineBetween: typeof forLineBetween;
+declare const xy_d_forLineFromTo: typeof forLineFromTo;
 declare const xy_d_getLine: typeof getLine;
 declare const xy_d_getLineThru: typeof getLineThru;
 declare const xy_d_forCircle: typeof forCircle;
@@ -313,7 +323,7 @@ declare namespace xy_d {
   export {
     Loc$1 as Loc,
     xy_d_XY as XY,
-    xy_d_Size as Size,
+    Size$1 as Size,
     xy_d_DIRS as DIRS,
     xy_d_NO_DIRECTION as NO_DIRECTION,
     xy_d_UP as UP,
@@ -325,6 +335,8 @@ declare namespace xy_d {
     xy_d_LEFT_DOWN as LEFT_DOWN,
     xy_d_LEFT_UP as LEFT_UP,
     xy_d_CLOCK_DIRS as CLOCK_DIRS,
+    xy_d_isLoc as isLoc,
+    xy_d_isXY as isXY,
     xy_d_x as x,
     xy_d_y as y,
     xy_d_contains as contains,
@@ -339,6 +351,8 @@ declare namespace xy_d {
     xy_d_XYMatchFunc as XYMatchFunc,
     xy_d_matchingNeighbor as matchingNeighbor,
     xy_d_straightDistanceBetween as straightDistanceBetween,
+    xy_d_maxAxisFromTo as maxAxisFromTo,
+    xy_d_maxAxisBetween as maxAxisBetween,
     xy_d_distanceBetween as distanceBetween,
     xy_d_distanceFromTo as distanceFromTo,
     xy_d_calcRadius as calcRadius,
@@ -351,6 +365,7 @@ declare namespace xy_d {
     xy_d_stepFromTo as stepFromTo,
     xy_d_forLine as forLine,
     xy_d_forLineBetween as forLineBetween,
+    xy_d_forLineFromTo as forLineFromTo,
     xy_d_getLine as getLine,
     xy_d_getLineThru as getLineThru,
     xy_d_forCircle as forCircle,
@@ -584,13 +599,13 @@ declare namespace flag_d {
 declare type Loc = Loc$1;
 declare type ArrayInit<T> = (i: number) => T;
 declare function makeArray<T>(l: number, fn?: T | ArrayInit<T>): Array<T>;
-declare type GridInit<T> = (x: number, y: number, grid: Grid<T>) => T;
-declare type GridEach<T> = (value: T, x: number, y: number, grid: Grid<T>) => any;
-declare type AsyncGridEach<T> = (value: T, x: number, y: number, grid: Grid<T>) => Promise<any>;
-declare type GridUpdate<T> = (value: T, x: number, y: number, grid: Grid<T>) => T;
-declare type GridMatch<T> = (value: T, x: number, y: number, grid: Grid<T>) => boolean;
+declare type GridInit<T> = (x: number, y: number, grid: Grid$1<T>) => T;
+declare type GridEach<T> = (value: T, x: number, y: number, grid: Grid$1<T>) => any;
+declare type AsyncGridEach<T> = (value: T, x: number, y: number, grid: Grid$1<T>) => Promise<any>;
+declare type GridUpdate<T> = (value: T, x: number, y: number, grid: Grid$1<T>) => T;
+declare type GridMatch<T> = (value: T, x: number, y: number, grid: Grid$1<T>) => boolean;
 declare type GridFormat<T> = (value: T, x: number, y: number) => string;
-declare class Grid<T> extends Array<Array<T>> {
+declare class Grid$1<T> extends Array<Array<T>> {
     protected _width: number;
     protected _height: number;
     constructor(w: number, h: number, v: GridInit<T> | T);
@@ -652,7 +667,7 @@ declare class Grid<T> extends Array<Array<T>> {
     fillRect(x: number, y: number, w: number, h: number, v: T | GridUpdate<T>): void;
     fillCircle(x: number, y: number, radius: number, v: T | GridUpdate<T>): void;
     replace(findValue: T, replaceValue: T): void;
-    copy(from: Grid<T>): void;
+    copy(from: Grid$1<T>): void;
     count(match: GridMatch<T> | T): number;
     /**
      * Finds the first matching value/result and returns that location as an xy.Loc
@@ -686,7 +701,7 @@ declare const stats: {
     create: number;
     free: number;
 };
-declare class NumGrid extends Grid<number> {
+declare class NumGrid extends Grid$1<number> {
     x?: number;
     y?: number;
     static alloc(w: number, h: number, v: GridInit<number> | number): NumGrid;
@@ -706,9 +721,9 @@ declare class NumGrid extends Grid<number> {
 declare const alloc: typeof NumGrid.alloc;
 declare const free: typeof NumGrid.free;
 declare function make$8<T>(w: number, h: number, v?: number | GridInit<number>): NumGrid;
-declare function make$8<T>(w: number, h: number, v?: T | GridInit<T>): Grid<T>;
-declare type GridZip<T, U> = (destVal: T, sourceVal: U, destX: number, destY: number, sourceX: number, sourceY: number, destGrid: Grid<T>, sourceGrid: Grid<U>) => void;
-declare function offsetZip<T, U>(destGrid: Grid<T>, srcGrid: Grid<U>, srcToDestX: number, srcToDestY: number, value: T | GridZip<T, U>): void;
+declare function make$8<T>(w: number, h: number, v?: T | GridInit<T>): Grid$1<T>;
+declare type GridZip<T, U> = (destVal: T, sourceVal: U, destX: number, destY: number, sourceX: number, sourceY: number, destGrid: Grid$1<T>, sourceGrid: Grid$1<U>) => void;
+declare function offsetZip<T, U>(destGrid: Grid$1<T>, srcGrid: Grid$1<U>, srcToDestX: number, srcToDestY: number, value: T | GridZip<T, U>): void;
 declare function intersection(onto: NumGrid, a: NumGrid, b?: NumGrid): void;
 declare function unite(onto: NumGrid, a: NumGrid, b?: NumGrid): void;
 
@@ -720,8 +735,6 @@ type grid_d_AsyncGridEach<_0> = AsyncGridEach<_0>;
 type grid_d_GridUpdate<_0> = GridUpdate<_0>;
 type grid_d_GridMatch<_0> = GridMatch<_0>;
 type grid_d_GridFormat<_0> = GridFormat<_0>;
-type grid_d_Grid<_0> = Grid<_0>;
-declare const grid_d_Grid: typeof Grid;
 declare const grid_d_stats: typeof stats;
 type grid_d_NumGrid = NumGrid;
 declare const grid_d_NumGrid: typeof NumGrid;
@@ -741,7 +754,7 @@ declare namespace grid_d {
     grid_d_GridUpdate as GridUpdate,
     grid_d_GridMatch as GridMatch,
     grid_d_GridFormat as GridFormat,
-    grid_d_Grid as Grid,
+    Grid$1 as Grid,
     grid_d_stats as stats,
     grid_d_NumGrid as NumGrid,
     grid_d_alloc as alloc,
@@ -794,7 +807,7 @@ interface CompileOptions {
     field?: string;
     debug?: boolean;
 }
-declare function compile(template: string, opts?: CompileOptions): Template;
+declare function compile$1(template: string, opts?: CompileOptions): Template;
 declare function apply(template: string, args?: Args | string): string;
 
 interface Colors {
@@ -848,56 +861,55 @@ interface Options {
 }
 declare function configure(opts?: Options): void;
 
-declare const index_d$4_configure: typeof configure;
-declare const index_d$4_compile: typeof compile;
-declare const index_d$4_apply: typeof apply;
-type index_d$4_Template = Template;
-type index_d$4_CompileOptions = CompileOptions;
-declare const index_d$4_eachChar: typeof eachChar;
-type index_d$4_EachOptions = EachOptions;
-declare const index_d$4_wordWrap: typeof wordWrap;
-declare const index_d$4_splitIntoLines: typeof splitIntoLines;
-declare const index_d$4_addHelper: typeof addHelper;
-declare const index_d$4_options: typeof options;
-type index_d$4_Align = Align;
-type index_d$4_VAlign = VAlign;
-declare const index_d$4_length: typeof length;
-declare const index_d$4_advanceChars: typeof advanceChars;
-declare const index_d$4_firstChar: typeof firstChar;
-declare const index_d$4_padStart: typeof padStart;
-declare const index_d$4_padEnd: typeof padEnd;
-declare const index_d$4_center: typeof center;
-declare const index_d$4_truncate: typeof truncate;
-declare const index_d$4_capitalize: typeof capitalize;
-declare const index_d$4_removeColors: typeof removeColors;
-declare const index_d$4_spliceRaw: typeof spliceRaw;
-declare const index_d$4_hash: typeof hash;
-declare namespace index_d$4 {
+declare const index_d$6_configure: typeof configure;
+declare const index_d$6_apply: typeof apply;
+type index_d$6_Template = Template;
+type index_d$6_CompileOptions = CompileOptions;
+declare const index_d$6_eachChar: typeof eachChar;
+type index_d$6_EachOptions = EachOptions;
+declare const index_d$6_wordWrap: typeof wordWrap;
+declare const index_d$6_splitIntoLines: typeof splitIntoLines;
+declare const index_d$6_addHelper: typeof addHelper;
+declare const index_d$6_options: typeof options;
+type index_d$6_Align = Align;
+type index_d$6_VAlign = VAlign;
+declare const index_d$6_length: typeof length;
+declare const index_d$6_advanceChars: typeof advanceChars;
+declare const index_d$6_firstChar: typeof firstChar;
+declare const index_d$6_padStart: typeof padStart;
+declare const index_d$6_padEnd: typeof padEnd;
+declare const index_d$6_center: typeof center;
+declare const index_d$6_truncate: typeof truncate;
+declare const index_d$6_capitalize: typeof capitalize;
+declare const index_d$6_removeColors: typeof removeColors;
+declare const index_d$6_spliceRaw: typeof spliceRaw;
+declare const index_d$6_hash: typeof hash;
+declare namespace index_d$6 {
   export {
-    index_d$4_configure as configure,
-    index_d$4_compile as compile,
-    index_d$4_apply as apply,
-    index_d$4_Template as Template,
-    index_d$4_CompileOptions as CompileOptions,
-    index_d$4_eachChar as eachChar,
-    index_d$4_EachOptions as EachOptions,
-    index_d$4_wordWrap as wordWrap,
-    index_d$4_splitIntoLines as splitIntoLines,
-    index_d$4_addHelper as addHelper,
-    index_d$4_options as options,
-    index_d$4_Align as Align,
-    index_d$4_VAlign as VAlign,
-    index_d$4_length as length,
-    index_d$4_advanceChars as advanceChars,
-    index_d$4_firstChar as firstChar,
-    index_d$4_padStart as padStart,
-    index_d$4_padEnd as padEnd,
-    index_d$4_center as center,
-    index_d$4_truncate as truncate,
-    index_d$4_capitalize as capitalize,
-    index_d$4_removeColors as removeColors,
-    index_d$4_spliceRaw as spliceRaw,
-    index_d$4_hash as hash,
+    index_d$6_configure as configure,
+    compile$1 as compile,
+    index_d$6_apply as apply,
+    index_d$6_Template as Template,
+    index_d$6_CompileOptions as CompileOptions,
+    index_d$6_eachChar as eachChar,
+    index_d$6_EachOptions as EachOptions,
+    index_d$6_wordWrap as wordWrap,
+    index_d$6_splitIntoLines as splitIntoLines,
+    index_d$6_addHelper as addHelper,
+    index_d$6_options as options,
+    index_d$6_Align as Align,
+    index_d$6_VAlign as VAlign,
+    index_d$6_length as length,
+    index_d$6_advanceChars as advanceChars,
+    index_d$6_firstChar as firstChar,
+    index_d$6_padStart as padStart,
+    index_d$6_padEnd as padEnd,
+    index_d$6_center as center,
+    index_d$6_truncate as truncate,
+    index_d$6_capitalize as capitalize,
+    index_d$6_removeColors as removeColors,
+    index_d$6_spliceRaw as spliceRaw,
+    index_d$6_hash as hash,
   };
 }
 
@@ -955,6 +967,95 @@ declare namespace buffer_d {
   };
 }
 
+declare type AnyObj = Record<string, any>;
+declare type TweenCb = (obj: AnyObj, dt: number) => any;
+declare type EasingFn = (v: number) => number;
+declare type InterpolateFn = (start: any, goal: any, pct: number) => any;
+interface Animation {
+    isRunning(): boolean;
+    start(): void;
+    tick(dt: number): boolean;
+    gameTick(dt: number): boolean;
+    stop(): void;
+}
+interface Animator {
+    addAnimation(a: Animation): void;
+    removeAnimation(a: Animation): void;
+}
+declare class Tween implements Animation {
+    _obj: AnyObj;
+    _repeat: number;
+    _count: number;
+    _from: boolean;
+    _duration: number;
+    _delay: number;
+    _repeatDelay: number;
+    _yoyo: boolean;
+    _time: number;
+    _startTime: number;
+    _goal: AnyObj;
+    _start: AnyObj;
+    _startCb: TweenCb | null;
+    _updateCb: TweenCb | null;
+    _repeatCb: TweenCb | null;
+    _finishCb: TweenCb | null;
+    _resolveCb: null | ((v?: any) => void);
+    _easing: EasingFn;
+    _interpolate: InterpolateFn;
+    constructor(src: AnyObj);
+    isRunning(): boolean;
+    onStart(cb: TweenCb): this;
+    onUpdate(cb: TweenCb): this;
+    onRepeat(cb: TweenCb): this;
+    onFinish(cb: TweenCb): this;
+    to(goal: AnyObj, duration?: number): this;
+    from(start: AnyObj, duration?: number): this;
+    duration(): number;
+    duration(v: number): this;
+    repeat(): number;
+    repeat(v: number): this;
+    delay(): number;
+    delay(v: number): this;
+    repeatDelay(): number;
+    repeatDelay(v: number): this;
+    yoyo(): boolean;
+    yoyo(v: boolean): this;
+    start(): Promise<boolean>;
+    tick(dt: number): boolean;
+    _restart(): void;
+    gameTick(_dt: number): boolean;
+    stop(success?: boolean): void;
+    _updateProperties(obj: AnyObj, start: AnyObj, goal: AnyObj, pct: number): boolean;
+}
+declare function make$6(src: AnyObj): Tween;
+declare function linear(pct: number): number;
+declare function interpolate(start: any, goal: any, pct: number): any;
+
+type tween_d_AnyObj = AnyObj;
+type tween_d_TweenCb = TweenCb;
+type tween_d_EasingFn = EasingFn;
+type tween_d_InterpolateFn = InterpolateFn;
+type tween_d_Animation = Animation;
+type tween_d_Animator = Animator;
+type tween_d_Tween = Tween;
+declare const tween_d_Tween: typeof Tween;
+declare const tween_d_linear: typeof linear;
+declare const tween_d_interpolate: typeof interpolate;
+declare namespace tween_d {
+  export {
+    tween_d_AnyObj as AnyObj,
+    tween_d_TweenCb as TweenCb,
+    tween_d_EasingFn as EasingFn,
+    tween_d_InterpolateFn as InterpolateFn,
+    tween_d_Animation as Animation,
+    tween_d_Animator as Animator,
+    tween_d_Tween as Tween,
+    make$6 as make,
+    tween_d_linear as linear,
+    tween_d_interpolate as interpolate,
+  };
+}
+
 declare class Event$1 {
     type: string;
     target: any;
@@ -1000,7 +1101,7 @@ declare function makeKeyEvent(e: KeyboardEvent): Event$1;
 declare function keyCodeDirection(key: string): Loc$1 | null;
 declare function ignoreKeyEvent(e: KeyboardEvent): boolean;
 declare function makeMouseEvent(e: MouseEvent, x: number, y: number): Event$1;
-declare class Loop {
+declare class Loop implements Animator {
     running: boolean;
     events: Event$1[];
     mouse: XY;
@@ -1010,6 +1111,7 @@ declare class Loop {
     protected interval: number;
     protected intervalCount: number;
     protected ended: boolean;
+    _animations: (Animation | null)[];
     constructor();
     hasEvents(): number;
     clearEvents(): void;
@@ -1024,13 +1126,16 @@ declare class Loop {
     pauseEvents(): void;
     resumeEvents(): void;
     tickMs(ms?: number): Promise<unknown>;
+    nextTick(ms?: number): Promise<Event$1 | null>;
     nextKeyPress(ms?: number, match?: EventMatchFn): Promise<Event$1 | null>;
     nextKeyOrClick(ms?: number, matchFn?: EventMatchFn): Promise<Event$1 | null>;
     pause(ms: number): Promise<boolean | null>;
     waitForAck(): Promise<boolean | null>;
     onkeydown(e: KeyboardEvent): void;
+    addAnimation(a: Animation): void;
+    removeAnimation(a: Animation): void;
 }
-declare function make$6(): Loop;
+declare function make$5(): Loop;
 declare const loop: Loop;
 
 type io_d_ControlFn = ControlFn;
@@ -1079,7 +1184,7 @@ declare namespace io_d {
     io_d_ignoreKeyEvent as ignoreKeyEvent,
     io_d_makeMouseEvent as makeMouseEvent,
     io_d_Loop as Loop,
-    make$6 as make,
+    make$5 as make,
     io_d_loop as loop,
   };
 }
@@ -1228,35 +1333,35 @@ declare class FovSystem implements FovTracker {
     update(cx: number, cy: number, cr?: number): boolean;
 }
 
-type index_d$3_FovFlags = FovFlags;
-declare const index_d$3_FovFlags: typeof FovFlags;
-type index_d$3_FovStrategy = FovStrategy;
-type index_d$3_SetVisibleFn = SetVisibleFn;
-type index_d$3_ViewportCb = ViewportCb;
-type index_d$3_FovSite = FovSite;
-type index_d$3_FovSubject = FovSubject;
-type index_d$3_FovTracker = FovTracker;
-type index_d$3_FOV = FOV;
-declare const index_d$3_FOV: typeof FOV;
-type index_d$3_FovChangeFn = FovChangeFn;
-type index_d$3_FovNoticer = FovNoticer;
-type index_d$3_FovSystemOptions = FovSystemOptions;
-type index_d$3_FovSystem = FovSystem;
-declare const index_d$3_FovSystem: typeof FovSystem;
-declare namespace index_d$3 {
+type index_d$5_FovFlags = FovFlags;
+declare const index_d$5_FovFlags: typeof FovFlags;
+type index_d$5_FovStrategy = FovStrategy;
+type index_d$5_SetVisibleFn = SetVisibleFn;
+type index_d$5_ViewportCb = ViewportCb;
+type index_d$5_FovSite = FovSite;
+type index_d$5_FovSubject = FovSubject;
+type index_d$5_FovTracker = FovTracker;
+type index_d$5_FOV = FOV;
+declare const index_d$5_FOV: typeof FOV;
+type index_d$5_FovChangeFn = FovChangeFn;
+type index_d$5_FovNoticer = FovNoticer;
+type index_d$5_FovSystemOptions = FovSystemOptions;
+type index_d$5_FovSystem = FovSystem;
+declare const index_d$5_FovSystem: typeof FovSystem;
+declare namespace index_d$5 {
   export {
-    index_d$3_FovFlags as FovFlags,
-    index_d$3_FovStrategy as FovStrategy,
-    index_d$3_SetVisibleFn as SetVisibleFn,
-    index_d$3_ViewportCb as ViewportCb,
-    index_d$3_FovSite as FovSite,
-    index_d$3_FovSubject as FovSubject,
-    index_d$3_FovTracker as FovTracker,
-    index_d$3_FOV as FOV,
-    index_d$3_FovChangeFn as FovChangeFn,
-    index_d$3_FovNoticer as FovNoticer,
-    index_d$3_FovSystemOptions as FovSystemOptions,
-    index_d$3_FovSystem as FovSystem,
+    index_d$5_FovFlags as FovFlags,
+    index_d$5_FovStrategy as FovStrategy,
+    index_d$5_SetVisibleFn as SetVisibleFn,
+    index_d$5_ViewportCb as ViewportCb,
+    index_d$5_FovSite as FovSite,
+    index_d$5_FovSubject as FovSubject,
+    index_d$5_FovTracker as FovTracker,
+    index_d$5_FOV as FOV,
+    index_d$5_FovChangeFn as FovChangeFn,
+    index_d$5_FovNoticer as FovNoticer,
+    index_d$5_FovSystemOptions as FovSystemOptions,
+    index_d$5_FovSystem as FovSystem,
   };
 }
 
@@ -1418,7 +1523,7 @@ declare namespace events_d {
 
 declare type FrequencyFn = (danger: number) => number;
 declare type FrequencyConfig = FrequencyFn | number | string | Record<string, number> | null;
-declare function make$5(v?: FrequencyConfig): FrequencyFn;
+declare function make$4(v?: FrequencyConfig): FrequencyFn;
 
 type frequency_d_FrequencyFn = FrequencyFn;
 type frequency_d_FrequencyConfig = FrequencyConfig;
@@ -1426,7 +1531,7 @@ declare namespace frequency_d {
   export {
     frequency_d_FrequencyFn as FrequencyFn,
     frequency_d_FrequencyConfig as FrequencyConfig,
-    make$5 as make,
+    make$4 as make,
   };
 }
 
@@ -1477,13 +1582,13 @@ declare type CTX = CanvasRenderingContext2D;
 declare type DrawFunction = (ctx: CTX, x: number, y: number, width: number, height: number) => void;
 declare type DrawType = string | DrawFunction;
 interface GlyphOptions {
-    font: string;
-    fontSize: number;
-    size: number;
-    tileWidth: number;
-    tileHeight: number;
-    basicOnly: boolean;
-    basic: boolean;
+    font?: string;
+    fontSize?: number;
+    size?: number;
+    tileWidth?: number;
+    tileHeight?: number;
+    basicOnly?: boolean;
+    basic?: boolean;
 }
 declare class Glyphs {
     private _node;
@@ -1493,7 +1598,7 @@ declare class Glyphs {
     needsUpdate: boolean;
     private _map;
     static fromImage(src: string | HTMLImageElement): Glyphs;
-    static fromFont(src: Partial<GlyphOptions> | string): Glyphs;
+    static fromFont(src: GlyphOptions | string): Glyphs;
     private constructor();
     get node(): HTMLCanvasElement;
     get ctx(): CanvasRenderingContext2D;
@@ -1509,13 +1614,13 @@ declare class Glyphs {
 
 declare type EventFn = (ev: Event$1) => void;
 interface BaseOptions {
-    width: number;
-    height: number;
-    glyphs: Glyphs;
-    div: HTMLElement | string;
-    io: boolean;
-    loop: Loop;
-    image: HTMLImageElement | string;
+    width?: number;
+    height?: number;
+    glyphs?: Glyphs;
+    div?: HTMLElement | string;
+    io?: boolean;
+    loop?: Loop;
+    image?: HTMLImageElement | string;
 }
 declare type CanvasOptions = BaseOptions & GlyphOptions;
 declare class NotSupportedError extends Error {
@@ -1589,46 +1694,46 @@ declare class CanvasGL extends BaseCanvas {
     _render(): void;
 }
 
-declare function make$4(opts: Partial<CanvasOptions>): BaseCanvas;
-declare function make$4(width: number, height: number, opts?: Partial<CanvasOptions>): BaseCanvas;
+declare function make$3(opts: Partial<CanvasOptions>): BaseCanvas;
+declare function make$3(width: number, height: number, opts?: Partial<CanvasOptions>): BaseCanvas;
 
-type index_d$2_BufferTarget = BufferTarget;
-type index_d$2_Buffer = Buffer;
-declare const index_d$2_Buffer: typeof Buffer;
-type index_d$2_GlyphOptions = GlyphOptions;
-type index_d$2_Glyphs = Glyphs;
-declare const index_d$2_Glyphs: typeof Glyphs;
-type index_d$2_EventFn = EventFn;
-type index_d$2_CanvasOptions = CanvasOptions;
-type index_d$2_NotSupportedError = NotSupportedError;
-declare const index_d$2_NotSupportedError: typeof NotSupportedError;
-type index_d$2_BaseCanvas = BaseCanvas;
-declare const index_d$2_BaseCanvas: typeof BaseCanvas;
-type index_d$2_Canvas2D = Canvas2D;
-declare const index_d$2_Canvas2D: typeof Canvas2D;
-type index_d$2_CanvasGL = CanvasGL;
-declare const index_d$2_CanvasGL: typeof CanvasGL;
-declare namespace index_d$2 {
+type index_d$4_BufferTarget = BufferTarget;
+type index_d$4_Buffer = Buffer;
+declare const index_d$4_Buffer: typeof Buffer;
+type index_d$4_GlyphOptions = GlyphOptions;
+type index_d$4_Glyphs = Glyphs;
+declare const index_d$4_Glyphs: typeof Glyphs;
+type index_d$4_EventFn = EventFn;
+type index_d$4_CanvasOptions = CanvasOptions;
+type index_d$4_NotSupportedError = NotSupportedError;
+declare const index_d$4_NotSupportedError: typeof NotSupportedError;
+type index_d$4_BaseCanvas = BaseCanvas;
+declare const index_d$4_BaseCanvas: typeof BaseCanvas;
+type index_d$4_Canvas2D = Canvas2D;
+declare const index_d$4_Canvas2D: typeof Canvas2D;
+type index_d$4_CanvasGL = CanvasGL;
+declare const index_d$4_CanvasGL: typeof CanvasGL;
+declare namespace index_d$4 {
   export {
-    index_d$2_BufferTarget as BufferTarget,
-    index_d$2_Buffer as Buffer,
-    index_d$2_GlyphOptions as GlyphOptions,
-    index_d$2_Glyphs as Glyphs,
-    index_d$2_EventFn as EventFn,
-    index_d$2_CanvasOptions as CanvasOptions,
-    index_d$2_NotSupportedError as NotSupportedError,
-    index_d$2_BaseCanvas as BaseCanvas,
-    index_d$2_Canvas2D as Canvas2D,
-    index_d$2_CanvasGL as CanvasGL,
-    make$4 as make,
+    index_d$4_BufferTarget as BufferTarget,
+    index_d$4_Buffer as Buffer,
+    index_d$4_GlyphOptions as GlyphOptions,
+    index_d$4_Glyphs as Glyphs,
+    index_d$4_EventFn as EventFn,
+    index_d$4_CanvasOptions as CanvasOptions,
+    index_d$4_NotSupportedError as NotSupportedError,
+    index_d$4_BaseCanvas as BaseCanvas,
+    index_d$4_Canvas2D as Canvas2D,
+    index_d$4_CanvasGL as CanvasGL,
+    make$3 as make,
   };
 }
 
 interface SpriteConfig {
-    ch: string | null;
-    fg: ColorBase | null;
-    bg: ColorBase | null;
-    opacity: number;
+    ch?: string | null;
+    fg?: ColorBase | null;
+    bg?: ColorBase | null;
+    opacity?: number;
 }
 declare class Sprite implements SpriteData$1 {
     ch: string | null;
@@ -1641,17 +1746,17 @@ declare class Sprite implements SpriteData$1 {
     toString(): string;
 }
 declare const sprites: Record<string, Sprite>;
-declare function make$3(): Sprite;
-declare function make$3(bg: ColorBase, opacity?: number): Sprite;
-declare function make$3(ch: string | null, fg: ColorBase | null, bg: ColorBase | null, opacity?: number): Sprite;
-declare function make$3(args: any[]): Sprite;
-declare function make$3(info: Partial<SpriteConfig>): Sprite;
+declare function make$2(): Sprite;
+declare function make$2(bg: ColorBase, opacity?: number): Sprite;
+declare function make$2(ch?: string | null, fg?: ColorBase | null, bg?: ColorBase | null, opacity?: number): Sprite;
+declare function make$2(args: any[]): Sprite;
+declare function make$2(info: SpriteConfig): Sprite;
 declare function from$1(name: string): Sprite;
-declare function from$1(config: Partial<SpriteConfig>): Sprite;
+declare function from$1(config: SpriteConfig): Sprite;
 declare function install$2(name: string, bg: ColorBase, opacity?: number): Sprite;
 declare function install$2(name: string, ch: string | null, fg: Color | number | string | number[] | null, bg: Color | number | string | number[] | null, opacity?: number): Sprite;
 declare function install$2(name: string, args: any[]): Sprite;
-declare function install$2(name: string, info: Partial<SpriteConfig>): Sprite;
+declare function install$2(name: string, info: SpriteConfig): Sprite;
 
 interface SpriteData {
     readonly ch: string | null;
@@ -1660,27 +1765,27 @@ interface SpriteData {
     readonly opacity: number;
 }
 
-type index_d$1_SpriteConfig = SpriteConfig;
-type index_d$1_Sprite = Sprite;
-declare const index_d$1_Sprite: typeof Sprite;
-declare const index_d$1_sprites: typeof sprites;
-type index_d$1_DrawInfo = DrawInfo;
-type index_d$1_Mixer = Mixer;
-declare const index_d$1_Mixer: typeof Mixer;
-declare const index_d$1_makeMixer: typeof makeMixer;
-type index_d$1_SpriteData = SpriteData;
-declare namespace index_d$1 {
+type index_d$3_SpriteConfig = SpriteConfig;
+type index_d$3_Sprite = Sprite;
+declare const index_d$3_Sprite: typeof Sprite;
+declare const index_d$3_sprites: typeof sprites;
+type index_d$3_DrawInfo = DrawInfo;
+type index_d$3_Mixer = Mixer;
+declare const index_d$3_Mixer: typeof Mixer;
+declare const index_d$3_makeMixer: typeof makeMixer;
+type index_d$3_SpriteData = SpriteData;
+declare namespace index_d$3 {
   export {
-    index_d$1_SpriteConfig as SpriteConfig,
-    index_d$1_Sprite as Sprite,
-    index_d$1_sprites as sprites,
-    make$3 as make,
+    index_d$3_SpriteConfig as SpriteConfig,
+    index_d$3_Sprite as Sprite,
+    index_d$3_sprites as sprites,
+    make$2 as make,
     from$1 as from,
     install$2 as install,
-    index_d$1_DrawInfo as DrawInfo,
-    index_d$1_Mixer as Mixer,
-    index_d$1_makeMixer as makeMixer,
-    index_d$1_SpriteData as SpriteData,
+    index_d$3_DrawInfo as DrawInfo,
+    index_d$3_Mixer as Mixer,
+    index_d$3_makeMixer as makeMixer,
+    index_d$3_SpriteData as SpriteData,
   };
 }
 
@@ -1774,7 +1879,7 @@ declare class Blob {
     _cellularAutomataRound(grid: NumGrid): boolean;
 }
 declare function fillBlob(grid: NumGrid, opts?: Partial<BlobConfig>): Bounds;
-declare function make$2(opts?: Partial<BlobConfig>): Blob;
+declare function make$1(opts?: Partial<BlobConfig>): Blob;
 
 type blob_d_BlobConfig = BlobConfig;
 type blob_d_Blob = Blob;
@@ -1785,7 +1890,7 @@ declare namespace blob_d {
     blob_d_BlobConfig as BlobConfig,
     blob_d_Blob as Blob,
     blob_d_fillBlob as fillBlob,
-    make$2 as make,
+    make$1 as make,
   };
 }
 
@@ -1857,8 +1962,8 @@ declare class Light implements LightType {
 declare function intensity(light: Color | LightValue): number;
 declare function isDarkLight(light: Color | LightValue, threshold?: number): boolean;
 declare function isShadowLight(light: Color | LightValue, threshold?: number): boolean;
-declare function make$1(color: ColorBase, radius?: RangeBase, fadeTo?: number, pass?: boolean): Light;
-declare function make$1(light: LightBase): Light;
+declare function make(color: ColorBase, radius?: RangeBase, fadeTo?: number, pass?: boolean): Light;
+declare function make(light: LightBase): Light;
 declare const lights: Record<string, Light>;
 declare function from(light: LightBase | LightType): Light;
 declare function install(id: string, color: ColorBase, radius: RangeBase, fadeTo?: number, pass?: boolean): Light;
@@ -1882,9 +1987,9 @@ declare class LightSystem implements LightSystemType, PaintSite {
     glowLightChanged: boolean;
     dynamicLightChanged: boolean;
     changed: boolean;
-    light: Grid<LightValue>;
-    oldLight: Grid<LightValue>;
-    glowLight: Grid<LightValue>;
+    light: Grid$1<LightValue>;
+    oldLight: Grid$1<LightValue>;
+    glowLight: Grid$1<LightValue>;
     flags: NumGrid;
     constructor(map: LightSystemSite, opts?: Partial<LightSystemOptions>);
     copy(other: LightSystem): void;
@@ -1912,121 +2017,1356 @@ declare class LightSystem implements LightSystemType, PaintSite {
     addCellLight(x: number, y: number, light: LightValue, dispelShadows: boolean): void;
 }
 
-type index_d_LightConfig = LightConfig;
-type index_d_LightBase = LightBase;
-type index_d_LightType = LightType;
-type index_d_LightCb = LightCb;
-type index_d_PaintSite = PaintSite;
-type index_d_LightSystemSite = LightSystemSite;
-type index_d_LightSystemType = LightSystemType;
-declare const index_d_config: typeof config;
-type index_d_Light = Light;
-declare const index_d_Light: typeof Light;
-declare const index_d_intensity: typeof intensity;
-declare const index_d_isDarkLight: typeof isDarkLight;
-declare const index_d_isShadowLight: typeof isShadowLight;
-declare const index_d_lights: typeof lights;
-declare const index_d_from: typeof from;
-declare const index_d_install: typeof install;
-declare const index_d_installAll: typeof installAll;
-type index_d_StaticLightInfo = StaticLightInfo;
-type index_d_LightSystemOptions = LightSystemOptions;
-type index_d_LightSystem = LightSystem;
-declare const index_d_LightSystem: typeof LightSystem;
+type index_d$2_LightConfig = LightConfig;
+type index_d$2_LightBase = LightBase;
+type index_d$2_LightType = LightType;
+type index_d$2_LightCb = LightCb;
+type index_d$2_PaintSite = PaintSite;
+type index_d$2_LightSystemSite = LightSystemSite;
+type index_d$2_LightSystemType = LightSystemType;
+declare const index_d$2_config: typeof config;
+type index_d$2_Light = Light;
+declare const index_d$2_Light: typeof Light;
+declare const index_d$2_intensity: typeof intensity;
+declare const index_d$2_isDarkLight: typeof isDarkLight;
+declare const index_d$2_isShadowLight: typeof isShadowLight;
+declare const index_d$2_make: typeof make;
+declare const index_d$2_lights: typeof lights;
+declare const index_d$2_from: typeof from;
+declare const index_d$2_install: typeof install;
+declare const index_d$2_installAll: typeof installAll;
+type index_d$2_StaticLightInfo = StaticLightInfo;
+type index_d$2_LightSystemOptions = LightSystemOptions;
+type index_d$2_LightSystem = LightSystem;
+declare const index_d$2_LightSystem: typeof LightSystem;
+declare namespace index_d$2 {
+  export {
+    index_d$2_LightConfig as LightConfig,
+    index_d$2_LightBase as LightBase,
+    index_d$2_LightType as LightType,
+    index_d$2_LightCb as LightCb,
+    index_d$2_PaintSite as PaintSite,
+    index_d$2_LightSystemSite as LightSystemSite,
+    index_d$2_LightSystemType as LightSystemType,
+    index_d$2_config as config,
+    index_d$2_Light as Light,
+    index_d$2_intensity as intensity,
+    index_d$2_isDarkLight as isDarkLight,
+    index_d$2_isShadowLight as isShadowLight,
+    index_d$2_make as make,
+    index_d$2_lights as lights,
+    index_d$2_from as from,
+    index_d$2_install as install,
+    index_d$2_installAll as installAll,
+    index_d$2_StaticLightInfo as StaticLightInfo,
+    index_d$2_LightSystemOptions as LightSystemOptions,
+    index_d$2_LightSystem as LightSystem,
+  };
+}
+
+declare type MatchFn = (el: UISelectable) => boolean;
+declare type BuildFn = (next: MatchFn, e: UISelectable) => boolean;
+declare class Selector {
+    text: string;
+    priority: number;
+    matchFn: MatchFn;
+    constructor(text: string);
+    protected _parse(text: string): MatchFn;
+    protected _parentMatch(): BuildFn;
+    protected _ancestorMatch(): BuildFn;
+    protected _matchElement(text: string): BuildFn;
+    protected _matchTag(tag: string): MatchFn | null;
+    protected _matchClass(cls: string): MatchFn;
+    protected _matchProp(prop: string): MatchFn;
+    protected _matchId(id: string): MatchFn;
+    protected _matchFirst(): MatchFn;
+    protected _matchLast(): MatchFn;
+    protected _matchNot(fn: MatchFn): MatchFn;
+    matches(obj: UISelectable): boolean;
+}
+declare function compile(text: string): Selector;
+
+interface Size {
+    width: number;
+    height: number;
+}
+declare type PrefixType = 'none' | 'letter' | 'number' | 'bullet';
+declare type PropType = string | number | boolean;
+interface UIStyle {
+    readonly selector: Selector;
+    dirty: boolean;
+    readonly fg?: ColorBase;
+    readonly bg?: ColorBase;
+    readonly align?: Align;
+    readonly valign?: VAlign;
+    get(key: keyof UIStyle): any;
+    set(key: keyof UIStyle, value: any): this;
+    set(values: StyleOptions): this;
+    unset(key: keyof UIStyle): this;
+}
+interface StyleOptions {
+    fg?: ColorBase;
+    bg?: ColorBase;
+    align?: Align;
+    valign?: VAlign;
+}
+interface UISelectable {
+    readonly tag: string;
+    readonly classes: string[];
+    children: UISelectable[];
+    attr(name: string): PropType | undefined;
+    prop(name: string): PropType | undefined;
+    parent: UISelectable | null;
+}
+interface UIStylable extends UISelectable {
+    style(): UIStyle;
+    readonly opacity: number;
+}
+interface UILayer {
+    readonly buffer: Buffer;
+    readonly width: number;
+    readonly height: number;
+    finish(result?: any): void;
+    click(e: Event$1): boolean;
+    mousemove(e: Event$1): boolean;
+    keypress(e: Event$1): boolean;
+    dir(e: Event$1): boolean;
+    tick(e: Event$1): boolean;
+    draw(): void;
+    needsDraw: boolean;
+}
+
+interface GridTarget {
+    pos(): XY;
+    pos(x: number, y: number): any;
+}
+declare class Grid {
+    _left: number;
+    _top: number;
+    _colWidths: number[];
+    _rowHeights: number[];
+    _col: number;
+    _row: number;
+    target: GridTarget;
+    constructor(target: GridTarget);
+    cols(): number[];
+    cols(count: number, width: number): this;
+    cols(widths: number[]): this;
+    rows(): number[];
+    rows(count: number, height?: number): this;
+    rows(heights: number[]): this;
+    col(n?: number): this;
+    nextCol(): this;
+    row(n?: number): this;
+    nextRow(): this;
+    endRow(h: number): this;
+    protected _setPos(): this;
+}
+
+declare type StyleType = string | StyleOptions;
+declare class Style implements UIStyle {
+    _fg?: ColorBase;
+    _bg?: ColorBase;
+    _border?: ColorBase;
+    _align?: Align;
+    _valign?: VAlign;
+    selector: Selector;
+    protected _dirty: boolean;
+    constructor(selector?: string, init?: StyleOptions);
+    get dirty(): boolean;
+    set dirty(v: boolean);
+    get fg(): ColorBase | undefined;
+    get bg(): ColorBase | undefined;
+    dim(pct?: number, fg?: boolean, bg?: boolean): this;
+    bright(pct?: number, fg?: boolean, bg?: boolean): this;
+    invert(): this;
+    get align(): Align | undefined;
+    get valign(): VAlign | undefined;
+    get(key: keyof Style): any;
+    set(opts: StyleOptions, setDirty?: boolean): this;
+    set(key: keyof StyleOptions, value: any, setDirty?: boolean): this;
+    unset(key: keyof Style): this;
+    clone(): this;
+    copy(other: Style): this;
+}
+declare function makeStyle(style: string, selector?: string): Style;
+declare class ComputedStyle extends Style {
+    sources: UIStyle[];
+    _opacity: number;
+    _baseFg: Color | null;
+    _baseBg: Color | null;
+    constructor(sources?: UIStyle[], opacity?: number);
+    get opacity(): number;
+    set opacity(v: number);
+    get dirty(): boolean;
+    set dirty(v: boolean);
+}
+declare class Sheet {
+    rules: UIStyle[];
+    _dirty: boolean;
+    constructor(parentSheet?: Sheet | null);
+    get dirty(): boolean;
+    set dirty(v: boolean);
+    add(selector: string, props: StyleOptions): this;
+    get(selector: string): UIStyle | null;
+    remove(selector: string): void;
+    computeFor(widget: UIStylable): ComputedStyle;
+}
+declare const defaultStyle: Sheet;
+
+declare type EventCb$1 = (name: string, widget: Widget | null, args?: any) => boolean;
+interface WidgetOptions extends StyleOptions {
+    id?: string;
+    disabled?: boolean;
+    hidden?: boolean;
+    opacity?: number;
+    x?: number;
+    y?: number;
+    width?: number;
+    height?: number;
+    class?: string;
+    tag?: string;
+    tabStop?: boolean;
+    action?: string;
+    depth?: number;
+}
+interface SetParentOptions {
+    left?: number;
+    right?: number;
+    top?: number;
+    bottom?: number;
+    beforeIndex?: number;
+}
+declare class Widget implements UIStylable {
+    tag: string;
+    layer: Layer;
+    bounds: Bounds;
+    _depth: number;
+    events: Record<string, EventCb$1[]>;
+    children: Widget[];
+    _style: Style;
+    _used: ComputedStyle;
+    _parent: Widget | null;
+    classes: string[];
+    _props: Record<string, PropType>;
+    _attrs: Record<string, PropType>;
+    constructor(term: Layer, opts?: WidgetOptions);
+    get depth(): number;
+    set depth(v: number);
+    get parent(): Widget | null;
+    set parent(v: Widget | null);
+    setParent(v: Widget | null, opts?: SetParentOptions): void;
+    pos(): XY;
+    pos(xy: XY): this;
+    pos(x: number, y: number): this;
+    center(bounds?: Bounds): this;
+    centerX(bounds?: Bounds): this;
+    centerY(bounds?: Bounds): this;
+    text(): string;
+    text(v: string): this;
+    attr(name: string): PropType;
+    attr(name: string, v: PropType): this;
+    _attrInt(name: string): number;
+    _attrStr(name: string): string;
+    _attrBool(name: string): boolean;
+    prop(name: string): PropType | undefined;
+    prop(name: string, v: PropType): this;
+    _setProp(name: string, v: PropType): void;
+    _propInt(name: string): number;
+    _propStr(name: string): string;
+    _propBool(name: string): boolean;
+    toggleProp(name: string): this;
+    incProp(name: string, n?: number): this;
+    contains(e: XY): boolean;
+    contains(x: number, y: number): boolean;
+    style(): Style;
+    style(opts: StyleOptions): this;
+    addClass(c: string): this;
+    removeClass(c: string): this;
+    hasClass(c: string): boolean;
+    toggleClass(c: string): this;
+    get focused(): boolean;
+    focus(reverse?: boolean): boolean;
+    blur(reverse?: boolean): boolean;
+    get hovered(): boolean;
+    set hovered(v: boolean);
+    get hidden(): boolean;
+    set hidden(v: boolean);
+    get opacity(): number;
+    set opacity(v: number);
+    updateStyle(): void;
+    draw(buffer: Buffer$1): boolean;
+    fadeIn(ms: number): this;
+    fadeOut(ms: number): this;
+    fadeTo(opacity: number, ms: number): this;
+    fadeToggle(ms: number): this;
+    slideIn(x: number, y: number, from: 'left' | 'top' | 'right' | 'bottom', ms: number): this;
+    slideOut(dir: 'left' | 'top' | 'right' | 'bottom', ms: number): this;
+    slide(from: XY | Loc$1, to: XY | Loc$1, ms: number): this;
+    protected _draw(buffer: Buffer$1): boolean;
+    protected _drawFill(buffer: Buffer$1): void;
+    childAt(xy: XY): Widget | null;
+    childAt(x: number, y: number): Widget | null;
+    _addChild(w: Widget, opts?: SetParentOptions): this;
+    _removeChild(w: Widget): this;
+    resize(w: number, h: number): this;
+    mouseenter(e: Event$1, over: Widget): void;
+    mousemove(e: Event$1): boolean;
+    mouseleave(e: Event$1): void;
+    click(e: Event$1): boolean;
+    keypress(e: Event$1): boolean;
+    dir(e: Event$1): boolean;
+    tick(e: Event$1): boolean;
+    on(event: string, cb: EventCb$1): this;
+    off(event: string, cb?: EventCb$1): this;
+    _fireEvent(name: string, source: Widget | null, args?: any): boolean;
+    _bubbleEvent(name: string, source: Widget | null, args?: any): boolean;
+}
+
+declare type TimerFn = () => void;
+interface TimerInfo {
+    action: string | TimerFn;
+    time: number;
+}
+interface UICore {
+    readonly loop: Loop;
+    readonly canvas: BaseCanvas;
+    readonly width: number;
+    readonly height: number;
+    readonly styles: Sheet;
+    startNewLayer(): Layer;
+    copyUIBuffer(dest: Buffer$1): void;
+    finishLayer(layer: Layer): void;
+    stop(): void;
+}
+declare type StartCb = () => void;
+declare type DrawCb = (buffer: Buffer$1) => void;
+declare type EventCb = (e: Event$1) => boolean;
+declare type FinishCb = (result: any) => void;
+interface LayerOptions {
+    styles?: Sheet;
+    start?: StartCb;
+    draw?: DrawCb;
+    tick?: EventCb;
+    dir?: EventCb;
+    mousemove?: EventCb;
+    click?: EventCb;
+    keypress?: EventCb;
+    finish?: FinishCb;
+}
+declare class Layer implements UILayer {
+    ui: UICore;
+    buffer: Buffer;
+    body: Widget;
+    styles: Sheet;
+    needsDraw: boolean;
+    result: any;
+    _attachOrder: Widget[];
+    _depthOrder: Widget[];
+    _focusWidget: Widget | null;
+    _hasTabStop: boolean;
+    timers: TimerInfo[];
+    _tweens: Tween[];
+    promise: Promise<any>;
+    _done: Function | null;
+    _opts: WidgetOptions;
+    _drawCb: DrawCb | null;
+    _tickCb: EventCb | null;
+    _dirCb: EventCb | null;
+    _mousemoveCb: EventCb | null;
+    _clickCb: EventCb | null;
+    _keypressCb: EventCb | null;
+    _finishCb: FinishCb | null;
+    constructor(ui: UICore, opts?: LayerOptions);
+    get width(): number;
+    get height(): number;
+    reset(): this;
+    fg(v: ColorBase): this;
+    bg(v: ColorBase): this;
+    dim(pct?: number, fg?: boolean, bg?: boolean): this;
+    bright(pct?: number, fg?: boolean, bg?: boolean): this;
+    invert(): this;
+    style(opts: StyleOptions): this;
+    class(c: string): this;
+    pos(): XY;
+    pos(x: number, y: number): this;
+    moveTo(x: number, y: number): this;
+    move(dx: number, dy: number): this;
+    up(n?: number): this;
+    down(n?: number): this;
+    left(n?: number): this;
+    right(n?: number): this;
+    nextLine(n?: number): this;
+    prevLine(n?: number): this;
+    grid(): Grid;
+    clear(color?: ColorBase): this;
+    sortWidgets(): this;
+    attach(w: Widget): this;
+    detach(w: Widget): this;
+    widgetAt(x: number, y: number): Widget;
+    widgetAt(xy: XY): Widget;
+    get focusWidget(): Widget | null;
+    setFocusWidget(w: Widget | null, reverse?: boolean): void;
+    getWidget(id: string): Widget | null;
+    nextTabStop(): boolean;
+    prevTabStop(): boolean;
+    on(event: string, cb: EventCb$1): this;
+    off(event: string, cb?: EventCb$1): this;
+    mousemove(e: Event$1): boolean;
+    click(e: Event$1): boolean;
+    keypress(e: Event$1): boolean;
+    dir(e: Event$1): boolean;
+    tick(e: Event$1): boolean;
+    draw(): void;
+    setTimeout(action: string | TimerFn, time: number): void;
+    clearTimeout(action: string | TimerFn): void;
+    animate(tween: Tween): this;
+    finish(result?: any): void;
+    _finish(): void;
+}
+
+interface TextOptions extends WidgetOptions {
+    text: string;
+}
+declare class Text extends Widget {
+    _text: string;
+    _lines: string[];
+    _fixedWidth: boolean;
+    _fixedHeight: boolean;
+    constructor(layer: Layer, opts: TextOptions);
+    text(): string;
+    text(v: string): this;
+    resize(w: number, h: number): this;
+    _draw(buffer: Buffer$1): boolean;
+}
+declare type AddTextOptions = Omit<TextOptions, 'text'> & SetParentOptions & {
+    parent?: Widget;
+};
+declare module '../ui/layer' {
+    interface Layer {
+        text(text: string, opts?: AddTextOptions): Text;
+    }
+}
+
+declare type FormatFn = Template;
+declare type Value = string | number;
+declare type SelectType = 'none' | 'column' | 'row' | 'cell';
+declare type HoverType = 'none' | 'column' | 'row' | 'cell' | 'select';
+declare type DataObject = Record<string, any>;
+declare type DataItem = Value | Value[] | DataObject;
+declare type DataType = DataItem[];
+declare type BorderType = 'ascii' | 'fill' | 'none';
+interface ColumnOptions {
+    width?: number;
+    format?: string | FormatFn;
+    header?: string;
+    headerTag?: string;
+    headerClass?: string;
+    empty?: string;
+    dataTag?: string;
+    dataClass?: string;
+}
+interface DataTableOptions extends Omit<WidgetOptions, 'height'> {
+    size?: number;
+    rowHeight?: number;
+    header?: boolean;
+    headerTag?: string;
+    dataTag?: string;
+    prefix?: PrefixType;
+    select?: SelectType;
+    hover?: HoverType;
+    wrap?: boolean;
+    columns: ColumnOptions[];
+    data?: DataType;
+    border?: boolean | BorderType;
+}
+declare class Column {
+    static default: {
+        select: string;
+        hover: string;
+        tag: string;
+        headerTag: string;
+        dataTag: string;
+        border: string;
+    };
+    width: number;
+    format: Template;
+    header: string;
+    headerTag: string;
+    dataTag: string;
+    empty: string;
+    constructor(opts: ColumnOptions);
+    addHeader(table: DataTable, x: number, y: number, col: number): Text;
+    addData(table: DataTable, data: DataItem, x: number, y: number, col: number, row: number): Text;
+    addEmpty(table: DataTable, x: number, y: number, col: number, row: number): Text;
+}
+declare class DataTable extends Widget {
+    static default: {
+        columnWidth: number;
+        header: boolean;
+        empty: string;
+        tag: string;
+        headerTag: string;
+        dataTag: string;
+        select: SelectType;
+        hover: HoverType;
+        prefix: PrefixType;
+        border: BorderType;
+        wrap: boolean;
+    };
+    _data: DataType;
+    columns: Column[];
+    showHeader: boolean;
+    rowHeight: number;
+    size: number;
+    selectedRow: number;
+    selectedColumn: number;
+    constructor(layer: Layer, opts: DataTableOptions);
+    get selectedData(): any;
+    select(col: number, row: number): this;
+    selectNextRow(): this;
+    selectPrevRow(): this;
+    selectNextCol(): this;
+    selectPrevCol(): this;
+    blur(reverse?: boolean): boolean;
+    data(): DataType;
+    data(data: DataType): this;
+    _draw(buffer: Buffer$1): boolean;
+    mouseenter(e: Event$1, over: Widget): void;
+    click(e: Event$1): boolean;
+    keypress(e: Event$1): boolean;
+    dir(e: Event$1): boolean;
+}
+declare class TD extends Text {
+    mouseleave(e: Event$1): void;
+}
+declare type AddDataTableOptions = DataTableOptions & SetParentOptions & {
+    parent?: Widget;
+};
+declare module '../ui/layer' {
+    interface Layer {
+        datatable(opts: AddDataTableOptions): DataTable;
+    }
+}
+
+declare type PadInfo = boolean | number | [number] | [number, number] | [number, number, number, number];
+interface DialogOptions extends WidgetOptions {
+    width: number;
+    height: number;
+    border?: BorderType;
+    pad?: PadInfo;
+    legend?: string;
+    legendTag?: string;
+    legendClass?: string;
+    legendAlign?: Align;
+}
+declare function toPadArray(pad: PadInfo): [number, number, number, number];
+declare class Dialog extends Widget {
+    static default: {
+        tag: string;
+        border: BorderType;
+        pad: boolean;
+        legendTag: string;
+        legendClass: string;
+        legendAlign: Align;
+    };
+    legend: Widget | null;
+    constructor(layer: Layer, opts: DialogOptions);
+    _adjustBounds(pad: [number, number, number, number]): this;
+    get _innerLeft(): number;
+    get _innerWidth(): number;
+    get _innerTop(): number;
+    get _innerHeight(): number;
+    _addLegend(opts: DialogOptions): this;
+    _draw(buffer: Buffer$1): boolean;
+}
+declare type AddDialogOptions = DialogOptions & SetParentOptions & {
+    parent?: Widget;
+};
+declare module '../ui/layer' {
+    interface Layer {
+        dialog(opts?: AddDialogOptions): Dialog;
+    }
+}
+
+interface AlertOptions extends DialogOptions {
+    duration?: number;
+    waitForAck?: boolean;
+    textClass?: string;
+    opacity?: number;
+}
+declare module './layer' {
+    interface Layer {
+        alert(opts: AlertOptions | number, text: string, args?: any): Layer;
+    }
+}
+
+interface ButtonOptions extends Omit<TextOptions, 'text'> {
+    text?: string;
+    id: string;
+}
+declare class Button extends Text {
+    constructor(layer: Layer, opts: ButtonOptions);
+    keypress(ev: Event$1): boolean;
+    click(ev: Event$1): boolean;
+}
+declare type AddButtonOptions = Omit<ButtonOptions, 'text'> & SetParentOptions & {
+    parent?: Widget;
+};
+declare module '../ui/layer' {
+    interface Layer {
+        button(text: string, opts?: AddButtonOptions): Button;
+    }
+}
+
+interface ConfirmOptions extends Omit<DialogOptions, 'width' | 'height'> {
+    width?: number;
+    height?: number;
+    textClass?: string;
+    opacity?: number;
+    buttonWidth?: number;
+    ok?: string;
+    okClass?: string;
+    cancel?: boolean | string;
+    cancelClass?: string;
+}
+declare module './layer' {
+    interface Layer {
+        confirm(text: string, args?: any): Layer;
+        confirm(opts: ConfirmOptions, text: string, args?: any): Layer;
+    }
+}
+
+interface InputBoxOptions extends Omit<DialogOptions, 'width' | 'height'> {
+    width?: number;
+    height?: number;
+    textClass?: string;
+    opacity?: number;
+    buttonWidth?: number;
+    label?: string;
+    labelClass?: string;
+    default?: string;
+    placeholder?: string;
+    inputClass?: string;
+    minLength?: number;
+    maxLength?: number;
+    numbersOnly?: boolean;
+    min?: number;
+    max?: number;
+}
+declare module './layer' {
+    interface Layer {
+        inputbox(text: string, args?: any): Layer;
+        inputbox(opts: InputBoxOptions, text: string, args?: any): Layer;
+    }
+}
+
+interface UIOptions extends CanvasOptions {
+    canvas?: BaseCanvas;
+    loop?: Loop;
+}
+declare class UI implements UICore {
+    canvas: BaseCanvas;
+    loop: Loop;
+    layer: Layer | null;
+    layers: Layer[];
+    _done: boolean;
+    _promise: Promise<void> | null;
+    constructor(opts?: UIOptions);
+    get width(): number;
+    get height(): number;
+    get styles(): Sheet;
+    get baseBuffer(): Buffer;
+    get canvasBuffer(): Buffer;
+    get buffer(): Buffer;
+    startNewLayer(): Layer;
+    copyUIBuffer(dest: Buffer$1): void;
+    finishLayer(layer: Layer): void;
+    stop(): void;
+    mousemove(e: Event$1): Promise<boolean>;
+    click(e: Event$1): Promise<boolean>;
+    keypress(e: Event$1): Promise<boolean>;
+    dir(e: Event$1): Promise<boolean>;
+    tick(e: Event$1): Promise<boolean>;
+    draw(): void;
+}
+
+type index_d$1_Size = Size;
+type index_d$1_PrefixType = PrefixType;
+type index_d$1_PropType = PropType;
+type index_d$1_UIStyle = UIStyle;
+type index_d$1_StyleOptions = StyleOptions;
+type index_d$1_UISelectable = UISelectable;
+type index_d$1_UIStylable = UIStylable;
+type index_d$1_UILayer = UILayer;
+type index_d$1_GridTarget = GridTarget;
+type index_d$1_Grid = Grid;
+declare const index_d$1_Grid: typeof Grid;
+type index_d$1_MatchFn = MatchFn;
+type index_d$1_Selector = Selector;
+declare const index_d$1_Selector: typeof Selector;
+declare const index_d$1_compile: typeof compile;
+type index_d$1_StyleType = StyleType;
+type index_d$1_Style = Style;
+declare const index_d$1_Style: typeof Style;
+declare const index_d$1_makeStyle: typeof makeStyle;
+type index_d$1_ComputedStyle = ComputedStyle;
+declare const index_d$1_ComputedStyle: typeof ComputedStyle;
+type index_d$1_Sheet = Sheet;
+declare const index_d$1_Sheet: typeof Sheet;
+declare const index_d$1_defaultStyle: typeof defaultStyle;
+type index_d$1_TimerFn = TimerFn;
+type index_d$1_TimerInfo = TimerInfo;
+type index_d$1_UICore = UICore;
+type index_d$1_StartCb = StartCb;
+type index_d$1_DrawCb = DrawCb;
+type index_d$1_EventCb = EventCb;
+type index_d$1_FinishCb = FinishCb;
+type index_d$1_LayerOptions = LayerOptions;
+type index_d$1_Layer = Layer;
+declare const index_d$1_Layer: typeof Layer;
+type index_d$1_AlertOptions = AlertOptions;
+type index_d$1_ConfirmOptions = ConfirmOptions;
+type index_d$1_InputBoxOptions = InputBoxOptions;
+type index_d$1_UIOptions = UIOptions;
+type index_d$1_UI = UI;
+declare const index_d$1_UI: typeof UI;
+declare namespace index_d$1 {
+  export {
+    index_d$1_Size as Size,
+    index_d$1_PrefixType as PrefixType,
+    index_d$1_PropType as PropType,
+    index_d$1_UIStyle as UIStyle,
+    index_d$1_StyleOptions as StyleOptions,
+    index_d$1_UISelectable as UISelectable,
+    index_d$1_UIStylable as UIStylable,
+    index_d$1_UILayer as UILayer,
+    index_d$1_GridTarget as GridTarget,
+    index_d$1_Grid as Grid,
+    index_d$1_MatchFn as MatchFn,
+    index_d$1_Selector as Selector,
+    index_d$1_compile as compile,
+    index_d$1_StyleType as StyleType,
+    index_d$1_Style as Style,
+    index_d$1_makeStyle as makeStyle,
+    index_d$1_ComputedStyle as ComputedStyle,
+    index_d$1_Sheet as Sheet,
+    index_d$1_defaultStyle as defaultStyle,
+    index_d$1_TimerFn as TimerFn,
+    index_d$1_TimerInfo as TimerInfo,
+    index_d$1_UICore as UICore,
+    index_d$1_StartCb as StartCb,
+    index_d$1_DrawCb as DrawCb,
+    index_d$1_EventCb as EventCb,
+    index_d$1_FinishCb as FinishCb,
+    index_d$1_LayerOptions as LayerOptions,
+    index_d$1_Layer as Layer,
+    index_d$1_AlertOptions as AlertOptions,
+    index_d$1_ConfirmOptions as ConfirmOptions,
+    index_d$1_InputBoxOptions as InputBoxOptions,
+    index_d$1_UIOptions as UIOptions,
+    index_d$1_UI as UI,
+  };
+}
+
+declare class Body extends Widget {
+    constructor(layer: Layer);
+    _drawFill(buffer: Buffer$1): void;
+}
+
+interface BorderOptions extends WidgetOptions {
+    width: number;
+    height: number;
+    ascii?: boolean;
+}
+declare class Border extends Widget {
+    ascii: boolean;
+    constructor(layer: Layer, opts: BorderOptions);
+    contains(e: XY): boolean;
+    contains(x: number, y: number): boolean;
+    _draw(buffer: Buffer$1): boolean;
+}
+declare type AddBorderOptions = BorderOptions & SetParentOptions & {
+    parent?: Widget;
+};
+declare module '../ui/layer' {
+    interface Layer {
+        border(opts: AddBorderOptions): Border;
+    }
+}
+declare function drawBorder(buffer: Buffer$1, x: number, y: number, w: number, h: number, style: UIStyle, ascii: boolean): void;
+
+interface FieldsetOptions extends Omit<DialogOptions, 'width' | 'height'> {
+    width?: number;
+    height?: number;
+    dataWidth: number;
+    separator?: string;
+    labelTag?: string;
+    labelClass?: string;
+    dataTag?: string;
+    dataClass?: string;
+}
+declare class Fieldset extends Dialog {
+    static default: {
+        tag: string;
+        border: BorderType;
+        separator: string;
+        pad: boolean;
+        legendTag: string;
+        legendClass: string;
+        legendAlign: Align;
+        labelTag: string;
+        labelClass: string;
+        dataTag: string;
+        dataClass: string;
+    };
+    fields: Field[];
+    constructor(layer: Layer, opts: FieldsetOptions);
+    _adjustBounds(pad: [number, number, number, number]): this;
+    get _labelLeft(): number;
+    get _dataLeft(): number;
+    get _nextY(): number;
+    add(label: string, format: string | FieldOptions): this;
+    data(d: any): this;
+}
+declare type AddFieldsetOptions = FieldsetOptions & SetParentOptions & {
+    parent?: Widget;
+};
+declare module '../ui/layer' {
+    interface Layer {
+        fieldset(opts?: AddFieldsetOptions): Fieldset;
+    }
+}
+interface FieldOptions extends WidgetOptions {
+    format: string | Template;
+}
+declare class Field extends Text {
+    _format: Template;
+    constructor(layer: Layer, opts: FieldOptions);
+    data(v: any): this;
+}
+
+interface OrderedListOptions extends WidgetOptions {
+    pad?: number;
+}
+declare class OrderedList extends Widget {
+    static default: {
+        pad: number;
+    };
+    _fixedWidth: boolean;
+    _fixedHeight: boolean;
+    constructor(layer: Layer, opts: OrderedListOptions);
+    _addChild(w: Widget, opts?: SetParentOptions): this;
+    _draw(buffer: Buffer$1): boolean;
+    _getBullet(index: number): string;
+    _drawBulletFor(widget: Widget, buffer: Buffer$1, index: number): void;
+}
+interface UnorderedListOptions extends OrderedListOptions {
+    bullet?: string;
+}
+declare class UnorderedList extends OrderedList {
+    static default: {
+        bullet: string;
+        pad: number;
+    };
+    constructor(layer: Layer, opts: UnorderedListOptions);
+    _getBullet(_index: number): string;
+}
+declare type AddOrderedListOptions = OrderedListOptions & SetParentOptions & {
+    parent?: Widget;
+};
+declare type AddUnorderedListOptions = UnorderedListOptions & SetParentOptions & {
+    parent?: Widget;
+};
+declare module '../ui/layer' {
+    interface Layer {
+        ol(opts?: AddOrderedListOptions): OrderedList;
+        ul(opts?: AddUnorderedListOptions): UnorderedList;
+    }
+}
+
+interface InputOptions extends Omit<TextOptions, 'text'> {
+    text?: string;
+    id: string;
+    placeholder?: string;
+    minLength?: number;
+    maxLength?: number;
+    numbersOnly?: boolean;
+    min?: number;
+    max?: number;
+    required?: boolean;
+    disabled?: boolean;
+}
+declare class Input extends Text {
+    static default: {
+        tag: string;
+        width: number;
+        placeholder: string;
+    };
+    minLength: number;
+    maxLength: number;
+    numbersOnly: boolean;
+    min: number;
+    max: number;
+    constructor(layer: Layer, opts: InputOptions);
+    reset(): void;
+    _setProp(name: string, v: PropType): void;
+    isValid(): boolean;
+    keypress(ev: Event$1): boolean;
+    text(): string;
+    text(v: string): this;
+    _draw(buffer: Buffer$1, _force?: boolean): boolean;
+}
+declare type AddInputOptions = InputOptions & SetParentOptions & {
+    parent?: Widget;
+};
+declare module '../ui/layer' {
+    interface Layer {
+        input(opts: AddInputOptions): Input;
+    }
+}
+
+interface DataListOptions extends ColumnOptions, WidgetOptions {
+    size?: number;
+    rowHeight?: number;
+    hover?: HoverType;
+    headerTag?: string;
+    dataTag?: string;
+    prefix?: PrefixType;
+    data?: DataType;
+    border?: boolean | BorderType;
+}
+declare class DataList extends DataTable {
+    constructor(layer: Layer, opts: DataListOptions);
+}
+declare type AddDataListOptions = DataListOptions & SetParentOptions & {
+    parent?: Widget;
+};
+declare module '../ui/layer' {
+    interface Layer {
+        datalist(opts: AddDataListOptions): DataList;
+    }
+}
+
+interface Rec<T> {
+    [keys: string]: T;
+}
+declare type DropdownConfig = Rec<ButtonConfig>;
+declare type ActionConfig = string;
+declare type ButtonConfig = ActionConfig | DropdownConfig;
+interface MenuOptions extends WidgetOptions {
+    buttons: DropdownConfig;
+    buttonClass?: string | string[];
+    buttonTag?: string;
+    minWidth?: number;
+    marker?: string;
+}
+declare class Menu extends Widget {
+    static default: {
+        tag: string;
+        class: string;
+        buttonClass: string;
+        buttonTag: string;
+        marker: string;
+        minWidth: number;
+    };
+    constructor(layer: Layer, opts: MenuOptions);
+    _initButtons(opts: MenuOptions): void;
+    collapse(): this;
+}
+interface MenuButtonOptions extends WidgetOptions {
+    text: string;
+    buttons: ButtonConfig;
+}
+declare class MenuButton extends Text {
+    menu: Menu | null;
+    constructor(layer: Layer, opts: MenuButtonOptions);
+    collapse(): this;
+    expand(): this;
+    _setMenuPos(xy: XY, opts: MenuButtonOptions): void;
+    _initMenu(opts: MenuButtonOptions): Menu | null;
+}
+declare type AddMenuOptions = MenuOptions & SetParentOptions & {
+    parent?: Widget;
+};
+declare module '../ui/layer' {
+    interface Layer {
+        menu(opts: AddMenuOptions): Menu;
+    }
+}
+
+interface MenubarOptions extends WidgetOptions {
+    buttons: DropdownConfig;
+    buttonClass?: string | string[];
+    buttonTag?: string;
+    menuClass?: string | string[];
+    menuTag?: string;
+    minWidth?: number;
+    prefix?: string;
+    separator?: string;
+}
+declare class Menubar extends Widget {
+    static default: {
+        buttonClass: string;
+        buttonTag: string;
+        menuClass: string;
+        menuTag: string;
+        prefix: string;
+        separator: string;
+    };
+    _config: DropdownConfig;
+    _buttons: MenubarButton[];
+    _selectedIndex: number;
+    constructor(layer: Layer, opts: MenubarOptions);
+    get selectedIndex(): number;
+    set selectedIndex(v: number);
+    get selectedButton(): Widget;
+    focus(reverse?: boolean): boolean;
+    blur(reverse?: boolean): boolean;
+    collapse(): boolean;
+    keypress(e: Event$1): boolean;
+    mousemove(e: Event$1): boolean;
+    _initButtons(opts: MenubarOptions): void;
+    _buttonClick(_action: string, button: Widget | null): boolean;
+}
+interface MenubarButtonOptions extends WidgetOptions {
+    text: string;
+    buttons: ButtonConfig;
+}
+declare class MenubarButton extends Text {
+    menu: Menu | null;
+    constructor(layer: Layer, opts: MenubarButtonOptions);
+    collapse(): boolean;
+    expand(): this;
+    _setMenuPos(xy: XY, opts: MenubarButtonOptions): void;
+    _initMenu(opts: MenubarButtonOptions): Menu | null;
+}
+declare type AddMenubarOptions = MenubarOptions & SetParentOptions & {
+    parent?: Widget;
+};
+declare module '../ui/layer' {
+    interface Layer {
+        menubar(opts?: AddMenubarOptions): Menubar;
+    }
+}
+declare class MenuViewer extends Widget {
+    menubar: Menubar;
+    mainMenu: Menu;
+    constructor(menubar: Menubar, buttons: DropdownConfig);
+    contains(): boolean;
+    finish(): void;
+    _initMenu(buttons: DropdownConfig): Menu;
+    keypress(e: Event$1): boolean;
+}
+
+interface SelectOptions extends WidgetOptions {
+    text: string;
+    buttons: DropdownConfig;
+    buttonClass?: string;
+    buttonTag?: string;
+}
+declare class Select extends Widget {
+    dropdown: Text;
+    menu: Menu;
+    constructor(layer: Layer, opts: SelectOptions);
+    _initText(opts: SelectOptions): void;
+    _initMenu(opts: SelectOptions): void;
+}
+declare type AddSelectOptions = SelectOptions & SetParentOptions & {
+    parent?: Widget;
+};
+declare module '../ui/layer' {
+    interface Layer {
+        select(opts: AddSelectOptions): Select;
+    }
+}
+
+declare type NextType = string | null;
+interface PromptChoice {
+    info?: string | Template;
+    next?: string;
+    value?: any;
+}
+interface PromptOptions {
+    field?: string;
+    next?: string;
+    id?: string;
+}
+declare class Prompt {
+    _id: string | null;
+    _field: string;
+    _prompt: string | Template;
+    _choices: string[];
+    _infos: (string | Template)[];
+    _next: NextType[];
+    _values: any[];
+    _defaultNext: NextType;
+    selection: number;
+    constructor(question: string | Template, field?: string | PromptOptions);
+    reset(): void;
+    field(): string;
+    field(v: string): this;
+    id(): string | null;
+    id(v: string | null): this;
+    prompt(arg?: any): string;
+    next(): string | null;
+    next(v: string | null): this;
+    choices(): string[];
+    choices(choices: Record<string, string | PromptChoice>): this;
+    choices(choices: string[], infos?: (string | PromptChoice)[]): this;
+    choice(choice: string, info?: string | PromptChoice): this;
+    info(arg?: any): string;
+    choose(n: number): this;
+    value(): any;
+    updateResult(res: any): this;
+}
+interface ChoiceOptions extends WidgetOptions {
+    width: number;
+    height: number;
+    choiceWidth: number;
+    border?: BorderType;
+    promptTag?: string;
+    promptClass?: string;
+    choiceTag?: string;
+    choiceClass?: string;
+    infoTag?: string;
+    infoClass?: string;
+    prompt?: Prompt;
+}
+declare class Choice extends Widget {
+    static default: {
+        tag: string;
+        border: string;
+        promptTag: string;
+        promptClass: string;
+        choiceTag: string;
+        choiceClass: string;
+        infoTag: string;
+        infoClass: string;
+    };
+    choiceWidth: number;
+    prompt: Widget;
+    list: DataList;
+    info: Text;
+    _prompt: Prompt | null;
+    _done: null | ((v: any) => void);
+    constructor(layer: Layer, opts: ChoiceOptions);
+    showPrompt(prompt: Prompt, arg?: any): Promise<any>;
+    _addList(): this;
+    _addInfo(): this;
+    _addLegend(): this;
+    _draw(buffer: Buffer$1): boolean;
+}
+declare type AddChoiceOptions = ChoiceOptions & SetParentOptions & {
+    parent?: Widget;
+};
+declare module '../ui/layer' {
+    interface Layer {
+        choice(opts?: AddChoiceOptions): Choice;
+    }
+}
+declare class Inquiry {
+    widget: Choice;
+    _prompts: Prompt[];
+    events: Record<string, EventCb$1[]>;
+    _result: any;
+    _stack: Prompt[];
+    _current: Prompt | null;
+    constructor(widget: Choice);
+    prompts(v: Prompt[] | Prompt, ...args: Prompt[]): this;
+    _finish(): void;
+    _cancel(): void;
+    start(): void;
+    back(): void;
+    restart(): void;
+    quit(): void;
+    _keypress(_n: string, _w: Widget | null, e: Event$1): boolean;
+    _change(_n: string, _w: Widget | null, p: Prompt): boolean;
+    on(event: string, cb: EventCb$1): this;
+    off(event: string, cb?: EventCb$1): this;
+    _fireEvent(name: string, source: Widget | null, args?: any): boolean;
+}
+
+type index_d_WidgetOptions = WidgetOptions;
+type index_d_SetParentOptions = SetParentOptions;
+type index_d_Widget = Widget;
+declare const index_d_Widget: typeof Widget;
+type index_d_Body = Body;
+declare const index_d_Body: typeof Body;
+type index_d_TextOptions = TextOptions;
+type index_d_Text = Text;
+declare const index_d_Text: typeof Text;
+type index_d_AddTextOptions = AddTextOptions;
+type index_d_BorderOptions = BorderOptions;
+type index_d_Border = Border;
+declare const index_d_Border: typeof Border;
+type index_d_AddBorderOptions = AddBorderOptions;
+declare const index_d_drawBorder: typeof drawBorder;
+type index_d_ButtonOptions = ButtonOptions;
+type index_d_Button = Button;
+declare const index_d_Button: typeof Button;
+type index_d_AddButtonOptions = AddButtonOptions;
+type index_d_PadInfo = PadInfo;
+type index_d_DialogOptions = DialogOptions;
+declare const index_d_toPadArray: typeof toPadArray;
+type index_d_Dialog = Dialog;
+declare const index_d_Dialog: typeof Dialog;
+type index_d_AddDialogOptions = AddDialogOptions;
+type index_d_FieldsetOptions = FieldsetOptions;
+type index_d_Fieldset = Fieldset;
+declare const index_d_Fieldset: typeof Fieldset;
+type index_d_AddFieldsetOptions = AddFieldsetOptions;
+type index_d_FieldOptions = FieldOptions;
+type index_d_Field = Field;
+declare const index_d_Field: typeof Field;
+type index_d_OrderedListOptions = OrderedListOptions;
+type index_d_OrderedList = OrderedList;
+declare const index_d_OrderedList: typeof OrderedList;
+type index_d_UnorderedListOptions = UnorderedListOptions;
+type index_d_UnorderedList = UnorderedList;
+declare const index_d_UnorderedList: typeof UnorderedList;
+type index_d_AddOrderedListOptions = AddOrderedListOptions;
+type index_d_AddUnorderedListOptions = AddUnorderedListOptions;
+type index_d_InputOptions = InputOptions;
+type index_d_Input = Input;
+declare const index_d_Input: typeof Input;
+type index_d_AddInputOptions = AddInputOptions;
+type index_d_FormatFn = FormatFn;
+type index_d_Value = Value;
+type index_d_SelectType = SelectType;
+type index_d_HoverType = HoverType;
+type index_d_DataObject = DataObject;
+type index_d_DataItem = DataItem;
+type index_d_DataType = DataType;
+type index_d_BorderType = BorderType;
+type index_d_ColumnOptions = ColumnOptions;
+type index_d_DataTableOptions = DataTableOptions;
+type index_d_Column = Column;
+declare const index_d_Column: typeof Column;
+type index_d_DataTable = DataTable;
+declare const index_d_DataTable: typeof DataTable;
+type index_d_TD = TD;
+declare const index_d_TD: typeof TD;
+type index_d_AddDataTableOptions = AddDataTableOptions;
+type index_d_DataListOptions = DataListOptions;
+type index_d_DataList = DataList;
+declare const index_d_DataList: typeof DataList;
+type index_d_AddDataListOptions = AddDataListOptions;
+type index_d_Rec<_0> = Rec<_0>;
+type index_d_DropdownConfig = DropdownConfig;
+type index_d_ActionConfig = ActionConfig;
+type index_d_ButtonConfig = ButtonConfig;
+type index_d_MenuOptions = MenuOptions;
+type index_d_Menu = Menu;
+declare const index_d_Menu: typeof Menu;
+type index_d_MenuButtonOptions = MenuButtonOptions;
+type index_d_MenuButton = MenuButton;
+declare const index_d_MenuButton: typeof MenuButton;
+type index_d_AddMenuOptions = AddMenuOptions;
+type index_d_MenubarOptions = MenubarOptions;
+type index_d_Menubar = Menubar;
+declare const index_d_Menubar: typeof Menubar;
+type index_d_MenubarButtonOptions = MenubarButtonOptions;
+type index_d_MenubarButton = MenubarButton;
+declare const index_d_MenubarButton: typeof MenubarButton;
+type index_d_AddMenubarOptions = AddMenubarOptions;
+type index_d_MenuViewer = MenuViewer;
+declare const index_d_MenuViewer: typeof MenuViewer;
+type index_d_SelectOptions = SelectOptions;
+type index_d_Select = Select;
+declare const index_d_Select: typeof Select;
+type index_d_AddSelectOptions = AddSelectOptions;
+type index_d_NextType = NextType;
+type index_d_PromptChoice = PromptChoice;
+type index_d_PromptOptions = PromptOptions;
+type index_d_Prompt = Prompt;
+declare const index_d_Prompt: typeof Prompt;
+type index_d_ChoiceOptions = ChoiceOptions;
+type index_d_Choice = Choice;
+declare const index_d_Choice: typeof Choice;
+type index_d_AddChoiceOptions = AddChoiceOptions;
+type index_d_Inquiry = Inquiry;
+declare const index_d_Inquiry: typeof Inquiry;
 declare namespace index_d {
   export {
-    index_d_LightConfig as LightConfig,
-    index_d_LightBase as LightBase,
-    index_d_LightType as LightType,
-    index_d_LightCb as LightCb,
-    index_d_PaintSite as PaintSite,
-    index_d_LightSystemSite as LightSystemSite,
-    index_d_LightSystemType as LightSystemType,
-    index_d_config as config,
-    index_d_Light as Light,
-    index_d_intensity as intensity,
-    index_d_isDarkLight as isDarkLight,
-    index_d_isShadowLight as isShadowLight,
-    make$1 as make,
-    index_d_lights as lights,
-    index_d_from as from,
-    index_d_install as install,
-    index_d_installAll as installAll,
-    index_d_StaticLightInfo as StaticLightInfo,
-    index_d_LightSystemOptions as LightSystemOptions,
-    index_d_LightSystem as LightSystem,
+    EventCb$1 as EventCb,
+    index_d_WidgetOptions as WidgetOptions,
+    index_d_SetParentOptions as SetParentOptions,
+    index_d_Widget as Widget,
+    index_d_Body as Body,
+    index_d_TextOptions as TextOptions,
+    index_d_Text as Text,
+    index_d_AddTextOptions as AddTextOptions,
+    index_d_BorderOptions as BorderOptions,
+    index_d_Border as Border,
+    index_d_AddBorderOptions as AddBorderOptions,
+    index_d_drawBorder as drawBorder,
+    index_d_ButtonOptions as ButtonOptions,
+    index_d_Button as Button,
+    index_d_AddButtonOptions as AddButtonOptions,
+    index_d_PadInfo as PadInfo,
+    index_d_DialogOptions as DialogOptions,
+    index_d_toPadArray as toPadArray,
+    index_d_Dialog as Dialog,
+    index_d_AddDialogOptions as AddDialogOptions,
+    index_d_FieldsetOptions as FieldsetOptions,
+    index_d_Fieldset as Fieldset,
+    index_d_AddFieldsetOptions as AddFieldsetOptions,
+    index_d_FieldOptions as FieldOptions,
+    index_d_Field as Field,
+    index_d_OrderedListOptions as OrderedListOptions,
+    index_d_OrderedList as OrderedList,
+    index_d_UnorderedListOptions as UnorderedListOptions,
+    index_d_UnorderedList as UnorderedList,
+    index_d_AddOrderedListOptions as AddOrderedListOptions,
+    index_d_AddUnorderedListOptions as AddUnorderedListOptions,
+    index_d_InputOptions as InputOptions,
+    index_d_Input as Input,
+    index_d_AddInputOptions as AddInputOptions,
+    index_d_FormatFn as FormatFn,
+    index_d_Value as Value,
+    index_d_SelectType as SelectType,
+    index_d_HoverType as HoverType,
+    index_d_DataObject as DataObject,
+    index_d_DataItem as DataItem,
+    index_d_DataType as DataType,
+    index_d_BorderType as BorderType,
+    index_d_ColumnOptions as ColumnOptions,
+    index_d_DataTableOptions as DataTableOptions,
+    index_d_Column as Column,
+    index_d_DataTable as DataTable,
+    index_d_TD as TD,
+    index_d_AddDataTableOptions as AddDataTableOptions,
+    index_d_DataListOptions as DataListOptions,
+    index_d_DataList as DataList,
+    index_d_AddDataListOptions as AddDataListOptions,
+    index_d_Rec as Rec,
+    index_d_DropdownConfig as DropdownConfig,
+    index_d_ActionConfig as ActionConfig,
+    index_d_ButtonConfig as ButtonConfig,
+    index_d_MenuOptions as MenuOptions,
+    index_d_Menu as Menu,
+    index_d_MenuButtonOptions as MenuButtonOptions,
+    index_d_MenuButton as MenuButton,
+    index_d_AddMenuOptions as AddMenuOptions,
+    index_d_MenubarOptions as MenubarOptions,
+    index_d_Menubar as Menubar,
+    index_d_MenubarButtonOptions as MenubarButtonOptions,
+    index_d_MenubarButton as MenubarButton,
+    index_d_AddMenubarOptions as AddMenubarOptions,
+    index_d_MenuViewer as MenuViewer,
+    index_d_SelectOptions as SelectOptions,
+    index_d_Select as Select,
+    index_d_AddSelectOptions as AddSelectOptions,
+    index_d_NextType as NextType,
+    index_d_PromptChoice as PromptChoice,
+    index_d_PromptOptions as PromptOptions,
+    index_d_Prompt as Prompt,
+    index_d_ChoiceOptions as ChoiceOptions,
+    index_d_Choice as Choice,
+    index_d_AddChoiceOptions as AddChoiceOptions,
+    index_d_Inquiry as Inquiry,
   };
 }
 
-declare type AnyObj = Record<string, any>;
-declare type TweenCb = (obj: AnyObj, dt: number) => any;
-declare type EasingFn = (v: number) => number;
-declare type InterpolateFn = (start: any, goal: any, pct: number) => any;
-declare class Tween {
-    _obj: AnyObj;
-    _repeat: number;
-    _count: number;
-    _from: boolean;
-    _duration: number;
-    _delay: number;
-    _repeatDelay: number;
-    _yoyo: boolean;
-    _time: number;
-    _startTime: number;
-    _goal: AnyObj;
-    _start: AnyObj;
-    _startCb: TweenCb | null;
-    _updateCb: TweenCb | null;
-    _repeatCb: TweenCb | null;
-    _finishCb: TweenCb | null;
-    _easing: EasingFn;
-    _interpolate: InterpolateFn;
-    constructor(src: AnyObj);
-    isRunning(): boolean;
-    onStart(cb: TweenCb): this;
-    onUpdate(cb: TweenCb): this;
-    onRepeat(cb: TweenCb): this;
-    onFinish(cb: TweenCb): this;
-    to(goal: AnyObj, duration?: number): this;
-    from(start: AnyObj, duration?: number): this;
-    duration(): number;
-    duration(v: number): this;
-    repeat(): number;
-    repeat(v: number): this;
-    delay(): number;
-    delay(v: number): this;
-    repeatDelay(): number;
-    repeatDelay(v: number): this;
-    yoyo(): boolean;
-    yoyo(v: boolean): this;
-    start(): this;
-    tick(dt: number): this;
-    _updateProperties(obj: AnyObj, start: AnyObj, goal: AnyObj, pct: number): boolean;
-}
-declare function make(src: AnyObj): Tween;
-declare function linear(pct: number): number;
-declare function interpolate(start: any, goal: any, pct: number): any;
-
-type tween_d_AnyObj = AnyObj;
-type tween_d_TweenCb = TweenCb;
-type tween_d_EasingFn = EasingFn;
-type tween_d_InterpolateFn = InterpolateFn;
-type tween_d_Tween = Tween;
-declare const tween_d_Tween: typeof Tween;
-declare const tween_d_make: typeof make;
-declare const tween_d_linear: typeof linear;
-declare const tween_d_interpolate: typeof interpolate;
-declare namespace tween_d {
-  export {
-    tween_d_AnyObj as AnyObj,
-    tween_d_TweenCb as TweenCb,
-    tween_d_EasingFn as EasingFn,
-    tween_d_InterpolateFn as InterpolateFn,
-    tween_d_Tween as Tween,
-    tween_d_make as make,
-    tween_d_linear as linear,
-    tween_d_interpolate as interpolate,
-  };
-}
-
-export { ERROR, FALSE, IDENTITY, IS_NONZERO, IS_ZERO, NOOP, ONE, TRUE, WARN, ZERO, arrayDelete, arrayFindRight, arrayIncludesAll, arrayInsert, arrayNext, arrayPrev, arraysIntersect, blob_d as blob, buffer_d as buffer, index_d$2 as canvas, clamp, index_d$5 as color, colors, config$1 as config, data, events_d as events, first, flag_d as flag, index_d$3 as fov, frequency_d as frequency, grid_d as grid, io_d as io, index_d as light, list_d as list, loop, message_d as message, nextIndex, object_d as object, path_d as path, prevIndex, range_d as range, rng_d as rng, scheduler_d as scheduler, index_d$1 as sprite, sprites, sum, index_d$4 as text, tween_d as tween, types_d as types, xy_d as xy };
+export { ERROR, FALSE, IDENTITY, IS_NONZERO, IS_ZERO, NOOP, ONE, TRUE, WARN, ZERO, arrayDelete, arrayFindRight, arrayIncludesAll, arrayInsert, arrayNext, arrayNullify, arrayPrev, arraysIntersect, blob_d as blob, buffer_d as buffer, index_d$4 as canvas, clamp, index_d$7 as color, colors, config$1 as config, data, events_d as events, first, flag_d as flag, index_d$5 as fov, frequency_d as frequency, grid_d as grid, io_d as io, lerp, index_d$2 as light, list_d as list, loop, message_d as message, nextIndex, object_d as object, path_d as path, prevIndex, range_d as range, rng_d as rng, scheduler_d as scheduler, index_d$3 as sprite, sprites, sum, index_d$6 as text, tween_d as tween, types_d as types, index_d$1 as ui, index_d as widget, xy_d as xy };
