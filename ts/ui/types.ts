@@ -153,11 +153,11 @@ export interface UILayer {
     finish(result?: any): void;
 
     // events
-    click(e: IO.Event): boolean;
-    mousemove(e: IO.Event): boolean;
-    keypress(e: IO.Event): boolean;
-    dir(e: IO.Event): boolean;
-    tick(e: IO.Event): boolean;
+    click(e: IO.Event): Promise<boolean>;
+    mousemove(e: IO.Event): Promise<boolean>;
+    keypress(e: IO.Event): Promise<boolean>;
+    dir(e: IO.Event): Promise<boolean>;
+    tick(e: IO.Event): Promise<boolean>;
 
     // draw
     draw(): void;

@@ -8561,17 +8561,16 @@ void main() {
             this.body.off(event, cb);
             return this;
         }
-        mousemove(e) {
-            if (this._mousemoveCb && this._mousemoveCb.call(this, e))
+        async mousemove(e) {
+            if (this._mousemoveCb && (await this._mousemoveCb.call(this, e)))
                 return false;
             const over = this.widgetAt(e);
             over.mouseenter(e, over);
-            const all = this._depthOrder.map((w) => w.mousemove(e));
-            Promise.all(all);
+            this._depthOrder.forEach((w) => w.mousemove(e));
             return false; // TODO - this._done
         }
-        click(e) {
-            if (this._clickCb && this._clickCb.call(this, e))
+        async click(e) {
+            if (this._clickCb && (await this._clickCb.call(this, e)))
                 return false;
             let w = this.widgetAt(e);
             let setFocus = false;
@@ -8586,10 +8585,10 @@ void main() {
             }
             return false; // TODO - this._done
         }
-        keypress(e) {
+        async keypress(e) {
             if (!e.key)
                 return false;
-            if (this._keypressCb && this._keypressCb.call(this, e))
+            if (this._keypressCb && (await this._keypressCb.call(this, e)))
                 return false;
             let w = this.focusWidget || this.body;
             while (w) {
@@ -8610,8 +8609,8 @@ void main() {
             //         return this.done;
             return false;
         }
-        dir(e) {
-            if (this._dirCb && this._dirCb.call(this, e))
+        async dir(e) {
+            if (this._dirCb && (await this._dirCb.call(this, e)))
                 return false;
             let target = this.focusWidget || this.body;
             while (target) {
@@ -8622,7 +8621,7 @@ void main() {
             // return this.done;
             return false;
         }
-        tick(e) {
+        async tick(e) {
             const dt = e.dt;
             // fire animations
             this._tweens.forEach((tw) => tw.tick(dt));
@@ -8643,8 +8642,9 @@ void main() {
             for (let w of this._depthOrder) {
                 w.tick(e);
             }
-            if (this._tickCb)
-                this._tickCb.call(this, e);
+            if (this._tickCb) {
+                await this._tickCb.call(this, e);
+            }
             return false;
         }
         draw() {

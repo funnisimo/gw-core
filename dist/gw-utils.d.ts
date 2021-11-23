@@ -2127,11 +2127,11 @@ interface UILayer {
     readonly width: number;
     readonly height: number;
     finish(result?: any): void;
-    click(e: Event$1): boolean;
-    mousemove(e: Event$1): boolean;
-    keypress(e: Event$1): boolean;
-    dir(e: Event$1): boolean;
-    tick(e: Event$1): boolean;
+    click(e: Event$1): Promise<boolean>;
+    mousemove(e: Event$1): Promise<boolean>;
+    keypress(e: Event$1): Promise<boolean>;
+    dir(e: Event$1): Promise<boolean>;
+    tick(e: Event$1): Promise<boolean>;
     draw(): void;
     needsDraw: boolean;
 }
@@ -2341,7 +2341,7 @@ interface UICore {
 }
 declare type StartCb = () => void;
 declare type DrawCb = (buffer: Buffer$1) => void;
-declare type EventCb = (e: Event$1) => boolean;
+declare type EventCb = (e: Event$1) => boolean | Promise<boolean>;
 declare type FinishCb = (result: any) => void;
 interface LayerOptions {
     styles?: Sheet;
@@ -2412,11 +2412,11 @@ declare class Layer implements UILayer {
     prevTabStop(): boolean;
     on(event: string, cb: EventCb$1): this;
     off(event: string, cb?: EventCb$1): this;
-    mousemove(e: Event$1): boolean;
-    click(e: Event$1): boolean;
-    keypress(e: Event$1): boolean;
-    dir(e: Event$1): boolean;
-    tick(e: Event$1): boolean;
+    mousemove(e: Event$1): Promise<boolean>;
+    click(e: Event$1): Promise<boolean>;
+    keypress(e: Event$1): Promise<boolean>;
+    dir(e: Event$1): Promise<boolean>;
+    tick(e: Event$1): Promise<boolean>;
     draw(): void;
     setTimeout(action: string | TimerFn, time: number): void;
     clearTimeout(action: string | TimerFn): void;

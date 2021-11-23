@@ -372,19 +372,19 @@ export class Layer implements UILayer {
         return this;
     }
 
-    mousemove(e: IO.Event): boolean {
-        if (this._mousemoveCb && this._mousemoveCb.call(this, e)) return false;
+    async mousemove(e: IO.Event): Promise<boolean> {
+        if (this._mousemoveCb && (await this._mousemoveCb.call(this, e)))
+            return false;
 
         const over = this.widgetAt(e);
         over.mouseenter(e, over);
-        const all = this._depthOrder.map((w) => w.mousemove(e));
-        Promise.all(all);
+        this._depthOrder.forEach((w) => w.mousemove(e));
 
         return false; // TODO - this._done
     }
 
-    click(e: IO.Event): boolean {
-        if (this._clickCb && this._clickCb.call(this, e)) return false;
+    async click(e: IO.Event): Promise<boolean> {
+        if (this._clickCb && (await this._clickCb.call(this, e))) return false;
 
         let w: Widget.Widget | null = this.widgetAt(e);
         let setFocus = false;
@@ -402,10 +402,11 @@ export class Layer implements UILayer {
         return false; // TODO - this._done
     }
 
-    keypress(e: IO.Event): boolean {
+    async keypress(e: IO.Event): Promise<boolean> {
         if (!e.key) return false;
 
-        if (this._keypressCb && this._keypressCb.call(this, e)) return false;
+        if (this._keypressCb && (await this._keypressCb.call(this, e)))
+            return false;
 
         let w: Widget.Widget | null = this.focusWidget || this.body;
 
@@ -428,8 +429,8 @@ export class Layer implements UILayer {
         return false;
     }
 
-    dir(e: IO.Event): boolean {
-        if (this._dirCb && this._dirCb.call(this, e)) return false;
+    async dir(e: IO.Event): Promise<boolean> {
+        if (this._dirCb && (await this._dirCb.call(this, e))) return false;
 
         let target: Widget.Widget | null = this.focusWidget || this.body;
 
@@ -441,7 +442,7 @@ export class Layer implements UILayer {
         return false;
     }
 
-    tick(e: IO.Event): boolean {
+    async tick(e: IO.Event): Promise<boolean> {
         const dt = e.dt;
 
         // fire animations
@@ -464,7 +465,9 @@ export class Layer implements UILayer {
             w.tick(e);
         }
 
-        if (this._tickCb) this._tickCb.call(this, e);
+        if (this._tickCb) {
+            await this._tickCb.call(this, e);
+        }
 
         return false;
     }

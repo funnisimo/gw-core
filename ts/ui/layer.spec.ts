@@ -117,7 +117,7 @@ describe('Layer', () => {
     });
 
     describe('focus', () => {
-        test.only('set focus automatically', async () => {
+        test('set focus automatically', async () => {
             layer.clear('black');
 
             layer.text('A');
@@ -141,7 +141,7 @@ describe('Layer', () => {
             expect(layer._focusWidget).toBe(divB);
         });
 
-        test('click to set focus', () => {
+        test('click to set focus', async () => {
             layer.text('DIV A');
             const divB = layer.pos(0, 1).text('DIV B', { tabStop: true });
             const divC = layer.pos(0, 2).text('DIV C', { tabStop: true });
@@ -153,21 +153,21 @@ describe('Layer', () => {
 
             // click C
             expect(layer.widgetAt(2, 2)).toBe(divC);
-            layer.click(UTILS.click(2, 2));
+            await layer.click(UTILS.click(2, 2));
             expect(layer._focusWidget).toBe(divC);
 
             // click nothing
             expect(layer.widgetAt(5, 5)).toBe(layer.body);
-            layer.click(UTILS.click(5, 5));
+            await layer.click(UTILS.click(5, 5));
             expect(layer._focusWidget).toBe(divC); // does not change
 
             // click B
             expect(layer.widgetAt(2, 1)).toBe(divB);
-            layer.click(UTILS.click(2, 1));
+            await layer.click(UTILS.click(2, 1));
             expect(layer._focusWidget).toBe(divB);
         });
 
-        test('tab + TAB - next/prev focus', () => {
+        test('tab + TAB - next/prev focus', async () => {
             layer.text('DIV A');
             const divB = layer.pos(0, 1).text('DIV B', { tabStop: true });
             const divC = layer.pos(0, 2).text('DIV C', { tabStop: true });
@@ -180,25 +180,25 @@ describe('Layer', () => {
             expect(layer._focusWidget).toBe(divB);
 
             // tab
-            layer.keypress(UTILS.keypress('Tab'));
+            await layer.keypress(UTILS.keypress('Tab'));
             expect(layer._focusWidget).toBe(divC);
-            layer.keypress(UTILS.keypress('Tab'));
+            await layer.keypress(UTILS.keypress('Tab'));
             expect(layer._focusWidget).toBe(divE);
-            layer.keypress(UTILS.keypress('Tab'));
+            await layer.keypress(UTILS.keypress('Tab'));
             expect(layer._focusWidget).toBe(divB);
 
             // TAB - reverse
-            layer.keypress(UTILS.keypress('TAB'));
+            await layer.keypress(UTILS.keypress('TAB'));
             expect(layer._focusWidget).toBe(divE);
-            layer.keypress(UTILS.keypress('TAB'));
+            await layer.keypress(UTILS.keypress('TAB'));
             expect(layer._focusWidget).toBe(divC);
-            layer.keypress(UTILS.keypress('TAB'));
+            await layer.keypress(UTILS.keypress('TAB'));
             expect(layer._focusWidget).toBe(divB);
-            layer.keypress(UTILS.keypress('TAB'));
+            await layer.keypress(UTILS.keypress('TAB'));
             expect(layer._focusWidget).toBe(divE);
         });
 
-        test('element eats tab and TAB to stop change', () => {
+        test('element eats tab and TAB to stop change', async () => {
             const keypressFn = jest.fn().mockReturnValue(true); // We handled this keypress
 
             layer.text('DIV A');
@@ -217,28 +217,28 @@ describe('Layer', () => {
             expect(layer._focusWidget).toBe(divB);
 
             // tab
-            layer.keypress(UTILS.keypress('Tab'));
+            await layer.keypress(UTILS.keypress('Tab'));
             expect(layer._focusWidget).toBe(divB);
-            layer.keypress(UTILS.keypress('Tab'));
+            await layer.keypress(UTILS.keypress('Tab'));
             expect(layer._focusWidget).toBe(divB);
             keypressFn.mockReturnValue(false); // Now we let the key pass
-            layer.keypress(UTILS.keypress('Tab'));
+            await layer.keypress(UTILS.keypress('Tab'));
             expect(layer._focusWidget).toBe(divC);
 
             // TAB - reverse
             keypressFn.mockReturnValue(true); // we handle
-            layer.keypress(UTILS.keypress('TAB'));
+            await layer.keypress(UTILS.keypress('TAB'));
             expect(layer._focusWidget).toBe(divC);
-            layer.keypress(UTILS.keypress('TAB'));
+            await layer.keypress(UTILS.keypress('TAB'));
             expect(layer._focusWidget).toBe(divC);
             keypressFn.mockReturnValue(false);
-            layer.keypress(UTILS.keypress('TAB'));
+            await layer.keypress(UTILS.keypress('TAB'));
             expect(layer._focusWidget).toBe(divB);
-            layer.keypress(UTILS.keypress('TAB'));
+            await layer.keypress(UTILS.keypress('TAB'));
             expect(layer._focusWidget).toBe(divC);
         });
 
-        test('focus event.  blur event.', () => {
+        test('focus event.  blur event.', async () => {
             const blurFn = jest.fn();
             const focusFn = jest.fn();
 
@@ -257,14 +257,14 @@ describe('Layer', () => {
             layer.nextTabStop();
             expect(layer._focusWidget).toBe(divB);
 
-            layer.keypress(UTILS.keypress('Tab'));
+            await layer.keypress(UTILS.keypress('Tab'));
             expect(layer._focusWidget).toBe(divC);
 
             expect(blurFn).toHaveBeenCalled();
             expect(focusFn).toHaveBeenCalled();
         });
 
-        test('blur event cancels', () => {
+        test('blur event cancels', async () => {
             const blurFn = jest.fn().mockReturnValue(true); // We handled - stop the focus change
             const focusFn = jest.fn();
 
@@ -283,14 +283,14 @@ describe('Layer', () => {
             layer.nextTabStop();
             expect(layer._focusWidget).toBe(divB);
 
-            layer.keypress(UTILS.keypress('Tab'));
+            await layer.keypress(UTILS.keypress('Tab'));
             expect(layer._focusWidget).toBe(divB);
 
             expect(blurFn).toHaveBeenCalled();
             expect(focusFn).not.toHaveBeenCalled();
         });
 
-        test('focus event cancels?', () => {
+        test('focus event cancels?', async () => {
             const blurFn = jest.fn();
             const focusFn = jest.fn().mockReturnValue(true); // We handled - stop the focus change
 
@@ -309,14 +309,14 @@ describe('Layer', () => {
             layer.nextTabStop();
             expect(layer._focusWidget).toBe(divB);
 
-            layer.keypress(UTILS.keypress('Tab'));
+            await layer.keypress(UTILS.keypress('Tab'));
             expect(layer._focusWidget).toBe(divB);
 
             expect(blurFn).toHaveBeenCalled();
             expect(focusFn).toHaveBeenCalled();
         });
 
-        test('disabled elements skipped', () => {
+        test('disabled elements skipped', async () => {
             layer.text('DIV A');
             const divB = layer.pos(0, 1).text('DIV B', { tabStop: true });
             const divC = layer
@@ -331,26 +331,26 @@ describe('Layer', () => {
             expect(layer._focusWidget).toBe(divB);
 
             // tab
-            layer.keypress(UTILS.keypress('Tab'));
+            await layer.keypress(UTILS.keypress('Tab'));
             expect(layer._focusWidget).toBe(divE); // Skips C
 
             // TAB - reverse
-            layer.keypress(UTILS.keypress('TAB'));
+            await layer.keypress(UTILS.keypress('TAB'));
             expect(layer._focusWidget).toBe(divB); // Skips C
 
             divC.prop('disabled', false);
-            layer.keypress(UTILS.keypress('Tab'));
+            await layer.keypress(UTILS.keypress('Tab'));
             expect(layer._focusWidget).toBe(divC); // Now it is there
-            layer.keypress(UTILS.keypress('Tab'));
+            await layer.keypress(UTILS.keypress('Tab'));
             expect(layer._focusWidget).toBe(divE);
 
-            layer.keypress(UTILS.keypress('TAB'));
+            await layer.keypress(UTILS.keypress('TAB'));
             expect(layer._focusWidget).toBe(divC); // Now it is there
-            layer.keypress(UTILS.keypress('TAB'));
+            await layer.keypress(UTILS.keypress('TAB'));
             expect(layer._focusWidget).toBe(divB);
         });
 
-        test('hidden elements skipped', () => {
+        test('hidden elements skipped', async () => {
             layer.text('DIV A');
             const divB = layer.pos(0, 1).text('DIV B', { tabStop: true });
             const divC = layer
@@ -365,22 +365,22 @@ describe('Layer', () => {
             expect(layer._focusWidget).toBe(divB);
 
             // tab
-            layer.keypress(UTILS.keypress('Tab'));
+            await layer.keypress(UTILS.keypress('Tab'));
             expect(layer._focusWidget).toBe(divE); // Skips C
 
             // TAB - reverse
-            layer.keypress(UTILS.keypress('TAB'));
+            await layer.keypress(UTILS.keypress('TAB'));
             expect(layer._focusWidget).toBe(divB); // Skips C
 
             divC.hidden = false;
-            layer.keypress(UTILS.keypress('Tab'));
+            await layer.keypress(UTILS.keypress('Tab'));
             expect(layer._focusWidget).toBe(divC); // Now it is there
-            layer.keypress(UTILS.keypress('Tab'));
+            await layer.keypress(UTILS.keypress('Tab'));
             expect(layer._focusWidget).toBe(divE);
 
-            layer.keypress(UTILS.keypress('TAB'));
+            await layer.keypress(UTILS.keypress('TAB'));
             expect(layer._focusWidget).toBe(divC); // Now it is there
-            layer.keypress(UTILS.keypress('TAB'));
+            await layer.keypress(UTILS.keypress('TAB'));
             expect(layer._focusWidget).toBe(divB);
         });
     });
