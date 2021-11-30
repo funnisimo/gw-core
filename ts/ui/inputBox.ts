@@ -2,7 +2,8 @@
 import * as Color from '../color';
 import * as TextUtils from '../text';
 
-import { Layer } from './layer';
+import { UI } from './ui';
+import { WidgetLayer } from '../widget/layer';
 import '../widget/button';
 import * as Dialog from '../widget/dialog';
 
@@ -31,20 +32,20 @@ export interface InputBoxOptions
     max?: number;
 }
 
-// extend Layer
+// extend WidgetLayer
 
-declare module './layer' {
-    interface Layer {
-        inputbox(text: string, args?: any): Layer;
-        inputbox(opts: InputBoxOptions, text: string, args?: any): Layer;
+declare module './ui' {
+    interface UI {
+        inputbox(text: string, args?: any): WidgetLayer;
+        inputbox(opts: InputBoxOptions, text: string, args?: any): WidgetLayer;
     }
 }
 
-Layer.prototype.inputbox = function (
+UI.prototype.inputbox = function (
     opts: InputBoxOptions | string,
     text?: string | any,
     args?: any
-): Layer {
+): WidgetLayer {
     if (typeof opts === 'string') {
         args = text;
         text = opts;
@@ -58,7 +59,7 @@ Layer.prototype.inputbox = function (
     opts.border = opts.border || 'ascii';
     opts.pad = opts.pad || 1;
 
-    const layer = this.ui.startNewLayer();
+    const layer = this.startWidgetLayer();
 
     // Fade the background
     const opacity = opts.opacity !== undefined ? opts.opacity : 50;

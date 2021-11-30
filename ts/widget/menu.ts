@@ -5,8 +5,7 @@ import * as TextUtils from '../text';
 import * as Widget from './widget';
 // import * as Button from './button';
 import * as Text from './text';
-import { Layer } from '../ui/layer';
-import { installWidget } from './make';
+import { WidgetLayer } from './layer';
 
 export interface Rec<T> {
     [keys: string]: T;
@@ -33,7 +32,7 @@ export class Menu extends Widget.Widget {
         minWidth: 4,
     };
 
-    constructor(layer: Layer, opts: MenuOptions) {
+    constructor(layer: WidgetLayer, opts: MenuOptions) {
         super(
             layer,
             (() => {
@@ -135,7 +134,7 @@ export interface MenuButtonOptions extends Widget.WidgetOptions {
 export class MenuButton extends Text.Text {
     menu: Menu | null = null;
 
-    constructor(layer: Layer, opts: MenuButtonOptions) {
+    constructor(layer: WidgetLayer, opts: MenuButtonOptions) {
         super(
             layer,
             (() => {
@@ -210,19 +209,17 @@ export class MenuButton extends Text.Text {
     }
 }
 
-installWidget('menu', (l, opts) => new Menu(l, opts));
-
-// extend Layer
+// extend WidgetLayer
 
 export type AddMenuOptions = MenuOptions &
     Widget.SetParentOptions & { parent?: Widget.Widget };
 
-declare module '../ui/layer' {
-    interface Layer {
+declare module './layer' {
+    interface WidgetLayer {
         menu(opts: AddMenuOptions): Menu;
     }
 }
-Layer.prototype.menu = function (opts: AddMenuOptions): Menu {
+WidgetLayer.prototype.menu = function (opts: AddMenuOptions): Menu {
     const options = Object.assign({}, this._opts, opts);
     const list = new Menu(this, options);
     if (opts.parent) {

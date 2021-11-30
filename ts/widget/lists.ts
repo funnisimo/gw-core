@@ -1,7 +1,7 @@
 // import * as GWU from 'gw-utils';
 import * as Buffer from '../buffer';
 
-import { Layer } from '../ui/layer';
+import { WidgetLayer } from './layer';
 import * as Widget from './widget';
 
 export interface OrderedListOptions extends Widget.WidgetOptions {
@@ -16,7 +16,7 @@ export class OrderedList extends Widget.Widget {
     _fixedWidth = false;
     _fixedHeight = false;
 
-    constructor(layer: Layer, opts: OrderedListOptions) {
+    constructor(layer: WidgetLayer, opts: OrderedListOptions) {
         super(
             layer,
             (() => {
@@ -85,7 +85,7 @@ export class UnorderedList extends OrderedList {
         pad: 1,
     };
 
-    constructor(layer: Layer, opts: UnorderedListOptions) {
+    constructor(layer: WidgetLayer, opts: UnorderedListOptions) {
         super(
             layer,
             (() => {
@@ -103,7 +103,7 @@ export class UnorderedList extends OrderedList {
     }
 }
 
-// extend Layer
+// extend WidgetLayer
 
 export type AddOrderedListOptions = OrderedListOptions &
     Widget.SetParentOptions & { parent?: Widget.Widget };
@@ -111,14 +111,16 @@ export type AddOrderedListOptions = OrderedListOptions &
 export type AddUnorderedListOptions = UnorderedListOptions &
     Widget.SetParentOptions & { parent?: Widget.Widget };
 
-declare module '../ui/layer' {
-    interface Layer {
+declare module './layer' {
+    interface WidgetLayer {
         ol(opts?: AddOrderedListOptions): OrderedList;
         ul(opts?: AddUnorderedListOptions): UnorderedList;
     }
 }
 
-Layer.prototype.ol = function (opts: AddOrderedListOptions = {}): OrderedList {
+WidgetLayer.prototype.ol = function (
+    opts: AddOrderedListOptions = {}
+): OrderedList {
     const options = Object.assign({}, this._opts, opts) as OrderedListOptions;
     const widget = new OrderedList(this, options);
     if (opts.parent) {
@@ -127,7 +129,7 @@ Layer.prototype.ol = function (opts: AddOrderedListOptions = {}): OrderedList {
     return widget;
 };
 
-Layer.prototype.ul = function (
+WidgetLayer.prototype.ul = function (
     opts: AddUnorderedListOptions = {}
 ): UnorderedList {
     const options = Object.assign({}, this._opts, opts) as UnorderedListOptions;

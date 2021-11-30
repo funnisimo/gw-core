@@ -8,8 +8,7 @@ import { Widget, WidgetOptions, SetParentOptions } from './widget';
 import { PrefixType } from '../ui/types';
 import { Text } from './text';
 import { drawBorder } from './border';
-import { installWidget } from './make';
-import { Layer } from '../ui/layer';
+import { WidgetLayer } from './layer';
 
 export type FormatFn = TextUtils.Template; // (data: any, index: number) => string;
 export type Value = string | number;
@@ -177,7 +176,7 @@ export class DataTable extends Widget {
     selectedRow = -1;
     selectedColumn = 0;
 
-    constructor(layer: Layer, opts: DataTableOptions) {
+    constructor(layer: WidgetLayer, opts: DataTableOptions) {
         super(
             layer,
             (() => {
@@ -478,8 +477,6 @@ export class DataTable extends Widget {
     }
 }
 
-installWidget('datatable', (l, opts) => new DataTable(l, opts));
-
 export class TD extends Text {
     mouseleave(e: IO.Event) {
         super.mouseleave(e);
@@ -494,17 +491,19 @@ export class TD extends Text {
     }
 }
 
-// extend Layer
+// extend WidgetLayer
 
 export type AddDataTableOptions = DataTableOptions &
     SetParentOptions & { parent?: Widget };
 
-declare module '../ui/layer' {
-    interface Layer {
+declare module './layer' {
+    interface WidgetLayer {
         datatable(opts: AddDataTableOptions): DataTable;
     }
 }
-Layer.prototype.datatable = function (opts: AddDataTableOptions): DataTable {
+WidgetLayer.prototype.datatable = function (
+    opts: AddDataTableOptions
+): DataTable {
     const options = Object.assign({}, this._opts, opts);
     const list = new DataTable(this, options);
     if (opts.parent) {

@@ -1,10 +1,10 @@
 // import * as GWU from 'gw-utils';
 import * as Buffer from '../buffer';
 import * as Widget from './widget';
-import { Layer } from '../ui/layer';
+import { WidgetLayer } from './layer';
 
 export class Body extends Widget.Widget {
-    constructor(layer: Layer) {
+    constructor(layer: WidgetLayer) {
         super(layer, {
             tag: 'body',
             id: 'BODY',

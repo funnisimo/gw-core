@@ -5,7 +5,8 @@ import * as IO from '../io';
 import * as Canvas from '../canvas';
 
 import { defaultStyle, Sheet } from './style';
-import { UICore, Layer } from './layer';
+import { UICore, Layer, LayerOptions } from './layer';
+import * as Tween from '../tween';
 // import * as Widget from './widget';
 
 export interface UIOptions extends Canvas.CanvasOptions {
@@ -24,8 +25,17 @@ export class UI implements UICore {
     _promise: Promise<void> | null = null;
 
     constructor(opts: UIOptions = {}) {
+        opts.loop = opts.loop || IO.loop;
+        this.loop = opts.loop;
         this.canvas = opts.canvas || Canvas.make(opts);
-        this.loop = opts.loop || IO.loop;
+
+        // get keyboard input hooked up
+        if (this.canvas.node && this.canvas.node.parentElement) {
+            this.canvas.node.parentElement.onkeydown = this.loop.onkeydown.bind(
+                this.loop
+            );
+            this.canvas.node.parentElement.tabIndex = 1;
+        }
     }
 
     get width(): number {
@@ -56,18 +66,20 @@ export class UI implements UICore {
         return this.layer ? this.layer.buffer : this.canvas.buffer;
     }
 
-    startNewLayer(): Layer {
-        const layer = new Layer(this, {
-            styles: this.layer ? this.layer.styles : this.styles,
-        });
+    startNewLayer(opts: LayerOptions = {}): Layer {
+        opts.styles = this.layer ? this.layer.styles : this.styles;
+        const layer = new Layer(this, opts);
+        this.startLayer(layer);
+        return layer;
+    }
 
+    startLayer(layer: Layer) {
         this.layers.push(layer);
 
         if (!this._promise) {
             this._promise = this.loop.run((this as unknown) as IO.IOMap);
         }
         this.layer = layer;
-        return layer;
     }
 
     copyUIBuffer(dest: Buffer.Buffer): void {
@@ -105,33 +117,40 @@ export class UI implements UICore {
     //     this.layers.length = 0;
     // }
 
-    async mousemove(e: IO.Event): Promise<boolean> {
-        if (this.layer) await this.layer.mousemove(e);
+    mousemove(e: IO.Event): boolean {
+        if (this.layer) this.layer.mousemove(e);
         return this._done;
     }
 
-    async click(e: IO.Event): Promise<boolean> {
-        if (this.layer) await this.layer.click(e);
+    click(e: IO.Event): boolean {
+        if (this.layer) this.layer.click(e);
         return this._done;
     }
 
-    async keypress(e: IO.Event): Promise<boolean> {
-        if (this.layer) await this.layer.keypress(e);
+    keypress(e: IO.Event): boolean {
+        if (this.layer) this.layer.keypress(e);
         return this._done;
     }
 
-    async dir(e: IO.Event): Promise<boolean> {
-        if (this.layer) await this.layer.dir(e);
+    dir(e: IO.Event): boolean {
+        if (this.layer) this.layer.dir(e);
         return this._done;
     }
 
-    async tick(e: IO.Event): Promise<boolean> {
-        if (this.layer) await this.layer.tick(e);
+    tick(e: IO.Event): boolean {
+        if (this.layer) this.layer.tick(e);
         return this._done;
     }
 
     draw() {
         if (this.layer) this.layer.draw();
+    }
+
+    addAnimation(a: Tween.Animation): void {
+        this.loop.addAnimation(a);
+    }
+    removeAnimation(a: Tween.Animation): void {
+        this.loop.removeAnimation(a);
     }
 
     // UTILITY FUNCTIONS

@@ -3,9 +3,8 @@ import * as TextUtils from '../text';
 import * as IO from '../io';
 import * as Buffer from '../buffer';
 
-import { Layer } from '../ui/layer';
+import { WidgetLayer } from './layer';
 import * as Text from './text';
-import { installWidget } from './make';
 import * as Widget from './widget';
 import { PropType } from '../ui/types';
 import * as Style from '../ui/style';
@@ -59,7 +58,7 @@ export class Input extends Text.Text {
     min = 0;
     max = 0;
 
-    constructor(layer: Layer, opts: InputOptions) {
+    constructor(layer: WidgetLayer, opts: InputOptions) {
         super(
             layer,
             (() => {
@@ -209,19 +208,17 @@ export class Input extends Text.Text {
     }
 }
 
-installWidget('input', (l, opts) => new Input(l, opts));
-
-// extend Layer
+// extend WidgetLayer
 
 export type AddInputOptions = InputOptions &
     Widget.SetParentOptions & { parent?: Widget.Widget };
 
-declare module '../ui/layer' {
-    interface Layer {
+declare module './layer' {
+    interface WidgetLayer {
         input(opts: AddInputOptions): Input;
     }
 }
-Layer.prototype.input = function (opts: AddInputOptions): Input {
+WidgetLayer.prototype.input = function (opts: AddInputOptions): Input {
     const options = Object.assign({}, this._opts, opts);
     const list = new Input(this, options);
     if (opts.parent) {

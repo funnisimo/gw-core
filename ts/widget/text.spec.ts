@@ -7,13 +7,13 @@ import * as Color from '../color';
 import * as Buffer from '../buffer';
 
 import * as Text from './text';
-import * as Layer from '../ui/layer';
+import * as Layer from './layer';
 
 describe('Text Widget', () => {
-    let layer: Layer.Layer;
+    let layer: Layer.WidgetLayer;
 
     beforeEach(() => {
-        layer = UTILS.mockLayer(50, 30);
+        layer = UTILS.mockWidgetLayer(50, 30);
     });
 
     test('text create empty', () => {

@@ -2,17 +2,17 @@ import * as UTILS from '../../test/utils';
 // import * as GWU from 'gw-utils';
 import * as Tween from '../tween';
 
-import * as Widget from '../widget';
+import * as Widget from '.';
 import * as Layer from './layer';
-import { UI } from './ui';
+import { UI } from '../ui/ui';
 
 describe('Layer', () => {
     let ui: UI;
-    let layer: Layer.Layer;
+    let layer: Layer.WidgetLayer;
 
     beforeEach(() => {
         ui = UTILS.mockUI(50, 30);
-        layer = ui.startNewLayer();
+        layer = ui.startWidgetLayer();
     });
 
     afterEach(() => {

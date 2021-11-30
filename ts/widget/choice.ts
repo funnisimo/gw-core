@@ -4,7 +4,7 @@ import * as TextUtils from '../text';
 import * as Buffer from '../buffer';
 import * as IO from '../io';
 
-import { Layer } from '../ui/layer';
+import { WidgetLayer } from './layer';
 import * as Text from './text';
 import * as Widget from './widget';
 import { BorderType } from './datatable';
@@ -196,7 +196,7 @@ export class Choice extends Widget.Widget {
     _prompt: Prompt | null = null;
     _done: null | ((v: any) => void) = null;
 
-    constructor(layer: Layer, opts: ChoiceOptions) {
+    constructor(layer: WidgetLayer, opts: ChoiceOptions) {
         super(
             layer,
             (() => {
@@ -319,17 +319,17 @@ export class Choice extends Widget.Widget {
     }
 }
 
-// extend Layer
+// extend WidgetLayer
 
 export type AddChoiceOptions = ChoiceOptions &
     Widget.SetParentOptions & { parent?: Widget.Widget };
 
-declare module '../ui/layer' {
-    interface Layer {
+declare module './layer' {
+    interface WidgetLayer {
         choice(opts?: AddChoiceOptions): Choice;
     }
 }
-Layer.prototype.choice = function (opts: AddChoiceOptions): Choice {
+WidgetLayer.prototype.choice = function (opts: AddChoiceOptions): Choice {
     const options = Object.assign({}, this._opts, opts) as ChoiceOptions;
     const widget = new Choice(this, options);
     if (opts.parent) {

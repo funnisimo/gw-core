@@ -3,14 +3,13 @@ import * as UTILS from '../../test/utils';
 import * as IO from '../io';
 
 import * as Checkbox from './checkbox';
-import * as Layer from '../ui/layer';
-import { createWidget } from './make';
+import * as Layer from './layer';
 
 describe('Checkbox Widget', () => {
-    let layer: Layer.Layer;
+    let layer: Layer.WidgetLayer;
 
     beforeEach(() => {
-        layer = UTILS.mockLayer(50, 30);
+        layer = UTILS.mockWidgetLayer(50, 30);
     });
 
     test('create obj', () => {
@@ -19,19 +18,6 @@ describe('Checkbox Widget', () => {
         expect(e.attr('value')).toEqual('on');
         expect(e.attr('check')).toEqual('\u2612');
         expect(e.attr('uncheck')).toEqual('\u2610');
-    });
-
-    test('make', () => {
-        const e = createWidget('checkbox', layer, {
-            text: 'checkbox',
-            value: 'val',
-            check: 'A',
-            uncheck: 'B',
-        });
-        expect(e).toBeInstanceOf(Checkbox.Checkbox);
-        expect(e.attr('value')).toEqual('val');
-        expect(e.attr('check')).toEqual('A');
-        expect(e.attr('uncheck')).toEqual('B');
     });
 
     test('keypress', async () => {

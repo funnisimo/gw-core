@@ -2,7 +2,8 @@
 import * as Color from '../color';
 import * as Text from '../text';
 
-import { Layer } from './layer';
+import { UI } from './ui';
+import { WidgetLayer } from '../widget/layer';
 import * as Dialog from '../widget/dialog';
 
 export interface AlertOptions extends Dialog.DialogOptions {
@@ -12,19 +13,23 @@ export interface AlertOptions extends Dialog.DialogOptions {
     opacity?: number;
 }
 
-// extend Layer
+// extend WidgetLayer
 
-declare module './layer' {
-    interface Layer {
-        alert(opts: AlertOptions | number, text: string, args?: any): Layer;
+declare module './ui' {
+    interface UI {
+        alert(
+            opts: AlertOptions | number,
+            text: string,
+            args?: any
+        ): WidgetLayer;
     }
 }
 
-Layer.prototype.alert = function (
+UI.prototype.alert = function (
     opts: AlertOptions | number,
     text: string,
     args?: any
-): Layer {
+): WidgetLayer {
     if (typeof opts === 'number') {
         opts = { duration: opts } as AlertOptions;
     }
@@ -37,7 +42,7 @@ Layer.prototype.alert = function (
     opts.border = opts.border || 'ascii';
     opts.pad = opts.pad || 1;
 
-    const layer = this.ui.startNewLayer();
+    const layer = this.startWidgetLayer();
 
     // Fade the background
     const opacity = opts.opacity !== undefined ? opts.opacity : 50;

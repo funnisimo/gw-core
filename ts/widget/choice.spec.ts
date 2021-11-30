@@ -2,7 +2,7 @@ import * as UTILS from '../../test/utils';
 
 import * as Choice from './choice';
 import { UI } from '../ui';
-import { Layer } from '../ui/layer';
+import { WidgetLayer } from './layer';
 
 describe('Prompt', () => {
     test('basic', () => {
@@ -96,11 +96,11 @@ describe('Prompt', () => {
 
 describe('Choice', () => {
     let ui: UI;
-    let layer: Layer;
+    let layer: WidgetLayer;
 
     beforeEach(() => {
         ui = UTILS.mockUI(100, 38);
-        layer = ui.startNewLayer();
+        layer = ui.startWidgetLayer();
     });
 
     afterEach(() => {

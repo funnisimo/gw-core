@@ -6,13 +6,13 @@ import * as Buffer from '../buffer';
 import * as Color from '../color';
 
 import * as Button from './button';
-import * as Layer from '../ui/layer';
+import * as Layer from './layer';
 
 describe('Button Widget', () => {
-    let layer: Layer.Layer;
+    let layer: Layer.WidgetLayer;
 
     beforeEach(() => {
-        layer = UTILS.mockLayer(50, 30);
+        layer = UTILS.mockWidgetLayer(50, 30);
     });
 
     test('create', () => {

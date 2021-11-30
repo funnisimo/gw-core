@@ -286,8 +286,8 @@ export class Loop implements Animator {
     public events: Event[] = [];
     public mouse: XY.XY = { x: -1, y: -1 };
 
-    protected CURRENT_HANDLER: EventHandler | null = null;
-    protected PAUSED: EventHandler | null = null;
+    protected _handlers: EventHandler[] = [];
+    protected PAUSED = false;
     protected LAST_CLICK: XY.XY = { x: -1, y: -1 };
     protected interval = 0;
     protected intervalCount = 0;
@@ -295,6 +295,10 @@ export class Loop implements Animator {
     _animations: (Animation | null)[] = [];
 
     constructor() {}
+
+    get CURRENT_HANDLER(): EventHandler | null {
+        return this._handlers[this._handlers.length - 1] || null;
+    }
 
     hasEvents() {
         return this.events.length;
@@ -327,10 +331,6 @@ export class Loop implements Animator {
     pushEvent(ev: Event) {
         if (this.ended) return;
 
-        if (this.PAUSED) {
-            console.log('PAUSED EVENT', ev.type);
-        }
-
         if (this.events.length) {
             const last = this.events[this.events.length - 1];
             if (last.type === ev.type) {
@@ -358,8 +358,9 @@ export class Loop implements Animator {
             return;
         }
 
-        if (this.CURRENT_HANDLER) {
-            this.CURRENT_HANDLER(ev);
+        const h = this.CURRENT_HANDLER;
+        if (h && !this.PAUSED) {
+            h(ev);
         } else if (ev.type === TICK) {
             const first = this.events[0];
             if (first && first.type === TICK) {
@@ -394,15 +395,16 @@ export class Loop implements Animator {
 
         if (ms == 0 || this.ended) return Promise.resolve(null);
 
-        if (this.CURRENT_HANDLER) {
-            throw new Error(
-                'OVERWRITE HANDLER -- Check for a missing await around Loop function calls.'
-            );
-        } else if (this.events.length) {
+        // if (this.CURRENT_HANDLER) {
+        //     throw new Error(
+        //         'OVERWRITE HANDLER -- Check for a missing await around Loop function calls.'
+        //     );
+        // } else
+        if (this.events.length) {
             console.warn('SET HANDLER WITH QUEUED EVENTS - nextEvent');
         }
 
-        this.CURRENT_HANDLER = (e) => {
+        const h = (e: Event) => {
             if (e.type === MOUSEMOVE) {
                 this.mouse.x = e.x;
                 this.mouse.y = e.y;
@@ -416,9 +418,11 @@ export class Loop implements Animator {
                 e.dt = elapsed;
             } else if (!match!(e)) return;
 
-            this.CURRENT_HANDLER = null;
+            this._handlers.pop();
             done(e);
         };
+
+        this._handlers.push(h);
 
         return new Promise((resolve) => (done = resolve));
     }
@@ -471,7 +475,7 @@ export class Loop implements Animator {
         if (this.CURRENT_HANDLER) {
             this.pushEvent(makeStopEvent());
         }
-        this.CURRENT_HANDLER = null;
+        // this.CURRENT_HANDLER = null;
     }
 
     end() {
@@ -482,32 +486,26 @@ export class Loop implements Animator {
         this.ended = false;
     }
 
-    pauseEvents() {
-        if (this.PAUSED) return;
-        this.PAUSED = this.CURRENT_HANDLER;
-        this.CURRENT_HANDLER = null;
-        // io.debug('events paused');
-    }
+    // pauseEvents() {
+    //     if (this.PAUSED) return;
+    //     this.PAUSED = true;
+    //     // io.debug('events paused');
+    // }
 
-    resumeEvents() {
-        if (!this.PAUSED) return;
+    // resumeEvents() {
+    //     if (!this.PAUSED) return;
 
-        if (this.CURRENT_HANDLER) {
-            console.warn('overwrite CURRENT HANDLER!');
-        }
+    //     this.PAUSED = false;
+    //     // io.debug('resuming events');
 
-        this.CURRENT_HANDLER = this.PAUSED;
-        this.PAUSED = null;
-        // io.debug('resuming events');
-
-        if (this.events.length && this.CURRENT_HANDLER) {
-            const e: Event = this.events.shift()!;
-            // io.debug('- processing paused event', e.type);
-            this.CURRENT_HANDLER(e);
-            // io.recycleEvent(e);	// DO NOT DO THIS B/C THE HANDLER MAY PUT IT BACK ON THE QUEUE (see tickMs)
-        }
-        // io.debug('events resumed');
-    }
+    //     if (this.events.length && this.CURRENT_HANDLER) {
+    //         const e: Event = this.events.shift()!;
+    //         // io.debug('- processing paused event', e.type);
+    //         this.CURRENT_HANDLER(e);
+    //         // io.recycleEvent(e);	// DO NOT DO THIS B/C THE HANDLER MAY PUT IT BACK ON THE QUEUE (see tickMs)
+    //     }
+    //     // io.debug('events resumed');
+    // }
 
     // IO
 

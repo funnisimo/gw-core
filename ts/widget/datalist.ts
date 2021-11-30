@@ -1,8 +1,7 @@
 import * as DataTable from './datatable';
 import { PrefixType } from '../ui/types';
 import * as Widget from './widget';
-import { installWidget } from './make';
-import { Layer } from '../ui/layer';
+import { WidgetLayer } from './layer';
 
 export interface DataListOptions
     extends DataTable.ColumnOptions,
@@ -21,7 +20,7 @@ export interface DataListOptions
 }
 
 export class DataList extends DataTable.DataTable {
-    constructor(layer: Layer, opts: DataListOptions) {
+    constructor(layer: WidgetLayer, opts: DataListOptions) {
         super(
             layer,
             (() => {
@@ -40,19 +39,17 @@ export class DataList extends DataTable.DataTable {
     }
 }
 
-installWidget('list', (l, opts) => new DataList(l, opts));
-
-// extend Layer
+// extend WidgetLayer
 
 export type AddDataListOptions = DataListOptions &
     Widget.SetParentOptions & { parent?: Widget.Widget };
 
-declare module '../ui/layer' {
-    interface Layer {
+declare module './layer' {
+    interface WidgetLayer {
         datalist(opts: AddDataListOptions): DataList;
     }
 }
-Layer.prototype.datalist = function (opts: AddDataListOptions): DataList {
+WidgetLayer.prototype.datalist = function (opts: AddDataListOptions): DataList {
     const options = Object.assign({}, this._opts, opts);
     const list = new DataList(this, options);
     if (opts.parent) {

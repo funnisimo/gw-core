@@ -1,7 +1,7 @@
 // import * as GWU from 'gw-utils';
 import * as TextUtils from '../text';
 
-import { Layer } from '../ui/layer';
+import { WidgetLayer } from './layer';
 import * as Text from './text';
 import * as Widget from './widget';
 import * as Dialog from './dialog';
@@ -42,7 +42,7 @@ export class Fieldset extends Dialog.Dialog {
 
     fields: Field[] = [];
 
-    constructor(layer: Layer, opts: FieldsetOptions) {
+    constructor(layer: WidgetLayer, opts: FieldsetOptions) {
         super(
             layer,
             (() => {
@@ -133,17 +133,17 @@ export class Fieldset extends Dialog.Dialog {
     }
 }
 
-// extend Layer
+// extend WidgetLayer
 
 export type AddFieldsetOptions = FieldsetOptions &
     Widget.SetParentOptions & { parent?: Widget.Widget };
 
-declare module '../ui/layer' {
-    interface Layer {
+declare module './layer' {
+    interface WidgetLayer {
         fieldset(opts?: AddFieldsetOptions): Fieldset;
     }
 }
-Layer.prototype.fieldset = function (opts: AddFieldsetOptions): Fieldset {
+WidgetLayer.prototype.fieldset = function (opts: AddFieldsetOptions): Fieldset {
     const options = Object.assign({}, this._opts, opts) as FieldsetOptions;
     const widget = new Fieldset(this, options);
     if (opts.parent) {
@@ -162,7 +162,7 @@ export interface FieldOptions extends Widget.WidgetOptions {
 export class Field extends Text.Text {
     _format: TextUtils.Template;
 
-    constructor(layer: Layer, opts: FieldOptions) {
+    constructor(layer: WidgetLayer, opts: FieldOptions) {
         super(
             layer,
             (() => {

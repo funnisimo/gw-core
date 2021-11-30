@@ -213,6 +213,8 @@ export class Tween implements Animation {
             }
         } else if (this._repeatCb) {
             this._repeatCb.call(this, this._obj, this._count);
+        } else if (this._updateCb) {
+            this._updateCb.call(this, this._obj, 0);
         }
     }
 

@@ -1105,14 +1105,15 @@ declare class Loop implements Animator {
     running: boolean;
     events: Event$1[];
     mouse: XY;
-    protected CURRENT_HANDLER: EventHandler | null;
-    protected PAUSED: EventHandler | null;
+    protected _handlers: EventHandler[];
+    protected PAUSED: boolean;
     protected LAST_CLICK: XY;
     protected interval: number;
     protected intervalCount: number;
     protected ended: boolean;
     _animations: (Animation | null)[];
     constructor();
+    get CURRENT_HANDLER(): EventHandler | null;
     hasEvents(): number;
     clearEvents(): void;
     protected _startTicks(): void;
@@ -1123,8 +1124,6 @@ declare class Loop implements Animator {
     stop(): void;
     end(): void;
     start(): void;
-    pauseEvents(): void;
-    resumeEvents(): void;
     tickMs(ms?: number): Promise<unknown>;
     nextTick(ms?: number): Promise<Event$1 | null>;
     nextKeyPress(ms?: number, match?: EventMatchFn): Promise<Event$1 | null>;
@@ -2127,11 +2126,11 @@ interface UILayer {
     readonly width: number;
     readonly height: number;
     finish(result?: any): void;
-    click(e: Event$1): Promise<boolean>;
-    mousemove(e: Event$1): Promise<boolean>;
-    keypress(e: Event$1): Promise<boolean>;
-    dir(e: Event$1): Promise<boolean>;
-    tick(e: Event$1): Promise<boolean>;
+    click(e: Event$1): boolean;
+    mousemove(e: Event$1): boolean;
+    keypress(e: Event$1): boolean;
+    dir(e: Event$1): boolean;
+    tick(e: Event$1): boolean;
     draw(): void;
     needsDraw: boolean;
 }
@@ -2214,7 +2213,106 @@ declare class Sheet {
 }
 declare const defaultStyle: Sheet;
 
-declare type EventCb$1 = (name: string, widget: Widget | null, args?: any) => boolean;
+interface UIOptions extends CanvasOptions {
+    canvas?: BaseCanvas;
+    loop?: Loop;
+}
+declare class UI implements UICore {
+    canvas: BaseCanvas;
+    loop: Loop;
+    layer: Layer | null;
+    layers: Layer[];
+    _done: boolean;
+    _promise: Promise<void> | null;
+    constructor(opts?: UIOptions);
+    get width(): number;
+    get height(): number;
+    get styles(): Sheet;
+    get baseBuffer(): Buffer;
+    get canvasBuffer(): Buffer;
+    get buffer(): Buffer;
+    startNewLayer(opts?: LayerOptions): Layer;
+    startLayer(layer: Layer): void;
+    copyUIBuffer(dest: Buffer$1): void;
+    finishLayer(layer: Layer): void;
+    stop(): void;
+    mousemove(e: Event$1): boolean;
+    click(e: Event$1): boolean;
+    keypress(e: Event$1): boolean;
+    dir(e: Event$1): boolean;
+    tick(e: Event$1): boolean;
+    draw(): void;
+    addAnimation(a: Animation): void;
+    removeAnimation(a: Animation): void;
+}
+
+declare type TimerFn = () => void;
+interface TimerInfo {
+    action: TimerFn;
+    time: number;
+}
+interface UICore {
+    readonly loop: Loop;
+    readonly canvas: BaseCanvas;
+    readonly width: number;
+    readonly height: number;
+    readonly styles: Sheet;
+    startNewLayer(): Layer;
+    copyUIBuffer(dest: Buffer$1): void;
+    finishLayer(layer: Layer): void;
+    stop(): void;
+}
+declare type StartCb = () => void;
+declare type DrawCb = (buffer: Buffer$1) => boolean;
+declare type EventCb$1 = (e: Event$1) => boolean;
+declare type FinishCb = (result: any) => void;
+interface LayerOptions {
+    styles?: Sheet;
+    start?: StartCb;
+    draw?: DrawCb;
+    tick?: EventCb$1;
+    dir?: EventCb$1;
+    mousemove?: EventCb$1;
+    click?: EventCb$1;
+    keypress?: EventCb$1;
+    finish?: FinishCb;
+}
+declare class Layer implements UILayer {
+    ui: UI;
+    buffer: Buffer;
+    styles: Sheet;
+    needsDraw: boolean;
+    result: any;
+    timers: TimerInfo[];
+    _tweens: Tween[];
+    promise: Promise<any>;
+    _done: Function | null;
+    _drawCb: DrawCb | null;
+    _tickCb: EventCb$1 | null;
+    _dirCb: EventCb$1 | null;
+    _mousemoveCb: EventCb$1 | null;
+    _clickCb: EventCb$1 | null;
+    _keypressCb: EventCb$1 | null;
+    _finishCb: FinishCb | null;
+    _startCb: StartCb | null;
+    constructor(ui: UI, opts?: LayerOptions);
+    get width(): number;
+    get height(): number;
+    mousemove(e: Event$1): boolean;
+    click(e: Event$1): boolean;
+    keypress(e: Event$1): boolean;
+    dir(e: Event$1): boolean;
+    tick(e: Event$1): boolean;
+    draw(): void;
+    setTimeout(action: TimerFn, time: number): void;
+    clearTimeout(action: string | TimerFn): void;
+    animate(tween: Tween): this;
+    run(opts: LayerOptions): Promise<any>;
+    finish(result?: any): void;
+    _finish(): void;
+}
+
+declare type EventCb = (name: string, widget: Widget | null, args?: any) => boolean | any;
 interface WidgetOptions extends StyleOptions {
     id?: string;
     disabled?: boolean;
@@ -2239,10 +2337,10 @@ interface SetParentOptions {
 }
 declare class Widget implements UIStylable {
     tag: string;
-    layer: Layer;
+    layer: WidgetLayer;
     bounds: Bounds;
     _depth: number;
-    events: Record<string, EventCb$1[]>;
+    events: Record<string, EventCb[]>;
     children: Widget[];
     _style: Style;
     _used: ComputedStyle;
@@ -2250,7 +2348,7 @@ declare class Widget implements UIStylable {
     classes: string[];
     _props: Record<string, PropType>;
     _attrs: Record<string, PropType>;
-    constructor(term: Layer, opts?: WidgetOptions);
+    constructor(term: WidgetLayer, opts?: WidgetOptions);
     get depth(): number;
     set depth(v: number);
     get parent(): Widget | null;
@@ -2317,69 +2415,22 @@ declare class Widget implements UIStylable {
     keypress(e: Event$1): boolean;
     dir(e: Event$1): boolean;
     tick(e: Event$1): boolean;
-    on(event: string, cb: EventCb$1): this;
-    off(event: string, cb?: EventCb$1): this;
+    on(event: string, cb: EventCb): this;
+    off(event: string, cb?: EventCb): this;
     _fireEvent(name: string, source: Widget | null, args?: any): boolean;
     _bubbleEvent(name: string, source: Widget | null, args?: any): boolean;
 }
 
-declare type TimerFn = () => void;
-interface TimerInfo {
-    action: string | TimerFn;
-    time: number;
+interface WidgetLayerOptions extends LayerOptions {
 }
-interface UICore {
-    readonly loop: Loop;
-    readonly canvas: BaseCanvas;
-    readonly width: number;
-    readonly height: number;
-    readonly styles: Sheet;
-    startNewLayer(): Layer;
-    copyUIBuffer(dest: Buffer$1): void;
-    finishLayer(layer: Layer): void;
-    stop(): void;
-}
-declare type StartCb = () => void;
-declare type DrawCb = (buffer: Buffer$1) => void;
-declare type EventCb = (e: Event$1) => boolean | Promise<boolean>;
-declare type FinishCb = (result: any) => void;
-interface LayerOptions {
-    styles?: Sheet;
-    start?: StartCb;
-    draw?: DrawCb;
-    tick?: EventCb;
-    dir?: EventCb;
-    mousemove?: EventCb;
-    click?: EventCb;
-    keypress?: EventCb;
-    finish?: FinishCb;
-}
-declare class Layer implements UILayer {
-    ui: UICore;
-    buffer: Buffer;
+declare class WidgetLayer extends Layer {
     body: Widget;
-    styles: Sheet;
-    needsDraw: boolean;
-    result: any;
     _attachOrder: Widget[];
     _depthOrder: Widget[];
     _focusWidget: Widget | null;
     _hasTabStop: boolean;
-    timers: TimerInfo[];
-    _tweens: Tween[];
-    promise: Promise<any>;
-    _done: Function | null;
     _opts: WidgetOptions;
-    _drawCb: DrawCb | null;
-    _tickCb: EventCb | null;
-    _dirCb: EventCb | null;
-    _mousemoveCb: EventCb | null;
-    _clickCb: EventCb | null;
-    _keypressCb: EventCb | null;
-    _finishCb: FinishCb | null;
-    constructor(ui: UICore, opts?: LayerOptions);
-    get width(): number;
-    get height(): number;
+    constructor(ui: UI, opts?: WidgetLayerOptions);
     reset(): this;
     fg(v: ColorBase): this;
     bg(v: ColorBase): this;
@@ -2410,19 +2461,20 @@ declare class Layer implements UILayer {
     getWidget(id: string): Widget | null;
     nextTabStop(): boolean;
     prevTabStop(): boolean;
-    on(event: string, cb: EventCb$1): this;
-    off(event: string, cb?: EventCb$1): this;
-    mousemove(e: Event$1): Promise<boolean>;
-    click(e: Event$1): Promise<boolean>;
-    keypress(e: Event$1): Promise<boolean>;
-    dir(e: Event$1): Promise<boolean>;
-    tick(e: Event$1): Promise<boolean>;
+    on(event: string, cb: EventCb): this;
+    off(event: string, cb?: EventCb): this;
+    mousemove(e: Event$1): boolean;
+    click(e: Event$1): boolean;
+    keypress(e: Event$1): boolean;
+    dir(e: Event$1): boolean;
+    tick(e: Event$1): boolean;
     draw(): void;
-    setTimeout(action: string | TimerFn, time: number): void;
-    clearTimeout(action: string | TimerFn): void;
-    animate(tween: Tween): this;
-    finish(result?: any): void;
     _finish(): void;
+}
+declare module '../ui/ui' {
+    interface UI {
+        startWidgetLayer(opts?: WidgetLayerOptions): WidgetLayer;
+    }
 }
 
 interface TextOptions extends WidgetOptions {
@@ -2433,7 +2485,7 @@ declare class Text extends Widget {
     _lines: string[];
     _fixedWidth: boolean;
     _fixedHeight: boolean;
-    constructor(layer: Layer, opts: TextOptions);
+    constructor(layer: WidgetLayer, opts: TextOptions);
     text(): string;
     text(v: string): this;
     resize(w: number, h: number): this;
@@ -2442,8 +2494,8 @@ declare class Text extends Widget {
 declare type AddTextOptions = Omit<TextOptions, 'text'> & SetParentOptions & {
     parent?: Widget;
 };
-declare module '../ui/layer' {
-    interface Layer {
+declare module './layer' {
+    interface WidgetLayer {
         text(text: string, opts?: AddTextOptions): Text;
     }
 }
@@ -2521,7 +2573,7 @@ declare class DataTable extends Widget {
     size: number;
     selectedRow: number;
     selectedColumn: number;
-    constructor(layer: Layer, opts: DataTableOptions);
+    constructor(layer: WidgetLayer, opts: DataTableOptions);
     get selectedData(): any;
     select(col: number, row: number): this;
     selectNextRow(): this;
@@ -2543,8 +2595,8 @@ declare class TD extends Text {
 declare type AddDataTableOptions = DataTableOptions & SetParentOptions & {
     parent?: Widget;
 };
-declare module '../ui/layer' {
-    interface Layer {
+declare module './layer' {
+    interface WidgetLayer {
         datatable(opts: AddDataTableOptions): DataTable;
     }
 }
@@ -2571,7 +2623,7 @@ declare class Dialog extends Widget {
         legendAlign: Align;
     };
     legend: Widget | null;
-    constructor(layer: Layer, opts: DialogOptions);
+    constructor(layer: WidgetLayer, opts: DialogOptions);
     _adjustBounds(pad: [number, number, number, number]): this;
     get _innerLeft(): number;
     get _innerWidth(): number;
@@ -2583,8 +2635,8 @@ declare class Dialog extends Widget {
 declare type AddDialogOptions = DialogOptions & SetParentOptions & {
     parent?: Widget;
 };
-declare module '../ui/layer' {
-    interface Layer {
+declare module './layer' {
+    interface WidgetLayer {
         dialog(opts?: AddDialogOptions): Dialog;
     }
 }
@@ -2595,9 +2647,9 @@ interface AlertOptions extends DialogOptions {
     textClass?: string;
     opacity?: number;
 }
-declare module './layer' {
-    interface Layer {
-        alert(opts: AlertOptions | number, text: string, args?: any): Layer;
+declare module './ui' {
+    interface UI {
+        alert(opts: AlertOptions | number, text: string, args?: any): WidgetLayer;
     }
 }
 
@@ -2606,15 +2658,15 @@ interface ButtonOptions extends Omit<TextOptions, 'text'> {
     id: string;
 }
 declare class Button extends Text {
-    constructor(layer: Layer, opts: ButtonOptions);
+    constructor(layer: WidgetLayer, opts: ButtonOptions);
     keypress(ev: Event$1): boolean;
     click(ev: Event$1): boolean;
 }
 declare type AddButtonOptions = Omit<ButtonOptions, 'text'> & SetParentOptions & {
     parent?: Widget;
 };
-declare module '../ui/layer' {
-    interface Layer {
+declare module './layer' {
+    interface WidgetLayer {
         button(text: string, opts?: AddButtonOptions): Button;
     }
 }
@@ -2630,10 +2682,10 @@ interface ConfirmOptions extends Omit<DialogOptions, 'width' | 'height'> {
     cancel?: boolean | string;
     cancelClass?: string;
 }
-declare module './layer' {
-    interface Layer {
-        confirm(text: string, args?: any): Layer;
-        confirm(opts: ConfirmOptions, text: string, args?: any): Layer;
+declare module './ui' {
+    interface UI {
+        confirm(text: string, args?: any): WidgetLayer;
+        confirm(opts: ConfirmOptions, text: string, args?: any): WidgetLayer;
     }
 }
 
@@ -2654,41 +2706,11 @@ interface InputBoxOptions extends Omit<DialogOptions, 'width' | 'height'> {
     min?: number;
     max?: number;
 }
-declare module './layer' {
-    interface Layer {
-        inputbox(text: string, args?: any): Layer;
-        inputbox(opts: InputBoxOptions, text: string, args?: any): Layer;
+declare module './ui' {
+    interface UI {
+        inputbox(text: string, args?: any): WidgetLayer;
+        inputbox(opts: InputBoxOptions, text: string, args?: any): WidgetLayer;
     }
-}
-
-interface UIOptions extends CanvasOptions {
-    canvas?: BaseCanvas;
-    loop?: Loop;
-}
-declare class UI implements UICore {
-    canvas: BaseCanvas;
-    loop: Loop;
-    layer: Layer | null;
-    layers: Layer[];
-    _done: boolean;
-    _promise: Promise<void> | null;
-    constructor(opts?: UIOptions);
-    get width(): number;
-    get height(): number;
-    get styles(): Sheet;
-    get baseBuffer(): Buffer;
-    get canvasBuffer(): Buffer;
-    get buffer(): Buffer;
-    startNewLayer(): Layer;
-    copyUIBuffer(dest: Buffer$1): void;
-    finishLayer(layer: Layer): void;
-    stop(): void;
-    mousemove(e: Event$1): Promise<boolean>;
-    click(e: Event$1): Promise<boolean>;
-    keypress(e: Event$1): Promise<boolean>;
-    dir(e: Event$1): Promise<boolean>;
-    tick(e: Event$1): Promise<boolean>;
-    draw(): void;
 }
 
 type index_d$1_Size = Size;
@@ -2720,17 +2742,16 @@ type index_d$1_TimerInfo = TimerInfo;
 type index_d$1_UICore = UICore;
 type index_d$1_StartCb = StartCb;
 type index_d$1_DrawCb = DrawCb;
-type index_d$1_EventCb = EventCb;
 type index_d$1_FinishCb = FinishCb;
 type index_d$1_LayerOptions = LayerOptions;
 type index_d$1_Layer = Layer;
 declare const index_d$1_Layer: typeof Layer;
-type index_d$1_AlertOptions = AlertOptions;
-type index_d$1_ConfirmOptions = ConfirmOptions;
-type index_d$1_InputBoxOptions = InputBoxOptions;
 type index_d$1_UIOptions = UIOptions;
 type index_d$1_UI = UI;
 declare const index_d$1_UI: typeof UI;
+type index_d$1_AlertOptions = AlertOptions;
+type index_d$1_ConfirmOptions = ConfirmOptions;
+type index_d$1_InputBoxOptions = InputBoxOptions;
 declare namespace index_d$1 {
   export {
     index_d$1_Size as Size,
@@ -2757,20 +2778,20 @@ declare namespace index_d$1 {
     index_d$1_UICore as UICore,
     index_d$1_StartCb as StartCb,
     index_d$1_DrawCb as DrawCb,
-    index_d$1_EventCb as EventCb,
+    EventCb$1 as EventCb,
     index_d$1_FinishCb as FinishCb,
     index_d$1_LayerOptions as LayerOptions,
     index_d$1_Layer as Layer,
+    index_d$1_UIOptions as UIOptions,
+    index_d$1_UI as UI,
     index_d$1_AlertOptions as AlertOptions,
     index_d$1_ConfirmOptions as ConfirmOptions,
     index_d$1_InputBoxOptions as InputBoxOptions,
-    index_d$1_UIOptions as UIOptions,
-    index_d$1_UI as UI,
   };
 }
 
 declare class Body extends Widget {
-    constructor(layer: Layer);
+    constructor(layer: WidgetLayer);
     _drawFill(buffer: Buffer$1): void;
 }
 
@@ -2781,7 +2802,7 @@ interface BorderOptions extends WidgetOptions {
 }
 declare class Border extends Widget {
     ascii: boolean;
-    constructor(layer: Layer, opts: BorderOptions);
+    constructor(layer: WidgetLayer, opts: BorderOptions);
     contains(e: XY): boolean;
     contains(x: number, y: number): boolean;
     _draw(buffer: Buffer$1): boolean;
@@ -2789,8 +2810,8 @@ declare class Border extends Widget {
 declare type AddBorderOptions = BorderOptions & SetParentOptions & {
     parent?: Widget;
 };
-declare module '../ui/layer' {
-    interface Layer {
+declare module './layer' {
+    interface WidgetLayer {
         border(opts: AddBorderOptions): Border;
     }
 }
@@ -2821,7 +2842,7 @@ declare class Fieldset extends Dialog {
         dataClass: string;
     };
     fields: Field[];
-    constructor(layer: Layer, opts: FieldsetOptions);
+    constructor(layer: WidgetLayer, opts: FieldsetOptions);
     _adjustBounds(pad: [number, number, number, number]): this;
     get _labelLeft(): number;
     get _dataLeft(): number;
@@ -2832,8 +2853,8 @@ declare class Fieldset extends Dialog {
 declare type AddFieldsetOptions = FieldsetOptions & SetParentOptions & {
     parent?: Widget;
 };
-declare module '../ui/layer' {
-    interface Layer {
+declare module './layer' {
+    interface WidgetLayer {
         fieldset(opts?: AddFieldsetOptions): Fieldset;
     }
 }
@@ -2842,7 +2863,7 @@ interface FieldOptions extends WidgetOptions {
 }
 declare class Field extends Text {
     _format: Template;
-    constructor(layer: Layer, opts: FieldOptions);
+    constructor(layer: WidgetLayer, opts: FieldOptions);
     data(v: any): this;
 }
 
@@ -2855,7 +2876,7 @@ declare class OrderedList extends Widget {
     };
     _fixedWidth: boolean;
     _fixedHeight: boolean;
-    constructor(layer: Layer, opts: OrderedListOptions);
+    constructor(layer: WidgetLayer, opts: OrderedListOptions);
     _addChild(w: Widget, opts?: SetParentOptions): this;
     _draw(buffer: Buffer$1): boolean;
     _getBullet(index: number): string;
@@ -2869,7 +2890,7 @@ declare class UnorderedList extends OrderedList {
         bullet: string;
         pad: number;
     };
-    constructor(layer: Layer, opts: UnorderedListOptions);
+    constructor(layer: WidgetLayer, opts: UnorderedListOptions);
     _getBullet(_index: number): string;
 }
 declare type AddOrderedListOptions = OrderedListOptions & SetParentOptions & {
@@ -2878,8 +2899,8 @@ declare type AddOrderedListOptions = OrderedListOptions & SetParentOptions & {
 declare type AddUnorderedListOptions = UnorderedListOptions & SetParentOptions & {
     parent?: Widget;
 };
-declare module '../ui/layer' {
-    interface Layer {
+declare module './layer' {
+    interface WidgetLayer {
         ol(opts?: AddOrderedListOptions): OrderedList;
         ul(opts?: AddUnorderedListOptions): UnorderedList;
     }
@@ -2908,7 +2929,7 @@ declare class Input extends Text {
     numbersOnly: boolean;
     min: number;
     max: number;
-    constructor(layer: Layer, opts: InputOptions);
+    constructor(layer: WidgetLayer, opts: InputOptions);
     reset(): void;
     _setProp(name: string, v: PropType): void;
     isValid(): boolean;
@@ -2920,8 +2941,8 @@ declare class Input extends Text {
 declare type AddInputOptions = InputOptions & SetParentOptions & {
     parent?: Widget;
 };
-declare module '../ui/layer' {
-    interface Layer {
+declare module './layer' {
+    interface WidgetLayer {
         input(opts: AddInputOptions): Input;
     }
 }
@@ -2937,13 +2958,13 @@ interface DataListOptions extends ColumnOptions, WidgetOptions {
     border?: boolean | BorderType;
 }
 declare class DataList extends DataTable {
-    constructor(layer: Layer, opts: DataListOptions);
+    constructor(layer: WidgetLayer, opts: DataListOptions);
 }
 declare type AddDataListOptions = DataListOptions & SetParentOptions & {
     parent?: Widget;
 };
-declare module '../ui/layer' {
-    interface Layer {
+declare module './layer' {
+    interface WidgetLayer {
         datalist(opts: AddDataListOptions): DataList;
     }
 }
@@ -2970,7 +2991,7 @@ declare class Menu extends Widget {
         marker: string;
         minWidth: number;
     };
-    constructor(layer: Layer, opts: MenuOptions);
+    constructor(layer: WidgetLayer, opts: MenuOptions);
     _initButtons(opts: MenuOptions): void;
     collapse(): this;
 }
@@ -2980,7 +3001,7 @@ interface MenuButtonOptions extends WidgetOptions {
 }
 declare class MenuButton extends Text {
     menu: Menu | null;
-    constructor(layer: Layer, opts: MenuButtonOptions);
+    constructor(layer: WidgetLayer, opts: MenuButtonOptions);
     collapse(): this;
     expand(): this;
     _setMenuPos(xy: XY, opts: MenuButtonOptions): void;
@@ -2989,8 +3010,8 @@ declare class MenuButton extends Text {
 declare type AddMenuOptions = MenuOptions & SetParentOptions & {
     parent?: Widget;
 };
-declare module '../ui/layer' {
-    interface Layer {
+declare module './layer' {
+    interface WidgetLayer {
         menu(opts: AddMenuOptions): Menu;
     }
 }
@@ -3017,7 +3038,7 @@ declare class Menubar extends Widget {
     _config: DropdownConfig;
     _buttons: MenubarButton[];
     _selectedIndex: number;
-    constructor(layer: Layer, opts: MenubarOptions);
+    constructor(layer: WidgetLayer, opts: MenubarOptions);
     get selectedIndex(): number;
     set selectedIndex(v: number);
     get selectedButton(): Widget;
@@ -3035,7 +3056,7 @@ interface MenubarButtonOptions extends WidgetOptions {
 }
 declare class MenubarButton extends Text {
     menu: Menu | null;
-    constructor(layer: Layer, opts: MenubarButtonOptions);
+    constructor(layer: WidgetLayer, opts: MenubarButtonOptions);
     collapse(): boolean;
     expand(): this;
     _setMenuPos(xy: XY, opts: MenubarButtonOptions): void;
@@ -3044,8 +3065,8 @@ declare class MenubarButton extends Text {
 declare type AddMenubarOptions = MenubarOptions & SetParentOptions & {
     parent?: Widget;
 };
-declare module '../ui/layer' {
-    interface Layer {
+declare module './layer' {
+    interface WidgetLayer {
         menubar(opts?: AddMenubarOptions): Menubar;
     }
 }
@@ -3068,15 +3089,15 @@ interface SelectOptions extends WidgetOptions {
 declare class Select extends Widget {
     dropdown: Text;
     menu: Menu;
-    constructor(layer: Layer, opts: SelectOptions);
+    constructor(layer: WidgetLayer, opts: SelectOptions);
     _initText(opts: SelectOptions): void;
     _initMenu(opts: SelectOptions): void;
 }
 declare type AddSelectOptions = SelectOptions & SetParentOptions & {
     parent?: Widget;
 };
-declare module '../ui/layer' {
-    interface Layer {
+declare module './layer' {
+    interface WidgetLayer {
         select(opts: AddSelectOptions): Select;
     }
 }
@@ -3150,7 +3171,7 @@ declare class Choice extends Widget {
     info: Text;
     _prompt: Prompt | null;
     _done: null | ((v: any) => void);
-    constructor(layer: Layer, opts: ChoiceOptions);
+    constructor(layer: WidgetLayer, opts: ChoiceOptions);
     showPrompt(prompt: Prompt, arg?: any): Promise<any>;
     _addList(): this;
     _addInfo(): this;
@@ -3160,15 +3181,15 @@ declare class Choice extends Widget {
 declare type AddChoiceOptions = ChoiceOptions & SetParentOptions & {
     parent?: Widget;
 };
-declare module '../ui/layer' {
-    interface Layer {
+declare module './layer' {
+    interface WidgetLayer {
         choice(opts?: AddChoiceOptions): Choice;
     }
 }
 declare class Inquiry {
     widget: Choice;
     _prompts: Prompt[];
-    events: Record<string, EventCb$1[]>;
+    events: Record<string, EventCb[]>;
     _result: any;
     _stack: Prompt[];
     _current: Prompt | null;
@@ -3182,11 +3203,12 @@ declare class Inquiry {
     quit(): void;
     _keypress(_n: string, _w: Widget | null, e: Event$1): boolean;
     _change(_n: string, _w: Widget | null, p: Prompt): boolean;
-    on(event: string, cb: EventCb$1): this;
-    off(event: string, cb?: EventCb$1): this;
+    on(event: string, cb: EventCb): this;
+    off(event: string, cb?: EventCb): this;
     _fireEvent(name: string, source: Widget | null, args?: any): boolean;
 }
 
+type index_d_EventCb = EventCb;
 type index_d_WidgetOptions = WidgetOptions;
 type index_d_SetParentOptions = SetParentOptions;
 type index_d_Widget = Widget;
@@ -3287,9 +3309,12 @@ declare const index_d_Choice: typeof Choice;
 type index_d_AddChoiceOptions = AddChoiceOptions;
 type index_d_Inquiry = Inquiry;
 declare const index_d_Inquiry: typeof Inquiry;
+type index_d_WidgetLayerOptions = WidgetLayerOptions;
+type index_d_WidgetLayer = WidgetLayer;
+declare const index_d_WidgetLayer: typeof WidgetLayer;
 declare namespace index_d {
   export {
-    EventCb$1 as EventCb,
+    index_d_EventCb as EventCb,
     index_d_WidgetOptions as WidgetOptions,
     index_d_SetParentOptions as SetParentOptions,
     index_d_Widget as Widget,
@@ -3366,6 +3391,8 @@ declare namespace index_d {
     index_d_Choice as Choice,
     index_d_AddChoiceOptions as AddChoiceOptions,
     index_d_Inquiry as Inquiry,
+    index_d_WidgetLayerOptions as WidgetLayerOptions,
+    index_d_WidgetLayer as WidgetLayer,
   };
 }
 

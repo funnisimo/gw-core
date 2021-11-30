@@ -3,8 +3,7 @@ import * as XY from '../xy';
 import * as IO from '../io';
 
 import * as Widget from './widget';
-import { Layer } from '../ui/layer';
-import { installWidget } from './make';
+import { WidgetLayer } from './layer';
 import { DropdownConfig, Menu, ButtonConfig } from './menu';
 import * as Text from './text';
 
@@ -37,7 +36,7 @@ export class Menubar extends Widget.Widget {
     _buttons: MenubarButton[] = [];
     _selectedIndex = -1;
 
-    constructor(layer: Layer, opts: MenubarOptions) {
+    constructor(layer: WidgetLayer, opts: MenubarOptions) {
         super(
             layer,
             (() => {
@@ -184,8 +183,6 @@ export class Menubar extends Widget.Widget {
     }
 }
 
-installWidget('menubar', (l, opts) => new Menubar(l, opts));
-
 export interface MenubarButtonOptions extends Widget.WidgetOptions {
     text: string;
     buttons: ButtonConfig;
@@ -194,7 +191,7 @@ export interface MenubarButtonOptions extends Widget.WidgetOptions {
 export class MenubarButton extends Text.Text {
     menu: Menu | null = null;
 
-    constructor(layer: Layer, opts: MenubarButtonOptions) {
+    constructor(layer: WidgetLayer, opts: MenubarButtonOptions) {
         super(
             layer,
             (() => {
@@ -274,17 +271,17 @@ export class MenubarButton extends Text.Text {
     }
 }
 
-// extend Layer
+// extend WidgetLayer
 
 export type AddMenubarOptions = MenubarOptions &
     Widget.SetParentOptions & { parent?: Widget.Widget };
 
-declare module '../ui/layer' {
-    interface Layer {
+declare module './layer' {
+    interface WidgetLayer {
         menubar(opts?: AddMenubarOptions): Menubar;
     }
 }
-Layer.prototype.menubar = function (opts: AddMenubarOptions): Menubar {
+WidgetLayer.prototype.menubar = function (opts: AddMenubarOptions): Menubar {
     const options: MenubarOptions = Object.assign({}, this._opts, opts);
     const menubar = new Menubar(this, options);
     if (opts.parent) {

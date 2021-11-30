@@ -1,9 +1,8 @@
 // import * as GWU from 'gw-utils';
 import * as IO from '../io';
 
-import { Layer } from '../ui/layer';
+import { WidgetLayer } from './layer';
 import * as Text from './text';
-import { installWidget } from './make';
 import * as Widget from './widget';
 
 export interface ButtonOptions extends Omit<Text.TextOptions, 'text'> {
@@ -12,7 +11,7 @@ export interface ButtonOptions extends Omit<Text.TextOptions, 'text'> {
 }
 
 export class Button extends Text.Text {
-    constructor(layer: Layer, opts: ButtonOptions) {
+    constructor(layer: WidgetLayer, opts: ButtonOptions) {
         super(
             layer,
             (() => {
@@ -52,19 +51,17 @@ export class Button extends Text.Text {
     }
 }
 
-installWidget('button', (l, opts) => new Button(l, opts));
-
 // extend Layer
 
 export type AddButtonOptions = Omit<ButtonOptions, 'text'> &
     Widget.SetParentOptions & { parent?: Widget.Widget };
 
-declare module '../ui/layer' {
-    interface Layer {
+declare module './layer' {
+    interface WidgetLayer {
         button(text: string, opts?: AddButtonOptions): Button;
     }
 }
-Layer.prototype.button = function (
+WidgetLayer.prototype.button = function (
     text: string,
     opts: AddButtonOptions
 ): Button {

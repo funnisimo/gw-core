@@ -2,7 +2,7 @@
 import * as TextUtils from '../text';
 import * as Buffer from '../buffer';
 
-import { Layer } from '../ui/layer';
+import { WidgetLayer } from './layer';
 import * as Text from './text';
 import * as Widget from './widget';
 import { BorderType } from './datatable';
@@ -57,7 +57,7 @@ export class Dialog extends Widget.Widget {
 
     legend: Widget.Widget | null = null;
 
-    constructor(layer: Layer, opts: DialogOptions) {
+    constructor(layer: WidgetLayer, opts: DialogOptions) {
         super(
             layer,
             (() => {
@@ -186,17 +186,17 @@ export class Dialog extends Widget.Widget {
     }
 }
 
-// extend Layer
+// extend WidgetLayer
 
 export type AddDialogOptions = DialogOptions &
     Widget.SetParentOptions & { parent?: Widget.Widget };
 
-declare module '../ui/layer' {
-    interface Layer {
+declare module './layer' {
+    interface WidgetLayer {
         dialog(opts?: AddDialogOptions): Dialog;
     }
 }
-Layer.prototype.dialog = function (opts: AddDialogOptions): Dialog {
+WidgetLayer.prototype.dialog = function (opts: AddDialogOptions): Dialog {
     const options = Object.assign({}, this._opts, opts) as DialogOptions;
     const widget = new Dialog(this, options);
     if (opts.parent) {

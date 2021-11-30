@@ -2,8 +2,7 @@
 import * as Widget from './widget';
 import * as Menu from './menu';
 import * as Text from './text';
-import { Layer } from '../ui/layer';
-import { installWidget } from './make';
+import { WidgetLayer } from './layer';
 
 export interface SelectOptions extends Widget.WidgetOptions {
     text: string;
@@ -16,7 +15,7 @@ export class Select extends Widget.Widget {
     dropdown!: Text.Text;
     menu!: Menu.Menu;
 
-    constructor(layer: Layer, opts: SelectOptions) {
+    constructor(layer: WidgetLayer, opts: SelectOptions) {
         super(layer, opts);
 
         this.tag = opts.tag || 'select';
@@ -61,19 +60,18 @@ export class Select extends Widget.Widget {
         this.menu.setParent(this);
     }
 }
-installWidget('select', (l, opts) => new Select(l, opts));
 
-// extend Layer
+// extend WidgetLayer
 
 export type AddSelectOptions = SelectOptions &
     Widget.SetParentOptions & { parent?: Widget.Widget };
 
-declare module '../ui/layer' {
-    interface Layer {
+declare module './layer' {
+    interface WidgetLayer {
         select(opts: AddSelectOptions): Select;
     }
 }
-Layer.prototype.select = function (opts: AddSelectOptions): Select {
+WidgetLayer.prototype.select = function (opts: AddSelectOptions): Select {
     const options: SelectOptions = Object.assign({}, this._opts, opts);
     const list = new Select(this, options);
     if (opts.parent) {

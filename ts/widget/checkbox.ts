@@ -2,9 +2,8 @@
 import * as IO from '../io';
 import * as Buffer from '../buffer';
 
-import { Layer } from '../ui/layer';
+import { WidgetLayer } from './layer';
 import * as Text from './text';
-import { installWidget } from './make';
 
 export interface CheckboxOptions extends Text.TextOptions {
     uncheck?: string;
@@ -22,7 +21,7 @@ export class Checkbox extends Text.Text {
         value: 'on',
     };
 
-    constructor(layer: Layer, opts: CheckboxOptions) {
+    constructor(layer: WidgetLayer, opts: CheckboxOptions) {
         super(
             layer,
             (() => {
@@ -97,5 +96,3 @@ export class Checkbox extends Text.Text {
         return true;
     }
 }
-
-installWidget('checkbox', (l, opts) => new Checkbox(l, opts));

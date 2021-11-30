@@ -3,13 +3,13 @@ import * as UTILS from '../../test/utils';
 import * as Buffer from '../buffer';
 
 import * as Input from './input';
-import * as Layer from '../ui/layer';
+import * as Layer from './layer';
 
 describe('Input Widget', () => {
-    let layer: Layer.Layer;
+    let layer: Layer.WidgetLayer;
 
     beforeEach(() => {
-        layer = UTILS.mockLayer(50, 30);
+        layer = UTILS.mockWidgetLayer(50, 30);
     });
 
     test('create', () => {

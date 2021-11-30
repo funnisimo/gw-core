@@ -4,8 +4,7 @@ import * as XY from '../xy';
 
 import { UIStyle } from '../ui/types';
 import * as Widget from './widget';
-import { Layer } from '../ui/layer';
-import { installWidget } from './make';
+import { WidgetLayer } from './layer';
 
 export interface BorderOptions extends Widget.WidgetOptions {
     width: number;
@@ -17,7 +16,7 @@ export interface BorderOptions extends Widget.WidgetOptions {
 export class Border extends Widget.Widget {
     ascii = false;
 
-    constructor(layer: Layer, opts: BorderOptions) {
+    constructor(layer: WidgetLayer, opts: BorderOptions) {
         super(layer, opts);
         if (opts.ascii) {
             this.ascii = true;
@@ -44,18 +43,16 @@ export class Border extends Widget.Widget {
     }
 }
 
-installWidget('border', (l, opts) => new Border(l, opts));
-
-// extend Layer
+// extend WidgetLayer
 export type AddBorderOptions = BorderOptions &
     Widget.SetParentOptions & { parent?: Widget.Widget };
 
-declare module '../ui/layer' {
-    interface Layer {
+declare module './layer' {
+    interface WidgetLayer {
         border(opts: AddBorderOptions): Border;
     }
 }
-Layer.prototype.border = function (opts: AddBorderOptions): Border {
+WidgetLayer.prototype.border = function (opts: AddBorderOptions): Border {
     const options = Object.assign({}, this._opts, opts);
     const list = new Border(this, options);
     if (opts.parent) {

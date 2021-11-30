@@ -2,7 +2,8 @@
 import * as Color from '../color';
 import * as TextUtils from '../text';
 
-import { Layer } from './layer';
+import { UI } from './ui';
+import { WidgetLayer } from '../widget/layer';
 import '../widget/button';
 import * as Dialog from '../widget/dialog';
 
@@ -23,20 +24,20 @@ export interface ConfirmOptions
     cancelClass?: string;
 }
 
-// extend Layer
+// extend WidgetLayer
 
-declare module './layer' {
-    interface Layer {
-        confirm(text: string, args?: any): Layer;
-        confirm(opts: ConfirmOptions, text: string, args?: any): Layer;
+declare module './ui' {
+    interface UI {
+        confirm(text: string, args?: any): WidgetLayer;
+        confirm(opts: ConfirmOptions, text: string, args?: any): WidgetLayer;
     }
 }
 
-Layer.prototype.confirm = function (
+UI.prototype.confirm = function (
     opts: ConfirmOptions | string,
     text?: string | any,
     args?: any
-): Layer {
+): WidgetLayer {
     if (typeof opts === 'string') {
         args = text;
         text = opts;
@@ -50,7 +51,7 @@ Layer.prototype.confirm = function (
     opts.border = opts.border || 'ascii';
     opts.pad = opts.pad || 1;
 
-    const layer = this.ui.startNewLayer();
+    const layer = this.startWidgetLayer();
 
     // Fade the background
     const opacity = opts.opacity !== undefined ? opts.opacity : 50;

@@ -3,8 +3,7 @@ import * as TextUtils from '../text';
 import * as Buffer from '../buffer';
 
 import { Widget, WidgetOptions, SetParentOptions } from './widget';
-import { installWidget } from './make';
-import { Layer } from '../ui/layer';
+import { WidgetLayer } from './layer';
 
 export interface TextOptions extends WidgetOptions {
     text: string;
@@ -16,7 +15,7 @@ export class Text extends Widget {
     _fixedWidth = false;
     _fixedHeight = false;
 
-    constructor(layer: Layer, opts: TextOptions) {
+    constructor(layer: WidgetLayer, opts: TextOptions) {
         super(layer, opts);
         this._fixedHeight = !!opts.height;
         this._fixedWidth = !!opts.width;
@@ -85,19 +84,17 @@ export class Text extends Widget {
     }
 }
 
-installWidget('text', (l, opts) => new Text(l, opts));
-
 // extend Layer
 
 export type AddTextOptions = Omit<TextOptions, 'text'> &
     SetParentOptions & { parent?: Widget };
 
-declare module '../ui/layer' {
-    interface Layer {
+declare module './layer' {
+    interface WidgetLayer {
         text(text: string, opts?: AddTextOptions): Text;
     }
 }
-Layer.prototype.text = function (
+WidgetLayer.prototype.text = function (
     text: string,
     opts: AddTextOptions = {}
 ): Text {

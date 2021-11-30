@@ -6,14 +6,14 @@ import * as IO from '../io';
 
 import * as Style from '../ui/style';
 import { StyleOptions, PropType, UIStylable } from '../ui/types';
-import { Layer } from '../ui/layer';
+import { WidgetLayer } from './layer';
 
 // return true if you want to stop the event from propagating
 export type EventCb = (
     name: string,
     widget: Widget | null,
     args?: any
-) => boolean;
+) => boolean | any;
 
 export interface WidgetOptions extends StyleOptions {
     id?: string;
@@ -52,7 +52,7 @@ Style.defaultStyle.add('*', {
 
 export class Widget implements UIStylable {
     tag: string = 'text';
-    layer: Layer;
+    layer: WidgetLayer;
     bounds: XY.Bounds = new XY.Bounds(0, 0, 0, 1);
     _depth = 0;
     events: Record<string, EventCb[]> = {};
@@ -67,7 +67,7 @@ export class Widget implements UIStylable {
     _props: Record<string, PropType> = {};
     _attrs: Record<string, PropType> = {};
 
-    constructor(term: Layer, opts: WidgetOptions = {}) {
+    constructor(term: WidgetLayer, opts: WidgetOptions = {}) {
         this.layer = term;
         // this.bounds.x = term.x;
         // this.bounds.y = term.y;
@@ -607,7 +607,9 @@ export class Widget implements UIStylable {
         const handlers = this.events[name] || [];
         let handled = false;
         for (let handler of handlers) {
-            handled = handler(name, source || this, args) || handled;
+            if (handler(name, source || this, args) === true) {
+                handled = true;
+            }
         }
         return handled;
     }

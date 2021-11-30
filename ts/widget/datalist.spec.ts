@@ -1,13 +1,13 @@
 import * as UTILS from '../../test/utils';
 // import * as GWU from 'gw-utils';
 import * as DataList from './datalist';
-import * as Layer from '../ui/layer';
+import * as Layer from './layer';
 
 describe('List Widget', () => {
-    let layer: Layer.Layer;
+    let layer: Layer.WidgetLayer;
 
     beforeEach(() => {
-        layer = UTILS.mockLayer(50, 30);
+        layer = UTILS.mockWidgetLayer(50, 30);
     });
 
     test('constructor', () => {

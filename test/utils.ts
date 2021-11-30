@@ -3,6 +3,7 @@ import { Buffer } from '../ts/buffer';
 import * as Canvas from '../ts/canvas';
 import * as IO from '../ts/io';
 import * as Layer from '../ts/ui/layer';
+import * as WidgetLayer from '../ts/widget/layer';
 import * as UI from '../ts/ui/ui';
 
 export function extractBufferText(
@@ -100,6 +101,12 @@ export function mockUI(width = 100, height = 38) {
 export function mockLayer(w: number, h: number): Layer.Layer {
     const ui = mockUI(w, h);
     const layer = new Layer.Layer(ui);
+    return layer;
+}
+
+export function mockWidgetLayer(w: number, h: number): WidgetLayer.WidgetLayer {
+    const ui = mockUI(w, h);
+    const layer = new WidgetLayer.WidgetLayer(ui);
     return layer;
 }
 
