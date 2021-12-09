@@ -25,45 +25,58 @@ describe('UI', () => {
         expect(ui.layer).toBeNull();
     });
 
+    // jest.setTimeout(10 * 60 * 1000);
+
     test('stop layer', async () => {
         const ui = new UI.UI({ loop, canvas });
         const layer = ui.startNewLayer();
         expect(ui.layer).toBe(layer);
 
         jest.spyOn(layer, 'click');
+
+        const p = layer.run();
+
         await UTILS.pushEvent(ui.loop, UTILS.click(2, 2));
         expect(layer.click).toHaveBeenCalled();
 
         layer.finish();
         expect(ui.layer).toBeNull();
 
-        await ui.stop();
+        ui.stop();
         expect(ui._done).toBeTruthy();
+
+        await p;
     });
+
+    async function runLayer(ui: UI.UI) {
+        const layer = ui.startNewLayer();
+        // console.log('start new layer');
+
+        let result = '';
+        return layer.run({
+            async click(_e) {
+                // console.log('click', e.x);
+                result += await runLayer(ui);
+            },
+            async keypress(e) {
+                // console.log('keypress', e.key);
+                layer.finish(result + e.key);
+            },
+        });
+    }
 
     test('multiple layers', async () => {
         const ui = new UI.UI({ loop, canvas });
 
-        const layer = ui.startNewLayer();
-        jest.spyOn(layer, 'click');
-        expect(ui.layer).toBe(layer);
+        const p = runLayer(ui);
+        await UTILS.pushEvent(ui.loop, UTILS.click(2, 2)); // 2 layers
+        await UTILS.pushEvent(ui.loop, UTILS.click(3, 2)); // 3 layers
 
-        const layer2 = ui.startNewLayer();
-        jest.spyOn(layer2, 'click');
-        expect(ui.layer).toBe(layer2);
+        await UTILS.pushEvent(ui.loop, UTILS.keypress('a')); // 2 layers
+        await UTILS.pushEvent(ui.loop, UTILS.keypress('b')); // 1 layers
+        await UTILS.pushEvent(ui.loop, UTILS.keypress('c')); // 0 layers
 
-        await UTILS.pushEvent(ui.loop, UTILS.click(2, 2));
-
-        expect(layer.click).not.toHaveBeenCalled();
-        expect(layer2.click).toHaveBeenCalled();
-
-        layer2.finish();
-        expect(ui.layer).toBe(layer);
-        layer.finish();
-        expect(ui.layer).toBeNull();
-
-        await ui.stop();
-        expect(ui._done).toBeTruthy();
+        expect(await p).toEqual('abc');
     });
 
     test('many layers', async () => {
@@ -82,45 +95,7 @@ describe('UI', () => {
             expect(ui.layer).toBe(layers[layers.length - 1] || null);
         }
 
-        await ui.stop();
-        expect(ui._done).toBeTruthy();
-    });
-
-    test('multiple layers 2', async () => {
-        const ui = new UI.UI({ loop, canvas });
-        const layer = ui.startNewLayer();
-        jest.spyOn(layer, 'click');
-
-        // @ts-ignore
-        layer.click.mockImplementation(() => {
-            layer.finish('TACO');
-        });
-        expect(ui.layer).toBe(layer);
-
-        const layer2 = ui.startNewLayer();
-        jest.spyOn(layer2, 'click');
-        expect(ui.layer).toBe(layer2);
-
-        // @ts-ignore
-        layer2.click.mockImplementation(() => {
-            layer2.finish(null);
-        });
-
-        const e2 = UTILS.click(2, 2);
-        const e3 = UTILS.click(3, 3);
-
-        await UTILS.pushEvent(ui.loop, e2);
-        expect(ui.layer).toBe(layer);
-
-        await UTILS.pushEvent(ui.loop, e3);
-
-        expect(layer.result).toEqual('TACO');
-        expect(layer2.result).toEqual(null);
-
-        expect(layer2.click).toHaveBeenCalledWith(e2);
-        expect(layer.click).toHaveBeenCalledWith(e3);
-
-        await ui.stop();
+        ui.stop();
         expect(ui._done).toBeTruthy();
     });
 

@@ -281,8 +281,6 @@ export class WidgetLayer extends Layer {
     }
 
     mousemove(e: IO.Event): boolean {
-        if (this._mousemoveCb && this._mousemoveCb.call(this, e)) return false;
-
         const over = this.widgetAt(e);
         over.mouseenter(e, over);
         this._depthOrder.forEach((w) => w.mousemove(e));
@@ -291,8 +289,6 @@ export class WidgetLayer extends Layer {
     }
 
     click(e: IO.Event): boolean {
-        if (this._clickCb && this._clickCb.call(this, e)) return false;
-
         let w: Widget.Widget | null = this.widgetAt(e);
         let setFocus = false;
 
@@ -311,8 +307,6 @@ export class WidgetLayer extends Layer {
 
     keypress(e: IO.Event): boolean {
         if (!e.key) return false;
-
-        if (this._keypressCb && this._keypressCb.call(this, e)) return false;
 
         let w: Widget.Widget | null = this.focusWidget || this.body;
 
@@ -336,8 +330,6 @@ export class WidgetLayer extends Layer {
     }
 
     dir(e: IO.Event): boolean {
-        if (this._dirCb && this._dirCb.call(this, e)) return false;
-
         let target: Widget.Widget | null = this.focusWidget || this.body;
 
         while (target) {
@@ -382,10 +374,9 @@ export class WidgetLayer extends Layer {
         this.buffer.render();
     }
 
-    _finish() {
-        if (!this._done) return;
+    finish(result?: any) {
+        super.finish(result);
         this.body._fireEvent('finish', this.body, this.result);
-        super._finish();
     }
 }
 

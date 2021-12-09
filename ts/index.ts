@@ -18,7 +18,7 @@ export * as color from './color';
 export * as text from './text';
 export * as types from './types';
 export * as message from './message';
-// export { cosmetic, random } from './rng';
+export { cosmetic, random } from './rng';
 export * as rng from './rng';
 export { colors } from './color';
 export { sprites } from './sprite';

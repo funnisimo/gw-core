@@ -87,11 +87,11 @@ declare function fromArray(vals: ColorData, base256?: boolean): Color;
 declare function fromCss(css: string): Color;
 declare function fromName(name: string): Color;
 declare function fromNumber(val: number, base256?: boolean): Color;
-declare function make$c(): Color;
-declare function make$c(rgb: number, base256?: boolean): Color;
-declare function make$c(color?: ColorBase | null): Color;
-declare function make$c(arrayLike: ColorData, base256?: boolean): Color;
-declare function make$c(...rgb: number[]): Color;
+declare function make$d(): Color;
+declare function make$d(rgb: number, base256?: boolean): Color;
+declare function make$d(color?: ColorBase | null): Color;
+declare function make$d(arrayLike: ColorData, base256?: boolean): Color;
+declare function make$d(...rgb: number[]): Color;
 declare function from$4(): Color;
 declare function from$4(rgb: number, base256?: boolean): Color;
 declare function from$4(color?: ColorBase | null): Color;
@@ -138,7 +138,7 @@ declare namespace index_d$7 {
     index_d$7_fromCss as fromCss,
     index_d$7_fromName as fromName,
     index_d$7_fromNumber as fromNumber,
-    make$c as make,
+    make$d as make,
     from$4 as from,
     index_d$7_separate as separate,
     index_d$7_relativeLuminance as relativeLuminance,
@@ -235,8 +235,10 @@ declare class Bounds {
     contains(loc: Loc$1 | XY): boolean;
     toString(): string;
 }
-declare function copyXY(dest: XY, src: XY | Loc$1): void;
-declare function addXY(dest: XY, src: XY | Loc$1): void;
+declare function copy(dest: XY, src: XY | Loc$1): void;
+declare function addTo(dest: XY, src: XY | Loc$1): void;
+declare function add$1(a: XY, b: XY | Loc$1): XY;
+declare function add$1(a: Loc$1, b: XY | Loc$1): Loc$1;
 declare function equalsXY(dest: XY | Loc$1 | null | undefined, src: XY | Loc$1 | null | undefined): boolean;
 declare function lerpXY(a: XY | Loc$1, b: XY | Loc$1, pct: number): any[];
 declare type XYFunc = (x: number, y: number) => any;
@@ -288,8 +290,8 @@ declare const xy_d_y: typeof y;
 declare const xy_d_contains: typeof contains;
 type xy_d_Bounds = Bounds;
 declare const xy_d_Bounds: typeof Bounds;
-declare const xy_d_copyXY: typeof copyXY;
-declare const xy_d_addXY: typeof addXY;
+declare const xy_d_copy: typeof copy;
+declare const xy_d_addTo: typeof addTo;
 declare const xy_d_equalsXY: typeof equalsXY;
 declare const xy_d_lerpXY: typeof lerpXY;
 type xy_d_XYFunc = XYFunc;
@@ -341,8 +343,9 @@ declare namespace xy_d {
     xy_d_y as y,
     xy_d_contains as contains,
     xy_d_Bounds as Bounds,
-    xy_d_copyXY as copyXY,
-    xy_d_addXY as addXY,
+    xy_d_copy as copy,
+    xy_d_addTo as addTo,
+    add$1 as add,
     xy_d_equalsXY as equalsXY,
     xy_d_lerpXY as lerpXY,
     xy_d_XYFunc as XYFunc,
@@ -521,7 +524,7 @@ declare class Random {
 }
 declare const random: Random;
 declare const cosmetic: Random;
-declare function make$b(seed?: number): Random;
+declare function make$c(seed?: number): Random;
 
 type rng_d_WeightedArray = WeightedArray;
 type rng_d_WeightedObject = WeightedObject;
@@ -543,7 +546,7 @@ declare namespace rng_d {
     rng_d_Random as Random,
     rng_d_random as random,
     rng_d_cosmetic as cosmetic,
-    make$b as make,
+    make$c as make,
   };
 }
 
@@ -554,25 +557,29 @@ declare class Range {
     clumps: number;
     constructor(lower: number, upper?: number, clumps?: number);
     value(rng?: Random): number;
+    max(): number;
     contains(value: number): boolean;
     copy(other: Range): this;
     toString(): string;
 }
-declare function make$a(config: RangeBase | null): Range;
-declare const from$3: typeof make$a;
+declare function make$b(config: RangeBase | null): Range;
+declare const from$3: typeof make$b;
 declare function asFn(config: RangeBase | null): () => number;
+declare function value(base: RangeBase): number;
 
 type range_d_RangeBase = RangeBase;
 type range_d_Range = Range;
 declare const range_d_Range: typeof Range;
 declare const range_d_asFn: typeof asFn;
+declare const range_d_value: typeof value;
 declare namespace range_d {
   export {
     range_d_RangeBase as RangeBase,
     range_d_Range as Range,
-    make$a as make,
+    make$b as make,
     from$3 as from,
     range_d_asFn as asFn,
+    range_d_value as value,
   };
 }
 
@@ -581,7 +588,7 @@ declare type FlagBase = FlagSource | FlagSource[] | null;
 declare function fl(N: number): number;
 declare function toString<T>(flagObj: T, value: number): string;
 declare function from$2<T>(obj: T, ...args: (FlagBase | undefined)[]): number;
-declare function make$9(obj: Record<string, FlagBase>): Record<string, number>;
+declare function make$a(obj: Record<string, FlagBase>): Record<string, number>;
 
 type flag_d_FlagBase = FlagBase;
 declare const flag_d_fl: typeof fl;
@@ -592,7 +599,7 @@ declare namespace flag_d {
     flag_d_fl as fl,
     flag_d_toString as toString,
     from$2 as from,
-    make$9 as make,
+    make$a as make,
   };
 }
 
@@ -720,8 +727,8 @@ declare class NumGrid extends Grid$1<number> {
 }
 declare const alloc: typeof NumGrid.alloc;
 declare const free: typeof NumGrid.free;
-declare function make$8<T>(w: number, h: number, v?: number | GridInit<number>): NumGrid;
-declare function make$8<T>(w: number, h: number, v?: T | GridInit<T>): Grid$1<T>;
+declare function make$9<T>(w: number, h: number, v?: number | GridInit<number>): NumGrid;
+declare function make$9<T>(w: number, h: number, v?: T | GridInit<T>): Grid$1<T>;
 declare type GridZip<T, U> = (destVal: T, sourceVal: U, destX: number, destY: number, sourceX: number, sourceY: number, destGrid: Grid$1<T>, sourceGrid: Grid$1<U>) => void;
 declare function offsetZip<T, U>(destGrid: Grid$1<T>, srcGrid: Grid$1<U>, srcToDestX: number, srcToDestY: number, value: T | GridZip<T, U>): void;
 declare function intersection(onto: NumGrid, a: NumGrid, b?: NumGrid): void;
@@ -759,7 +766,7 @@ declare namespace grid_d {
     grid_d_NumGrid as NumGrid,
     grid_d_alloc as alloc,
     grid_d_free as free,
-    make$8 as make,
+    make$9 as make,
     grid_d_GridZip as GridZip,
     grid_d_offsetZip as offsetZip,
     grid_d_intersection as intersection,
@@ -956,26 +963,26 @@ declare class Buffer$1 {
     blend(color: ColorBase, x: number, y: number, width: number, height: number): this;
     dump(): void;
 }
-declare function make$7(width: number, height: number): Buffer$1;
+declare function make$8(width: number, height: number): Buffer$1;
 
 type buffer_d_DrawData = DrawData;
 declare namespace buffer_d {
   export {
     buffer_d_DrawData as DrawData,
     Buffer$1 as Buffer,
-    make$7 as make,
+    make$8 as make,
   };
 }
 
 declare type AnyObj = Record<string, any>;
-declare type TweenCb = (obj: AnyObj, dt: number) => any;
+declare type TweenCb = (obj: AnyObj, dt: number) => void;
+declare type TweenFinishCb = (obj: AnyObj, success: boolean) => any;
 declare type EasingFn = (v: number) => number;
 declare type InterpolateFn = (start: any, goal: any, pct: number) => any;
 interface Animation {
     isRunning(): boolean;
     start(): void;
     tick(dt: number): boolean;
-    gameTick(dt: number): boolean;
     stop(): void;
 }
 interface Animator {
@@ -998,7 +1005,7 @@ declare class Tween implements Animation {
     _startCb: TweenCb | null;
     _updateCb: TweenCb | null;
     _repeatCb: TweenCb | null;
-    _finishCb: TweenCb | null;
+    _finishCb: TweenFinishCb | null;
     _resolveCb: null | ((v?: any) => void);
     _easing: EasingFn;
     _interpolate: InterpolateFn;
@@ -1007,7 +1014,7 @@ declare class Tween implements Animation {
     onStart(cb: TweenCb): this;
     onUpdate(cb: TweenCb): this;
     onRepeat(cb: TweenCb): this;
-    onFinish(cb: TweenCb): this;
+    onFinish(cb: TweenFinishCb): this;
     to(goal: AnyObj, duration?: number): this;
     from(start: AnyObj, duration?: number): this;
     duration(): number;
@@ -1020,19 +1027,19 @@ declare class Tween implements Animation {
     repeatDelay(v: number): this;
     yoyo(): boolean;
     yoyo(v: boolean): this;
-    start(): Promise<boolean>;
+    start(): Promise<any>;
     tick(dt: number): boolean;
     _restart(): void;
-    gameTick(_dt: number): boolean;
     stop(success?: boolean): void;
     _updateProperties(obj: AnyObj, start: AnyObj, goal: AnyObj, pct: number): boolean;
 }
-declare function make$6(src: AnyObj): Tween;
+declare function make$7(src: AnyObj): Tween;
 declare function linear(pct: number): number;
 declare function interpolate(start: any, goal: any, pct: number): any;
 
 type tween_d_AnyObj = AnyObj;
 type tween_d_TweenCb = TweenCb;
+type tween_d_TweenFinishCb = TweenFinishCb;
 type tween_d_EasingFn = EasingFn;
 type tween_d_InterpolateFn = InterpolateFn;
 type tween_d_Animation = Animation;
@@ -1045,12 +1052,13 @@ declare namespace tween_d {
   export {
     tween_d_AnyObj as AnyObj,
     tween_d_TweenCb as TweenCb,
+    tween_d_TweenFinishCb as TweenFinishCb,
     tween_d_EasingFn as EasingFn,
     tween_d_InterpolateFn as InterpolateFn,
     tween_d_Animation as Animation,
     tween_d_Animator as Animator,
     tween_d_Tween as Tween,
-    make$6 as make,
+    make$7 as make,
     tween_d_linear as linear,
     tween_d_interpolate as interpolate,
   };
@@ -1058,6 +1066,7 @@ declare namespace tween_d {
 
 declare class Event$1 {
     type: string;
+    source: any;
     target: any;
     defaultPrevented: boolean;
     propagationStopped: boolean;
@@ -1092,8 +1101,8 @@ declare const MOUSEUP = "mouseup";
 declare const STOP = "stop";
 declare type EventHandler = (event: Event$1) => void;
 declare function setKeymap(keymap: IOMap): void;
-declare function handlerFor(ev: Event$1, km: IOMap): EventFn$2 | ControlFn | null;
-declare function dispatchEvent(ev: Event$1, km?: IOMap): Promise<boolean | void>;
+declare function handlerFor(ev: Event$1, km: Record<string, any>): any | null;
+declare function dispatchEvent(ev: Event$1, km: IOMap, thisArg?: any): Promise<any>;
 declare function makeStopEvent(): Event$1;
 declare function makeCustomEvent(type: string, opts?: Partial<Event$1>): Event$1;
 declare function makeTickEvent(dt: number): Event$1;
@@ -1134,7 +1143,7 @@ declare class Loop implements Animator {
     addAnimation(a: Animation): void;
     removeAnimation(a: Animation): void;
 }
-declare function make$5(): Loop;
+declare function make$6(): Loop;
 declare const loop: Loop;
 
 type io_d_ControlFn = ControlFn;
@@ -1183,7 +1192,7 @@ declare namespace io_d {
     io_d_ignoreKeyEvent as ignoreKeyEvent,
     io_d_makeMouseEvent as makeMouseEvent,
     io_d_Loop as Loop,
-    make$5 as make,
+    make$6 as make,
     io_d_loop as loop,
   };
 }
@@ -1394,7 +1403,7 @@ declare namespace path_d {
   };
 }
 
-declare type EventFn$1 = (...args: any[]) => Promise<any> | any;
+declare type EventFn$1 = (...args: any[]) => void;
 /**
  * Data for an event listener.
  */
@@ -1493,7 +1502,7 @@ declare function removeAllListeners(event?: string): void;
  * @returns {boolean} `true` if the event had listeners, else `false`.
  * @public
  */
-declare function emit(...args: any[]): Promise<boolean>;
+declare function emit(...args: any[]): boolean;
 
 type events_d_Listener = Listener;
 declare const events_d_Listener: typeof Listener;
@@ -1522,7 +1531,7 @@ declare namespace events_d {
 
 declare type FrequencyFn = (danger: number) => number;
 declare type FrequencyConfig = FrequencyFn | number | string | Record<string, number> | null;
-declare function make$4(v?: FrequencyConfig): FrequencyFn;
+declare function make$5(v?: FrequencyConfig): FrequencyFn;
 
 type frequency_d_FrequencyFn = FrequencyFn;
 type frequency_d_FrequencyConfig = FrequencyConfig;
@@ -1530,7 +1539,7 @@ declare namespace frequency_d {
   export {
     frequency_d_FrequencyFn as FrequencyFn,
     frequency_d_FrequencyConfig as FrequencyConfig,
-    make$4 as make,
+    make$5 as make,
   };
 }
 
@@ -1693,8 +1702,8 @@ declare class CanvasGL extends BaseCanvas {
     _render(): void;
 }
 
-declare function make$3(opts: Partial<CanvasOptions>): BaseCanvas;
-declare function make$3(width: number, height: number, opts?: Partial<CanvasOptions>): BaseCanvas;
+declare function make$4(opts: Partial<CanvasOptions>): BaseCanvas;
+declare function make$4(width: number, height: number, opts?: Partial<CanvasOptions>): BaseCanvas;
 
 type index_d$4_BufferTarget = BufferTarget;
 type index_d$4_Buffer = Buffer;
@@ -1724,7 +1733,7 @@ declare namespace index_d$4 {
     index_d$4_BaseCanvas as BaseCanvas,
     index_d$4_Canvas2D as Canvas2D,
     index_d$4_CanvasGL as CanvasGL,
-    make$3 as make,
+    make$4 as make,
   };
 }
 
@@ -1745,11 +1754,11 @@ declare class Sprite implements SpriteData$1 {
     toString(): string;
 }
 declare const sprites: Record<string, Sprite>;
-declare function make$2(): Sprite;
-declare function make$2(bg: ColorBase, opacity?: number): Sprite;
-declare function make$2(ch?: string | null, fg?: ColorBase | null, bg?: ColorBase | null, opacity?: number): Sprite;
-declare function make$2(args: any[]): Sprite;
-declare function make$2(info: SpriteConfig): Sprite;
+declare function make$3(): Sprite;
+declare function make$3(bg: ColorBase, opacity?: number): Sprite;
+declare function make$3(ch?: string | null, fg?: ColorBase | null, bg?: ColorBase | null, opacity?: number): Sprite;
+declare function make$3(args: any[]): Sprite;
+declare function make$3(info: SpriteConfig): Sprite;
 declare function from$1(name: string): Sprite;
 declare function from$1(config: SpriteConfig): Sprite;
 declare function install$2(name: string, bg: ColorBase, opacity?: number): Sprite;
@@ -1778,7 +1787,7 @@ declare namespace index_d$3 {
     index_d$3_SpriteConfig as SpriteConfig,
     index_d$3_Sprite as Sprite,
     index_d$3_sprites as sprites,
-    make$2 as make,
+    make$3 as make,
     from$1 as from,
     install$2 as install,
     index_d$3_DrawInfo as DrawInfo,
@@ -1878,7 +1887,7 @@ declare class Blob {
     _cellularAutomataRound(grid: NumGrid): boolean;
 }
 declare function fillBlob(grid: NumGrid, opts?: Partial<BlobConfig>): Bounds;
-declare function make$1(opts?: Partial<BlobConfig>): Blob;
+declare function make$2(opts?: Partial<BlobConfig>): Blob;
 
 type blob_d_BlobConfig = BlobConfig;
 type blob_d_Blob = Blob;
@@ -1889,7 +1898,7 @@ declare namespace blob_d {
     blob_d_BlobConfig as BlobConfig,
     blob_d_Blob as Blob,
     blob_d_fillBlob as fillBlob,
-    make$1 as make,
+    make$2 as make,
   };
 }
 
@@ -1961,8 +1970,8 @@ declare class Light implements LightType {
 declare function intensity(light: Color | LightValue): number;
 declare function isDarkLight(light: Color | LightValue, threshold?: number): boolean;
 declare function isShadowLight(light: Color | LightValue, threshold?: number): boolean;
-declare function make(color: ColorBase, radius?: RangeBase, fadeTo?: number, pass?: boolean): Light;
-declare function make(light: LightBase): Light;
+declare function make$1(color: ColorBase, radius?: RangeBase, fadeTo?: number, pass?: boolean): Light;
+declare function make$1(light: LightBase): Light;
 declare const lights: Record<string, Light>;
 declare function from(light: LightBase | LightType): Light;
 declare function install(id: string, color: ColorBase, radius: RangeBase, fadeTo?: number, pass?: boolean): Light;
@@ -2029,7 +2038,6 @@ declare const index_d$2_Light: typeof Light;
 declare const index_d$2_intensity: typeof intensity;
 declare const index_d$2_isDarkLight: typeof isDarkLight;
 declare const index_d$2_isShadowLight: typeof isShadowLight;
-declare const index_d$2_make: typeof make;
 declare const index_d$2_lights: typeof lights;
 declare const index_d$2_from: typeof from;
 declare const index_d$2_install: typeof install;
@@ -2052,7 +2060,7 @@ declare namespace index_d$2 {
     index_d$2_intensity as intensity,
     index_d$2_isDarkLight as isDarkLight,
     index_d$2_isShadowLight as isShadowLight,
-    index_d$2_make as make,
+    make$1 as make,
     index_d$2_lights as lights,
     index_d$2_from as from,
     index_d$2_install as install,
@@ -2223,7 +2231,6 @@ declare class UI implements UICore {
     layer: Layer | null;
     layers: Layer[];
     _done: boolean;
-    _promise: Promise<void> | null;
     constructor(opts?: UIOptions);
     get width(): number;
     get height(): number;
@@ -2234,17 +2241,13 @@ declare class UI implements UICore {
     startNewLayer(opts?: LayerOptions): Layer;
     startLayer(layer: Layer): void;
     copyUIBuffer(dest: Buffer$1): void;
-    finishLayer(layer: Layer): void;
+    finishLayer(layer: Layer, result?: any): void;
+    _finishLayer(layer: Layer): void;
     stop(): void;
-    mousemove(e: Event$1): boolean;
-    click(e: Event$1): boolean;
-    keypress(e: Event$1): boolean;
-    dir(e: Event$1): boolean;
-    tick(e: Event$1): boolean;
-    draw(): void;
     addAnimation(a: Animation): void;
     removeAnimation(a: Animation): void;
 }
+declare function make(opts: UIOptions): UI;
 
 declare type TimerFn = () => void;
 interface TimerInfo {
@@ -2268,48 +2271,33 @@ declare type EventCb$1 = (e: Event$1) => boolean;
 declare type FinishCb = (result: any) => void;
 interface LayerOptions {
     styles?: Sheet;
-    start?: StartCb;
-    draw?: DrawCb;
-    tick?: EventCb$1;
-    dir?: EventCb$1;
-    mousemove?: EventCb$1;
-    click?: EventCb$1;
-    keypress?: EventCb$1;
-    finish?: FinishCb;
 }
-declare class Layer implements UILayer {
+declare class Layer implements UILayer, Animator {
     ui: UI;
     buffer: Buffer;
     styles: Sheet;
     needsDraw: boolean;
     result: any;
     timers: TimerInfo[];
-    _tweens: Tween[];
-    promise: Promise<any>;
-    _done: Function | null;
-    _drawCb: DrawCb | null;
-    _tickCb: EventCb$1 | null;
-    _dirCb: EventCb$1 | null;
-    _mousemoveCb: EventCb$1 | null;
-    _clickCb: EventCb$1 | null;
-    _keypressCb: EventCb$1 | null;
-    _finishCb: FinishCb | null;
-    _startCb: StartCb | null;
+    _tweens: Animation[];
+    _running: boolean;
+    _keymap: IOMap;
     constructor(ui: UI, opts?: LayerOptions);
+    get running(): boolean;
     get width(): number;
     get height(): number;
-    mousemove(e: Event$1): boolean;
-    click(e: Event$1): boolean;
-    keypress(e: Event$1): boolean;
-    dir(e: Event$1): boolean;
+    mousemove(_e: Event$1): boolean;
+    click(_e: Event$1): boolean;
+    keypress(_e: Event$1): boolean;
+    dir(_e: Event$1): boolean;
     tick(e: Event$1): boolean;
     draw(): void;
     setTimeout(action: TimerFn, time: number): void;
     clearTimeout(action: string | TimerFn): void;
-    animate(tween: Tween): this;
-    run(opts: LayerOptions): Promise<any>;
+    addAnimation(a: Animation): void;
+    removeAnimation(a: Animation): void;
+    run(keymap?: IOMap, ms?: number): Promise<any>;
     finish(result?: any): void;
-    _finish(): void;
 }
 
 declare type EventCb = (name: string, widget: Widget | null, args?: any) => boolean | any;
@@ -2469,7 +2457,7 @@ declare class WidgetLayer extends Layer {
     dir(e: Event$1): boolean;
     tick(e: Event$1): boolean;
     draw(): void;
-    _finish(): void;
+    finish(result?: any): void;
 }
 declare module '../ui/ui' {
     interface UI {
@@ -2749,6 +2737,7 @@ declare const index_d$1_Layer: typeof Layer;
 type index_d$1_UIOptions = UIOptions;
 type index_d$1_UI = UI;
 declare const index_d$1_UI: typeof UI;
+declare const index_d$1_make: typeof make;
 type index_d$1_AlertOptions = AlertOptions;
 type index_d$1_ConfirmOptions = ConfirmOptions;
 type index_d$1_InputBoxOptions = InputBoxOptions;
@@ -2784,6 +2773,7 @@ declare namespace index_d$1 {
     index_d$1_Layer as Layer,
     index_d$1_UIOptions as UIOptions,
     index_d$1_UI as UI,
+    index_d$1_make as make,
     index_d$1_AlertOptions as AlertOptions,
     index_d$1_ConfirmOptions as ConfirmOptions,
     index_d$1_InputBoxOptions as InputBoxOptions,
@@ -3213,6 +3203,9 @@ type index_d_WidgetOptions = WidgetOptions;
 type index_d_SetParentOptions = SetParentOptions;
 type index_d_Widget = Widget;
 declare const index_d_Widget: typeof Widget;
+type index_d_WidgetLayerOptions = WidgetLayerOptions;
+type index_d_WidgetLayer = WidgetLayer;
+declare const index_d_WidgetLayer: typeof WidgetLayer;
 type index_d_Body = Body;
 declare const index_d_Body: typeof Body;
 type index_d_TextOptions = TextOptions;
@@ -3309,15 +3302,14 @@ declare const index_d_Choice: typeof Choice;
 type index_d_AddChoiceOptions = AddChoiceOptions;
 type index_d_Inquiry = Inquiry;
 declare const index_d_Inquiry: typeof Inquiry;
-type index_d_WidgetLayerOptions = WidgetLayerOptions;
-type index_d_WidgetLayer = WidgetLayer;
-declare const index_d_WidgetLayer: typeof WidgetLayer;
 declare namespace index_d {
   export {
     index_d_EventCb as EventCb,
     index_d_WidgetOptions as WidgetOptions,
     index_d_SetParentOptions as SetParentOptions,
     index_d_Widget as Widget,
+    index_d_WidgetLayerOptions as WidgetLayerOptions,
+    index_d_WidgetLayer as WidgetLayer,
     index_d_Body as Body,
     index_d_TextOptions as TextOptions,
     index_d_Text as Text,
@@ -3391,9 +3383,7 @@ declare namespace index_d {
     index_d_Choice as Choice,
     index_d_AddChoiceOptions as AddChoiceOptions,
     index_d_Inquiry as Inquiry,
-    index_d_WidgetLayerOptions as WidgetLayerOptions,
-    index_d_WidgetLayer as WidgetLayer,
   };
 }
 
-export { ERROR, FALSE, IDENTITY, IS_NONZERO, IS_ZERO, NOOP, ONE, TRUE, WARN, ZERO, arrayDelete, arrayFindRight, arrayIncludesAll, arrayInsert, arrayNext, arrayNullify, arrayPrev, arraysIntersect, blob_d as blob, buffer_d as buffer, index_d$4 as canvas, clamp, index_d$7 as color, colors, config$1 as config, data, events_d as events, first, flag_d as flag, index_d$5 as fov, frequency_d as frequency, grid_d as grid, io_d as io, lerp, index_d$2 as light, list_d as list, loop, message_d as message, nextIndex, object_d as object, path_d as path, prevIndex, range_d as range, rng_d as rng, scheduler_d as scheduler, index_d$3 as sprite, sprites, sum, index_d$6 as text, tween_d as tween, types_d as types, index_d$1 as ui, index_d as widget, xy_d as xy };
+export { ERROR, FALSE, IDENTITY, IS_NONZERO, IS_ZERO, NOOP, ONE, TRUE, WARN, ZERO, arrayDelete, arrayFindRight, arrayIncludesAll, arrayInsert, arrayNext, arrayNullify, arrayPrev, arraysIntersect, blob_d as blob, buffer_d as buffer, index_d$4 as canvas, clamp, index_d$7 as color, colors, config$1 as config, cosmetic, data, events_d as events, first, flag_d as flag, index_d$5 as fov, frequency_d as frequency, grid_d as grid, io_d as io, lerp, index_d$2 as light, list_d as list, loop, message_d as message, nextIndex, object_d as object, path_d as path, prevIndex, random, range_d as range, rng_d as rng, scheduler_d as scheduler, index_d$3 as sprite, sprites, sum, index_d$6 as text, tween_d as tween, types_d as types, index_d$1 as ui, index_d as widget, xy_d as xy };

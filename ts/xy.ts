@@ -137,14 +137,23 @@ export class Bounds {
     }
 }
 
-export function copyXY(dest: XY, src: XY | Loc) {
+export function copy(dest: XY, src: XY | Loc) {
     dest.x = x(src);
     dest.y = y(src);
 }
 
-export function addXY(dest: XY, src: XY | Loc) {
+export function addTo(dest: XY, src: XY | Loc) {
     dest.x += x(src);
     dest.y += y(src);
+}
+
+export function add(a: XY, b: XY | Loc): XY;
+export function add(a: Loc, b: XY | Loc): Loc;
+export function add(a: XY | Loc, b: XY | Loc): XY | Loc {
+    if (Array.isArray(a)) {
+        return [a[0] + x(b), a[1] + y(b)] as Loc;
+    }
+    return { x: a.x + x(b), y: a.y + y(b) } as XY;
 }
 
 export function equalsXY(

@@ -2,7 +2,8 @@
 import * as Utils from './utils';
 
 export type AnyObj = Record<string, any>;
-export type TweenCb = (obj: AnyObj, dt: number) => any;
+export type TweenCb = (obj: AnyObj, dt: number) => void;
+export type TweenFinishCb = (obj: AnyObj, success: boolean) => any;
 
 export type EasingFn = (v: number) => number;
 export type InterpolateFn = (start: any, goal: any, pct: number) => any;
@@ -11,11 +12,10 @@ export interface Animation {
     isRunning(): boolean;
 
     start(): void;
-
     tick(dt: number): boolean;
-    gameTick(dt: number): boolean;
-
     stop(): void;
+
+    // gameTick(dt: number): boolean;
 }
 
 export interface Animator {
@@ -44,7 +44,7 @@ export class Tween implements Animation {
     _startCb: TweenCb | null = null;
     _updateCb: TweenCb | null = null;
     _repeatCb: TweenCb | null = null;
-    _finishCb: TweenCb | null = null;
+    _finishCb: TweenFinishCb | null = null;
     _resolveCb: null | ((v?: any) => void) = null;
 
     _easing: EasingFn = linear;
@@ -73,7 +73,7 @@ export class Tween implements Animation {
         return this;
     }
 
-    onFinish(cb: TweenCb): this {
+    onFinish(cb: TweenFinishCb): this {
         this._finishCb = cb;
         return this;
     }
@@ -132,7 +132,7 @@ export class Tween implements Animation {
         return this;
     }
 
-    start(): Promise<boolean> {
+    start(): Promise<any> {
         this._time = 0;
         this._startTime = this._delay;
         this._count = 0;
@@ -149,9 +149,15 @@ export class Tween implements Animation {
             );
         }
 
-        return new Promise((resolve) => {
+        let p = new Promise((resolve) => {
             this._resolveCb = resolve;
         });
+
+        if (this._finishCb) {
+            const cb = this._finishCb;
+            p = p.then((success) => cb.call(this, this._obj, !!success));
+        }
+        return p;
     }
 
     tick(dt: number): boolean {
@@ -218,13 +224,13 @@ export class Tween implements Animation {
         }
     }
 
-    gameTick(_dt: number): boolean {
-        return false;
-    }
+    // gameTick(_dt: number): boolean {
+    //     return false;
+    // }
 
     stop(success = false): void {
         this._time = Number.MAX_SAFE_INTEGER;
-        if (this._finishCb) this._finishCb.call(this, this._obj, 1);
+        // if (this._finishCb) this._finishCb.call(this, this._obj, 1);
         if (this._resolveCb) this._resolveCb(success);
     }
 

@@ -4,7 +4,8 @@ import { Animator, Animation } from './tween';
 
 export class Event {
     type!: string;
-    target: any = null;
+    source: any = null; // original sourcing information
+    target: any = null; // current handler information
 
     // Used in UI
     defaultPrevented = false;
@@ -50,6 +51,7 @@ export class Event {
     reset(type: string, opts?: Partial<Event>) {
         this.type = type;
         this.target = null;
+        this.source = null;
         this.defaultPrevented = false;
 
         this.shiftKey = false;
@@ -116,7 +118,7 @@ export function setKeymap(keymap: IOMap) {
     IOMAP = keymap;
 }
 
-export function handlerFor(ev: Event, km: IOMap): EventFn | ControlFn | null {
+export function handlerFor(ev: Event, km: Record<string, any>): any | null {
     let c;
     if (ev.dir) {
         c = km.dir || km.keypress;
@@ -131,7 +133,7 @@ export function handlerFor(ev: Event, km: IOMap): EventFn | ControlFn | null {
     return c || null;
 }
 
-export async function dispatchEvent(ev: Event, km?: IOMap) {
+export async function dispatchEvent(ev: Event, km: IOMap, thisArg?: any) {
     let result;
 
     km = km || IOMAP;
@@ -145,7 +147,7 @@ export async function dispatchEvent(ev: Event, km?: IOMap) {
 
     if (handler) {
         // if (typeof c === 'function') {
-        result = await handler.call(km, ev);
+        result = await handler.call(thisArg || km, ev);
         // } else if (commands[c]) {
         //     result = await commands[c](ev);
         // } else {

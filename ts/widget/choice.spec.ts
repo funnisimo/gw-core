@@ -132,7 +132,7 @@ describe('Choice', () => {
         expect(prompt.selection).toEqual(0);
         expect(prompt.value()).toEqual('A');
 
-        layer.draw(); // in case we want to test click
+        const p = layer.run(); // in case we want to test click
 
         inputFn.mockClear();
         await UTILS.pushEvent(ui.loop, UTILS.dir('down'));
@@ -149,6 +149,9 @@ describe('Choice', () => {
         expect(prompt.value()).toEqual('B');
 
         expect(await promise).toEqual('B');
+
+        layer.finish();
+        await p;
     });
 });
 

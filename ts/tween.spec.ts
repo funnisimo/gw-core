@@ -20,6 +20,25 @@ describe('Tween', () => {
         expect(startCb).not.toHaveBeenCalled();
     });
 
+    test('async finish', async () => {
+        const obj = { x: 0, y: 0 };
+        const finishCb = jest.fn().mockResolvedValue(123);
+        const tween = Tween.make(obj)
+            .to({
+                x: 10,
+            })
+            .duration(1000)
+            .onFinish(finishCb);
+
+        const p = tween.start();
+        while (tween.isRunning()) {
+            tween.tick(100);
+        }
+
+        expect(await p).toEqual(123);
+        expect(finishCb).toHaveBeenCalledWith(obj, true);
+    });
+
     test('basic', () => {
         const obj = { x: 0, y: 0 };
         const tween = Tween.make(obj);
@@ -91,7 +110,7 @@ describe('Tween', () => {
         expect(obj.x).toEqual(10);
     });
 
-    test('repeat', () => {
+    test('repeat', async () => {
         const obj = { x: 0, y: 0 };
         const tween = Tween.make(obj);
         expect(tween).toBeInstanceOf(Tween.Tween);
@@ -119,13 +138,16 @@ describe('Tween', () => {
 
         const cbFinish = jest.fn().mockImplementation((o) => {
             expect(o.x).toEqual(10);
+            return 123; // You can change the return value of the promise
         });
         tween.onFinish(cbFinish);
 
-        tween.start();
+        const p = tween.start();
         while (tween.isRunning()) {
             tween.tick(100);
         }
+
+        expect(await p).toEqual(123);
 
         expect(cbStart).toHaveBeenCalledTimes(1);
         expect(cbRepeat).toHaveBeenCalledTimes(2);

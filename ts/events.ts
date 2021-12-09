@@ -1,6 +1,6 @@
 import * as List from './list';
 
-export type EventFn = (...args: any[]) => Promise<any> | any;
+export type EventFn = (...args: any[]) => void;
 
 /**
  * Data for an event listener.
@@ -169,7 +169,7 @@ export function removeAllListeners(event?: string) {
  * @returns {boolean} `true` if the event had listeners, else `false`.
  * @public
  */
-export async function emit(...args: any[]) {
+export function emit(...args: any[]): boolean {
     const event = args[0];
     if (!EVENTS[event]) return false; // no events to send
     let listener = EVENTS[event];
@@ -177,7 +177,7 @@ export async function emit(...args: any[]) {
     while (listener) {
         let next = listener.next;
         if (listener.once) List.remove(EVENTS, event, listener);
-        await listener.fn.apply(listener.context, args);
+        listener.fn.apply(listener.context, args);
         listener = next;
     }
     return true;

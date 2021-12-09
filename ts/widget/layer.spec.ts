@@ -386,10 +386,14 @@ describe('Layer', () => {
     });
 
     describe('animate', () => {
+        // jest.setTimeout(10 * 60 * 1000);
+
         test('basic', async () => {
             const obj = { x: 0 };
             const tween = Tween.make(obj).to({ x: 10 }).duration(1000);
-            layer.animate(tween);
+            layer.addAnimation(tween);
+            const p = layer.run();
+
             expect(layer._tweens).toHaveLength(1);
             expect(tween.isRunning()).toBeTruthy();
 
@@ -403,6 +407,9 @@ describe('Layer', () => {
             expect(obj.x).toEqual(10);
 
             expect(layer._tweens).toHaveLength(0);
+
+            layer.finish();
+            await p;
         });
 
         test.skip('advanced', async () => {

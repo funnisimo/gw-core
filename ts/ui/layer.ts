@@ -2,6 +2,7 @@ import * as Canvas from '../canvas';
 import * as Buffer from '../buffer';
 import * as IO from '../io';
 import * as Tween from '../tween';
+import * as Utils from '../utils';
 
 import * as Style from './style';
 import { UI } from './ui';
@@ -35,18 +36,9 @@ export type FinishCb = (result: any) => void;
 
 export interface LayerOptions {
     styles?: Style.Sheet;
-
-    start?: StartCb;
-    draw?: DrawCb;
-    tick?: EventCb;
-    dir?: EventCb;
-    mousemove?: EventCb;
-    click?: EventCb;
-    keypress?: EventCb;
-    finish?: FinishCb;
 }
 
-export class Layer implements UILayer {
+export class Layer implements UILayer, Tween.Animator {
     ui: UI;
     buffer: Canvas.Buffer;
     styles: Style.Sheet;
@@ -55,19 +47,10 @@ export class Layer implements UILayer {
     result: any = undefined;
 
     timers: TimerInfo[] = [];
-    _tweens: Tween.Tween[] = [];
+    _tweens: Tween.Animation[] = [];
 
-    promise!: Promise<any>;
-    _done: Function | null = null;
-
-    _drawCb: DrawCb | null = null;
-    _tickCb: EventCb | null = null;
-    _dirCb: EventCb | null = null;
-    _mousemoveCb: EventCb | null = null;
-    _clickCb: EventCb | null = null;
-    _keypressCb: EventCb | null = null;
-    _finishCb: FinishCb | null = null;
-    _startCb: StartCb | null = null;
+    _running = false;
+    _keymap: IO.IOMap = {};
 
     constructor(ui: UI, opts: LayerOptions = {}) {
         this.ui = ui;
@@ -75,7 +58,11 @@ export class Layer implements UILayer {
         this.buffer = ui.canvas.buffer.clone();
         this.styles = new Style.Sheet(opts.styles || ui.styles);
 
-        this.run(opts);
+        // this.run(opts);
+    }
+
+    get running() {
+        return this._running;
     }
 
     get width(): number {
@@ -97,29 +84,19 @@ export class Layer implements UILayer {
     //     return this;
     // }
 
-    mousemove(e: IO.Event): boolean {
-        if (!this._mousemoveCb) return false;
-        this._mousemoveCb.call(this, e);
+    mousemove(_e: IO.Event): boolean {
         return false;
     }
 
-    click(e: IO.Event): boolean {
-        if (!this._clickCb) return false;
-        this._clickCb.call(this, e);
+    click(_e: IO.Event): boolean {
         return false;
     }
 
-    keypress(e: IO.Event): boolean {
-        if (!e.key) return false;
-
-        if (!this._keypressCb) return false;
-        this._keypressCb.call(this, e);
+    keypress(_e: IO.Event): boolean {
         return false;
     }
 
-    dir(e: IO.Event): boolean {
-        if (!this._dirCb) return false;
-        this._dirCb.call(this, e);
+    dir(_e: IO.Event): boolean {
         return false;
     }
 
@@ -138,17 +115,10 @@ export class Layer implements UILayer {
             }
         }
 
-        if (this._tickCb) {
-            this._tickCb.call(this, e);
-        }
-
         return false;
     }
 
     draw() {
-        if (!this._drawCb) return;
-
-        if (!this._drawCb.call(this, this.buffer)) return;
         console.log('draw');
         this.buffer.render();
     }
@@ -171,42 +141,79 @@ export class Layer implements UILayer {
         }
     }
 
-    animate(tween: Tween.Tween): this {
-        if (!tween.isRunning()) tween.start();
-        this._tweens.push(tween);
-        return this;
+    // Animator
+
+    addAnimation(a: Tween.Animation): void {
+        if (!a.isRunning()) a.start();
+        this._tweens.push(a);
+    }
+    removeAnimation(a: Tween.Animation): void {
+        Utils.arrayNullify(this._tweens, a);
     }
 
-    run(opts: LayerOptions): Promise<any> {
-        this._drawCb = opts.draw || this._drawCb;
-        this._tickCb = opts.tick || this._tickCb;
-        this._dirCb = opts.dir || this._dirCb;
-        this._mousemoveCb = opts.mousemove || this._mousemoveCb;
-        this._clickCb = opts.click || this._clickCb;
-        this._keypressCb = opts.keypress || this._keypressCb;
-        this._finishCb = opts.finish || this._finishCb;
-        this._startCb = opts.start || this._startCb;
+    // RUN
 
-        this.promise = new Promise((resolve) => {
-            this._done = resolve;
-        });
+    async run(keymap: IO.IOMap = {}, ms = -1): Promise<any> {
+        if (this._running) throw new Error('Already running!');
 
-        if (this._startCb) {
-            this._startCb.call(this);
+        this.result = undefined;
+        const loop = this.ui.loop;
+        this._running = true;
+        loop.clearEvents(); // ??? Should we do this?
+
+        ['keypress', 'dir', 'click', 'mousemove', 'tick', 'draw'].forEach(
+            (e) => {
+                if (e in keymap) return;
+                keymap[e] = this[e as keyof Layer];
+            }
+        );
+
+        if (keymap.start && typeof keymap.start === 'function') {
+            await (<IO.ControlFn>keymap.start).call(this);
         }
 
-        return this.promise;
+        let busy = false;
+        const tickLoop = (setInterval(() => {
+            if (busy) return;
+            const e = IO.makeTickEvent(16);
+            loop.pushEvent(e);
+        }, 16) as unknown) as number;
+
+        while (this._running) {
+            if (keymap.draw && typeof keymap.draw === 'function') {
+                (<IO.ControlFn>keymap.draw).call(this);
+            }
+            if (this._tweens.length) {
+                const ev = await loop.nextTick();
+                if (ev && ev.dt) {
+                    this._tweens.forEach((a) => a && a.tick(ev.dt));
+                    this._tweens = this._tweens.filter(
+                        (a) => a && a.isRunning()
+                    );
+                }
+            } else {
+                const ev = await loop.nextEvent(ms);
+                busy = true;
+                if (ev) {
+                    await IO.dispatchEvent(ev, keymap, this); // return code does not matter (call layer.finish() to exit loop)
+                    // this._running = false;
+                }
+                busy = false;
+            }
+        }
+
+        if (keymap.stop && typeof keymap.stop === 'function') {
+            await (<IO.ControlFn>keymap.stop).call(this);
+        }
+
+        clearInterval(tickLoop);
+
+        return this.result;
     }
 
     finish(result?: any) {
         this.result = result;
-        this.ui.finishLayer(this);
-    }
-
-    _finish() {
-        if (!this._done) return;
-        if (this._finishCb) this._finishCb.call(this, this.result);
-        this._done(this.result);
-        this._done = null;
+        this._running = false;
+        this.ui._finishLayer(this);
     }
 }

@@ -27,6 +27,10 @@ export class Range {
         return rng.clumped(this.lo, this.hi, this.clumps);
     }
 
+    max(): number {
+        return this.hi;
+    }
+
     contains(value: number): boolean {
         return this.lo <= value && this.hi >= value;
     }
@@ -109,4 +113,9 @@ export const from = make;
 export function asFn(config: RangeBase | null) {
     const range = make(config);
     return () => range.value();
+}
+
+export function value(base: RangeBase): number {
+    const r = make(base);
+    return r.value();
 }

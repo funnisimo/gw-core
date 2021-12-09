@@ -107,23 +107,23 @@ describe('XY', () => {
         });
     });
 
-    test('copyXY', () => {
+    test('copy', () => {
         const dest = { x: 0, y: 0 };
 
-        XY.copyXY(dest, { x: 4, y: 5 });
+        XY.copy(dest, { x: 4, y: 5 });
         expect(dest).toEqual({ x: 4, y: 5 });
 
-        XY.copyXY(dest, [2, 3]);
+        XY.copy(dest, [2, 3]);
         expect(dest).toEqual({ x: 2, y: 3 });
     });
 
-    test('addXY', () => {
+    test('addTo', () => {
         const dest = { x: 0, y: 0 };
 
-        XY.addXY(dest, { x: 4, y: 5 });
+        XY.addTo(dest, { x: 4, y: 5 });
         expect(dest).toEqual({ x: 4, y: 5 });
 
-        XY.addXY(dest, [2, 3]);
+        XY.addTo(dest, [2, 3]);
         expect(dest).toEqual({ x: 6, y: 8 });
     });
 
@@ -417,6 +417,4 @@ describe('XY', () => {
             ]);
         });
     });
-
-    
 });

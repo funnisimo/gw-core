@@ -415,7 +415,7 @@ export class Widget implements UIStylable {
             .onUpdate((info) => {
                 this.opacity = info.pct;
             });
-        this.layer.animate(tween);
+        this.layer.addAnimation(tween);
 
         return this;
     }
@@ -466,7 +466,7 @@ export class Widget implements UIStylable {
             .onUpdate((info) => {
                 this.pos(info.x, info.y);
             });
-        this.layer.animate(tween);
+        this.layer.addAnimation(tween);
 
         return this;
     }

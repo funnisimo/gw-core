@@ -22,7 +22,7 @@ export class UI implements UICore {
 
     // inDialog = false;
     _done = false;
-    _promise: Promise<void> | null = null;
+    // _promise: Promise<void> | null = null;
 
     constructor(opts: UIOptions = {}) {
         opts.loop = opts.loop || IO.loop;
@@ -76,9 +76,9 @@ export class UI implements UICore {
     startLayer(layer: Layer) {
         this.layers.push(layer);
 
-        if (!this._promise) {
-            this._promise = this.loop.run((this as unknown) as IO.IOMap);
-        }
+        // if (!this._promise) {
+        //     this._promise = this.loop.run((this as unknown) as IO.IOMap);
+        // }
         this.layer = layer;
     }
 
@@ -88,8 +88,11 @@ export class UI implements UICore {
         dest.changed = false; // So you have to draw something to make the canvas render...
     }
 
-    finishLayer(layer: Layer): void {
-        layer._finish();
+    finishLayer(layer: Layer, result?: any): void {
+        layer.finish(result);
+    }
+
+    _finishLayer(layer: Layer): void {
         Utils.arrayDelete(this.layers, layer);
         if (this.layer === layer) {
             this.layer = this.layers[this.layers.length - 1] || null;
@@ -117,40 +120,40 @@ export class UI implements UICore {
     //     this.layers.length = 0;
     // }
 
-    mousemove(e: IO.Event): boolean {
-        if (this.layer) this.layer.mousemove(e);
-        return this._done;
-    }
+    // mousemove(e: IO.Event): boolean {
+    //     if (this.layer) this.layer.mousemove(e);
+    //     return this._done;
+    // }
 
-    click(e: IO.Event): boolean {
-        if (this.layer) this.layer.click(e);
-        return this._done;
-    }
+    // click(e: IO.Event): boolean {
+    //     if (this.layer) this.layer.click(e);
+    //     return this._done;
+    // }
 
-    keypress(e: IO.Event): boolean {
-        if (this.layer) this.layer.keypress(e);
-        return this._done;
-    }
+    // keypress(e: IO.Event): boolean {
+    //     if (this.layer) this.layer.keypress(e);
+    //     return this._done;
+    // }
 
-    dir(e: IO.Event): boolean {
-        if (this.layer) this.layer.dir(e);
-        return this._done;
-    }
+    // dir(e: IO.Event): boolean {
+    //     if (this.layer) this.layer.dir(e);
+    //     return this._done;
+    // }
 
-    tick(e: IO.Event): boolean {
-        if (this.layer) this.layer.tick(e);
-        return this._done;
-    }
+    // tick(e: IO.Event): boolean {
+    //     if (this.layer) this.layer.tick(e);
+    //     return this._done;
+    // }
 
-    draw() {
-        if (this.layer) this.layer.draw();
-    }
+    // draw() {
+    //     if (this.layer) this.layer.draw();
+    // }
 
     addAnimation(a: Tween.Animation): void {
-        this.loop.addAnimation(a);
+        this.layer?.addAnimation(a);
     }
     removeAnimation(a: Tween.Animation): void {
-        this.loop.removeAnimation(a);
+        this.layer?.removeAnimation(a);
     }
 
     // UTILITY FUNCTIONS
@@ -448,4 +451,8 @@ export class UI implements UICore {
 
     //     return await dlg.show();
     // }
+}
+
+export function make(opts: UIOptions): UI {
+    return new UI(opts);
 }
