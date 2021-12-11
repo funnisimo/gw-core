@@ -774,6 +774,27 @@ declare namespace grid_d {
   };
 }
 
+declare type AsyncQueueHandlerFn<T> = (obj: T) => void;
+declare class AsyncQueue<T> {
+    _data: T[];
+    _waiting: AsyncQueueHandlerFn<T> | null;
+    constructor();
+    get length(): number;
+    get last(): T | undefined;
+    get first(): T | undefined;
+    enqueue(obj: T): void;
+    prepend(obj: T): void;
+    dequeue(): Promise<T>;
+}
+
+type queue_d_AsyncQueue<_0> = AsyncQueue<_0>;
+declare const queue_d_AsyncQueue: typeof AsyncQueue;
+declare namespace queue_d {
+  export {
+    queue_d_AsyncQueue as AsyncQueue,
+  };
+}
+
 interface DrawInfo {
     ch: string | number | null;
     fg: ColorBase;
@@ -935,7 +956,7 @@ declare class Buffer$1 {
     get width(): number;
     get height(): number;
     hasXY(x: number, y: number): boolean;
-    clone(): Buffer$1;
+    clone(): this;
     resize(width: number, height: number): void;
     protected _index(x: number, y: number): number;
     get(x: number, y: number): number;
@@ -1090,8 +1111,8 @@ declare class Event$1 {
     reset(type: string, opts?: Partial<Event$1>): void;
 }
 declare type ControlFn = () => void | Promise<void>;
-declare type EventFn$2 = (event: Event$1) => boolean | void | Promise<boolean | void>;
-declare type IOMap = Record<string, EventFn$2 | ControlFn>;
+declare type EventFn$1 = (event: Event$1) => boolean | void | Promise<boolean | void>;
+declare type IOMap = Record<string, EventFn$1 | ControlFn>;
 declare type EventMatchFn = (event: Event$1) => boolean;
 declare const KEYPRESS = "keypress";
 declare const MOUSEMOVE = "mousemove";
@@ -1099,7 +1120,6 @@ declare const CLICK = "click";
 declare const TICK = "tick";
 declare const MOUSEUP = "mouseup";
 declare const STOP = "stop";
-declare type EventHandler = (event: Event$1) => void;
 declare function setKeymap(keymap: IOMap): void;
 declare function handlerFor(ev: Event$1, km: Record<string, any>): any | null;
 declare function dispatchEvent(ev: Event$1, km: IOMap, thisArg?: any): Promise<any>;
@@ -1110,41 +1130,84 @@ declare function makeKeyEvent(e: KeyboardEvent): Event$1;
 declare function keyCodeDirection(key: string): Loc$1 | null;
 declare function ignoreKeyEvent(e: KeyboardEvent): boolean;
 declare function makeMouseEvent(e: MouseEvent, x: number, y: number): Event$1;
-declare class Loop implements Animator {
-    running: boolean;
-    events: Event$1[];
+interface EventQueue extends Animator {
+    enqueue(ev: Event$1): void;
+    clearEvents(): void;
+}
+declare type TimerFn = () => void;
+interface TimerInfo {
+    action: TimerFn;
+    time: number;
+}
+interface IOHandler {
+    nextEvent(ms?: number): Promise<Event$1 | null>;
+    nextTick(ms?: number): Promise<Event$1 | null>;
+    nextKeyOrClick(ms?: number, match?: EventMatchFn): Promise<Event$1 | null>;
+    nextKeyPress(ms?: number, match?: EventMatchFn): Promise<Event$1 | null>;
+    pause(ms: number): Promise<boolean>;
+    waitForAck(): Promise<boolean>;
+    setTimeout(fn: TimerFn, ms: number): void;
+    clearTimeout(fn: TimerFn): void;
+    run(keymap: IOMap, thisArg?: any): Promise<any>;
+    finish(r: any): void;
+}
+declare class Handler implements IOHandler, EventQueue, Animator {
+    _running: boolean;
+    _events: AsyncQueue<Event$1>;
+    _result: any;
+    _tweens: Animation[];
+    _timers: TimerInfo[];
     mouse: XY;
-    protected _handlers: EventHandler[];
-    protected PAUSED: boolean;
-    protected LAST_CLICK: XY;
-    protected interval: number;
-    protected intervalCount: number;
-    protected ended: boolean;
-    _animations: (Animation | null)[];
-    constructor();
-    get CURRENT_HANDLER(): EventHandler | null;
+    lastClick: XY;
+    constructor(loop?: Loop);
+    get running(): boolean;
     hasEvents(): number;
     clearEvents(): void;
-    protected _startTicks(): void;
-    protected _stopTicks(): void;
-    pushEvent(ev: Event$1): void;
+    enqueue(ev: Event$1): void;
     nextEvent(ms?: number, match?: EventMatchFn): Promise<Event$1 | null>;
-    run(keymap: IOMap, ms?: number): Promise<void>;
-    stop(): void;
-    end(): void;
-    start(): void;
-    tickMs(ms?: number): Promise<unknown>;
+    run(keymap?: IOMap, ms?: number, thisArg?: any): Promise<any>;
+    finish(result?: any): void;
     nextTick(ms?: number): Promise<Event$1 | null>;
     nextKeyPress(ms?: number, match?: EventMatchFn): Promise<Event$1 | null>;
     nextKeyOrClick(ms?: number, matchFn?: EventMatchFn): Promise<Event$1 | null>;
-    pause(ms: number): Promise<boolean | null>;
-    waitForAck(): Promise<boolean | null>;
+    pause(ms: number): Promise<boolean>;
+    waitForAck(): Promise<boolean>;
+    addAnimation(a: Animation): void;
+    removeAnimation(a: Animation): void;
+    setTimeout(action: TimerFn, time: number): void;
+    clearTimeout(action: string | TimerFn): void;
+    _tick(dt: number): boolean;
+}
+declare function make$6(andPush?: boolean): Handler;
+declare function nextEvent(ms?: number): Promise<Event$1 | null>;
+declare function nextTick(ms?: number): Promise<Event$1 | null>;
+declare function nextKeyOrClick(ms?: number, match?: EventMatchFn): Promise<Event$1 | null>;
+declare function nextKeyPress(ms?: number, match?: EventMatchFn): Promise<Event$1 | null>;
+declare function pause(ms: number): Promise<boolean>;
+declare function waitForAck(): Promise<boolean>;
+interface IOLoop {
+    pushHandler(handler: EventQueue): void;
+    popHandler(handler: EventQueue): void;
+    enqueue(ev: Event$1): void;
+}
+declare class Loop implements Animator {
+    handlers: EventQueue[];
+    currentHandler: EventQueue | null;
+    _tickInterval: number;
+    constructor();
+    pushHandler(handler: EventQueue): void;
+    popHandler(handler: EventQueue): void;
+    enqueue(ev: Event$1): void;
+    _startTicks(): void;
+    _stopTicks(): void;
     onkeydown(e: KeyboardEvent): void;
     addAnimation(a: Animation): void;
     removeAnimation(a: Animation): void;
 }
-declare function make$6(): Loop;
 declare const loop: Loop;
+declare function pushHandler(handler: EventQueue): void;
+declare function popHandler(handler: EventQueue): void;
+declare function enqueue(ev: Event$1): void;
 
 type io_d_ControlFn = ControlFn;
 type io_d_IOMap = IOMap;
@@ -1165,14 +1228,30 @@ declare const io_d_makeKeyEvent: typeof makeKeyEvent;
 declare const io_d_keyCodeDirection: typeof keyCodeDirection;
 declare const io_d_ignoreKeyEvent: typeof ignoreKeyEvent;
 declare const io_d_makeMouseEvent: typeof makeMouseEvent;
+type io_d_EventQueue = EventQueue;
+type io_d_TimerFn = TimerFn;
+type io_d_TimerInfo = TimerInfo;
+type io_d_IOHandler = IOHandler;
+type io_d_Handler = Handler;
+declare const io_d_Handler: typeof Handler;
+declare const io_d_nextEvent: typeof nextEvent;
+declare const io_d_nextTick: typeof nextTick;
+declare const io_d_nextKeyOrClick: typeof nextKeyOrClick;
+declare const io_d_nextKeyPress: typeof nextKeyPress;
+declare const io_d_pause: typeof pause;
+declare const io_d_waitForAck: typeof waitForAck;
+type io_d_IOLoop = IOLoop;
 type io_d_Loop = Loop;
 declare const io_d_Loop: typeof Loop;
 declare const io_d_loop: typeof loop;
+declare const io_d_pushHandler: typeof pushHandler;
+declare const io_d_popHandler: typeof popHandler;
+declare const io_d_enqueue: typeof enqueue;
 declare namespace io_d {
   export {
     Event$1 as Event,
     io_d_ControlFn as ControlFn,
-    EventFn$2 as EventFn,
+    EventFn$1 as EventFn,
     io_d_IOMap as IOMap,
     io_d_EventMatchFn as EventMatchFn,
     io_d_KEYPRESS as KEYPRESS,
@@ -1191,9 +1270,24 @@ declare namespace io_d {
     io_d_keyCodeDirection as keyCodeDirection,
     io_d_ignoreKeyEvent as ignoreKeyEvent,
     io_d_makeMouseEvent as makeMouseEvent,
-    io_d_Loop as Loop,
+    io_d_EventQueue as EventQueue,
+    io_d_TimerFn as TimerFn,
+    io_d_TimerInfo as TimerInfo,
+    io_d_IOHandler as IOHandler,
+    io_d_Handler as Handler,
     make$6 as make,
+    io_d_nextEvent as nextEvent,
+    io_d_nextTick as nextTick,
+    io_d_nextKeyOrClick as nextKeyOrClick,
+    io_d_nextKeyPress as nextKeyPress,
+    io_d_pause as pause,
+    io_d_waitForAck as waitForAck,
+    io_d_IOLoop as IOLoop,
+    io_d_Loop as Loop,
     io_d_loop as loop,
+    io_d_pushHandler as pushHandler,
+    io_d_popHandler as popHandler,
+    io_d_enqueue as enqueue,
   };
 }
 
@@ -1403,12 +1497,12 @@ declare namespace path_d {
   };
 }
 
-declare type EventFn$1 = (...args: any[]) => void;
+declare type EventFn = (...args: any[]) => void;
 /**
  * Data for an event listener.
  */
 declare class Listener implements ListItem<Listener> {
-    fn: EventFn$1;
+    fn: EventFn;
     context: any;
     once: boolean;
     next: Listener | null;
@@ -1418,7 +1512,7 @@ declare class Listener implements ListItem<Listener> {
      * @param {any} [context=null] The context to invoke the listener with.
      * @param {boolean} [once=false] Specify if the listener is a one-time listener.
      */
-    constructor(fn: EventFn$1, context?: any, once?: boolean);
+    constructor(fn: EventFn, context?: any, once?: boolean);
     /**
      * Compares this Listener to the parameters.
      * @param {EventFn} fn - The function
@@ -1426,7 +1520,7 @@ declare class Listener implements ListItem<Listener> {
      * @param {boolean} [once] - Whether or not it is a one time handler.
      * @returns Whether or not this Listener matches the parameters.
      */
-    matches(fn: EventFn$1, context?: any, once?: boolean): boolean;
+    matches(fn: EventFn, context?: any, once?: boolean): boolean;
 }
 /**
  * Add a listener for a given event.
@@ -1437,7 +1531,7 @@ declare class Listener implements ListItem<Listener> {
  * @param {boolean} once Specify if the listener is a one-time listener.
  * @returns {Listener}
  */
-declare function addListener(event: string, fn: EventFn$1, context?: any, once?: boolean): Listener;
+declare function addListener(event: string, fn: EventFn, context?: any, once?: boolean): Listener;
 /**
  * Add a listener for a given event.
  *
@@ -1447,7 +1541,7 @@ declare function addListener(event: string, fn: EventFn$1, context?: any, once?:
  * @param {boolean} once Specify if the listener is a one-time listener.
  * @returns {Listener}
  */
-declare function on(event: string, fn: EventFn$1, context?: any, once?: boolean): Listener;
+declare function on(event: string, fn: EventFn, context?: any, once?: boolean): Listener;
 /**
  * Add a one-time listener for a given event.
  *
@@ -1457,7 +1551,7 @@ declare function on(event: string, fn: EventFn$1, context?: any, once?: boolean)
  * @returns {EventEmitter} `this`.
  * @public
  */
-declare function once(event: string, fn: EventFn$1, context?: any): Listener;
+declare function once(event: string, fn: EventFn, context?: any): Listener;
 /**
  * Remove the listeners of a given event.
  *
@@ -1468,7 +1562,7 @@ declare function once(event: string, fn: EventFn$1, context?: any): Listener;
  * @returns {EventEmitter} `this`.
  * @public
  */
-declare function removeListener(event: string, fn: EventFn$1, context?: any, once?: boolean): boolean;
+declare function removeListener(event: string, fn: EventFn, context?: any, once?: boolean): boolean;
 /**
  * Remove the listeners of a given event.
  *
@@ -1479,7 +1573,7 @@ declare function removeListener(event: string, fn: EventFn$1, context?: any, onc
  * @returns {EventEmitter} `this`.
  * @public
  */
-declare function off(event: string, fn: EventFn$1, context?: any, once?: boolean): boolean;
+declare function off(event: string, fn: EventFn, context?: any, once?: boolean): boolean;
 /**
  * Clear event by name.
  *
@@ -1504,6 +1598,7 @@ declare function removeAllListeners(event?: string): void;
  */
 declare function emit(...args: any[]): boolean;
 
+type events_d_EventFn = EventFn;
 type events_d_Listener = Listener;
 declare const events_d_Listener: typeof Listener;
 declare const events_d_addListener: typeof addListener;
@@ -1516,7 +1611,7 @@ declare const events_d_removeAllListeners: typeof removeAllListeners;
 declare const events_d_emit: typeof emit;
 declare namespace events_d {
   export {
-    EventFn$1 as EventFn,
+    events_d_EventFn as EventFn,
     events_d_Listener as Listener,
     events_d_addListener as addListener,
     events_d_on as on,
@@ -1620,29 +1715,20 @@ declare class Glyphs {
     _initGlyphs(basicOnly?: boolean): void;
 }
 
-declare type EventFn = (ev: Event$1) => void;
-interface BaseOptions {
-    width?: number;
-    height?: number;
-    glyphs?: Glyphs;
-    div?: HTMLElement | string;
-    io?: boolean;
-    loop?: Loop;
-    image?: HTMLImageElement | string;
-}
-declare type CanvasOptions = BaseOptions & GlyphOptions;
 declare class NotSupportedError extends Error {
     constructor(...params: any[]);
 }
 declare abstract class BaseCanvas implements BufferTarget {
     mouse: XY;
-    protected _data: Uint32Array;
-    protected _renderRequested: boolean;
-    protected _glyphs: Glyphs;
-    protected _node: HTMLCanvasElement;
-    protected _width: number;
-    protected _height: number;
-    protected _buffer: Buffer;
+    _data: Uint32Array;
+    _renderRequested: boolean;
+    _glyphs: Glyphs;
+    _node: HTMLCanvasElement;
+    _width: number;
+    _height: number;
+    _buffers: Buffer[];
+    _current: number;
+    loop: Loop;
     constructor(width: number, height: number, glyphs: Glyphs);
     get node(): HTMLCanvasElement;
     get width(): number;
@@ -1655,6 +1741,10 @@ declare abstract class BaseCanvas implements BufferTarget {
     set glyphs(glyphs: Glyphs);
     toGlyph(ch: string | number): number;
     get buffer(): Buffer;
+    get parentBuffer(): Buffer;
+    get root(): Buffer;
+    pushBuffer(): Buffer;
+    popBuffer(): void;
     protected _createNode(): HTMLCanvasElement;
     protected abstract _createContext(): void;
     private _configure;
@@ -1666,10 +1756,10 @@ declare abstract class BaseCanvas implements BufferTarget {
     render(): void;
     abstract _render(): void;
     hasXY(x: number, y: number): boolean;
-    set onclick(fn: EventFn | null);
-    set onmousemove(fn: EventFn | null);
-    set onmouseup(fn: EventFn | null);
-    set onkeydown(fn: EventFn | null);
+    set onclick(fn: EventFn$1 | null);
+    set onmousemove(fn: EventFn$1 | null);
+    set onmouseup(fn: EventFn$1 | null);
+    set onkeydown(fn: EventFn$1 | null);
     protected _toX(offsetX: number): number;
     protected _toY(offsetY: number): number;
 }
@@ -1686,7 +1776,7 @@ declare class Canvas2D extends BaseCanvas {
 
 declare class CanvasGL extends BaseCanvas {
     private _gl;
-    private _buffers;
+    private _glBuffers;
     private _attribs;
     private _uniforms;
     private _texture;
@@ -1702,6 +1792,16 @@ declare class CanvasGL extends BaseCanvas {
     _render(): void;
 }
 
+interface BaseOptions {
+    width?: number;
+    height?: number;
+    glyphs?: Glyphs;
+    div?: HTMLElement | string;
+    io?: true;
+    loop?: Loop;
+    image?: HTMLImageElement | string;
+}
+declare type CanvasOptions = BaseOptions & GlyphOptions;
 declare function make$4(opts: Partial<CanvasOptions>): BaseCanvas;
 declare function make$4(width: number, height: number, opts?: Partial<CanvasOptions>): BaseCanvas;
 
@@ -1711,8 +1811,6 @@ declare const index_d$4_Buffer: typeof Buffer;
 type index_d$4_GlyphOptions = GlyphOptions;
 type index_d$4_Glyphs = Glyphs;
 declare const index_d$4_Glyphs: typeof Glyphs;
-type index_d$4_EventFn = EventFn;
-type index_d$4_CanvasOptions = CanvasOptions;
 type index_d$4_NotSupportedError = NotSupportedError;
 declare const index_d$4_NotSupportedError: typeof NotSupportedError;
 type index_d$4_BaseCanvas = BaseCanvas;
@@ -1721,18 +1819,18 @@ type index_d$4_Canvas2D = Canvas2D;
 declare const index_d$4_Canvas2D: typeof Canvas2D;
 type index_d$4_CanvasGL = CanvasGL;
 declare const index_d$4_CanvasGL: typeof CanvasGL;
+type index_d$4_CanvasOptions = CanvasOptions;
 declare namespace index_d$4 {
   export {
     index_d$4_BufferTarget as BufferTarget,
     index_d$4_Buffer as Buffer,
     index_d$4_GlyphOptions as GlyphOptions,
     index_d$4_Glyphs as Glyphs,
-    index_d$4_EventFn as EventFn,
-    index_d$4_CanvasOptions as CanvasOptions,
     index_d$4_NotSupportedError as NotSupportedError,
     index_d$4_BaseCanvas as BaseCanvas,
     index_d$4_Canvas2D as Canvas2D,
     index_d$4_CanvasGL as CanvasGL,
+    index_d$4_CanvasOptions as CanvasOptions,
     make$4 as make,
   };
 }
@@ -2221,49 +2319,8 @@ declare class Sheet {
 }
 declare const defaultStyle: Sheet;
 
-interface UIOptions extends CanvasOptions {
-    canvas?: BaseCanvas;
-    loop?: Loop;
-}
-declare class UI implements UICore {
-    canvas: BaseCanvas;
-    loop: Loop;
-    layer: Layer | null;
-    layers: Layer[];
-    _done: boolean;
-    constructor(opts?: UIOptions);
-    get width(): number;
-    get height(): number;
-    get styles(): Sheet;
-    get baseBuffer(): Buffer;
-    get canvasBuffer(): Buffer;
-    get buffer(): Buffer;
-    startNewLayer(opts?: LayerOptions): Layer;
-    startLayer(layer: Layer): void;
-    copyUIBuffer(dest: Buffer$1): void;
-    finishLayer(layer: Layer, result?: any): void;
-    _finishLayer(layer: Layer): void;
-    stop(): void;
-    addAnimation(a: Animation): void;
-    removeAnimation(a: Animation): void;
-}
-declare function make(opts: UIOptions): UI;
-
-declare type TimerFn = () => void;
-interface TimerInfo {
-    action: TimerFn;
-    time: number;
-}
-interface UICore {
-    readonly loop: Loop;
+interface CanvasSource {
     readonly canvas: BaseCanvas;
-    readonly width: number;
-    readonly height: number;
-    readonly styles: Sheet;
-    startNewLayer(): Layer;
-    copyUIBuffer(dest: Buffer$1): void;
-    finishLayer(layer: Layer): void;
-    stop(): void;
 }
 declare type StartCb = () => void;
 declare type DrawCb = (buffer: Buffer$1) => boolean;
@@ -2272,25 +2329,26 @@ declare type FinishCb = (result: any) => void;
 interface LayerOptions {
     styles?: Sheet;
 }
+interface BufferStack {
+    readonly buffer: Buffer;
+    readonly parentBuffer: Buffer;
+    readonly loop: Loop;
+    pushBuffer(): Buffer;
+    popBuffer(): void;
+}
 declare class Layer implements UILayer, Animator {
-    ui: UI;
+    canvas: BufferStack;
     buffer: Buffer;
-    styles: Sheet;
+    io: Handler;
     needsDraw: boolean;
-    result: any;
-    timers: TimerInfo[];
-    _tweens: Animation[];
-    _running: boolean;
-    _keymap: IOMap;
-    constructor(ui: UI, opts?: LayerOptions);
-    get running(): boolean;
+    constructor(ui: CanvasSource | BaseCanvas, _opts?: LayerOptions);
     get width(): number;
     get height(): number;
     mousemove(_e: Event$1): boolean;
     click(_e: Event$1): boolean;
     keypress(_e: Event$1): boolean;
     dir(_e: Event$1): boolean;
-    tick(e: Event$1): boolean;
+    tick(_e: Event$1): boolean;
     draw(): void;
     setTimeout(action: TimerFn, time: number): void;
     clearTimeout(action: string | TimerFn): void;
@@ -2413,12 +2471,13 @@ interface WidgetLayerOptions extends LayerOptions {
 }
 declare class WidgetLayer extends Layer {
     body: Widget;
+    styles: Sheet;
     _attachOrder: Widget[];
     _depthOrder: Widget[];
     _focusWidget: Widget | null;
     _hasTabStop: boolean;
     _opts: WidgetOptions;
-    constructor(ui: UI, opts?: WidgetLayerOptions);
+    constructor(ui: CanvasSource, opts?: WidgetLayerOptions);
     reset(): this;
     fg(v: ColorBase): this;
     bg(v: ColorBase): this;
@@ -2458,11 +2517,6 @@ declare class WidgetLayer extends Layer {
     tick(e: Event$1): boolean;
     draw(): void;
     finish(result?: any): void;
-}
-declare module '../ui/ui' {
-    interface UI {
-        startWidgetLayer(opts?: WidgetLayerOptions): WidgetLayer;
-    }
 }
 
 interface TextOptions extends WidgetOptions {
@@ -2629,36 +2683,16 @@ declare module './layer' {
     }
 }
 
+interface UIOptions extends CanvasOptions {
+    canvas?: BaseCanvas;
+    loop?: Loop;
+}
 interface AlertOptions extends DialogOptions {
     duration?: number;
     waitForAck?: boolean;
     textClass?: string;
     opacity?: number;
 }
-declare module './ui' {
-    interface UI {
-        alert(opts: AlertOptions | number, text: string, args?: any): WidgetLayer;
-    }
-}
-
-interface ButtonOptions extends Omit<TextOptions, 'text'> {
-    text?: string;
-    id: string;
-}
-declare class Button extends Text {
-    constructor(layer: WidgetLayer, opts: ButtonOptions);
-    keypress(ev: Event$1): boolean;
-    click(ev: Event$1): boolean;
-}
-declare type AddButtonOptions = Omit<ButtonOptions, 'text'> & SetParentOptions & {
-    parent?: Widget;
-};
-declare module './layer' {
-    interface WidgetLayer {
-        button(text: string, opts?: AddButtonOptions): Button;
-    }
-}
-
 interface ConfirmOptions extends Omit<DialogOptions, 'width' | 'height'> {
     width?: number;
     height?: number;
@@ -2670,13 +2704,6 @@ interface ConfirmOptions extends Omit<DialogOptions, 'width' | 'height'> {
     cancel?: boolean | string;
     cancelClass?: string;
 }
-declare module './ui' {
-    interface UI {
-        confirm(text: string, args?: any): WidgetLayer;
-        confirm(opts: ConfirmOptions, text: string, args?: any): WidgetLayer;
-    }
-}
-
 interface InputBoxOptions extends Omit<DialogOptions, 'width' | 'height'> {
     width?: number;
     height?: number;
@@ -2694,10 +2721,37 @@ interface InputBoxOptions extends Omit<DialogOptions, 'width' | 'height'> {
     min?: number;
     max?: number;
 }
-declare module './ui' {
-    interface UI {
-        inputbox(text: string, args?: any): WidgetLayer;
-        inputbox(opts: InputBoxOptions, text: string, args?: any): WidgetLayer;
+declare class UI {
+    canvas: BaseCanvas;
+    loop: Loop;
+    buffer: Buffer;
+    constructor(opts?: UIOptions);
+    get width(): number;
+    get height(): number;
+    alert(text: string, args?: any): Promise<boolean>;
+    alert(opts: AlertOptions | number, text: string, args?: any): Promise<boolean>;
+    confirm(_text?: string | any, _args?: any): Promise<boolean>;
+    confirm(_opts: ConfirmOptions | string, _text?: string | any, _args?: any): Promise<boolean>;
+    inputbox(_text?: string | any, _args?: any): Promise<string | null>;
+    inputbox(_opts: InputBoxOptions | string, _text?: string | any, _args?: any): Promise<string | null>;
+}
+declare function make(opts: UIOptions): UI;
+
+interface ButtonOptions extends Omit<TextOptions, 'text'> {
+    text?: string;
+    id: string;
+}
+declare class Button extends Text {
+    constructor(layer: WidgetLayer, opts: ButtonOptions);
+    keypress(ev: Event$1): boolean;
+    click(ev: Event$1): boolean;
+}
+declare type AddButtonOptions = Omit<ButtonOptions, 'text'> & SetParentOptions & {
+    parent?: Widget;
+};
+declare module './layer' {
+    interface WidgetLayer {
+        button(text: string, opts?: AddButtonOptions): Button;
     }
 }
 
@@ -2725,22 +2779,21 @@ declare const index_d$1_ComputedStyle: typeof ComputedStyle;
 type index_d$1_Sheet = Sheet;
 declare const index_d$1_Sheet: typeof Sheet;
 declare const index_d$1_defaultStyle: typeof defaultStyle;
-type index_d$1_TimerFn = TimerFn;
-type index_d$1_TimerInfo = TimerInfo;
-type index_d$1_UICore = UICore;
+type index_d$1_CanvasSource = CanvasSource;
 type index_d$1_StartCb = StartCb;
 type index_d$1_DrawCb = DrawCb;
 type index_d$1_FinishCb = FinishCb;
 type index_d$1_LayerOptions = LayerOptions;
+type index_d$1_BufferStack = BufferStack;
 type index_d$1_Layer = Layer;
 declare const index_d$1_Layer: typeof Layer;
 type index_d$1_UIOptions = UIOptions;
-type index_d$1_UI = UI;
-declare const index_d$1_UI: typeof UI;
-declare const index_d$1_make: typeof make;
 type index_d$1_AlertOptions = AlertOptions;
 type index_d$1_ConfirmOptions = ConfirmOptions;
 type index_d$1_InputBoxOptions = InputBoxOptions;
+type index_d$1_UI = UI;
+declare const index_d$1_UI: typeof UI;
+declare const index_d$1_make: typeof make;
 declare namespace index_d$1 {
   export {
     index_d$1_Size as Size,
@@ -2762,21 +2815,20 @@ declare namespace index_d$1 {
     index_d$1_ComputedStyle as ComputedStyle,
     index_d$1_Sheet as Sheet,
     index_d$1_defaultStyle as defaultStyle,
-    index_d$1_TimerFn as TimerFn,
-    index_d$1_TimerInfo as TimerInfo,
-    index_d$1_UICore as UICore,
+    index_d$1_CanvasSource as CanvasSource,
     index_d$1_StartCb as StartCb,
     index_d$1_DrawCb as DrawCb,
     EventCb$1 as EventCb,
     index_d$1_FinishCb as FinishCb,
     index_d$1_LayerOptions as LayerOptions,
+    index_d$1_BufferStack as BufferStack,
     index_d$1_Layer as Layer,
     index_d$1_UIOptions as UIOptions,
-    index_d$1_UI as UI,
-    index_d$1_make as make,
     index_d$1_AlertOptions as AlertOptions,
     index_d$1_ConfirmOptions as ConfirmOptions,
     index_d$1_InputBoxOptions as InputBoxOptions,
+    index_d$1_UI as UI,
+    index_d$1_make as make,
   };
 }
 
@@ -3386,4 +3438,4 @@ declare namespace index_d {
   };
 }
 
-export { ERROR, FALSE, IDENTITY, IS_NONZERO, IS_ZERO, NOOP, ONE, TRUE, WARN, ZERO, arrayDelete, arrayFindRight, arrayIncludesAll, arrayInsert, arrayNext, arrayNullify, arrayPrev, arraysIntersect, blob_d as blob, buffer_d as buffer, index_d$4 as canvas, clamp, index_d$7 as color, colors, config$1 as config, cosmetic, data, events_d as events, first, flag_d as flag, index_d$5 as fov, frequency_d as frequency, grid_d as grid, io_d as io, lerp, index_d$2 as light, list_d as list, loop, message_d as message, nextIndex, object_d as object, path_d as path, prevIndex, random, range_d as range, rng_d as rng, scheduler_d as scheduler, index_d$3 as sprite, sprites, sum, index_d$6 as text, tween_d as tween, types_d as types, index_d$1 as ui, index_d as widget, xy_d as xy };
+export { ERROR, FALSE, IDENTITY, IS_NONZERO, IS_ZERO, NOOP, ONE, TRUE, WARN, ZERO, arrayDelete, arrayFindRight, arrayIncludesAll, arrayInsert, arrayNext, arrayNullify, arrayPrev, arraysIntersect, blob_d as blob, buffer_d as buffer, index_d$4 as canvas, clamp, index_d$7 as color, colors, config$1 as config, cosmetic, data, events_d as events, first, flag_d as flag, index_d$5 as fov, frequency_d as frequency, grid_d as grid, io_d as io, lerp, index_d$2 as light, list_d as list, message_d as message, nextIndex, object_d as object, path_d as path, prevIndex, queue_d as queue, random, range_d as range, rng_d as rng, scheduler_d as scheduler, index_d$3 as sprite, sprites, sum, index_d$6 as text, tween_d as tween, types_d as types, index_d$1 as ui, index_d as widget, xy_d as xy };

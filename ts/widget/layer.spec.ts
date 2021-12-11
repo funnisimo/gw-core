@@ -4,6 +4,7 @@ import * as Tween from '../tween';
 
 import * as Widget from '.';
 import * as Layer from './layer';
+import { WidgetLayer } from '.';
 import { UI } from '../ui/ui';
 
 describe('Layer', () => {
@@ -12,12 +13,11 @@ describe('Layer', () => {
 
     beforeEach(() => {
         ui = UTILS.mockUI(50, 30);
-        layer = ui.startWidgetLayer();
+        layer = new WidgetLayer(ui);
     });
 
     afterEach(() => {
         layer.finish();
-        ui.stop();
     });
 
     test('constructor', () => {
@@ -394,7 +394,7 @@ describe('Layer', () => {
             layer.addAnimation(tween);
             const p = layer.run();
 
-            expect(layer._tweens).toHaveLength(1);
+            expect(layer.io._tweens).toHaveLength(1);
             expect(tween.isRunning()).toBeTruthy();
 
             await UTILS.pushEvent(ui.loop, UTILS.tick(50));
@@ -406,7 +406,7 @@ describe('Layer', () => {
 
             expect(obj.x).toEqual(10);
 
-            expect(layer._tweens).toHaveLength(0);
+            expect(layer.io._tweens).toHaveLength(0);
 
             layer.finish();
             await p;

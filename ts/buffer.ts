@@ -35,8 +35,10 @@ export class Buffer {
         return x >= 0 && y >= 0 && x < this.width && y < this.height;
     }
 
-    clone(): Buffer {
-        const other = new Buffer(this._width, this._height);
+    clone(): this {
+        const other = new (<new (w: number, h: number) => this>(
+            this.constructor
+        ))(this._width, this._height);
         other.copy(this);
         return other;
     }

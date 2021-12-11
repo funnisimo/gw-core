@@ -11,6 +11,10 @@ describe('Table Widget', () => {
         layer = UTILS.mockWidgetLayer(50, 30);
     });
 
+    afterEach(() => {
+        layer.finish();
+    });
+
     test('Column', () => {
         const col = new DataTable.Column({
             header: 'HEADER',

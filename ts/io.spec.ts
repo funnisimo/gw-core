@@ -1,4 +1,5 @@
 import 'jest-extended';
+import * as UTILS from '../test/utils';
 import * as IO from './io';
 
 describe('IO', () => {
@@ -12,24 +13,26 @@ describe('IO', () => {
     // });
 
     test('loop', async () => {
-        const handler = jest.fn().mockResolvedValue(true);
         const keymap = {
-            a: handler,
+            a(this: IO.Handler) {
+                this.finish(123);
+            },
         };
 
         const loop = IO.make();
-
-        expect(handler).not.toHaveBeenCalled();
+        expect(loop.running).toBeFalsy();
 
         const ev = IO.makeKeyEvent({
             key: 'a',
             code: 'KEY_A',
         } as KeyboardEvent);
-        const result = loop.run(keymap);
-        loop.pushEvent(ev);
 
-        await result;
-        expect(handler).toHaveBeenCalledWith(ev);
+        const result = loop.run(keymap);
+        expect(loop.running).toBeTruthy();
+
+        IO.enqueue(ev);
+
+        expect(await result).toEqual(123);
     });
 
     test('run - single loop', async () => {
@@ -38,32 +41,59 @@ describe('IO', () => {
         const p = loop.run(
             {
                 keypress: (e) => {
-                    // @ts-ignore
-                    expect(loop.CURRENT_HANDLER).toBeNull();
-                    if (e.key === 'p') return true;
+                    if (e.key === 'p') loop.finish();
                 },
             },
             1000
         );
 
-        loop.pushEvent(
+        loop.enqueue(
             IO.makeKeyEvent({ key: 'e', code: 'KEY_E' } as KeyboardEvent)
         );
 
-        loop.pushEvent(
+        loop.enqueue(
             IO.makeKeyEvent({ key: 'p', code: 'KEY_P' } as KeyboardEvent)
         );
 
         await p;
     });
 
+    test('simplest usage', async () => {
+        const p = IO.nextEvent();
+
+        const ev = IO.makeKeyEvent({
+            key: 'e',
+            code: 'KEY_E',
+        } as KeyboardEvent);
+        IO.enqueue(ev);
+
+        expect(await p).toBe(ev);
+    });
+
     test('custom event dispatch', async () => {
-        const event = { type: 'ACTION', key: 'test' } as IO.Event;
+        const event = IO.makeCustomEvent('ACTION', { key: 'test' });
 
         const handler = jest.fn();
 
         await IO.dispatchEvent(event, { ACTION: handler });
 
         expect(handler).toHaveBeenCalledWith(event);
+    });
+
+    test('setTimeout', async () => {
+        const handler = IO.make();
+        // IO.loop.pushHandler(handler);
+
+        const fn = jest.fn().mockImplementation(() => {
+            handler.finish(123);
+        });
+
+        handler.setTimeout(fn, 200);
+        const p = handler.run();
+
+        IO.enqueue(UTILS.tick(100));
+        IO.enqueue(UTILS.tick(100));
+
+        expect(await p).toEqual(123);
     });
 });

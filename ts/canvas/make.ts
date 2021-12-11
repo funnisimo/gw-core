@@ -1,12 +1,19 @@
-import { Glyphs } from './glyphs';
-import {
-    CanvasOptions,
-    BaseCanvas,
-    Canvas2D,
-    NotSupportedError,
-} from './canvas';
+import { Glyphs, GlyphOptions } from './glyphs';
+import { BaseCanvas, Canvas2D, NotSupportedError } from './canvas';
 import { CanvasGL } from './canvasGL';
 import * as IO from '../io';
+
+interface BaseOptions {
+    width?: number;
+    height?: number;
+    glyphs?: Glyphs;
+    div?: HTMLElement | string;
+    io?: true; // if true, hookup events to standard IO loop.
+    loop?: IO.Loop; // The loop to attach to
+    image?: HTMLImageElement | string;
+}
+
+export type CanvasOptions = BaseOptions & GlyphOptions;
 
 export function make(opts: Partial<CanvasOptions>): BaseCanvas;
 export function make(
@@ -31,14 +38,14 @@ export function make(...args: any[]): BaseCanvas {
         glyphs = Glyphs.fromFont(opts);
     }
 
-    let canvas;
+    let canvas: CanvasGL | Canvas2D;
     try {
         canvas = new CanvasGL(width, height, glyphs);
     } catch (e) {
         if (!(e instanceof NotSupportedError)) throw e;
     }
 
-    if (!canvas) {
+    if (canvas! === undefined) {
         canvas = new Canvas2D(width, height, glyphs);
     }
 
@@ -59,12 +66,15 @@ export function make(...args: any[]): BaseCanvas {
         }
     }
 
+    if (opts.loop) {
+        canvas.loop = opts.loop;
+    }
+
     if (opts.io || opts.loop) {
-        let loop = opts.loop || IO.loop;
-        canvas.onclick = (e) => loop.pushEvent(e);
-        canvas.onmousemove = (e) => loop.pushEvent(e);
-        canvas.onmouseup = (e) => loop.pushEvent(e);
-        // canvas.onkeydown = (e) => loop.pushEvent(e); // Keyboard events require tabindex to be set, better to let user do this.
+        canvas.onclick = (e) => canvas.loop.enqueue(e);
+        canvas.onmousemove = (e) => canvas.loop.enqueue(e);
+        canvas.onmouseup = (e) => canvas.loop.enqueue(e);
+        // canvas.onkeydown = (e) => loop.enqueue(e); // Keyboard events require tabindex to be set, better to let user do this.
     }
 
     return canvas;

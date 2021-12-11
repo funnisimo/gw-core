@@ -10,6 +10,10 @@ describe('List Widget', () => {
         layer = UTILS.mockWidgetLayer(50, 30);
     });
 
+    afterEach(() => {
+        layer.finish();
+    });
+
     test('constructor', () => {
         const dl = new DataList.DataList(layer, {});
         expect(dl.columns).toHaveLength(1);

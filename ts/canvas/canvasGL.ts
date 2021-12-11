@@ -57,7 +57,7 @@ const VERTICES_PER_TILE = 6;
 
 export class CanvasGL extends Canvas.BaseCanvas {
     private _gl!: GL;
-    private _buffers!: {
+    private _glBuffers!: {
         position?: WebGLBuffer;
         uv?: WebGLBuffer;
         style?: WebGLBuffer;
@@ -80,7 +80,7 @@ export class CanvasGL extends Canvas.BaseCanvas {
             throw new Canvas.NotSupportedError('WebGL 2 not supported');
         }
         this._gl = gl;
-        this._buffers = {};
+        this._glBuffers = {};
         this._attribs = {};
         this._uniforms = {};
 
@@ -106,27 +106,27 @@ export class CanvasGL extends Canvas.BaseCanvas {
 
     private _createGeometry() {
         const gl = this._gl;
-        this._buffers.position && gl.deleteBuffer(this._buffers.position);
-        this._buffers.uv && gl.deleteBuffer(this._buffers.uv);
+        this._glBuffers.position && gl.deleteBuffer(this._glBuffers.position);
+        this._glBuffers.uv && gl.deleteBuffer(this._glBuffers.uv);
         let buffers = createGeometry(
             gl,
             this._attribs,
             this.width,
             this.height
         );
-        Object.assign(this._buffers, buffers);
+        Object.assign(this._glBuffers, buffers);
     }
 
     private _createData() {
         const gl = this._gl;
         const attribs = this._attribs;
         const tileCount = this.width * this.height;
-        this._buffers.style && gl.deleteBuffer(this._buffers.style);
+        this._glBuffers.style && gl.deleteBuffer(this._glBuffers.style);
         this._data = new Uint32Array(tileCount * VERTICES_PER_TILE);
         const style = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, style);
         gl.vertexAttribIPointer(attribs['style'], 1, gl.UNSIGNED_INT, 0, 0);
-        Object.assign(this._buffers, { style });
+        Object.assign(this._glBuffers, { style });
     }
 
     protected _setGlyphs(glyphs: Glyphs) {
@@ -226,7 +226,7 @@ export class CanvasGL extends Canvas.BaseCanvas {
         }
 
         this._renderRequested = false;
-        gl.bindBuffer(gl.ARRAY_BUFFER, this._buffers.style!);
+        gl.bindBuffer(gl.ARRAY_BUFFER, this._glBuffers.style!);
         gl.bufferData(gl.ARRAY_BUFFER, this._data, gl.DYNAMIC_DRAW);
         gl.drawArrays(
             gl.TRIANGLES,

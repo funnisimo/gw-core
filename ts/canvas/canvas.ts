@@ -1,23 +1,9 @@
-import { Glyphs, GlyphOptions } from './glyphs';
+import { Glyphs } from './glyphs';
 import { BufferTarget, Buffer as CanvasBuffer } from './buffer';
 import * as Buffer from '../buffer';
 import * as IO from '../io';
 import * as Utils from '../utils';
 import * as XY from '../xy';
-
-export type EventFn = (ev: IO.Event) => void;
-
-interface BaseOptions {
-    width?: number;
-    height?: number;
-    glyphs?: Glyphs;
-    div?: HTMLElement | string;
-    io?: boolean; // if true, hookup events to standard IO loop.
-    loop?: IO.Loop; // if provided, hookup events to this loop.
-    image?: HTMLImageElement | string;
-}
-
-export type CanvasOptions = BaseOptions & GlyphOptions;
 
 export class NotSupportedError extends Error {
     constructor(...params: any[]) {
@@ -36,22 +22,23 @@ export class NotSupportedError extends Error {
 }
 
 export abstract class BaseCanvas implements BufferTarget {
-    public mouse: XY.XY = { x: -1, y: -1 };
-    protected _data!: Uint32Array;
-    protected _renderRequested: boolean = false;
-    protected _glyphs!: Glyphs;
-    protected _node: HTMLCanvasElement;
+    mouse: XY.XY = { x: -1, y: -1 };
+    _data!: Uint32Array;
+    _renderRequested: boolean = false;
+    _glyphs!: Glyphs;
+    _node: HTMLCanvasElement;
 
-    protected _width: number = 100;
-    protected _height: number = 38;
-    protected _buffer: CanvasBuffer;
+    _width: number = 100;
+    _height: number = 38;
+    _buffers: CanvasBuffer[] = [];
+    _current = 0;
+    loop: IO.Loop = IO.loop;
 
     constructor(width: number, height: number, glyphs: Glyphs) {
         this._node = this._createNode();
         this._createContext();
         this._configure(width, height, glyphs);
-
-        this._buffer = new CanvasBuffer(this);
+        this._buffers.push(new CanvasBuffer(this));
     }
 
     get node(): HTMLCanvasElement {
@@ -88,8 +75,32 @@ export abstract class BaseCanvas implements BufferTarget {
         return this._glyphs.forChar(ch);
     }
 
-    get buffer() {
-        return this._buffer;
+    get buffer(): CanvasBuffer {
+        return this._buffers[this._current];
+    }
+
+    get parentBuffer(): CanvasBuffer {
+        const index = Math.max(0, this._current - 1);
+        return this._buffers[index];
+    }
+
+    get root(): CanvasBuffer {
+        return this._buffers[0];
+    }
+
+    pushBuffer(): CanvasBuffer {
+        const current = this.buffer;
+        ++this._current;
+        if (this._current >= this._buffers.length) {
+            this._buffers.push(current.clone());
+        } else {
+            this.buffer.copy(current);
+        }
+        return this.buffer;
+    }
+
+    popBuffer() {
+        this._current = Math.max(0, this._current - 1);
     }
 
     protected _createNode() {
@@ -116,9 +127,7 @@ export abstract class BaseCanvas implements BufferTarget {
         this._width = width;
         this._height = height;
 
-        if (this._buffer) {
-            this._buffer.resize(width, height);
-        }
+        this._buffers.forEach((b) => b.resize(width, height));
 
         const node = this.node;
         node.width = this._width * this.tileWidth;
@@ -148,7 +157,7 @@ export abstract class BaseCanvas implements BufferTarget {
         return x >= 0 && y >= 0 && x < this.width && y < this.height;
     }
 
-    set onclick(fn: EventFn | null) {
+    set onclick(fn: IO.EventFn | null) {
         if (fn) {
             this.node.onclick = (e: MouseEvent) => {
                 const x = this._toX(e.offsetX);
@@ -161,7 +170,7 @@ export abstract class BaseCanvas implements BufferTarget {
         }
     }
 
-    set onmousemove(fn: EventFn | null) {
+    set onmousemove(fn: IO.EventFn | null) {
         if (fn) {
             this.node.onmousemove = (e: MouseEvent) => {
                 const x = this._toX(e.offsetX);
@@ -177,7 +186,7 @@ export abstract class BaseCanvas implements BufferTarget {
         }
     }
 
-    set onmouseup(fn: EventFn | null) {
+    set onmouseup(fn: IO.EventFn | null) {
         if (fn) {
             this.node.onmouseup = (e: MouseEvent) => {
                 const x = this._toX(e.offsetX);
@@ -190,7 +199,7 @@ export abstract class BaseCanvas implements BufferTarget {
         }
     }
 
-    set onkeydown(fn: EventFn | null) {
+    set onkeydown(fn: IO.EventFn | null) {
         if (fn) {
             this.node.onkeydown = (e: KeyboardEvent) => {
                 e.stopPropagation();
@@ -316,48 +325,3 @@ export class Canvas2D extends BaseCanvas {
         this._ctx.putImageData(d, px, py);
     }
 }
-
-// export function withImage(image: ImageOptions | HTMLImageElement | string) {
-//     let opts = {} as CanvasOptions;
-//     if (typeof image === 'string') {
-//         opts.glyphs = Glyphs.fromImage(image);
-//     } else if (image instanceof HTMLImageElement) {
-//         opts.glyphs = Glyphs.fromImage(image);
-//     } else {
-//         if (!image.image) throw new Error('You must supply the image.');
-//         Object.assign(opts, image);
-//         opts.glyphs = Glyphs.fromImage(image.image);
-//     }
-
-//     let canvas;
-//     try {
-//         canvas = new Canvas(opts);
-//     } catch (e) {
-//         if (!(e instanceof NotSupportedError)) throw e;
-//     }
-
-//     if (!canvas) {
-//         canvas = new Canvas2D(opts);
-//     }
-
-//     return canvas;
-// }
-
-// export function withFont(src: FontOptions | string) {
-//     if (typeof src === 'string') {
-//         src = { font: src } as FontOptions;
-//     }
-//     src.glyphs = Glyphs.fromFont(src);
-//     let canvas;
-//     try {
-//         canvas = new Canvas(src);
-//     } catch (e) {
-//         if (!(e instanceof NotSupportedError)) throw e;
-//     }
-
-//     if (!canvas) {
-//         canvas = new Canvas2D(src);
-//     }
-
-//     return canvas;
-// }

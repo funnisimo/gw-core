@@ -2,31 +2,14 @@ import * as Canvas from '../canvas';
 import * as Buffer from '../buffer';
 import * as IO from '../io';
 import * as Tween from '../tween';
-import * as Utils from '../utils';
+// import * as Utils from '../utils';
 
 import * as Style from './style';
-import { UI } from './ui';
+// import { UI } from './ui';
 import { UILayer } from './types';
 
-export type TimerFn = () => void;
-
-export interface TimerInfo {
-    action: TimerFn;
-    time: number;
-}
-
-export interface UICore {
-    readonly loop: IO.Loop;
+export interface CanvasSource {
     readonly canvas: Canvas.BaseCanvas;
-    readonly width: number;
-    readonly height: number;
-    readonly styles: Style.Sheet;
-
-    startNewLayer(): Layer;
-    copyUIBuffer(dest: Buffer.Buffer): void;
-    finishLayer(layer: Layer): void;
-
-    stop(): void;
 }
 
 export type StartCb = () => void;
@@ -38,38 +21,50 @@ export interface LayerOptions {
     styles?: Style.Sheet;
 }
 
+export interface BufferStack {
+    readonly buffer: Canvas.Buffer;
+    readonly parentBuffer: Canvas.Buffer;
+    readonly loop: IO.Loop;
+
+    pushBuffer(): Canvas.Buffer;
+    popBuffer(): void;
+}
+
 export class Layer implements UILayer, Tween.Animator {
-    ui: UI;
+    canvas: BufferStack;
     buffer: Canvas.Buffer;
-    styles: Style.Sheet;
+    io: IO.Handler;
+    // styles: Style.Sheet;
 
     needsDraw = true;
-    result: any = undefined;
+    // result: any = undefined;
 
-    timers: TimerInfo[] = [];
-    _tweens: Tween.Animation[] = [];
+    // timers: TimerInfo[] = [];
+    // _tweens: Tween.Animation[] = [];
 
-    _running = false;
-    _keymap: IO.IOMap = {};
+    // _running = false;
+    // _keymap: IO.IOMap = {};
 
-    constructor(ui: UI, opts: LayerOptions = {}) {
-        this.ui = ui;
+    constructor(
+        ui: CanvasSource | Canvas.BaseCanvas,
+        _opts: LayerOptions = {}
+    ) {
+        this.canvas = ui instanceof Canvas.BaseCanvas ? ui : ui.canvas;
+        this.buffer = this.canvas.pushBuffer();
+        this.io = new IO.Handler(this.canvas.loop);
 
-        this.buffer = ui.canvas.buffer.clone();
-        this.styles = new Style.Sheet(opts.styles || ui.styles);
-
-        // this.run(opts);
+        // this.styles = new Style.Sheet(opts.styles || ui.styles);
     }
 
-    get running() {
-        return this._running;
-    }
+    // get running() {
+    //     return this._running;
+    // }
 
     get width(): number {
-        return this.ui.width;
+        return this.buffer.width;
     }
     get height(): number {
-        return this.ui.height;
+        return this.buffer.height;
     }
 
     // EVENTS
@@ -100,120 +95,77 @@ export class Layer implements UILayer, Tween.Animator {
         return false;
     }
 
-    tick(e: IO.Event): boolean {
-        const dt = e.dt;
+    tick(_e: IO.Event): boolean {
+        // const dt = e.dt;
 
-        // fire animations
-        this._tweens.forEach((tw) => tw.tick(dt));
-        this._tweens = this._tweens.filter((tw) => tw.isRunning());
+        // // fire animations
+        // this._tweens.forEach((tw) => tw.tick(dt));
+        // this._tweens = this._tweens.filter((tw) => tw.isRunning());
 
-        for (let timer of this.timers) {
-            if (timer.time <= 0) continue; // ignore fired timers
-            timer.time -= dt;
-            if (timer.time <= 0) {
-                timer.action();
-            }
-        }
+        // for (let timer of this.timers) {
+        //     if (timer.time <= 0) continue; // ignore fired timers
+        //     timer.time -= dt;
+        //     if (timer.time <= 0) {
+        //         timer.action();
+        //     }
+        // }
 
         return false;
     }
 
     draw() {
-        console.log('draw');
-        this.buffer.render();
+        if (this.buffer.changed) {
+            console.log('draw');
+            this.buffer.render();
+        }
     }
 
     // LOOP
 
-    setTimeout(action: TimerFn, time: number) {
-        const slot = this.timers.findIndex((t) => t.time <= 0);
-        if (slot < 0) {
-            this.timers.push({ action, time });
-        } else {
-            this.timers[slot] = { action, time };
-        }
+    setTimeout(action: IO.TimerFn, time: number) {
+        this.io.setTimeout(action, time);
+        // const slot = this.timers.findIndex((t) => t.time <= 0);
+        // if (slot < 0) {
+        //     this.timers.push({ action, time });
+        // } else {
+        //     this.timers[slot] = { action, time };
+        // }
     }
 
-    clearTimeout(action: string | TimerFn) {
-        const timer = this.timers.find((t) => t.action === action);
-        if (timer) {
-            timer.time = -1;
-        }
+    clearTimeout(action: string | IO.TimerFn) {
+        this.io.clearTimeout(action);
+        // const timer = this.timers.find((t) => t.action === action);
+        // if (timer) {
+        //     timer.time = -1;
+        // }
     }
 
     // Animator
 
     addAnimation(a: Tween.Animation): void {
-        if (!a.isRunning()) a.start();
-        this._tweens.push(a);
+        this.io.addAnimation(a);
     }
     removeAnimation(a: Tween.Animation): void {
-        Utils.arrayNullify(this._tweens, a);
+        this.io.removeAnimation(a);
     }
 
     // RUN
 
-    async run(keymap: IO.IOMap = {}, ms = -1): Promise<any> {
-        if (this._running) throw new Error('Already running!');
-
-        this.result = undefined;
-        const loop = this.ui.loop;
-        this._running = true;
-        loop.clearEvents(); // ??? Should we do this?
-
+    run(keymap: IO.IOMap = {}, ms = -1): Promise<any> {
         ['keypress', 'dir', 'click', 'mousemove', 'tick', 'draw'].forEach(
             (e) => {
                 if (e in keymap) return;
-                keymap[e] = this[e as keyof Layer];
+                keymap[e] = this[e as keyof Layer] as IO.EventFn;
             }
         );
 
-        if (keymap.start && typeof keymap.start === 'function') {
-            await (<IO.ControlFn>keymap.start).call(this);
-        }
-
-        let busy = false;
-        const tickLoop = (setInterval(() => {
-            if (busy) return;
-            const e = IO.makeTickEvent(16);
-            loop.pushEvent(e);
-        }, 16) as unknown) as number;
-
-        while (this._running) {
-            if (keymap.draw && typeof keymap.draw === 'function') {
-                (<IO.ControlFn>keymap.draw).call(this);
-            }
-            if (this._tweens.length) {
-                const ev = await loop.nextTick();
-                if (ev && ev.dt) {
-                    this._tweens.forEach((a) => a && a.tick(ev.dt));
-                    this._tweens = this._tweens.filter(
-                        (a) => a && a.isRunning()
-                    );
-                }
-            } else {
-                const ev = await loop.nextEvent(ms);
-                busy = true;
-                if (ev) {
-                    await IO.dispatchEvent(ev, keymap, this); // return code does not matter (call layer.finish() to exit loop)
-                    // this._running = false;
-                }
-                busy = false;
-            }
-        }
-
-        if (keymap.stop && typeof keymap.stop === 'function') {
-            await (<IO.ControlFn>keymap.stop).call(this);
-        }
-
-        clearInterval(tickLoop);
-
-        return this.result;
+        return this.io.run(keymap, ms, this);
     }
 
     finish(result?: any) {
-        this.result = result;
-        this._running = false;
-        this.ui._finishLayer(this);
+        this.io.finish(result);
+        this.canvas.popBuffer();
+        this.canvas.loop.popHandler(this.io);
+        this.canvas.buffer.render(); // redraw old buffer
     }
 }

@@ -11,6 +11,10 @@ describe('Fieldset Widget', () => {
         layer = UTILS.mockWidgetLayer(50, 30);
     });
 
+    afterEach(() => {
+        layer.finish();
+    });
+
     test('create obj', () => {
         const e = new Fieldset.Fieldset(layer, {
             width: 30,

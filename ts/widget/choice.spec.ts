@@ -1,8 +1,8 @@
 import * as UTILS from '../../test/utils';
 
 import * as Choice from './choice';
-import { UI } from '../ui';
 import { WidgetLayer } from './layer';
+import { UI } from '../ui/ui';
 
 describe('Prompt', () => {
     test('basic', () => {
@@ -95,16 +95,17 @@ describe('Prompt', () => {
 });
 
 describe('Choice', () => {
-    let ui: UI;
+    let canvas: UI;
     let layer: WidgetLayer;
 
     beforeEach(() => {
-        ui = UTILS.mockUI(100, 38);
-        layer = ui.startWidgetLayer();
+        canvas = UTILS.mockUI(100, 38);
+        layer = new WidgetLayer(canvas);
     });
 
     afterEach(() => {
-        ui.stop();
+        // ui.stop();
+        layer.finish();
     });
 
     test('create', async () => {
@@ -135,14 +136,14 @@ describe('Choice', () => {
         const p = layer.run(); // in case we want to test click
 
         inputFn.mockClear();
-        await UTILS.pushEvent(ui.loop, UTILS.dir('down'));
+        await UTILS.pushEvent(canvas.loop, UTILS.dir('down'));
         expect(changeFn).not.toHaveBeenCalled();
         expect(inputFn).toHaveBeenCalledWith('input', choice, prompt);
         expect(prompt.selection).toEqual(1);
         expect(prompt.value()).toEqual('B');
 
         inputFn.mockClear();
-        await UTILS.pushEvent(ui.loop, UTILS.keypress('Enter'));
+        await UTILS.pushEvent(canvas.loop, UTILS.keypress('Enter'));
         expect(inputFn).not.toHaveBeenCalled();
         expect(changeFn).toHaveBeenCalledWith('change', choice, prompt);
         expect(prompt.selection).toEqual(1);

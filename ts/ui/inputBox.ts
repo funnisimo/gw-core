@@ -2,64 +2,47 @@
 import * as Color from '../color';
 import * as TextUtils from '../text';
 
-import { UI } from './ui';
-import { WidgetLayer } from '../widget/layer';
+import { DialogOptions } from '../widget/dialog';
+import { UI, InputBoxOptions } from './ui';
 import '../widget/button';
-import * as Dialog from '../widget/dialog';
-
-export interface InputBoxOptions
-    extends Omit<Dialog.DialogOptions, 'width' | 'height'> {
-    width?: number;
-    height?: number;
-
-    textClass?: string;
-    opacity?: number;
-
-    buttonWidth?: number;
-
-    label?: string;
-    labelClass?: string;
-
-    default?: string;
-    placeholder?: string;
-    inputClass?: string;
-
-    minLength?: number;
-    maxLength?: number;
-
-    numbersOnly?: boolean;
-    min?: number;
-    max?: number;
-}
+import { WidgetLayer } from '../widget/layer';
 
 // extend WidgetLayer
 
-declare module './ui' {
-    interface UI {
-        inputbox(text: string, args?: any): WidgetLayer;
-        inputbox(opts: InputBoxOptions, text: string, args?: any): WidgetLayer;
-    }
-}
+// declare module './ui' {
+//     interface UI {
+//         inputbox(text: string, args?: any): Promise<string>;
+//         inputbox(
+//             opts: InputBoxOptions,
+//             text: string,
+//             args?: any
+//         ): Promise<string>;
+//     }
+// }
 
-UI.prototype.inputbox = function (
-    opts: InputBoxOptions | string,
-    text?: string | any,
-    args?: any
-): WidgetLayer {
-    if (typeof opts === 'string') {
-        args = text;
-        text = opts;
-        opts = {};
+UI.prototype.inputbox = function (...args: any[]): Promise<string | null> {
+    let opts = {} as InputBoxOptions;
+    let text: string;
+    let textArgs: any = {};
+
+    if (typeof args[1] === 'string') {
+        opts.default = args[0];
+        text = args[1];
+        textArgs = args[2];
+    } else {
+        text = args[0];
+        textArgs = args[1];
     }
-    if (args) {
-        text = TextUtils.apply(text!, args);
+
+    if (textArgs) {
+        text = TextUtils.apply(text, textArgs);
     }
 
     opts.class = opts.class || 'confirm';
     opts.border = opts.border || 'ascii';
     opts.pad = opts.pad || 1;
 
-    const layer = this.startWidgetLayer();
+    const layer = new WidgetLayer(this);
 
     // Fade the background
     const opacity = opts.opacity !== undefined ? opts.opacity : 50;
@@ -81,7 +64,7 @@ UI.prototype.inputbox = function (
         y: textWidget.bounds.y,
         tag: 'inputbox',
     });
-    const dialog = layer.dialog(opts as Dialog.DialogOptions);
+    const dialog = layer.dialog(opts as DialogOptions);
     textWidget.setParent(dialog);
 
     let width = dialog._innerWidth;
@@ -121,5 +104,5 @@ UI.prototype.inputbox = function (
         return false;
     });
 
-    return layer;
+    return layer.run();
 };

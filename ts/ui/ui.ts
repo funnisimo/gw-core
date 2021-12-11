@@ -1,12 +1,13 @@
 // import * as GWU from 'gw-utils';
-import * as Utils from '../utils';
-import * as Buffer from '../buffer';
+// import * as Utils from '../utils';
+// import * as Buffer from '../buffer';
 import * as IO from '../io';
 import * as Canvas from '../canvas';
+import * as Dialog from '../widget/dialog';
 
-import { defaultStyle, Sheet } from './style';
-import { UICore, Layer, LayerOptions } from './layer';
-import * as Tween from '../tween';
+// import { defaultStyle, Sheet } from './style';
+// import { UICore, Layer, LayerOptions } from './layer';
+// import * as Tween from '../tween';
 // import * as Widget from './widget';
 
 export interface UIOptions extends Canvas.CanvasOptions {
@@ -14,20 +15,72 @@ export interface UIOptions extends Canvas.CanvasOptions {
     loop?: IO.Loop;
 }
 
-export class UI implements UICore {
+export interface AlertOptions extends Dialog.DialogOptions {
+    duration?: number;
+    waitForAck?: boolean;
+    textClass?: string;
+    opacity?: number;
+}
+
+export interface ConfirmOptions
+    extends Omit<Dialog.DialogOptions, 'width' | 'height'> {
+    width?: number;
+    height?: number;
+
+    textClass?: string;
+    opacity?: number;
+
+    buttonWidth?: number;
+
+    ok?: string;
+    okClass?: string;
+
+    cancel?: boolean | string;
+    cancelClass?: string;
+}
+
+export interface InputBoxOptions
+    extends Omit<Dialog.DialogOptions, 'width' | 'height'> {
+    width?: number;
+    height?: number;
+
+    textClass?: string;
+    opacity?: number;
+
+    buttonWidth?: number;
+
+    label?: string;
+    labelClass?: string;
+
+    default?: string;
+    placeholder?: string;
+    inputClass?: string;
+
+    minLength?: number;
+    maxLength?: number;
+
+    numbersOnly?: boolean;
+    min?: number;
+    max?: number;
+}
+
+export class UI {
     canvas: Canvas.BaseCanvas;
     loop: IO.Loop;
-    layer: Layer | null = null;
-    layers: Layer[] = [];
+    buffer: Canvas.Buffer;
 
-    // inDialog = false;
-    _done = false;
-    // _promise: Promise<void> | null = null;
+    //     layer: Layer | null = null;
+    //     layers: Layer[] = [];
+
+    //     // inDialog = false;
+    //     _done = false;
+    //     // _promise: Promise<void> | null = null;
 
     constructor(opts: UIOptions = {}) {
         opts.loop = opts.loop || IO.loop;
         this.loop = opts.loop;
         this.canvas = opts.canvas || Canvas.make(opts);
+        this.buffer = this.canvas.buffer;
 
         // get keyboard input hooked up
         if (this.canvas.node && this.canvas.node.parentElement) {
@@ -45,412 +98,442 @@ export class UI implements UICore {
         return this.canvas.height;
     }
 
-    get styles(): Sheet {
-        return defaultStyle;
+    alert(text: string, args?: any): Promise<boolean>;
+    alert(
+        opts: AlertOptions | number,
+        text: string,
+        args?: any
+    ): Promise<boolean>;
+    alert(..._args: any[]) {
+        return Promise.resolve(true);
     }
 
-    // render() {
-    //     this.buffer.render();
-    // }
-
-    get baseBuffer(): Canvas.Buffer {
-        const layer = this.layers[this.layers.length - 2] || null;
-        return layer ? layer.buffer : this.canvas.buffer;
+    confirm(_text?: string | any, _args?: any): Promise<boolean>;
+    confirm(
+        _opts: ConfirmOptions | string,
+        _text?: string | any,
+        _args?: any
+    ): Promise<boolean>;
+    confirm(..._args: any[]): Promise<boolean> {
+        return Promise.resolve(true);
     }
 
-    get canvasBuffer(): Canvas.Buffer {
-        return this.canvas.buffer;
+    inputbox(_text?: string | any, _args?: any): Promise<string | null>;
+    inputbox(
+        _opts: InputBoxOptions | string,
+        _text?: string | any,
+        _args?: any
+    ): Promise<string | null>;
+    inputbox(..._args: any[]): Promise<string | null> {
+        return Promise.resolve(null);
     }
 
-    get buffer(): Canvas.Buffer {
-        return this.layer ? this.layer.buffer : this.canvas.buffer;
-    }
+    //     get styles(): Sheet {
+    //         return defaultStyle;
+    //     }
 
-    startNewLayer(opts: LayerOptions = {}): Layer {
-        opts.styles = this.layer ? this.layer.styles : this.styles;
-        const layer = new Layer(this, opts);
-        this.startLayer(layer);
-        return layer;
-    }
+    //     // render() {
+    //     //     this.buffer.render();
+    //     // }
 
-    startLayer(layer: Layer) {
-        this.layers.push(layer);
+    //     get baseBuffer(): Canvas.Buffer {
+    //         const layer = this.layers[this.layers.length - 2] || null;
+    //         return layer ? layer.buffer : this.canvas.buffer;
+    //     }
 
-        // if (!this._promise) {
-        //     this._promise = this.loop.run((this as unknown) as IO.IOMap);
-        // }
-        this.layer = layer;
-    }
+    //     get canvasBuffer(): Canvas.Buffer {
+    //         return this.canvas.buffer;
+    //     }
 
-    copyUIBuffer(dest: Buffer.Buffer): void {
-        const base = this.baseBuffer;
-        dest.copy(base);
-        dest.changed = false; // So you have to draw something to make the canvas render...
-    }
+    //     get buffer(): Canvas.Buffer {
+    //         return this.layer ? this.layer.buffer : this.canvas.buffer;
+    //     }
 
-    finishLayer(layer: Layer, result?: any): void {
-        layer.finish(result);
-    }
+    //     startNewLayer(opts: LayerOptions = {}): Layer {
+    //         opts.styles = this.layer ? this.layer.styles : this.styles;
+    //         const layer = new Layer(this, opts);
+    //         this.startLayer(layer);
+    //         return layer;
+    //     }
 
-    _finishLayer(layer: Layer): void {
-        Utils.arrayDelete(this.layers, layer);
-        if (this.layer === layer) {
-            this.layer = this.layers[this.layers.length - 1] || null;
-            this.layer && (this.layer.needsDraw = true);
-        }
-    }
+    //     startLayer(layer: Layer) {
+    //         this.layers.push(layer);
 
-    stop(): void {
-        this._done = true;
-        while (this.layer) {
-            this.finishLayer(this.layer);
-        }
-    }
+    //         // if (!this._promise) {
+    //         //     this._promise = this.loop.run((this as unknown) as IO.IOMap);
+    //         // }
+    //         this.layer = layer;
+    //     }
 
-    // run(): Promise<void> {
-    //     // this._done = false;
-    //     return this.loop.run(this as unknown as IO.IOMap);
-    // }
+    //     copyUIBuffer(dest: Buffer.Buffer): void {
+    //         const base = this.baseBuffer;
+    //         dest.copy(base);
+    //         dest.changed = false; // So you have to draw something to make the canvas render...
+    //     }
 
-    // stop() {
-    //     this._done = true;
-    //     if (this.layer) this.layer.stop();
-    //     this.layers.forEach((l) => l.stop());
-    //     this.layer = null;
-    //     this.layers.length = 0;
-    // }
+    //     finishLayer(layer: Layer, result?: any): void {
+    //         layer.finish(result);
+    //     }
 
-    // mousemove(e: IO.Event): boolean {
-    //     if (this.layer) this.layer.mousemove(e);
-    //     return this._done;
-    // }
-
-    // click(e: IO.Event): boolean {
-    //     if (this.layer) this.layer.click(e);
-    //     return this._done;
-    // }
-
-    // keypress(e: IO.Event): boolean {
-    //     if (this.layer) this.layer.keypress(e);
-    //     return this._done;
-    // }
-
-    // dir(e: IO.Event): boolean {
-    //     if (this.layer) this.layer.dir(e);
-    //     return this._done;
-    // }
-
-    // tick(e: IO.Event): boolean {
-    //     if (this.layer) this.layer.tick(e);
-    //     return this._done;
-    // }
-
-    // draw() {
-    //     if (this.layer) this.layer.draw();
-    // }
-
-    addAnimation(a: Tween.Animation): void {
-        this.layer?.addAnimation(a);
-    }
-    removeAnimation(a: Tween.Animation): void {
-        this.layer?.removeAnimation(a);
-    }
-
-    // UTILITY FUNCTIONS
-
-    // async fadeTo(color: GWU.color.ColorBase = 'black', duration = 1000) {
-    //     color = GWU.color.from(color);
-    //     const buffer = this.startLayer();
-
-    //     let pct = 0;
-    //     let elapsed = 0;
-
-    //     while (elapsed < duration) {
-    //         elapsed += 32;
-    //         if (await this.loop.pause(32)) {
-    //             elapsed = duration;
+    //     _finishLayer(layer: Layer): void {
+    //         Utils.arrayDelete(this.layers, layer);
+    //         if (this.layer === layer) {
+    //             this.layer = this.layers[this.layers.length - 1] || null;
+    //             this.layer && (this.layer.needsDraw = true);
     //         }
-
-    //         pct = Math.floor((100 * elapsed) / duration);
-
-    //         this.copyUIBuffer(buffer);
-    //         buffer.mix(color, pct);
-    //         buffer.render();
     //     }
 
-    //     this.finishLayer();
-    // }
-
-    // async alert(opts: number | AlertOptions, text: string, args: any) {
-    //     if (typeof opts === 'number') {
-    //         opts = { duration: opts } as AlertOptions;
+    //     stop(): void {
+    //         this._done = true;
+    //         while (this.layer) {
+    //             this.finishLayer(this.layer);
+    //         }
     //     }
 
-    //     if (args) {
-    //         text = GWU.text.apply(text, args);
+    //     // run(): Promise<void> {
+    //     //     // this._done = false;
+    //     //     return this.loop.run(this as unknown as IO.IOMap);
+    //     // }
+
+    //     // stop() {
+    //     //     this._done = true;
+    //     //     if (this.layer) this.layer.stop();
+    //     //     this.layers.forEach((l) => l.stop());
+    //     //     this.layer = null;
+    //     //     this.layers.length = 0;
+    //     // }
+
+    //     // mousemove(e: IO.Event): boolean {
+    //     //     if (this.layer) this.layer.mousemove(e);
+    //     //     return this._done;
+    //     // }
+
+    //     // click(e: IO.Event): boolean {
+    //     //     if (this.layer) this.layer.click(e);
+    //     //     return this._done;
+    //     // }
+
+    //     // keypress(e: IO.Event): boolean {
+    //     //     if (this.layer) this.layer.keypress(e);
+    //     //     return this._done;
+    //     // }
+
+    //     // dir(e: IO.Event): boolean {
+    //     //     if (this.layer) this.layer.dir(e);
+    //     //     return this._done;
+    //     // }
+
+    //     // tick(e: IO.Event): boolean {
+    //     //     if (this.layer) this.layer.tick(e);
+    //     //     return this._done;
+    //     // }
+
+    //     // draw() {
+    //     //     if (this.layer) this.layer.draw();
+    //     // }
+
+    //     addAnimation(a: Tween.Animation): void {
+    //         this.layer?.addAnimation(a);
+    //     }
+    //     removeAnimation(a: Tween.Animation): void {
+    //         this.layer?.removeAnimation(a);
     //     }
 
-    //     const width = opts.width || GWU.text.length(text);
-    //     opts.box = opts.box || { bg: opts.bg };
-    //     // opts.box.bg = opts.box.bg || 'gray';
+    //     // UTILITY FUNCTIONS
 
-    //     const textOpts: Widget.TextOptions = {
-    //         fg: opts.fg,
-    //         text,
-    //         x: 0,
-    //         y: 0,
-    //         wrap: width,
-    //     };
-    //     const textWidget = new Widget.Text('TEXT', textOpts);
+    //     // async fadeTo(color: GWU.color.ColorBase = 'black', duration = 1000) {
+    //     //     color = GWU.color.from(color);
+    //     //     const buffer = this.startLayer();
 
-    //     const height = textWidget.bounds.height;
+    //     //     let pct = 0;
+    //     //     let elapsed = 0;
 
-    //     const dlg: Widget.Dialog = Widget.buildDialog(this, width, height)
-    //         .with(textWidget, { x: 0, y: 0 })
-    //         .addBox(opts.box)
-    //         .center()
-    //         .done();
+    //     //     while (elapsed < duration) {
+    //     //         elapsed += 32;
+    //     //         if (await this.loop.pause(32)) {
+    //     //             elapsed = duration;
+    //     //         }
 
-    //     dlg.setEventHandlers({
-    //         click: () => dlg.close(true),
-    //         keypress: () => dlg.close(true),
-    //         TIMEOUT: () => dlg.close(false),
-    //     });
+    //     //         pct = Math.floor((100 * elapsed) / duration);
 
-    //     if (!opts.waitForAck) {
-    //         dlg.setTimeout('TIMEOUT', opts.duration || 3000);
-    //     }
+    //     //         this.copyUIBuffer(buffer);
+    //     //         buffer.mix(color, pct);
+    //     //         buffer.render();
+    //     //     }
 
-    //     return await dlg.show();
-    // }
+    //     //     this.finishLayer();
+    //     // }
 
-    // async confirm(text: string, args?: any): Promise<boolean>;
-    // async confirm(
-    //     opts: ConfirmOptions,
-    //     text: string,
-    //     args?: any
-    // ): Promise<boolean>;
-    // async confirm(...args: any[]): Promise<boolean> {
-    //     let opts: ConfirmOptions;
-    //     let text: string;
-    //     let textArgs: any = null;
-    //     if (args.length <= 2 && typeof args[0] === 'string') {
-    //         opts = {};
-    //         text = args[0];
-    //         textArgs = args[1] || null;
-    //     } else {
-    //         opts = args[0];
-    //         text = args[1];
-    //         textArgs = args[2] || null;
-    //     }
+    //     // async alert(opts: number | AlertOptions, text: string, args: any) {
+    //     //     if (typeof opts === 'number') {
+    //     //         opts = { duration: opts } as AlertOptions;
+    //     //     }
 
-    //     if (textArgs) {
-    //         text = GWU.text.apply(text, textArgs);
-    //     }
+    //     //     if (args) {
+    //     //         text = GWU.text.apply(text, args);
+    //     //     }
 
-    //     const width =
-    //         opts.width ||
-    //         Math.min(Math.floor(this.buffer.width / 2), GWU.text.length(text));
+    //     //     const width = opts.width || GWU.text.length(text);
+    //     //     opts.box = opts.box || { bg: opts.bg };
+    //     //     // opts.box.bg = opts.box.bg || 'gray';
 
-    //     const textOpts: Widget.TextOptions = {
-    //         fg: opts.fg,
-    //         text,
-    //         wrap: width,
-    //     };
-    //     const textWidget = new Widget.Text('TEXT', textOpts);
+    //     //     const textOpts: Widget.TextOptions = {
+    //     //         fg: opts.fg,
+    //     //         text,
+    //     //         x: 0,
+    //     //         y: 0,
+    //     //         wrap: width,
+    //     //     };
+    //     //     const textWidget = new Widget.Text('TEXT', textOpts);
 
-    //     const height = textWidget.bounds.height + 2;
+    //     //     const height = textWidget.bounds.height;
 
-    //     opts.allowCancel = opts.allowCancel !== false;
-    //     opts.buttons = Object.assign(
-    //         {
-    //             fg: 'white',
-    //             activeFg: 'teal',
-    //             bg: 'dark_gray',
-    //             activeBg: 'darkest_gray',
-    //         },
-    //         opts.buttons || {}
-    //     );
-    //     if (typeof opts.ok === 'string') {
-    //         opts.ok = { text: opts.ok };
-    //     }
-    //     if (typeof opts.cancel === 'string') {
-    //         opts.cancel = { text: opts.cancel };
-    //     }
-    //     opts.ok = opts.ok || {};
-    //     opts.cancel = opts.cancel || {};
+    //     //     const dlg: Widget.Dialog = Widget.buildDialog(this, width, height)
+    //     //         .with(textWidget, { x: 0, y: 0 })
+    //     //         .addBox(opts.box)
+    //     //         .center()
+    //     //         .done();
 
-    //     const okOpts = Object.assign({}, opts.buttons, { text: 'OK' }, opts.ok);
-    //     const cancelOpts = Object.assign(
-    //         {},
-    //         opts.buttons,
-    //         { text: 'CANCEL' },
-    //         opts.cancel
-    //     );
+    //     //     dlg.setEventHandlers({
+    //     //         click: () => dlg.close(true),
+    //     //         keypress: () => dlg.close(true),
+    //     //         TIMEOUT: () => dlg.close(false),
+    //     //     });
 
-    //     const builder = Widget.buildDialog(this, width, height)
-    //         .with(textWidget, { x: 0, y: 0 })
-    //         .with(new Widget.Button('OK', okOpts), { x: 0, bottom: 0 });
+    //     //     if (!opts.waitForAck) {
+    //     //         dlg.setTimeout('TIMEOUT', opts.duration || 3000);
+    //     //     }
 
-    //     if (opts.allowCancel) {
-    //         builder.with(new Widget.Button('CANCEL', cancelOpts), {
-    //             right: 0,
-    //             bottom: 0,
-    //         });
-    //     }
+    //     //     return await dlg.show();
+    //     // }
 
-    //     const dlg: Widget.Dialog = builder.center().addBox(opts.box).done();
+    //     // async confirm(text: string, args?: any): Promise<boolean>;
+    //     // async confirm(
+    //     //     opts: ConfirmOptions,
+    //     //     text: string,
+    //     //     args?: any
+    //     // ): Promise<boolean>;
+    //     // async confirm(...args: any[]): Promise<boolean> {
+    //     //     let opts: ConfirmOptions;
+    //     //     let text: string;
+    //     //     let textArgs: any = null;
+    //     //     if (args.length <= 2 && typeof args[0] === 'string') {
+    //     //         opts = {};
+    //     //         text = args[0];
+    //     //         textArgs = args[1] || null;
+    //     //     } else {
+    //     //         opts = args[0];
+    //     //         text = args[1];
+    //     //         textArgs = args[2] || null;
+    //     //     }
 
-    //     dlg.setEventHandlers({
-    //         OK() {
-    //             dlg.close(true);
-    //         },
-    //         CANCEL() {
-    //             dlg.close(false);
-    //         },
-    //         Escape() {
-    //             dlg.close(false);
-    //         },
-    //         Enter() {
-    //             dlg.close(true);
-    //         },
-    //     });
+    //     //     if (textArgs) {
+    //     //         text = GWU.text.apply(text, textArgs);
+    //     //     }
 
-    //     return await dlg.show();
-    // }
+    //     //     const width =
+    //     //         opts.width ||
+    //     //         Math.min(Math.floor(this.buffer.width / 2), GWU.text.length(text));
 
-    // async showWidget(widget: Widget.Widget, keymap: Widget.EventHandlers = {}) {
-    //     const center = widget.bounds.x < 0 || widget.bounds.y < 0;
+    //     //     const textOpts: Widget.TextOptions = {
+    //     //         fg: opts.fg,
+    //     //         text,
+    //     //         wrap: width,
+    //     //     };
+    //     //     const textWidget = new Widget.Text('TEXT', textOpts);
 
-    //     const place = { x: widget.bounds.x, y: widget.bounds.y };
-    //     const builder = Widget.buildDialog(this).with(widget, { x: 0, y: 0 });
-    //     if (center) {
-    //         builder.center();
-    //     } else {
-    //         builder.place(place.x, place.y);
-    //     }
-    //     const dlg = builder.done();
+    //     //     const height = textWidget.bounds.height + 2;
 
-    //     keymap.Escape =
-    //         keymap.Escape ||
-    //         (() => {
-    //             dlg.close(false);
-    //         });
-    //     dlg.setEventHandlers(keymap);
+    //     //     opts.allowCancel = opts.allowCancel !== false;
+    //     //     opts.buttons = Object.assign(
+    //     //         {
+    //     //             fg: 'white',
+    //     //             activeFg: 'teal',
+    //     //             bg: 'dark_gray',
+    //     //             activeBg: 'darkest_gray',
+    //     //         },
+    //     //         opts.buttons || {}
+    //     //     );
+    //     //     if (typeof opts.ok === 'string') {
+    //     //         opts.ok = { text: opts.ok };
+    //     //     }
+    //     //     if (typeof opts.cancel === 'string') {
+    //     //         opts.cancel = { text: opts.cancel };
+    //     //     }
+    //     //     opts.ok = opts.ok || {};
+    //     //     opts.cancel = opts.cancel || {};
 
-    //     return await dlg.show();
-    // }
+    //     //     const okOpts = Object.assign({}, opts.buttons, { text: 'OK' }, opts.ok);
+    //     //     const cancelOpts = Object.assign(
+    //     //         {},
+    //     //         opts.buttons,
+    //     //         { text: 'CANCEL' },
+    //     //         opts.cancel
+    //     //     );
 
-    // // assumes you are in a dialog and give the buffer for that dialog
-    // async getInputAt(
-    //     x: number,
-    //     y: number,
-    //     maxLength: number,
-    //     opts: Widget.InputOptions = {}
-    // ): Promise<string> {
-    //     opts.width = maxLength;
-    //     opts.x = x;
-    //     opts.y = y;
-    //     const widget = new Widget.Input('INPUT', opts);
+    //     //     const builder = Widget.buildDialog(this, width, height)
+    //     //         .with(textWidget, { x: 0, y: 0 })
+    //     //         .with(new Widget.Button('OK', okOpts), { x: 0, bottom: 0 });
 
-    //     return this.showWidget(widget, {
-    //         INPUT(_e, dlg) {
-    //             dlg.close(widget.text);
-    //         },
-    //         Escape(_e, dlg) {
-    //             dlg.close('');
-    //         },
-    //     });
-    // }
+    //     //     if (opts.allowCancel) {
+    //     //         builder.with(new Widget.Button('CANCEL', cancelOpts), {
+    //     //             right: 0,
+    //     //             bottom: 0,
+    //     //         });
+    //     //     }
 
-    // async inputBox(opts: InputBoxOptions, prompt: string, args?: any) {
-    //     if (args) {
-    //         prompt = GWU.text.apply(prompt, args);
-    //     }
+    //     //     const dlg: Widget.Dialog = builder.center().addBox(opts.box).done();
 
-    //     const width =
-    //         opts.width ||
-    //         Math.min(
-    //             Math.floor(this.buffer.width / 2),
-    //             GWU.text.length(prompt)
-    //         );
+    //     //     dlg.setEventHandlers({
+    //     //         OK() {
+    //     //             dlg.close(true);
+    //     //         },
+    //     //         CANCEL() {
+    //     //             dlg.close(false);
+    //     //         },
+    //     //         Escape() {
+    //     //             dlg.close(false);
+    //     //         },
+    //     //         Enter() {
+    //     //             dlg.close(true);
+    //     //         },
+    //     //     });
 
-    //     const promptOpts: Widget.TextOptions = {
-    //         fg: opts.fg,
-    //         text: prompt,
-    //         wrap: width,
-    //     };
-    //     const promptWidget = new Widget.Text('TEXT', promptOpts);
+    //     //     return await dlg.show();
+    //     // }
 
-    //     const height =
-    //         promptWidget.bounds.height +
-    //         2 + // skip + input
-    //         2; // skip + ok/cancel
-    //     opts.allowCancel = opts.allowCancel !== false;
-    //     opts.buttons = Object.assign(
-    //         {
-    //             fg: 'white',
-    //             activeFg: 'teal',
-    //             bg: 'dark_gray',
-    //             activeBg: 'darkest_gray',
-    //         },
-    //         opts.buttons || {}
-    //     );
-    //     if (typeof opts.ok === 'string') {
-    //         opts.ok = { text: opts.ok };
-    //     }
-    //     if (typeof opts.cancel === 'string') {
-    //         opts.cancel = { text: opts.cancel };
-    //     }
-    //     opts.ok = opts.ok || {};
-    //     opts.cancel = opts.cancel || {};
+    //     // async showWidget(widget: Widget.Widget, keymap: Widget.EventHandlers = {}) {
+    //     //     const center = widget.bounds.x < 0 || widget.bounds.y < 0;
 
-    //     const okOpts = Object.assign({}, opts.buttons, { text: 'OK' }, opts.ok);
-    //     const cancelOpts = Object.assign(
-    //         {},
-    //         opts.buttons,
-    //         { text: 'CANCEL' },
-    //         opts.cancel
-    //     );
+    //     //     const place = { x: widget.bounds.x, y: widget.bounds.y };
+    //     //     const builder = Widget.buildDialog(this).with(widget, { x: 0, y: 0 });
+    //     //     if (center) {
+    //     //         builder.center();
+    //     //     } else {
+    //     //         builder.place(place.x, place.y);
+    //     //     }
+    //     //     const dlg = builder.done();
 
-    //     opts.input = opts.input || {};
-    //     opts.input.width = opts.input.width || width;
-    //     opts.input.bg = opts.input.bg || opts.fg;
-    //     opts.input.fg = opts.input.fg || opts.bg;
+    //     //     keymap.Escape =
+    //     //         keymap.Escape ||
+    //     //         (() => {
+    //     //             dlg.close(false);
+    //     //         });
+    //     //     dlg.setEventHandlers(keymap);
 
-    //     const inputWidget = new Widget.Input('INPUT', opts.input || {});
-    //     const builder = Widget.buildDialog(this, width, height)
-    //         .with(promptWidget, { x: 0, y: 0 })
-    //         .with(inputWidget, { bottom: 2, x: 0 })
-    //         .with(new Widget.Button('OK', okOpts), { bottom: 0, x: 0 })
-    //         .addBox(opts.box);
+    //     //     return await dlg.show();
+    //     // }
 
-    //     if (opts.allowCancel) {
-    //         builder.with(new Widget.Button('CANCEL', cancelOpts), {
-    //             bottom: 0,
-    //             right: 0,
-    //         });
-    //     }
+    //     // // assumes you are in a dialog and give the buffer for that dialog
+    //     // async getInputAt(
+    //     //     x: number,
+    //     //     y: number,
+    //     //     maxLength: number,
+    //     //     opts: Widget.InputOptions = {}
+    //     // ): Promise<string> {
+    //     //     opts.width = maxLength;
+    //     //     opts.x = x;
+    //     //     opts.y = y;
+    //     //     const widget = new Widget.Input('INPUT', opts);
 
-    //     const dlg: Widget.Dialog = builder.center().done();
+    //     //     return this.showWidget(widget, {
+    //     //         INPUT(_e, dlg) {
+    //     //             dlg.close(widget.text);
+    //     //         },
+    //     //         Escape(_e, dlg) {
+    //     //             dlg.close('');
+    //     //         },
+    //     //     });
+    //     // }
 
-    //     dlg.setEventHandlers({
-    //         OK() {
-    //             dlg.close(inputWidget.text);
-    //         },
-    //         CANCEL() {
-    //             dlg.close('');
-    //         },
-    //         Escape() {
-    //             dlg.close('');
-    //         },
-    //         INPUT() {
-    //             dlg.close(inputWidget.text);
-    //         },
-    //     });
+    //     // async inputBox(opts: InputBoxOptions, prompt: string, args?: any) {
+    //     //     if (args) {
+    //     //         prompt = GWU.text.apply(prompt, args);
+    //     //     }
 
-    //     return await dlg.show();
-    // }
+    //     //     const width =
+    //     //         opts.width ||
+    //     //         Math.min(
+    //     //             Math.floor(this.buffer.width / 2),
+    //     //             GWU.text.length(prompt)
+    //     //         );
+
+    //     //     const promptOpts: Widget.TextOptions = {
+    //     //         fg: opts.fg,
+    //     //         text: prompt,
+    //     //         wrap: width,
+    //     //     };
+    //     //     const promptWidget = new Widget.Text('TEXT', promptOpts);
+
+    //     //     const height =
+    //     //         promptWidget.bounds.height +
+    //     //         2 + // skip + input
+    //     //         2; // skip + ok/cancel
+    //     //     opts.allowCancel = opts.allowCancel !== false;
+    //     //     opts.buttons = Object.assign(
+    //     //         {
+    //     //             fg: 'white',
+    //     //             activeFg: 'teal',
+    //     //             bg: 'dark_gray',
+    //     //             activeBg: 'darkest_gray',
+    //     //         },
+    //     //         opts.buttons || {}
+    //     //     );
+    //     //     if (typeof opts.ok === 'string') {
+    //     //         opts.ok = { text: opts.ok };
+    //     //     }
+    //     //     if (typeof opts.cancel === 'string') {
+    //     //         opts.cancel = { text: opts.cancel };
+    //     //     }
+    //     //     opts.ok = opts.ok || {};
+    //     //     opts.cancel = opts.cancel || {};
+
+    //     //     const okOpts = Object.assign({}, opts.buttons, { text: 'OK' }, opts.ok);
+    //     //     const cancelOpts = Object.assign(
+    //     //         {},
+    //     //         opts.buttons,
+    //     //         { text: 'CANCEL' },
+    //     //         opts.cancel
+    //     //     );
+
+    //     //     opts.input = opts.input || {};
+    //     //     opts.input.width = opts.input.width || width;
+    //     //     opts.input.bg = opts.input.bg || opts.fg;
+    //     //     opts.input.fg = opts.input.fg || opts.bg;
+
+    //     //     const inputWidget = new Widget.Input('INPUT', opts.input || {});
+    //     //     const builder = Widget.buildDialog(this, width, height)
+    //     //         .with(promptWidget, { x: 0, y: 0 })
+    //     //         .with(inputWidget, { bottom: 2, x: 0 })
+    //     //         .with(new Widget.Button('OK', okOpts), { bottom: 0, x: 0 })
+    //     //         .addBox(opts.box);
+
+    //     //     if (opts.allowCancel) {
+    //     //         builder.with(new Widget.Button('CANCEL', cancelOpts), {
+    //     //             bottom: 0,
+    //     //             right: 0,
+    //     //         });
+    //     //     }
+
+    //     //     const dlg: Widget.Dialog = builder.center().done();
+
+    //     //     dlg.setEventHandlers({
+    //     //         OK() {
+    //     //             dlg.close(inputWidget.text);
+    //     //         },
+    //     //         CANCEL() {
+    //     //             dlg.close('');
+    //     //         },
+    //     //         Escape() {
+    //     //             dlg.close('');
+    //     //         },
+    //     //         INPUT() {
+    //     //             dlg.close(inputWidget.text);
+    //     //         },
+    //     //     });
+
+    //     //     return await dlg.show();
+    //     // }
 }
 
 export function make(opts: UIOptions): UI {

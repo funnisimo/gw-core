@@ -2,47 +2,48 @@
 import * as Color from '../color';
 import * as Text from '../text';
 
-import { UI } from './ui';
+import * as UI from './ui';
 import { WidgetLayer } from '../widget/layer';
-import * as Dialog from '../widget/dialog';
-
-export interface AlertOptions extends Dialog.DialogOptions {
-    duration?: number;
-    waitForAck?: boolean;
-    textClass?: string;
-    opacity?: number;
-}
 
 // extend WidgetLayer
 
-declare module './ui' {
-    interface UI {
-        alert(
-            opts: AlertOptions | number,
-            text: string,
-            args?: any
-        ): WidgetLayer;
-    }
-}
+// declare module './ui' {
+//     interface UI {
+//         alert(
+//             opts: AlertOptions | number,
+//             text: string,
+//             args?: any
+//         ): Promise<boolean>;
+//     }
+// }
 
-UI.prototype.alert = function (
-    opts: AlertOptions | number,
-    text: string,
-    args?: any
-): WidgetLayer {
-    if (typeof opts === 'number') {
-        opts = { duration: opts } as AlertOptions;
+UI.UI.prototype.alert = function (...args: any[]): Promise<boolean> {
+    let opts = {} as UI.AlertOptions;
+    let text: string;
+    let textArgs: any = {};
+
+    if (typeof args[0] === 'number') {
+        opts.duration = args[0];
+        text = args[1];
+        textArgs = args[2];
+    } else if (typeof args[0] === 'string') {
+        text = args[0];
+        textArgs = args[1];
+    } else {
+        opts = args[0];
+        text = args[1];
+        textArgs = args[2];
     }
 
-    if (args) {
-        text = Text.apply(text, args);
+    if (textArgs) {
+        text = Text.apply(text, textArgs);
     }
 
     opts.class = opts.class || 'alert';
     opts.border = opts.border || 'ascii';
     opts.pad = opts.pad || 1;
 
-    const layer = this.startWidgetLayer();
+    const layer = new WidgetLayer(this);
 
     // Fade the background
     const opacity = opts.opacity !== undefined ? opts.opacity : 50;
@@ -82,5 +83,5 @@ UI.prototype.alert = function (
         layer.finish(false);
     }, opts.duration || 3000);
 
-    return layer;
+    return layer.run();
 };

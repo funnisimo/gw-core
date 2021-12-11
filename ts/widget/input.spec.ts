@@ -12,6 +12,10 @@ describe('Input Widget', () => {
         layer = UTILS.mockWidgetLayer(50, 30);
     });
 
+    afterEach(() => {
+        layer.finish();
+    });
+
     test('create', () => {
         const widget = new Input.Input(layer, { id: 'ID', text: 'Test' });
 

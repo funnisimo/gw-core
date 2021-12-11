@@ -7,6 +7,7 @@ import * as Text from './text';
 import * as Widget from './widget';
 import { BorderType } from './datatable';
 import { drawBorder } from './border';
+import * as Style from '../ui/style';
 
 export type PadInfo =
     | boolean
@@ -43,6 +44,11 @@ export function toPadArray(pad: PadInfo): [number, number, number, number] {
     }
     throw new Error('Invalid pad: ' + pad);
 }
+
+Style.defaultStyle.add('dialog', {
+    bg: 'darkest_gray',
+    fg: 'light_gray',
+});
 
 export class Dialog extends Widget.Widget {
     static default = {

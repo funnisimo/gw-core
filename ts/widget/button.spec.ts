@@ -15,6 +15,10 @@ describe('Button Widget', () => {
         layer = UTILS.mockWidgetLayer(50, 30);
     });
 
+    afterEach(() => {
+        layer.finish();
+    });
+
     test('create', () => {
         let widget = new Button.Button(layer, { id: 'ID', text: 'Button' });
         expect(widget.bounds.x).toEqual(0);

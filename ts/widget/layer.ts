@@ -7,13 +7,15 @@ import { Grid } from '../ui/grid';
 import * as Widget from '../widget/widget';
 import { Body } from './body';
 import { StyleOptions } from '../ui/types';
-import { Layer, LayerOptions } from '../ui/layer';
-import { UI } from '../ui/ui';
+import { Layer, LayerOptions, CanvasSource } from '../ui/layer';
+import * as Style from '../ui/style';
 
 export interface WidgetLayerOptions extends LayerOptions {}
 
 export class WidgetLayer extends Layer {
     body: Widget.Widget;
+
+    styles: Style.Sheet;
 
     _attachOrder: Widget.Widget[] = [];
     _depthOrder: Widget.Widget[] = [];
@@ -22,8 +24,9 @@ export class WidgetLayer extends Layer {
 
     _opts: Widget.WidgetOptions = { x: 0, y: 0 };
 
-    constructor(ui: UI, opts: WidgetLayerOptions = {}) {
+    constructor(ui: CanvasSource, opts: WidgetLayerOptions = {}) {
         super(ui, opts);
+        this.styles = new Style.Sheet(opts.styles || Style.defaultStyle);
         this.body = new Body(this);
     }
 
@@ -362,7 +365,7 @@ export class WidgetLayer extends Layer {
         if (!this.needsDraw) return;
         this.needsDraw = false;
 
-        this.ui.copyUIBuffer(this.buffer);
+        this.buffer.copy(this.canvas.parentBuffer);
 
         // draw from low depth to high depth
         for (let i = this._depthOrder.length - 1; i >= 0; --i) {
@@ -376,22 +379,22 @@ export class WidgetLayer extends Layer {
 
     finish(result?: any) {
         super.finish(result);
-        this.body._fireEvent('finish', this.body, this.result);
+        this.body._fireEvent('finish', this.body, result);
     }
 }
 
-declare module '../ui/ui' {
-    interface UI {
-        startWidgetLayer(opts?: WidgetLayerOptions): WidgetLayer;
-    }
-}
+// declare module '../ui/ui' {
+//     interface UI {
+//         startWidgetLayer(opts?: WidgetLayerOptions): WidgetLayer;
+//     }
+// }
 
-UI.prototype.startWidgetLayer = function (
-    opts: WidgetLayerOptions = {}
-): WidgetLayer {
-    opts.styles = this.layer ? this.layer.styles : this.styles;
-    const layer = new WidgetLayer(this, opts);
+// UI.prototype.startWidgetLayer = function (
+//     opts: WidgetLayerOptions = {}
+// ): WidgetLayer {
+//     opts.styles = this.layer ? this.layer.styles : this.styles;
+//     const layer = new WidgetLayer(this, opts);
 
-    this.startLayer(layer);
-    return layer;
-};
+//     this.startLayer(layer);
+//     return layer;
+// };

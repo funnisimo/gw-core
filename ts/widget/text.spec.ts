@@ -16,6 +16,10 @@ describe('Text Widget', () => {
         layer = UTILS.mockWidgetLayer(50, 30);
     });
 
+    afterEach(() => {
+        layer.finish();
+    });
+
     test('text create empty', () => {
         // Takes everything
         let widget = new Text.Text(layer, {

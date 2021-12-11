@@ -3,7 +3,8 @@
 By default, in examples, the results <DIV> has keyboard events hooked into the LOOP. When you run the LOOP, it will let you handle keypress events.
 
 ```js
-LOOP.run(
+const handler = new GWU.io.Handler(LOOP);
+handler.run(
     {
         keypress(e) {
             SHOW(e.key);
@@ -17,7 +18,8 @@ SHOW('Click on me and type any key.');
 You can also trap specific key combinations.
 
 ```js
-LOOP.run(
+const handler = new GWU.io.Handler(LOOP);
+handler.run(
     {
         t(e) {
             SHOW('lowercase : ' + e.key);

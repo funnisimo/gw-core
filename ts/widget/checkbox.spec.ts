@@ -12,6 +12,10 @@ describe('Checkbox Widget', () => {
         layer = UTILS.mockWidgetLayer(50, 30);
     });
 
+    afterEach(() => {
+        layer.finish();
+    });
+
     test('create obj', () => {
         const e = new Checkbox.Checkbox(layer, { text: 'checkbox' });
         expect(e.tag).toEqual('checkbox');
