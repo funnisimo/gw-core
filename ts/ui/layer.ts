@@ -5,12 +5,8 @@ import * as Tween from '../tween';
 // import * as Utils from '../utils';
 
 import * as Style from './style';
-// import { UI } from './ui';
+import { UI } from './ui';
 import { UILayer } from './types';
-
-export interface CanvasSource {
-    readonly canvas: Canvas.BaseCanvas;
-}
 
 export type StartCb = () => void;
 export type DrawCb = (buffer: Buffer.Buffer) => boolean;
@@ -31,7 +27,7 @@ export interface BufferStack {
 }
 
 export class Layer implements UILayer, Tween.Animator {
-    canvas: BufferStack;
+    ui: UI;
     buffer: Canvas.Buffer;
     io: IO.Handler;
     // styles: Style.Sheet;
@@ -45,13 +41,10 @@ export class Layer implements UILayer, Tween.Animator {
     // _running = false;
     // _keymap: IO.IOMap = {};
 
-    constructor(
-        ui: CanvasSource | Canvas.BaseCanvas,
-        _opts: LayerOptions = {}
-    ) {
-        this.canvas = ui instanceof Canvas.BaseCanvas ? ui : ui.canvas;
-        this.buffer = this.canvas.pushBuffer();
-        this.io = new IO.Handler(this.canvas.loop);
+    constructor(ui: UI, _opts: LayerOptions = {}) {
+        this.ui = ui;
+        this.buffer = ui.canvas.pushBuffer();
+        this.io = new IO.Handler(ui.loop);
 
         // this.styles = new Style.Sheet(opts.styles || ui.styles);
     }
@@ -164,8 +157,8 @@ export class Layer implements UILayer, Tween.Animator {
 
     finish(result?: any) {
         this.io.finish(result);
-        this.canvas.popBuffer();
-        this.canvas.loop.popHandler(this.io);
-        this.canvas.buffer.render(); // redraw old buffer
+        this.ui.canvas.popBuffer();
+        this.ui.loop.popHandler(this.io);
+        this.ui.canvas.buffer.render(); // redraw old buffer
     }
 }

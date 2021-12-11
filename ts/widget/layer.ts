@@ -7,7 +7,8 @@ import { Grid } from '../ui/grid';
 import * as Widget from '../widget/widget';
 import { Body } from './body';
 import { StyleOptions } from '../ui/types';
-import { Layer, LayerOptions, CanvasSource } from '../ui/layer';
+import { Layer, LayerOptions } from '../ui/layer';
+import { UI } from '../ui/ui';
 import * as Style from '../ui/style';
 
 export interface WidgetLayerOptions extends LayerOptions {}
@@ -24,7 +25,7 @@ export class WidgetLayer extends Layer {
 
     _opts: Widget.WidgetOptions = { x: 0, y: 0 };
 
-    constructor(ui: CanvasSource, opts: WidgetLayerOptions = {}) {
+    constructor(ui: UI, opts: WidgetLayerOptions = {}) {
         super(ui, opts);
         this.styles = new Style.Sheet(opts.styles || Style.defaultStyle);
         this.body = new Body(this);
@@ -365,7 +366,7 @@ export class WidgetLayer extends Layer {
         if (!this.needsDraw) return;
         this.needsDraw = false;
 
-        this.buffer.copy(this.canvas.parentBuffer);
+        this.buffer.reset();
 
         // draw from low depth to high depth
         for (let i = this._depthOrder.length - 1; i >= 0; --i) {

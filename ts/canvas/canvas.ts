@@ -92,7 +92,9 @@ export abstract class BaseCanvas implements BufferTarget {
         const current = this.buffer;
         ++this._current;
         if (this._current >= this._buffers.length) {
-            this._buffers.push(current.clone());
+            const newBuffer = new CanvasBuffer(this, current);
+            newBuffer.reset();
+            this._buffers.push(newBuffer);
         } else {
             this.buffer.copy(current);
         }

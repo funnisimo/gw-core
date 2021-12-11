@@ -33,8 +33,9 @@ describe('buffer', () => {
             target.copyTo.mockClear();
             target.draw.mockClear();
 
-            b.load();
-            expect(target.copyTo).toHaveBeenCalled();
+            b.reset();
+            // expect(target.copyTo).toHaveBeenCalled();
+            // TODO - show that it is 0 now
 
             b.draw(3, 2, '@', 0xfff);
             expect(target.toGlyph).toHaveBeenCalledWith('@');

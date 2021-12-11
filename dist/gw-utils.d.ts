@@ -1673,12 +1673,12 @@ interface BufferTarget {
     toGlyph(ch: string | number): number;
 }
 declare class Buffer extends Buffer$1 {
-    private _target;
-    constructor(canvas: BufferTarget);
-    clone(): this;
+    _target: BufferTarget;
+    _parent: Buffer | null;
+    constructor(canvas: BufferTarget, parent?: Buffer);
     toGlyph(ch: string | number): number;
     render(): this;
-    load(): this;
+    reset(): void;
 }
 
 declare type CTX = CanvasRenderingContext2D;
@@ -2319,46 +2319,7 @@ declare class Sheet {
 }
 declare const defaultStyle: Sheet;
 
-interface CanvasSource {
-    readonly canvas: BaseCanvas;
-}
-declare type StartCb = () => void;
-declare type DrawCb = (buffer: Buffer$1) => boolean;
-declare type EventCb$1 = (e: Event$1) => boolean;
-declare type FinishCb = (result: any) => void;
-interface LayerOptions {
-    styles?: Sheet;
-}
-interface BufferStack {
-    readonly buffer: Buffer;
-    readonly parentBuffer: Buffer;
-    readonly loop: Loop;
-    pushBuffer(): Buffer;
-    popBuffer(): void;
-}
-declare class Layer implements UILayer, Animator {
-    canvas: BufferStack;
-    buffer: Buffer;
-    io: Handler;
-    needsDraw: boolean;
-    constructor(ui: CanvasSource | BaseCanvas, _opts?: LayerOptions);
-    get width(): number;
-    get height(): number;
-    mousemove(_e: Event$1): boolean;
-    click(_e: Event$1): boolean;
-    keypress(_e: Event$1): boolean;
-    dir(_e: Event$1): boolean;
-    tick(_e: Event$1): boolean;
-    draw(): void;
-    setTimeout(action: TimerFn, time: number): void;
-    clearTimeout(action: string | TimerFn): void;
-    addAnimation(a: Animation): void;
-    removeAnimation(a: Animation): void;
-    run(keymap?: IOMap, ms?: number): Promise<any>;
-    finish(result?: any): void;
-}
-
-declare type EventCb = (name: string, widget: Widget | null, args?: any) => boolean | any;
+declare type EventCb$1 = (name: string, widget: Widget | null, args?: any) => boolean | any;
 interface WidgetOptions extends StyleOptions {
     id?: string;
     disabled?: boolean;
@@ -2386,7 +2347,7 @@ declare class Widget implements UIStylable {
     layer: WidgetLayer;
     bounds: Bounds;
     _depth: number;
-    events: Record<string, EventCb[]>;
+    events: Record<string, EventCb$1[]>;
     children: Widget[];
     _style: Style;
     _used: ComputedStyle;
@@ -2461,8 +2422,8 @@ declare class Widget implements UIStylable {
     keypress(e: Event$1): boolean;
     dir(e: Event$1): boolean;
     tick(e: Event$1): boolean;
-    on(event: string, cb: EventCb): this;
-    off(event: string, cb?: EventCb): this;
+    on(event: string, cb: EventCb$1): this;
+    off(event: string, cb?: EventCb$1): this;
     _fireEvent(name: string, source: Widget | null, args?: any): boolean;
     _bubbleEvent(name: string, source: Widget | null, args?: any): boolean;
 }
@@ -2477,7 +2438,7 @@ declare class WidgetLayer extends Layer {
     _focusWidget: Widget | null;
     _hasTabStop: boolean;
     _opts: WidgetOptions;
-    constructor(ui: CanvasSource, opts?: WidgetLayerOptions);
+    constructor(ui: UI, opts?: WidgetLayerOptions);
     reset(): this;
     fg(v: ColorBase): this;
     bg(v: ColorBase): this;
@@ -2508,8 +2469,8 @@ declare class WidgetLayer extends Layer {
     getWidget(id: string): Widget | null;
     nextTabStop(): boolean;
     prevTabStop(): boolean;
-    on(event: string, cb: EventCb): this;
-    off(event: string, cb?: EventCb): this;
+    on(event: string, cb: EventCb$1): this;
+    off(event: string, cb?: EventCb$1): this;
     mousemove(e: Event$1): boolean;
     click(e: Event$1): boolean;
     keypress(e: Event$1): boolean;
@@ -2737,6 +2698,42 @@ declare class UI {
 }
 declare function make(opts: UIOptions): UI;
 
+declare type StartCb = () => void;
+declare type DrawCb = (buffer: Buffer$1) => boolean;
+declare type EventCb = (e: Event$1) => boolean;
+declare type FinishCb = (result: any) => void;
+interface LayerOptions {
+    styles?: Sheet;
+}
+interface BufferStack {
+    readonly buffer: Buffer;
+    readonly parentBuffer: Buffer;
+    readonly loop: Loop;
+    pushBuffer(): Buffer;
+    popBuffer(): void;
+}
+declare class Layer implements UILayer, Animator {
+    ui: UI;
+    buffer: Buffer;
+    io: Handler;
+    needsDraw: boolean;
+    constructor(ui: UI, _opts?: LayerOptions);
+    get width(): number;
+    get height(): number;
+    mousemove(_e: Event$1): boolean;
+    click(_e: Event$1): boolean;
+    keypress(_e: Event$1): boolean;
+    dir(_e: Event$1): boolean;
+    tick(_e: Event$1): boolean;
+    draw(): void;
+    setTimeout(action: TimerFn, time: number): void;
+    clearTimeout(action: string | TimerFn): void;
+    addAnimation(a: Animation): void;
+    removeAnimation(a: Animation): void;
+    run(keymap?: IOMap, ms?: number): Promise<any>;
+    finish(result?: any): void;
+}
+
 interface ButtonOptions extends Omit<TextOptions, 'text'> {
     text?: string;
     id: string;
@@ -2779,9 +2776,9 @@ declare const index_d$1_ComputedStyle: typeof ComputedStyle;
 type index_d$1_Sheet = Sheet;
 declare const index_d$1_Sheet: typeof Sheet;
 declare const index_d$1_defaultStyle: typeof defaultStyle;
-type index_d$1_CanvasSource = CanvasSource;
 type index_d$1_StartCb = StartCb;
 type index_d$1_DrawCb = DrawCb;
+type index_d$1_EventCb = EventCb;
 type index_d$1_FinishCb = FinishCb;
 type index_d$1_LayerOptions = LayerOptions;
 type index_d$1_BufferStack = BufferStack;
@@ -2815,10 +2812,9 @@ declare namespace index_d$1 {
     index_d$1_ComputedStyle as ComputedStyle,
     index_d$1_Sheet as Sheet,
     index_d$1_defaultStyle as defaultStyle,
-    index_d$1_CanvasSource as CanvasSource,
     index_d$1_StartCb as StartCb,
     index_d$1_DrawCb as DrawCb,
-    EventCb$1 as EventCb,
+    index_d$1_EventCb as EventCb,
     index_d$1_FinishCb as FinishCb,
     index_d$1_LayerOptions as LayerOptions,
     index_d$1_BufferStack as BufferStack,
@@ -3231,7 +3227,7 @@ declare module './layer' {
 declare class Inquiry {
     widget: Choice;
     _prompts: Prompt[];
-    events: Record<string, EventCb[]>;
+    events: Record<string, EventCb$1[]>;
     _result: any;
     _stack: Prompt[];
     _current: Prompt | null;
@@ -3245,12 +3241,11 @@ declare class Inquiry {
     quit(): void;
     _keypress(_n: string, _w: Widget | null, e: Event$1): boolean;
     _change(_n: string, _w: Widget | null, p: Prompt): boolean;
-    on(event: string, cb: EventCb): this;
-    off(event: string, cb?: EventCb): this;
+    on(event: string, cb: EventCb$1): this;
+    off(event: string, cb?: EventCb$1): this;
     _fireEvent(name: string, source: Widget | null, args?: any): boolean;
 }
 
-type index_d_EventCb = EventCb;
 type index_d_WidgetOptions = WidgetOptions;
 type index_d_SetParentOptions = SetParentOptions;
 type index_d_Widget = Widget;
@@ -3356,7 +3351,7 @@ type index_d_Inquiry = Inquiry;
 declare const index_d_Inquiry: typeof Inquiry;
 declare namespace index_d {
   export {
-    index_d_EventCb as EventCb,
+    EventCb$1 as EventCb,
     index_d_WidgetOptions as WidgetOptions,
     index_d_SetParentOptions as SetParentOptions,
     index_d_Widget as Widget,
