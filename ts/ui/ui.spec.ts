@@ -13,9 +13,15 @@ describe('UI', () => {
         loop = canvas.loop;
     });
 
+    afterEach(() => {
+        loop.finish();
+    });
+
     test('construct', () => {
         const ui = new UI.UI({ loop, canvas: canvas });
         expect(ui.loop).toBe(loop);
         expect(ui.canvas).toBe(canvas);
+
+        ui.finish();
     });
 });

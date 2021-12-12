@@ -612,6 +612,12 @@ export class Loop implements Animator {
 
     constructor() {}
 
+    finish() {
+        this._stopTicks();
+        this.handlers.length = 0;
+        this.currentHandler = null;
+    }
+
     pushHandler(handler: EventQueue): void {
         if (!this.handlers.includes(handler)) {
             this.handlers.push(handler);

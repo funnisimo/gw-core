@@ -88,10 +88,13 @@ export function mockUI(width = 100, height = 38) {
     // @ts-ignore
     const canvas = bufferStack(width, height);
 
-    return new UI.UI({
+    const ui = new UI.UI({
         loop: canvas.loop,
         canvas: canvas as Canvas.BaseCanvas,
+        layer: false,
     });
+
+    return ui;
 }
 
 export function mockLayer(w: number, h: number): Layer.Layer {

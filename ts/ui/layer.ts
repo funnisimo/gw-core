@@ -45,6 +45,7 @@ export class Layer implements UILayer, Tween.Animator {
         this.ui = ui;
         this.buffer = ui.canvas.pushBuffer();
         this.io = new IO.Handler(ui.loop);
+        ui.pushLayer(this);
 
         // this.styles = new Style.Sheet(opts.styles || ui.styles);
     }

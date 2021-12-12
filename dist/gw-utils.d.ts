@@ -1195,6 +1195,7 @@ declare class Loop implements Animator {
     currentHandler: EventQueue | null;
     _tickInterval: number;
     constructor();
+    finish(): void;
     pushHandler(handler: EventQueue): void;
     popHandler(handler: EventQueue): void;
     enqueue(ev: Event$1): void;
@@ -2647,6 +2648,7 @@ declare module './layer' {
 interface UIOptions extends CanvasOptions {
     canvas?: BaseCanvas;
     loop?: Loop;
+    layer?: boolean;
 }
 interface AlertOptions extends DialogOptions {
     duration?: number;
@@ -2686,9 +2688,15 @@ declare class UI {
     canvas: BaseCanvas;
     loop: Loop;
     buffer: Buffer;
+    _layer?: Layer;
+    layers: Layer[];
     constructor(opts?: UIOptions);
     get width(): number;
     get height(): number;
+    finish(): void;
+    get layer(): Layer;
+    pushLayer(layer: Layer): void;
+    popLayer(layer: Layer): void;
     alert(text: string, args?: any): Promise<boolean>;
     alert(opts: AlertOptions | number, text: string, args?: any): Promise<boolean>;
     confirm(_text?: string | any, _args?: any): Promise<boolean>;

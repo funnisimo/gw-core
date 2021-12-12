@@ -4,6 +4,8 @@
 import * as IO from '../io';
 import * as Canvas from '../canvas';
 import * as Dialog from '../widget/dialog';
+import { Layer } from './layer';
+import * as Utils from '../utils';
 
 // import { defaultStyle, Sheet } from './style';
 // import { UICore, Layer, LayerOptions } from './layer';
@@ -13,6 +15,7 @@ import * as Dialog from '../widget/dialog';
 export interface UIOptions extends Canvas.CanvasOptions {
     canvas?: Canvas.BaseCanvas;
     loop?: IO.Loop;
+    layer?: boolean;
 }
 
 export interface AlertOptions extends Dialog.DialogOptions {
@@ -69,8 +72,8 @@ export class UI {
     loop: IO.Loop;
     buffer: Canvas.Buffer;
 
-    //     layer: Layer | null = null;
-    //     layers: Layer[] = [];
+    _layer?: Layer;
+    layers: Layer[] = [];
 
     //     // inDialog = false;
     //     _done = false;
@@ -89,6 +92,10 @@ export class UI {
             );
             this.canvas.node.parentElement.tabIndex = 1;
         }
+
+        if (opts.layer !== false) {
+            this._layer = new Layer(this);
+        }
     }
 
     get width(): number {
@@ -96,6 +103,27 @@ export class UI {
     }
     get height(): number {
         return this.canvas.height;
+    }
+
+    finish() {
+        if (this._layer) this._layer.finish();
+    }
+
+    get layer(): Layer {
+        return this._layer!;
+    }
+
+    pushLayer(layer: Layer) {
+        this.layers.push(layer);
+    }
+
+    popLayer(layer: Layer) {
+        if (layer === this.layers[0]) return;
+
+        Utils.arrayDelete(this.layers, layer);
+        if (layer === this._layer) {
+            this._layer = this.layers[this.layers.length - 1];
+        }
     }
 
     alert(text: string, args?: any): Promise<boolean>;
