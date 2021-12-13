@@ -1,15 +1,15 @@
 import * as Events from './events';
 
 describe('GW.events', () => {
-    test('constructor', () => {
+    test('Listener', () => {
         const fn = jest.fn();
         const ctx = {};
-        const a = new Events.Listener(fn, ctx, true);
+        const a = new Events.EventListener(fn, ctx, true);
         expect(a.fn).toBe(fn);
         expect(a.context).toBe(ctx);
         expect(a.once).toBeTruthy();
 
-        const b = new Events.Listener(fn);
+        const b = new Events.EventListener(fn);
         expect(b.fn).toBe(fn);
         expect(b.context).toBeNull();
         expect(b.once).toBeFalsy();
@@ -23,134 +23,145 @@ describe('GW.events', () => {
         expect(a.matches(fn2)).toBeFalsy();
     });
 
+    interface TestEvents {
+        test: (a: number, b: number, c: number) => void;
+        other: () => void;
+    }
+
+    let events: Events.EventEmitter<TestEvents>;
+
+    beforeEach(() => {
+        events = new Events.EventEmitter<TestEvents>();
+    });
+
     test('basic event', () => {
         const listener = jest.fn();
-        Events.on('test', listener);
-        Events.emit('test', 1, 2, 3);
-        expect(listener).toHaveBeenCalledWith('test', 1, 2, 3);
+        events.on('test', listener);
+        events.emit('test', 1, 2, 3);
+        expect(listener).toHaveBeenCalledWith(1, 2, 3);
     });
 
     test('handler must be function', () => {
         // @ts-ignore
-        expect(() => Events.addListener('test', 'test')).toThrow();
+        expect(() => events.addListener('test', 'test')).toThrow();
     });
 
     test('basic event removing', () => {
         const listener = jest.fn();
-        Events.on('test', listener);
-        Events.off('test', listener);
-        Events.emit('test', 1, 2, 3);
+        events.on('test', listener);
+        events.off('test', listener);
+        events.emit('test', 1, 2, 3);
         expect(listener).not.toHaveBeenCalled();
     });
 
     test('multiple calls', () => {
         const listener = jest.fn();
-        Events.on('test', listener);
-        Events.emit('test', 1, 2, 3);
-        Events.emit('test', 1, 2, 3);
+        events.on('test', listener);
+        events.emit('test', 1, 2, 3);
+        events.emit('test', 1, 2, 3);
         expect(listener).toHaveBeenCalledTimes(2);
 
-        expect(Events.emit('other')).toBeFalsy();
+        expect(events.emit('other')).toBeFalsy();
     });
 
     test('once', () => {
         const listener = jest.fn();
-        Events.on('test', listener, undefined, true);
-        Events.emit('test', 1, 2, 3);
-        Events.emit('test', 1, 2, 3);
+        events.on('test', listener, undefined, true);
+        events.emit('test', 1, 2, 3);
+        events.emit('test', 1, 2, 3);
         expect(listener).toHaveBeenCalledTimes(1);
     });
 
     test('multiple listeners', () => {
         const a = jest.fn();
-        Events.on('test', a);
+        events.on('test', a);
 
         const b = jest.fn();
-        Events.on('test', b);
+        events.on('test', b);
 
         const c = jest.fn();
-        Events.on('test', c);
+        events.on('test', c);
 
-        Events.emit('test', 1, 2, 3);
-        Events.emit('test', 1, 2, 3);
+        events.emit('test', 1, 2, 3);
+        events.emit('test', 1, 2, 3);
         expect(a).toHaveBeenCalledTimes(2);
         expect(b).toHaveBeenCalledTimes(2);
         expect(c).toHaveBeenCalledTimes(2);
 
         // @ts-ignore
-        expect(Events.removeListener('test')).toBeFalsy();
-        expect(Events.removeListener('test', a)).toBeTruthy();
-        expect(Events.removeListener('test', a)).toBeFalsy();
-        expect(Events.removeListener('test', c)).toBeTruthy();
-        expect(Events.removeListener('test', b)).toBeTruthy();
+        events.removeListener('test');
+        events.removeListener('test', a);
+        events.removeListener('test', a);
+        events.removeListener('test', c);
+        events.removeListener('test', b);
 
-        Events.clearEvent('test');
-        Events.clearEvent('other');
+        events.clearEvent('test');
+        events.clearEvent('other');
     });
 
     test('multiple listeners, some with once', () => {
         const a = jest.fn();
-        Events.on('test', a);
+        events.on('test', a);
 
         const b = jest.fn();
-        Events.once('test', b);
+        events.once('test', b);
 
         const c = jest.fn();
-        Events.on('test', c);
+        events.on('test', c);
 
-        Events.emit('test', 1, 2, 3);
-        Events.emit('test', 1, 2, 3);
+        events.emit('test', 1, 2, 3);
+        events.emit('test', 1, 2, 3);
         expect(a).toHaveBeenCalledTimes(2);
         expect(b).toHaveBeenCalledTimes(1);
         expect(c).toHaveBeenCalledTimes(2);
 
-        Events.clearEvent('test');
-        expect(Events.removeListener('test', a)).toBeFalsy();
-        expect(Events.removeListener('test', b)).toBeFalsy();
-        expect(Events.removeListener('test', c)).toBeFalsy();
+        events.clearEvent('test');
+        events.removeListener('test', a);
+        events.removeListener('test', b);
+        events.removeListener('test', c);
     });
 
     test('multiple listeners, first with once', () => {
         const a = jest.fn();
-        Events.once('test', a);
+        events.once('test', a);
 
         const b = jest.fn();
-        Events.on('test', b);
+        events.on('test', b);
 
         const c = jest.fn();
-        Events.once('test', c);
+        events.once('test', c);
 
-        Events.emit('test', 1, 2, 3);
-        Events.emit('test', 1, 2, 3);
+        events.emit('test', 1, 2, 3);
+        events.emit('test', 1, 2, 3);
         expect(a).toHaveBeenCalledTimes(1);
         expect(b).toHaveBeenCalledTimes(2);
         expect(c).toHaveBeenCalledTimes(1);
 
-        Events.removeAllListeners('test');
-        expect(Events.removeListener('test', a)).toBeFalsy();
-        expect(Events.removeListener('test', b)).toBeFalsy();
-        expect(Events.removeListener('test', c)).toBeFalsy();
+        events.removeAllListeners('test');
+        events.removeListener('test', a);
+        events.removeListener('test', b);
+        events.removeListener('test', c);
     });
 
     test('multiple  listeners', () => {
         const a = jest.fn().mockResolvedValue(true);
-        Events.on('test', a);
+        events.on('test', a);
 
         const b = jest.fn().mockResolvedValue(true);
-        Events.on('test', b);
+        events.on('test', b);
 
         const c = jest.fn().mockResolvedValue(true);
-        Events.on('test', c);
+        events.on('test', c);
 
-        Events.emit('test', 1, 2, 3);
-        Events.emit('test', 1, 2, 3);
+        events.emit('test', 1, 2, 3);
+        events.emit('test', 1, 2, 3);
         expect(a).toHaveBeenCalledTimes(2);
         expect(b).toHaveBeenCalledTimes(2);
         expect(c).toHaveBeenCalledTimes(2);
 
-        Events.removeAllListeners();
-        expect(Events.removeListener('test', a)).toBeFalsy();
-        expect(Events.removeListener('test', b)).toBeFalsy();
-        expect(Events.removeListener('test', c)).toBeFalsy();
+        events.removeAllListeners();
+        events.removeListener('test', a);
+        events.removeListener('test', b);
+        events.removeListener('test', c);
     });
 });

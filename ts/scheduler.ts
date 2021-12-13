@@ -1,7 +1,5 @@
-export type ScheduleFn = Function;
-
 interface Event {
-    fn: ScheduleFn | null;
+    item: any;
     time: number;
     next: Event | null;
 }
@@ -26,33 +24,33 @@ export class Scheduler {
         }
     }
 
-    push(fn: ScheduleFn, delay = 1) {
-        let item;
+    push(item: any, delay = 1) {
+        let entry;
         if (this.cache) {
-            item = this.cache;
-            this.cache = item.next;
-            item.next = null;
+            entry = this.cache;
+            this.cache = entry.next;
+            entry.next = null;
         } else {
-            item = { fn: null, time: 0, next: null };
+            entry = { item: null, time: 0, next: null };
         }
-        item.fn = fn;
-        item.time = this.time + delay;
+        entry.item = item;
+        entry.time = this.time + delay;
         if (!this.next) {
-            this.next = item;
+            this.next = entry;
         } else {
             let current = (this as unknown) as Event;
             let next = current.next;
-            while (next && next.time <= item.time) {
+            while (next && next.time <= entry.time) {
                 current = next;
                 next = current.next;
             }
-            item.next = current.next;
-            current.next = item;
+            entry.next = current.next;
+            current.next = entry;
         }
-        return item;
+        return entry;
     }
 
-    pop() {
+    pop(): any {
         const n = this.next;
         if (!n) return null;
 
@@ -61,23 +59,23 @@ export class Scheduler {
         this.cache = n;
 
         this.time = Math.max(n.time, this.time); // so you can schedule -1 as a time uint
-        return n.fn;
+        return n.item;
     }
 
-    remove(item: Event) {
+    remove(item: any) {
         if (!item || !this.next) return;
-        if (this.next === item) {
+        if (this.next.item === item) {
             this.next = item.next;
             return;
         }
         let prev = this.next;
         let current = prev.next;
-        while (current && current !== item) {
+        while (current && current.item !== item) {
             prev = current;
             current = current.next;
         }
 
-        if (current === item) {
+        if (current && current.item === item) {
             prev.next = current.next;
         }
     }
