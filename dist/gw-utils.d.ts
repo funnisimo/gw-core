@@ -1849,6 +1849,7 @@ declare namespace index_d$5 {
 declare const FORBIDDEN = -1;
 declare const OBSTRUCTION = -2;
 declare const AVOIDED = 10;
+declare const OK = 1;
 declare const NO_PATH = 30000;
 declare type BlockedFn = (
     toX: number,
@@ -1861,6 +1862,12 @@ declare function calculateDistances(
     distanceMap: NumGrid,
     destinationX: number,
     destinationY: number,
+    costMap: NumGrid,
+    eightWays?: boolean,
+    maxDistance?: number
+): void;
+declare function rescan(
+    distanceMap: NumGrid,
     costMap: NumGrid,
     eightWays?: boolean,
     maxDistance?: number
@@ -1883,9 +1890,11 @@ declare function getPath(
 declare const path_d_FORBIDDEN: typeof FORBIDDEN;
 declare const path_d_OBSTRUCTION: typeof OBSTRUCTION;
 declare const path_d_AVOIDED: typeof AVOIDED;
+declare const path_d_OK: typeof OK;
 declare const path_d_NO_PATH: typeof NO_PATH;
 type path_d_BlockedFn = BlockedFn;
 declare const path_d_calculateDistances: typeof calculateDistances;
+declare const path_d_rescan: typeof rescan;
 declare const path_d_nextStep: typeof nextStep;
 declare const path_d_getPath: typeof getPath;
 declare namespace path_d {
@@ -1893,9 +1902,11 @@ declare namespace path_d {
         path_d_FORBIDDEN as FORBIDDEN,
         path_d_OBSTRUCTION as OBSTRUCTION,
         path_d_AVOIDED as AVOIDED,
+        path_d_OK as OK,
         path_d_NO_PATH as NO_PATH,
         path_d_BlockedFn as BlockedFn,
         path_d_calculateDistances as calculateDistances,
+        path_d_rescan as rescan,
         path_d_nextStep as nextStep,
         path_d_getPath as getPath,
     };

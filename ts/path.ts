@@ -4,6 +4,7 @@ import * as XY from './xy';
 export const FORBIDDEN = -1;
 export const OBSTRUCTION = -2;
 export const AVOIDED = 10;
+export const OK = 1;
 export const NO_PATH = 30000;
 
 export type BlockedFn = (
@@ -172,6 +173,98 @@ function isBoundaryXY(data: Grid.NumGrid, x: number, y: number) {
     return false;
 }
 
+function batchInput(
+    map: DijkstraMap,
+    distanceMap: Grid.NumGrid,
+    costMap: Grid.NumGrid,
+    eightWays = false,
+    maxDistance = NO_PATH
+) {
+    let i, j;
+
+    map.eightWays = eightWays;
+
+    let left: CostLink | null = null;
+    let right: CostLink | null = null;
+
+    map.front.right = null;
+    for (i = 0; i < distanceMap.width; i++) {
+        for (j = 0; j < distanceMap.height; j++) {
+            let link = getLink(map, i, j);
+
+            if (distanceMap) {
+                link.distance = distanceMap[i][j];
+            } else {
+                if (costMap) {
+                    // totally hackish; refactor
+                    link.distance = maxDistance;
+                }
+            }
+
+            let cost;
+
+            if (
+                i == 0 ||
+                j == 0 ||
+                i == distanceMap.width - 1 ||
+                j == distanceMap.height - 1
+            ) {
+                cost = OBSTRUCTION;
+                // }
+                // else if (costMap === null) {
+                //     if (
+                //         cellHasEntityFlag(i, j, L_BLOCKS_MOVE) &&
+                //         cellHasEntityFlag(i, j, L_BLOCKS_DIAGONAL)
+                //     ) {
+                //         cost = OBSTRUCTION;
+                //     } else {
+                //         cost = FORBIDDEN;
+                //     }
+            } else {
+                cost = costMap[i][j];
+            }
+
+            link.cost = cost;
+
+            if (cost > 0) {
+                if (link.distance < maxDistance) {
+                    // @ts-ignore
+                    if (right === null || right.distance > link.distance) {
+                        // left and right are used to traverse the list; if many cells have similar values,
+                        // some time can be saved by not clearing them with each insertion.  this time,
+                        // sadly, we have to start from the front.
+
+                        left = map.front;
+                        right = map.front.right;
+                    }
+
+                    // @ts-ignore
+                    while (right !== null && right.distance < link.distance) {
+                        left = right;
+                        // @ts-ignore
+                        right = right.right;
+                    }
+
+                    link.right = right;
+                    link.left = left;
+                    // @ts-ignore
+                    left.right = link;
+                    // @ts-ignore
+                    if (right !== null) right.left = link;
+
+                    left = link;
+                } else {
+                    link.right = null;
+                    link.left = null;
+                }
+            } else {
+                link.right = null;
+                link.left = null;
+            }
+        }
+    }
+}
+
 function batchOutput(map: DijkstraMap, distanceMap: Grid.NumGrid) {
     let i, j;
 
@@ -226,6 +319,17 @@ export function calculateDistances(
     // TODO - Add this where called!
     //   distanceMap.x = destinationX;
     //   distanceMap.y = destinationY;
+}
+
+export function rescan(
+    distanceMap: Grid.NumGrid,
+    costMap: Grid.NumGrid,
+    eightWays = false,
+    maxDistance = NO_PATH
+) {
+    if (!DIJKSTRA_MAP) throw new Error('You must scan the map first.');
+    batchInput(DIJKSTRA_MAP, distanceMap, costMap, eightWays, maxDistance);
+    batchOutput(DIJKSTRA_MAP, distanceMap);
 }
 
 // Returns null if there are no beneficial moves.
