@@ -115,6 +115,7 @@ export class UI {
 
     pushLayer(layer: Layer) {
         this.layers.push(layer);
+        this._layer = layer;
     }
 
     popLayer(layer: Layer) {
@@ -123,6 +124,7 @@ export class UI {
         Utils.arrayDelete(this.layers, layer);
         if (layer === this._layer) {
             this._layer = this.layers[this.layers.length - 1];
+            this._layer.needsDraw = true;
         }
     }
 

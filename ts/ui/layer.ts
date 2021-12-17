@@ -73,23 +73,23 @@ export class Layer implements UILayer, Tween.Animator {
     //     return this;
     // }
 
-    mousemove(_e: IO.Event): boolean {
+    mousemove(_e: IO.Event): boolean | Promise<boolean> {
         return false;
     }
 
-    click(_e: IO.Event): boolean {
+    click(_e: IO.Event): boolean | Promise<boolean> {
         return false;
     }
 
-    keypress(_e: IO.Event): boolean {
+    keypress(_e: IO.Event): boolean | Promise<boolean> {
         return false;
     }
 
-    dir(_e: IO.Event): boolean {
+    dir(_e: IO.Event): boolean | Promise<boolean> {
         return false;
     }
 
-    tick(_e: IO.Event): boolean {
+    tick(_e: IO.Event): boolean | Promise<boolean> {
         // const dt = e.dt;
 
         // // fire animations
@@ -116,8 +116,8 @@ export class Layer implements UILayer, Tween.Animator {
 
     // LOOP
 
-    setTimeout(action: IO.TimerFn, time: number) {
-        this.io.setTimeout(action, time);
+    setTimeout(action: IO.TimerFn, time: number): IO.TimerFn {
+        return this.io.setTimeout(action, time);
         // const slot = this.timers.findIndex((t) => t.time <= 0);
         // if (slot < 0) {
         //     this.timers.push({ action, time });
@@ -126,7 +126,7 @@ export class Layer implements UILayer, Tween.Animator {
         // }
     }
 
-    clearTimeout(action: string | IO.TimerFn) {
+    clearTimeout(action: IO.TimerFn) {
         this.io.clearTimeout(action);
         // const timer = this.timers.find((t) => t.action === action);
         // if (timer) {
@@ -159,7 +159,7 @@ export class Layer implements UILayer, Tween.Animator {
     finish(result?: any) {
         this.io.finish(result);
         this.ui.canvas.popBuffer();
-        this.ui.loop.popHandler(this.io);
-        this.ui.canvas.buffer.render(); // redraw old buffer
+        this.ui.popLayer(this);
+        // this.ui.loop.popHandler(this.io);
     }
 }

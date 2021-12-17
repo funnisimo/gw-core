@@ -149,7 +149,7 @@ export class Glyphs {
         }
 
         [
-            ' ',
+            ' ', // empty
             '\u263a', // smiley hollow
             '\u263b', // smiley filled
             '\u2665', // hearts
@@ -164,9 +164,9 @@ export class Glyphs {
             '\u2219', // bullet square
             '\u2043', // bullet hyphen
             '\u2022', // bullet circle
-            '\u2690', // flag hollow
+            '\u2630', // trigram - hamburger menu
+            '\u2637', // trigram split
 
-            '\u2691', // flag filled
             '\u2610', // unchecked
             '\u2611', // checked
             '\u2612', // checked - with X

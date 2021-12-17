@@ -3,7 +3,14 @@ import * as XY from './xy';
 import * as Queue from './queue';
 import { Animator, Animation } from './tween';
 
-export class Event {
+export interface EventType {
+    type: string;
+    dir?: XY.Loc | null;
+    key?: string;
+    code?: string;
+}
+
+export class Event implements EventType {
     type!: string;
     source: any = null; // original sourcing information
     target: any = null; // current handler information
@@ -119,12 +126,12 @@ export function setKeymap(keymap: IOMap) {
     IOMAP = keymap;
 }
 
-export function handlerFor(ev: Event, km: Record<string, any>): any | null {
+export function handlerFor(ev: EventType, km: Record<string, any>): any | null {
     let c;
     if (ev.dir) {
         c = km.dir || km.keypress;
     } else if (ev.type === KEYPRESS) {
-        c = km[ev.key] || km[ev.code] || km.keypress;
+        c = km[ev.key!] || km[ev.code!] || km.keypress;
     } else if (km[ev.type]) {
         c = km[ev.type];
     }
@@ -286,10 +293,10 @@ export function makeMouseEvent(e: MouseEvent, x: number, y: number) {
 
 ////////////////////////////////
 // HANDLER
-export interface EventQueue extends Animator {
-    enqueue(ev: Event): void;
-    clearEvents(): void;
-}
+// export interface EventQueue extends Animator {
+//     enqueue(ev: Event): void;
+//     clearEvents(): void;
+// }
 
 export type TimerFn = () => void;
 
@@ -313,12 +320,13 @@ export interface IOHandler {
     finish(r: any): void;
 }
 
-export class Handler implements IOHandler, EventQueue, Animator {
+export class Handler implements IOHandler, Animator {
     _running = false;
     _events: Queue.AsyncQueue<Event> = new Queue.AsyncQueue<Event>();
     _result: any = undefined;
     _tweens: Animation[] = [];
     _timers: TimerInfo[] = [];
+    _loop: Loop | null = null;
 
     mouse: XY.XY = { x: -1, y: -1 };
     lastClick: XY.XY = { x: -1, y: -1 };
@@ -446,7 +454,7 @@ export class Handler implements IOHandler, EventQueue, Animator {
         this._running = false;
         this._result = result;
         this.enqueue(makeStopEvent());
-        popHandler(this);
+        if (this._loop) this._loop.popHandler(this);
     }
 
     // IO
@@ -505,16 +513,17 @@ export class Handler implements IOHandler, EventQueue, Animator {
 
     // Timers
 
-    setTimeout(action: TimerFn, time: number) {
+    setTimeout(action: TimerFn, time: number): TimerFn {
         const slot = this._timers.findIndex((t) => t.time <= 0);
         if (slot < 0) {
             this._timers.push({ action, time });
         } else {
             this._timers[slot] = { action, time };
         }
+        return action;
     }
 
-    clearTimeout(action: string | TimerFn) {
+    clearTimeout(action: TimerFn) {
         const timer = this._timers.find((t) => t.action === action);
         if (timer) {
             timer.time = -1;
@@ -538,10 +547,13 @@ export class Handler implements IOHandler, EventQueue, Animator {
     }
 }
 
-export function make(andPush = true): Handler {
+export function make(andPush: boolean | Loop = true): Handler {
     const handler = new Handler();
     if (andPush) {
-        pushHandler(handler);
+        if (andPush === true) {
+            andPush = loop;
+        }
+        loop.pushHandler(handler);
     }
     return handler;
 }
@@ -600,14 +612,14 @@ export async function waitForAck(): Promise<boolean> {
 // LOOP
 
 export interface IOLoop {
-    pushHandler(handler: EventQueue): void;
-    popHandler(handler: EventQueue): void;
+    pushHandler(handler: Handler): void;
+    popHandler(handler: Handler): void;
     enqueue(ev: Event): void;
 }
 
 export class Loop implements Animator {
-    handlers: EventQueue[] = [];
-    currentHandler: EventQueue | null = null;
+    handlers: Handler[] = [];
+    currentHandler: Handler | null = null;
     _tickInterval = 0;
 
     constructor() {}
@@ -618,15 +630,17 @@ export class Loop implements Animator {
         this.currentHandler = null;
     }
 
-    pushHandler(handler: EventQueue): void {
+    pushHandler(handler: Handler): void {
         if (!this.handlers.includes(handler)) {
             this.handlers.push(handler);
         }
         this.currentHandler = handler;
+        handler._loop = this;
         this._startTicks();
     }
-    popHandler(handler: EventQueue): void {
+    popHandler(handler: Handler): void {
         Utils.arrayDelete(this.handlers, handler);
+        handler._loop = null;
         this.currentHandler = this.handlers[this.handlers.length - 1] || null;
         if (!this.currentHandler) {
             this._stopTicks();
@@ -681,11 +695,11 @@ export class Loop implements Animator {
 
 export const loop = new Loop();
 
-export function pushHandler(handler: EventQueue) {
+export function pushHandler(handler: Handler) {
     loop.pushHandler(handler);
 }
 
-export function popHandler(handler: EventQueue) {
+export function popHandler(handler: Handler) {
     loop.popHandler(handler);
 }
 

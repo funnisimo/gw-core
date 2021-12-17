@@ -3971,6 +3971,7 @@ class Handler {
         this._result = undefined;
         this._tweens = [];
         this._timers = [];
+        this._loop = null;
         this.mouse = { x: -1, y: -1 };
         this.lastClick = { x: -1, y: -1 };
         if (loop) {
@@ -4082,7 +4083,8 @@ class Handler {
         this._running = false;
         this._result = result;
         this.enqueue(makeStopEvent());
-        popHandler(this);
+        if (this._loop)
+            this._loop.popHandler(this);
     }
     // IO
     // async tickMs(ms = 1) {
@@ -4141,6 +4143,7 @@ class Handler {
         else {
             this._timers[slot] = { action, time };
         }
+        return action;
     }
     clearTimeout(action) {
         const timer = this._timers.find((t) => t.action === action);
@@ -4166,7 +4169,10 @@ class Handler {
 function make$7(andPush = true) {
     const handler = new Handler();
     if (andPush) {
-        pushHandler(handler);
+        if (andPush === true) {
+            andPush = loop;
+        }
+        loop.pushHandler(handler);
     }
     return handler;
 }
@@ -4223,10 +4229,12 @@ class Loop {
             this.handlers.push(handler);
         }
         this.currentHandler = handler;
+        handler._loop = this;
         this._startTicks();
     }
     popHandler(handler) {
         arrayDelete(this.handlers, handler);
+        handler._loop = null;
         this.currentHandler = this.handlers[this.handlers.length - 1] || null;
         if (!this.currentHandler) {
             this._stopTicks();
@@ -5648,8 +5656,8 @@ class Glyphs {
             '\u2219',
             '\u2043',
             '\u2022',
-            '\u2690',
-            '\u2691',
+            '\u2630',
+            '\u2637',
             '\u2610',
             '\u2611',
             '\u2612',
@@ -8102,7 +8110,7 @@ class Layer {
     }
     // LOOP
     setTimeout(action, time) {
-        this.io.setTimeout(action, time);
+        return this.io.setTimeout(action, time);
         // const slot = this.timers.findIndex((t) => t.time <= 0);
         // if (slot < 0) {
         //     this.timers.push({ action, time });
@@ -8136,8 +8144,8 @@ class Layer {
     finish(result) {
         this.io.finish(result);
         this.ui.canvas.popBuffer();
-        this.ui.loop.popHandler(this.io);
-        this.ui.canvas.buffer.render(); // redraw old buffer
+        this.ui.popLayer(this);
+        // this.ui.loop.popHandler(this.io);
     }
 }
 
@@ -8176,6 +8184,7 @@ class UI {
     }
     pushLayer(layer) {
         this.layers.push(layer);
+        this._layer = layer;
     }
     popLayer(layer) {
         if (layer === this.layers[0])
@@ -8183,6 +8192,7 @@ class UI {
         arrayDelete(this.layers, layer);
         if (layer === this._layer) {
             this._layer = this.layers[this.layers.length - 1];
+            this._layer.needsDraw = true;
         }
     }
     alert(..._args) {

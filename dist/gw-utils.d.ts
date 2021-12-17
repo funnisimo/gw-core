@@ -1427,7 +1427,13 @@ declare namespace tween_d {
     };
 }
 
-declare class Event$1 {
+interface EventType {
+    type: string;
+    dir?: Loc$1 | null;
+    key?: string;
+    code?: string;
+}
+declare class Event$1 implements EventType {
     type: string;
     source: any;
     target: any;
@@ -1465,7 +1471,7 @@ declare const TICK = 'tick';
 declare const MOUSEUP = 'mouseup';
 declare const STOP = 'stop';
 declare function setKeymap(keymap: IOMap): void;
-declare function handlerFor(ev: Event$1, km: Record<string, any>): any | null;
+declare function handlerFor(ev: EventType, km: Record<string, any>): any | null;
 declare function dispatchEvent(
     ev: Event$1,
     km: IOMap,
@@ -1481,10 +1487,6 @@ declare function makeKeyEvent(e: KeyboardEvent): Event$1;
 declare function keyCodeDirection(key: string): Loc$1 | null;
 declare function ignoreKeyEvent(e: KeyboardEvent): boolean;
 declare function makeMouseEvent(e: MouseEvent, x: number, y: number): Event$1;
-interface EventQueue extends Animator {
-    enqueue(ev: Event$1): void;
-    clearEvents(): void;
-}
 declare type TimerFn = () => void;
 interface TimerInfo {
     action: TimerFn;
@@ -1502,12 +1504,13 @@ interface IOHandler {
     run(keymap: IOMap, thisArg?: any): Promise<any>;
     finish(r: any): void;
 }
-declare class Handler implements IOHandler, EventQueue, Animator {
+declare class Handler implements IOHandler, Animator {
     _running: boolean;
     _events: AsyncQueue<Event$1>;
     _result: any;
     _tweens: Animation[];
     _timers: TimerInfo[];
+    _loop: Loop | null;
     mouse: XY;
     lastClick: XY;
     constructor(loop?: Loop);
@@ -1528,11 +1531,11 @@ declare class Handler implements IOHandler, EventQueue, Animator {
     waitForAck(): Promise<boolean>;
     addAnimation(a: Animation): void;
     removeAnimation(a: Animation): void;
-    setTimeout(action: TimerFn, time: number): void;
-    clearTimeout(action: string | TimerFn): void;
+    setTimeout(action: TimerFn, time: number): TimerFn;
+    clearTimeout(action: TimerFn): void;
     _tick(dt: number): boolean;
 }
-declare function make$6(andPush?: boolean): Handler;
+declare function make$6(andPush?: boolean | Loop): Handler;
 declare function nextEvent(ms?: number): Promise<Event$1 | null>;
 declare function nextTick(ms?: number): Promise<Event$1 | null>;
 declare function nextKeyOrClick(
@@ -1546,18 +1549,18 @@ declare function nextKeyPress(
 declare function pause(ms: number): Promise<boolean>;
 declare function waitForAck(): Promise<boolean>;
 interface IOLoop {
-    pushHandler(handler: EventQueue): void;
-    popHandler(handler: EventQueue): void;
+    pushHandler(handler: Handler): void;
+    popHandler(handler: Handler): void;
     enqueue(ev: Event$1): void;
 }
 declare class Loop implements Animator {
-    handlers: EventQueue[];
-    currentHandler: EventQueue | null;
+    handlers: Handler[];
+    currentHandler: Handler | null;
     _tickInterval: number;
     constructor();
     finish(): void;
-    pushHandler(handler: EventQueue): void;
-    popHandler(handler: EventQueue): void;
+    pushHandler(handler: Handler): void;
+    popHandler(handler: Handler): void;
     enqueue(ev: Event$1): void;
     _startTicks(): void;
     _stopTicks(): void;
@@ -1566,10 +1569,11 @@ declare class Loop implements Animator {
     removeAnimation(a: Animation): void;
 }
 declare const loop: Loop;
-declare function pushHandler(handler: EventQueue): void;
-declare function popHandler(handler: EventQueue): void;
+declare function pushHandler(handler: Handler): void;
+declare function popHandler(handler: Handler): void;
 declare function enqueue(ev: Event$1): void;
 
+type io_d_EventType = EventType;
 type io_d_ControlFn = ControlFn;
 type io_d_IOMap = IOMap;
 type io_d_EventMatchFn = EventMatchFn;
@@ -1589,7 +1593,6 @@ declare const io_d_makeKeyEvent: typeof makeKeyEvent;
 declare const io_d_keyCodeDirection: typeof keyCodeDirection;
 declare const io_d_ignoreKeyEvent: typeof ignoreKeyEvent;
 declare const io_d_makeMouseEvent: typeof makeMouseEvent;
-type io_d_EventQueue = EventQueue;
 type io_d_TimerFn = TimerFn;
 type io_d_TimerInfo = TimerInfo;
 type io_d_IOHandler = IOHandler;
@@ -1610,6 +1613,7 @@ declare const io_d_popHandler: typeof popHandler;
 declare const io_d_enqueue: typeof enqueue;
 declare namespace io_d {
     export {
+        io_d_EventType as EventType,
         Event$1 as Event,
         io_d_ControlFn as ControlFn,
         EventFn$1 as EventFn,
@@ -1631,7 +1635,6 @@ declare namespace io_d {
         io_d_keyCodeDirection as keyCodeDirection,
         io_d_ignoreKeyEvent as ignoreKeyEvent,
         io_d_makeMouseEvent as makeMouseEvent,
-        io_d_EventQueue as EventQueue,
         io_d_TimerFn as TimerFn,
         io_d_TimerInfo as TimerInfo,
         io_d_IOHandler as IOHandler,
@@ -2760,11 +2763,11 @@ interface UILayer {
     readonly width: number;
     readonly height: number;
     finish(result?: any): void;
-    click(e: Event$1): boolean;
-    mousemove(e: Event$1): boolean;
-    keypress(e: Event$1): boolean;
-    dir(e: Event$1): boolean;
-    tick(e: Event$1): boolean;
+    click(e: Event$1): boolean | Promise<boolean>;
+    mousemove(e: Event$1): boolean | Promise<boolean>;
+    keypress(e: Event$1): boolean | Promise<boolean>;
+    dir(e: Event$1): boolean | Promise<boolean>;
+    tick(e: Event$1): boolean | Promise<boolean>;
     draw(): void;
     needsDraw: boolean;
 }
@@ -3296,14 +3299,14 @@ declare class Layer implements UILayer, Animator {
     constructor(ui: UI, _opts?: LayerOptions);
     get width(): number;
     get height(): number;
-    mousemove(_e: Event$1): boolean;
-    click(_e: Event$1): boolean;
-    keypress(_e: Event$1): boolean;
-    dir(_e: Event$1): boolean;
-    tick(_e: Event$1): boolean;
+    mousemove(_e: Event$1): boolean | Promise<boolean>;
+    click(_e: Event$1): boolean | Promise<boolean>;
+    keypress(_e: Event$1): boolean | Promise<boolean>;
+    dir(_e: Event$1): boolean | Promise<boolean>;
+    tick(_e: Event$1): boolean | Promise<boolean>;
     draw(): void;
-    setTimeout(action: TimerFn, time: number): void;
-    clearTimeout(action: string | TimerFn): void;
+    setTimeout(action: TimerFn, time: number): TimerFn;
+    clearTimeout(action: TimerFn): void;
     addAnimation(a: Animation): void;
     removeAnimation(a: Animation): void;
     run(keymap?: IOMap, ms?: number): Promise<any>;
