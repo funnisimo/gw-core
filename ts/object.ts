@@ -203,7 +203,7 @@ export function firstOpt(field: string, ...args: any[]) {
         if (typeof arg !== 'object' || Array.isArray(arg)) {
             return arg;
         }
-        if (arg[field] !== undefined) {
+        if (arg && arg[field] !== undefined) {
             return arg[field];
         }
     }

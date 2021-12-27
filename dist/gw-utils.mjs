@@ -939,7 +939,7 @@ function firstOpt(field, ...args) {
         if (typeof arg !== 'object' || Array.isArray(arg)) {
             return arg;
         }
-        if (arg[field] !== undefined) {
+        if (arg && arg[field] !== undefined) {
             return arg[field];
         }
     }
@@ -5117,19 +5117,21 @@ function rescan(distanceMap, costMap, eightWays = false, maxDistance = NO_PATH) 
 // a cell that the monster avoids.
 function nextStep(distanceMap, x, y, isBlocked, useDiagonals = false) {
     let newX, newY, bestScore;
-    let dir, bestDir;
-    let blocked;
+    let dir;
     // brogueAssert(coordinatesAreInMap(x, y));
     bestScore = 0;
-    bestDir = NO_DIRECTION;
+    let bestDir = NO_DIRECTION;
+    const dist = distanceMap[x][y];
     for (dir = 0; dir < (useDiagonals ? 8 : 4); ++dir) {
         newX = x + DIRS$2[dir][0];
         newY = y + DIRS$2[dir][1];
-        blocked = isBlocked(newX, newY, x, y, distanceMap);
-        if (!blocked &&
-            distanceMap[x][y] - distanceMap[newX][newY] > bestScore) {
-            bestDir = dir;
-            bestScore = distanceMap[x][y] - distanceMap[newX][newY];
+        const newDist = distanceMap[newX][newY];
+        if (newDist < dist) {
+            const diff = dist - newDist;
+            if (diff > bestScore && !isBlocked(newX, newY, x, y, distanceMap)) {
+                bestDir = dir;
+                bestScore = diff;
+            }
         }
     }
     return DIRS$2[bestDir] || null;

@@ -345,26 +345,24 @@ export function nextStep(
     useDiagonals = false
 ) {
     let newX, newY, bestScore;
-    let dir, bestDir;
-    let blocked;
+    let dir;
 
     // brogueAssert(coordinatesAreInMap(x, y));
 
     bestScore = 0;
-    bestDir = XY.NO_DIRECTION;
+    let bestDir = XY.NO_DIRECTION;
 
+    const dist = distanceMap[x][y];
     for (dir = 0; dir < (useDiagonals ? 8 : 4); ++dir) {
         newX = x + XY.DIRS[dir][0];
         newY = y + XY.DIRS[dir][1];
-
-        blocked = isBlocked(newX, newY, x, y, distanceMap);
-
-        if (
-            !blocked &&
-            distanceMap[x][y] - distanceMap[newX][newY] > bestScore
-        ) {
-            bestDir = dir;
-            bestScore = distanceMap[x][y] - distanceMap[newX][newY];
+        const newDist = distanceMap[newX][newY];
+        if (newDist < dist) {
+            const diff = dist - newDist;
+            if (diff > bestScore && !isBlocked(newX, newY, x, y, distanceMap)) {
+                bestDir = dir;
+                bestScore = diff;
+            }
         }
     }
     return XY.DIRS[bestDir] || null;
