@@ -142,7 +142,7 @@ export class Color {
         } else {
             H = 60 * (6 - (B - G) / (R - G));
         }
-        return Math.round(H);
+        return Math.round(H) || 0;
     }
 
     equals(other: Color | ColorBase) {

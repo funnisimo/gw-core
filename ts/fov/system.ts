@@ -18,10 +18,10 @@ export interface FovNoticer {
 }
 
 export interface FovSystemOptions {
-    revealed: boolean;
-    visible: boolean;
-    alwaysVisible: boolean;
-    callback: FovChangeFn | FovNoticer;
+    revealed?: boolean;
+    visible?: boolean;
+    alwaysVisible?: boolean;
+    callback?: FovChangeFn | FovNoticer;
 }
 
 export class FovSystem implements TYPES.FovTracker {
@@ -33,7 +33,7 @@ export class FovSystem implements TYPES.FovTracker {
     protected _callback: FovChangeFn = NOOP;
     follow: FovSubject | null = null;
 
-    constructor(site: TYPES.FovSite, opts: Partial<FovSystemOptions> = {}) {
+    constructor(site: TYPES.FovSite, opts: FovSystemOptions = {}) {
         this.site = site;
 
         let flag = 0;
@@ -134,33 +134,34 @@ export class FovSystem implements TYPES.FovTracker {
     }
 
     makeAlwaysVisible() {
-        this.flags.update(
-            (v) =>
-                v |
-                (FovFlags.ALWAYS_VISIBLE | FovFlags.REVEALED | FovFlags.VISIBLE)
-        );
-        // TODO - onFovChange?
         this.changed = true;
+        this.flags.forEach((_v, x, y) => {
+            this.flags[x][y] |=
+                FovFlags.ALWAYS_VISIBLE | FovFlags.REVEALED | FovFlags.VISIBLE;
+            this.callback(x, y, true);
+        });
     }
     makeCellAlwaysVisible(x: number, y: number) {
+        this.changed = true;
         this.flags[x][y] |=
             FovFlags.ALWAYS_VISIBLE | FovFlags.REVEALED | FovFlags.VISIBLE;
-        // TODO - onFovChange?
-        this.changed = true;
+        this.callback(x, y, true);
     }
 
     revealAll(makeVisibleToo = true): void {
         const flag =
             FovFlags.REVEALED | (makeVisibleToo ? FovFlags.VISIBLE : 0);
         this.flags.update((v) => v | flag);
-        // TODO - onFovChange?
+        this.flags.forEach((v, x, y) => {
+            this.callback(x, y, !!(v & FovFlags.VISIBLE));
+        });
         this.changed = true;
     }
     revealCell(x: number, y: number, makeVisibleToo = true) {
         const flag =
             FovFlags.REVEALED | (makeVisibleToo ? FovFlags.VISIBLE : 0);
         this.flags[x][y] |= flag;
-        // TODO - onFovChange?
+        this.callback(x, y, !!(flag & FovFlags.VISIBLE));
         this.changed = true;
     }
     hideCell(x: number, y: number): void {
@@ -170,18 +171,21 @@ export class FovSystem implements TYPES.FovTracker {
             FovFlags.ALWAYS_VISIBLE
         );
         this.flags[x][y] = this.demoteCellVisibility(this.flags[x][y]); // clears visible, etc...
-        // TODO - onFovChange?
+        this.callback(x, y, false);
+
         this.changed = true;
     }
     magicMapCell(x: number, y: number): void {
         this.flags[x][y] |= FovFlags.MAGIC_MAPPED;
         this.changed = true;
-        // TODO - onFovChange?
+        this.callback(x, y, true);
     }
     reset() {
         this.flags.fill(0);
         this.changed = true;
-        // TODO - onFovChange?
+        this.flags.forEach((_v, x, y) => {
+            this.callback(x, y, false);
+        });
     }
 
     // get changed(): boolean {
@@ -250,7 +254,11 @@ export class FovSystem implements TYPES.FovTracker {
     // UPDATE
 
     protected demoteCellVisibility(flag: number): number {
-        flag &= ~(FovFlags.WAS_ANY_KIND_OF_VISIBLE | FovFlags.WAS_IN_FOV | FovFlags.WAS_DETECTED);
+        flag &= ~(
+            FovFlags.WAS_ANY_KIND_OF_VISIBLE |
+            FovFlags.WAS_IN_FOV |
+            FovFlags.WAS_DETECTED
+        );
 
         if (flag & FovFlags.IN_FOV) {
             flag &= ~FovFlags.IN_FOV;
@@ -297,7 +305,7 @@ export class FovSystem implements TYPES.FovTracker {
             // }
         } else if (isVisible && !wasVisible) {
             // if the cell became visible this move
-                this.flags[x][y] |= FovFlags.REVEALED;
+            this.flags[x][y] |= FovFlags.REVEALED;
             this._callback(x, y, isVisible);
         } else if (!isVisible && wasVisible) {
             // if the cell ceased being visible this move

@@ -317,8 +317,8 @@ export function calculateDistances(
     setDistance(DIJKSTRA_MAP, destinationX, destinationY, 0);
     batchOutput(DIJKSTRA_MAP, distanceMap);
     // TODO - Add this where called!
-    //   distanceMap.x = destinationX;
-    //   distanceMap.y = destinationY;
+    distanceMap.x = destinationX;
+    distanceMap.y = destinationY;
 }
 
 export function rescan(
@@ -414,30 +414,27 @@ export function getPath(
     // actor = actor || GW.PLAYER;
     let x = originX;
     let y = originY;
-    let steps = 0;
 
     if (distanceMap[x][y] < 0 || distanceMap[x][y] >= NO_PATH) {
         const loc = getClosestValidLocationOnMap(distanceMap, x, y);
-        if (loc) {
-            x = loc[0];
-            y = loc[1];
-        }
+        if (!loc) return null;
+        x = loc[0];
+        y = loc[1];
     }
 
-    const path: XY.Loc[] = [[x, y]];
+    const path: XY.Loc[] = [];
     let dir;
     do {
         dir = nextStep(distanceMap, x, y, isBlocked, eightWays);
         if (dir) {
+            path.push([x, y]);
             x += dir[0];
             y += dir[1];
             // path[steps][0] = x;
             // path[steps][1] = y;
-            path.push([x, y]);
-            steps++;
             // brogueAssert(coordinatesAreInMap(x, y));
         }
     } while (dir);
 
-    return steps ? path : null;
+    return path.length ? path : null;
 }

@@ -1389,10 +1389,10 @@ interface FovNoticer {
     onFovChange: FovChangeFn;
 }
 interface FovSystemOptions {
-    revealed: boolean;
-    visible: boolean;
-    alwaysVisible: boolean;
-    callback: FovChangeFn | FovNoticer;
+    revealed?: boolean;
+    visible?: boolean;
+    alwaysVisible?: boolean;
+    callback?: FovChangeFn | FovNoticer;
 }
 declare class FovSystem implements FovTracker {
     site: FovSite;
@@ -1401,7 +1401,7 @@ declare class FovSystem implements FovTracker {
     changed: boolean;
     protected _callback: FovChangeFn;
     follow: FovSubject | null;
-    constructor(site: FovSite, opts?: Partial<FovSystemOptions>);
+    constructor(site: FovSite, opts?: FovSystemOptions);
     get callback(): FovChangeFn;
     set callback(v: FovChangeFn | FovNoticer | null);
     getFlag(x: number, y: number): FovFlags;
@@ -2092,7 +2092,7 @@ interface StaticLightInfo {
     next: StaticLightInfo | null;
 }
 interface LightSystemOptions {
-    ambient: ColorBase | LightValue;
+    ambient?: ColorBase | LightValue;
 }
 declare class LightSystem implements LightSystemType, PaintSite {
     site: LightSystemSite;
@@ -2105,7 +2105,7 @@ declare class LightSystem implements LightSystemType, PaintSite {
     oldLight: Grid$1<LightValue>;
     glowLight: Grid$1<LightValue>;
     flags: NumGrid;
-    constructor(map: LightSystemSite, opts?: Partial<LightSystemOptions>);
+    constructor(map: LightSystemSite, opts?: LightSystemOptions);
     copy(other: LightSystem): void;
     getAmbient(): LightValue;
     setAmbient(light: LightValue | ColorBase): void;

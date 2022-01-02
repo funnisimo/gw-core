@@ -46,7 +46,7 @@ function assignField(dest: any, src: any, key: string) {
         dest[key] = updated.slice();
     } else if (current && Array.isArray(current)) {
         current.length = 0;
-    } else {
+    } else if (updated !== undefined) {
         dest[key] = updated;
     }
 }

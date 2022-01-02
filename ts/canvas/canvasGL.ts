@@ -198,8 +198,9 @@ export class CanvasGL extends Canvas.BaseCanvas {
         }
         data._data.forEach((style, i) => {
             const index = i * VERTICES_PER_TILE;
-            this._data[index + 2] = style;
-            this._data[index + 5] = style;
+            for (let j = 0; j < VERTICES_PER_TILE; ++j) {
+                this._data[index + j] = style;
+            }
         });
         this._requestRender();
         data.changed = false;
@@ -211,7 +212,7 @@ export class CanvasGL extends Canvas.BaseCanvas {
         const n = this.width * this.height;
         for (let i = 0; i < n; ++i) {
             const index = i * VERTICES_PER_TILE;
-            data._data[i] = this._data[index + 2];
+            data._data[i] = this._data[index + 0];
         }
     }
 

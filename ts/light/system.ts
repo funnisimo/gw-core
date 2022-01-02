@@ -31,7 +31,7 @@ enum LightFlags {
 }
 
 export interface LightSystemOptions {
-    ambient: Color.ColorBase | Color.LightValue;
+    ambient?: Color.ColorBase | Color.LightValue;
 }
 
 export class LightSystem implements LightSystemType, PaintSite {
@@ -47,7 +47,7 @@ export class LightSystem implements LightSystemType, PaintSite {
     glowLight: Grid.Grid<Color.LightValue>;
     flags: Grid.NumGrid;
 
-    constructor(map: LightSystemSite, opts: Partial<LightSystemOptions> = {}) {
+    constructor(map: LightSystemSite, opts: LightSystemOptions = {}) {
         this.site = map;
         this.ambient = Color.from(opts.ambient || 'white').toLight();
         this.changed = false;
