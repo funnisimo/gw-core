@@ -1,6 +1,5 @@
 import * as Text from './text/index';
 import * as GW from './gw';
-import * as XY from './xy';
 import { TRUE } from './utils';
 
 export const templates: Record<string, Text.Template> = {};
@@ -42,7 +41,7 @@ export function addAt(x: number, y: number, msg: string, args?: any) {
     } else if (args) {
         msg = Text.apply(msg, args);
     }
-    handlers.forEach((h) => h.addMessage(x, y, msg));
+    handlers.forEach((h) => h.addMessage.call(h, x, y, msg));
 }
 
 export function addCombat(x: number, y: number, msg: string, args?: any) {
@@ -52,13 +51,13 @@ export function addCombat(x: number, y: number, msg: string, args?: any) {
     } else if (args) {
         msg = Text.apply(msg, args);
     }
-    handlers.forEach((h) => h.addCombatMessage(x, y, msg));
+    handlers.forEach((h) => h.addCombatMessage.call(h, x, y, msg));
 }
 
 export interface CacheOptions {
     length: number;
     width: number;
-    match?: XY.XYMatchFunc;
+    match?: (x: number, y: number) => false | any;
 }
 
 export type EachMsgFn = (msg: string, confirmed: boolean, i: number) => any;
@@ -71,17 +70,24 @@ export class MessageCache implements MessageHandler {
     NEXT_WRITE_INDEX = 0;
     NEEDS_UPDATE = true;
     COMBAT_MESSAGE: string | null = null;
-    matchFn: XY.XYMatchFunc;
+    matchFn: (x: number, y: number) => false | any;
 
     constructor(opts: Partial<CacheOptions> = {}) {
         this.matchFn = opts.match || TRUE;
         this.ARCHIVE_LINES = opts.length || 30;
         this.MSG_WIDTH = opts.width || 80;
+        this.clear();
+        handlers.push(this);
+    }
+
+    clear() {
         for (let i = 0; i < this.ARCHIVE_LINES; ++i) {
             this.ARCHIVE[i] = null;
             this.CONFIRMED[i] = false;
         }
-        handlers.push(this);
+        this.NEXT_WRITE_INDEX = 0;
+        this.NEEDS_UPDATE = true;
+        this.COMBAT_MESSAGE = null;
     }
 
     get needsUpdate(): boolean {
@@ -105,7 +111,7 @@ export class MessageCache implements MessageHandler {
     }
 
     addMessage(x: number, y: number, msg: string) {
-        if (!this.matchFn(x, y)) return;
+        if (this.matchFn(x, y) === false) return;
         this.commitCombatMessage();
         this._addMessage(msg);
     }

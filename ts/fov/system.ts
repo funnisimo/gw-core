@@ -307,9 +307,11 @@ export class FovSystem implements TYPES.FovTracker {
             // if the cell became visible this move
             this.flags[x][y] |= FovFlags.REVEALED;
             this._callback(x, y, isVisible);
+            this.changed = true;
         } else if (!isVisible && wasVisible) {
             // if the cell ceased being visible this move
             this._callback(x, y, isVisible);
+            this.changed = true;
         }
         return isVisible;
     }
@@ -366,9 +368,11 @@ export class FovSystem implements TYPES.FovTracker {
         } else if (!isDetect && wasDetect) {
             // ceased being detected visible
             this._callback(x, y, isDetect);
+            this.changed = true;
         } else if (!wasDetect && isDetect) {
             // became detected visible
             this._callback(x, y, isDetect);
+            this.changed = true;
         }
         return isDetect;
     }
@@ -433,7 +437,7 @@ export class FovSystem implements TYPES.FovTracker {
         }
 
         // this.needsUpdate = false;
-        this.changed = true; // we updated something...
+        this.changed = false;
         this.flags.update(this.demoteCellVisibility.bind(this));
 
         this.site.eachViewport((x, y, radius, type) => {
@@ -489,6 +493,6 @@ export class FovSystem implements TYPES.FovTracker {
         // 	}
         // }
 
-        return true;
+        return this.changed;
     }
 }

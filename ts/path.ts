@@ -1,5 +1,6 @@
 import * as Grid from './grid';
 import * as XY from './xy';
+import { FALSE } from './utils';
 
 export const FORBIDDEN = -1;
 export const OBSTRUCTION = -2;
@@ -368,10 +369,11 @@ export function nextStep(
     return XY.DIRS[bestDir] || null;
 }
 
-function getClosestValidLocationOnMap(
+export function getClosestValidLocation(
     distanceMap: Grid.NumGrid,
     x: number,
-    y: number
+    y: number,
+    blocked: BlockedFn = FALSE
 ) {
     let i, j, dist, closestDistance, lowestMapScore;
     let locX = -1;
@@ -384,7 +386,11 @@ function getClosestValidLocationOnMap(
     lowestMapScore = 10000;
     for (i = 1; i < width - 1; i++) {
         for (j = 1; j < height - 1; j++) {
-            if (distanceMap[i][j] >= 0 && distanceMap[i][j] < NO_PATH) {
+            if (
+                distanceMap[i][j] >= 0 &&
+                distanceMap[i][j] < NO_PATH &&
+                !blocked(i, j, i, j, distanceMap)
+            ) {
                 dist = (i - x) * (i - x) + (j - y) * (j - y);
                 if (
                     dist < closestDistance ||
@@ -415,8 +421,12 @@ export function getPath(
     let x = originX;
     let y = originY;
 
-    if (distanceMap[x][y] < 0 || distanceMap[x][y] >= NO_PATH) {
-        const loc = getClosestValidLocationOnMap(distanceMap, x, y);
+    if (
+        distanceMap[x][y] < 0 ||
+        distanceMap[x][y] >= NO_PATH ||
+        isBlocked(x, y, x, y, distanceMap)
+    ) {
+        const loc = getClosestValidLocation(distanceMap, x, y, isBlocked);
         if (!loc) return null;
         x = loc[0];
         y = loc[1];

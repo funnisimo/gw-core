@@ -97,8 +97,14 @@ export class Mixer implements DrawInfo {
         return this._changed();
     }
 
-    invert() {
+    swap() {
         [this.bg, this.fg] = [this.fg, this.bg];
+        return this._changed();
+    }
+
+    invert() {
+        this.bg = this.bg.inverse();
+        this.fg = this.fg.inverse();
         return this._changed();
     }
 

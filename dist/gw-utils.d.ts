@@ -76,6 +76,7 @@ declare class Color {
     scale(percent: number): Color;
     multiply(other: ColorData | Color): Color;
     normalize(): Color;
+    inverse(): Color;
     /**
      * Returns the css code for the current RGB values of the color.
      * @param base256 - Show in base 256 (#abcdef) instead of base 16 (#abc)
@@ -814,6 +815,7 @@ declare class Mixer implements DrawInfo {
     blackOut(): this;
     draw(ch?: string | number, fg?: ColorBase, bg?: ColorBase): this;
     drawSprite(src: SpriteData$1 | Mixer, opacity?: number): this | undefined;
+    swap(): this;
     invert(): this;
     multiply(color: ColorBase, fg?: boolean, bg?: boolean): this;
     scale(multiplier: number, fg?: boolean, bg?: boolean): this;
@@ -1480,6 +1482,7 @@ declare type BlockedFn = (toX: number, toY: number, fromX: number, fromY: number
 declare function calculateDistances(distanceMap: NumGrid, destinationX: number, destinationY: number, costMap: NumGrid, eightWays?: boolean, maxDistance?: number): void;
 declare function rescan(distanceMap: NumGrid, costMap: NumGrid, eightWays?: boolean, maxDistance?: number): void;
 declare function nextStep(distanceMap: NumGrid, x: number, y: number, isBlocked: BlockedFn, useDiagonals?: boolean): Loc$1;
+declare function getClosestValidLocation(distanceMap: NumGrid, x: number, y: number, blocked?: BlockedFn): number[] | null;
 declare function getPath(distanceMap: NumGrid, originX: number, originY: number, isBlocked: BlockedFn, eightWays?: boolean): Loc$1[] | null;
 
 declare const path_d_FORBIDDEN: typeof FORBIDDEN;
@@ -1491,6 +1494,7 @@ type path_d_BlockedFn = BlockedFn;
 declare const path_d_calculateDistances: typeof calculateDistances;
 declare const path_d_rescan: typeof rescan;
 declare const path_d_nextStep: typeof nextStep;
+declare const path_d_getClosestValidLocation: typeof getClosestValidLocation;
 declare const path_d_getPath: typeof getPath;
 declare namespace path_d {
   export {
@@ -1503,6 +1507,7 @@ declare namespace path_d {
     path_d_calculateDistances as calculateDistances,
     path_d_rescan as rescan,
     path_d_nextStep as nextStep,
+    path_d_getClosestValidLocation as getClosestValidLocation,
     path_d_getPath as getPath,
   };
 }
@@ -1918,7 +1923,7 @@ declare function addCombat(x: number, y: number, msg: string, args?: any): void;
 interface CacheOptions {
     length: number;
     width: number;
-    match?: XYMatchFunc;
+    match?: (x: number, y: number) => false | any;
 }
 declare type EachMsgFn = (msg: string, confirmed: boolean, i: number) => any;
 declare class MessageCache implements MessageHandler {
@@ -1929,8 +1934,9 @@ declare class MessageCache implements MessageHandler {
     NEXT_WRITE_INDEX: number;
     NEEDS_UPDATE: boolean;
     COMBAT_MESSAGE: string | null;
-    matchFn: XYMatchFunc;
+    matchFn: (x: number, y: number) => false | any;
     constructor(opts?: Partial<CacheOptions>);
+    clear(): void;
     get needsUpdate(): boolean;
     set needsUpdate(needs: boolean);
     protected _addMessageLine(msg: string): void;

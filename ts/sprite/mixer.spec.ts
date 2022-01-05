@@ -146,14 +146,14 @@ describe('Mixer', () => {
         expect(mixer.drawSprite(mixer)).toBe(mixer);
     });
 
-    test('invert', () => {
+    test('swap', () => {
         const mixer = new Mixer();
         mixer.draw('@', 0xf00, Color.fromCss('#00F'));
         expect(mixer.ch).toEqual('@');
         expect(mixer.fg.css()).toEqual('#f00');
         expect(mixer.bg.css()).toEqual('#00f');
 
-        mixer.invert();
+        mixer.swap();
         expect(mixer.fg.css()).toEqual('#00f');
         expect(mixer.bg.css()).toEqual('#f00');
     });

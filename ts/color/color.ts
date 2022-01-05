@@ -392,6 +392,16 @@ export class Color {
         );
     }
 
+    inverse(): Color {
+        const other = new Color(
+            100 - this.r,
+            100 - this.g,
+            100 - this.b,
+            this.a
+        );
+        return other;
+    }
+
     /**
      * Returns the css code for the current RGB values of the color.
      * @param base256 - Show in base 256 (#abcdef) instead of base 16 (#abc)
