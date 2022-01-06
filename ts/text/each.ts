@@ -8,16 +8,15 @@ interface Colors {
 }
 
 type ColorFunction = (colors: Colors) => void;
-type ColorInfo = [any, any];
 
 type EachFn = (ch: string, fg: any, bg: any, i: number, n: number) => void;
+
+type EachWordFn = (ch: string, fg: any, bg: any, prefix: string) => void;
 
 export interface EachOptions {
     fg?: ColorBase;
     bg?: ColorBase;
     eachColor?: ColorFunction;
-    colorStart?: string;
-    colorEnd?: string;
 }
 
 export function eachChar(text: string, fn: EachFn, opts: EachOptions = {}) {
@@ -26,60 +25,148 @@ export function eachChar(text: string, fn: EachFn, opts: EachOptions = {}) {
     text = '' + text; // force string
     if (!text.length) return;
 
-    const colors: ColorInfo[] = [];
     const colorFn = opts.eachColor || NOOP;
 
-    let fg = opts.fg || Config.options.defaultFg;
-    let bg = opts.bg || Config.options.defaultBg;
+    const fg = opts.fg || Config.options.defaultFg;
+    const bg = opts.bg || Config.options.defaultBg;
 
     const ctx = {
         fg,
         bg,
     };
 
-    const CS = opts.colorStart || Config.options.colorStart;
-    const CE = opts.colorEnd || Config.options.colorEnd;
-
     colorFn(ctx);
 
-    let n = 0;
-    for (let i = 0; i < text.length; ++i) {
-        const ch = text[i];
-        if (ch == CS) {
-            let j = i + 1;
-            while (j < text.length && text[j] != CS) {
-                ++j;
-            }
-            if (j == text.length) {
-                console.warn(
-                    `Reached end of string while seeking end of color start section.\n- text: ${text}\n- start @: ${i}`
-                );
-                return; // reached end - done (error though)
-            }
-            if (j == i + 1) {
-                // next char
-                ++i; // fall through
-            } else {
-                colors.push([ctx.fg, ctx.bg]);
-                const color = text.substring(i + 1, j);
-                const newColors = color.split('|');
-                ctx.fg = newColors[0] || ctx.fg;
-                ctx.bg = newColors[1] || ctx.bg;
+    const priorCtx = Object.assign({}, ctx);
+
+    let len = 0;
+    let inside = false;
+    let inline = false;
+    let index = 0;
+    let colorText = '';
+
+    while (index < text.length) {
+        const ch = text.charAt(index);
+        if (inline) {
+            if (ch === '}') {
+                inline = false;
+                inside = false;
+                Object.assign(ctx, priorCtx);
                 colorFn(ctx);
-                i = j;
-                continue;
-            }
-        } else if (ch == CE) {
-            if (text[i + 1] == CE) {
-                ++i;
             } else {
-                const c = colors.pop(); // if you pop too many times colors still revert to what you passed in
-                [ctx.fg, ctx.bg] = c || [fg, bg];
-                // colorFn(ctx);
-                continue;
+                fn(ch, ctx.fg, ctx.bg, index, len);
+                ++len;
             }
+        } else if (inside) {
+            if (ch === ' ') {
+                inline = true;
+                Object.assign(priorCtx, ctx);
+
+                const colors = colorText.split(':');
+                if (colors[0].length) {
+                    ctx.fg = colors[0];
+                }
+                if (colors[1]) {
+                    ctx.bg = colors[1];
+                }
+                colorFn(ctx);
+                colorText = '';
+            } else if (ch === '}') {
+                inside = false;
+                const colors = colorText.split(':');
+                if (colors[0].length) {
+                    ctx.fg = colors[0];
+                }
+                if (colors[1]) {
+                    ctx.bg = colors[1];
+                }
+                colorFn(ctx);
+                colorText = '';
+            } else {
+                colorText += ch;
+            }
+        } else if (ch === '#') {
+            if (text.charAt(index + 1) === '{') {
+                if (text.charAt(index + 2) === '}') {
+                    index += 2;
+                    ctx.fg = fg;
+                    ctx.bg = bg;
+                    colorFn(ctx);
+                } else {
+                    inside = true;
+                    index += 1;
+                }
+            } else {
+                fn(ch, ctx.fg, ctx.bg, index, len);
+                ++len;
+            }
+        } else if (ch === '\\') {
+            index += 1; // skip next char
+            const ch = text.charAt(index);
+            fn(ch, ctx.fg, ctx.bg, index, len);
+            ++len;
+        } else {
+            fn(ch, ctx.fg, ctx.bg, index, len);
+            ++len;
         }
-        fn(ch, ctx.fg, ctx.bg, n, i);
-        ++n;
+        ++index;
+    }
+
+    if (inline) {
+        console.warn('Ended text without ending inline color!');
+    }
+}
+
+export function eachWord(text: string, fn: EachWordFn, opts: EachOptions = {}) {
+    let currentWord = '';
+    let fg = '';
+    let bg = '';
+    let prefix = '';
+
+    eachChar(
+        text,
+        (ch, fg0, bg0) => {
+            if (fg0 !== fg || bg0 !== bg) {
+                if (currentWord.length) {
+                    fn(currentWord, fg, bg, prefix);
+                    currentWord = '';
+                    prefix = '';
+                }
+
+                fg = fg0;
+                bg = bg0;
+            }
+
+            if (ch === ' ') {
+                if (currentWord.length) {
+                    fn(currentWord, fg, bg, prefix);
+                    currentWord = '';
+                    prefix = '';
+                }
+                prefix += ' ';
+            } else if (ch === '\n') {
+                if (currentWord.length) {
+                    fn(currentWord, fg, bg, prefix);
+                    currentWord = '';
+                    prefix = '';
+                }
+                fn('\n', fg, bg, prefix);
+                prefix = '';
+            } else if (ch === '-') {
+                if (currentWord.length) {
+                    currentWord += ch;
+                    fn(currentWord, fg, bg, prefix);
+                    currentWord = '';
+                    prefix = '';
+                }
+            } else {
+                currentWord += ch;
+            }
+        },
+        opts
+    );
+
+    if (currentWord) {
+        fn(currentWord, fg, bg, prefix);
     }
 }

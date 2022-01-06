@@ -1,6 +1,38 @@
 import * as Compile from './compile';
 import * as Config from './config';
 
+//
+//
+// [COLOR] = '<color name>' | '<color hex3>'
+// [FGBG] = '<COLOR>' | ':<COLOR>' | '<COLOR>:<COLOR>'
+// [color] = '#<FGBG> '| ''
+
+// [helper] = '<helper name> ' | ''
+
+// [FORMAT] = '[+-][0][\d]d' | '[+|-][\d]s' | '[+-][0][\d].\df'
+// [format] = '%<FORMAT>' | ''
+//
+// [value] = 'field' | 'obj.field' | 'func' | 'obj.func'
+//
+// {{[color][helper][value][format]}}
+//
+// {{field}}
+// {{#red field}}
+// {{field%2f}}
+// {{#red field%2f}}
+// {{#red:blue field%2f}}
+//
+// {{obj.field}}
+// {{obj.method}}
+// {{func}}
+//
+// {{helper field}}
+// {{helper obj}}
+// {{helper obj.field}}
+// {{helper field%-2s}}
+// {{#red helper field%2d}}
+//
+
 describe('compile', () => {
     afterEach(() => {
         jest.resetAllMocks();

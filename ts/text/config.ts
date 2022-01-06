@@ -1,7 +1,8 @@
 export var options = {
-    colorStart: 'Ω', // alt-z
-    colorEnd: '∆', // alt-j
-    field: '§', // alt-6
+    colorStart: '#{', // alt-z
+    colorEnd: '}', // alt-j
+    field: '{{', // alt-6
+    fieldEnd: '}}',
     defaultFg: null,
     defaultBg: null,
 };

@@ -1,80 +1,139 @@
-import * as Config from './config';
+import { TRUE } from '../utils';
 
 export function length(text: string) {
     if (!text || text.length == 0) return 0;
 
     let len = 0;
-    const CS = Config.options.colorStart;
-    const CE = Config.options.colorEnd;
-
-    for (let i = 0; i < text.length; ++i) {
-        const ch = text[i];
-        if (ch == CS) {
-            const end = text.indexOf(CS, i + 1);
-            i = end;
-        } else if (ch == CE) {
-            // skip
+    let inside = false;
+    let inline = false;
+    for (let index = 0; index < text.length; ++index) {
+        const ch = text.charAt(index);
+        if (inline) {
+            if (ch === '}') {
+                inline = false;
+                inside = false;
+            } else {
+                len += 1;
+            }
+        } else if (inside) {
+            if (ch === ' ') {
+                inline = true;
+            } else if (ch === '}') {
+                inside = false;
+            }
+        } else if (ch === '#') {
+            if (text.charAt(index + 1) === '{') {
+                inside = true;
+                index += 1;
+            } else {
+                len += 1;
+            }
+        } else if (ch === '\\') {
+            if (text.charAt(index + 1) === '#') {
+                index += 1; // skip next char
+            }
+            len += 1;
         } else {
-            ++len;
+            len += 1;
         }
     }
+
     return len;
 }
 
-let inColor = false;
+// let inColor = false;
 export function advanceChars(text: string, start: number, count: number) {
-    const CS = Config.options.colorStart;
-    const CE = Config.options.colorEnd;
+    let len = 0;
+    let inside = false;
+    let inline = false;
+    let index = start || 0;
 
-    inColor = false;
-    let i = start;
-    while (count > 0 && i < text.length) {
-        const ch = text[i];
-        if (ch === CS) {
-            ++i;
-            if (text[i] === CS) {
-                --count;
+    while (len < count) {
+        const ch = text.charAt(index);
+        if (inline) {
+            if (ch === '}') {
+                inline = false;
+                inside = false;
             } else {
-                while (text[i] !== CS) ++i;
-                inColor = true;
+                len += 1;
             }
-            ++i;
-        } else if (ch === CE) {
-            if (text[i + 1] === CE) {
-                --count;
-                ++i;
+        } else if (inside) {
+            if (ch === ' ') {
+                inline = true;
+            } else if (ch === '}') {
+                inside = false;
+            }
+        } else if (ch === '#') {
+            if (text.charAt(index + 1) === '{') {
+                inside = true;
+                index += 1;
             } else {
-                inColor = false;
+                len += 1;
             }
-            ++i;
+        } else if (ch === '\\') {
+            if (text.charAt(index + 1) === '#') {
+                index += 1; // skip next char
+            }
+            len += 1;
         } else {
-            --count;
-            ++i;
+            len += 1;
         }
+        ++index;
     }
-    return i;
+
+    return index;
+}
+
+export function findChar(
+    text: string,
+    matchFn: (ch: string, index: number) => boolean,
+    start = 0
+): number {
+    let inside = false;
+    let inline = false;
+    let index = start;
+
+    while (index < text.length) {
+        let ch = text.charAt(index);
+        if (inline) {
+            if (ch === '}') {
+                inline = false;
+                inside = false;
+            } else {
+                if (matchFn(ch, index)) return index;
+            }
+        } else if (inside) {
+            if (ch === ' ') {
+                inline = true;
+            } else if (ch === '}') {
+                inside = false;
+            }
+        } else if (ch === '#') {
+            if (text.charAt(index + 1) === '{') {
+                inside = true;
+                index += 1;
+            } else {
+                if (matchFn(ch, index)) return index;
+            }
+        } else if (ch === '\\') {
+            if (text.charAt(index + 1) === '#') {
+                index += 1; // skip next char
+                ch = text.charAt(index);
+            }
+            if (matchFn(ch, index)) return index;
+        } else {
+            if (matchFn(ch, index)) return index;
+        }
+        ++index;
+    }
+
+    return -1;
 }
 
 export function firstChar(text: string) {
-    const CS = Config.options.colorStart;
-    const CE = Config.options.colorEnd;
-
-    let i = 0;
-    while (i < text.length) {
-        const ch = text[i];
-        if (ch === CS) {
-            if (text[i + 1] === CS) return CS;
-            ++i;
-            while (text[i] !== CS) ++i;
-            ++i;
-        } else if (ch === CE) {
-            if (text[i + 1] === CE) return CE;
-            ++i;
-        } else {
-            return ch;
-        }
-    }
-    return null;
+    const index = findChar(text, TRUE);
+    if (index < 0) return null;
+    return text.charAt(index);
 }
 
 export function padStart(text: string, width: number, pad: string = ' ') {
@@ -103,74 +162,109 @@ export function center(text: string, width: number, pad: string = ' ') {
 }
 
 export function truncate(text: string, width: number): string {
-    const len = length(text);
-    if (len <= width) return text;
+    let len = 0;
+    let inside = false;
+    let inline = false;
+    let index = 0;
+    let colorCount = 0;
 
-    const index = advanceChars(text, 0, width);
-    if (!inColor) return text.substring(0, index);
+    while (len < width) {
+        const ch = text.charAt(index);
+        if (inline) {
+            if (ch === '}') {
+                inline = false;
+                inside = false;
+                colorCount -= 1;
+            } else {
+                len += 1;
+            }
+        } else if (inside) {
+            if (ch === ' ') {
+                inline = true;
+            } else if (ch === '}') {
+                inside = false;
+            }
+        } else if (ch === '#') {
+            if (text.charAt(index + 1) === '{') {
+                if (text.charAt(index + 2) === '}') {
+                    index += 2;
+                    colorCount = 0;
+                } else {
+                    inside = true;
+                    index += 1;
+                    colorCount += 1;
+                }
+            } else {
+                len += 1;
+            }
+        } else if (ch === '\\') {
+            if (text.charAt(index + 1) === '#') {
+                index += 1; // skip next char
+            }
+            len += 1;
+        } else {
+            len += 1;
+        }
+        ++index;
+    }
 
-    const CE = Config.options.colorEnd;
-    return text.substring(0, index) + CE;
+    if (inline) {
+        return text.substring(0, index) + '}' + (colorCount > 1 ? '#{}' : '');
+    }
+
+    return text.substring(0, index) + (colorCount ? '#{}' : '');
 }
 
 export function capitalize(text: string) {
-    const CS = Config.options.colorStart;
-    const CE = Config.options.colorEnd;
-    let i = 0;
-    while (i < text.length) {
-        const ch = text[i];
-        if (ch == CS) {
-            ++i;
-            while (text[i] != CS && i < text.length) {
-                ++i;
-            }
-            ++i;
-        } else if (ch == CE) {
-            ++i;
-            while (text[i] == CE && i < text.length) {
-                ++i;
-            }
-        } else if (/[A-Za-z]/.test(ch)) {
-            return (
-                text.substring(0, i) + ch.toUpperCase() + text.substring(i + 1)
-            );
-        } else {
-            ++i;
-        }
-    }
-    return text;
+    // TODO - better test for first letter
+    const i = findChar(text, (ch) => ch !== ' ');
+    if (i < 0) return text;
+
+    const ch = text.charAt(i);
+    return text.substring(0, i) + ch.toUpperCase() + text.substring(i + 1);
 }
 
 export function removeColors(text: string) {
-    const CS = Config.options.colorStart;
-    const CE = Config.options.colorEnd;
-
     let out = '';
-    let start = 0;
-    for (let i = 0; i < text.length; ++i) {
-        const k = text[i];
-        if (k === CS) {
-            if (text[i + 1] == CS) {
-                ++i;
-                continue;
+    let inside = false;
+    let inline = false;
+    let index = 0;
+
+    while (index < text.length) {
+        let ch = text.charAt(index);
+        if (inline) {
+            if (ch === '}') {
+                inline = false;
+                inside = false;
+            } else {
+                out += ch;
             }
-            out += text.substring(start, i);
-            ++i;
-            while (text[i] != CS && i < text.length) {
-                ++i;
+        } else if (inside) {
+            if (ch === ' ') {
+                inline = true;
+            } else if (ch === '}') {
+                inside = false;
             }
-            start = i + 1;
-        } else if (k === CE) {
-            if (text[i + 1] == CE) {
-                ++i;
-                continue;
+        } else if (ch === '#') {
+            if (text.charAt(index + 1) === '{') {
+                inside = true;
+                index += 1;
+            } else {
+                out += ch;
             }
-            out += text.substring(start, i);
-            start = i + 1;
+        } else if (ch === '\\') {
+            if (text.charAt(index + 1) === '#') {
+                out += ch;
+                index += 1; // skip next char
+                ch = text.charAt(index);
+            }
+            out += ch;
+        } else {
+            out += ch;
         }
+        ++index;
     }
-    if (start == 0) return text;
-    out += text.substring(start);
+
     return out;
 }
 
