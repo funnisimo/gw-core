@@ -229,7 +229,7 @@ export class Buffer {
         text: string,
         fg: Color.ColorBase = 0xfff,
         bg: Color.ColorBase = -1,
-        indent = 0
+        indent = 0 // TODO - convert to WrapOptions
     ): number {
         // if (!this.hasXY(x, y)) return 0;
 
@@ -237,7 +237,7 @@ export class Buffer {
         if (typeof bg !== 'number') bg = Color.from(bg);
 
         width = Math.min(width, this.width - x);
-        text = Text.wordWrap(text, width, indent);
+        text = Text.wordWrap(text, width, { indent });
 
         let lineCount = 0;
         let xi = x;

@@ -153,8 +153,8 @@ export function eachWord(text: string, fn: EachWordFn, opts: EachOptions = {}) {
                 fn('\n', fg, bg, prefix);
                 prefix = '';
             } else if (ch === '-') {
-                if (currentWord.length) {
-                    currentWord += ch;
+                currentWord += ch;
+                if (currentWord.length > 3) {
                     fn(currentWord, fg, bg, prefix);
                     currentWord = '';
                     prefix = '';

@@ -8,7 +8,7 @@ import * as Utils from './utils';
 // #{red:blue}  << set fg: red, bg: blue
 // #{}          << clear fg, bg to default
 //
-// \#{          << mark as not a color command (ignore \)
+// \\#{          << mark as not a color command (ignore \\)
 //
 // Text shortcuts
 //
@@ -19,7 +19,7 @@ import * as Utils from './utils';
 // NOTE: Text is everything starting at first character after the space after color
 //       This means if you put multiple spaces, they will be colored
 //       e.g. #{:red     } << 4 red bg squares
-// After coloring this text, the stack returns to where it started
+// After coloring this text, the color returns to where it started
 //
 
 describe('length', () => {

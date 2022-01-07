@@ -51,9 +51,9 @@ describe('Fieldset Widget', () => {
         });
 
         // console.log(layer.allWidgets.map((w) => info(w)));
-        fs.add('Age', '§age%10d§');
-        fs.add('Height', '§height%10s§');
-        fs.add('Weight', '§weight%10d§');
+        fs.add('Age', '{{age%10d}}');
+        fs.add('Height', '{{height%10s}}');
+        fs.add('Weight', '{{weight%10d}}');
 
         fs.data({ age: 4, height: "6'2", weight: 190 });
 
@@ -96,9 +96,9 @@ describe('Fieldset Widget', () => {
         });
 
         // console.log(layer.allWidgets.map((w) => info(w)));
-        fs.add('Age', '§age%10d§');
-        fs.add('Height', '§height%10s§');
-        fs.add('Weight', '§weight%10d§');
+        fs.add('Age', '{{age%10d}}');
+        fs.add('Height', '{{height%10s}}');
+        fs.add('Weight', '{{weight%10d}}');
 
         fs.data({ age: 4, height: "6'2", weight: 190 });
 

@@ -180,6 +180,18 @@ describe('each', () => {
             jest.resetAllMocks();
         });
 
+        test('one char', () => {
+            Each.eachWord('a', eachFn);
+            expect(eachFn).toHaveBeenCalledTimes(1);
+            expect(output).toEqual(['a']);
+        });
+
+        test('just hyphen', () => {
+            Each.eachWord('-', eachFn);
+            expect(eachFn).toHaveBeenCalledTimes(1);
+            expect(output).toEqual(['-']);
+        });
+
         test('one word', () => {
             Each.eachWord('test', eachFn);
             expect(eachFn).toHaveBeenCalledTimes(1);

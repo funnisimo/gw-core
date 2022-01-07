@@ -19,7 +19,7 @@ describe('Table Widget', () => {
         const col = new DataTable.Column({
             header: 'HEADER',
             width: 10,
-            format: '§age§ years',
+            format: '{{age}} years',
         });
 
         expect(col.format({ age: 5 })).toEqual('5 years');
@@ -61,7 +61,7 @@ describe('Table Widget', () => {
                         return d.name;
                     }) as TextUtils.Template,
                 },
-                { width: 5, header: 'Each', format: '$§price%4d§' },
+                { width: 5, header: 'Each', format: '${{price%4d}}' },
             ],
         });
 

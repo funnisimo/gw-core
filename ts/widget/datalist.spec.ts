@@ -3,7 +3,7 @@ import * as UTILS from '../../test/utils';
 import * as DataList from './datalist';
 import * as Layer from './layer';
 
-describe('List Widget', () => {
+describe('DataList Widget', () => {
     let layer: Layer.WidgetLayer;
 
     beforeEach(() => {
@@ -20,7 +20,7 @@ describe('List Widget', () => {
         expect(dl.columns[0]).toMatchObject({ width: 10 });
     });
 
-    test('default', () => {
+    test.only('default', () => {
         const dl = layer.datalist({
             x: 10,
             y: 5,

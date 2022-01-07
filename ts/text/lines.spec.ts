@@ -2,6 +2,7 @@ import * as Lines from './lines';
 
 describe('Lines', () => {
     test('simple stuff', () => {
+        expect(Lines.wordWrap('-', 10)).toEqual('-');
         expect(Lines.wordWrap('test', 10)).toEqual('test');
         expect(Lines.wordWrap('test test', 10)).toEqual('test test');
         expect(Lines.wordWrap('test test test', 10)).toEqual('test test\ntest');
@@ -77,18 +78,18 @@ test('basic indent', () => {
     );
 });
 
-//     test('indent', () => {
-//         const raw =
-//             'ΩyellowΩWelcome to Town!∆\nΩdark_purpleΩVisit our shops to equip yourself for a journey into the ΩgreenΩDungeons of Moria∆.  Once you are prepared, enter the dungeon and seek the Ωdark_redΩ#Balrog∆.  Destroy him to free us all!∆\nΩwhiteΩPress <?> for help.';
-//         const wrapped = Lines.wordWrap(raw, 80, 20);
-//         expect(wrapped.split('\n')).toEqual([
-//             'ΩyellowΩWelcome to Town!∆',
-//             'Ωdark_purpleΩVisit our shops to equip yourself for a journey into the ΩgreenΩDungeons of Moria∆. ',
-//             'Once you are prepared, enter the dungeon and seek the',
-//             'Ωdark_redΩ#Balrog∆.  Destroy him to free us all!∆',
-//             'ΩwhiteΩPress <?> for help.',
-//         ]);
-//     });
+test('indent', () => {
+    const raw =
+        '#{yellow}Welcome to Town!\n#{dark_purple}Visit our shops to equip yourself for a journey into the #{green Dungeons of Moria}.  Once you are prepared, enter the dungeon and seek the #{dark_red #Balrog}.  Destroy him to free us all!\n#{white}Press <?> for help.';
+    const wrapped = Lines.wordWrap(raw, 80, { indent: 10 });
+    expect(wrapped.split('\n')).toEqual([
+        '#{yellow}Welcome to Town!',
+        '          #{dark_purple}Visit our shops to equip yourself for a journey into the',
+        '          #{green}Dungeons of Moria#{dark_purple}.  Once you are prepared, enter the dungeon',
+        '          #{dark_purple}and seek the #{dark_red}#Balrog#{dark_purple}.  Destroy him to free us all!',
+        '          #{white}Press <?> for help.',
+    ]);
+});
 
 test('colors', () => {
     expect(Lines.wordWrap('#{orange}test#{}', 10)).toEqual('#{orange}test');
@@ -161,75 +162,78 @@ test('add hyphens', () => {
 
 //     });
 
-//     describe('splitIntoLines', () => {
-//         test('basic', () => {
-//             // @ts-ignore
-//             expect(Lines.splitIntoLines(undefined, 10)).toEqual([]);
-//             expect(Lines.splitIntoLines('', 10)).toEqual([]);
-//             expect(Lines.splitIntoLines('\n', 10)).toEqual(['']);
-//             expect(Lines.splitIntoLines('a')).toEqual(['a']);
+describe('splitIntoLines', () => {
+    test('basic', () => {
+        // @ts-ignore
+        expect(Lines.splitIntoLines(undefined, 10)).toEqual([]);
+        expect(Lines.splitIntoLines('', 10)).toEqual(['']);
+        expect(Lines.splitIntoLines('\n', 10)).toEqual(['']);
+        expect(Lines.splitIntoLines('a', 10)).toEqual(['a']);
+        expect(Lines.splitIntoLines('-', 20)).toEqual(['-']);
 
-//             expect(Lines.splitIntoLines('reallyreally', 0)).toEqual([
-//                 'reallyreally',
-//             ]);
+        expect(Lines.splitIntoLines('reallyreally', 0)).toEqual([
+            'reallyreally',
+        ]);
 
-//             expect(Lines.splitIntoLines('reallyreally', 10)).toEqual([
-//                 'reallyrea-',
-//                 'lly',
-//             ]);
-//             expect(Lines.splitIntoLines('test reallyreally', 10)).toEqual([
-//                 'test real-',
-//                 'lyreally',
-//             ]);
-//             expect(Lines.splitIntoLines('testing reallyreally', 10)).toEqual([
-//                 'testing',
-//                 'reallyrea-',
-//                 'lly',
-//             ]);
-//             expect(Lines.splitIntoLines('testing reallyreally', 12)).toEqual([
-//                 'testing',
-//                 'reallyreally',
-//             ]);
-//             expect(
-//                 Lines.splitIntoLines('reallyreallylongwordsthrow', 10)
-//             ).toEqual(['reallyrea-', 'llylongwo-', 'rdsthrow']);
-//         });
+        expect(Lines.splitIntoLines('reallyreally', 10)).toEqual([
+            'reallyrea-',
+            'lly',
+        ]);
+        expect(Lines.splitIntoLines('test reallyreally', 10)).toEqual([
+            'test real-',
+            'lyreally',
+        ]);
+        expect(Lines.splitIntoLines('testing reallyreally', 10)).toEqual([
+            'testing',
+            'reallyrea-',
+            'lly',
+        ]);
+        expect(Lines.splitIntoLines('testing reallyreally', 12)).toEqual([
+            'testing',
+            'reallyreally',
+        ]);
+        expect(Lines.splitIntoLines('reallyreallylongwordsthrow', 10)).toEqual([
+            'reallyrea-',
+            'llylongwo-',
+            'rdsthrow',
+        ]);
+    });
 
-//         test('newlines only', () => {
-//             expect(Lines.splitIntoLines('really\nreally')).toEqual([
-//                 'really',
-//                 'really',
-//             ]);
-//             expect(Lines.splitIntoLines('test reallyreally\n')).toEqual([
-//                 'test reallyreally',
-//             ]);
-//             expect(Lines.splitIntoLines('reallyreallylongwordsthrow')).toEqual([
-//                 'reallyreallylongwordsthrow',
-//             ]);
-//         });
+    test('newlines only', () => {
+        expect(Lines.splitIntoLines('really\nreally')).toEqual([
+            'really',
+            'really',
+        ]);
+        expect(Lines.splitIntoLines('test reallyreally\n')).toEqual([
+            'test reallyreally',
+        ]);
+        expect(Lines.splitIntoLines('reallyreallylongwordsthrow')).toEqual([
+            'reallyreallylongwordsthrow',
+        ]);
+    });
 
-//         test('withColor', () => {
-//             const raw =
-//                 'Ω|yellowΩWelcome to Town!∆\nΩwhite|purpleΩVisit our shops to equip yourself for a journey into the ΩgreenΩDungeons of Moria∆.  Once you are prepared, enter the dungeon and seek the Ωdark_redΩ#Balrog∆.  Destroy him to free us all!∆\nΩwhiteΩPress <?> for help.';
-//             const wrapped = Lines.splitIntoLines(raw, 80, 20);
-//             expect(wrapped).toEqual([
-//                 'Ω|yellowΩWelcome to Town!∆',
-//                 'Ωwhite|purpleΩVisit our shops to equip yourself for a journey into the ΩgreenΩDungeons of Moria∆. ',
-//                 'Ωwhite|purpleΩOnce you are prepared, enter the dungeon and seek the',
-//                 'Ωwhite|purpleΩΩdark_redΩ#Balrog∆.  Destroy him to free us all!∆',
-//                 'ΩwhiteΩPress <?> for help.',
-//             ]);
+    test('withColor', () => {
+        const raw =
+            '#{:yellow}Welcome to Town!\n#{white:purple}Visit our shops to equip yourself for a journey into the #{green Dungeons of Moria}.  Once you are prepared, enter the dungeon and seek the #{dark_red #Balrog}.  Destroy him to free us all!\n#{white}Press <?> for help.';
+        const wrapped = Lines.splitIntoLines(raw, 80, { indent: 10 });
+        expect(wrapped).toEqual([
+            '#{:yellow}Welcome to Town!',
+            '          #{white:purple}Visit our shops to equip yourself for a journey into the',
+            '          #{green:purple}Dungeons of Moria#{white:purple}.  Once you are prepared, enter the dungeon',
+            '          #{white:purple}and seek the #{dark_red:purple}#Balrog#{white:purple}.  Destroy him to free us all!',
+            '          #{white:purple}Press <?> for help.',
+        ]);
 
-//             expect(
-//                 Lines.splitIntoLines('ΩyellowΩtesting reallyreally', 10)
-//             ).toEqual(['ΩyellowΩtesting', 'ΩyellowΩreallyrea-', 'ΩyellowΩlly']);
-//             expect(
-//                 Lines.splitIntoLines('Ω|yellowΩtesting reallyreally', 10)
-//             ).toEqual([
-//                 'Ω|yellowΩtesting',
-//                 'Ω|yellowΩreallyrea-',
-//                 'Ω|yellowΩlly',
-//             ]);
-//         });
-//     });
+        expect(
+            Lines.splitIntoLines('#{yellow}testing reallyreally', 10)
+        ).toEqual(['#{yellow}testing', '#{yellow}reallyrea-', '#{yellow}lly']);
+        expect(
+            Lines.splitIntoLines('#{:yellow}testing reallyreally', 10)
+        ).toEqual([
+            '#{:yellow}testing',
+            '#{:yellow}reallyrea-',
+            '#{:yellow}lly',
+        ]);
+    });
+});
 // });

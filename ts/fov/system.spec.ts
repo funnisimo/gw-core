@@ -464,7 +464,7 @@ describe('FOV System', () => {
         expect(system.isAnyKindOfVisible(15, 15)).toBeFalsy();
         expect(system.isActorDetected(15, 15)).toBeTruthy();
 
-        expect(system.update()).toBeTruthy();
+        expect(system.update()).toBeFalsy(); // no change
         expect(system.isDirectlyVisible(10, 10)).toBeFalsy();
         expect(system.isAnyKindOfVisible(10, 10)).toBeFalsy();
         expect(system.isActorDetected(10, 10)).toBeFalsy();

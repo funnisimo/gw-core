@@ -20,7 +20,10 @@ import * as Config from './config';
 // {{#red field}}
 // {{field%2f}}
 // {{#red field%2f}}
+// {{#:red field%2f}}
 // {{#red:blue field%2f}}
+// #{red:blue}{{field%2f}}
+// #{red:blue {{field%2f}}}
 //
 // {{obj.field}}
 // {{obj.method}}
@@ -38,6 +41,58 @@ describe('compile', () => {
         jest.resetAllMocks();
     });
 
+    describe('fieldSplit', () => {
+        test('no template', () => {
+            expect(Compile.fieldSplit('test')).toEqual(['test']);
+            expect(Compile.fieldSplit('test \\{{ok}}')).toEqual([
+                'test {{ok}}',
+            ]);
+        });
+
+        test('templates', () => {
+            expect(Compile.fieldSplit('{{test}}')).toEqual(['', 'test']);
+            expect(Compile.fieldSplit('{{aaaa bbbb cccc}}')).toEqual([
+                '',
+                'aaaa bbbb cccc',
+            ]);
+            expect(Compile.fieldSplit('{{{test}}}')).toEqual([
+                '{',
+                'test',
+                '}',
+            ]);
+            expect(Compile.fieldSplit('ok {{test}}')).toEqual(['ok ', 'test']);
+            expect(Compile.fieldSplit('{{test}} ok')).toEqual([
+                '',
+                'test',
+                ' ok',
+            ]);
+            expect(Compile.fieldSplit('{{aaaa}}{{bbbb}}')).toEqual([
+                '',
+                'aaaa',
+                '',
+                'bbbb',
+            ]);
+            expect(Compile.fieldSplit('{{aaaa}} ok {{bbbb}}')).toEqual([
+                '',
+                'aaaa',
+                ' ok ',
+                'bbbb',
+            ]);
+
+            expect(Compile.fieldSplit('#{red}{{name}}#{}')).toEqual([
+                '#{red}',
+                'name',
+                '#{}',
+            ]);
+
+            expect(Compile.fieldSplit('#{red {{name}}}')).toEqual([
+                '#{red ',
+                'name',
+                '}',
+            ]);
+        });
+    });
+
     test('no replacements', () => {
         const template = Compile.compile('test');
         expect(template({})).toEqual('test');
@@ -46,29 +101,29 @@ describe('compile', () => {
     });
 
     test('placing a marker', () => {
-        const template = Compile.compile('test §§!');
-        expect(template({})).toEqual('test §!');
+        const template = Compile.compile('test \\{{!');
+        expect(template({})).toEqual('test {{!');
     });
 
     test('simple replacement', () => {
-        const template = Compile.compile('My name is §name§.');
+        const template = Compile.compile('My name is {{name}}.');
         expect(template({ name: 'Henry' })).toEqual('My name is Henry.');
     });
 
     test('simple object fields', () => {
-        const template = Compile.compile('My name is §actor.name§.');
+        const template = Compile.compile('My name is {{actor.name}}.');
         expect(template({ actor: { name: 'Henry' } })).toEqual(
             'My name is Henry.'
         );
     });
 
     test('simple string data', () => {
-        const template = Compile.compile('My name is §value§.');
+        const template = Compile.compile('My name is {{value}}.');
         expect(template('Henry')).toEqual('My name is Henry.');
     });
 
     test('invalid format', () => {
-        const t = Compile.compile('Test §a%4r§!');
+        const t = Compile.compile('Test {{a%4r}}!');
         expect(t({ a: 4 })).toEqual('Test 4!');
     });
 
@@ -335,7 +390,7 @@ describe('compile', () => {
                 });
             Config.addHelper('default', defaultHelper);
 
-            const fn = Compile.compile('§you§ §ate§ §the item§.');
+            const fn = Compile.compile('{{you}} {{ate}} {{the item}}.');
             const text = fn({ actor: 'Fred', item: 'taco' });
             expect(text).toEqual('you:Fred ate:Fred the:taco.');
 
@@ -362,7 +417,7 @@ describe('compile', () => {
             });
             Config.addHelper('the', theHelper);
 
-            const fn = Compile.compile('§you§ §ate§ §the item§.');
+            const fn = Compile.compile('{{you}} {{ate}} {{the item}}.');
             const text = fn({ actor: 'Fred', item: 'taco' });
             expect(text).toEqual('you:Fred ate:Fred the:taco.');
 
@@ -377,7 +432,7 @@ describe('compile', () => {
             });
             Config.addHelper('verb', verbHelper);
 
-            const fn = Compile.compile('you §verb§ the item.');
+            const fn = Compile.compile('you {{verb}} the item.');
             const text = fn({ verb: 'ate' });
             expect(text).toEqual('you verb:ate the item.');
             expect(verbHelper).toHaveBeenCalledTimes(1);
@@ -385,21 +440,23 @@ describe('compile', () => {
     });
 
     test('apply', () => {
-        expect(Compile.apply('a §test§!', { test: 'taco' })).toEqual('a taco!');
-        expect(Compile.apply('a §test§!')).toEqual('a !'); // cannot debug with apply - only compile
+        expect(Compile.apply('a {{test}}!', { test: 'taco' })).toEqual(
+            'a taco!'
+        );
+        expect(Compile.apply('a {{test}}!')).toEqual('a !'); // cannot debug with apply - only compile
     });
 
-    describe('options', () => {
-        test('custom field marker', () => {
-            const a = Compile.compile('a ^test^!', { field: '^' });
-            expect(a({ test: 'taco' })).toEqual('a taco!');
-            expect(a({})).toEqual('a !');
-        });
+    // describe('options', () => {
+    //     test('custom field marker', () => {
+    //         const a = Compile.compile('a ^test^!', { field: '^' });
+    //         expect(a({ test: 'taco' })).toEqual('a taco!');
+    //         expect(a({})).toEqual('a !');
+    //     });
 
-        test('custom field marker - debug', () => {
-            const a = Compile.compile('a ^test^!', { field: '^', debug: true });
-            expect(a({ test: 'taco' })).toEqual('a taco!');
-            expect(a({})).toEqual('a !!test!!!');
-        });
-    });
+    //     test('custom field marker - debug', () => {
+    //         const a = Compile.compile('a ^test^!', { field: '^', debug: true });
+    //         expect(a({ test: 'taco' })).toEqual('a taco!');
+    //         expect(a({})).toEqual('a !!test!!!');
+    //     });
+    // });
 });

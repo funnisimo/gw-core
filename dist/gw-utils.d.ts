@@ -835,6 +835,7 @@ declare type Args = any;
 declare type Template = (args: Args) => string;
 interface CompileOptions {
     field?: string;
+    fieldEnd?: string;
     debug?: boolean;
 }
 declare function compile$1(template: string, opts?: CompileOptions): Template;
@@ -850,13 +851,12 @@ interface EachOptions {
     fg?: ColorBase;
     bg?: ColorBase;
     eachColor?: ColorFunction;
-    colorStart?: string;
-    colorEnd?: string;
 }
 declare function eachChar(text: string, fn: EachFn, opts?: EachOptions): void;
 
 declare function length(text: string): number;
 declare function advanceChars(text: string, start: number, count: number): number;
+declare function findChar(text: string, matchFn: (ch: string, index: number) => boolean, start?: number): number;
 declare function firstChar(text: string): string | null;
 declare function padStart(text: string, width: number, pad?: string): string;
 declare function padEnd(text: string, width: number, pad?: string): string;
@@ -867,13 +867,18 @@ declare function removeColors(text: string): string;
 declare function spliceRaw(msg: string, begin: number, deleteLength: number, add?: string): string;
 declare function hash(str: string): number;
 
-declare function wordWrap(text: string, width: number, indent?: number): string;
-declare function splitIntoLines(source: string, width?: number, indent?: number): string[];
+interface WrapOptions {
+    hyphenate?: number | boolean;
+    indent?: number;
+}
+declare function wordWrap(text: string, lineWidth: number, opts?: WrapOptions): string;
+declare function splitIntoLines(text: string, width?: number, opts?: WrapOptions): string[];
 
 declare var options: {
     colorStart: string;
     colorEnd: string;
     field: string;
+    fieldEnd: string;
     defaultFg: null;
     defaultBg: null;
 };
@@ -905,6 +910,7 @@ type index_d$6_Align = Align;
 type index_d$6_VAlign = VAlign;
 declare const index_d$6_length: typeof length;
 declare const index_d$6_advanceChars: typeof advanceChars;
+declare const index_d$6_findChar: typeof findChar;
 declare const index_d$6_firstChar: typeof firstChar;
 declare const index_d$6_padStart: typeof padStart;
 declare const index_d$6_padEnd: typeof padEnd;
@@ -931,6 +937,7 @@ declare namespace index_d$6 {
     index_d$6_VAlign as VAlign,
     index_d$6_length as length,
     index_d$6_advanceChars as advanceChars,
+    index_d$6_findChar as findChar,
     index_d$6_firstChar as firstChar,
     index_d$6_padStart as padStart,
     index_d$6_padEnd as padEnd,

@@ -8,13 +8,79 @@ export type FieldFn = (args: Args) => any;
 
 export interface CompileOptions {
     field?: string;
+    fieldEnd?: string;
     debug?: boolean;
+}
+
+export function fieldSplit(
+    template: string,
+    _opts: CompileOptions = {}
+): string[] {
+    // const FS = opts.field || Config.options.field;
+    // const FE = opts.fieldEnd || Config.options.fieldEnd;
+
+    const output: string[] = [];
+    let inside = false;
+    let start = 0;
+    let hasEscape = false;
+
+    let index = 0;
+    while (index < template.length) {
+        const ch = template.charAt(index);
+
+        if (inside) {
+            if (ch === '}') {
+                if (template.charAt(index + 1) !== '}') {
+                    throw new Error('Templates cannot contain }');
+                }
+
+                const snipet = template.slice(start, index);
+                output.push(snipet);
+                ++index;
+                inside = false;
+                start = index + 1;
+            }
+        } else {
+            if (ch === '\\') {
+                if (template.charAt(index + 1) === '{') {
+                    ++index;
+                    hasEscape = true;
+                }
+            } else if (ch === '{') {
+                if (template.charAt(index + 1) === '{') {
+                    while (template.charAt(index + 1) === '{') {
+                        ++index;
+                    }
+                    inside = true;
+                    let snipet = template.slice(start, index - 1);
+                    if (hasEscape) {
+                        snipet = snipet.replace(/\\\{/g, '{');
+                    }
+                    output.push(snipet);
+                    start = index + 1;
+                    hasEscape = false;
+                }
+            }
+        }
+
+        ++index;
+    }
+
+    if (start !== template.length) {
+        let snipet = template.slice(start);
+        if (hasEscape) {
+            snipet = snipet.replace(/\\\{/g, '{');
+        }
+        output.push(snipet);
+    }
+
+    return output;
 }
 
 export function compile(template: string, opts: CompileOptions = {}): Template {
     const F = opts.field || Config.options.field;
 
-    const parts = template.split(F);
+    const parts = fieldSplit(template);
     const sections = parts.map((part, i) => {
         if (i % 2 == 0) return textSegment(part);
         if (part.length == 0) return textSegment(F);

@@ -2820,9 +2820,10 @@
     }
 
     var options = {
-        colorStart: 'Ω',
-        colorEnd: '∆',
-        field: '§',
+        colorStart: '#{',
+        colorEnd: '}',
+        field: '{{',
+        fieldEnd: '}}',
         defaultFg: null,
         defaultBg: null,
     };
@@ -2840,9 +2841,65 @@
         helpers[name] = fn;
     }
 
+    function fieldSplit(template, _opts = {}) {
+        // const FS = opts.field || Config.options.field;
+        // const FE = opts.fieldEnd || Config.options.fieldEnd;
+        const output = [];
+        let inside = false;
+        let start = 0;
+        let hasEscape = false;
+        let index = 0;
+        while (index < template.length) {
+            const ch = template.charAt(index);
+            if (inside) {
+                if (ch === '}') {
+                    if (template.charAt(index + 1) !== '}') {
+                        throw new Error('Templates cannot contain }');
+                    }
+                    const snipet = template.slice(start, index);
+                    output.push(snipet);
+                    ++index;
+                    inside = false;
+                    start = index + 1;
+                }
+            }
+            else {
+                if (ch === '\\') {
+                    if (template.charAt(index + 1) === '{') {
+                        ++index;
+                        hasEscape = true;
+                    }
+                }
+                else if (ch === '{') {
+                    if (template.charAt(index + 1) === '{') {
+                        while (template.charAt(index + 1) === '{') {
+                            ++index;
+                        }
+                        inside = true;
+                        let snipet = template.slice(start, index - 1);
+                        if (hasEscape) {
+                            snipet = snipet.replace(/\\\{/g, '{');
+                        }
+                        output.push(snipet);
+                        start = index + 1;
+                        hasEscape = false;
+                    }
+                }
+            }
+            ++index;
+        }
+        if (start !== template.length) {
+            let snipet = template.slice(start);
+            if (hasEscape) {
+                snipet = snipet.replace(/\\\{/g, '{');
+            }
+            output.push(snipet);
+        }
+        return output;
+    }
     function compile$1(template, opts = {}) {
         const F = opts.field || options.field;
-        const parts = template.split(F);
+        const parts = fieldSplit(template);
         const sections = parts.map((part, i) => {
             if (i % 2 == 0)
                 return textSegment(part);
@@ -2994,57 +3051,144 @@
         text = '' + text; // force string
         if (!text.length)
             return;
-        const colors = [];
         const colorFn = opts.eachColor || NOOP;
-        let fg = opts.fg || options.defaultFg;
-        let bg = opts.bg || options.defaultBg;
+        const fg = opts.fg || options.defaultFg;
+        const bg = opts.bg || options.defaultBg;
         const ctx = {
             fg,
             bg,
         };
-        const CS = opts.colorStart || options.colorStart;
-        const CE = opts.colorEnd || options.colorEnd;
         colorFn(ctx);
-        let n = 0;
-        for (let i = 0; i < text.length; ++i) {
-            const ch = text[i];
-            if (ch == CS) {
-                let j = i + 1;
-                while (j < text.length && text[j] != CS) {
-                    ++j;
-                }
-                if (j == text.length) {
-                    console.warn(`Reached end of string while seeking end of color start section.\n- text: ${text}\n- start @: ${i}`);
-                    return; // reached end - done (error though)
-                }
-                if (j == i + 1) {
-                    // next char
-                    ++i; // fall through
-                }
-                else {
-                    colors.push([ctx.fg, ctx.bg]);
-                    const color = text.substring(i + 1, j);
-                    const newColors = color.split('|');
-                    ctx.fg = newColors[0] || ctx.fg;
-                    ctx.bg = newColors[1] || ctx.bg;
+        const priorCtx = Object.assign({}, ctx);
+        let len = 0;
+        let inside = false;
+        let inline = false;
+        let index = 0;
+        let colorText = '';
+        while (index < text.length) {
+            const ch = text.charAt(index);
+            if (inline) {
+                if (ch === '}') {
+                    inline = false;
+                    inside = false;
+                    Object.assign(ctx, priorCtx);
                     colorFn(ctx);
-                    i = j;
-                    continue;
-                }
-            }
-            else if (ch == CE) {
-                if (text[i + 1] == CE) {
-                    ++i;
                 }
                 else {
-                    const c = colors.pop(); // if you pop too many times colors still revert to what you passed in
-                    [ctx.fg, ctx.bg] = c || [fg, bg];
-                    // colorFn(ctx);
-                    continue;
+                    fn(ch, ctx.fg, ctx.bg, index, len);
+                    ++len;
                 }
             }
-            fn(ch, ctx.fg, ctx.bg, n, i);
-            ++n;
+            else if (inside) {
+                if (ch === ' ') {
+                    inline = true;
+                    Object.assign(priorCtx, ctx);
+                    const colors = colorText.split(':');
+                    if (colors[0].length) {
+                        ctx.fg = colors[0];
+                    }
+                    if (colors[1]) {
+                        ctx.bg = colors[1];
+                    }
+                    colorFn(ctx);
+                    colorText = '';
+                }
+                else if (ch === '}') {
+                    inside = false;
+                    const colors = colorText.split(':');
+                    if (colors[0].length) {
+                        ctx.fg = colors[0];
+                    }
+                    if (colors[1]) {
+                        ctx.bg = colors[1];
+                    }
+                    colorFn(ctx);
+                    colorText = '';
+                }
+                else {
+                    colorText += ch;
+                }
+            }
+            else if (ch === '#') {
+                if (text.charAt(index + 1) === '{') {
+                    if (text.charAt(index + 2) === '}') {
+                        index += 2;
+                        ctx.fg = fg;
+                        ctx.bg = bg;
+                        colorFn(ctx);
+                    }
+                    else {
+                        inside = true;
+                        index += 1;
+                    }
+                }
+                else {
+                    fn(ch, ctx.fg, ctx.bg, index, len);
+                    ++len;
+                }
+            }
+            else if (ch === '\\') {
+                index += 1; // skip next char
+                const ch = text.charAt(index);
+                fn(ch, ctx.fg, ctx.bg, index, len);
+                ++len;
+            }
+            else {
+                fn(ch, ctx.fg, ctx.bg, index, len);
+                ++len;
+            }
+            ++index;
+        }
+        if (inline) {
+            console.warn('Ended text without ending inline color!');
+        }
+    }
+    function eachWord(text, fn, opts = {}) {
+        let currentWord = '';
+        let fg = '';
+        let bg = '';
+        let prefix = '';
+        eachChar(text, (ch, fg0, bg0) => {
+            if (fg0 !== fg || bg0 !== bg) {
+                if (currentWord.length) {
+                    fn(currentWord, fg, bg, prefix);
+                    currentWord = '';
+                    prefix = '';
+                }
+                fg = fg0;
+                bg = bg0;
+            }
+            if (ch === ' ') {
+                if (currentWord.length) {
+                    fn(currentWord, fg, bg, prefix);
+                    currentWord = '';
+                    prefix = '';
+                }
+                prefix += ' ';
+            }
+            else if (ch === '\n') {
+                if (currentWord.length) {
+                    fn(currentWord, fg, bg, prefix);
+                    currentWord = '';
+                    prefix = '';
+                }
+                fn('\n', fg, bg, prefix);
+                prefix = '';
+            }
+            else if (ch === '-') {
+                currentWord += ch;
+                if (currentWord.length > 3) {
+                    fn(currentWord, fg, bg, prefix);
+                    currentWord = '';
+                    prefix = '';
+                }
+            }
+            else {
+                currentWord += ch;
+            }
+        }, opts);
+        if (currentWord) {
+            fn(currentWord, fg, bg, prefix);
         }
     }
 
@@ -3052,82 +3196,150 @@
         if (!text || text.length == 0)
             return 0;
         let len = 0;
-        const CS = options.colorStart;
-        const CE = options.colorEnd;
-        for (let i = 0; i < text.length; ++i) {
-            const ch = text[i];
-            if (ch == CS) {
-                const end = text.indexOf(CS, i + 1);
-                i = end;
+        let inside = false;
+        let inline = false;
+        for (let index = 0; index < text.length; ++index) {
+            const ch = text.charAt(index);
+            if (inline) {
+                if (ch === '}') {
+                    inline = false;
+                    inside = false;
+                }
+                else {
+                    len += 1;
+                }
             }
-            else if (ch == CE) ;
+            else if (inside) {
+                if (ch === ' ') {
+                    inline = true;
+                }
+                else if (ch === '}') {
+                    inside = false;
+                }
+            }
+            else if (ch === '#') {
+                if (text.charAt(index + 1) === '{') {
+                    inside = true;
+                    index += 1;
+                }
+                else {
+                    len += 1;
+                }
+            }
+            else if (ch === '\\') {
+                if (text.charAt(index + 1) === '#') {
+                    index += 1; // skip next char
+                }
+                len += 1;
+            }
             else {
-                ++len;
+                len += 1;
             }
         }
         return len;
     }
-    let inColor = false;
+    // let inColor = false;
     function advanceChars(text, start, count) {
-        const CS = options.colorStart;
-        const CE = options.colorEnd;
-        inColor = false;
-        let i = start;
-        while (count > 0 && i < text.length) {
-            const ch = text[i];
-            if (ch === CS) {
-                ++i;
-                if (text[i] === CS) {
-                    --count;
+        let len = 0;
+        let inside = false;
+        let inline = false;
+        let index = start || 0;
+        while (len < count) {
+            const ch = text.charAt(index);
+            if (inline) {
+                if (ch === '}') {
+                    inline = false;
+                    inside = false;
                 }
                 else {
-                    while (text[i] !== CS)
-                        ++i;
-                    inColor = true;
+                    len += 1;
                 }
-                ++i;
             }
-            else if (ch === CE) {
-                if (text[i + 1] === CE) {
-                    --count;
-                    ++i;
+            else if (inside) {
+                if (ch === ' ') {
+                    inline = true;
+                }
+                else if (ch === '}') {
+                    inside = false;
+                }
+            }
+            else if (ch === '#') {
+                if (text.charAt(index + 1) === '{') {
+                    inside = true;
+                    index += 1;
                 }
                 else {
-                    inColor = false;
+                    len += 1;
                 }
-                ++i;
+            }
+            else if (ch === '\\') {
+                if (text.charAt(index + 1) === '#') {
+                    index += 1; // skip next char
+                }
+                len += 1;
             }
             else {
-                --count;
-                ++i;
+                len += 1;
             }
+            ++index;
         }
-        return i;
+        return index;
+    }
+    function findChar(text, matchFn, start = 0) {
+        let inside = false;
+        let inline = false;
+        let index = start;
+        while (index < text.length) {
+            let ch = text.charAt(index);
+            if (inline) {
+                if (ch === '}') {
+                    inline = false;
+                    inside = false;
+                }
+                else {
+                    if (matchFn(ch, index))
+                        return index;
+                }
+            }
+            else if (inside) {
+                if (ch === ' ') {
+                    inline = true;
+                }
+                else if (ch === '}') {
+                    inside = false;
+                }
+            }
+            else if (ch === '#') {
+                if (text.charAt(index + 1) === '{') {
+                    inside = true;
+                    index += 1;
+                }
+                else {
+                    if (matchFn(ch, index))
+                        return index;
+                }
+            }
+            else if (ch === '\\') {
+                if (text.charAt(index + 1) === '#') {
+                    index += 1; // skip next char
+                    ch = text.charAt(index);
+                }
+                if (matchFn(ch, index))
+                    return index;
+            }
+            else {
+                if (matchFn(ch, index))
+                    return index;
+            }
+            ++index;
+        }
+        return -1;
     }
     function firstChar(text) {
-        const CS = options.colorStart;
-        const CE = options.colorEnd;
-        let i = 0;
-        while (i < text.length) {
-            const ch = text[i];
-            if (ch === CS) {
-                if (text[i + 1] === CS)
-                    return CS;
-                ++i;
-                while (text[i] !== CS)
-                    ++i;
-                ++i;
-            }
-            else if (ch === CE) {
-                if (text[i + 1] === CE)
-                    return CE;
-                ++i;
-            }
-            else {
-                return ch;
-            }
-        }
-        return null;
+        const index = findChar(text, TRUE);
+        if (index < 0)
+            return null;
+        return text.charAt(index);
     }
     function padStart(text, width, pad = ' ') {
         const len = length(text);
@@ -3153,74 +3365,117 @@
         return text.padStart(rawLen + left, pad).padEnd(rawLen + padLen, pad);
     }
     function truncate(text, width) {
-        const len = length(text);
-        if (len <= width)
-            return text;
-        const index = advanceChars(text, 0, width);
-        if (!inColor)
-            return text.substring(0, index);
-        const CE = options.colorEnd;
-        return text.substring(0, index) + CE;
-    }
-    function capitalize(text) {
-        const CS = options.colorStart;
-        const CE = options.colorEnd;
-        let i = 0;
-        while (i < text.length) {
-            const ch = text[i];
-            if (ch == CS) {
-                ++i;
-                while (text[i] != CS && i < text.length) {
-                    ++i;
+        let len = 0;
+        let inside = false;
+        let inline = false;
+        let index = 0;
+        let colorCount = 0;
+        while (len < width) {
+            const ch = text.charAt(index);
+            if (inline) {
+                if (ch === '}') {
+                    inline = false;
+                    inside = false;
+                    colorCount -= 1;
                 }
-                ++i;
-            }
-            else if (ch == CE) {
-                ++i;
-                while (text[i] == CE && i < text.length) {
-                    ++i;
+                else {
+                    len += 1;
                 }
             }
-            else if (/[A-Za-z]/.test(ch)) {
-                return (text.substring(0, i) + ch.toUpperCase() + text.substring(i + 1));
+            else if (inside) {
+                if (ch === ' ') {
+                    inline = true;
+                }
+                else if (ch === '}') {
+                    inside = false;
+                }
+            }
+            else if (ch === '#') {
+                if (text.charAt(index + 1) === '{') {
+                    if (text.charAt(index + 2) === '}') {
+                        index += 2;
+                        colorCount = 0;
+                    }
+                    else {
+                        inside = true;
+                        index += 1;
+                        colorCount += 1;
+                    }
+                }
+                else {
+                    len += 1;
+                }
+            }
+            else if (ch === '\\') {
+                if (text.charAt(index + 1) === '#') {
+                    index += 1; // skip next char
+                }
+                len += 1;
             }
             else {
-                ++i;
+                len += 1;
             }
+            ++index;
         }
-        return text;
+        if (inline) {
+            return text.substring(0, index) + '}' + (colorCount > 1 ? '#{}' : '');
+        }
+        return text.substring(0, index) + (colorCount ? '#{}' : '');
+    }
+    function capitalize(text) {
+        // TODO - better test for first letter
+        const i = findChar(text, (ch) => ch !== ' ');
+        if (i < 0)
+            return text;
+        const ch = text.charAt(i);
+        return text.substring(0, i) + ch.toUpperCase() + text.substring(i + 1);
     }
     function removeColors(text) {
-        const CS = options.colorStart;
-        const CE = options.colorEnd;
         let out = '';
-        let start = 0;
-        for (let i = 0; i < text.length; ++i) {
-            const k = text[i];
-            if (k === CS) {
-                if (text[i + 1] == CS) {
-                    ++i;
-                    continue;
+        let inside = false;
+        let inline = false;
+        let index = 0;
+        while (index < text.length) {
+            let ch = text.charAt(index);
+            if (inline) {
+                if (ch === '}') {
+                    inline = false;
+                    inside = false;
                 }
-                out += text.substring(start, i);
-                ++i;
-                while (text[i] != CS && i < text.length) {
-                    ++i;
+                else {
+                    out += ch;
                 }
-                start = i + 1;
             }
-            else if (k === CE) {
-                if (text[i + 1] == CE) {
-                    ++i;
-                    continue;
+            else if (inside) {
+                if (ch === ' ') {
+                    inline = true;
                 }
-                out += text.substring(start, i);
-                start = i + 1;
+                else if (ch === '}') {
+                    inside = false;
+                }
             }
+            else if (ch === '#') {
+                if (text.charAt(index + 1) === '{') {
+                    inside = true;
+                    index += 1;
+                }
+                else {
+                    out += ch;
+                }
+            }
+            else if (ch === '\\') {
+                if (text.charAt(index + 1) === '#') {
+                    out += ch;
+                    index += 1; // skip next char
+                    ch = text.charAt(index);
+                }
+                out += ch;
+            }
+            else {
+                out += ch;
+            }
+            ++index;
         }
-        if (start == 0)
-            return text;
-        out += text.substring(start);
         return out;
     }
     function spliceRaw(msg, begin, deleteLength, add = '') {
@@ -3245,179 +3500,156 @@
         return hash;
     }
 
-    function nextBreak(text, start) {
-        const CS = options.colorStart;
-        const CE = options.colorEnd;
-        let i = start;
-        let l = 0;
-        let count = true;
-        while (i < text.length) {
-            const ch = text[i];
-            if (ch == ' ') {
-                while (text[i + 1] == ' ') {
-                    ++i;
-                    ++l; // need to count the extra spaces as part of the word
-                }
-                return [i, l];
+    // import { Color } from '../color';
+    function wordWrap(text, lineWidth, opts = {}) {
+        // let inside = false;
+        // let inline = false;
+        if (lineWidth < 5)
+            return text;
+        // hyphenate is the wordlen needed to hyphenate
+        // smaller words are not hyphenated
+        let hyphenLen = lineWidth;
+        if (opts.hyphenate) {
+            if (opts.hyphenate === true) {
+                opts.hyphenate = Math.floor(lineWidth / 2);
             }
-            if (ch == '-') {
-                return [i, l];
-            }
-            if (ch == '\n') {
-                return [i, l];
-            }
-            if (ch == CS) {
-                if (text[i + 1] == CS && count) {
-                    l += 1;
-                    i += 2;
-                    continue;
-                }
-                count = !count;
-                ++i;
-                continue;
-            }
-            else if (ch == CE) {
-                if (text[i + 1] == CE) {
-                    l += 1;
-                    ++i;
-                }
-                i++;
-                continue;
-            }
-            l += count ? 1 : 0;
-            ++i;
+            hyphenLen = clamp(opts.hyphenate, 6, lineWidth + 1);
         }
-        return [i, l];
+        opts.indent = opts.indent || 0;
+        const indent = ' '.repeat(opts.indent);
+        let output = '';
+        let lastFg = null;
+        let lastBg = null;
+        let lineLeft = lineWidth;
+        lineWidth -= opts.indent;
+        eachWord(text, (word, fg, bg, prefix) => {
+            let totalLen = prefix.length + word.length;
+            // console.log('word', word, lineLen, newLen);
+            if (totalLen > lineLeft && word.length > hyphenLen) {
+                const parts = splitWord(word, lineWidth, lineLeft - prefix.length);
+                if (parts[0].length === 0) {
+                    // line doesn't have enough space left, end it
+                    output += '\n';
+                    if (fg || bg) {
+                        output += `#{${fg ? fg : ''}${bg ? ':' + bg : ''}}`;
+                    }
+                    lineLeft = lineWidth;
+                    parts.shift();
+                }
+                else {
+                    output += prefix;
+                    lineLeft -= prefix.length;
+                }
+                while (parts.length > 1) {
+                    output += parts.shift() + '-\n';
+                    if (fg || bg) {
+                        output += `#{${fg ? fg : ''}${bg ? ':' + bg : ''}}`;
+                    }
+                    output += indent;
+                }
+                output += parts[0];
+                lineLeft = lineWidth - parts[0].length - indent.length;
+                return;
+            }
+            if (word === '\n' || totalLen > lineLeft) {
+                output += '\n';
+                // if (fg || bg || lastFg !== fg || lastBg !== bg) {
+                //     output += `#{${fg ? fg : ''}${bg ? ':' + bg : ''}}`;
+                // }
+                // lastFg = fg;
+                // lastBg = bg;
+                if (fg || bg) {
+                    lastFg = 'INVALID';
+                    lastBg = 'INVALID';
+                }
+                lineLeft = lineWidth;
+                output += indent;
+                lineLeft -= indent.length;
+                if (word === '\n')
+                    return;
+                // lineLeft -= word.length;
+                prefix = '';
+            }
+            if (prefix.length) {
+                output += prefix;
+                lineLeft -= prefix.length;
+            }
+            if (fg !== lastFg || bg !== lastBg) {
+                lastFg = fg;
+                lastBg = bg;
+                output += `#{${fg ? fg : ''}${bg ? ':' + bg : ''}}`;
+            }
+            lineLeft -= word.length;
+            output += word;
+        });
+        return output;
     }
-    function splice(text, start, len, add = '') {
-        return text.substring(0, start) + add + text.substring(start + len);
-    }
-    function hyphenate(text, lineWidth, start, end, wordWidth, spaceLeftOnLine) {
-        while (start < end) {
+    function splitWord(word, lineWidth, firstWidth) {
+        let index = 0;
+        let output = [];
+        let spaceLeftOnLine = firstWidth || lineWidth;
+        while (index < word.length) {
+            const wordWidth = word.length - index;
             // do not need to hyphenate
-            if (spaceLeftOnLine >= wordWidth)
-                return [text, end];
-            // not much room left and word fits on next line
-            if (spaceLeftOnLine < 4 && wordWidth <= lineWidth) {
-                text = splice(text, start - 1, 1, '\n');
-                return [text, end + 1];
+            if (spaceLeftOnLine >= wordWidth) {
+                output.push(word.substring(index));
+                return output;
+            }
+            // not much room left
+            if (spaceLeftOnLine < 4) {
+                spaceLeftOnLine = lineWidth;
+                output.push(''); // need to fill first line
             }
             // if will fit on this line and next...
             if (wordWidth < spaceLeftOnLine + lineWidth) {
-                const w = advanceChars(text, start, spaceLeftOnLine - 1);
-                text = splice(text, w, 0, '-\n');
-                return [text, end + 2];
+                output.push(word.substring(index, index + spaceLeftOnLine - 1));
+                output.push(word.substring(index + spaceLeftOnLine - 1));
+                return output;
             }
-            if (spaceLeftOnLine < 5) {
-                text = splice(text, start - 1, 1, '\n');
-                spaceLeftOnLine = lineWidth;
-                continue;
-            }
-            // one hyphen will work...
+            // hyphenate next part
             const hyphenAt = Math.min(spaceLeftOnLine - 1, Math.floor(wordWidth / 2));
-            const w = advanceChars(text, start, hyphenAt);
-            text = splice(text, w, 0, '-\n');
-            start = w + 2;
-            end += 2;
-            wordWidth -= hyphenAt;
-        }
-        return [text, end];
-    }
-    function wordWrap(text, width, indent = 0) {
-        if (!width)
-            throw new Error('Need string and width');
-        if (text.length < width)
-            return text;
-        if (length(text) < width)
-            return text;
-        if (text.indexOf('\n') == -1) {
-            return wrapLine(text, width, indent);
-        }
-        const lines = text.split('\n');
-        const split = lines.map((line, i) => wrapLine(line, width, i ? indent : 0));
-        return split.join('\n');
-    }
-    // Returns the number of lines, including the newlines already in the text.
-    // Puts the output in "to" only if we receive a "to" -- can make it null and just get a line count.
-    function wrapLine(text, width, indent) {
-        if (text.length < width)
-            return text;
-        if (length(text) < width)
-            return text;
-        let spaceLeftOnLine = width;
-        width = width - indent;
-        let printString = text;
-        // Now go through and replace spaces with newlines as needed.
-        // console.log('wordWrap - ', text, width, indent);
-        let removeSpace = true;
-        let i = -1;
-        while (i < printString.length) {
-            // wordWidth counts the word width of the next word without color escapes.
-            // w indicates the position of the space or newline or null terminator that terminates the word.
-            let [w, wordWidth] = nextBreak(printString, i + (removeSpace ? 1 : 0));
-            let hyphen = false;
-            if (printString[w] == '-') {
-                w++;
-                wordWidth++;
-                hyphen = true;
-            }
-            // console.log('- w=%d, width=%d, space=%d, word=%s', w, wordWidth, spaceLeftOnLine, printString.substring(i, w));
-            if (wordWidth > width) {
-                [printString, w] = hyphenate(printString, width, i + 1, w, wordWidth, spaceLeftOnLine);
-            }
-            else if (wordWidth == spaceLeftOnLine) {
-                const nl = w < printString.length ? '\n' : '';
-                const remove = hyphen ? 0 : 1;
-                printString = splice(printString, w, remove, nl); // [i] = '\n';
-                w += 1 - remove; // if we change the length we need to advance our pointer
-                spaceLeftOnLine = width;
-            }
-            else if (wordWidth > spaceLeftOnLine) {
-                const remove = removeSpace ? 1 : 0;
-                printString = splice(printString, i, remove, '\n'); // [i] = '\n';
-                w += 1 - remove; // if we change the length we need to advance our pointer
-                const extra = hyphen ? 0 : 1;
-                spaceLeftOnLine = width - wordWidth - extra; // line width minus the width of the word we just wrapped and the space
-                //printf("\n\n%s", printString);
-            }
-            else {
-                const extra = hyphen ? 0 : 1;
-                spaceLeftOnLine -= wordWidth + extra;
-            }
-            removeSpace = !hyphen;
-            i = w; // Advance to the terminator that follows the word.
-        }
-        return printString;
-    }
-    // Returns the number of lines, including the newlines already in the text.
-    // Puts the output in "to" only if we receive a "to" -- can make it null and just get a line count.
-    function splitIntoLines(source, width = 200, indent = 0) {
-        const CS = options.colorStart;
-        const output = [];
-        if (!source)
-            return output;
-        if (width <= 0)
-            width = 200;
-        let text = wordWrap(source, width, indent);
-        let start = 0;
-        let fg0 = null;
-        let bg0 = null;
-        eachChar(text, (ch, fg, bg, _, n) => {
-            if (ch == '\n') {
-                let color = fg0 || bg0
-                    ? `${CS}${fg0 ? fg0 : ''}${bg0 ? '|' + bg0 : ''}${CS}`
-                    : '';
-                output.push(color + text.substring(start, n));
-                start = n + 1;
-                fg0 = fg;
-                bg0 = bg;
-            }
-        });
-        let color = fg0 || bg0 ? `${CS}${fg0 ? fg0 : ''}${bg0 ? '|' + bg0 : ''}${CS}` : '';
-        if (start < text.length) {
-            output.push(color + text.substring(start));
+            const hyphen = word.substring(index, index + hyphenAt);
+            output.push(hyphen);
+            index += hyphenAt;
+            spaceLeftOnLine = lineWidth;
         }
         return output;
+    }
+    // // Returns the number of lines, including the newlines already in the text.
+    // // Puts the output in "to" only if we receive a "to" -- can make it null and just get a line count.
+    // export function splitIntoLines(source: string, width = 200, indent = 0) {
+    //     const output: string[] = [];
+    //     if (!source) return output;
+    //     if (width <= 0) width = 200;
+    //     let text = wordWrap(source, width, indent);
+    //     let start = 0;
+    //     let fg0: Color | number | null = null;
+    //     let bg0: Color | number | null = null;
+    //     eachChar(text, (ch, fg, bg, _, n) => {
+    //         if (ch == '\n') {
+    //             let color =
+    //                 fg0 || bg0 ? `#{${fg0 ? fg0 : ''}${bg0 ? ':' + bg0 : ''}}` : '';
+    //             output.push(color + text.substring(start, n));
+    //             start = n + 1;
+    //             fg0 = fg;
+    //             bg0 = bg;
+    //         }
+    //     });
+    //     let color = fg0 || bg0 ? `#{${fg0 ? fg0 : ''}${bg0 ? ':' + bg0 : ''}}` : '';
+    //     if (start < text.length) {
+    //         output.push(color + text.substring(start));
+    //     }
+    //     return output;
+    // }
+    function splitIntoLines(text, width = 200, opts = {}) {
+        if (typeof text !== 'string')
+            return [];
+        text = text.trimEnd();
+        // if (text.endsWith('\n')) {
+        //     text = text.trimEnd();
+        // }
+        const updated = wordWrap(text, width, opts);
+        return updated.split('\n');
     }
 
     function configure(opts = {}) {
@@ -3450,6 +3682,7 @@
         options: options,
         length: length,
         advanceChars: advanceChars,
+        findChar: findChar,
         firstChar: firstChar,
         padStart: padStart,
         padEnd: padEnd,
@@ -3620,14 +3853,15 @@
             }, { fg, bg });
             return 1; // used 1 line
         }
-        wrapText(x, y, width, text, fg = 0xfff, bg = -1, indent = 0) {
+        wrapText(x, y, width, text, fg = 0xfff, bg = -1, indent = 0 // TODO - convert to WrapOptions
+        ) {
             // if (!this.hasXY(x, y)) return 0;
             if (typeof fg !== 'number')
                 fg = from$2(fg);
             if (typeof bg !== 'number')
                 bg = from$2(bg);
             width = Math.min(width, this.width - x);
-            text = wordWrap(text, width, indent);
+            text = wordWrap(text, width, { indent });
             let lineCount = 0;
             let xi = x;
             eachChar(text, (ch, fg0, bg0) => {
