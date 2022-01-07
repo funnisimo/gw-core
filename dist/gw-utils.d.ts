@@ -884,7 +884,8 @@ declare var options: {
 };
 declare type Align = 'left' | 'center' | 'right';
 declare type VAlign = 'top' | 'middle' | 'bottom';
-declare type HelperFn = (name: string, data?: Record<string, any>, obj?: any) => string;
+declare type HelperData = Record<string, any>;
+declare type HelperFn = (name: string, data?: HelperData, obj?: any) => string;
 declare function addHelper(name: string, fn: HelperFn): void;
 
 interface Options {

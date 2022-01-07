@@ -36,17 +36,15 @@ export type VAlign = 'top' | 'middle' | 'bottom';
 //   return 0xFFF;
 // }
 
-export type HelperFn = (
-    name: string,
-    data?: Record<string, any>,
-    obj?: any
-) => string;
+export type HelperData = Record<string, any>;
+
+export type HelperFn = (name: string, data?: HelperData, obj?: any) => string;
 
 export var helpers: Record<string, HelperFn> = {
-    default: (_name: string, _?: Record<string, any>, _value?: any) => {
+    default: (_name: string, _?: HelperData, _value?: any) => {
         return '';
     },
-    debug: (name: string, _?: Record<string, any>, value?: any) => {
+    debug: (name: string, _?: HelperData, value?: any) => {
         if (value !== undefined) return `${value}.!!${name}!!`;
         return `!!${name}!!`;
     },

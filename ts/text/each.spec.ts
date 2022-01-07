@@ -56,8 +56,12 @@ describe('each', () => {
 
         test('starting fg color', () => {
             Each.eachChar('test', eachFn, { fg: 'red' });
-            expect(eachFn).toHaveBeenCalledTimes(4);
             expect(output).toEqual('#red|#t#red|#e#red|#s#red|#t');
+            expect(eachFn).toHaveBeenCalledTimes(4);
+            expect(eachFn).toHaveBeenCalledWith('t', 'red', null, 0, 0);
+            expect(eachFn).toHaveBeenCalledWith('e', 'red', null, 1, 1);
+            expect(eachFn).toHaveBeenCalledWith('s', 'red', null, 2, 2);
+            expect(eachFn).toHaveBeenCalledWith('t', 'red', null, 3, 3);
         });
 
         test('both starting colors', () => {
@@ -72,6 +76,16 @@ describe('each', () => {
             Each.eachChar('a #{red}test#{} text', eachFn);
             expect(output).toEqual('a #red|#t#red|#e#red|#s#red|#t text');
             expect(eachFn).toHaveBeenCalledTimes(11);
+        });
+
+        test('fg color', () => {
+            Each.eachChar('#{red test}', eachFn);
+            expect(output).toEqual('#red|#t#red|#e#red|#s#red|#t');
+            expect(eachFn).toHaveBeenCalledTimes(4);
+            expect(eachFn).toHaveBeenCalledWith('t', 'red', null, 0, 6);
+            expect(eachFn).toHaveBeenCalledWith('e', 'red', null, 1, 7);
+            expect(eachFn).toHaveBeenCalledWith('s', 'red', null, 2, 8);
+            expect(eachFn).toHaveBeenCalledWith('t', 'red', null, 3, 9);
         });
 
         test('colors', () => {

@@ -3075,7 +3075,7 @@
                     colorFn(ctx);
                 }
                 else {
-                    fn(ch, ctx.fg, ctx.bg, index, len);
+                    fn(ch, ctx.fg, ctx.bg, len, index);
                     ++len;
                 }
             }
@@ -3123,18 +3123,18 @@
                     }
                 }
                 else {
-                    fn(ch, ctx.fg, ctx.bg, index, len);
+                    fn(ch, ctx.fg, ctx.bg, len, index);
                     ++len;
                 }
             }
             else if (ch === '\\') {
                 index += 1; // skip next char
                 const ch = text.charAt(index);
-                fn(ch, ctx.fg, ctx.bg, index, len);
+                fn(ch, ctx.fg, ctx.bg, len, index);
                 ++len;
             }
             else {
-                fn(ch, ctx.fg, ctx.bg, index, len);
+                fn(ch, ctx.fg, ctx.bg, len, index);
                 ++len;
             }
             ++index;
