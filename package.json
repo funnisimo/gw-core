@@ -8,11 +8,13 @@
     "types": "dist/gw-utils.d.ts",
     "devDependencies": {
         "@babel/types": "^7.12.10",
+        "@rollup/plugin-commonjs": "^21.0.1",
         "@rollup/plugin-node-resolve": "^13.0.6",
         "@types/jest": "^27.0",
         "http-server": "^0.12.3",
         "jest": "^27.0",
         "jest-extended": "^0.11.5",
+        "lodash": "^4.17.21",
         "prettier": "^2.2.1",
         "replace": "^1.2.0",
         "rollup": "^2.60.0",
@@ -54,5 +56,8 @@
         "tabWidth": 4,
         "semi": true,
         "singleQuote": true
+    },
+    "dependencies": {
+        "@types/lodash": "^4.14.178"
     }
 }

@@ -294,3 +294,52 @@ export function hash(str: string): number {
     }
     return hash;
 }
+
+export function splitArgs(text: string): string[] {
+    const output: string[] = [];
+
+    let index = 0;
+    let start = 0;
+    let insideQuote = false;
+    let insideSingle = false;
+
+    while (index < text.length) {
+        const ch = text.charAt(index);
+        if (insideQuote) {
+            if (ch === '"') {
+                output.push(text.substring(start, index));
+                start = index + 1;
+                insideSingle = false;
+                insideQuote = false;
+            }
+        } else if (insideSingle) {
+            if (ch === "'") {
+                output.push(text.substring(start, index));
+                start = index + 1;
+                insideSingle = false;
+                insideQuote = false;
+            }
+        } else if (ch === ' ') {
+            if (start !== index) {
+                output.push(text.substring(start, index));
+            }
+            start = index + 1;
+        } else if (ch === '"') {
+            start = index + 1;
+            insideQuote = true;
+        } else if (ch === "'") {
+            start = index + 1;
+            insideSingle = true;
+        }
+
+        ++index;
+    }
+
+    if (start === 0) {
+        output.push(text);
+    } else if (start < index) {
+        output.push(text.substring(start));
+    }
+
+    return output;
+}

@@ -1,3 +1,5 @@
+import * as OBJECT from '../object';
+
 export var options = {
     colorStart: '#{', // alt-z
     colorEnd: '}', // alt-j
@@ -36,17 +38,31 @@ export type VAlign = 'top' | 'middle' | 'bottom';
 //   return 0xFFF;
 // }
 
-export type HelperData = Record<string, any>;
+export type View = Record<string, any>;
 
-export type HelperFn = (name: string, data?: HelperData, obj?: any) => string;
+export interface HelperObj {
+    get: (view: View, pattern: string) => any;
+}
+export type HelperFn = (
+    this: HelperObj,
+    name: string,
+    data: View,
+    args: string[]
+) => string;
 
 export var helpers: Record<string, HelperFn> = {
-    default: (_name: string, _?: HelperData, _value?: any) => {
-        return '';
+    default: (name: string, view: View, args: string[]) => {
+        if (args.length === 0) return name;
+        if (args.length === 1) {
+            return '' + OBJECT.getValue(view, args[0]);
+        }
+        return args.map((a) => OBJECT.getValue(view, a)).join(' ');
     },
-    debug: (name: string, _?: HelperData, value?: any) => {
-        if (value !== undefined) return `${value}.!!${name}!!`;
-        return `!!${name}!!`;
+    debug: (name: string, _view: View, args: string[]) => {
+        if (args.length) {
+            return `{{${name} ${args.join(' ')}}}`;
+        }
+        return `{{${name}}}`;
     },
 };
 

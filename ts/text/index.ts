@@ -2,8 +2,17 @@ export { compile, apply, Template, CompileOptions } from './compile';
 export { eachChar, EachOptions } from './each';
 export * from './utils';
 export { wordWrap, splitIntoLines } from './lines';
+export * from './tensable';
 
-export { addHelper, options, Align, VAlign } from './config';
+export {
+    addHelper,
+    options,
+    Align,
+    VAlign,
+    View,
+    HelperFn,
+    HelperObj,
+} from './config';
 
 interface Options {
     fg?: any;

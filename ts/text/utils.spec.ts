@@ -191,3 +191,13 @@ describe('hash', () => {
         expect(Utils.hash('#{red}tacos#{}')).toEqual(1144837967);
     });
 });
+
+describe('splitArgs', () => {
+    test('basic', () => {
+        expect(Utils.splitArgs('aaaa')).toEqual(['aaaa']);
+        expect(Utils.splitArgs('aaaa bbbb')).toEqual(['aaaa', 'bbbb']);
+        expect(Utils.splitArgs('  aaaa   bbbb')).toEqual(['aaaa', 'bbbb']);
+        expect(Utils.splitArgs('a b.c.d')).toEqual(['a', 'b.c.d']);
+        expect(Utils.splitArgs('a "b c d"')).toEqual(['a', 'b c d']);
+    });
+});

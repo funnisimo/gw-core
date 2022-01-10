@@ -1,3 +1,5 @@
+import * as lodash from 'lodash';
+
 /**
  * GW.utils
  * @module utils
@@ -440,6 +442,26 @@ declare namespace list_d {
   };
 }
 
+declare const getValue: {
+    <TObject extends object, TKey extends keyof TObject>(object: TObject, path: TKey | [TKey]): TObject[TKey];
+    <TObject_1 extends object, TKey_1 extends keyof TObject_1>(object: TObject_1 | null | undefined, path: TKey_1 | [TKey_1]): TObject_1[TKey_1] | undefined;
+    <TObject_2 extends object, TKey_2 extends keyof TObject_2, TDefault>(object: TObject_2 | null | undefined, path: TKey_2 | [TKey_2], defaultValue: TDefault): TDefault | Exclude<TObject_2[TKey_2], undefined>;
+    <TObject_3 extends object, TKey1 extends keyof TObject_3, TKey2 extends keyof TObject_3[TKey1]>(object: TObject_3, path: [TKey1, TKey2]): TObject_3[TKey1][TKey2];
+    <TObject_4 extends object, TKey1_1 extends keyof TObject_4, TKey2_1 extends keyof TObject_4[TKey1_1]>(object: TObject_4 | null | undefined, path: [TKey1_1, TKey2_1]): TObject_4[TKey1_1][TKey2_1] | undefined;
+    <TObject_5 extends object, TKey1_2 extends keyof TObject_5, TKey2_2 extends keyof TObject_5[TKey1_2], TDefault_1>(object: TObject_5 | null | undefined, path: [TKey1_2, TKey2_2], defaultValue: TDefault_1): TDefault_1 | Exclude<TObject_5[TKey1_2][TKey2_2], undefined>;
+    <TObject_6 extends object, TKey1_3 extends keyof TObject_6, TKey2_3 extends keyof TObject_6[TKey1_3], TKey3 extends keyof TObject_6[TKey1_3][TKey2_3]>(object: TObject_6, path: [TKey1_3, TKey2_3, TKey3]): TObject_6[TKey1_3][TKey2_3][TKey3];
+    <TObject_7 extends object, TKey1_4 extends keyof TObject_7, TKey2_4 extends keyof TObject_7[TKey1_4], TKey3_1 extends keyof TObject_7[TKey1_4][TKey2_4]>(object: TObject_7 | null | undefined, path: [TKey1_4, TKey2_4, TKey3_1]): TObject_7[TKey1_4][TKey2_4][TKey3_1] | undefined;
+    <TObject_8 extends object, TKey1_5 extends keyof TObject_8, TKey2_5 extends keyof TObject_8[TKey1_5], TKey3_2 extends keyof TObject_8[TKey1_5][TKey2_5], TDefault_2>(object: TObject_8 | null | undefined, path: [TKey1_5, TKey2_5, TKey3_2], defaultValue: TDefault_2): TDefault_2 | Exclude<TObject_8[TKey1_5][TKey2_5][TKey3_2], undefined>;
+    <TObject_9 extends object, TKey1_6 extends keyof TObject_9, TKey2_6 extends keyof TObject_9[TKey1_6], TKey3_3 extends keyof TObject_9[TKey1_6][TKey2_6], TKey4 extends keyof TObject_9[TKey1_6][TKey2_6][TKey3_3]>(object: TObject_9, path: [TKey1_6, TKey2_6, TKey3_3, TKey4]): TObject_9[TKey1_6][TKey2_6][TKey3_3][TKey4];
+    <TObject_10 extends object, TKey1_7 extends keyof TObject_10, TKey2_7 extends keyof TObject_10[TKey1_7], TKey3_4 extends keyof TObject_10[TKey1_7][TKey2_7], TKey4_1 extends keyof TObject_10[TKey1_7][TKey2_7][TKey3_4]>(object: TObject_10 | null | undefined, path: [TKey1_7, TKey2_7, TKey3_4, TKey4_1]): TObject_10[TKey1_7][TKey2_7][TKey3_4][TKey4_1] | undefined;
+    <TObject_11 extends object, TKey1_8 extends keyof TObject_11, TKey2_8 extends keyof TObject_11[TKey1_8], TKey3_5 extends keyof TObject_11[TKey1_8][TKey2_8], TKey4_2 extends keyof TObject_11[TKey1_8][TKey2_8][TKey3_5], TDefault_3>(object: TObject_11 | null | undefined, path: [TKey1_8, TKey2_8, TKey3_5, TKey4_2], defaultValue: TDefault_3): TDefault_3 | Exclude<TObject_11[TKey1_8][TKey2_8][TKey3_5][TKey4_2], undefined>;
+    <T>(object: lodash.NumericDictionary<T>, path: number): T;
+    <T_1>(object: lodash.NumericDictionary<T_1> | null | undefined, path: number): T_1 | undefined;
+    <T_2, TDefault_4>(object: lodash.NumericDictionary<T_2> | null | undefined, path: number, defaultValue: TDefault_4): T_2 | TDefault_4;
+    <TDefault_5>(object: null | undefined, path: lodash.PropertyPath, defaultValue: TDefault_5): TDefault_5;
+    (object: null | undefined, path: lodash.PropertyPath): undefined;
+    (object: any, path: lodash.PropertyPath, defaultValue?: any): any;
+};
 declare function copyObject(dest: any, src: any): void;
 declare function assignObject(dest: any, src: any): void;
 declare function assignOmitting(omit: string | string[], dest: any, src: any): void;
@@ -453,6 +475,7 @@ declare function clearObject(obj: any): void;
 declare function getOpt(obj: any, member: string, _default: any): any;
 declare function firstOpt(field: string, ...args: any[]): any;
 
+declare const object_d_getValue: typeof getValue;
 declare const object_d_copyObject: typeof copyObject;
 declare const object_d_assignObject: typeof assignObject;
 declare const object_d_assignOmitting: typeof assignOmitting;
@@ -467,6 +490,7 @@ declare const object_d_getOpt: typeof getOpt;
 declare const object_d_firstOpt: typeof firstOpt;
 declare namespace object_d {
   export {
+    object_d_getValue as getValue,
     object_d_copyObject as copyObject,
     object_d_assignObject as assignObject,
     object_d_assignOmitting as assignOmitting,
@@ -831,15 +855,31 @@ declare class Mixer implements DrawInfo {
 }
 declare function makeMixer(base?: Partial<DrawInfo>): Mixer;
 
-declare type Args = any;
-declare type Template = (args: Args) => string;
+declare var options: {
+    colorStart: string;
+    colorEnd: string;
+    field: string;
+    fieldEnd: string;
+    defaultFg: null;
+    defaultBg: null;
+};
+declare type Align = 'left' | 'center' | 'right';
+declare type VAlign = 'top' | 'middle' | 'bottom';
+declare type View = Record<string, any>;
+interface HelperObj {
+    get: (view: View, pattern: string) => any;
+}
+declare type HelperFn = (this: HelperObj, name: string, data: View, args: string[]) => string;
+declare function addHelper(name: string, fn: HelperFn): void;
+
+declare type Template = (view: View | string) => string;
 interface CompileOptions {
     field?: string;
     fieldEnd?: string;
     debug?: boolean;
 }
 declare function compile$1(template: string, opts?: CompileOptions): Template;
-declare function apply(template: string, args?: Args | string): string;
+declare function apply(template: string, view?: View | string): string;
 
 interface Colors {
     fg: ColorBase | null;
@@ -866,6 +906,7 @@ declare function capitalize(text: string): string;
 declare function removeColors(text: string): string;
 declare function spliceRaw(msg: string, begin: number, deleteLength: number, add?: string): string;
 declare function hash(str: string): number;
+declare function splitArgs(text: string): string[];
 
 interface WrapOptions {
     hyphenate?: number | boolean;
@@ -874,19 +915,11 @@ interface WrapOptions {
 declare function wordWrap(text: string, lineWidth: number, opts?: WrapOptions): string;
 declare function splitIntoLines(text: string, width?: number, opts?: WrapOptions): string[];
 
-declare var options: {
-    colorStart: string;
-    colorEnd: string;
-    field: string;
-    fieldEnd: string;
-    defaultFg: null;
-    defaultBg: null;
-};
-declare type Align = 'left' | 'center' | 'right';
-declare type VAlign = 'top' | 'middle' | 'bottom';
-declare type HelperData = Record<string, any>;
-declare type HelperFn = (name: string, data?: HelperData, obj?: any) => string;
-declare function addHelper(name: string, fn: HelperFn): void;
+declare function toSingularVerb(text: string): string;
+declare function toPluralVerb(text: string): string;
+declare function toSingularNoun(text: string): string;
+declare function toPluralNoun(text: string): string;
+declare function toQuantity(text: string, count: number): string;
 
 interface Options {
     fg?: any;
@@ -909,6 +942,9 @@ declare const index_d$6_addHelper: typeof addHelper;
 declare const index_d$6_options: typeof options;
 type index_d$6_Align = Align;
 type index_d$6_VAlign = VAlign;
+type index_d$6_View = View;
+type index_d$6_HelperFn = HelperFn;
+type index_d$6_HelperObj = HelperObj;
 declare const index_d$6_length: typeof length;
 declare const index_d$6_advanceChars: typeof advanceChars;
 declare const index_d$6_findChar: typeof findChar;
@@ -921,6 +957,12 @@ declare const index_d$6_capitalize: typeof capitalize;
 declare const index_d$6_removeColors: typeof removeColors;
 declare const index_d$6_spliceRaw: typeof spliceRaw;
 declare const index_d$6_hash: typeof hash;
+declare const index_d$6_splitArgs: typeof splitArgs;
+declare const index_d$6_toSingularVerb: typeof toSingularVerb;
+declare const index_d$6_toPluralVerb: typeof toPluralVerb;
+declare const index_d$6_toSingularNoun: typeof toSingularNoun;
+declare const index_d$6_toPluralNoun: typeof toPluralNoun;
+declare const index_d$6_toQuantity: typeof toQuantity;
 declare namespace index_d$6 {
   export {
     index_d$6_configure as configure,
@@ -936,6 +978,9 @@ declare namespace index_d$6 {
     index_d$6_options as options,
     index_d$6_Align as Align,
     index_d$6_VAlign as VAlign,
+    index_d$6_View as View,
+    index_d$6_HelperFn as HelperFn,
+    index_d$6_HelperObj as HelperObj,
     index_d$6_length as length,
     index_d$6_advanceChars as advanceChars,
     index_d$6_findChar as findChar,
@@ -948,6 +993,12 @@ declare namespace index_d$6 {
     index_d$6_removeColors as removeColors,
     index_d$6_spliceRaw as spliceRaw,
     index_d$6_hash as hash,
+    index_d$6_splitArgs as splitArgs,
+    index_d$6_toSingularVerb as toSingularVerb,
+    index_d$6_toPluralVerb as toPluralVerb,
+    index_d$6_toSingularNoun as toSingularNoun,
+    index_d$6_toPluralNoun as toPluralNoun,
+    index_d$6_toQuantity as toQuantity,
   };
 }
 

@@ -1,5 +1,9 @@
 import { ERROR } from './utils';
 
+import get from 'lodash/get';
+
+export const getValue = get;
+
 // export function extend(obj, name, fn) {
 //   const base = obj[name] || NOOP;
 //   const newFn = fn.bind(obj, base.bind(obj));

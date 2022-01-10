@@ -2,6 +2,10 @@ import 'jest-extended';
 import * as Config from './config';
 
 describe('Config', () => {
+    const THIS = {
+        get: jest.fn(),
+    };
+
     it('will add helpers', () => {
         expect(Config.helpers).toBeObject();
 
@@ -12,11 +16,15 @@ describe('Config', () => {
 
     test('default helper', () => {
         expect(Config.helpers.default).toBeFunction();
-        expect(Config.helpers.default('test')).toEqual('');
+        expect(Config.helpers.default.call(THIS, 'test', {}, [])).toEqual(
+            'test'
+        );
     });
 
     test('debug helper', () => {
         expect(Config.helpers.debug).toBeFunction();
-        expect(Config.helpers.debug('test')).toEqual('!!test!!');
+        expect(Config.helpers.debug.call(THIS, 'test', {}, [])).toEqual(
+            '{{test}}'
+        );
     });
 });
