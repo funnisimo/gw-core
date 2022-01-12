@@ -9866,6 +9866,9 @@ void main() {
             // }
             return false;
         }
+        reset() {
+            this.buffer.copy(this.ui.baseBuffer);
+        }
         draw() {
             if (this.buffer.changed) {
                 console.log('draw');
@@ -9946,6 +9949,11 @@ void main() {
         get layer() {
             return this._layer;
         }
+        startNewLayer() {
+            const layer = new Layer(this);
+            this.pushLayer(layer);
+            return layer;
+        }
         pushLayer(layer) {
             this.layers.push(layer);
             this._layer = layer;
@@ -9967,6 +9975,114 @@ void main() {
         }
         inputbox(..._args) {
             return Promise.resolve(null);
+        }
+        //     get styles(): Sheet {
+        //         return defaultStyle;
+        //     }
+        //     // render() {
+        //     //     this.buffer.render();
+        //     // }
+        get baseBuffer() {
+            const layer = this.layers[this.layers.length - 2] || null;
+            return layer ? layer.buffer : this.canvas.buffer;
+        }
+        //     get canvasBuffer(): Canvas.Buffer {
+        //         return this.canvas.buffer;
+        //     }
+        //     get buffer(): Canvas.Buffer {
+        //         return this.layer ? this.layer.buffer : this.canvas.buffer;
+        //     }
+        //     startNewLayer(opts: LayerOptions = {}): Layer {
+        //         opts.styles = this.layer ? this.layer.styles : this.styles;
+        //         const layer = new Layer(this, opts);
+        //         this.startLayer(layer);
+        //         return layer;
+        //     }
+        //     startLayer(layer: Layer) {
+        //         this.layers.push(layer);
+        //         // if (!this._promise) {
+        //         //     this._promise = this.loop.run((this as unknown) as IO.IOMap);
+        //         // }
+        //         this.layer = layer;
+        //     }
+        //     copyUIBuffer(dest: Buffer.Buffer): void {
+        //         const base = this.baseBuffer;
+        //         dest.copy(base);
+        //         dest.changed = false; // So you have to draw something to make the canvas render...
+        //     }
+        //     finishLayer(layer: Layer, result?: any): void {
+        //         layer.finish(result);
+        //     }
+        //     _finishLayer(layer: Layer): void {
+        //         Utils.arrayDelete(this.layers, layer);
+        //         if (this.layer === layer) {
+        //             this.layer = this.layers[this.layers.length - 1] || null;
+        //             this.layer && (this.layer.needsDraw = true);
+        //         }
+        //     }
+        //     stop(): void {
+        //         this._done = true;
+        //         while (this.layer) {
+        //             this.finishLayer(this.layer);
+        //         }
+        //     }
+        //     // run(): Promise<void> {
+        //     //     // this._done = false;
+        //     //     return this.loop.run(this as unknown as IO.IOMap);
+        //     // }
+        //     // stop() {
+        //     //     this._done = true;
+        //     //     if (this.layer) this.layer.stop();
+        //     //     this.layers.forEach((l) => l.stop());
+        //     //     this.layer = null;
+        //     //     this.layers.length = 0;
+        //     // }
+        //     // mousemove(e: IO.Event): boolean {
+        //     //     if (this.layer) this.layer.mousemove(e);
+        //     //     return this._done;
+        //     // }
+        //     // click(e: IO.Event): boolean {
+        //     //     if (this.layer) this.layer.click(e);
+        //     //     return this._done;
+        //     // }
+        //     // keypress(e: IO.Event): boolean {
+        //     //     if (this.layer) this.layer.keypress(e);
+        //     //     return this._done;
+        //     // }
+        //     // dir(e: IO.Event): boolean {
+        //     //     if (this.layer) this.layer.dir(e);
+        //     //     return this._done;
+        //     // }
+        //     // tick(e: IO.Event): boolean {
+        //     //     if (this.layer) this.layer.tick(e);
+        //     //     return this._done;
+        //     // }
+        //     // draw() {
+        //     //     if (this.layer) this.layer.draw();
+        //     // }
+        //     addAnimation(a: Tween.Animation): void {
+        //         this.layer?.addAnimation(a);
+        //     }
+        //     removeAnimation(a: Tween.Animation): void {
+        //         this.layer?.removeAnimation(a);
+        //     }
+        //     // UTILITY FUNCTIONS
+        async fadeTo(color = 'black', duration = 1000) {
+            color = from$2(color);
+            const layer = this.startNewLayer();
+            let pct = 0;
+            let elapsed = 0;
+            while (elapsed < duration) {
+                elapsed += 32;
+                if (await layer.io.pause(32)) {
+                    elapsed = duration;
+                }
+                pct = Math.floor((100 * elapsed) / duration);
+                layer.reset();
+                layer.buffer.mix(color, pct);
+                layer.draw();
+            }
+            layer.finish();
         }
     }
     function make(opts) {

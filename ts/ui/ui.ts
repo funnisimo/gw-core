@@ -6,6 +6,7 @@ import * as Canvas from '../canvas';
 import * as Dialog from '../widget/dialog';
 import { Layer } from './layer';
 import * as Utils from '../utils';
+import * as Color from '../color';
 
 // import { defaultStyle, Sheet } from './style';
 // import { UICore, Layer, LayerOptions } from './layer';
@@ -113,6 +114,12 @@ export class UI {
         return this._layer!;
     }
 
+    startNewLayer() {
+        const layer = new Layer(this);
+        this.pushLayer(layer);
+        return layer;
+    }
+
     pushLayer(layer: Layer) {
         this.layers.push(layer);
         this._layer = layer;
@@ -166,10 +173,10 @@ export class UI {
     //     //     this.buffer.render();
     //     // }
 
-    //     get baseBuffer(): Canvas.Buffer {
-    //         const layer = this.layers[this.layers.length - 2] || null;
-    //         return layer ? layer.buffer : this.canvas.buffer;
-    //     }
+    get baseBuffer(): Canvas.Buffer {
+        const layer = this.layers[this.layers.length - 2] || null;
+        return layer ? layer.buffer : this.canvas.buffer;
+    }
 
     //     get canvasBuffer(): Canvas.Buffer {
     //         return this.canvas.buffer;
@@ -271,28 +278,28 @@ export class UI {
 
     //     // UTILITY FUNCTIONS
 
-    //     // async fadeTo(color: GWU.color.ColorBase = 'black', duration = 1000) {
-    //     //     color = GWU.color.from(color);
-    //     //     const buffer = this.startLayer();
+    async fadeTo(color: Color.ColorBase = 'black', duration = 1000) {
+        color = Color.from(color);
+        const layer = this.startNewLayer();
 
-    //     //     let pct = 0;
-    //     //     let elapsed = 0;
+        let pct = 0;
+        let elapsed = 0;
 
-    //     //     while (elapsed < duration) {
-    //     //         elapsed += 32;
-    //     //         if (await this.loop.pause(32)) {
-    //     //             elapsed = duration;
-    //     //         }
+        while (elapsed < duration) {
+            elapsed += 32;
+            if (await layer.io.pause(32)) {
+                elapsed = duration;
+            }
 
-    //     //         pct = Math.floor((100 * elapsed) / duration);
+            pct = Math.floor((100 * elapsed) / duration);
 
-    //     //         this.copyUIBuffer(buffer);
-    //     //         buffer.mix(color, pct);
-    //     //         buffer.render();
-    //     //     }
+            layer.reset();
+            layer.buffer.mix(color, pct);
+            layer.draw();
+        }
 
-    //     //     this.finishLayer();
-    //     // }
+        layer.finish();
+    }
 
     //     // async alert(opts: number | AlertOptions, text: string, args: any) {
     //     //     if (typeof opts === 'number') {

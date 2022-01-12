@@ -107,6 +107,10 @@ export class Layer implements UILayer, Tween.Animator {
         return false;
     }
 
+    reset() {
+        this.buffer.copy(this.ui.baseBuffer);
+    }
+
     draw() {
         if (this.buffer.changed) {
             console.log('draw');

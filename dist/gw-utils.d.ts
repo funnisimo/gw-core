@@ -2767,6 +2767,7 @@ declare class UI {
     get height(): number;
     finish(): void;
     get layer(): Layer;
+    startNewLayer(): Layer;
     pushLayer(layer: Layer): void;
     popLayer(layer: Layer): void;
     alert(text: string, args?: any): Promise<boolean>;
@@ -2775,6 +2776,8 @@ declare class UI {
     confirm(_opts: ConfirmOptions | string, _text?: string | any, _args?: any): Promise<boolean>;
     inputbox(_text?: string | any, _args?: any): Promise<string | null>;
     inputbox(_opts: InputBoxOptions | string, _text?: string | any, _args?: any): Promise<string | null>;
+    get baseBuffer(): Buffer;
+    fadeTo(color?: ColorBase, duration?: number): Promise<void>;
 }
 declare function make(opts: UIOptions): UI;
 
@@ -2805,6 +2808,7 @@ declare class Layer implements UILayer, Animator {
     keypress(_e: Event$1): boolean | Promise<boolean>;
     dir(_e: Event$1): boolean | Promise<boolean>;
     tick(_e: Event$1): boolean | Promise<boolean>;
+    reset(): void;
     draw(): void;
     setTimeout(action: TimerFn, time: number): TimerFn;
     clearTimeout(action: TimerFn): void;
