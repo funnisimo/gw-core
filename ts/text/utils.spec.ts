@@ -120,7 +120,8 @@ test('firstChar', () => {
     expect(Utils.firstChar('#{} test')).toEqual(' ');
     expect(Utils.firstChar('#{red}#{}test')).toEqual('t');
     expect(Utils.firstChar('#{red test} case')).toEqual('t');
-    expect(Utils.firstChar('')).toEqual(null);
+    expect(Utils.firstChar('')).toEqual('');
+    expect(Utils.firstChar('#{red}')).toEqual('');
 });
 
 describe('advanceChars', () => {

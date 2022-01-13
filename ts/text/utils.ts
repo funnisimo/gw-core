@@ -130,10 +130,25 @@ export function findChar(
     return -1;
 }
 
-export function firstChar(text: string) {
+export function firstChar(text: string): string {
     const index = findChar(text, TRUE);
-    if (index < 0) return null;
+    if (index < 0) return '';
     return text.charAt(index);
+}
+
+export function startsWith(text: string, match: string | RegExp): boolean {
+    if (typeof match === 'string') {
+        if (match.length === 1) {
+            return firstChar(text) === match;
+        }
+    }
+
+    const noColors = removeColors(text);
+
+    if (typeof match === 'string') {
+        return noColors.startsWith(match);
+    }
+    return match.exec(noColors) !== null;
 }
 
 export function padStart(text: string, width: number, pad: string = ' ') {

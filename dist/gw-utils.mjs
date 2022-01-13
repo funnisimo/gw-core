@@ -4301,8 +4301,20 @@ function findChar(text, matchFn, start = 0) {
 function firstChar(text) {
     const index = findChar(text, TRUE);
     if (index < 0)
-        return null;
+        return '';
     return text.charAt(index);
+}
+function startsWith(text, match) {
+    if (typeof match === 'string') {
+        if (match.length === 1) {
+            return firstChar(text) === match;
+        }
+    }
+    const noColors = removeColors(text);
+    if (typeof match === 'string') {
+        return noColors.startsWith(match);
+    }
+    return match.exec(noColors) !== null;
 }
 function padStart(text, width, pad = ' ') {
     const len = length(text);
@@ -5163,6 +5175,7 @@ var index$6 = /*#__PURE__*/Object.freeze({
     advanceChars: advanceChars,
     findChar: findChar,
     firstChar: firstChar,
+    startsWith: startsWith,
     padStart: padStart,
     padEnd: padEnd,
     center: center,

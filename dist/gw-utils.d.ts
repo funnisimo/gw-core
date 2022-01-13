@@ -897,7 +897,8 @@ declare function eachChar(text: string, fn: EachFn, opts?: EachOptions): void;
 declare function length(text: string): number;
 declare function advanceChars(text: string, start: number, count: number): number;
 declare function findChar(text: string, matchFn: (ch: string, index: number) => boolean, start?: number): number;
-declare function firstChar(text: string): string | null;
+declare function firstChar(text: string): string;
+declare function startsWith(text: string, match: string | RegExp): boolean;
 declare function padStart(text: string, width: number, pad?: string): string;
 declare function padEnd(text: string, width: number, pad?: string): string;
 declare function center(text: string, width: number, pad?: string): string;
@@ -949,6 +950,7 @@ declare const index_d$6_length: typeof length;
 declare const index_d$6_advanceChars: typeof advanceChars;
 declare const index_d$6_findChar: typeof findChar;
 declare const index_d$6_firstChar: typeof firstChar;
+declare const index_d$6_startsWith: typeof startsWith;
 declare const index_d$6_padStart: typeof padStart;
 declare const index_d$6_padEnd: typeof padEnd;
 declare const index_d$6_center: typeof center;
@@ -985,6 +987,7 @@ declare namespace index_d$6 {
     index_d$6_advanceChars as advanceChars,
     index_d$6_findChar as findChar,
     index_d$6_firstChar as firstChar,
+    index_d$6_startsWith as startsWith,
     index_d$6_padStart as padStart,
     index_d$6_padEnd as padEnd,
     index_d$6_center as center,
