@@ -5378,6 +5378,9 @@ class Buffer$1 {
         }
         return lineCount + 1;
     }
+    fillBounds(bounds, ch = -1, fg = -1, bg = -1) {
+        return this.fillRect(bounds.x, bounds.y, bounds.width, bounds.height, ch, fg, bg);
+    }
     fillRect(x, y, w, h, ch = -1, fg = -1, bg = -1) {
         if (ch === null)
             ch = -1;
@@ -5395,6 +5398,9 @@ class Buffer$1 {
             }
         }
         return this;
+    }
+    blackOutBounds(bounds, bg = 0) {
+        return this.blackOutRect(bounds.x, bounds.y, bounds.width, bounds.height, bg);
     }
     blackOutRect(x, y, w, h, bg = 0) {
         if (typeof bg !== 'number')
@@ -6325,10 +6331,12 @@ class FovSystem {
         });
         this.changed = true;
     }
-    revealCell(x, y, makeVisibleToo = true) {
+    revealCell(x, y, radius = 0, makeVisibleToo = true) {
         const flag = FovFlags.REVEALED | (makeVisibleToo ? FovFlags.VISIBLE : 0);
-        this.flags[x][y] |= flag;
-        this.callback(x, y, !!(flag & FovFlags.VISIBLE));
+        this.fov.calculate(x, y, radius, (x0, y0) => {
+            this.flags[x0][y0] |= flag;
+            this.callback(x0, y0, !!(flag & FovFlags.VISIBLE));
+        });
         this.changed = true;
     }
     hideCell(x, y) {

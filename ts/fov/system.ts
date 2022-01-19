@@ -157,11 +157,14 @@ export class FovSystem implements TYPES.FovTracker {
         });
         this.changed = true;
     }
-    revealCell(x: number, y: number, makeVisibleToo = true) {
+    revealCell(x: number, y: number, radius = 0, makeVisibleToo = true) {
         const flag =
             FovFlags.REVEALED | (makeVisibleToo ? FovFlags.VISIBLE : 0);
-        this.flags[x][y] |= flag;
-        this.callback(x, y, !!(flag & FovFlags.VISIBLE));
+
+        this.fov.calculate(x, y, radius, (x0, y0) => {
+            this.flags[x0][y0] |= flag;
+            this.callback(x0, y0, !!(flag & FovFlags.VISIBLE));
+        });
         this.changed = true;
     }
     hideCell(x: number, y: number): void {

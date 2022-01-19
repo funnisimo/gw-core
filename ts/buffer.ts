@@ -1,6 +1,7 @@
 import { Mixer, DrawInfo } from './sprite/mixer';
 import * as Color from './color';
 import * as Text from './text';
+import { Bounds } from './xy';
 
 export interface DrawData {
     glyph: number;
@@ -264,6 +265,23 @@ export class Buffer {
         return lineCount + 1;
     }
 
+    fillBounds(
+        bounds: Bounds,
+        ch: string | number | null = -1,
+        fg: Color.ColorBase | null = -1,
+        bg: Color.ColorBase | null = -1
+    ): this {
+        return this.fillRect(
+            bounds.x,
+            bounds.y,
+            bounds.width,
+            bounds.height,
+            ch,
+            fg,
+            bg
+        );
+    }
+
     fillRect(
         x: number,
         y: number,
@@ -286,6 +304,16 @@ export class Buffer {
             }
         }
         return this;
+    }
+
+    blackOutBounds(bounds: Bounds, bg: Color.ColorBase = 0): this {
+        return this.blackOutRect(
+            bounds.x,
+            bounds.y,
+            bounds.width,
+            bounds.height,
+            bg
+        );
     }
 
     blackOutRect(

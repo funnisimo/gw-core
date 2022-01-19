@@ -70,7 +70,12 @@ export interface FovTracker {
     isHighlight(x: number, y: number): boolean;
 
     revealAll(): void;
-    revealCell(x: number, y: number, isMagicMapped: boolean): void;
+    revealCell(
+        x: number,
+        y: number,
+        radius?: number,
+        makeVisibleToo?: boolean
+    ): void;
     hideCell(x: number, y: number): void;
     magicMapCell(x: number, y: number): void;
 

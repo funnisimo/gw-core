@@ -1037,7 +1037,9 @@ declare class Buffer$1 {
     copy(other: Buffer$1): this;
     drawText(x: number, y: number, text: string, fg?: ColorBase, bg?: ColorBase, maxWidth?: number, align?: Align): number;
     wrapText(x: number, y: number, width: number, text: string, fg?: ColorBase, bg?: ColorBase, indent?: number): number;
+    fillBounds(bounds: Bounds, ch?: string | number | null, fg?: ColorBase | null, bg?: ColorBase | null): this;
     fillRect(x: number, y: number, w: number, h: number, ch?: string | number | null, fg?: ColorBase | null, bg?: ColorBase | null): this;
+    blackOutBounds(bounds: Bounds, bg?: ColorBase): this;
     blackOutRect(x: number, y: number, w: number, h: number, bg?: ColorBase): this;
     highlight(x: number, y: number, color: ColorBase, strength: number): this;
     mix(color: ColorBase, percent: number): this;
@@ -1426,7 +1428,7 @@ interface FovTracker {
     clearHighlight(x?: number, y?: number): void;
     isHighlight(x: number, y: number): boolean;
     revealAll(): void;
-    revealCell(x: number, y: number, isMagicMapped: boolean): void;
+    revealCell(x: number, y: number, radius?: number, makeVisibleToo?: boolean): void;
     hideCell(x: number, y: number): void;
     magicMapCell(x: number, y: number): void;
     update(): boolean;
@@ -1484,7 +1486,7 @@ declare class FovSystem implements FovTracker {
     makeAlwaysVisible(): void;
     makeCellAlwaysVisible(x: number, y: number): void;
     revealAll(makeVisibleToo?: boolean): void;
-    revealCell(x: number, y: number, makeVisibleToo?: boolean): void;
+    revealCell(x: number, y: number, radius?: number, makeVisibleToo?: boolean): void;
     hideCell(x: number, y: number): void;
     magicMapCell(x: number, y: number): void;
     reset(): void;

@@ -1,5 +1,6 @@
 import * as FOV from './index';
 import * as UTILS from '../utils';
+// import * as FLAG from '../flag';
 
 interface ViewportInfo {
     x: number;
@@ -328,14 +329,16 @@ describe('FOV System', () => {
         expect(system.isAnyKindOfVisible(6, 6)).toBeTruthy();
         expect(system.isRevealed(6, 6)).toBeTruthy();
 
-        system.revealCell(7, 7, false);
+        system.revealCell(7, 7, 1, false);
         expect(system.isAnyKindOfVisible(7, 7)).toBeFalsy();
         expect(system.isRevealed(7, 7)).toBeTruthy();
-
-        system.magicMapCell(8, 8);
         expect(system.isAnyKindOfVisible(8, 8)).toBeFalsy();
-        expect(system.isRevealed(8, 8)).toBeFalsy();
-        expect(system.isMagicMapped(8, 8)).toBeTruthy();
+        expect(system.isRevealed(8, 8)).toBeTruthy();
+
+        system.magicMapCell(10, 10);
+        expect(system.isAnyKindOfVisible(10, 10)).toBeFalsy();
+        expect(system.isRevealed(10, 10)).toBeFalsy();
+        expect(system.isMagicMapped(10, 10)).toBeTruthy();
 
         system.hideCell(5, 5);
         expect(system.isAnyKindOfVisible(5, 5)).toBeFalsy();
