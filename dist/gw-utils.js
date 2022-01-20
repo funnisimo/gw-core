@@ -2427,7 +2427,7 @@
                 v = 2 * this.value() - 1;
                 r = u * u + v * v;
             } while (r > 1 || r == 0);
-            let gauss = u * Math.sqrt(-2 * Math.log(r) / r);
+            let gauss = u * Math.sqrt((-2 * Math.log(r)) / r);
             return mean + gauss * stddev;
         }
         dice(count, sides, addend = 0) {
@@ -2544,10 +2544,7 @@
             for (k = 0; k < 50 && !candidateLocs; k++) {
                 for (i = x - k; i <= x + k; i++) {
                     for (j = y - k; j <= y + k; j++) {
-                        if ((i == x - k ||
-                            i == x + k ||
-                            j == y - k ||
-                            j == y + k) &&
+                        if (Math.ceil(distanceBetween(x, y, i, j)) == k &&
                             matchFn(i, j)) {
                             candidateLocs++;
                         }
@@ -2559,23 +2556,21 @@
             }
             // and pick one
             randIndex = 1 + this.number(candidateLocs);
-            for (k = 0; k < 50; k++) {
-                for (i = x - k; i <= x + k; i++) {
-                    for (j = y - k; j <= y + k; j++) {
-                        if ((i == x - k ||
-                            i == x + k ||
-                            j == y - k ||
-                            j == y + k) &&
-                            matchFn(i, j)) {
-                            if (--randIndex == 0) {
-                                loc[0] = i;
-                                loc[1] = j;
-                                return loc;
-                            }
+            --k;
+            // for (k = 0; k < 50; k++) {
+            for (i = x - k; i <= x + k; i++) {
+                for (j = y - k; j <= y + k; j++) {
+                    if (Math.ceil(distanceBetween(x, y, i, j)) == k &&
+                        matchFn(i, j)) {
+                        if (--randIndex == 0) {
+                            loc[0] = i;
+                            loc[1] = j;
+                            return loc;
                         }
                     }
                 }
             }
+            // }
             return [-1, -1]; // should never reach this point
         }
     }

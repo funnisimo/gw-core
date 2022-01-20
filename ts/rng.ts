@@ -160,22 +160,22 @@ export class Random {
     }
 
     /**
-	 * @param mean Mean value
-	 * @param stddev Standard deviation. ~95% of the absolute values will be lower than 2*stddev.
-	 * @returns A normally distributed pseudorandom value
+     * @param mean Mean value
+     * @param stddev Standard deviation. ~95% of the absolute values will be lower than 2*stddev.
+     * @returns A normally distributed pseudorandom value
      * @see: https://github.com/ondras/rot.js/blob/v2.2.0/src/rng.ts
-	 */
-	normal(mean = 0, stddev = 1) {
-		let u, v, r;
-		do {
-			u = 2*this.value()-1;
-			v = 2*this.value()-1;
-			r = u*u + v*v;
-		} while (r > 1 || r == 0);
+     */
+    normal(mean = 0, stddev = 1) {
+        let u, v, r;
+        do {
+            u = 2 * this.value() - 1;
+            v = 2 * this.value() - 1;
+            r = u * u + v * v;
+        } while (r > 1 || r == 0);
 
-		let gauss = u * Math.sqrt(-2*Math.log(r)/r);
-		return mean + gauss*stddev;
-	}
+        let gauss = u * Math.sqrt((-2 * Math.log(r)) / r);
+        return mean + gauss * stddev;
+    }
 
     dice(count: number, sides: number, addend = 0) {
         let total = 0;
@@ -319,10 +319,7 @@ export class Random {
             for (i = x - k; i <= x + k; i++) {
                 for (j = y - k; j <= y + k; j++) {
                     if (
-                        (i == x - k ||
-                            i == x + k ||
-                            j == y - k ||
-                            j == y + k) &&
+                        Math.ceil(XY.distanceBetween(x, y, i, j)) == k &&
                         matchFn(i, j)
                     ) {
                         candidateLocs++;
@@ -338,25 +335,23 @@ export class Random {
         // and pick one
         randIndex = 1 + this.number(candidateLocs);
 
-        for (k = 0; k < 50; k++) {
-            for (i = x - k; i <= x + k; i++) {
-                for (j = y - k; j <= y + k; j++) {
-                    if (
-                        (i == x - k ||
-                            i == x + k ||
-                            j == y - k ||
-                            j == y + k) &&
-                        matchFn(i, j)
-                    ) {
-                        if (--randIndex == 0) {
-                            loc[0] = i;
-                            loc[1] = j;
-                            return loc;
-                        }
+        --k;
+        // for (k = 0; k < 50; k++) {
+        for (i = x - k; i <= x + k; i++) {
+            for (j = y - k; j <= y + k; j++) {
+                if (
+                    Math.ceil(XY.distanceBetween(x, y, i, j)) == k &&
+                    matchFn(i, j)
+                ) {
+                    if (--randIndex == 0) {
+                        loc[0] = i;
+                        loc[1] = j;
+                        return loc;
                     }
                 }
             }
         }
+        // }
 
         return [-1, -1]; // should never reach this point
     }

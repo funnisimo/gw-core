@@ -81,6 +81,13 @@ describe('random', () => {
         expect(random.weighted({ 4: 1 })).toEqual('4');
         expect(random.weighted({ 2: 1, 3: 1, 4: 1 })).toEqual('2');
     });
+
+    test('locNear', () => {
+        random.seed(12345);
+        expect(
+            random.matchingLocNear(5, 5, (x, y) => x !== 5 || y !== 5)
+        ).toEqual([4, 5]);
+    });
 });
 
 describe('cosmetic', () => {
