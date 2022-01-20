@@ -1,4 +1,5 @@
 import * as XY from './xy';
+import * as GRID from './grid';
 import {
     RandomFunction,
     WeightedArray,
@@ -281,30 +282,34 @@ export class Random {
     ): XY.Loc {
         let locationCount = 0;
         let i, j, index;
+        const grid = GRID.alloc(width, height);
 
         locationCount = 0;
-        XY.forRect(width, height, (i, j) => {
-            if (matchFn(i, j)) {
-                locationCount++;
+        grid.update((_v, x, y) => {
+            if (matchFn(x, y)) {
+                ++locationCount;
+                return 1;
             }
+            return 0;
         });
 
-        if (locationCount == 0) {
-            return [-1, -1];
-        } else {
+        if (locationCount) {
             index = this.range(0, locationCount - 1);
-        }
 
-        for (i = 0; i < width && index >= 0; i++) {
-            for (j = 0; j < height && index >= 0; j++) {
-                if (matchFn(i, j)) {
-                    if (index == 0) {
-                        return [i, j];
+            for (i = 0; i < width && index >= 0; i++) {
+                for (j = 0; j < height && index >= 0; j++) {
+                    if (grid[i][j]) {
+                        if (index == 0) {
+                            GRID.free(grid);
+                            return [i, j];
+                        }
+                        index--;
                     }
-                    index--;
                 }
             }
         }
+
+        GRID.free(grid);
         return [-1, -1];
     }
 
