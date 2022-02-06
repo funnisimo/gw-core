@@ -1,34 +1,34 @@
-import * as Base from '../buffer';
+import * as BUFFER from '../buffer';
 
 export interface BufferTarget {
     readonly width: number;
     readonly height: number;
-    copyTo(dest: Base.Buffer): void;
-    draw(src: Base.Buffer): void;
+    copyTo(dest: BUFFER.Buffer): void;
+    draw(src: BUFFER.Buffer): void;
     toGlyph(ch: string | number): number;
 }
 
-export class Buffer extends Base.Buffer {
+export class Buffer extends BUFFER.Buffer {
     _target: BufferTarget;
-    _parent: Buffer | null = null;
+    _parent?: Buffer;
 
     constructor(canvas: BufferTarget, parent?: Buffer) {
         super(canvas.width, canvas.height);
         this._target = canvas;
-        this._parent = parent || null;
+        this._parent = parent;
 
         canvas.copyTo(this);
     }
 
     // get canvas() { return this._target; }
 
-    // clone(): this {
-    //     const other = new (<new (canvas: BufferTarget) => this>(
-    //         this.constructor
-    //     ))(this._target);
-    //     other.copy(this);
-    //     return other;
-    // }
+    clone(): this {
+        const other = new (<
+            new (canvas: BufferTarget, parent?: Buffer) => this
+        >this.constructor)(this._target, this._parent);
+        other.copy(this);
+        return other;
+    }
 
     toGlyph(ch: string | number) {
         return this._target.toGlyph(ch);

@@ -3,7 +3,7 @@ import * as Utils from '../utils';
 import * as Range from '../range';
 import * as Grid from '../grid';
 import * as Color from '../color';
-import { config as CONFIG } from '../gw';
+import { config as CONFIG } from '../data';
 import * as Types from './types';
 
 // const LIGHT_SMOOTHING_THRESHOLD = 150;       // light components higher than this magnitude will be toned down a little

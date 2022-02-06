@@ -9,7 +9,7 @@ import {
 } from './types';
 import * as Grid from '../grid';
 import * as Light from './light';
-import { data as DATA } from '../gw';
+import { data as DATA } from '../data';
 import * as XY from '../xy';
 import * as Color from '../color';
 import { fl as Fl } from '../flag';

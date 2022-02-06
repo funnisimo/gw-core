@@ -60,6 +60,12 @@ function arraysIntersect(a, b) {
 function arrayIncludesAll(a, b) {
     return b.every((av) => a.includes(av));
 }
+function arrayRevEach(a, fn) {
+    for (let i = a.length; i > 0; --i) {
+        --i;
+        fn(a[i], i);
+    }
+}
 function arrayDelete(a, b) {
     const index = a.indexOf(b);
     if (index < 0)
@@ -137,6 +143,15 @@ function prevIndex(index, length, wrap = true) {
         return -1;
     }
     return index;
+}
+class DeleteArray extends Array {
+    constructor(...args) {
+        super(...args);
+    }
+    pushd(v) {
+        this.push(v);
+        return () => arrayDelete(this, v);
+    }
 }
 
 // DIRS are organized clockwise
@@ -3412,6 +3427,9 @@ class AsyncQueue {
     get length() {
         return this._data.length;
     }
+    clear() {
+        this._data.length = 0;
+    }
     get last() {
         return this._data[this._data.length - 1];
     }
@@ -3420,8 +3438,9 @@ class AsyncQueue {
     }
     enqueue(obj) {
         if (this._waiting) {
-            this._waiting(obj);
+            const fn = this._waiting;
             this._waiting = null;
+            fn(obj);
         }
         else {
             this._data.push(obj);
@@ -3962,7 +3981,7 @@ installSpread('azure', [0, 50, 100]);
 installSpread('silver', [75, 75, 75]);
 installSpread('gold', [100, 85, 0]);
 
-var index$7 = /*#__PURE__*/Object.freeze({
+var index$8 = /*#__PURE__*/Object.freeze({
     __proto__: null,
     colors: colors,
     Color: Color,
@@ -5158,7 +5177,7 @@ function configure(opts = {}) {
     }
 }
 
-var index$6 = /*#__PURE__*/Object.freeze({
+var index$7 = /*#__PURE__*/Object.freeze({
     __proto__: null,
     configure: configure,
     compile: compile$1,
@@ -5922,7 +5941,7 @@ function make$7(andPush = true) {
         if (andPush === true) {
             andPush = loop;
         }
-        loop.pushHandler(handler);
+        andPush.pushHandler(handler);
     }
     return handler;
 }
@@ -5963,7 +5982,7 @@ async function waitForAck() {
     popHandler(defaultHandler);
     return r;
 }
-class Loop {
+class Loop$1 {
     constructor() {
         this.handlers = [];
         this.currentHandler = null;
@@ -6030,7 +6049,7 @@ class Loop {
         }
     }
 }
-const loop = new Loop();
+const loop = new Loop$1();
 function pushHandler(handler) {
     loop.pushHandler(handler);
 }
@@ -6053,6 +6072,7 @@ var io = /*#__PURE__*/Object.freeze({
     setKeymap: setKeymap,
     handlerFor: handlerFor,
     dispatchEvent: dispatchEvent,
+    recycleEvent: recycleEvent,
     makeStopEvent: makeStopEvent,
     makeCustomEvent: makeCustomEvent,
     makeTickEvent: makeTickEvent,
@@ -6068,7 +6088,7 @@ var io = /*#__PURE__*/Object.freeze({
     nextKeyPress: nextKeyPress,
     pause: pause,
     waitForAck: waitForAck,
-    Loop: Loop,
+    Loop: Loop$1,
     loop: loop,
     pushHandler: pushHandler,
     popHandler: popHandler,
@@ -6621,7 +6641,7 @@ class FovSystem {
     }
 }
 
-var index$5 = /*#__PURE__*/Object.freeze({
+var index$6 = /*#__PURE__*/Object.freeze({
     __proto__: null,
     get FovFlags () { return FovFlags; },
     FOV: FOV,
@@ -7272,19 +7292,16 @@ var scheduler = /*#__PURE__*/Object.freeze({
 class Buffer extends Buffer$1 {
     constructor(canvas, parent) {
         super(canvas.width, canvas.height);
-        this._parent = null;
         this._target = canvas;
-        this._parent = parent || null;
+        this._parent = parent;
         canvas.copyTo(this);
     }
     // get canvas() { return this._target; }
-    // clone(): this {
-    //     const other = new (<new (canvas: BufferTarget) => this>(
-    //         this.constructor
-    //     ))(this._target);
-    //     other.copy(this);
-    //     return other;
-    // }
+    clone() {
+        const other = new this.constructor(this._target, this._parent);
+        other.copy(this);
+        return other;
+    }
     toGlyph(ch) {
         return this._target.toGlyph(ch);
     }
@@ -7690,7 +7707,9 @@ class BaseCanvas {
         this._current = Math.max(0, this._current - 1);
     }
     _createNode() {
-        return document.createElement('canvas');
+        const canvas = document.createElement('canvas');
+        canvas.setAttribute('tabindex', '0');
+        return canvas;
     }
     _configure(width, height, glyphs) {
         this._width = width;
@@ -7736,6 +7755,7 @@ class BaseCanvas {
                 const y = this._toY(e.offsetY);
                 const ev = makeMouseEvent(e, x, y);
                 fn(ev);
+                e.preventDefault();
             };
         }
         else {
@@ -7753,6 +7773,7 @@ class BaseCanvas {
                 this.mouse.y = y;
                 const ev = makeMouseEvent(e, x, y);
                 fn(ev);
+                e.preventDefault();
             };
         }
         else {
@@ -7766,6 +7787,7 @@ class BaseCanvas {
                 const y = this._toY(e.offsetY);
                 const ev = makeMouseEvent(e, x, y);
                 fn(ev);
+                e.preventDefault();
             };
         }
         else {
@@ -7778,6 +7800,7 @@ class BaseCanvas {
                 e.stopPropagation();
                 const ev = makeKeyEvent(e);
                 fn(ev);
+                e.preventDefault();
             };
         }
         else {
@@ -8056,22 +8079,22 @@ class CanvasGL extends BaseCanvas {
     //     }
     //     return false;
     // }
-    draw(data) {
+    draw(buffer) {
         // TODO - remove?
-        if (data._data.every((style, i) => {
+        if (buffer._data.every((style, i) => {
             const index = 2 + i * VERTICES_PER_TILE;
             return style === this._data[index];
         })) {
             return false;
         }
-        data._data.forEach((style, i) => {
+        buffer._data.forEach((style, i) => {
             const index = i * VERTICES_PER_TILE;
             for (let j = 0; j < VERTICES_PER_TILE; ++j) {
                 this._data[index + j] = style;
             }
         });
         this._requestRender();
-        data.changed = false;
+        buffer.changed = false;
         return true;
     }
     copyTo(data) {
@@ -8204,7 +8227,7 @@ function make$5(...args) {
     return canvas;
 }
 
-var index$4 = /*#__PURE__*/Object.freeze({
+var index$5 = /*#__PURE__*/Object.freeze({
     __proto__: null,
     Buffer: Buffer,
     Glyphs: Glyphs,
@@ -8315,7 +8338,7 @@ function install$2(name, ...args) {
     return sprite;
 }
 
-var index$3 = /*#__PURE__*/Object.freeze({
+var index$4 = /*#__PURE__*/Object.freeze({
     __proto__: null,
     Sprite: Sprite,
     sprites: sprites,
@@ -9072,7 +9095,7 @@ class LightSystem {
     }
 }
 
-var index$2 = /*#__PURE__*/Object.freeze({
+var index$3 = /*#__PURE__*/Object.freeze({
     __proto__: null,
     config: config,
     Light: Light,
@@ -11295,7 +11318,7 @@ UI.prototype.inputbox = function (...args) {
     return layer.run();
 };
 
-var index$1 = /*#__PURE__*/Object.freeze({
+var index$2 = /*#__PURE__*/Object.freeze({
     __proto__: null,
     Grid: Grid,
     Selector: Selector,
@@ -13100,7 +13123,7 @@ class Inquiry {
     }
 }
 
-var index = /*#__PURE__*/Object.freeze({
+var index$1 = /*#__PURE__*/Object.freeze({
     __proto__: null,
     Widget: Widget,
     WidgetLayer: WidgetLayer,
@@ -13131,4 +13154,599 @@ var index = /*#__PURE__*/Object.freeze({
     Inquiry: Inquiry
 });
 
-export { ERROR, FALSE, IDENTITY, IS_NONZERO, IS_ZERO, NOOP, ONE, TRUE, WARN, ZERO, arrayDelete, arrayFindRight, arrayIncludesAll, arrayInsert, arrayNext, arrayNullify, arrayPrev, arraysIntersect, blob, buffer, index$4 as canvas, clamp, index$7 as color, colors, config$1 as config, cosmetic, data, events, first, flag, index$5 as fov, frequency, grid, io, lerp, index$2 as light, list, message, nextIndex, object, path, prevIndex, queue, random, range, rng, scheduler, index$3 as sprite, sprites, sum, index$6 as text, tween, types, index$1 as ui, index as widget, xy };
+class IOQueue {
+    constructor() {
+        this.lastClick = { x: -1, y: -1 };
+        this._events = [];
+    }
+    get length() {
+        return this._events.length;
+    }
+    clear() {
+        this._events.length = 0;
+    }
+    enqueue(ev) {
+        if (this._events.length) {
+            const last = this._events[this._events.length - 1];
+            if (last.type === ev.type) {
+                if (last.type === MOUSEMOVE) {
+                    last.x = ev.x;
+                    last.y = ev.y;
+                    recycleEvent(ev);
+                    return;
+                }
+            }
+        }
+        // Keep clicks down to one per cell if holding down mouse button
+        if (ev.type === CLICK) {
+            if (this.lastClick.x == ev.x && this.lastClick.y == ev.y) {
+                if (this._events.findIndex((e) => e.type === CLICK) >= 0) {
+                    recycleEvent(ev);
+                    return;
+                }
+            }
+            this.lastClick.x = ev.x;
+            this.lastClick.y = ev.y;
+        }
+        else if (ev.type == MOUSEUP) {
+            this.lastClick.x = -1;
+            this.lastClick.y = -1;
+            recycleEvent(ev);
+            return;
+        }
+        if (ev.type === TICK) {
+            const first = this._events[0];
+            if (first && first.type === TICK) {
+                first.dt += ev.dt;
+                recycleEvent(ev);
+                return;
+            }
+            this._events.unshift(ev); // ticks go first
+        }
+        else {
+            this._events.push(ev);
+        }
+    }
+    dequeue() {
+        return this._events.shift();
+    }
+}
+
+class Events {
+    constructor(ctx) {
+        this._events = {};
+        this._ctx = ctx;
+    }
+    on(ev, cb) {
+        if (!(ev in this._events)) {
+            this._events[ev] = new DeleteArray();
+        }
+        return this._events[ev].pushd(cb);
+    }
+    trigger(ev, ...args) {
+        const events = this._events[ev];
+        if (!events) {
+            return false;
+        }
+        events.forEach((fn) => fn.call(this._ctx, ...args));
+        return events.length > 0;
+    }
+}
+/*
+        let fired = false;
+        next = next || UTILS.NOOP;
+        const events = this._events[ev];
+        if (!events) {
+            next();
+            return fired;
+        }
+        let index = -1;
+
+        const ctx = this._ctx;
+        function _next() {
+            ++index;
+            if (index >= events.length) return next!();
+            events[index].call(ctx, args, _next);
+            fired = true;
+        }
+        _next();
+        return fired;
+*/
+
+class Loop {
+    constructor() {
+        this._timer = 0;
+    }
+    start(cb, dt = 16) {
+        let busy = false;
+        if (this._timer)
+            throw new Error('Cannot start loop twice.');
+        this._timer = setInterval(() => {
+            if (!busy) {
+                busy = true;
+                cb();
+                busy = false;
+            }
+        }, dt);
+    }
+    stop() {
+        if (this._timer) {
+            clearInterval(this._timer);
+            this._timer = 0;
+        }
+    }
+}
+
+class Timers {
+    constructor(ctx) {
+        this._timers = [];
+        this._ctx = ctx;
+    }
+    setTimeout(fn, delay) {
+        const info = {
+            fn,
+            delay,
+            repeat: 0,
+        };
+        this._timers.push(info);
+        return () => arrayDelete(this._timers, info);
+    }
+    setInterval(fn, delay) {
+        const info = {
+            fn,
+            delay,
+            repeat: delay,
+        };
+        this._timers.push(info);
+        return () => arrayDelete(this._timers, info);
+    }
+    update(dt) {
+        if (!this._timers.length)
+            return;
+        let needFilter = false;
+        this._timers.forEach((info) => {
+            info.delay -= dt;
+            if (info.delay <= 0) {
+                info.fn.call(this._ctx);
+                if (info.repeat) {
+                    info.delay += info.repeat;
+                    if (info.delay < 0) {
+                        info.delay = info.repeat;
+                    }
+                }
+            }
+            needFilter = needFilter || info.delay <= 0;
+        });
+        if (needFilter) {
+            this._timers = this._timers.filter((info) => info.delay > 0);
+        }
+    }
+}
+
+class Scene {
+    constructor(id, opts = {}) {
+        this.dt = 0;
+        this.time = 0;
+        this.realTime = 0;
+        this.skipTime = false;
+        this.stopped = true;
+        this.paused = false;
+        this.sleeping = false;
+        this.debug = false;
+        this.id = id;
+        this.events = new Events(this);
+        this.timers = new Timers(this);
+        if (opts.on) {
+            Object.entries(opts.on).forEach(([ev, fn]) => {
+                this.on(ev, fn);
+            });
+        }
+        Object.entries(opts).forEach(([ev, fn]) => {
+            if (typeof fn !== 'function')
+                return;
+            this.on(ev, fn);
+        });
+    }
+    isActive() {
+        return !this.stopped;
+    }
+    isPaused() {
+        return this.isPaused;
+    }
+    isSleeping() {
+        return this.isSleeping;
+    }
+    on(ev, fn) {
+        return this.events.on(ev, fn);
+    }
+    trigger(ev, ...args) {
+        return this.events.trigger(ev, ...args);
+    }
+    wait(delay, fn, ctx) {
+        if (typeof fn === 'string') {
+            const ev = fn;
+            ctx = ctx || {};
+            fn = () => this.trigger(ev, ctx);
+        }
+        return this.timers.setTimeout(fn, delay);
+    }
+    repeat(delay, fn, ctx) {
+        if (typeof fn === 'string') {
+            const ev = fn;
+            ctx = ctx || {};
+            fn = () => this.trigger(ev, ctx);
+        }
+        return this.timers.setInterval(fn, delay);
+    }
+    // run() {
+    //     this.trigger('run', this);
+    //     let running = false;
+    //     this.loopID = (setInterval(() => {
+    //         if (!running) {
+    //             running = true;
+    //             this._frame();
+    //             running = false;
+    //         }
+    //     }, 16) as unknown) as number;
+    //     this.stopped = false;
+    // }
+    create(app) {
+        this.app = app;
+        this.buffer = app.buffer.clone();
+        this.trigger('create');
+    }
+    destroy() {
+        this.trigger('destroy');
+    }
+    start(data) {
+        this.stopped = false;
+        this.events.trigger('start', data || {});
+    }
+    stop(data) {
+        this.stopped = true;
+        this.events.trigger('stop', data || {});
+    }
+    pause(data) {
+        this.paused = true;
+        this.events.trigger('pause', data || {});
+    }
+    resume(data) {
+        this.paused = false;
+        this.events.trigger('resume', data || {});
+    }
+    sleep(data) {
+        this.sleeping = true;
+        this.events.trigger('sleep', data || {});
+    }
+    wake(data) {
+        this.sleeping = false;
+        this.events.trigger('wake', data || {});
+    }
+    // FRAME STEPS
+    frameStart() {
+        this.events.trigger('frameStart');
+    }
+    input() {
+        if (this.paused || this.sleeping || this.stopped)
+            return;
+        const io$1 = this.app.io;
+        while (io$1.length) {
+            const ev = io$1.dequeue();
+            if (ev.type === KEYPRESS) {
+                if ((ev.dir && this.events.trigger('dir', ev)) ||
+                    this.events.trigger(ev.key, ev) ||
+                    this.events.trigger(ev.code, ev)) {
+                    continue;
+                }
+            }
+            this.events.trigger(ev.type, ev) || this.events.trigger('io', ev);
+        }
+    }
+    update() {
+        if (this.paused || this.sleeping || this.stopped)
+            return;
+        this.timers.update(this.app.dt);
+        this.events.trigger('update');
+    }
+    draw() {
+        if (this.sleeping || this.stopped)
+            return;
+        this.events.trigger('draw');
+    }
+    frameDebug(_buffer) {
+        this.events.trigger('frameDebug');
+    }
+    frameEnd() {
+        this.events.trigger('frameEnd');
+    }
+}
+
+class Scenes {
+    constructor(gw) {
+        this._scenes = {};
+        this._active = [];
+        this._app = gw;
+    }
+    install(id, opts) {
+        let scene;
+        if (opts instanceof Scene) {
+            scene = opts;
+        }
+        else {
+            if (typeof opts === 'function') {
+                opts = { create: opts };
+            }
+            scene = new Scene(id, opts);
+        }
+        this._scenes[id] = scene;
+        scene.create(this._app);
+        scene.on('start', () => this._start(scene));
+        scene.on('stop', () => this._stop(scene));
+    }
+    get(id) {
+        if (id === undefined) {
+            return this._active[this._active.length - 1] || null;
+        }
+        return this._scenes[id] || null;
+    }
+    start(id, data) {
+        const scene = this._scenes[id];
+        if (!scene)
+            throw new Error('Unknown scene:' + id);
+        this._active.forEach((a) => a.stop());
+        scene.start(data);
+    }
+    _start(scene) {
+        this._active.push(scene);
+    }
+    push(id, data) {
+        const scene = this._scenes[id];
+        if (!scene)
+            throw new Error('Unknown scene:' + id);
+        scene.start(data);
+    }
+    stop(id, data) {
+        const scene = this._scenes[id];
+        if (!scene)
+            throw new Error('Unknown scene:' + id);
+        scene.stop(data);
+    }
+    _stop(_scene) {
+        this._active = this._active.filter((s) => s.isActive());
+    }
+    pause(id, data) {
+        const scene = this._scenes[id];
+        if (!scene)
+            throw new Error('Unknown scene:' + id);
+        scene.pause(data);
+    }
+    resume(id, data) {
+        const scene = this._scenes[id];
+        if (!scene)
+            throw new Error('Unknown scene:' + id);
+        scene.resume(data);
+    }
+    sleep(id, data) {
+        const scene = this._scenes[id];
+        if (!scene)
+            throw new Error('Unknown scene:' + id);
+        scene.sleep(data);
+    }
+    wake(id, data) {
+        const scene = this._scenes[id];
+        if (!scene)
+            throw new Error('Unknown scene:' + id);
+        scene.wake(data);
+    }
+    // FRAME
+    frameStart() {
+        this._active.forEach((s) => s.frameStart());
+    }
+    input() {
+        arrayRevEach(this._active, (s) => s.input());
+    }
+    update() {
+        this._active.forEach((s) => s.update());
+    }
+    draw() {
+        this._active.forEach((s, i) => {
+            if (i > 0) {
+                s.buffer.copy(this._active[i - 1].buffer);
+            }
+            s.draw();
+        });
+    }
+    frameEnd() {
+        const last = this._active[this._active.length - 1];
+        if (last) {
+            this._active.forEach((s) => s.frameEnd());
+            last.buffer.render();
+        }
+    }
+    frameDebug() {
+        const last = this._active[this._active.length - 1];
+        if (last) {
+            this._active.forEach((s) => s.frameDebug(last.buffer));
+            last.buffer.render();
+        }
+    }
+}
+
+class App {
+    constructor(opts = {}) {
+        this.dt = 0;
+        this.time = 0;
+        this.realTime = 0;
+        this.skipTime = false;
+        this.fps = 0;
+        this.fpsBuf = [];
+        this.fpsTimer = 0;
+        this.numFrames = 0;
+        this.loopID = 0;
+        this.stopped = true;
+        this.paused = false;
+        this.debug = false;
+        if ('loop' in opts) {
+            this.loop = opts.loop;
+            delete opts.loop;
+        }
+        else {
+            this.loop = new Loop();
+        }
+        // @ts-ignore
+        this.canvas = make$5(opts);
+        this.io = new IOQueue();
+        this.events = new Events(this);
+        this.timers = new Timers(this);
+        this.scenes = new Scenes(this);
+        this.canvas.onclick = this.io.enqueue.bind(this.io);
+        this.canvas.onmousemove = this.io.enqueue.bind(this.io);
+        this.canvas.onclick = this.io.enqueue.bind(this.io);
+        this.canvas.onkeydown = this.io.enqueue.bind(this.io);
+        if (opts.on) {
+            Object.entries(opts.on).forEach(([ev, fn]) => {
+                this.on(ev, fn);
+            });
+        }
+        this.loop.start(this._frame.bind(this));
+    }
+    get buffer() {
+        return this.canvas.buffer;
+    }
+    get node() {
+        return this.canvas.node;
+    }
+    get mouseXY() {
+        return this.canvas.mouse;
+    }
+    on(ev, fn) {
+        return this.events.on(ev, fn);
+    }
+    trigger(ev, ...args) {
+        return this.events.trigger(ev, ...args);
+    }
+    wait(delay, fn, ctx) {
+        if (typeof fn === 'string') {
+            const ev = fn;
+            ctx = ctx || {};
+            fn = () => this.trigger(ev, ctx);
+        }
+        return this.timers.setTimeout(fn, delay);
+    }
+    repeat(delay, fn, ctx) {
+        if (typeof fn === 'string') {
+            const ev = fn;
+            ctx = ctx || {};
+            fn = () => this.trigger(ev, ctx);
+        }
+        return this.timers.setInterval(fn, delay);
+    }
+    // run() {
+    //     this.trigger('run', this);
+    //     let running = false;
+    //     this.loopID = (setInterval(() => {
+    //         if (!running) {
+    //             running = true;
+    //             this._frame();
+    //             running = false;
+    //         }
+    //     }, 16) as unknown) as number;
+    //     this.stopped = false;
+    // }
+    stop() {
+        this.trigger('stop', this);
+        this.loop.stop();
+        this.stopped = true;
+    }
+    _frame() {
+        const t = Date.now();
+        if (document && document.visibilityState !== 'visible') {
+            return;
+        }
+        const realTime = t;
+        const realDt = realTime - this.realTime;
+        this.realTime = realTime;
+        if (!this.skipTime) {
+            this.dt = realDt;
+            this.time += this.dt;
+            this.fpsBuf.push(1000 / this.dt);
+            this.fpsTimer += this.dt;
+            if (this.fpsTimer >= 1) {
+                this.fpsTimer = 0;
+                this.fps = Math.round(this.fpsBuf.reduce((a, b) => a + b) / this.fpsBuf.length);
+                this.fpsBuf = [];
+            }
+        }
+        this.skipTime = false;
+        this.numFrames++;
+        this._frameStart();
+        this._input();
+        if (!this.paused && this.debug !== true) {
+            this._update();
+        }
+        this._draw();
+        this._frameEnd();
+        if (this.debug !== false) {
+            this._frameDebug();
+        }
+        this.io.clear();
+    }
+    _input() {
+        // let the scenes try it first
+        this.scenes.input();
+        // unprocessed io is handled here
+        while (this.io.length) {
+            const ev = this.io.dequeue();
+            if (ev.type === KEYPRESS) {
+                if ((ev.dir && this.events.trigger('dir', ev)) ||
+                    this.events.trigger(ev.key, ev) ||
+                    this.events.trigger(ev.code, ev)) {
+                    continue;
+                }
+            }
+            this.events.trigger(ev.type, ev) || this.events.trigger('io', ev);
+        }
+    }
+    _update() {
+        this.timers.update(this.dt);
+        this.events.trigger('update');
+        this.scenes.update();
+    }
+    _frameStart() {
+        this.events.trigger('frameStart');
+        this.scenes.frameStart();
+    }
+    _draw() {
+        this.events.trigger('draw');
+        this.scenes.draw();
+    }
+    _frameDebug() {
+        this.events.trigger('frameDebug');
+        this.scenes.frameDebug();
+    }
+    _frameEnd() {
+        this.events.trigger('frameEnd');
+        this.scenes.frameEnd();
+        if (this.buffer.changed) {
+            this.buffer.render();
+        }
+    }
+}
+function gw(opts) {
+    const app = new App(opts);
+    return app;
+}
+
+var index = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    IOQueue: IOQueue,
+    Events: Events,
+    Loop: Loop,
+    Timers: Timers,
+    Scene: Scene,
+    Scenes: Scenes,
+    App: App,
+    gw: gw
+});
+
+export { DeleteArray, ERROR, FALSE, IDENTITY, IS_NONZERO, IS_ZERO, NOOP, ONE, TRUE, WARN, ZERO, arrayDelete, arrayFindRight, arrayIncludesAll, arrayInsert, arrayNext, arrayNullify, arrayPrev, arrayRevEach, arraysIntersect, blob, buffer, index$5 as canvas, clamp, index$8 as color, colors, config$1 as config, cosmetic, data, events, first, flag, index$6 as fov, frequency, grid, index as gw, io, lerp, index$3 as light, list, message, nextIndex, object, path, prevIndex, queue, random, range, rng, scheduler, index$4 as sprite, sprites, sum, index$7 as text, tween, types, index$2 as ui, index$1 as widget, xy };

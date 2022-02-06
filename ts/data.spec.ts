@@ -1,5 +1,5 @@
 import 'jest-extended';
-import * as GW from './gw';
+import * as GW from './data';
 
 describe('GW', () => {
     test('exports', () => {

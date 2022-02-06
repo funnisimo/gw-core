@@ -26,6 +26,7 @@ declare function WARN(...args: string[]): void;
 declare function first(...args: any[]): any;
 declare function arraysIntersect(a: any[], b: any[]): boolean;
 declare function arrayIncludesAll(a: any[], b: any[]): boolean;
+declare function arrayRevEach<T>(a: T[], fn: (v: T, i: number) => void): void;
 declare function arrayDelete<T>(a: T[], b: T): boolean;
 declare function arrayNullify<T>(a: (T | null)[], b: T): boolean;
 declare function arrayInsert<T>(a: T[], b: T, beforeFn?: (t: T) => boolean): void;
@@ -35,6 +36,10 @@ declare function arrayNext<T>(a: T[], current: T, fn: (t: T) => boolean, wrap?: 
 declare function arrayPrev<T>(a: T[], current: T, fn: (t: T) => boolean, wrap?: boolean): T | undefined;
 declare function nextIndex(index: number, length: number, wrap?: boolean): number;
 declare function prevIndex(index: number, length: number, wrap?: boolean): number;
+declare class DeleteArray<T> extends Array<T> {
+    constructor(...args: any[]);
+    pushd(v: T): () => void;
+}
 
 declare type ColorData = [number, number, number] | [number, number, number, number];
 declare type ColorBase = string | number | ColorData | Color;
@@ -112,46 +117,46 @@ declare const NONE: Color;
 declare const BLACK: Color;
 declare const WHITE: Color;
 
-type index_d$7_ColorData = ColorData;
-type index_d$7_ColorBase = ColorBase;
-type index_d$7_LightValue = LightValue;
-declare const index_d$7_colors: typeof colors;
-type index_d$7_Color = Color;
-declare const index_d$7_Color: typeof Color;
-declare const index_d$7_fromArray: typeof fromArray;
-declare const index_d$7_fromCss: typeof fromCss;
-declare const index_d$7_fromName: typeof fromName;
-declare const index_d$7_fromNumber: typeof fromNumber;
-declare const index_d$7_separate: typeof separate;
-declare const index_d$7_relativeLuminance: typeof relativeLuminance;
-declare const index_d$7_distance: typeof distance;
-declare const index_d$7_smoothScalar: typeof smoothScalar;
-declare const index_d$7_installSpread: typeof installSpread;
-declare const index_d$7_NONE: typeof NONE;
-declare const index_d$7_BLACK: typeof BLACK;
-declare const index_d$7_WHITE: typeof WHITE;
-declare namespace index_d$7 {
+type index_d$8_ColorData = ColorData;
+type index_d$8_ColorBase = ColorBase;
+type index_d$8_LightValue = LightValue;
+declare const index_d$8_colors: typeof colors;
+type index_d$8_Color = Color;
+declare const index_d$8_Color: typeof Color;
+declare const index_d$8_fromArray: typeof fromArray;
+declare const index_d$8_fromCss: typeof fromCss;
+declare const index_d$8_fromName: typeof fromName;
+declare const index_d$8_fromNumber: typeof fromNumber;
+declare const index_d$8_separate: typeof separate;
+declare const index_d$8_relativeLuminance: typeof relativeLuminance;
+declare const index_d$8_distance: typeof distance;
+declare const index_d$8_smoothScalar: typeof smoothScalar;
+declare const index_d$8_installSpread: typeof installSpread;
+declare const index_d$8_NONE: typeof NONE;
+declare const index_d$8_BLACK: typeof BLACK;
+declare const index_d$8_WHITE: typeof WHITE;
+declare namespace index_d$8 {
   export {
-    index_d$7_ColorData as ColorData,
-    index_d$7_ColorBase as ColorBase,
-    index_d$7_LightValue as LightValue,
-    index_d$7_colors as colors,
-    index_d$7_Color as Color,
-    index_d$7_fromArray as fromArray,
-    index_d$7_fromCss as fromCss,
-    index_d$7_fromName as fromName,
-    index_d$7_fromNumber as fromNumber,
+    index_d$8_ColorData as ColorData,
+    index_d$8_ColorBase as ColorBase,
+    index_d$8_LightValue as LightValue,
+    index_d$8_colors as colors,
+    index_d$8_Color as Color,
+    index_d$8_fromArray as fromArray,
+    index_d$8_fromCss as fromCss,
+    index_d$8_fromName as fromName,
+    index_d$8_fromNumber as fromNumber,
     make$d as make,
     from$4 as from,
-    index_d$7_separate as separate,
-    index_d$7_relativeLuminance as relativeLuminance,
-    index_d$7_distance as distance,
-    index_d$7_smoothScalar as smoothScalar,
+    index_d$8_separate as separate,
+    index_d$8_relativeLuminance as relativeLuminance,
+    index_d$8_distance as distance,
+    index_d$8_smoothScalar as smoothScalar,
     install$3 as install,
-    index_d$7_installSpread as installSpread,
-    index_d$7_NONE as NONE,
-    index_d$7_BLACK as BLACK,
-    index_d$7_WHITE as WHITE,
+    index_d$8_installSpread as installSpread,
+    index_d$8_NONE as NONE,
+    index_d$8_BLACK as BLACK,
+    index_d$8_WHITE as WHITE,
   };
 }
 
@@ -805,6 +810,7 @@ declare class AsyncQueue<T> {
     _waiting: AsyncQueueHandlerFn<T> | null;
     constructor();
     get length(): number;
+    clear(): void;
     get last(): T | undefined;
     get first(): T | undefined;
     enqueue(obj: T): void;
@@ -931,77 +937,77 @@ interface Options {
 }
 declare function configure(opts?: Options): void;
 
-declare const index_d$6_configure: typeof configure;
-declare const index_d$6_apply: typeof apply;
-type index_d$6_Template = Template;
-type index_d$6_CompileOptions = CompileOptions;
-declare const index_d$6_eachChar: typeof eachChar;
-type index_d$6_EachOptions = EachOptions;
-declare const index_d$6_wordWrap: typeof wordWrap;
-declare const index_d$6_splitIntoLines: typeof splitIntoLines;
-declare const index_d$6_addHelper: typeof addHelper;
-declare const index_d$6_options: typeof options;
-type index_d$6_Align = Align;
-type index_d$6_VAlign = VAlign;
-type index_d$6_View = View;
-type index_d$6_HelperFn = HelperFn;
-type index_d$6_HelperObj = HelperObj;
-declare const index_d$6_length: typeof length;
-declare const index_d$6_advanceChars: typeof advanceChars;
-declare const index_d$6_findChar: typeof findChar;
-declare const index_d$6_firstChar: typeof firstChar;
-declare const index_d$6_startsWith: typeof startsWith;
-declare const index_d$6_padStart: typeof padStart;
-declare const index_d$6_padEnd: typeof padEnd;
-declare const index_d$6_center: typeof center;
-declare const index_d$6_truncate: typeof truncate;
-declare const index_d$6_capitalize: typeof capitalize;
-declare const index_d$6_removeColors: typeof removeColors;
-declare const index_d$6_spliceRaw: typeof spliceRaw;
-declare const index_d$6_hash: typeof hash;
-declare const index_d$6_splitArgs: typeof splitArgs;
-declare const index_d$6_toSingularVerb: typeof toSingularVerb;
-declare const index_d$6_toPluralVerb: typeof toPluralVerb;
-declare const index_d$6_toSingularNoun: typeof toSingularNoun;
-declare const index_d$6_toPluralNoun: typeof toPluralNoun;
-declare const index_d$6_toQuantity: typeof toQuantity;
-declare namespace index_d$6 {
+declare const index_d$7_configure: typeof configure;
+declare const index_d$7_apply: typeof apply;
+type index_d$7_Template = Template;
+type index_d$7_CompileOptions = CompileOptions;
+declare const index_d$7_eachChar: typeof eachChar;
+type index_d$7_EachOptions = EachOptions;
+declare const index_d$7_wordWrap: typeof wordWrap;
+declare const index_d$7_splitIntoLines: typeof splitIntoLines;
+declare const index_d$7_addHelper: typeof addHelper;
+declare const index_d$7_options: typeof options;
+type index_d$7_Align = Align;
+type index_d$7_VAlign = VAlign;
+type index_d$7_View = View;
+type index_d$7_HelperFn = HelperFn;
+type index_d$7_HelperObj = HelperObj;
+declare const index_d$7_length: typeof length;
+declare const index_d$7_advanceChars: typeof advanceChars;
+declare const index_d$7_findChar: typeof findChar;
+declare const index_d$7_firstChar: typeof firstChar;
+declare const index_d$7_startsWith: typeof startsWith;
+declare const index_d$7_padStart: typeof padStart;
+declare const index_d$7_padEnd: typeof padEnd;
+declare const index_d$7_center: typeof center;
+declare const index_d$7_truncate: typeof truncate;
+declare const index_d$7_capitalize: typeof capitalize;
+declare const index_d$7_removeColors: typeof removeColors;
+declare const index_d$7_spliceRaw: typeof spliceRaw;
+declare const index_d$7_hash: typeof hash;
+declare const index_d$7_splitArgs: typeof splitArgs;
+declare const index_d$7_toSingularVerb: typeof toSingularVerb;
+declare const index_d$7_toPluralVerb: typeof toPluralVerb;
+declare const index_d$7_toSingularNoun: typeof toSingularNoun;
+declare const index_d$7_toPluralNoun: typeof toPluralNoun;
+declare const index_d$7_toQuantity: typeof toQuantity;
+declare namespace index_d$7 {
   export {
-    index_d$6_configure as configure,
+    index_d$7_configure as configure,
     compile$1 as compile,
-    index_d$6_apply as apply,
-    index_d$6_Template as Template,
-    index_d$6_CompileOptions as CompileOptions,
-    index_d$6_eachChar as eachChar,
-    index_d$6_EachOptions as EachOptions,
-    index_d$6_wordWrap as wordWrap,
-    index_d$6_splitIntoLines as splitIntoLines,
-    index_d$6_addHelper as addHelper,
-    index_d$6_options as options,
-    index_d$6_Align as Align,
-    index_d$6_VAlign as VAlign,
-    index_d$6_View as View,
-    index_d$6_HelperFn as HelperFn,
-    index_d$6_HelperObj as HelperObj,
-    index_d$6_length as length,
-    index_d$6_advanceChars as advanceChars,
-    index_d$6_findChar as findChar,
-    index_d$6_firstChar as firstChar,
-    index_d$6_startsWith as startsWith,
-    index_d$6_padStart as padStart,
-    index_d$6_padEnd as padEnd,
-    index_d$6_center as center,
-    index_d$6_truncate as truncate,
-    index_d$6_capitalize as capitalize,
-    index_d$6_removeColors as removeColors,
-    index_d$6_spliceRaw as spliceRaw,
-    index_d$6_hash as hash,
-    index_d$6_splitArgs as splitArgs,
-    index_d$6_toSingularVerb as toSingularVerb,
-    index_d$6_toPluralVerb as toPluralVerb,
-    index_d$6_toSingularNoun as toSingularNoun,
-    index_d$6_toPluralNoun as toPluralNoun,
-    index_d$6_toQuantity as toQuantity,
+    index_d$7_apply as apply,
+    index_d$7_Template as Template,
+    index_d$7_CompileOptions as CompileOptions,
+    index_d$7_eachChar as eachChar,
+    index_d$7_EachOptions as EachOptions,
+    index_d$7_wordWrap as wordWrap,
+    index_d$7_splitIntoLines as splitIntoLines,
+    index_d$7_addHelper as addHelper,
+    index_d$7_options as options,
+    index_d$7_Align as Align,
+    index_d$7_VAlign as VAlign,
+    index_d$7_View as View,
+    index_d$7_HelperFn as HelperFn,
+    index_d$7_HelperObj as HelperObj,
+    index_d$7_length as length,
+    index_d$7_advanceChars as advanceChars,
+    index_d$7_findChar as findChar,
+    index_d$7_firstChar as firstChar,
+    index_d$7_startsWith as startsWith,
+    index_d$7_padStart as padStart,
+    index_d$7_padEnd as padEnd,
+    index_d$7_center as center,
+    index_d$7_truncate as truncate,
+    index_d$7_capitalize as capitalize,
+    index_d$7_removeColors as removeColors,
+    index_d$7_spliceRaw as spliceRaw,
+    index_d$7_hash as hash,
+    index_d$7_splitArgs as splitArgs,
+    index_d$7_toSingularVerb as toSingularVerb,
+    index_d$7_toPluralVerb as toPluralVerb,
+    index_d$7_toSingularNoun as toSingularNoun,
+    index_d$7_toPluralNoun as toPluralNoun,
+    index_d$7_toQuantity as toQuantity,
   };
 }
 
@@ -1195,6 +1201,7 @@ declare const STOP = "stop";
 declare function setKeymap(keymap: IOMap): void;
 declare function handlerFor(ev: EventType, km: Record<string, any>): any | null;
 declare function dispatchEvent(ev: Event$1, km: IOMap, thisArg?: any): Promise<any>;
+declare function recycleEvent(ev: Event$1): void;
 declare function makeStopEvent(): Event$1;
 declare function makeCustomEvent(type: string, opts?: Partial<Event$1>): Event$1;
 declare function makeTickEvent(dt: number): Event$1;
@@ -1202,9 +1209,9 @@ declare function makeKeyEvent(e: KeyboardEvent): Event$1;
 declare function keyCodeDirection(key: string): Loc$1 | null;
 declare function ignoreKeyEvent(e: KeyboardEvent): boolean;
 declare function makeMouseEvent(e: MouseEvent, x: number, y: number): Event$1;
-declare type TimerFn = () => void;
-interface TimerInfo {
-    action: TimerFn;
+declare type TimerFn$1 = () => void;
+interface TimerInfo$1 {
+    action: TimerFn$1;
     time: number;
 }
 interface IOHandler {
@@ -1214,8 +1221,8 @@ interface IOHandler {
     nextKeyPress(ms?: number, match?: EventMatchFn): Promise<Event$1 | null>;
     pause(ms: number): Promise<boolean>;
     waitForAck(): Promise<boolean>;
-    setTimeout(fn: TimerFn, ms: number): void;
-    clearTimeout(fn: TimerFn): void;
+    setTimeout(fn: TimerFn$1, ms: number): void;
+    clearTimeout(fn: TimerFn$1): void;
     run(keymap: IOMap, thisArg?: any): Promise<any>;
     finish(r: any): void;
 }
@@ -1224,11 +1231,11 @@ declare class Handler implements IOHandler, Animator {
     _events: AsyncQueue<Event$1>;
     _result: any;
     _tweens: Animation[];
-    _timers: TimerInfo[];
-    _loop: Loop | null;
+    _timers: TimerInfo$1[];
+    _loop: Loop$1 | null;
     mouse: XY;
     lastClick: XY;
-    constructor(loop?: Loop);
+    constructor(loop?: Loop$1);
     get running(): boolean;
     hasEvents(): number;
     clearEvents(): void;
@@ -1243,11 +1250,11 @@ declare class Handler implements IOHandler, Animator {
     waitForAck(): Promise<boolean>;
     addAnimation(a: Animation): void;
     removeAnimation(a: Animation): void;
-    setTimeout(action: TimerFn, time: number): TimerFn;
-    clearTimeout(action: TimerFn): void;
+    setTimeout(action: TimerFn$1, time: number): TimerFn$1;
+    clearTimeout(action: TimerFn$1): void;
     _tick(dt: number): boolean;
 }
-declare function make$6(andPush?: boolean | Loop): Handler;
+declare function make$6(andPush?: boolean | Loop$1): Handler;
 declare function nextEvent(ms?: number): Promise<Event$1 | null>;
 declare function nextTick(ms?: number): Promise<Event$1 | null>;
 declare function nextKeyOrClick(ms?: number, match?: EventMatchFn): Promise<Event$1 | null>;
@@ -1259,7 +1266,7 @@ interface IOLoop {
     popHandler(handler: Handler): void;
     enqueue(ev: Event$1): void;
 }
-declare class Loop implements Animator {
+declare class Loop$1 implements Animator {
     handlers: Handler[];
     currentHandler: Handler | null;
     _tickInterval: number;
@@ -1274,7 +1281,7 @@ declare class Loop implements Animator {
     addAnimation(a: Animation): void;
     removeAnimation(a: Animation): void;
 }
-declare const loop: Loop;
+declare const loop: Loop$1;
 declare function pushHandler(handler: Handler): void;
 declare function popHandler(handler: Handler): void;
 declare function enqueue(ev: Event$1): void;
@@ -1292,6 +1299,7 @@ declare const io_d_STOP: typeof STOP;
 declare const io_d_setKeymap: typeof setKeymap;
 declare const io_d_handlerFor: typeof handlerFor;
 declare const io_d_dispatchEvent: typeof dispatchEvent;
+declare const io_d_recycleEvent: typeof recycleEvent;
 declare const io_d_makeStopEvent: typeof makeStopEvent;
 declare const io_d_makeCustomEvent: typeof makeCustomEvent;
 declare const io_d_makeTickEvent: typeof makeTickEvent;
@@ -1299,8 +1307,6 @@ declare const io_d_makeKeyEvent: typeof makeKeyEvent;
 declare const io_d_keyCodeDirection: typeof keyCodeDirection;
 declare const io_d_ignoreKeyEvent: typeof ignoreKeyEvent;
 declare const io_d_makeMouseEvent: typeof makeMouseEvent;
-type io_d_TimerFn = TimerFn;
-type io_d_TimerInfo = TimerInfo;
 type io_d_IOHandler = IOHandler;
 type io_d_Handler = Handler;
 declare const io_d_Handler: typeof Handler;
@@ -1311,8 +1317,6 @@ declare const io_d_nextKeyPress: typeof nextKeyPress;
 declare const io_d_pause: typeof pause;
 declare const io_d_waitForAck: typeof waitForAck;
 type io_d_IOLoop = IOLoop;
-type io_d_Loop = Loop;
-declare const io_d_Loop: typeof Loop;
 declare const io_d_loop: typeof loop;
 declare const io_d_pushHandler: typeof pushHandler;
 declare const io_d_popHandler: typeof popHandler;
@@ -1334,6 +1338,7 @@ declare namespace io_d {
     io_d_setKeymap as setKeymap,
     io_d_handlerFor as handlerFor,
     io_d_dispatchEvent as dispatchEvent,
+    io_d_recycleEvent as recycleEvent,
     io_d_makeStopEvent as makeStopEvent,
     io_d_makeCustomEvent as makeCustomEvent,
     io_d_makeTickEvent as makeTickEvent,
@@ -1341,8 +1346,8 @@ declare namespace io_d {
     io_d_keyCodeDirection as keyCodeDirection,
     io_d_ignoreKeyEvent as ignoreKeyEvent,
     io_d_makeMouseEvent as makeMouseEvent,
-    io_d_TimerFn as TimerFn,
-    io_d_TimerInfo as TimerInfo,
+    TimerFn$1 as TimerFn,
+    TimerInfo$1 as TimerInfo,
     io_d_IOHandler as IOHandler,
     io_d_Handler as Handler,
     make$6 as make,
@@ -1353,7 +1358,7 @@ declare namespace io_d {
     io_d_pause as pause,
     io_d_waitForAck as waitForAck,
     io_d_IOLoop as IOLoop,
-    io_d_Loop as Loop,
+    Loop$1 as Loop,
     io_d_loop as loop,
     io_d_pushHandler as pushHandler,
     io_d_popHandler as popHandler,
@@ -1505,35 +1510,35 @@ declare class FovSystem implements FovTracker {
     update(cx: number, cy: number, cr?: number): boolean;
 }
 
-type index_d$5_FovFlags = FovFlags;
-declare const index_d$5_FovFlags: typeof FovFlags;
-type index_d$5_FovStrategy = FovStrategy;
-type index_d$5_SetVisibleFn = SetVisibleFn;
-type index_d$5_ViewportCb = ViewportCb;
-type index_d$5_FovSite = FovSite;
-type index_d$5_FovSubject = FovSubject;
-type index_d$5_FovTracker = FovTracker;
-type index_d$5_FOV = FOV;
-declare const index_d$5_FOV: typeof FOV;
-type index_d$5_FovChangeFn = FovChangeFn;
-type index_d$5_FovNoticer = FovNoticer;
-type index_d$5_FovSystemOptions = FovSystemOptions;
-type index_d$5_FovSystem = FovSystem;
-declare const index_d$5_FovSystem: typeof FovSystem;
-declare namespace index_d$5 {
+type index_d$6_FovFlags = FovFlags;
+declare const index_d$6_FovFlags: typeof FovFlags;
+type index_d$6_FovStrategy = FovStrategy;
+type index_d$6_SetVisibleFn = SetVisibleFn;
+type index_d$6_ViewportCb = ViewportCb;
+type index_d$6_FovSite = FovSite;
+type index_d$6_FovSubject = FovSubject;
+type index_d$6_FovTracker = FovTracker;
+type index_d$6_FOV = FOV;
+declare const index_d$6_FOV: typeof FOV;
+type index_d$6_FovChangeFn = FovChangeFn;
+type index_d$6_FovNoticer = FovNoticer;
+type index_d$6_FovSystemOptions = FovSystemOptions;
+type index_d$6_FovSystem = FovSystem;
+declare const index_d$6_FovSystem: typeof FovSystem;
+declare namespace index_d$6 {
   export {
-    index_d$5_FovFlags as FovFlags,
-    index_d$5_FovStrategy as FovStrategy,
-    index_d$5_SetVisibleFn as SetVisibleFn,
-    index_d$5_ViewportCb as ViewportCb,
-    index_d$5_FovSite as FovSite,
-    index_d$5_FovSubject as FovSubject,
-    index_d$5_FovTracker as FovTracker,
-    index_d$5_FOV as FOV,
-    index_d$5_FovChangeFn as FovChangeFn,
-    index_d$5_FovNoticer as FovNoticer,
-    index_d$5_FovSystemOptions as FovSystemOptions,
-    index_d$5_FovSystem as FovSystem,
+    index_d$6_FovFlags as FovFlags,
+    index_d$6_FovStrategy as FovStrategy,
+    index_d$6_SetVisibleFn as SetVisibleFn,
+    index_d$6_ViewportCb as ViewportCb,
+    index_d$6_FovSite as FovSite,
+    index_d$6_FovSubject as FovSubject,
+    index_d$6_FovTracker as FovTracker,
+    index_d$6_FOV as FOV,
+    index_d$6_FovChangeFn as FovChangeFn,
+    index_d$6_FovNoticer as FovNoticer,
+    index_d$6_FovSystemOptions as FovSystemOptions,
+    index_d$6_FovSystem as FovSystem,
   };
 }
 
@@ -1580,7 +1585,7 @@ declare type EventFn = (...args: any[]) => void;
 declare type Listener<L> = {
     [event in keyof L]: EventFn;
 };
-declare type Events = {
+declare type Events$1 = {
     [k: string]: (...args: any[]) => any;
 };
 /**
@@ -1607,7 +1612,7 @@ declare class EventListener implements ListItem<EventListener> {
      */
     matches(fn: EventFn, context?: any, once?: boolean): boolean;
 }
-declare class EventEmitter<L extends Listener<L> = Events> {
+declare class EventEmitter<L extends Listener<L> = Events$1> {
     _events: Record<string, EventListener | null>;
     constructor();
     /**
@@ -1689,16 +1694,15 @@ declare class EventEmitter<L extends Listener<L> = Events> {
 
 type events_d_EventFn = EventFn;
 type events_d_Listener<L> = Listener<L>;
-type events_d_Events = Events;
 type events_d_EventListener = EventListener;
 declare const events_d_EventListener: typeof EventListener;
-type events_d_EventEmitter<L extends Listener<L> = Events> = EventEmitter<L>;
+type events_d_EventEmitter<L extends Listener<L> = Events$1> = EventEmitter<L>;
 declare const events_d_EventEmitter: typeof EventEmitter;
 declare namespace events_d {
   export {
     events_d_EventFn as EventFn,
     events_d_Listener as Listener,
-    events_d_Events as Events,
+    Events$1 as Events,
     events_d_EventListener as EventListener,
     events_d_EventEmitter as EventEmitter,
   };
@@ -1751,8 +1755,9 @@ interface BufferTarget {
 }
 declare class Buffer extends Buffer$1 {
     _target: BufferTarget;
-    _parent: Buffer | null;
+    _parent?: Buffer;
     constructor(canvas: BufferTarget, parent?: Buffer);
+    clone(): this;
     toGlyph(ch: string | number): number;
     render(): this;
     reset(): void;
@@ -1805,7 +1810,7 @@ declare abstract class BaseCanvas implements BufferTarget {
     _height: number;
     _buffers: Buffer[];
     _current: number;
-    loop: Loop;
+    loop: Loop$1;
     constructor(width: number, height: number, glyphs: Glyphs);
     get node(): HTMLCanvasElement;
     get width(): number;
@@ -1864,7 +1869,7 @@ declare class CanvasGL extends BaseCanvas {
     protected _setGlyphs(glyphs: Glyphs): boolean;
     _uploadGlyphs(): void;
     resize(width: number, height: number): void;
-    draw(data: Buffer$1): boolean;
+    draw(buffer: Buffer$1): boolean;
     copyTo(data: Buffer$1): void;
     _render(): void;
 }
@@ -1875,39 +1880,39 @@ interface BaseOptions {
     glyphs?: Glyphs;
     div?: HTMLElement | string;
     io?: true;
-    loop?: Loop;
+    loop?: Loop$1;
     image?: HTMLImageElement | string;
 }
 declare type CanvasOptions = BaseOptions & GlyphOptions;
 declare function make$4(opts: Partial<CanvasOptions>): BaseCanvas;
 declare function make$4(width: number, height: number, opts?: Partial<CanvasOptions>): BaseCanvas;
 
-type index_d$4_BufferTarget = BufferTarget;
-type index_d$4_Buffer = Buffer;
-declare const index_d$4_Buffer: typeof Buffer;
-type index_d$4_GlyphOptions = GlyphOptions;
-type index_d$4_Glyphs = Glyphs;
-declare const index_d$4_Glyphs: typeof Glyphs;
-type index_d$4_NotSupportedError = NotSupportedError;
-declare const index_d$4_NotSupportedError: typeof NotSupportedError;
-type index_d$4_BaseCanvas = BaseCanvas;
-declare const index_d$4_BaseCanvas: typeof BaseCanvas;
-type index_d$4_Canvas2D = Canvas2D;
-declare const index_d$4_Canvas2D: typeof Canvas2D;
-type index_d$4_CanvasGL = CanvasGL;
-declare const index_d$4_CanvasGL: typeof CanvasGL;
-type index_d$4_CanvasOptions = CanvasOptions;
-declare namespace index_d$4 {
+type index_d$5_BufferTarget = BufferTarget;
+type index_d$5_Buffer = Buffer;
+declare const index_d$5_Buffer: typeof Buffer;
+type index_d$5_GlyphOptions = GlyphOptions;
+type index_d$5_Glyphs = Glyphs;
+declare const index_d$5_Glyphs: typeof Glyphs;
+type index_d$5_NotSupportedError = NotSupportedError;
+declare const index_d$5_NotSupportedError: typeof NotSupportedError;
+type index_d$5_BaseCanvas = BaseCanvas;
+declare const index_d$5_BaseCanvas: typeof BaseCanvas;
+type index_d$5_Canvas2D = Canvas2D;
+declare const index_d$5_Canvas2D: typeof Canvas2D;
+type index_d$5_CanvasGL = CanvasGL;
+declare const index_d$5_CanvasGL: typeof CanvasGL;
+type index_d$5_CanvasOptions = CanvasOptions;
+declare namespace index_d$5 {
   export {
-    index_d$4_BufferTarget as BufferTarget,
-    index_d$4_Buffer as Buffer,
-    index_d$4_GlyphOptions as GlyphOptions,
-    index_d$4_Glyphs as Glyphs,
-    index_d$4_NotSupportedError as NotSupportedError,
-    index_d$4_BaseCanvas as BaseCanvas,
-    index_d$4_Canvas2D as Canvas2D,
-    index_d$4_CanvasGL as CanvasGL,
-    index_d$4_CanvasOptions as CanvasOptions,
+    index_d$5_BufferTarget as BufferTarget,
+    index_d$5_Buffer as Buffer,
+    index_d$5_GlyphOptions as GlyphOptions,
+    index_d$5_Glyphs as Glyphs,
+    index_d$5_NotSupportedError as NotSupportedError,
+    index_d$5_BaseCanvas as BaseCanvas,
+    index_d$5_Canvas2D as Canvas2D,
+    index_d$5_CanvasGL as CanvasGL,
+    index_d$5_CanvasOptions as CanvasOptions,
     make$4 as make,
   };
 }
@@ -1948,27 +1953,27 @@ interface SpriteData {
     readonly opacity: number;
 }
 
-type index_d$3_SpriteConfig = SpriteConfig;
-type index_d$3_Sprite = Sprite;
-declare const index_d$3_Sprite: typeof Sprite;
-declare const index_d$3_sprites: typeof sprites;
-type index_d$3_DrawInfo = DrawInfo;
-type index_d$3_Mixer = Mixer;
-declare const index_d$3_Mixer: typeof Mixer;
-declare const index_d$3_makeMixer: typeof makeMixer;
-type index_d$3_SpriteData = SpriteData;
-declare namespace index_d$3 {
+type index_d$4_SpriteConfig = SpriteConfig;
+type index_d$4_Sprite = Sprite;
+declare const index_d$4_Sprite: typeof Sprite;
+declare const index_d$4_sprites: typeof sprites;
+type index_d$4_DrawInfo = DrawInfo;
+type index_d$4_Mixer = Mixer;
+declare const index_d$4_Mixer: typeof Mixer;
+declare const index_d$4_makeMixer: typeof makeMixer;
+type index_d$4_SpriteData = SpriteData;
+declare namespace index_d$4 {
   export {
-    index_d$3_SpriteConfig as SpriteConfig,
-    index_d$3_Sprite as Sprite,
-    index_d$3_sprites as sprites,
+    index_d$4_SpriteConfig as SpriteConfig,
+    index_d$4_Sprite as Sprite,
+    index_d$4_sprites as sprites,
     make$3 as make,
     from$1 as from,
     install$2 as install,
-    index_d$3_DrawInfo as DrawInfo,
-    index_d$3_Mixer as Mixer,
-    index_d$3_makeMixer as makeMixer,
-    index_d$3_SpriteData as SpriteData,
+    index_d$4_DrawInfo as DrawInfo,
+    index_d$4_Mixer as Mixer,
+    index_d$4_makeMixer as makeMixer,
+    index_d$4_SpriteData as SpriteData,
   };
 }
 
@@ -2201,49 +2206,49 @@ declare class LightSystem implements LightSystemType, PaintSite {
     addCellLight(x: number, y: number, light: LightValue, dispelShadows: boolean): void;
 }
 
-type index_d$2_LightConfig = LightConfig;
-type index_d$2_LightBase = LightBase;
-type index_d$2_LightType = LightType;
-type index_d$2_LightCb = LightCb;
-type index_d$2_PaintSite = PaintSite;
-type index_d$2_LightSystemSite = LightSystemSite;
-type index_d$2_LightSystemType = LightSystemType;
-declare const index_d$2_config: typeof config;
-type index_d$2_Light = Light;
-declare const index_d$2_Light: typeof Light;
-declare const index_d$2_intensity: typeof intensity;
-declare const index_d$2_isDarkLight: typeof isDarkLight;
-declare const index_d$2_isShadowLight: typeof isShadowLight;
-declare const index_d$2_lights: typeof lights;
-declare const index_d$2_from: typeof from;
-declare const index_d$2_install: typeof install;
-declare const index_d$2_installAll: typeof installAll;
-type index_d$2_StaticLightInfo = StaticLightInfo;
-type index_d$2_LightSystemOptions = LightSystemOptions;
-type index_d$2_LightSystem = LightSystem;
-declare const index_d$2_LightSystem: typeof LightSystem;
-declare namespace index_d$2 {
+type index_d$3_LightConfig = LightConfig;
+type index_d$3_LightBase = LightBase;
+type index_d$3_LightType = LightType;
+type index_d$3_LightCb = LightCb;
+type index_d$3_PaintSite = PaintSite;
+type index_d$3_LightSystemSite = LightSystemSite;
+type index_d$3_LightSystemType = LightSystemType;
+declare const index_d$3_config: typeof config;
+type index_d$3_Light = Light;
+declare const index_d$3_Light: typeof Light;
+declare const index_d$3_intensity: typeof intensity;
+declare const index_d$3_isDarkLight: typeof isDarkLight;
+declare const index_d$3_isShadowLight: typeof isShadowLight;
+declare const index_d$3_lights: typeof lights;
+declare const index_d$3_from: typeof from;
+declare const index_d$3_install: typeof install;
+declare const index_d$3_installAll: typeof installAll;
+type index_d$3_StaticLightInfo = StaticLightInfo;
+type index_d$3_LightSystemOptions = LightSystemOptions;
+type index_d$3_LightSystem = LightSystem;
+declare const index_d$3_LightSystem: typeof LightSystem;
+declare namespace index_d$3 {
   export {
-    index_d$2_LightConfig as LightConfig,
-    index_d$2_LightBase as LightBase,
-    index_d$2_LightType as LightType,
-    index_d$2_LightCb as LightCb,
-    index_d$2_PaintSite as PaintSite,
-    index_d$2_LightSystemSite as LightSystemSite,
-    index_d$2_LightSystemType as LightSystemType,
-    index_d$2_config as config,
-    index_d$2_Light as Light,
-    index_d$2_intensity as intensity,
-    index_d$2_isDarkLight as isDarkLight,
-    index_d$2_isShadowLight as isShadowLight,
+    index_d$3_LightConfig as LightConfig,
+    index_d$3_LightBase as LightBase,
+    index_d$3_LightType as LightType,
+    index_d$3_LightCb as LightCb,
+    index_d$3_PaintSite as PaintSite,
+    index_d$3_LightSystemSite as LightSystemSite,
+    index_d$3_LightSystemType as LightSystemType,
+    index_d$3_config as config,
+    index_d$3_Light as Light,
+    index_d$3_intensity as intensity,
+    index_d$3_isDarkLight as isDarkLight,
+    index_d$3_isShadowLight as isShadowLight,
     make$1 as make,
-    index_d$2_lights as lights,
-    index_d$2_from as from,
-    index_d$2_install as install,
-    index_d$2_installAll as installAll,
-    index_d$2_StaticLightInfo as StaticLightInfo,
-    index_d$2_LightSystemOptions as LightSystemOptions,
-    index_d$2_LightSystem as LightSystem,
+    index_d$3_lights as lights,
+    index_d$3_from as from,
+    index_d$3_install as install,
+    index_d$3_installAll as installAll,
+    index_d$3_StaticLightInfo as StaticLightInfo,
+    index_d$3_LightSystemOptions as LightSystemOptions,
+    index_d$3_LightSystem as LightSystem,
   };
 }
 
@@ -2724,7 +2729,7 @@ declare module './layer' {
 
 interface UIOptions extends CanvasOptions {
     canvas?: BaseCanvas;
-    loop?: Loop;
+    loop?: Loop$1;
     layer?: boolean;
 }
 interface AlertOptions extends DialogOptions {
@@ -2763,7 +2768,7 @@ interface InputBoxOptions extends Omit<DialogOptions, 'width' | 'height'> {
 }
 declare class UI {
     canvas: BaseCanvas;
-    loop: Loop;
+    loop: Loop$1;
     buffer: Buffer;
     _layer?: Layer;
     layers: Layer[];
@@ -2796,7 +2801,7 @@ interface LayerOptions {
 interface BufferStack {
     readonly buffer: Buffer;
     readonly parentBuffer: Buffer;
-    readonly loop: Loop;
+    readonly loop: Loop$1;
     pushBuffer(): Buffer;
     popBuffer(): void;
 }
@@ -2815,8 +2820,8 @@ declare class Layer implements UILayer, Animator {
     tick(_e: Event$1): boolean | Promise<boolean>;
     reset(): void;
     draw(): void;
-    setTimeout(action: TimerFn, time: number): TimerFn;
-    clearTimeout(action: TimerFn): void;
+    setTimeout(action: TimerFn$1, time: number): TimerFn$1;
+    clearTimeout(action: TimerFn$1): void;
     addAnimation(a: Animation): void;
     removeAnimation(a: Animation): void;
     run(keymap?: IOMap, ms?: number): Promise<any>;
@@ -2841,79 +2846,79 @@ declare module './layer' {
     }
 }
 
-type index_d$1_Size = Size;
-type index_d$1_PrefixType = PrefixType;
-type index_d$1_PropType = PropType;
-type index_d$1_UIStyle = UIStyle;
-type index_d$1_StyleOptions = StyleOptions;
-type index_d$1_UISelectable = UISelectable;
-type index_d$1_UIStylable = UIStylable;
-type index_d$1_UILayer = UILayer;
-type index_d$1_GridTarget = GridTarget;
-type index_d$1_Grid = Grid;
-declare const index_d$1_Grid: typeof Grid;
-type index_d$1_MatchFn = MatchFn;
-type index_d$1_Selector = Selector;
-declare const index_d$1_Selector: typeof Selector;
-declare const index_d$1_compile: typeof compile;
-type index_d$1_StyleType = StyleType;
-type index_d$1_Style = Style;
-declare const index_d$1_Style: typeof Style;
-declare const index_d$1_makeStyle: typeof makeStyle;
-type index_d$1_ComputedStyle = ComputedStyle;
-declare const index_d$1_ComputedStyle: typeof ComputedStyle;
-type index_d$1_Sheet = Sheet;
-declare const index_d$1_Sheet: typeof Sheet;
-declare const index_d$1_defaultStyle: typeof defaultStyle;
-type index_d$1_StartCb = StartCb;
-type index_d$1_DrawCb = DrawCb;
-type index_d$1_EventCb = EventCb;
-type index_d$1_FinishCb = FinishCb;
-type index_d$1_LayerOptions = LayerOptions;
-type index_d$1_BufferStack = BufferStack;
-type index_d$1_Layer = Layer;
-declare const index_d$1_Layer: typeof Layer;
-type index_d$1_UIOptions = UIOptions;
-type index_d$1_AlertOptions = AlertOptions;
-type index_d$1_ConfirmOptions = ConfirmOptions;
-type index_d$1_InputBoxOptions = InputBoxOptions;
-type index_d$1_UI = UI;
-declare const index_d$1_UI: typeof UI;
-declare const index_d$1_make: typeof make;
-declare namespace index_d$1 {
+type index_d$2_Size = Size;
+type index_d$2_PrefixType = PrefixType;
+type index_d$2_PropType = PropType;
+type index_d$2_UIStyle = UIStyle;
+type index_d$2_StyleOptions = StyleOptions;
+type index_d$2_UISelectable = UISelectable;
+type index_d$2_UIStylable = UIStylable;
+type index_d$2_UILayer = UILayer;
+type index_d$2_GridTarget = GridTarget;
+type index_d$2_Grid = Grid;
+declare const index_d$2_Grid: typeof Grid;
+type index_d$2_MatchFn = MatchFn;
+type index_d$2_Selector = Selector;
+declare const index_d$2_Selector: typeof Selector;
+declare const index_d$2_compile: typeof compile;
+type index_d$2_StyleType = StyleType;
+type index_d$2_Style = Style;
+declare const index_d$2_Style: typeof Style;
+declare const index_d$2_makeStyle: typeof makeStyle;
+type index_d$2_ComputedStyle = ComputedStyle;
+declare const index_d$2_ComputedStyle: typeof ComputedStyle;
+type index_d$2_Sheet = Sheet;
+declare const index_d$2_Sheet: typeof Sheet;
+declare const index_d$2_defaultStyle: typeof defaultStyle;
+type index_d$2_StartCb = StartCb;
+type index_d$2_DrawCb = DrawCb;
+type index_d$2_EventCb = EventCb;
+type index_d$2_FinishCb = FinishCb;
+type index_d$2_LayerOptions = LayerOptions;
+type index_d$2_BufferStack = BufferStack;
+type index_d$2_Layer = Layer;
+declare const index_d$2_Layer: typeof Layer;
+type index_d$2_UIOptions = UIOptions;
+type index_d$2_AlertOptions = AlertOptions;
+type index_d$2_ConfirmOptions = ConfirmOptions;
+type index_d$2_InputBoxOptions = InputBoxOptions;
+type index_d$2_UI = UI;
+declare const index_d$2_UI: typeof UI;
+declare const index_d$2_make: typeof make;
+declare namespace index_d$2 {
   export {
-    index_d$1_Size as Size,
-    index_d$1_PrefixType as PrefixType,
-    index_d$1_PropType as PropType,
-    index_d$1_UIStyle as UIStyle,
-    index_d$1_StyleOptions as StyleOptions,
-    index_d$1_UISelectable as UISelectable,
-    index_d$1_UIStylable as UIStylable,
-    index_d$1_UILayer as UILayer,
-    index_d$1_GridTarget as GridTarget,
-    index_d$1_Grid as Grid,
-    index_d$1_MatchFn as MatchFn,
-    index_d$1_Selector as Selector,
-    index_d$1_compile as compile,
-    index_d$1_StyleType as StyleType,
-    index_d$1_Style as Style,
-    index_d$1_makeStyle as makeStyle,
-    index_d$1_ComputedStyle as ComputedStyle,
-    index_d$1_Sheet as Sheet,
-    index_d$1_defaultStyle as defaultStyle,
-    index_d$1_StartCb as StartCb,
-    index_d$1_DrawCb as DrawCb,
-    index_d$1_EventCb as EventCb,
-    index_d$1_FinishCb as FinishCb,
-    index_d$1_LayerOptions as LayerOptions,
-    index_d$1_BufferStack as BufferStack,
-    index_d$1_Layer as Layer,
-    index_d$1_UIOptions as UIOptions,
-    index_d$1_AlertOptions as AlertOptions,
-    index_d$1_ConfirmOptions as ConfirmOptions,
-    index_d$1_InputBoxOptions as InputBoxOptions,
-    index_d$1_UI as UI,
-    index_d$1_make as make,
+    index_d$2_Size as Size,
+    index_d$2_PrefixType as PrefixType,
+    index_d$2_PropType as PropType,
+    index_d$2_UIStyle as UIStyle,
+    index_d$2_StyleOptions as StyleOptions,
+    index_d$2_UISelectable as UISelectable,
+    index_d$2_UIStylable as UIStylable,
+    index_d$2_UILayer as UILayer,
+    index_d$2_GridTarget as GridTarget,
+    index_d$2_Grid as Grid,
+    index_d$2_MatchFn as MatchFn,
+    index_d$2_Selector as Selector,
+    index_d$2_compile as compile,
+    index_d$2_StyleType as StyleType,
+    index_d$2_Style as Style,
+    index_d$2_makeStyle as makeStyle,
+    index_d$2_ComputedStyle as ComputedStyle,
+    index_d$2_Sheet as Sheet,
+    index_d$2_defaultStyle as defaultStyle,
+    index_d$2_StartCb as StartCb,
+    index_d$2_DrawCb as DrawCb,
+    index_d$2_EventCb as EventCb,
+    index_d$2_FinishCb as FinishCb,
+    index_d$2_LayerOptions as LayerOptions,
+    index_d$2_BufferStack as BufferStack,
+    index_d$2_Layer as Layer,
+    index_d$2_UIOptions as UIOptions,
+    index_d$2_AlertOptions as AlertOptions,
+    index_d$2_ConfirmOptions as ConfirmOptions,
+    index_d$2_InputBoxOptions as InputBoxOptions,
+    index_d$2_UI as UI,
+    index_d$2_make as make,
   };
 }
 
@@ -3335,191 +3340,411 @@ declare class Inquiry {
     _fireEvent(name: string, source: Widget | null, args?: any): boolean;
 }
 
-type index_d_WidgetOptions = WidgetOptions;
-type index_d_SetParentOptions = SetParentOptions;
-type index_d_Widget = Widget;
-declare const index_d_Widget: typeof Widget;
-type index_d_WidgetLayerOptions = WidgetLayerOptions;
-type index_d_WidgetLayer = WidgetLayer;
-declare const index_d_WidgetLayer: typeof WidgetLayer;
-type index_d_Body = Body;
-declare const index_d_Body: typeof Body;
-type index_d_TextOptions = TextOptions;
-type index_d_Text = Text;
-declare const index_d_Text: typeof Text;
-type index_d_AddTextOptions = AddTextOptions;
-type index_d_BorderOptions = BorderOptions;
-type index_d_Border = Border;
-declare const index_d_Border: typeof Border;
-type index_d_AddBorderOptions = AddBorderOptions;
-declare const index_d_drawBorder: typeof drawBorder;
-type index_d_ButtonOptions = ButtonOptions;
-type index_d_Button = Button;
-declare const index_d_Button: typeof Button;
-type index_d_AddButtonOptions = AddButtonOptions;
-type index_d_PadInfo = PadInfo;
-type index_d_DialogOptions = DialogOptions;
-declare const index_d_toPadArray: typeof toPadArray;
-type index_d_Dialog = Dialog;
-declare const index_d_Dialog: typeof Dialog;
-type index_d_AddDialogOptions = AddDialogOptions;
-type index_d_FieldsetOptions = FieldsetOptions;
-type index_d_Fieldset = Fieldset;
-declare const index_d_Fieldset: typeof Fieldset;
-type index_d_AddFieldsetOptions = AddFieldsetOptions;
-type index_d_FieldOptions = FieldOptions;
-type index_d_Field = Field;
-declare const index_d_Field: typeof Field;
-type index_d_OrderedListOptions = OrderedListOptions;
-type index_d_OrderedList = OrderedList;
-declare const index_d_OrderedList: typeof OrderedList;
-type index_d_UnorderedListOptions = UnorderedListOptions;
-type index_d_UnorderedList = UnorderedList;
-declare const index_d_UnorderedList: typeof UnorderedList;
-type index_d_AddOrderedListOptions = AddOrderedListOptions;
-type index_d_AddUnorderedListOptions = AddUnorderedListOptions;
-type index_d_InputOptions = InputOptions;
-type index_d_Input = Input;
-declare const index_d_Input: typeof Input;
-type index_d_AddInputOptions = AddInputOptions;
-type index_d_FormatFn = FormatFn;
-type index_d_Value = Value;
-type index_d_SelectType = SelectType;
-type index_d_HoverType = HoverType;
-type index_d_DataObject = DataObject;
-type index_d_DataItem = DataItem;
-type index_d_DataType = DataType;
-type index_d_BorderType = BorderType;
-type index_d_ColumnOptions = ColumnOptions;
-type index_d_DataTableOptions = DataTableOptions;
-type index_d_Column = Column;
-declare const index_d_Column: typeof Column;
-type index_d_DataTable = DataTable;
-declare const index_d_DataTable: typeof DataTable;
-type index_d_TD = TD;
-declare const index_d_TD: typeof TD;
-type index_d_AddDataTableOptions = AddDataTableOptions;
-type index_d_DataListOptions = DataListOptions;
-type index_d_DataList = DataList;
-declare const index_d_DataList: typeof DataList;
-type index_d_AddDataListOptions = AddDataListOptions;
-type index_d_Rec<T> = Rec<T>;
-type index_d_DropdownConfig = DropdownConfig;
-type index_d_ActionConfig = ActionConfig;
-type index_d_ButtonConfig = ButtonConfig;
-type index_d_MenuOptions = MenuOptions;
-type index_d_Menu = Menu;
-declare const index_d_Menu: typeof Menu;
-type index_d_MenuButtonOptions = MenuButtonOptions;
-type index_d_MenuButton = MenuButton;
-declare const index_d_MenuButton: typeof MenuButton;
-type index_d_AddMenuOptions = AddMenuOptions;
-type index_d_MenubarOptions = MenubarOptions;
-type index_d_Menubar = Menubar;
-declare const index_d_Menubar: typeof Menubar;
-type index_d_MenubarButtonOptions = MenubarButtonOptions;
-type index_d_MenubarButton = MenubarButton;
-declare const index_d_MenubarButton: typeof MenubarButton;
-type index_d_AddMenubarOptions = AddMenubarOptions;
-type index_d_MenuViewer = MenuViewer;
-declare const index_d_MenuViewer: typeof MenuViewer;
-type index_d_SelectOptions = SelectOptions;
-type index_d_Select = Select;
-declare const index_d_Select: typeof Select;
-type index_d_AddSelectOptions = AddSelectOptions;
-type index_d_NextType = NextType;
-type index_d_PromptChoice = PromptChoice;
-type index_d_PromptOptions = PromptOptions;
-type index_d_Prompt = Prompt;
-declare const index_d_Prompt: typeof Prompt;
-type index_d_ChoiceOptions = ChoiceOptions;
-type index_d_Choice = Choice;
-declare const index_d_Choice: typeof Choice;
-type index_d_AddChoiceOptions = AddChoiceOptions;
-type index_d_Inquiry = Inquiry;
-declare const index_d_Inquiry: typeof Inquiry;
-declare namespace index_d {
+type index_d$1_WidgetOptions = WidgetOptions;
+type index_d$1_SetParentOptions = SetParentOptions;
+type index_d$1_Widget = Widget;
+declare const index_d$1_Widget: typeof Widget;
+type index_d$1_WidgetLayerOptions = WidgetLayerOptions;
+type index_d$1_WidgetLayer = WidgetLayer;
+declare const index_d$1_WidgetLayer: typeof WidgetLayer;
+type index_d$1_Body = Body;
+declare const index_d$1_Body: typeof Body;
+type index_d$1_TextOptions = TextOptions;
+type index_d$1_Text = Text;
+declare const index_d$1_Text: typeof Text;
+type index_d$1_AddTextOptions = AddTextOptions;
+type index_d$1_BorderOptions = BorderOptions;
+type index_d$1_Border = Border;
+declare const index_d$1_Border: typeof Border;
+type index_d$1_AddBorderOptions = AddBorderOptions;
+declare const index_d$1_drawBorder: typeof drawBorder;
+type index_d$1_ButtonOptions = ButtonOptions;
+type index_d$1_Button = Button;
+declare const index_d$1_Button: typeof Button;
+type index_d$1_AddButtonOptions = AddButtonOptions;
+type index_d$1_PadInfo = PadInfo;
+type index_d$1_DialogOptions = DialogOptions;
+declare const index_d$1_toPadArray: typeof toPadArray;
+type index_d$1_Dialog = Dialog;
+declare const index_d$1_Dialog: typeof Dialog;
+type index_d$1_AddDialogOptions = AddDialogOptions;
+type index_d$1_FieldsetOptions = FieldsetOptions;
+type index_d$1_Fieldset = Fieldset;
+declare const index_d$1_Fieldset: typeof Fieldset;
+type index_d$1_AddFieldsetOptions = AddFieldsetOptions;
+type index_d$1_FieldOptions = FieldOptions;
+type index_d$1_Field = Field;
+declare const index_d$1_Field: typeof Field;
+type index_d$1_OrderedListOptions = OrderedListOptions;
+type index_d$1_OrderedList = OrderedList;
+declare const index_d$1_OrderedList: typeof OrderedList;
+type index_d$1_UnorderedListOptions = UnorderedListOptions;
+type index_d$1_UnorderedList = UnorderedList;
+declare const index_d$1_UnorderedList: typeof UnorderedList;
+type index_d$1_AddOrderedListOptions = AddOrderedListOptions;
+type index_d$1_AddUnorderedListOptions = AddUnorderedListOptions;
+type index_d$1_InputOptions = InputOptions;
+type index_d$1_Input = Input;
+declare const index_d$1_Input: typeof Input;
+type index_d$1_AddInputOptions = AddInputOptions;
+type index_d$1_FormatFn = FormatFn;
+type index_d$1_Value = Value;
+type index_d$1_SelectType = SelectType;
+type index_d$1_HoverType = HoverType;
+type index_d$1_DataObject = DataObject;
+type index_d$1_DataItem = DataItem;
+type index_d$1_DataType = DataType;
+type index_d$1_BorderType = BorderType;
+type index_d$1_ColumnOptions = ColumnOptions;
+type index_d$1_DataTableOptions = DataTableOptions;
+type index_d$1_Column = Column;
+declare const index_d$1_Column: typeof Column;
+type index_d$1_DataTable = DataTable;
+declare const index_d$1_DataTable: typeof DataTable;
+type index_d$1_TD = TD;
+declare const index_d$1_TD: typeof TD;
+type index_d$1_AddDataTableOptions = AddDataTableOptions;
+type index_d$1_DataListOptions = DataListOptions;
+type index_d$1_DataList = DataList;
+declare const index_d$1_DataList: typeof DataList;
+type index_d$1_AddDataListOptions = AddDataListOptions;
+type index_d$1_Rec<T> = Rec<T>;
+type index_d$1_DropdownConfig = DropdownConfig;
+type index_d$1_ActionConfig = ActionConfig;
+type index_d$1_ButtonConfig = ButtonConfig;
+type index_d$1_MenuOptions = MenuOptions;
+type index_d$1_Menu = Menu;
+declare const index_d$1_Menu: typeof Menu;
+type index_d$1_MenuButtonOptions = MenuButtonOptions;
+type index_d$1_MenuButton = MenuButton;
+declare const index_d$1_MenuButton: typeof MenuButton;
+type index_d$1_AddMenuOptions = AddMenuOptions;
+type index_d$1_MenubarOptions = MenubarOptions;
+type index_d$1_Menubar = Menubar;
+declare const index_d$1_Menubar: typeof Menubar;
+type index_d$1_MenubarButtonOptions = MenubarButtonOptions;
+type index_d$1_MenubarButton = MenubarButton;
+declare const index_d$1_MenubarButton: typeof MenubarButton;
+type index_d$1_AddMenubarOptions = AddMenubarOptions;
+type index_d$1_MenuViewer = MenuViewer;
+declare const index_d$1_MenuViewer: typeof MenuViewer;
+type index_d$1_SelectOptions = SelectOptions;
+type index_d$1_Select = Select;
+declare const index_d$1_Select: typeof Select;
+type index_d$1_AddSelectOptions = AddSelectOptions;
+type index_d$1_NextType = NextType;
+type index_d$1_PromptChoice = PromptChoice;
+type index_d$1_PromptOptions = PromptOptions;
+type index_d$1_Prompt = Prompt;
+declare const index_d$1_Prompt: typeof Prompt;
+type index_d$1_ChoiceOptions = ChoiceOptions;
+type index_d$1_Choice = Choice;
+declare const index_d$1_Choice: typeof Choice;
+type index_d$1_AddChoiceOptions = AddChoiceOptions;
+type index_d$1_Inquiry = Inquiry;
+declare const index_d$1_Inquiry: typeof Inquiry;
+declare namespace index_d$1 {
   export {
     EventCb$1 as EventCb,
-    index_d_WidgetOptions as WidgetOptions,
-    index_d_SetParentOptions as SetParentOptions,
-    index_d_Widget as Widget,
-    index_d_WidgetLayerOptions as WidgetLayerOptions,
-    index_d_WidgetLayer as WidgetLayer,
-    index_d_Body as Body,
-    index_d_TextOptions as TextOptions,
-    index_d_Text as Text,
-    index_d_AddTextOptions as AddTextOptions,
-    index_d_BorderOptions as BorderOptions,
-    index_d_Border as Border,
-    index_d_AddBorderOptions as AddBorderOptions,
-    index_d_drawBorder as drawBorder,
-    index_d_ButtonOptions as ButtonOptions,
-    index_d_Button as Button,
-    index_d_AddButtonOptions as AddButtonOptions,
-    index_d_PadInfo as PadInfo,
-    index_d_DialogOptions as DialogOptions,
-    index_d_toPadArray as toPadArray,
-    index_d_Dialog as Dialog,
-    index_d_AddDialogOptions as AddDialogOptions,
-    index_d_FieldsetOptions as FieldsetOptions,
-    index_d_Fieldset as Fieldset,
-    index_d_AddFieldsetOptions as AddFieldsetOptions,
-    index_d_FieldOptions as FieldOptions,
-    index_d_Field as Field,
-    index_d_OrderedListOptions as OrderedListOptions,
-    index_d_OrderedList as OrderedList,
-    index_d_UnorderedListOptions as UnorderedListOptions,
-    index_d_UnorderedList as UnorderedList,
-    index_d_AddOrderedListOptions as AddOrderedListOptions,
-    index_d_AddUnorderedListOptions as AddUnorderedListOptions,
-    index_d_InputOptions as InputOptions,
-    index_d_Input as Input,
-    index_d_AddInputOptions as AddInputOptions,
-    index_d_FormatFn as FormatFn,
-    index_d_Value as Value,
-    index_d_SelectType as SelectType,
-    index_d_HoverType as HoverType,
-    index_d_DataObject as DataObject,
-    index_d_DataItem as DataItem,
-    index_d_DataType as DataType,
-    index_d_BorderType as BorderType,
-    index_d_ColumnOptions as ColumnOptions,
-    index_d_DataTableOptions as DataTableOptions,
-    index_d_Column as Column,
-    index_d_DataTable as DataTable,
-    index_d_TD as TD,
-    index_d_AddDataTableOptions as AddDataTableOptions,
-    index_d_DataListOptions as DataListOptions,
-    index_d_DataList as DataList,
-    index_d_AddDataListOptions as AddDataListOptions,
-    index_d_Rec as Rec,
-    index_d_DropdownConfig as DropdownConfig,
-    index_d_ActionConfig as ActionConfig,
-    index_d_ButtonConfig as ButtonConfig,
-    index_d_MenuOptions as MenuOptions,
-    index_d_Menu as Menu,
-    index_d_MenuButtonOptions as MenuButtonOptions,
-    index_d_MenuButton as MenuButton,
-    index_d_AddMenuOptions as AddMenuOptions,
-    index_d_MenubarOptions as MenubarOptions,
-    index_d_Menubar as Menubar,
-    index_d_MenubarButtonOptions as MenubarButtonOptions,
-    index_d_MenubarButton as MenubarButton,
-    index_d_AddMenubarOptions as AddMenubarOptions,
-    index_d_MenuViewer as MenuViewer,
-    index_d_SelectOptions as SelectOptions,
-    index_d_Select as Select,
-    index_d_AddSelectOptions as AddSelectOptions,
-    index_d_NextType as NextType,
-    index_d_PromptChoice as PromptChoice,
-    index_d_PromptOptions as PromptOptions,
-    index_d_Prompt as Prompt,
-    index_d_ChoiceOptions as ChoiceOptions,
-    index_d_Choice as Choice,
-    index_d_AddChoiceOptions as AddChoiceOptions,
-    index_d_Inquiry as Inquiry,
+    index_d$1_WidgetOptions as WidgetOptions,
+    index_d$1_SetParentOptions as SetParentOptions,
+    index_d$1_Widget as Widget,
+    index_d$1_WidgetLayerOptions as WidgetLayerOptions,
+    index_d$1_WidgetLayer as WidgetLayer,
+    index_d$1_Body as Body,
+    index_d$1_TextOptions as TextOptions,
+    index_d$1_Text as Text,
+    index_d$1_AddTextOptions as AddTextOptions,
+    index_d$1_BorderOptions as BorderOptions,
+    index_d$1_Border as Border,
+    index_d$1_AddBorderOptions as AddBorderOptions,
+    index_d$1_drawBorder as drawBorder,
+    index_d$1_ButtonOptions as ButtonOptions,
+    index_d$1_Button as Button,
+    index_d$1_AddButtonOptions as AddButtonOptions,
+    index_d$1_PadInfo as PadInfo,
+    index_d$1_DialogOptions as DialogOptions,
+    index_d$1_toPadArray as toPadArray,
+    index_d$1_Dialog as Dialog,
+    index_d$1_AddDialogOptions as AddDialogOptions,
+    index_d$1_FieldsetOptions as FieldsetOptions,
+    index_d$1_Fieldset as Fieldset,
+    index_d$1_AddFieldsetOptions as AddFieldsetOptions,
+    index_d$1_FieldOptions as FieldOptions,
+    index_d$1_Field as Field,
+    index_d$1_OrderedListOptions as OrderedListOptions,
+    index_d$1_OrderedList as OrderedList,
+    index_d$1_UnorderedListOptions as UnorderedListOptions,
+    index_d$1_UnorderedList as UnorderedList,
+    index_d$1_AddOrderedListOptions as AddOrderedListOptions,
+    index_d$1_AddUnorderedListOptions as AddUnorderedListOptions,
+    index_d$1_InputOptions as InputOptions,
+    index_d$1_Input as Input,
+    index_d$1_AddInputOptions as AddInputOptions,
+    index_d$1_FormatFn as FormatFn,
+    index_d$1_Value as Value,
+    index_d$1_SelectType as SelectType,
+    index_d$1_HoverType as HoverType,
+    index_d$1_DataObject as DataObject,
+    index_d$1_DataItem as DataItem,
+    index_d$1_DataType as DataType,
+    index_d$1_BorderType as BorderType,
+    index_d$1_ColumnOptions as ColumnOptions,
+    index_d$1_DataTableOptions as DataTableOptions,
+    index_d$1_Column as Column,
+    index_d$1_DataTable as DataTable,
+    index_d$1_TD as TD,
+    index_d$1_AddDataTableOptions as AddDataTableOptions,
+    index_d$1_DataListOptions as DataListOptions,
+    index_d$1_DataList as DataList,
+    index_d$1_AddDataListOptions as AddDataListOptions,
+    index_d$1_Rec as Rec,
+    index_d$1_DropdownConfig as DropdownConfig,
+    index_d$1_ActionConfig as ActionConfig,
+    index_d$1_ButtonConfig as ButtonConfig,
+    index_d$1_MenuOptions as MenuOptions,
+    index_d$1_Menu as Menu,
+    index_d$1_MenuButtonOptions as MenuButtonOptions,
+    index_d$1_MenuButton as MenuButton,
+    index_d$1_AddMenuOptions as AddMenuOptions,
+    index_d$1_MenubarOptions as MenubarOptions,
+    index_d$1_Menubar as Menubar,
+    index_d$1_MenubarButtonOptions as MenubarButtonOptions,
+    index_d$1_MenubarButton as MenubarButton,
+    index_d$1_AddMenubarOptions as AddMenubarOptions,
+    index_d$1_MenuViewer as MenuViewer,
+    index_d$1_SelectOptions as SelectOptions,
+    index_d$1_Select as Select,
+    index_d$1_AddSelectOptions as AddSelectOptions,
+    index_d$1_NextType as NextType,
+    index_d$1_PromptChoice as PromptChoice,
+    index_d$1_PromptOptions as PromptOptions,
+    index_d$1_Prompt as Prompt,
+    index_d$1_ChoiceOptions as ChoiceOptions,
+    index_d$1_Choice as Choice,
+    index_d$1_AddChoiceOptions as AddChoiceOptions,
+    index_d$1_Inquiry as Inquiry,
   };
 }
 
-export { ERROR, FALSE, IDENTITY, IS_NONZERO, IS_ZERO, NOOP, ONE, TRUE, WARN, ZERO, arrayDelete, arrayFindRight, arrayIncludesAll, arrayInsert, arrayNext, arrayNullify, arrayPrev, arraysIntersect, blob_d as blob, buffer_d as buffer, index_d$4 as canvas, clamp, index_d$7 as color, colors, config$1 as config, cosmetic, data, events_d as events, first, flag_d as flag, index_d$5 as fov, frequency_d as frequency, grid_d as grid, io_d as io, lerp, index_d$2 as light, list_d as list, message_d as message, nextIndex, object_d as object, path_d as path, prevIndex, queue_d as queue, random, range_d as range, rng_d as rng, scheduler_d as scheduler, index_d$3 as sprite, sprites, sum, index_d$6 as text, tween_d as tween, types_d as types, index_d$1 as ui, index_d as widget, xy_d as xy };
+declare class IOQueue {
+    _events: Event$1[];
+    lastClick: XY;
+    constructor();
+    get length(): number;
+    clear(): void;
+    enqueue(ev: Event$1): void;
+    dequeue(): Event$1 | undefined;
+}
+
+declare type CancelFn = () => void;
+declare type CallbackFn = (...args: any[]) => void;
+declare class Events {
+    _events: Record<string, DeleteArray<CallbackFn>>;
+    _ctx: any;
+    constructor(ctx?: any);
+    on(ev: string, cb: CallbackFn): CancelFn;
+    trigger(ev: string, ...args: any[]): boolean;
+}
+
+declare type Callback = () => void;
+declare class Loop {
+    _timer: number;
+    start(cb: Callback, dt?: number): void;
+    stop(): void;
+}
+
+declare type TimerFn = () => void;
+interface TimerInfo {
+    delay: number;
+    fn: TimerFn;
+    repeat: number;
+}
+declare class Timers {
+    _timers: TimerInfo[];
+    _ctx: any;
+    constructor(ctx?: any);
+    setTimeout(fn: TimerFn, delay: number): CancelFn;
+    setInterval(fn: TimerFn, delay: number): CancelFn;
+    update(dt: number): void;
+}
+
+declare class Scenes {
+    _app: App;
+    _scenes: Record<string, Scene>;
+    _active: Scene[];
+    constructor(gw: App);
+    install(id: string, opts: SceneOpts | CallbackFn | Scene): void;
+    get(id?: string): Scene | null;
+    start(id: string, data?: Record<string, any>): void;
+    _start(scene: Scene): void;
+    push(id: string, data?: Record<string, any>): void;
+    stop(id: string, data?: Record<string, any>): void;
+    _stop(_scene: Scene): void;
+    pause(id: string, data?: Record<string, any>): void;
+    resume(id: string, data?: Record<string, any>): void;
+    sleep(id: string, data?: Record<string, any>): void;
+    wake(id: string, data?: Record<string, any>): void;
+    frameStart(): void;
+    input(): void;
+    update(): void;
+    draw(): void;
+    frameEnd(): void;
+    frameDebug(): void;
+}
+
+interface GWOpts {
+    width?: number;
+    height?: number;
+    glyphs?: Glyphs;
+    div?: HTMLElement | string;
+    image?: HTMLImageElement | string;
+    font?: string;
+    fontSize?: number;
+    size?: number;
+    tileWidth?: number;
+    tileHeight?: number;
+    basicOnly?: boolean;
+    basic?: boolean;
+    on?: Record<string, CallbackFn>;
+    loop?: Loop;
+}
+declare class App {
+    canvas: BaseCanvas;
+    events: Events;
+    timers: Timers;
+    scenes: Scenes;
+    io: IOQueue;
+    loop: Loop;
+    dt: number;
+    time: number;
+    realTime: number;
+    skipTime: boolean;
+    fps: number;
+    fpsBuf: number[];
+    fpsTimer: number;
+    numFrames: number;
+    loopID: number;
+    stopped: boolean;
+    paused: boolean;
+    debug: boolean;
+    constructor(opts?: Partial<GWOpts>);
+    get buffer(): Buffer;
+    get node(): HTMLCanvasElement;
+    get mouseXY(): XY;
+    on(ev: string, fn: CallbackFn): CancelFn;
+    trigger(ev: string, ...args: any[]): boolean;
+    wait(delay: number, fn: TimerFn): CancelFn;
+    wait(delay: number, fn: string, ctx?: Record<string, any>): CancelFn;
+    repeat(delay: number, fn: TimerFn): CancelFn;
+    repeat(delay: number, fn: string, ctx?: Record<string, any>): CancelFn;
+    stop(): void;
+    _frame(): void;
+    _input(): void;
+    _update(): void;
+    _frameStart(): void;
+    _draw(): void;
+    _frameDebug(): void;
+    _frameEnd(): void;
+}
+declare function gw(opts: Partial<GWOpts>): App;
+
+interface SceneOpts {
+    data?: Record<string, string>;
+    create?: CallbackFn;
+    delete?: CallbackFn;
+    show?: CallbackFn;
+    hide?: CallbackFn;
+    pause?: CallbackFn;
+    resume?: CallbackFn;
+    sleep?: CallbackFn;
+    wake?: CallbackFn;
+    frameStart?: CallbackFn;
+    input?: CallbackFn;
+    update?: CallbackFn;
+    draw?: CallbackFn;
+    frameDebug?: CallbackFn;
+    frameEnd?: CallbackFn;
+    on?: Record<string, CallbackFn>;
+}
+declare class Scene {
+    id: string;
+    app: App;
+    events: Events;
+    timers: Timers;
+    buffer: Buffer;
+    dt: number;
+    time: number;
+    realTime: number;
+    skipTime: boolean;
+    stopped: boolean;
+    paused: boolean;
+    sleeping: boolean;
+    debug: boolean;
+    constructor(id: string, opts?: SceneOpts);
+    isActive(): boolean;
+    isPaused(): () => any;
+    isSleeping(): () => any;
+    on(ev: string, fn: CallbackFn): CancelFn;
+    trigger(ev: string, ...args: any[]): boolean;
+    wait(delay: number, fn: TimerFn): CancelFn;
+    wait(delay: number, fn: string, ctx?: Record<string, any>): CancelFn;
+    repeat(delay: number, fn: TimerFn): CancelFn;
+    repeat(delay: number, fn: string, ctx?: Record<string, any>): CancelFn;
+    create(app: App): void;
+    destroy(): void;
+    start(data?: Record<string, any>): void;
+    stop(data?: Record<string, any>): void;
+    pause(data?: Record<string, any>): void;
+    resume(data?: Record<string, any>): void;
+    sleep(data?: Record<string, any>): void;
+    wake(data?: Record<string, any>): void;
+    frameStart(): void;
+    input(): void;
+    update(): void;
+    draw(): void;
+    frameDebug(_buffer: Buffer): void;
+    frameEnd(): void;
+}
+
+type index_d_IOQueue = IOQueue;
+declare const index_d_IOQueue: typeof IOQueue;
+type index_d_CancelFn = CancelFn;
+type index_d_CallbackFn = CallbackFn;
+type index_d_Events = Events;
+declare const index_d_Events: typeof Events;
+type index_d_Callback = Callback;
+type index_d_Loop = Loop;
+declare const index_d_Loop: typeof Loop;
+type index_d_TimerFn = TimerFn;
+type index_d_Timers = Timers;
+declare const index_d_Timers: typeof Timers;
+type index_d_SceneOpts = SceneOpts;
+type index_d_Scene = Scene;
+declare const index_d_Scene: typeof Scene;
+type index_d_Scenes = Scenes;
+declare const index_d_Scenes: typeof Scenes;
+type index_d_GWOpts = GWOpts;
+type index_d_App = App;
+declare const index_d_App: typeof App;
+declare const index_d_gw: typeof gw;
+declare namespace index_d {
+  export {
+    index_d_IOQueue as IOQueue,
+    index_d_CancelFn as CancelFn,
+    index_d_CallbackFn as CallbackFn,
+    index_d_Events as Events,
+    index_d_Callback as Callback,
+    index_d_Loop as Loop,
+    index_d_TimerFn as TimerFn,
+    index_d_Timers as Timers,
+    index_d_SceneOpts as SceneOpts,
+    index_d_Scene as Scene,
+    index_d_Scenes as Scenes,
+    index_d_GWOpts as GWOpts,
+    index_d_App as App,
+    index_d_gw as gw,
+  };
+}
+
+export { DeleteArray, ERROR, FALSE, IDENTITY, IS_NONZERO, IS_ZERO, NOOP, ONE, TRUE, WARN, ZERO, arrayDelete, arrayFindRight, arrayIncludesAll, arrayInsert, arrayNext, arrayNullify, arrayPrev, arrayRevEach, arraysIntersect, blob_d as blob, buffer_d as buffer, index_d$5 as canvas, clamp, index_d$8 as color, colors, config$1 as config, cosmetic, data, events_d as events, first, flag_d as flag, index_d$6 as fov, frequency_d as frequency, grid_d as grid, index_d as gw, io_d as io, lerp, index_d$3 as light, list_d as list, message_d as message, nextIndex, object_d as object, path_d as path, prevIndex, queue_d as queue, random, range_d as range, rng_d as rng, scheduler_d as scheduler, index_d$4 as sprite, sprites, sum, index_d$7 as text, tween_d as tween, types_d as types, index_d$2 as ui, index_d$1 as widget, xy_d as xy };

@@ -1,5 +1,5 @@
 import * as Text from './text/index';
-import * as GW from './gw';
+import * as GW from './data';
 import { TRUE } from './utils';
 
 export const templates: Record<string, Text.Template> = {};

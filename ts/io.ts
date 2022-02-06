@@ -172,7 +172,7 @@ export async function dispatchEvent(ev: Event, km: IOMap, thisArg?: any) {
     return result;
 }
 
-function recycleEvent(ev: Event) {
+export function recycleEvent(ev: Event) {
     DEAD_EVENTS.push(ev);
 }
 
@@ -553,7 +553,7 @@ export function make(andPush: boolean | Loop = true): Handler {
         if (andPush === true) {
             andPush = loop;
         }
-        loop.pushHandler(handler);
+        andPush.pushHandler(handler);
     }
     return handler;
 }

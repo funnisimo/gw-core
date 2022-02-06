@@ -186,24 +186,24 @@ export class CanvasGL extends Canvas.BaseCanvas {
     //     return false;
     // }
 
-    draw(data: Buffer.Buffer): boolean {
+    draw(buffer: Buffer.Buffer): boolean {
         // TODO - remove?
         if (
-            data._data.every((style, i) => {
+            buffer._data.every((style, i) => {
                 const index = 2 + i * VERTICES_PER_TILE;
                 return style === this._data[index];
             })
         ) {
             return false;
         }
-        data._data.forEach((style, i) => {
+        buffer._data.forEach((style, i) => {
             const index = i * VERTICES_PER_TILE;
             for (let j = 0; j < VERTICES_PER_TILE; ++j) {
                 this._data[index + j] = style;
             }
         });
         this._requestRender();
-        data.changed = false;
+        buffer.changed = false;
         return true;
     }
 

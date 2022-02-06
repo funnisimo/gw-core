@@ -12,6 +12,10 @@ export class AsyncQueue<T> {
         return this._data.length;
     }
 
+    clear() {
+        this._data.length = 0;
+    }
+
     get last(): T | undefined {
         return this._data[this._data.length - 1];
     }
@@ -22,8 +26,9 @@ export class AsyncQueue<T> {
 
     enqueue(obj: T): void {
         if (this._waiting) {
-            this._waiting(obj);
+            const fn = this._waiting;
             this._waiting = null;
+            fn(obj);
         } else {
             this._data.push(obj);
         }

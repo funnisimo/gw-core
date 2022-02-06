@@ -106,7 +106,9 @@ export abstract class BaseCanvas implements BufferTarget {
     }
 
     protected _createNode() {
-        return document.createElement('canvas');
+        const canvas = document.createElement('canvas');
+        canvas.setAttribute('tabindex', '0');
+        return canvas;
     }
 
     protected abstract _createContext(): void;
@@ -166,6 +168,7 @@ export abstract class BaseCanvas implements BufferTarget {
                 const y = this._toY(e.offsetY);
                 const ev = IO.makeMouseEvent(e, x, y);
                 fn(ev);
+                e.preventDefault();
             };
         } else {
             this.node.onclick = null;
@@ -182,6 +185,7 @@ export abstract class BaseCanvas implements BufferTarget {
                 this.mouse.y = y;
                 const ev = IO.makeMouseEvent(e, x, y);
                 fn(ev);
+                e.preventDefault();
             };
         } else {
             this.node.onmousemove = null;
@@ -195,6 +199,7 @@ export abstract class BaseCanvas implements BufferTarget {
                 const y = this._toY(e.offsetY);
                 const ev = IO.makeMouseEvent(e, x, y);
                 fn(ev);
+                e.preventDefault();
             };
         } else {
             this.node.onmouseup = null;
@@ -207,6 +212,7 @@ export abstract class BaseCanvas implements BufferTarget {
                 e.stopPropagation();
                 const ev = IO.makeKeyEvent(e);
                 fn(ev);
+                e.preventDefault();
             };
         } else {
             this.node.onkeydown = null;
