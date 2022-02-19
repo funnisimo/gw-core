@@ -67,9 +67,8 @@
         return b.every((av) => a.includes(av));
     }
     function arrayRevEach(a, fn) {
-        for (let i = a.length; i > 0; --i) {
-            --i;
-            fn(a[i], i);
+        for (let i = a.length - 1; i > -1; --i) {
+            fn(a[i], i, a);
         }
     }
     function arrayDelete(a, b) {
@@ -150,15 +149,6 @@
         }
         return index;
     }
-    class DeleteArray extends Array {
-        constructor(...args) {
-            super(...args);
-        }
-        pushd(v) {
-            this.push(v);
-            return () => arrayDelete(this, v);
-        }
-    }
 
     // DIRS are organized clockwise
     // - first 4 are arrow directions
@@ -222,6 +212,13 @@
     }
     class Bounds {
         constructor(x = 0, y = 0, w = 0, h = 0) {
+            if (typeof x !== 'number') {
+                const opts = x;
+                h = opts.height || 0;
+                w = opts.width || 0;
+                y = opts.y || 0;
+                x = opts.x || 0;
+            }
             this.x = x;
             this.y = y;
             this.width = w;
@@ -251,8 +248,26 @@
         set bottom(v) {
             this.y = v - this.height;
         }
+        get center() {
+            return this.x + Math.floor(this.width / 2);
+        }
+        set center(v) {
+            this.x += v - this.center;
+        }
+        get middle() {
+            return this.y + Math.floor(this.height / 2);
+        }
+        set middle(v) {
+            this.y += v - this.middle;
+        }
         clone() {
             return new Bounds(this.x, this.y, this.width, this.height);
+        }
+        copy(other) {
+            this.x = other.x;
+            this.y = other.y;
+            this.width = other.width;
+            this.height = other.height;
         }
         contains(...args) {
             let i = args[0];
@@ -265,6 +280,22 @@
                 this.y <= j &&
                 this.x + this.width > i &&
                 this.y + this.height > j);
+        }
+        include(xy) {
+            const left = Math.min(x(xy), this.x);
+            const top = Math.min(y(xy), this.y);
+            const right = Math.max(xy instanceof Bounds ? xy.right : left, this.right);
+            const bottom = Math.max(xy instanceof Bounds ? xy.bottom : top, this.bottom);
+            this.left = left;
+            this.top = top;
+            this.width = right - left;
+            this.height = bottom - top;
+        }
+        pad(n = 1) {
+            this.x -= n;
+            this.y -= n;
+            this.width += n * 2;
+            this.height += n * 2;
         }
         toString() {
             return `[${this.x},${this.y} -> ${this.right},${this.bottom}]`;
@@ -2852,7 +2883,7 @@
     // Grid.fillBlob = fillBlob;
     const alloc = NumGrid.alloc.bind(NumGrid);
     const free = NumGrid.free.bind(NumGrid);
-    function make$d(w, h, v) {
+    function make$c(w, h, v) {
         if (v === undefined)
             return new NumGrid(w, h, 0);
         if (typeof v === 'number')
@@ -2894,7 +2925,7 @@
         NumGrid: NumGrid,
         alloc: alloc,
         free: free,
-        make: make$d,
+        make: make$c,
         offsetZip: offsetZip,
         intersection: intersection,
         unite: unite
@@ -3197,7 +3228,7 @@
     }
     const random = new Random();
     const cosmetic = new Random();
-    function make$c(seed) {
+    function make$b(seed) {
         return new Random(seed);
     }
 
@@ -3208,7 +3239,7 @@
         Random: Random,
         random: random,
         cosmetic: cosmetic,
-        make: make$c
+        make: make$b
     });
 
     class Range {
@@ -3248,7 +3279,7 @@
             return `${this.lo}-${this.hi}`;
         }
     }
-    function make$b(config) {
+    function make$a(config) {
         if (!config)
             return new Range(0, 0, 0);
         if (config instanceof Range)
@@ -3304,20 +3335,20 @@
         }
         throw new Error('Not a valid range - ' + config);
     }
-    const from$4 = make$b;
+    const from$4 = make$a;
     function asFn(config) {
-        const range = make$b(config);
+        const range = make$a(config);
         return () => range.value();
     }
     function value(base) {
-        const r = make$b(base);
+        const r = make$a(base);
         return r.value();
     }
 
     var range = /*#__PURE__*/Object.freeze({
         __proto__: null,
         Range: Range,
-        make: make$b,
+        make: make$a,
         from: from$4,
         asFn: asFn,
         value: value
@@ -3409,7 +3440,7 @@
         }
         return result;
     }
-    function make$a(obj) {
+    function make$9(obj) {
         const out = {};
         Object.entries(obj).forEach(([key, value]) => {
             out[key] = from$3(out, value);
@@ -3422,7 +3453,7 @@
         fl: fl,
         toString: toString,
         from: from$3,
-        make: make$a
+        make: make$9
     });
 
     class AsyncQueue {
@@ -3643,7 +3674,7 @@
         clamp() {
             if (this.isNull())
                 return this;
-            return make$9(this._data.map((v) => clamp(v, 0, 100)));
+            return make$8(this._data.map((v) => clamp(v, 0, 100)));
         }
         blend(other) {
             const O = from$2(other);
@@ -3653,7 +3684,7 @@
                 return O;
             const pct = O.a / 100;
             const keepPct = 1 - pct;
-            const newColor = make$9(Math.round(this._data[0] * keepPct + O._data[0] * pct), Math.round(this._data[1] * keepPct + O._data[1] * pct), Math.round(this._data[2] * keepPct + O._data[2] * pct), Math.round(O.a + this._data[3] * keepPct));
+            const newColor = make$8(Math.round(this._data[0] * keepPct + O._data[0] * pct), Math.round(this._data[1] * keepPct + O._data[1] * pct), Math.round(this._data[2] * keepPct + O._data[2] * pct), Math.round(O.a + this._data[3] * keepPct));
             if (this._rand) {
                 newColor._rand = this._rand.map((v) => Math.round(v * keepPct));
                 newColor.dances = this.dances;
@@ -3677,7 +3708,7 @@
                 return O;
             const pct = clamp(percent, 0, 100) / 100;
             const keepPct = 1 - pct;
-            const newColor = make$9(Math.round(this._data[0] * keepPct + O._data[0] * pct), Math.round(this._data[1] * keepPct + O._data[1] * pct), Math.round(this._data[2] * keepPct + O._data[2] * pct), (this.isNull() ? 100 : this._data[3]) * keepPct + O._data[3] * pct);
+            const newColor = make$8(Math.round(this._data[0] * keepPct + O._data[0] * pct), Math.round(this._data[1] * keepPct + O._data[1] * pct), Math.round(this._data[2] * keepPct + O._data[2] * pct), (this.isNull() ? 100 : this._data[3]) * keepPct + O._data[3] * pct);
             if (this._rand) {
                 newColor._rand = this._rand.slice();
                 newColor.dances = this.dances;
@@ -3703,7 +3734,7 @@
                 return this;
             const pct = clamp(percent, 0, 100) / 100;
             const keepPct = 1 - pct;
-            return make$9(Math.round(this._data[0] * keepPct + 100 * pct), Math.round(this._data[1] * keepPct + 100 * pct), Math.round(this._data[2] * keepPct + 100 * pct), this._a);
+            return make$8(Math.round(this._data[0] * keepPct + 100 * pct), Math.round(this._data[1] * keepPct + 100 * pct), Math.round(this._data[2] * keepPct + 100 * pct), this._a);
         }
         // Only adjusts r,g,b
         darken(percent) {
@@ -3711,7 +3742,7 @@
                 return this;
             const pct = clamp(percent, 0, 100) / 100;
             const keepPct = 1 - pct;
-            return make$9(Math.round(this._data[0] * keepPct + 0 * pct), Math.round(this._data[1] * keepPct + 0 * pct), Math.round(this._data[2] * keepPct + 0 * pct), this._a);
+            return make$8(Math.round(this._data[0] * keepPct + 0 * pct), Math.round(this._data[1] * keepPct + 0 * pct), Math.round(this._data[2] * keepPct + 0 * pct), this._a);
         }
         bake(clearDancing = false) {
             if (this.isNull())
@@ -3725,7 +3756,7 @@
             const redRand = cosmetic.number(d[1]);
             const greenRand = cosmetic.number(d[2]);
             const blueRand = cosmetic.number(d[3]);
-            return make$9(this._r + rand + redRand, this._g + rand + greenRand, this._b + rand + blueRand, this._a);
+            return make$8(this._r + rand + redRand, this._g + rand + greenRand, this._b + rand + blueRand, this._a);
         }
         // Adds a color to this one
         add(other, percent = 100) {
@@ -3733,13 +3764,13 @@
             if (O.isNull())
                 return this;
             const alpha = (O.a / 100) * (percent / 100);
-            return make$9(Math.round(this._data[0] + O._data[0] * alpha), Math.round(this._data[1] + O._data[1] * alpha), Math.round(this._data[2] + O._data[2] * alpha), clamp(Math.round(this._a + alpha * 100), 0, 100));
+            return make$8(Math.round(this._data[0] + O._data[0] * alpha), Math.round(this._data[1] + O._data[1] * alpha), Math.round(this._data[2] + O._data[2] * alpha), clamp(Math.round(this._a + alpha * 100), 0, 100));
         }
         scale(percent) {
             if (this.isNull() || percent == 100)
                 return this;
             const pct = Math.max(0, percent) / 100;
-            return make$9(Math.round(this._data[0] * pct), Math.round(this._data[1] * pct), Math.round(this._data[2] * pct), this._a);
+            return make$8(Math.round(this._data[0] * pct), Math.round(this._data[1] * pct), Math.round(this._data[2] * pct), this._a);
         }
         multiply(other) {
             if (this.isNull())
@@ -3756,7 +3787,7 @@
                 data = other._data;
             }
             const pct = (data[3] || 100) / 100;
-            return make$9(Math.round(this._ra * (data[0] / 100) * pct), Math.round(this._ga * (data[1] / 100) * pct), Math.round(this._ba * (data[2] / 100) * pct), 100);
+            return make$8(Math.round(this._ra * (data[0] / 100) * pct), Math.round(this._ga * (data[1] / 100) * pct), Math.round(this._ba * (data[2] / 100) * pct), 100);
         }
         // scales rgb down to a max of 100
         normalize() {
@@ -3765,7 +3796,7 @@
             const max = Math.max(this._ra, this._ga, this._ba);
             if (max <= 100)
                 return this;
-            return make$9(Math.round((100 * this._ra) / max), Math.round((100 * this._ga) / max), Math.round((100 * this._ba) / max), 100);
+            return make$8(Math.round((100 * this._ra) / max), Math.round((100 * this._ga) / max), Math.round((100 * this._ba) / max), 100);
         }
         inverse() {
             const other = new Color(100 - this.r, 100 - this.g, 100 - this.b, this.a);
@@ -3837,7 +3868,7 @@
             return new Color(Math.round((((val & 0xf00) >> 8) * 100) / 15), Math.round((((val & 0xf0) >> 4) * 100) / 15), Math.round(((val & 0xf) * 100) / 15), 100);
         }
     }
-    function make$9(...args) {
+    function make$8(...args) {
         let arg = args[0];
         let base256 = args[1];
         if (args.length == 0)
@@ -3876,7 +3907,7 @@
                 return fromName(arg);
             }
         }
-        return make$9(arg, args[1]);
+        return make$8(arg, args[1]);
     }
     // adjusts the luminosity of 2 colors to ensure there is enough separation between them
     function separate(a, b) {
@@ -3932,7 +3963,7 @@
         if (args.length == 1) {
             info = args[0];
         }
-        const c = info instanceof Color ? info : make$9(info);
+        const c = info instanceof Color ? info : make$8(info);
         // @ts-ignore
         c._const = true;
         colors[name] = c;
@@ -3995,7 +4026,7 @@
         fromCss: fromCss,
         fromName: fromName,
         fromNumber: fromNumber,
-        make: make$9,
+        make: make$8,
         from: from$2,
         separate: separate,
         relativeLuminance: relativeLuminance,
@@ -4011,8 +4042,8 @@
     class Mixer {
         constructor(base) {
             this.ch = first(base === null || base === void 0 ? void 0 : base.ch, -1);
-            this.fg = make$9(base === null || base === void 0 ? void 0 : base.fg);
-            this.bg = make$9(base === null || base === void 0 ? void 0 : base.bg);
+            this.fg = make$8(base === null || base === void 0 ? void 0 : base.fg);
+            this.bg = make$8(base === null || base === void 0 ? void 0 : base.bg);
         }
         _changed() {
             return this;
@@ -5351,6 +5382,11 @@
             this.changed = true;
             return this;
         }
+        apply(other) {
+            this._data.set(other._data);
+            this.changed = true;
+            return this;
+        }
         drawText(x, y, text, fg = 0xfff, bg = -1, maxWidth = 0, align = 'left') {
             // if (!this.hasXY(x, y)) return 0;
             if (typeof fg !== 'number')
@@ -5511,594 +5547,14 @@
             console.log(data.join('\n'));
         }
     }
-    function make$8(width, height) {
+    function make$7(width, height) {
         return new Buffer$1(width, height);
     }
 
     var buffer = /*#__PURE__*/Object.freeze({
         __proto__: null,
         Buffer: Buffer$1,
-        make: make$8
-    });
-
-    class Event {
-        constructor(type, opts) {
-            this.source = null; // original sourcing information
-            this.target = null; // current handler information
-            // Used in UI
-            this.defaultPrevented = false;
-            this.propagationStopped = false;
-            this.immediatePropagationStopped = false;
-            // Key Event
-            this.key = '';
-            this.code = '';
-            this.shiftKey = false;
-            this.ctrlKey = false;
-            this.altKey = false;
-            this.metaKey = false;
-            // Dir Event extends KeyEvent
-            this.dir = null;
-            // Mouse Event
-            this.x = -1;
-            this.y = -1;
-            this.clientX = -1;
-            this.clientY = -1;
-            // Tick Event
-            this.dt = 0;
-            this.reset(type, opts);
-        }
-        preventDefault() {
-            this.defaultPrevented = true;
-        }
-        stopPropagation() {
-            this.propagationStopped = true;
-        }
-        stopImmediatePropagation() {
-            this.immediatePropagationStopped = true;
-        }
-        reset(type, opts) {
-            this.type = type;
-            this.target = null;
-            this.source = null;
-            this.defaultPrevented = false;
-            this.shiftKey = false;
-            this.ctrlKey = false;
-            this.altKey = false;
-            this.metaKey = false;
-            this.key = '';
-            this.code = '';
-            this.x = -1;
-            this.y = -1;
-            this.dir = null;
-            this.dt = 0;
-            this.target = null;
-            if (opts) {
-                Object.assign(this, opts);
-            }
-        }
-    }
-    let IOMAP = {};
-    const DEAD_EVENTS = [];
-    const KEYPRESS = 'keypress';
-    const MOUSEMOVE = 'mousemove';
-    const CLICK = 'click';
-    const TICK = 'tick';
-    const MOUSEUP = 'mouseup';
-    const STOP = 'stop';
-    const CONTROL_CODES = [
-        'ShiftLeft',
-        'ShiftRight',
-        'ControlLeft',
-        'ControlRight',
-        'AltLeft',
-        'AltRight',
-        'MetaLeft',
-        'MetaRight',
-    ];
-    // type EventHandler = (event: Event) => void;
-    function setKeymap(keymap) {
-        IOMAP = keymap;
-    }
-    function handlerFor(ev, km) {
-        let c;
-        if (ev.dir) {
-            c = km.dir || km.keypress;
-        }
-        else if (ev.type === KEYPRESS) {
-            c = km[ev.key] || km[ev.code] || km.keypress;
-        }
-        else if (km[ev.type]) {
-            c = km[ev.type];
-        }
-        if (!c) {
-            c = km.dispatch;
-        }
-        return c || null;
-    }
-    async function dispatchEvent(ev, km, thisArg) {
-        let result;
-        km = km || IOMAP;
-        if (ev.type === STOP) {
-            recycleEvent(ev);
-            return true; // Should stop loops, etc...
-        }
-        const handler = handlerFor(ev, km);
-        if (handler) {
-            // if (typeof c === 'function') {
-            result = await handler.call(thisArg || km, ev);
-            // } else if (commands[c]) {
-            //     result = await commands[c](ev);
-            // } else {
-            //     Utils.WARN('No command found: ' + c);
-            // }
-        }
-        // TODO - what is this here for?
-        // if ('next' in km && km.next === false) {
-        //     result = false;
-        // }
-        recycleEvent(ev);
-        return result;
-    }
-    function recycleEvent(ev) {
-        DEAD_EVENTS.push(ev);
-    }
-    // STOP
-    function makeStopEvent() {
-        return makeCustomEvent(STOP);
-    }
-    // CUSTOM
-    function makeCustomEvent(type, opts) {
-        const ev = DEAD_EVENTS.pop() || null;
-        if (!ev)
-            return new Event(type, opts);
-        ev.reset(type, opts);
-        return ev;
-    }
-    // TICK
-    function makeTickEvent(dt) {
-        const ev = makeCustomEvent(TICK);
-        ev.dt = dt;
-        return ev;
-    }
-    // KEYBOARD
-    function makeKeyEvent(e) {
-        let key = e.key;
-        let code = e.code.toLowerCase();
-        if (e.shiftKey) {
-            key = key.toUpperCase();
-            code = code.toUpperCase();
-        }
-        if (e.ctrlKey) {
-            key = '^' + key;
-            code = '^' + code;
-        }
-        if (e.metaKey) {
-            key = '#' + key;
-            code = '#' + code;
-        }
-        if (e.altKey) {
-            code = '/' + code;
-        }
-        const ev = DEAD_EVENTS.pop() || new Event(KEYPRESS);
-        ev.shiftKey = e.shiftKey;
-        ev.ctrlKey = e.ctrlKey;
-        ev.altKey = e.altKey;
-        ev.metaKey = e.metaKey;
-        ev.type = KEYPRESS;
-        ev.defaultPrevented = false;
-        ev.key = key;
-        ev.code = code;
-        ev.x = -1;
-        ev.y = -1;
-        ev.clientX = -1;
-        ev.clientY = -1;
-        ev.dir = keyCodeDirection(e.code);
-        ev.dt = 0;
-        ev.target = null;
-        return ev;
-    }
-    function keyCodeDirection(key) {
-        const lowerKey = key.toLowerCase();
-        if (lowerKey === 'arrowup') {
-            return [0, -1];
-        }
-        else if (lowerKey === 'arrowdown') {
-            return [0, 1];
-        }
-        else if (lowerKey === 'arrowleft') {
-            return [-1, 0];
-        }
-        else if (lowerKey === 'arrowright') {
-            return [1, 0];
-        }
-        return null;
-    }
-    function ignoreKeyEvent(e) {
-        return CONTROL_CODES.includes(e.code);
-    }
-    // MOUSE
-    function makeMouseEvent(e, x, y) {
-        const ev = DEAD_EVENTS.pop() || new Event(e.type);
-        ev.shiftKey = e.shiftKey;
-        ev.ctrlKey = e.ctrlKey;
-        ev.altKey = e.altKey;
-        ev.metaKey = e.metaKey;
-        ev.type = e.type;
-        if (e.buttons && e.type !== 'mouseup') {
-            ev.type = CLICK;
-        }
-        ev.defaultPrevented = false;
-        ev.key = '';
-        ev.code = '';
-        ev.x = x;
-        ev.y = y;
-        ev.clientX = e.clientX;
-        ev.clientY = e.clientY;
-        ev.dir = null;
-        ev.dt = 0;
-        ev.target = null;
-        return ev;
-    }
-    class Handler {
-        constructor(loop) {
-            this._running = false;
-            this._events = new AsyncQueue();
-            this._result = undefined;
-            this._tweens = [];
-            this._timers = [];
-            this._loop = null;
-            this.mouse = { x: -1, y: -1 };
-            this.lastClick = { x: -1, y: -1 };
-            if (loop) {
-                loop.pushHandler(this);
-            }
-        }
-        get running() {
-            return this._running;
-        }
-        hasEvents() {
-            return this._events.length;
-        }
-        clearEvents() {
-            while (this._events.length) {
-                const ev = this._events._data.shift();
-                DEAD_EVENTS.push(ev);
-            }
-        }
-        enqueue(ev) {
-            if (this._events.length) {
-                const last = this._events.last;
-                if (last.type === ev.type) {
-                    if (last.type === MOUSEMOVE) {
-                        last.x = ev.x;
-                        last.y = ev.y;
-                        recycleEvent(ev);
-                        return;
-                    }
-                }
-            }
-            // Keep clicks down to one per cell if holding down mouse button
-            if (ev.type === CLICK) {
-                if (this.lastClick.x == ev.x && this.lastClick.y == ev.y) {
-                    recycleEvent(ev);
-                    return;
-                }
-                this.lastClick.x = ev.x;
-                this.lastClick.y = ev.y;
-            }
-            else if (ev.type == MOUSEUP) {
-                this.lastClick.x = -1;
-                this.lastClick.y = -1;
-                recycleEvent(ev);
-                return;
-            }
-            if (ev.type === TICK) {
-                const first = this._events.first;
-                if (first && first.type === TICK) {
-                    first.dt += ev.dt;
-                    recycleEvent(ev);
-                    return;
-                }
-                this._events.prepend(ev); // ticks go first
-            }
-            else {
-                this._events.enqueue(ev);
-            }
-        }
-        async nextEvent(ms = -1, match) {
-            match = match || TRUE;
-            let elapsed = 0;
-            while (ms < 0 || elapsed < ms) {
-                const e = await this._events.dequeue(); // important that ticks are regularly firing
-                if (e.type === MOUSEMOVE) {
-                    this.mouse.x = e.x;
-                    this.mouse.y = e.y;
-                }
-                if (e.type === TICK) {
-                    this._tick(e.dt); // run animations and timers
-                    if (ms > 0) {
-                        elapsed += e.dt;
-                        if (elapsed > ms) {
-                            return null;
-                        }
-                    }
-                }
-                if (match(e)) {
-                    return e;
-                }
-                recycleEvent(e);
-            }
-            return null;
-        }
-        async run(keymap = {}, ms = -1, thisArg) {
-            if (this._running)
-                throw new Error('IO Handler is already running!');
-            thisArg = thisArg || this;
-            this._running = true;
-            this.clearEvents(); // ??? Should we do this?
-            if (keymap.start && typeof keymap.start === 'function') {
-                await keymap.start.call(thisArg);
-            }
-            while (this.running) {
-                if (keymap.draw && typeof keymap.draw === 'function') {
-                    keymap.draw.call(thisArg);
-                }
-                const ev = await this.nextEvent(ms);
-                if (ev) {
-                    await dispatchEvent(ev, keymap, thisArg);
-                }
-            }
-            if (keymap.stop && typeof keymap.stop === 'function') {
-                await keymap.stop.call(thisArg);
-            }
-            return this._result;
-        }
-        finish(result) {
-            this.clearEvents();
-            this._running = false;
-            this._result = result;
-            this.enqueue(makeStopEvent());
-            if (this._loop)
-                this._loop.popHandler(this);
-        }
-        // IO
-        // async tickMs(ms = 1) {
-        //     let done: Function;
-        //     setTimeout(() => done(), ms);
-        //     return new Promise((resolve) => (done = resolve));
-        // }
-        async nextTick(ms = -1) {
-            return this.nextEvent(ms, (e) => e && e.type === TICK);
-        }
-        async nextKeyPress(ms, match) {
-            if (ms === undefined)
-                ms = -1;
-            match = match || TRUE;
-            function matchingKey(e) {
-                if (e.type !== KEYPRESS)
-                    return false;
-                return match(e);
-            }
-            return this.nextEvent(ms, matchingKey);
-        }
-        async nextKeyOrClick(ms, matchFn) {
-            if (ms === undefined)
-                ms = -1;
-            matchFn = matchFn || TRUE;
-            function match(e) {
-                if (e.type !== KEYPRESS && e.type !== CLICK)
-                    return false;
-                return matchFn(e);
-            }
-            return this.nextEvent(ms, match);
-        }
-        async pause(ms) {
-            const e = await this.nextKeyOrClick(ms);
-            return !!e && e.type !== TICK;
-        }
-        waitForAck() {
-            return this.pause(5 * 60 * 1000); // 5 min
-        }
-        // Animator
-        addAnimation(a) {
-            if (!a.isRunning()) {
-                a.start();
-            }
-            this._tweens.push(a);
-        }
-        removeAnimation(a) {
-            arrayDelete(this._tweens, a);
-        }
-        // Timers
-        setTimeout(action, time) {
-            const slot = this._timers.findIndex((t) => t.time <= 0);
-            if (slot < 0) {
-                this._timers.push({ action, time });
-            }
-            else {
-                this._timers[slot] = { action, time };
-            }
-            return action;
-        }
-        clearTimeout(action) {
-            const timer = this._timers.find((t) => t.action === action);
-            if (timer) {
-                timer.time = -1;
-            }
-        }
-        _tick(dt) {
-            // fire animations
-            this._tweens.forEach((tw) => tw.tick(dt));
-            this._tweens = this._tweens.filter((tw) => tw.isRunning());
-            for (let timer of this._timers) {
-                if (timer.time <= 0)
-                    continue; // ignore fired timers
-                timer.time -= dt;
-                if (timer.time <= 0) {
-                    timer.action();
-                }
-            }
-            return this._tweens.length > 0;
-        }
-    }
-    function make$7(andPush = true) {
-        const handler = new Handler();
-        if (andPush) {
-            if (andPush === true) {
-                andPush = loop;
-            }
-            andPush.pushHandler(handler);
-        }
-        return handler;
-    }
-    const defaultHandler = new Handler();
-    async function nextEvent(ms) {
-        pushHandler(defaultHandler);
-        const r = await defaultHandler.nextEvent(ms);
-        popHandler(defaultHandler);
-        return r;
-    }
-    async function nextTick(ms) {
-        pushHandler(defaultHandler);
-        const r = await defaultHandler.nextTick(ms);
-        popHandler(defaultHandler);
-        return r;
-    }
-    async function nextKeyOrClick(ms, match) {
-        pushHandler(defaultHandler);
-        const r = await defaultHandler.nextKeyOrClick(ms, match);
-        popHandler(defaultHandler);
-        return r;
-    }
-    async function nextKeyPress(ms, match) {
-        pushHandler(defaultHandler);
-        const r = await defaultHandler.nextKeyPress(ms, match);
-        popHandler(defaultHandler);
-        return r;
-    }
-    async function pause(ms) {
-        pushHandler(defaultHandler);
-        const r = await defaultHandler.pause(ms);
-        popHandler(defaultHandler);
-        return r;
-    }
-    async function waitForAck() {
-        pushHandler(defaultHandler);
-        const r = await defaultHandler.waitForAck();
-        popHandler(defaultHandler);
-        return r;
-    }
-    class Loop$1 {
-        constructor() {
-            this.handlers = [];
-            this.currentHandler = null;
-            this._tickInterval = 0;
-        }
-        finish() {
-            this._stopTicks();
-            this.handlers.length = 0;
-            this.currentHandler = null;
-        }
-        pushHandler(handler) {
-            if (!this.handlers.includes(handler)) {
-                this.handlers.push(handler);
-            }
-            this.currentHandler = handler;
-            handler._loop = this;
-            this._startTicks();
-        }
-        popHandler(handler) {
-            arrayDelete(this.handlers, handler);
-            handler._loop = null;
-            this.currentHandler = this.handlers[this.handlers.length - 1] || null;
-            if (!this.currentHandler) {
-                this._stopTicks();
-            }
-        }
-        enqueue(ev) {
-            if (this.currentHandler) {
-                this.currentHandler.enqueue(ev);
-            }
-        }
-        _startTicks() {
-            if (this._tickInterval)
-                return;
-            this._tickInterval = setInterval(() => {
-                const e = makeTickEvent(16);
-                this.enqueue(e);
-            }, 16);
-        }
-        _stopTicks() {
-            clearInterval(this._tickInterval);
-            this._tickInterval = 0;
-        }
-        onkeydown(e) {
-            if (ignoreKeyEvent(e))
-                return;
-            if (this.currentHandler) {
-                if (e.code === 'Escape') {
-                    this.currentHandler.clearEvents(); // clear all current events, then push on the escape
-                }
-                const ev = makeKeyEvent(e);
-                this.enqueue(ev);
-            }
-            e.preventDefault();
-        }
-        addAnimation(a) {
-            if (this.currentHandler) {
-                this.currentHandler.addAnimation(a);
-            }
-        }
-        removeAnimation(a) {
-            if (this.currentHandler) {
-                this.currentHandler.removeAnimation(a);
-            }
-        }
-    }
-    const loop = new Loop$1();
-    function pushHandler(handler) {
-        loop.pushHandler(handler);
-    }
-    function popHandler(handler) {
-        loop.popHandler(handler);
-    }
-    function enqueue(ev) {
-        loop.enqueue(ev);
-    }
-
-    var io = /*#__PURE__*/Object.freeze({
-        __proto__: null,
-        Event: Event,
-        KEYPRESS: KEYPRESS,
-        MOUSEMOVE: MOUSEMOVE,
-        CLICK: CLICK,
-        TICK: TICK,
-        MOUSEUP: MOUSEUP,
-        STOP: STOP,
-        setKeymap: setKeymap,
-        handlerFor: handlerFor,
-        dispatchEvent: dispatchEvent,
-        recycleEvent: recycleEvent,
-        makeStopEvent: makeStopEvent,
-        makeCustomEvent: makeCustomEvent,
-        makeTickEvent: makeTickEvent,
-        makeKeyEvent: makeKeyEvent,
-        keyCodeDirection: keyCodeDirection,
-        ignoreKeyEvent: ignoreKeyEvent,
-        makeMouseEvent: makeMouseEvent,
-        Handler: Handler,
-        make: make$7,
-        nextEvent: nextEvent,
-        nextTick: nextTick,
-        nextKeyOrClick: nextKeyOrClick,
-        nextKeyPress: nextKeyPress,
-        pause: pause,
-        waitForAck: waitForAck,
-        Loop: Loop$1,
-        loop: loop,
-        pushHandler: pushHandler,
-        popHandler: popHandler,
-        enqueue: enqueue
+        make: make$7
     });
 
     var FovFlags;
@@ -6252,7 +5708,7 @@
                 flag |= FovFlags.REVEALED;
             if (visible)
                 flag |= FovFlags.VISIBLE;
-            this.flags = make$d(site.width, site.height, flag);
+            this.flags = make$c(site.width, site.height, flag);
             // this.needsUpdate = true;
             if (opts.callback) {
                 this.callback = opts.callback;
@@ -7306,6 +6762,7 @@
         clone() {
             const other = new this.constructor(this._target, this._parent);
             other.copy(this);
+            other.changed = false;
             return other;
         }
         toGlyph(ch) {
@@ -7362,7 +6819,8 @@
             }
             const glyphs = new this(src);
             const basicOnly = src.basicOnly || src.basic || false;
-            glyphs._initGlyphs(basicOnly);
+            const initFn = src.init || initGlyphs;
+            initFn(glyphs, basicOnly);
             return glyphs;
         }
         get node() {
@@ -7428,202 +6886,488 @@
             this._ctx.restore();
             this.needsUpdate = true;
         }
-        _initGlyphs(basicOnly = false) {
-            for (let i = 32; i < 127; ++i) {
-                this.draw(i, String.fromCharCode(i));
-            }
+    }
+    function initGlyphs(glyphs, basicOnly = false) {
+        for (let i = 32; i < 127; ++i) {
+            glyphs.draw(i, String.fromCharCode(i));
+        }
+        [
+            ' ',
+            '\u263a',
+            '\u263b',
+            '\u2665',
+            '\u2666',
+            '\u2663',
+            '\u2660',
+            '\u263c',
+            '\u2600',
+            '\u2606',
+            '\u2605',
+            '\u2023',
+            '\u2219',
+            '\u2043',
+            '\u2022',
+            '\u2630',
+            '\u2637',
+            '\u2610',
+            '\u2611',
+            '\u2612',
+            '\u26ac',
+            '\u29bf',
+            '\u2191',
+            '\u2192',
+            '\u2193',
+            '\u2190',
+            '\u2194',
+            '\u2195',
+            '\u25b2',
+            '\u25b6',
+            '\u25bc',
+            '\u25c0', // big left arrow
+        ].forEach((ch, i) => {
+            glyphs.draw(i, ch);
+        });
+        if (!basicOnly) {
+            // [
+            // '\u2302',
+            // '\u2b09', '\u272a', '\u2718', '\u2610', '\u2611', '\u25ef', '\u25ce', '\u2690',
+            // '\u2691', '\u2598', '\u2596', '\u259d', '\u2597', '\u2744', '\u272d', '\u2727',
+            // '\u25e3', '\u25e4', '\u25e2', '\u25e5', '\u25a8', '\u25a7', '\u259a', '\u265f',
+            // '\u265c', '\u265e', '\u265d', '\u265b', '\u265a', '\u301c', '\u2694', '\u2692',
+            // '\u25b6', '\u25bc', '\u25c0', '\u25b2', '\u25a4', '\u25a5', '\u25a6', '\u257a',
+            // '\u257b', '\u2578', '\u2579', '\u2581', '\u2594', '\u258f', '\u2595', '\u272d',
+            // '\u2591', '\u2592', '\u2593', '\u2503', '\u252b', '\u2561', '\u2562', '\u2556',
+            // '\u2555', '\u2563', '\u2551', '\u2557', '\u255d', '\u255c', '\u255b', '\u2513',
+            // '\u2517', '\u253b', '\u2533', '\u2523', '\u2501', '\u254b', '\u255e', '\u255f',
+            // '\u255a', '\u2554', '\u2569', '\u2566', '\u2560', '\u2550', '\u256c', '\u2567',
+            // '\u2568', '\u2564', '\u2565', '\u2559', '\u2558', '\u2552', '\u2553', '\u256b',
+            // '\u256a', '\u251b', '\u250f', '\u2588', '\u2585', '\u258c', '\u2590', '\u2580',
+            // '\u03b1', '\u03b2', '\u0393', '\u03c0', '\u03a3', '\u03c3', '\u03bc', '\u03c4',
+            // '\u03a6', '\u03b8', '\u03a9', '\u03b4', '\u221e', '\u03b8', '\u03b5', '\u03b7',
+            // '\u039e', '\u00b1', '\u2265', '\u2264', '\u2234', '\u2237', '\u00f7', '\u2248',
+            // '\u22c4', '\u22c5', '\u2217', '\u27b5', '\u2620', '\u2625', '\u25fc', '\u25fb'
+            // ].forEach( (ch, i) => {
+            //   this.draw(i + 127, ch);
+            // });
             [
-                ' ',
-                '\u263a',
-                '\u263b',
-                '\u2665',
-                '\u2666',
-                '\u2663',
-                '\u2660',
-                '\u263c',
-                '\u2600',
-                '\u2606',
-                '\u2605',
-                '\u2023',
+                '\u2302',
+                '\u00C7',
+                '\u00FC',
+                '\u00E9',
+                '\u00E2',
+                '\u00E4',
+                '\u00E0',
+                '\u00E5',
+                '\u00E7',
+                '\u00EA',
+                '\u00EB',
+                '\u00E8',
+                '\u00EF',
+                '\u00EE',
+                '\u00EC',
+                '\u00C4',
+                '\u00C5',
+                '\u00C9',
+                '\u00E6',
+                '\u00C6',
+                '\u00F4',
+                '\u00F6',
+                '\u00F2',
+                '\u00FB',
+                '\u00F9',
+                '\u00FF',
+                '\u00D6',
+                '\u00DC',
+                '\u00A2',
+                '\u00A3',
+                '\u00A5',
+                '\u20A7',
+                '\u0192',
+                '\u00E1',
+                '\u00ED',
+                '\u00F3',
+                '\u00FA',
+                '\u00F1',
+                '\u00D1',
+                '\u00AA',
+                '\u00BA',
+                '\u00BF',
+                '\u2310',
+                '\u00AC',
+                '\u00BD',
+                '\u00BC',
+                '\u00A1',
+                '\u00AB',
+                '\u00BB',
+                '\u2591',
+                '\u2592',
+                '\u2593',
+                '\u2502',
+                '\u2524',
+                '\u2561',
+                '\u2562',
+                '\u2556',
+                '\u2555',
+                '\u2563',
+                '\u2551',
+                '\u2557',
+                '\u255D',
+                '\u255C',
+                '\u255B',
+                '\u2510',
+                '\u2514',
+                '\u2534',
+                '\u252C',
+                '\u251C',
+                '\u2500',
+                '\u253C',
+                '\u255E',
+                '\u255F',
+                '\u255A',
+                '\u2554',
+                '\u2569',
+                '\u2566',
+                '\u2560',
+                '\u2550',
+                '\u256C',
+                '\u2567',
+                '\u2568',
+                '\u2564',
+                '\u2565',
+                '\u2559',
+                '\u2558',
+                '\u2552',
+                '\u2553',
+                '\u256B',
+                '\u256A',
+                '\u2518',
+                '\u250C',
+                '\u2588',
+                '\u2584',
+                '\u258C',
+                '\u2590',
+                '\u2580',
+                '\u03B1',
+                '\u00DF',
+                '\u0393',
+                '\u03C0',
+                '\u03A3',
+                '\u03C3',
+                '\u00B5',
+                '\u03C4',
+                '\u03A6',
+                '\u0398',
+                '\u03A9',
+                '\u03B4',
+                '\u221E',
+                '\u03C6',
+                '\u03B5',
+                '\u2229',
+                '\u2261',
+                '\u00B1',
+                '\u2265',
+                '\u2264',
+                '\u2320',
+                '\u2321',
+                '\u00F7',
+                '\u2248',
+                '\u00B0',
                 '\u2219',
-                '\u2043',
-                '\u2022',
-                '\u2630',
-                '\u2637',
-                '\u2610',
-                '\u2611',
-                '\u2612',
-                '\u26ac',
-                '\u29bf',
-                '\u2191',
-                '\u2192',
-                '\u2193',
-                '\u2190',
-                '\u2194',
-                '\u2195',
-                '\u25b2',
-                '\u25b6',
-                '\u25bc',
-                '\u25c0', // big left arrow
+                '\u00B7',
+                '\u221A',
+                '\u207F',
+                '\u00B2',
+                '\u25A0',
+                '\u00A0',
             ].forEach((ch, i) => {
-                this.draw(i, ch);
+                glyphs.draw(i + 127, ch);
             });
-            if (!basicOnly) {
-                // [
-                // '\u2302',
-                // '\u2b09', '\u272a', '\u2718', '\u2610', '\u2611', '\u25ef', '\u25ce', '\u2690',
-                // '\u2691', '\u2598', '\u2596', '\u259d', '\u2597', '\u2744', '\u272d', '\u2727',
-                // '\u25e3', '\u25e4', '\u25e2', '\u25e5', '\u25a8', '\u25a7', '\u259a', '\u265f',
-                // '\u265c', '\u265e', '\u265d', '\u265b', '\u265a', '\u301c', '\u2694', '\u2692',
-                // '\u25b6', '\u25bc', '\u25c0', '\u25b2', '\u25a4', '\u25a5', '\u25a6', '\u257a',
-                // '\u257b', '\u2578', '\u2579', '\u2581', '\u2594', '\u258f', '\u2595', '\u272d',
-                // '\u2591', '\u2592', '\u2593', '\u2503', '\u252b', '\u2561', '\u2562', '\u2556',
-                // '\u2555', '\u2563', '\u2551', '\u2557', '\u255d', '\u255c', '\u255b', '\u2513',
-                // '\u2517', '\u253b', '\u2533', '\u2523', '\u2501', '\u254b', '\u255e', '\u255f',
-                // '\u255a', '\u2554', '\u2569', '\u2566', '\u2560', '\u2550', '\u256c', '\u2567',
-                // '\u2568', '\u2564', '\u2565', '\u2559', '\u2558', '\u2552', '\u2553', '\u256b',
-                // '\u256a', '\u251b', '\u250f', '\u2588', '\u2585', '\u258c', '\u2590', '\u2580',
-                // '\u03b1', '\u03b2', '\u0393', '\u03c0', '\u03a3', '\u03c3', '\u03bc', '\u03c4',
-                // '\u03a6', '\u03b8', '\u03a9', '\u03b4', '\u221e', '\u03b8', '\u03b5', '\u03b7',
-                // '\u039e', '\u00b1', '\u2265', '\u2264', '\u2234', '\u2237', '\u00f7', '\u2248',
-                // '\u22c4', '\u22c5', '\u2217', '\u27b5', '\u2620', '\u2625', '\u25fc', '\u25fb'
-                // ].forEach( (ch, i) => {
-                //   this.draw(i + 127, ch);
-                // });
-                [
-                    '\u2302',
-                    '\u00C7',
-                    '\u00FC',
-                    '\u00E9',
-                    '\u00E2',
-                    '\u00E4',
-                    '\u00E0',
-                    '\u00E5',
-                    '\u00E7',
-                    '\u00EA',
-                    '\u00EB',
-                    '\u00E8',
-                    '\u00EF',
-                    '\u00EE',
-                    '\u00EC',
-                    '\u00C4',
-                    '\u00C5',
-                    '\u00C9',
-                    '\u00E6',
-                    '\u00C6',
-                    '\u00F4',
-                    '\u00F6',
-                    '\u00F2',
-                    '\u00FB',
-                    '\u00F9',
-                    '\u00FF',
-                    '\u00D6',
-                    '\u00DC',
-                    '\u00A2',
-                    '\u00A3',
-                    '\u00A5',
-                    '\u20A7',
-                    '\u0192',
-                    '\u00E1',
-                    '\u00ED',
-                    '\u00F3',
-                    '\u00FA',
-                    '\u00F1',
-                    '\u00D1',
-                    '\u00AA',
-                    '\u00BA',
-                    '\u00BF',
-                    '\u2310',
-                    '\u00AC',
-                    '\u00BD',
-                    '\u00BC',
-                    '\u00A1',
-                    '\u00AB',
-                    '\u00BB',
-                    '\u2591',
-                    '\u2592',
-                    '\u2593',
-                    '\u2502',
-                    '\u2524',
-                    '\u2561',
-                    '\u2562',
-                    '\u2556',
-                    '\u2555',
-                    '\u2563',
-                    '\u2551',
-                    '\u2557',
-                    '\u255D',
-                    '\u255C',
-                    '\u255B',
-                    '\u2510',
-                    '\u2514',
-                    '\u2534',
-                    '\u252C',
-                    '\u251C',
-                    '\u2500',
-                    '\u253C',
-                    '\u255E',
-                    '\u255F',
-                    '\u255A',
-                    '\u2554',
-                    '\u2569',
-                    '\u2566',
-                    '\u2560',
-                    '\u2550',
-                    '\u256C',
-                    '\u2567',
-                    '\u2568',
-                    '\u2564',
-                    '\u2565',
-                    '\u2559',
-                    '\u2558',
-                    '\u2552',
-                    '\u2553',
-                    '\u256B',
-                    '\u256A',
-                    '\u2518',
-                    '\u250C',
-                    '\u2588',
-                    '\u2584',
-                    '\u258C',
-                    '\u2590',
-                    '\u2580',
-                    '\u03B1',
-                    '\u00DF',
-                    '\u0393',
-                    '\u03C0',
-                    '\u03A3',
-                    '\u03C3',
-                    '\u00B5',
-                    '\u03C4',
-                    '\u03A6',
-                    '\u0398',
-                    '\u03A9',
-                    '\u03B4',
-                    '\u221E',
-                    '\u03C6',
-                    '\u03B5',
-                    '\u2229',
-                    '\u2261',
-                    '\u00B1',
-                    '\u2265',
-                    '\u2264',
-                    '\u2320',
-                    '\u2321',
-                    '\u00F7',
-                    '\u2248',
-                    '\u00B0',
-                    '\u2219',
-                    '\u00B7',
-                    '\u221A',
-                    '\u207F',
-                    '\u00B2',
-                    '\u25A0',
-                    '\u00A0',
-                ].forEach((ch, i) => {
-                    this.draw(i + 127, ch);
-                });
+        }
+    }
+
+    class Event {
+        constructor(type, opts) {
+            this.target = null; // current handler information
+            // Used in UI
+            this.defaultPrevented = false;
+            this.propagationStopped = false;
+            this.immediatePropagationStopped = false;
+            // Key Event
+            this.key = '';
+            this.code = '';
+            this.shiftKey = false;
+            this.ctrlKey = false;
+            this.altKey = false;
+            this.metaKey = false;
+            // Dir Event extends KeyEvent
+            this.dir = null;
+            // Mouse Event
+            this.x = -1;
+            this.y = -1;
+            this.clientX = -1;
+            this.clientY = -1;
+            // Tick Event
+            this.dt = 0;
+            this.reset(type, opts);
+        }
+        preventDefault() {
+            this.defaultPrevented = true;
+        }
+        stopPropagation() {
+            this.propagationStopped = true;
+        }
+        stopImmediatePropagation() {
+            this.immediatePropagationStopped = true;
+        }
+        reset(type, opts) {
+            this.type = type;
+            this.target = null;
+            this.defaultPrevented = false;
+            this.shiftKey = false;
+            this.ctrlKey = false;
+            this.altKey = false;
+            this.metaKey = false;
+            this.key = '';
+            this.code = '';
+            this.x = -1;
+            this.y = -1;
+            this.dir = null;
+            this.dt = 0;
+            this.target = null;
+            if (opts) {
+                Object.assign(this, opts);
             }
+        }
+    }
+    // let IOMAP: IOMap = {};
+    const DEAD_EVENTS = [];
+    const KEYPRESS = 'keypress';
+    const MOUSEMOVE = 'mousemove';
+    const CLICK = 'click';
+    const TICK = 'tick';
+    const MOUSEUP = 'mouseup';
+    const STOP = 'stop';
+    const CONTROL_CODES = [
+        'ShiftLeft',
+        'ShiftRight',
+        'ControlLeft',
+        'ControlRight',
+        'AltLeft',
+        'AltRight',
+        'MetaLeft',
+        'MetaRight',
+        //
+        'Enter',
+        'Delete',
+        'Backspace',
+        'Tab',
+        'CapsLock',
+        'Escape',
+    ];
+    function isControlCode(e) {
+        if (typeof e === 'string') {
+            return CONTROL_CODES.includes(e);
+        }
+        return CONTROL_CODES.includes(e.code);
+    }
+    // type EventHandler = (event: Event) => void;
+    // export function setKeymap(keymap: IOMap) {
+    //     IOMAP = keymap;
+    // }
+    // export function handlerFor(ev: EventType, km: Record<string, any>): any | null {
+    //     let c;
+    //     if ('dir' in ev) {
+    //         c = km.dir || km.keypress;
+    //     } else if (ev.type === KEYPRESS) {
+    //         c = km[ev.key!] || km[ev.code!] || km.keypress;
+    //     } else if (km[ev.type]) {
+    //         c = km[ev.type];
+    //     }
+    //     if (!c) {
+    //         c = km.dispatch;
+    //     }
+    //     return c || null;
+    // }
+    // export async function dispatchEvent(ev: Event, km: IOMap, thisArg?: any) {
+    //     let result;
+    //     km = km || IOMAP;
+    //     if (ev.type === STOP) {
+    //         recycleEvent(ev);
+    //         return true; // Should stop loops, etc...
+    //     }
+    //     const handler = handlerFor(ev, km);
+    //     if (handler) {
+    //         // if (typeof c === 'function') {
+    //         result = await handler.call(thisArg || km, ev);
+    //         // } else if (commands[c]) {
+    //         //     result = await commands[c](ev);
+    //         // } else {
+    //         //     Utils.WARN('No command found: ' + c);
+    //         // }
+    //     }
+    //     // TODO - what is this here for?
+    //     // if ('next' in km && km.next === false) {
+    //     //     result = false;
+    //     // }
+    //     recycleEvent(ev);
+    //     return result;
+    // }
+    function recycleEvent(ev) {
+        DEAD_EVENTS.push(ev);
+    }
+    // STOP
+    function makeStopEvent() {
+        return makeCustomEvent(STOP);
+    }
+    // CUSTOM
+    function makeCustomEvent(type, opts) {
+        const ev = DEAD_EVENTS.pop() || null;
+        if (!ev)
+            return new Event(type, opts);
+        ev.reset(type, opts);
+        return ev;
+    }
+    // TICK
+    function makeTickEvent(dt) {
+        const ev = makeCustomEvent(TICK);
+        ev.dt = dt;
+        return ev;
+    }
+    // KEYBOARD
+    function makeKeyEvent(e) {
+        let key = e.key;
+        let code = e.code; // .toLowerCase();
+        if (e.shiftKey) {
+            key = key.toUpperCase();
+            // code = code.toUpperCase();
+        }
+        if (e.ctrlKey) {
+            key = '^' + key;
+            // code = '^' + code;
+        }
+        if (e.metaKey) {
+            key = '#' + key;
+            // code = '#' + code;
+        }
+        if (e.altKey) ;
+        const ev = DEAD_EVENTS.pop() || new Event(KEYPRESS);
+        ev.shiftKey = e.shiftKey;
+        ev.ctrlKey = e.ctrlKey;
+        ev.altKey = e.altKey;
+        ev.metaKey = e.metaKey;
+        ev.type = KEYPRESS;
+        ev.defaultPrevented = false;
+        ev.key = key;
+        ev.code = code;
+        ev.x = -1;
+        ev.y = -1;
+        ev.clientX = -1;
+        ev.clientY = -1;
+        ev.dir = keyCodeDirection(e.code);
+        ev.dt = 0;
+        ev.target = null;
+        return ev;
+    }
+    function keyCodeDirection(key) {
+        const lowerKey = key.toLowerCase();
+        if (lowerKey === 'arrowup') {
+            return [0, -1];
+        }
+        else if (lowerKey === 'arrowdown') {
+            return [0, 1];
+        }
+        else if (lowerKey === 'arrowleft') {
+            return [-1, 0];
+        }
+        else if (lowerKey === 'arrowright') {
+            return [1, 0];
+        }
+        return null;
+    }
+    function ignoreKeyEvent(e) {
+        return CONTROL_CODES.includes(e.code);
+    }
+    // MOUSE
+    function makeMouseEvent(e, x, y) {
+        const ev = DEAD_EVENTS.pop() || new Event(e.type);
+        ev.shiftKey = e.shiftKey;
+        ev.ctrlKey = e.ctrlKey;
+        ev.altKey = e.altKey;
+        ev.metaKey = e.metaKey;
+        ev.type = e.type || 'mousemove';
+        if (e.buttons && e.type !== 'mouseup') {
+            ev.type = CLICK;
+        }
+        ev.defaultPrevented = false;
+        ev.key = '';
+        ev.code = '';
+        ev.x = x;
+        ev.y = y;
+        ev.clientX = e.clientX;
+        ev.clientY = e.clientY;
+        ev.dir = null;
+        ev.dt = 0;
+        ev.target = null;
+        return ev;
+    }
+    class Queue {
+        constructor() {
+            this.lastClick = { x: -1, y: -1 };
+            this._events = [];
+        }
+        get length() {
+            return this._events.length;
+        }
+        clear() {
+            this._events.length = 0;
+        }
+        enqueue(ev) {
+            if (this._events.length) {
+                const last = this._events[this._events.length - 1];
+                if (last.type === ev.type) {
+                    if (last.type === MOUSEMOVE) {
+                        last.x = ev.x;
+                        last.y = ev.y;
+                        recycleEvent(ev);
+                        return;
+                    }
+                }
+            }
+            // Keep clicks down to one per cell if holding down mouse button
+            if (ev.type === CLICK) {
+                if (this.lastClick.x == ev.x && this.lastClick.y == ev.y) {
+                    if (this._events.findIndex((e) => e.type === CLICK) >= 0) {
+                        recycleEvent(ev);
+                        return;
+                    }
+                }
+                this.lastClick.x = ev.x;
+                this.lastClick.y = ev.y;
+            }
+            else if (ev.type == MOUSEUP) {
+                this.lastClick.x = -1;
+                this.lastClick.y = -1;
+                recycleEvent(ev);
+                return;
+            }
+            if (ev.type === TICK) {
+                const first = this._events[0];
+                if (first && first.type === TICK) {
+                    first.dt += ev.dt;
+                    recycleEvent(ev);
+                    return;
+                }
+                this._events.unshift(ev); // ticks go first
+            }
+            else {
+                this._events.push(ev);
+            }
+        }
+        dequeue() {
+            return this._events.shift();
+        }
+        peek() {
+            return this._events[0];
         }
     }
 
@@ -7641,6 +7385,7 @@
         }
     }
     class BaseCanvas {
+        // loop: IO.Loop = IO.loop;
         constructor(width, height, glyphs) {
             this.mouse = { x: -1, y: -1 };
             this._renderRequested = false;
@@ -7648,7 +7393,6 @@
             this._height = 38;
             this._buffers = [];
             this._current = 0;
-            this.loop = loop;
             this._node = this._createNode();
             this._createContext();
             this._configure(width, height, glyphs);
@@ -7754,6 +7498,9 @@
         hasXY(x, y) {
             return x >= 0 && y >= 0 && x < this.width && y < this.height;
         }
+        get onclick() {
+            throw new Error('write only.');
+        }
         set onclick(fn) {
             if (fn) {
                 this.node.onclick = (e) => {
@@ -7767,6 +7514,9 @@
             else {
                 this.node.onclick = null;
             }
+        }
+        get onmousemove() {
+            throw new Error('write only.');
         }
         set onmousemove(fn) {
             if (fn) {
@@ -7786,6 +7536,9 @@
                 this.node.onmousemove = null;
             }
         }
+        get onmouseup() {
+            throw new Error('write only.');
+        }
         set onmouseup(fn) {
             if (fn) {
                 this.node.onmouseup = (e) => {
@@ -7799,6 +7552,9 @@
             else {
                 this.node.onmouseup = null;
             }
+        }
+        get onkeydown() {
+            throw new Error('write only.');
         }
         set onkeydown(fn) {
             if (fn) {
@@ -8221,15 +7977,15 @@ void main() {
                 el.appendChild(canvas.node);
             }
         }
-        if (opts.loop) {
-            canvas.loop = opts.loop;
-        }
-        if (opts.io || opts.loop) {
-            canvas.onclick = (e) => canvas.loop.enqueue(e);
-            canvas.onmousemove = (e) => canvas.loop.enqueue(e);
-            canvas.onmouseup = (e) => canvas.loop.enqueue(e);
-            // canvas.onkeydown = (e) => loop.enqueue(e); // Keyboard events require tabindex to be set, better to let user do this.
-        }
+        // if (opts.loop) {
+        //     canvas.loop = opts.loop;
+        // }
+        // if (opts.io || opts.loop) {
+        //     canvas.onclick = (e) => canvas.loop.enqueue(e);
+        //     canvas.onmousemove = (e) => canvas.loop.enqueue(e);
+        //     canvas.onmouseup = (e) => canvas.loop.enqueue(e);
+        //     // canvas.onkeydown = (e) => loop.enqueue(e); // Keyboard events require tabindex to be set, better to let user do this.
+        // }
         return canvas;
     }
 
@@ -8237,6 +7993,7 @@ void main() {
         __proto__: null,
         Buffer: Buffer,
         Glyphs: Glyphs,
+        initGlyphs: initGlyphs,
         NotSupportedError: NotSupportedError,
         BaseCanvas: BaseCanvas,
         Canvas2D: Canvas2D,
@@ -8315,13 +8072,13 @@ void main() {
         if (typeof fg === 'string')
             fg = from$2(fg);
         else if (Array.isArray(fg))
-            fg = make$9(fg);
+            fg = make$8(fg);
         else if (fg === undefined || fg === null)
             fg = -1;
         if (typeof bg === 'string')
             bg = from$2(bg);
         else if (Array.isArray(bg))
-            bg = make$9(bg);
+            bg = make$8(bg);
         else if (bg === undefined || bg === null)
             bg = -1;
         return new Sprite(ch, fg, bg, opacity);
@@ -8675,14 +8432,14 @@ void main() {
         INTENSITY_DARK: 20,
         INTENSITY_SHADOW: 50,
     }); // less than 20% for highest color in rgb
-    let LIGHT_COMPONENTS = make$9();
+    let LIGHT_COMPONENTS = make$8();
     class Light {
         constructor(color, radius = 1, fadeTo = 0, pass = false) {
             this.fadeTo = 0;
             this.passThroughActors = false;
             this.id = null;
             this.color = from$2(color); /* color */
-            this.radius = make$b(radius);
+            this.radius = make$a(radius);
             this.fadeTo = fadeTo;
             this.passThroughActors = pass; // generally no, but miner light does (TODO - string parameter?  'false' or 'true')
         }
@@ -8852,10 +8609,10 @@ void main() {
             this.changed = false;
             this.glowLightChanged = false;
             this.dynamicLightChanged = false;
-            this.light = make$d(map.width, map.height, () => this.ambient.slice());
-            this.glowLight = make$d(map.width, map.height, () => this.ambient.slice());
-            this.oldLight = make$d(map.width, map.height, () => this.ambient.slice());
-            this.flags = make$d(map.width, map.height);
+            this.light = make$c(map.width, map.height, () => this.ambient.slice());
+            this.glowLight = make$c(map.width, map.height, () => this.ambient.slice());
+            this.oldLight = make$c(map.width, map.height, () => this.ambient.slice());
+            this.flags = make$c(map.width, map.height);
             this.finishLightUpdate();
         }
         copy(other) {
@@ -9140,7 +8897,7 @@ void main() {
             this._obj = src;
         }
         isRunning() {
-            return this._time < this._duration;
+            return this._startTime > 0 || this._time < this._duration;
         }
         onStart(cb) {
             this._startCb = cb;
@@ -9245,7 +9002,7 @@ void main() {
                 this._updateCb.call(this, this._obj, pct);
             }
             if (this._time >= this._duration) {
-                if (this._repeat > this._count) {
+                if (this._repeat > this._count || this._repeat < 0) {
                     this._time -= this._duration;
                     this._startTime =
                         this._repeatDelay > -1 ? this._repeatDelay : this._delay;
@@ -9303,8 +9060,8 @@ void main() {
             return madeChange;
         }
     }
-    function make$1(src) {
-        return new Tween(src);
+    function make$1(src, duration = 1000) {
+        return new Tween(src).duration(duration);
     }
     function linear(pct) {
         return clamp(pct, 0, 1);
@@ -9510,7 +9267,10 @@ void main() {
             else if (prop === 'unchecked') {
                 return this._matchNot(this._matchProp('checked'));
             }
-            this.priority += 1; // prop
+            this.priority += 2; // prop
+            if (['odd', 'even'].includes(prop)) {
+                this.priority -= 1;
+            }
             return (el) => !!el.prop(prop);
         }
         _matchId(id) {
@@ -9615,6 +9375,9 @@ void main() {
         }
         get bg() {
             return this._bg;
+        }
+        get opacity() {
+            return this._opacity;
         }
         dim(pct = 25, fg = true, bg = false) {
             if (fg) {
@@ -9736,11 +9499,11 @@ void main() {
     // }
     class ComputedStyle extends Style {
         // constructor(source: Stylable, sources?: Style[]) {
-        constructor(sources, opacity = 100) {
+        constructor(sources) {
             super();
             // obj: Stylable;
             this.sources = [];
-            this._opacity = 100;
+            // _opacity = 100;
             this._baseFg = null;
             this._baseBg = null;
             // this.obj = source;
@@ -9750,11 +9513,12 @@ void main() {
                 this.sources = sources;
             }
             this.sources.forEach((s) => super.set(s));
-            this.opacity = opacity;
+            // this.opacity = opacity;
             this._dirty = false; // As far as I know I reflect all of the current source values.
         }
         get opacity() {
-            return this._opacity;
+            var _a;
+            return (_a = this._opacity) !== null && _a !== void 0 ? _a : 100;
         }
         set opacity(v) {
             v = clamp(v, 0, 100);
@@ -9784,12 +9548,13 @@ void main() {
         constructor(parentSheet) {
             this.rules = [];
             this._dirty = true;
-            if (parentSheet === undefined) {
-                parentSheet = defaultStyle;
-            }
-            if (parentSheet) {
-                this.rules = parentSheet.rules.slice();
-            }
+            // if (parentSheet === undefined) {
+            //     parentSheet = defaultStyle;
+            // }
+            // if (parentSheet) {
+            //     this.rules = parentSheet.rules.slice();
+            // }
+            this._parent = parentSheet || null;
         }
         get dirty() {
             return this._dirty;
@@ -9799,6 +9564,9 @@ void main() {
             if (!this._dirty) {
                 this.rules.forEach((r) => (r.dirty = false));
             }
+        }
+        setParent(sheet) {
+            this._parent = sheet;
         }
         add(selector, props) {
             if (selector.includes(',')) {
@@ -9813,15 +9581,17 @@ void main() {
             // if 2 '.' - Error('Only single class rules supported.')
             // if '&' - Error('Not supported.')
             let rule = new Style(selector, props);
-            const existing = this.rules.findIndex((s) => s.selector.text === rule.selector.text);
-            if (existing > -1) {
-                const current = this.rules[existing];
-                current.set(rule);
-                rule = current;
-            }
-            else {
-                this.rules.push(rule);
-            }
+            // const existing = this.rules.findIndex(
+            //     (s) => s.selector.text === rule.selector.text
+            // );
+            // if (existing > -1) {
+            //     // TODO - Should this delete the rule and add the new one at the end?
+            //     const current = this.rules[existing];
+            //     current.set(rule);
+            //     rule = current;
+            // } else {
+            this.rules.push(rule);
+            // }
             // rulesChanged = true;
             this.dirty = true;
             return this;
@@ -9836,390 +9606,253 @@ void main() {
                 this.dirty = true;
             }
         }
+        _rulesFor(widget) {
+            let rules = this.rules.filter((r) => r.selector.matches(widget));
+            if (this._parent) {
+                rules = this._parent._rulesFor(widget).concat(rules);
+            }
+            return rules;
+        }
         computeFor(widget) {
-            const sources = this.rules.filter((r) => r.selector.matches(widget));
+            const sources = this._rulesFor(widget);
             const widgetStyle = widget.style();
             if (widgetStyle) {
                 sources.push(widgetStyle);
+                widgetStyle.dirty = false;
             }
-            widgetStyle.dirty = false;
-            return new ComputedStyle(sources, widget.opacity);
+            return new ComputedStyle(sources);
         }
     }
     const defaultStyle = new Sheet(null);
+    defaultStyle.add('*', { fg: 'white' });
 
-    class Layer {
-        // result: any = undefined;
-        // timers: TimerInfo[] = [];
-        // _tweens: Tween.Animation[] = [];
-        // _running = false;
-        // _keymap: IO.IOMap = {};
-        constructor(ui, _opts = {}) {
-            // styles: Style.Sheet;
-            this.needsDraw = true;
-            this.ui = ui;
-            this.buffer = ui.canvas.pushBuffer();
-            this.io = new Handler(ui.loop);
-            ui.pushLayer(this);
-            // this.styles = new Style.Sheet(opts.styles || ui.styles);
+    class Events {
+        constructor(ctx) {
+            this._events = {};
+            this.onUnhandled = null;
+            this._ctx = ctx;
         }
-        // get running() {
-        //     return this._running;
-        // }
-        get width() {
-            return this.buffer.width;
-        }
-        get height() {
-            return this.buffer.height;
-        }
-        // EVENTS
-        // on(event: string, cb: Widget.EventCb): this {
-        //     this.body.on(event, cb);
-        //     return this;
-        // }
-        // off(event: string, cb?: Widget.EventCb): this {
-        //     this.body.off(event, cb);
-        //     return this;
-        // }
-        mousemove(_e) {
-            return false;
-        }
-        click(_e) {
-            return false;
-        }
-        keypress(_e) {
-            return false;
-        }
-        dir(_e) {
-            return false;
-        }
-        tick(_e) {
-            // const dt = e.dt;
-            // // fire animations
-            // this._tweens.forEach((tw) => tw.tick(dt));
-            // this._tweens = this._tweens.filter((tw) => tw.isRunning());
-            // for (let timer of this.timers) {
-            //     if (timer.time <= 0) continue; // ignore fired timers
-            //     timer.time -= dt;
-            //     if (timer.time <= 0) {
-            //         timer.action();
-            //     }
-            // }
-            return false;
-        }
-        reset() {
-            this.buffer.copy(this.ui.baseBuffer);
-        }
-        draw() {
-            if (this.buffer.changed) {
-                console.log('draw');
-                this.buffer.render();
+        on(ev, fn) {
+            if (Array.isArray(ev)) {
+                const cleanup = ev.map((e) => this.on(e, fn));
+                return () => {
+                    cleanup.forEach((c) => c());
+                };
             }
-        }
-        // LOOP
-        setTimeout(action, time) {
-            return this.io.setTimeout(action, time);
-            // const slot = this.timers.findIndex((t) => t.time <= 0);
-            // if (slot < 0) {
-            //     this.timers.push({ action, time });
-            // } else {
-            //     this.timers[slot] = { action, time };
-            // }
-        }
-        clearTimeout(action) {
-            this.io.clearTimeout(action);
-            // const timer = this.timers.find((t) => t.action === action);
-            // if (timer) {
-            //     timer.time = -1;
-            // }
-        }
-        // Animator
-        addAnimation(a) {
-            this.io.addAnimation(a);
-        }
-        removeAnimation(a) {
-            this.io.removeAnimation(a);
-        }
-        // RUN
-        run(keymap = {}, ms = -1) {
-            ['keypress', 'dir', 'click', 'mousemove', 'tick', 'draw'].forEach((e) => {
-                if (e in keymap)
-                    return;
-                keymap[e] = this[e];
-            });
-            return this.io.run(keymap, ms, this);
-        }
-        finish(result) {
-            this.io.finish(result);
-            this.ui.canvas.popBuffer();
-            this.ui.popLayer(this);
-            // this.ui.loop.popHandler(this.io);
-        }
-    }
-
-    // import * as GWU from 'gw-utils';
-    class UI {
-        //     // inDialog = false;
-        //     _done = false;
-        //     // _promise: Promise<void> | null = null;
-        constructor(opts = {}) {
-            this.layers = [];
-            opts.loop = opts.loop || loop;
-            this.loop = opts.loop;
-            this.canvas = opts.canvas || make$5(opts);
-            this.buffer = this.canvas.buffer;
-            // get keyboard input hooked up
-            if (this.canvas.node && this.canvas.node.parentElement) {
-                this.canvas.node.parentElement.onkeydown = this.loop.onkeydown.bind(this.loop);
-                this.canvas.node.parentElement.tabIndex = 1;
+            if (!(ev in this._events)) {
+                this._events[ev] = [];
             }
-            if (opts.layer !== false) {
-                this._layer = new Layer(this);
+            const info = { fn };
+            this._events[ev].push(info);
+            return () => {
+                arrayNullify(this._events[ev], info);
+            };
+        }
+        once(ev, fn) {
+            if (Array.isArray(ev)) {
+                const cleanup = ev.map((e) => this.on(e, fn));
+                return () => {
+                    cleanup.forEach((c) => c());
+                };
             }
+            if (!(ev in this._events)) {
+                this._events[ev] = [];
+            }
+            const info = { fn, once: true };
+            this._events[ev].push(info);
+            return () => {
+                arrayNullify(this._events[ev], info);
+            };
         }
-        get width() {
-            return this.canvas.width;
-        }
-        get height() {
-            return this.canvas.height;
-        }
-        finish() {
-            if (this._layer)
-                this._layer.finish();
-        }
-        get layer() {
-            return this._layer;
-        }
-        startNewLayer() {
-            const layer = new Layer(this);
-            this.pushLayer(layer);
-            return layer;
-        }
-        pushLayer(layer) {
-            this.layers.push(layer);
-            this._layer = layer;
-        }
-        popLayer(layer) {
-            if (layer === this.layers[0])
+        off(ev, cb) {
+            if (Array.isArray(ev)) {
+                ev.forEach((e) => this.off(e, cb));
                 return;
-            arrayDelete(this.layers, layer);
-            if (layer === this._layer) {
-                this._layer = this.layers[this.layers.length - 1];
-                this._layer.needsDraw = true;
+            }
+            const events = this._events[ev];
+            if (!events)
+                return;
+            const current = events.findIndex((i) => i && i.fn === cb);
+            if (current > -1) {
+                events[current] = null;
             }
         }
-        alert(..._args) {
-            return Promise.resolve(true);
-        }
-        confirm(..._args) {
-            return Promise.resolve(true);
-        }
-        inputbox(..._args) {
-            return Promise.resolve(null);
-        }
-        //     get styles(): Sheet {
-        //         return defaultStyle;
-        //     }
-        //     // render() {
-        //     //     this.buffer.render();
-        //     // }
-        get baseBuffer() {
-            const layer = this.layers[this.layers.length - 2] || null;
-            return layer ? layer.buffer : this.canvas.buffer;
-        }
-        //     get canvasBuffer(): Canvas.Buffer {
-        //         return this.canvas.buffer;
-        //     }
-        //     get buffer(): Canvas.Buffer {
-        //         return this.layer ? this.layer.buffer : this.canvas.buffer;
-        //     }
-        //     startNewLayer(opts: LayerOptions = {}): Layer {
-        //         opts.styles = this.layer ? this.layer.styles : this.styles;
-        //         const layer = new Layer(this, opts);
-        //         this.startLayer(layer);
-        //         return layer;
-        //     }
-        //     startLayer(layer: Layer) {
-        //         this.layers.push(layer);
-        //         // if (!this._promise) {
-        //         //     this._promise = this.loop.run((this as unknown) as IO.IOMap);
-        //         // }
-        //         this.layer = layer;
-        //     }
-        //     copyUIBuffer(dest: Buffer.Buffer): void {
-        //         const base = this.baseBuffer;
-        //         dest.copy(base);
-        //         dest.changed = false; // So you have to draw something to make the canvas render...
-        //     }
-        //     finishLayer(layer: Layer, result?: any): void {
-        //         layer.finish(result);
-        //     }
-        //     _finishLayer(layer: Layer): void {
-        //         Utils.arrayDelete(this.layers, layer);
-        //         if (this.layer === layer) {
-        //             this.layer = this.layers[this.layers.length - 1] || null;
-        //             this.layer && (this.layer.needsDraw = true);
-        //         }
-        //     }
-        //     stop(): void {
-        //         this._done = true;
-        //         while (this.layer) {
-        //             this.finishLayer(this.layer);
-        //         }
-        //     }
-        //     // run(): Promise<void> {
-        //     //     // this._done = false;
-        //     //     return this.loop.run(this as unknown as IO.IOMap);
-        //     // }
-        //     // stop() {
-        //     //     this._done = true;
-        //     //     if (this.layer) this.layer.stop();
-        //     //     this.layers.forEach((l) => l.stop());
-        //     //     this.layer = null;
-        //     //     this.layers.length = 0;
-        //     // }
-        //     // mousemove(e: IO.Event): boolean {
-        //     //     if (this.layer) this.layer.mousemove(e);
-        //     //     return this._done;
-        //     // }
-        //     // click(e: IO.Event): boolean {
-        //     //     if (this.layer) this.layer.click(e);
-        //     //     return this._done;
-        //     // }
-        //     // keypress(e: IO.Event): boolean {
-        //     //     if (this.layer) this.layer.keypress(e);
-        //     //     return this._done;
-        //     // }
-        //     // dir(e: IO.Event): boolean {
-        //     //     if (this.layer) this.layer.dir(e);
-        //     //     return this._done;
-        //     // }
-        //     // tick(e: IO.Event): boolean {
-        //     //     if (this.layer) this.layer.tick(e);
-        //     //     return this._done;
-        //     // }
-        //     // draw() {
-        //     //     if (this.layer) this.layer.draw();
-        //     // }
-        //     addAnimation(a: Tween.Animation): void {
-        //         this.layer?.addAnimation(a);
-        //     }
-        //     removeAnimation(a: Tween.Animation): void {
-        //         this.layer?.removeAnimation(a);
-        //     }
-        //     // UTILITY FUNCTIONS
-        async fadeTo(color = 'black', duration = 1000) {
-            color = from$2(color);
-            const layer = this.startNewLayer();
-            let pct = 0;
-            let elapsed = 0;
-            while (elapsed < duration) {
-                elapsed += 32;
-                if (await layer.io.pause(32)) {
-                    elapsed = duration;
+        trigger(ev, ...args) {
+            if (Array.isArray(ev)) {
+                let success = false;
+                for (let name of ev) {
+                    success = this.trigger(name, ...args) || success;
                 }
-                pct = Math.floor((100 * elapsed) / duration);
-                layer.reset();
-                layer.buffer.mix(color, pct);
-                layer.draw();
+                return success;
             }
-            layer.finish();
+            const events = this._events[ev];
+            if (!events || events.length == 0) {
+                return this._unhandled(ev, args);
+            }
+            // newer events first (especially for input)
+            arrayRevEach(events, (info) => {
+                info && info.fn.call(this._ctx, ...args);
+            });
+            this._events[ev] = events.filter((i) => i && !i.once);
+            return true;
+        }
+        _unhandled(ev, args) {
+            if (!this.onUnhandled)
+                return false;
+            this.onUnhandled(ev, ...args);
+            return true;
+        }
+        dispatch(e) {
+            if (e.type === KEYPRESS) {
+                const evs = [e.code, 'keypress'];
+                if (e.key !== e.code) {
+                    evs.unshift(e.key);
+                }
+                if (e.dir) {
+                    evs.unshift('dir');
+                }
+                this.trigger(evs, e);
+            }
+            else {
+                this.trigger(e.type, e);
+            }
+        }
+        clear() {
+            this._events = {};
+            this.onUnhandled = null;
+        }
+        restart() {
+            Object.keys(this._events).forEach((ev) => {
+                this._events[ev] = this._events[ev].filter((i) => i && !i.once);
+            });
+            this.onUnhandled = null;
         }
     }
-    function make(opts) {
-        return new UI(opts);
-    }
+    /*
+            let fired = false;
+            next = next || UTILS.NOOP;
+            const events = this._events[ev];
+            if (!events) {
+                next();
+                return fired;
+            }
+            let index = -1;
 
-    defaultStyle.add('*', {
-        fg: 'white',
-        bg: -1,
-        align: 'left',
-        valign: 'top',
-    });
+            const ctx = this._ctx;
+            function _next() {
+                ++index;
+                if (index >= events.length) return next!();
+                events[index].call(ctx, args, _next);
+                fired = true;
+            }
+            _next();
+            return fired;
+    */
+
+    // Widget
     class Widget {
-        constructor(term, opts = {}) {
-            this.tag = 'text';
-            this.bounds = new Bounds(0, 0, 0, 1);
-            this._depth = 0;
-            this.events = {};
-            // action: string = '';
+        constructor(opts = {}) {
+            // tag = 'widget';
+            // id = '';
+            this.parent = null;
+            this.scene = null;
             this.children = [];
+            this.events = new Events(this);
             this._style = new Style();
-            this._parent = null;
+            this._data = {};
             this.classes = [];
-            this._props = {};
+            this._props = {
+                needsDraw: true,
+                needsStyle: true,
+                hover: false,
+            };
             this._attrs = {};
-            this.layer = term;
-            // this.bounds.x = term.x;
-            // this.bounds.y = term.y;
-            this.bounds.x = opts.x || 0;
-            this.bounds.y = opts.y || 0;
-            this.bounds.width = opts.width || 0;
-            this.bounds.height = opts.height || 1;
-            if (opts.tag) {
-                this.tag = opts.tag;
-            }
-            if (opts.id) {
+            if (opts.id)
                 this.attr('id', opts.id);
-                this.attr('action', opts.id);
-            }
-            if (opts.depth !== undefined) {
-                this._depth = opts.depth;
-            }
+            this.attr('tag', opts.tag || 'widget');
+            this.bounds = new Bounds(opts);
             this._style.set(opts);
+            // opts.tag && (this.tag = opts.tag);
             if (opts.class) {
                 this.classes = opts.class.split(/ +/g).map((c) => c.trim());
             }
             if (opts.tabStop) {
                 this.prop('tabStop', true);
             }
-            if (opts.action) ;
             if (opts.disabled) {
                 this.prop('disabled', true);
             }
             if (opts.hidden) {
-                this.prop('hidden', true);
+                this.hidden = true;
             }
+            if (opts.data) {
+                this._data = opts.data; // call set data yourself
+            }
+            opts.action = opts.action || opts.id;
             if (opts.action) {
+                if (opts.action === true) {
+                    if (!opts.id)
+                        throw new Error('boolean action requires id.');
+                    opts.action = opts.id;
+                }
                 this.attr('action', opts.action);
             }
-            if (this.attr('action')) {
-                this.on('click', (_n, w, e) => {
-                    const action = this._attrStr('action');
-                    if (action) {
-                        this._bubbleEvent(action, w, e);
-                    }
-                    return false; // keep bubbling
-                });
+            ['create', 'input', 'update', 'draw', 'destroy'].forEach((n) => {
+                if (n in opts) {
+                    this.events.on(n, opts[n]);
+                }
+            });
+            if (opts.on) {
+                Object.entries(opts.on).forEach(([ev, fn]) => this.on(ev, fn));
             }
-            this.layer.attach(this);
-            this.updateStyle();
-            if (opts.opacity !== undefined) {
-                this._used.opacity = opts.opacity;
+            if (opts.parent) {
+                this.setParent(opts.parent, opts);
+            }
+            else if (opts.scene) {
+                opts.scene.addChild(this, opts);
             }
         }
-        get depth() {
-            return this._depth;
+        get needsDraw() {
+            return this.scene ? this.scene.needsDraw : false;
         }
-        set depth(v) {
-            this._depth = v;
-            this.layer.sortWidgets();
+        set needsDraw(v) {
+            if (!v)
+                return;
+            this.scene && (this.scene.needsDraw = v);
         }
-        get parent() {
-            return this._parent;
+        get tag() {
+            return this._attrStr('tag');
         }
-        set parent(v) {
-            this.setParent(v);
+        get id() {
+            return this._attrStr('id');
         }
-        setParent(v, opts = {}) {
-            if (this._parent) {
-                this._parent._removeChild(this);
+        data(...args) {
+            if (args.length == 0) {
+                return this._data;
             }
-            this._parent = v;
-            if (this._parent) {
-                this.depth = this._depth || this._parent.depth + 1;
-                this._parent._addChild(this, opts);
+            if (args.length == 2) {
+                this._setDataItem(args[0], args[1]);
+                this.needsDraw = true;
+                return this;
             }
+            if (typeof args[0] === 'string') {
+                if (Array.isArray(this._data)) {
+                    throw new Error('Cannot access fields of array data.');
+                }
+                return this._data[args[0]];
+            }
+            this._setData(args[0]);
+            this.needsDraw = true;
+            return this;
+        }
+        _setData(v) {
+            this._data = v;
+        }
+        _setDataItem(key, v) {
+            if (Array.isArray(this._data)) {
+                throw new Error('Cannot set field in array data.');
+            }
+            this._data[key] = v;
         }
         pos(x, y) {
             if (x === undefined)
@@ -10232,30 +9865,161 @@ void main() {
                 this.bounds.x = x.x;
                 this.bounds.y = x.y;
             }
-            this.layer.needsDraw = true;
+            this.needsDraw = true;
             return this;
+        }
+        updatePos(opts) {
+            if (!this.parent && !this.scene)
+                return;
+            if (opts.centerX || opts.center) {
+                this.centerX();
+            }
+            else if (opts.left) {
+                this.left(opts.left);
+            }
+            else if (opts.right) {
+                this.right(opts.right);
+            }
+            else if (opts.x) {
+                this.bounds.x = opts.x;
+            }
+            if (opts.centerY || opts.center) {
+                this.centerY();
+            }
+            else if (opts.top) {
+                this.top(opts.top);
+            }
+            else if (opts.bottom) {
+                this.bottom(opts.bottom);
+            }
+            else if (opts.y) {
+                this.bounds.y = opts.y;
+            }
+        }
+        contains(...args) {
+            if (this.hidden)
+                return false;
+            if (this.bounds.contains(args[0], args[1]))
+                return true;
+            return this.children.some((c) => c.contains(args[0], args[1]));
         }
         center(bounds) {
             return this.centerX(bounds).centerY(bounds);
         }
         centerX(bounds) {
-            bounds = bounds || this.layer.body.bounds;
-            const w = this.bounds.width;
-            const mid = Math.round((bounds.width - w) / 2);
-            this.bounds.x = bounds.x + mid;
+            const dims = bounds || (this.parent ? this.parent.bounds : this.scene);
+            if (!dims)
+                throw new Error('Need parent or scene to apply center.');
+            if ('x' in dims) {
+                const w = this.bounds.width;
+                const mid = Math.round((dims.width - w) / 2);
+                this.bounds.x = dims.x + mid;
+            }
+            else {
+                this.bounds.x = Math.round((dims.width - this.bounds.width) / 2);
+            }
             return this;
         }
         centerY(bounds) {
-            bounds = bounds || this.layer.body.bounds;
-            const h = this.bounds.height;
-            const mid = Math.round((bounds.height - h) / 2);
-            this.bounds.y = bounds.y + mid;
+            const dims = bounds || (this.parent ? this.parent.bounds : this.scene);
+            if (!dims)
+                throw new Error('Need parent or scene to apply center.');
+            if ('y' in dims) {
+                const h = this.bounds.height;
+                const mid = Math.round((dims.height - h) / 2);
+                this.bounds.y = dims.y + mid;
+            }
+            else {
+                this.bounds.y = Math.round((dims.height - this.bounds.height) / 2);
+            }
             return this;
         }
-        text(v) {
-            if (v === undefined)
-                return this._attrStr('text');
-            this.attr('text', v);
+        left(n) {
+            const x = this.parent ? this.parent.bounds.left : 0;
+            this.bounds.left = x + n;
+            return this;
+        }
+        right(n) {
+            if (this.parent) {
+                this.bounds.right = this.parent.bounds.right + n;
+            }
+            else if (this.scene) {
+                this.bounds.right = this.scene.width + n - 1;
+            }
+            else {
+                this.bounds.left = 0;
+            }
+            return this;
+        }
+        top(n) {
+            const y = this.parent ? this.parent.bounds.top : 0;
+            this.bounds.top = y + n;
+            return this;
+        }
+        bottom(n) {
+            if (this.parent) {
+                this.bounds.bottom = this.parent.bounds.bottom + n - 1;
+            }
+            else if (this.scene) {
+                this.bounds.bottom = this.scene.height + n - 1;
+            }
+            else {
+                this.bounds.top = 0;
+            }
+            return this;
+        }
+        resize(w, h) {
+            this.bounds.width = w || this.bounds.width;
+            this.bounds.height = h || this.bounds.height;
+            this.needsDraw = true;
+            return this;
+        }
+        style(...args) {
+            if (args.length == 0)
+                return this._style;
+            if (typeof args[0] !== 'string') {
+                this._style.set(args[0]);
+            }
+            else {
+                if (args[1] === undefined) {
+                    const source = this._used || this._style;
+                    return source.get(args[0]);
+                }
+                this._style.set(args[0], args[1]);
+            }
+            this.needsStyle = true;
+            return this;
+        }
+        addClass(c) {
+            const all = c.split(/ +/g);
+            all.forEach((a) => {
+                if (this.classes.includes(a))
+                    return;
+                this.classes.push(a);
+            });
+            return this;
+        }
+        removeClass(c) {
+            const all = c.split(/ +/g);
+            all.forEach((a) => {
+                arrayDelete(this.classes, a);
+            });
+            return this;
+        }
+        hasClass(c) {
+            const all = c.split(/ +/g);
+            return arrayIncludesAll(this.classes, all);
+        }
+        toggleClass(c) {
+            const all = c.split(/ +/g);
+            all.forEach((a) => {
+                if (this.classes.includes(a)) {
+                    arrayDelete(this.classes, a);
+                }
+                else {
+                    this.classes.push(a);
+                }
+            });
             return this;
         }
         attr(name, v) {
@@ -10283,6 +10047,12 @@ void main() {
         _attrBool(name) {
             return !!this._attrs[name];
         }
+        text(v) {
+            if (v === undefined)
+                return this._attrStr('text');
+            this.attr('text', v);
+            return this;
+        }
         prop(name, v) {
             if (v === undefined)
                 return this._props[name];
@@ -10293,9 +10063,9 @@ void main() {
             return this;
         }
         _setProp(name, v) {
+            // console.log(`${this.tag}.${name}=${v} (was:${this._props[name]})`);
             this._props[name] = v;
-            // console.log(`${this.tag}.${name}=${v}`);
-            this.updateStyle();
+            this.needsStyle = true;
         }
         _propInt(name) {
             const n = this._props[name] || 0;
@@ -10333,70 +10103,23 @@ void main() {
             this.prop(name, current);
             return this;
         }
-        contains(...args) {
-            return this.bounds.contains(args[0], args[1]);
-        }
-        style(opts) {
-            if (opts === undefined)
-                return this._style;
-            this._style.set(opts);
-            this.updateStyle();
-            return this;
-        }
-        addClass(c) {
-            const all = c.split(/ +/g);
-            all.forEach((a) => {
-                if (this.classes.includes(a))
-                    return;
-                this.classes.push(a);
-            });
-            return this;
-        }
-        removeClass(c) {
-            const all = c.split(/ +/g);
-            all.forEach((a) => {
-                arrayDelete(this.classes, a);
-            });
-            return this;
-        }
-        hasClass(c) {
-            const all = c.split(/ +/g);
-            return arrayIncludesAll(this.classes, all);
-        }
-        toggleClass(c) {
-            const all = c.split(/ +/g);
-            all.forEach((a) => {
-                if (this.classes.includes(a)) {
-                    arrayDelete(this.classes, a);
-                }
-                else {
-                    this.classes.push(a);
-                }
-            });
-            return this;
-        }
-        get focused() {
-            return !!this.prop('focus');
-        }
-        // @return true to stop the focus change event
-        focus(reverse = false) {
-            if (this.prop('focus'))
-                return true;
-            this.prop('focus', true);
-            return this._fireEvent('focus', this, { reverse });
-        }
-        // @return true to stop the focus change event
-        blur(reverse = false) {
-            if (!this.prop('focus'))
-                return false;
-            this.prop('focus', false);
-            return this._fireEvent('blur', this, { reverse });
-        }
         get hovered() {
             return !!this.prop('hover');
         }
         set hovered(v) {
             this.prop('hover', v);
+        }
+        get disabled() {
+            let current = this;
+            while (current) {
+                if (current.prop('disabled'))
+                    return true;
+                current = current.parent;
+            }
+            return false;
+        }
+        set disabled(v) {
+            this.prop('disabled', v);
         }
         get hidden() {
             let current = this;
@@ -10409,724 +10132,875 @@ void main() {
         }
         set hidden(v) {
             this.prop('hidden', v);
-            if (!v && this._used.opacity == 0) {
+            if (!v && this._used && this._used.opacity == 0) {
                 this._used.opacity = 100;
             }
+            if (v && this.scene && this.scene.focused === this) {
+                this.scene.nextTabStop();
+            }
+            else if (!v && this.scene && this.scene.focused === null) {
+                this.scene.setFocusWidget(this);
+            }
+            this.trigger(v ? 'hide' : 'show');
         }
-        get opacity() {
-            let opacity = 100;
-            let current = this;
-            while (current) {
-                if (current._used) {
-                    opacity = Math.min(opacity, current._used.opacity); // TODO - opacity = Math.floor(opacity * current._used.opacity / 100);
+        get needsStyle() {
+            return this._propBool('needsStyle');
+        }
+        set needsStyle(v) {
+            this._props.needsStyle = v;
+            if (v) {
+                this.needsDraw = true; // changed style or state
+            }
+        }
+        get focused() {
+            return !!this.prop('focus');
+        }
+        focus(reverse = false) {
+            if (this.prop('focus'))
+                return;
+            this.prop('focus', true);
+            this.trigger('focus', { reverse });
+        }
+        blur(reverse = false) {
+            if (!this.prop('focus'))
+                return;
+            this.prop('focus', false);
+            this.trigger('blur', { reverse });
+        }
+        // CHILDREN
+        setParent(parent, opts) {
+            if (this.parent === parent)
+                return;
+            // remove from curent parent
+            if (this.parent) {
+                const index = this.parent.children.indexOf(this);
+                if (index < 0)
+                    throw new Error('Error in parent/child setup!');
+                this.parent.children.splice(index, 1);
+            }
+            if (parent) {
+                if (this.scene !== parent.scene) {
+                    if (this.scene) {
+                        this.scene._detach(this);
+                    }
+                    if (parent.scene) {
+                        parent.scene._attach(this);
+                    }
+                    if (opts && opts.focused) {
+                        this.scene.setFocusWidget(this);
+                    }
                 }
-                current = current.parent;
-            }
-            return opacity;
-        }
-        set opacity(v) {
-            if (v !== this._used.opacity) {
-                this._used.opacity = v;
-                this.hidden = this._used.opacity == 0;
-                this.layer.needsDraw = true;
-            }
-        }
-        updateStyle() {
-            this._used = this.layer.styles.computeFor(this);
-            this.layer.needsDraw = true; // changed style or state
-        }
-        draw(buffer) {
-            if (this.hidden)
-                return false;
-            return this._draw(buffer);
-        }
-        // Animation
-        fadeIn(ms) {
-            return this.fadeTo(100, ms);
-        }
-        fadeOut(ms) {
-            return this.fadeTo(0, ms);
-        }
-        fadeTo(opacity, ms) {
-            const tween$1 = make$1({ pct: this._used.opacity })
-                .to({ pct: opacity })
-                .duration(ms)
-                .onUpdate((info) => {
-                this.opacity = info.pct;
-            });
-            this.layer.addAnimation(tween$1);
-            return this;
-        }
-        fadeToggle(ms) {
-            return this.fadeTo(this._used.opacity ? 0 : 100, ms);
-        }
-        slideIn(x, y, from, ms) {
-            let start = { x, y };
-            if (from === 'left') {
-                start.x = -this.bounds.width;
-            }
-            else if (from === 'right') {
-                start.x = this.layer.width + this.bounds.width;
-            }
-            else if (from === 'top') {
-                start.y = -this.bounds.height;
-            }
-            else if (from === 'bottom') {
-                start.y = this.layer.height + this.bounds.height;
-            }
-            return this.slide(start, { x, y }, ms);
-        }
-        slideOut(dir, ms) {
-            let dest = { x: this.bounds.x, y: this.bounds.y };
-            if (dir === 'left') {
-                dest.x = -this.bounds.width;
-            }
-            else if (dir === 'right') {
-                dest.x = this.layer.width + this.bounds.width;
-            }
-            else if (dir === 'top') {
-                dest.y = -this.bounds.height;
-            }
-            else if (dir === 'bottom') {
-                dest.y = this.layer.height + this.bounds.height;
-            }
-            return this.slide(this.bounds, dest, ms);
-        }
-        slide(from, to, ms) {
-            const tween$1 = make$1({ x: x(from), y: y(from) })
-                .to({ x: x(to), y: y(to) })
-                .duration(ms)
-                .onUpdate((info) => {
-                this.pos(info.x, info.y);
-            });
-            this.layer.addAnimation(tween$1);
-            return this;
-        }
-        // Draw
-        _draw(buffer) {
-            this._drawFill(buffer);
-            return true;
-        }
-        _drawFill(buffer) {
-            buffer.fillRect(this.bounds.x, this.bounds.y, this.bounds.width, this.bounds.height, ' ', this._used.bg, this._used.bg);
-        }
-        childAt(...args) {
-            return this.children.find((c) => c.contains(args[0], args[1])) || null;
-        }
-        _addChild(w, opts) {
-            let beforeIndex = -1;
-            if (opts && opts.beforeIndex !== undefined) {
-                beforeIndex = opts.beforeIndex;
-            }
-            if (w._parent && w._parent !== this)
-                throw new Error('Trying to add child that already has a parent.');
-            if (!this.children.includes(w)) {
-                if (beforeIndex < 0 || beforeIndex >= this.children.length) {
-                    this.children.push(w);
+                if (opts && opts.first) {
+                    parent.children.unshift(this);
+                }
+                else if (opts && opts.before) {
+                    let index = -1;
+                    if (typeof opts.before === 'string') {
+                        index = parent.children.findIndex((c) => c.id === opts.before);
+                    }
+                    else {
+                        index = parent.children.indexOf(opts.before);
+                    }
+                    if (index < 0) {
+                        parent.children.unshift(this);
+                    }
+                    else {
+                        parent.children.splice(index, 0, this);
+                    }
+                }
+                else if (opts && opts.after) {
+                    let index = -1;
+                    if (typeof opts.after === 'string') {
+                        index = parent.children.findIndex((c) => c.id === opts.before);
+                    }
+                    else {
+                        index = parent.children.indexOf(opts.after);
+                    }
+                    if (index < 0) {
+                        parent.children.push(this);
+                    }
+                    else {
+                        parent.children.splice(index + 1, 0, this);
+                    }
                 }
                 else {
-                    this.children.splice(beforeIndex, 0, w);
+                    parent.children.push(this);
                 }
+                this.parent = parent;
             }
-            w._parent = this;
-            return this;
+            else {
+                this.scene && this.scene._detach(this);
+                this.parent = null;
+            }
+            if (opts && (this.parent || this.scene)) {
+                this.updatePos(opts);
+            }
         }
-        _removeChild(w) {
-            if (!w._parent || w._parent !== this)
-                throw new Error('Removing child that does not have this widget as parent.');
-            w._parent = null;
-            arrayDelete(this.children, w);
-            return this;
+        addChild(child) {
+            if (this.children.includes(child))
+                return;
+            child.setParent(this);
         }
-        resize(w, h) {
-            this.bounds.width = w || this.bounds.width;
-            this.bounds.height = h || this.bounds.height;
-            this.layer.needsDraw = true;
-            return this;
+        removeChild(child) {
+            if (!this.children.includes(child))
+                return;
+            child.setParent(null);
         }
-        // Events
-        mouseenter(e, over) {
-            if (!this.contains(e))
+        childAt(xy$1, y) {
+            if (!isXY(xy$1)) {
+                xy$1 = { x: xy$1, y: y };
+            }
+            // if (!this.contains(xy)) return null;
+            for (let child of this.children) {
+                if (child.contains(xy$1))
+                    return child;
+            }
+            return null;
+        }
+        getChild(id) {
+            return this.children.find((c) => c.id === id) || null;
+        }
+        // EVENTS
+        on(ev, cb) {
+            return this.events.on(ev, cb);
+        }
+        once(ev, cb) {
+            return this.events.once(ev, cb);
+        }
+        off(ev, cb) {
+            this.events.off(ev, cb);
+        }
+        trigger(ev, ...args) {
+            return this.events.trigger(ev, ...args);
+        }
+        action(ev) {
+            if (ev && ev.defaultPrevented)
+                return;
+            this.trigger('action');
+            const action = this._attrStr('action');
+            if (!action || !action.length)
+                return;
+            this.scene && this.scene.trigger(action, this);
+        }
+        // FRAME
+        input(e) {
+            this.trigger('input', e);
+            if (e.defaultPrevented || e.propagationStopped)
+                return;
+            if (e.type === KEYPRESS) {
+                this.keypress(e);
+            }
+            else if (e.type === MOUSEMOVE) {
+                this.mousemove(e);
+            }
+            else if (e.type === CLICK) {
+                this.click(e);
+            }
+        }
+        _mouseenter(e) {
+            if (!this.bounds.contains(e))
                 return;
             if (this.hovered)
                 return;
             this.hovered = true;
-            this._fireEvent('mouseenter', this, e);
-            if (this._parent) {
-                this._parent.mouseenter(e, over);
-            }
+            this.trigger('mouseenter', e);
+            // if (this._parent) {
+            //     this._parent._mouseenter(e);
+            // }
         }
         mousemove(e) {
-            if (this.contains(e) && !e.defaultPrevented && !this.hidden) {
-                this._fireEvent('mousemove', this, e);
+            for (let child of this.children) {
+                child.mousemove(e);
+            }
+            if (this.bounds.contains(e) && !this.hidden) {
+                //  && !e.defaultPrevented
+                this._mouseenter(e);
+                this.trigger('mousemove', e);
                 // e.preventDefault();
             }
             else {
-                this.mouseleave(e);
+                this._mouseleave(e);
             }
-            return false;
         }
-        mouseleave(e) {
-            if (this.contains(e))
-                return;
+        _mouseleave(e) {
             if (!this.hovered)
                 return;
+            if (this.bounds.contains(e))
+                return;
             this.hovered = false;
-            this._fireEvent('mouseleave', this, e);
+            this.trigger('mouseleave', e);
             // if (this._parent) {
             //     this._parent.mouseleave(e);
             // }
         }
         click(e) {
-            if (this.hidden)
-                return false;
-            return this._fireEvent('click', this, e);
+            if (this.disabled || this.hidden)
+                return;
+            e.target = this;
+            const c = this.childAt(e);
+            if (c) {
+                c.click(e);
+            }
+            if (!this.bounds.contains(e))
+                return;
+            if (e.propagationStopped)
+                return;
+            this.events.dispatch(e);
+            if (!e.defaultPrevented) {
+                this.action();
+            }
         }
+        // keypress bubbles
         keypress(e) {
-            return this._fireEvent('keypress', this, e);
-        }
-        dir(e) {
-            return this._fireEvent('dir', this, e);
-        }
-        tick(e) {
-            return this._fireEvent('tick', this, e);
-        }
-        on(event, cb) {
-            let handlers = this.events[event];
-            if (!handlers) {
-                handlers = this.events[event] = [];
-            }
-            if (!handlers.includes(cb)) {
-                handlers.push(cb);
-            }
-            return this;
-        }
-        off(event, cb) {
-            let handlers = this.events[event];
-            if (!handlers)
-                return this;
-            if (cb) {
-                arrayDelete(handlers, cb);
-            }
-            else {
-                handlers.length = 0; // clear all handlers
-            }
-            return this;
-        }
-        _fireEvent(name, source, args) {
-            const handlers = this.events[name] || [];
-            let handled = false;
-            for (let handler of handlers) {
-                if (handler(name, source || this, args) === true) {
-                    handled = true;
-                }
-            }
-            return handled;
-        }
-        _bubbleEvent(name, source, args) {
+            if (this.hidden || this.disabled)
+                return;
             let current = this;
-            while (current) {
-                if (current._fireEvent(name, source, args))
-                    return true;
+            while (current && !e.propagationStopped) {
+                current.events.dispatch(e);
                 current = current.parent;
             }
-            return false;
         }
-    }
-
-    class Body extends Widget {
-        constructor(layer) {
-            super(layer, {
-                tag: 'body',
-                id: 'BODY',
-                depth: -1,
-                width: layer.width,
-                height: layer.height,
-            });
+        draw(buffer) {
+            if (this.needsStyle && this.scene) {
+                this._used = this.scene.styles.computeFor(this);
+                this.needsStyle = false;
+            }
+            if (this.hidden)
+                return;
+            this._draw(buffer);
+            this.trigger('draw', buffer);
+            this.children.forEach((c) => c.draw(buffer));
+        }
+        _draw(buffer) {
+            this._drawFill(buffer);
         }
         _drawFill(buffer) {
-            buffer.blend(this._used.bg);
+            const b = this.bounds;
+            buffer.fillRect(b.x, b.y, b.width, b.height, 0, 0, this._used.bg);
+        }
+        update(dt) {
+            this.trigger('update', dt);
+        }
+        destroy() {
+            if (this.parent) {
+                this.setParent(null);
+            }
+            if (this.scene) {
+                this.scene._detach(this);
+            }
+            this.children.forEach((c) => c.destroy());
+            this.children = [];
         }
     }
-
-    class WidgetLayer extends Layer {
-        constructor(ui, opts = {}) {
-            super(ui, opts);
-            this._attachOrder = [];
-            this._depthOrder = [];
-            this._focusWidget = null;
-            this._hasTabStop = false;
-            this._opts = { x: 0, y: 0 };
-            this.styles = new Sheet(opts.styles || defaultStyle);
-            this.body = new Body(this);
+    function alignChildren(widget, align = 'left') {
+        if (widget.children.length < 2)
+            return;
+        if (align === 'left') {
+            const left = widget.children.reduce((out, c) => Math.min(out, c.bounds.left), 999);
+            widget.children.forEach((c) => (c.bounds.left = left));
         }
-        // Style and Opts
-        reset() {
-            this._opts = { x: 0, y: 0 };
-            return this;
-        }
-        fg(v) {
-            this._opts.fg = v;
-            return this;
-        }
-        bg(v) {
-            this._opts.bg = v;
-            return this;
-        }
-        dim(pct = 25, fg = true, bg = false) {
-            if (fg) {
-                this._opts.fg = from$2(this._opts.fg || 'white').darken(pct);
-            }
-            if (bg) {
-                this._opts.bg = from$2(this._opts.bg || 'black').darken(pct);
-            }
-            return this;
-        }
-        bright(pct = 25, fg = true, bg = false) {
-            if (fg) {
-                this._opts.fg = from$2(this._opts.fg || 'white').lighten(pct);
-            }
-            if (bg) {
-                this._opts.bg = from$2(this._opts.bg || 'black').lighten(pct);
-            }
-            return this;
-        }
-        invert() {
-            [this._opts.fg, this._opts.bg] = [this._opts.bg, this._opts.fg];
-            return this;
-        }
-        // STYLE
-        style(opts) {
-            Object.assign(this._opts, opts);
-            return this;
-        }
-        class(c) {
-            this._opts.class = this._opts.class || '';
-            this._opts.class += ' ' + c;
-            return this;
-        }
-        pos(x, y) {
-            if (x === undefined)
-                return this._opts;
-            this._opts.x = clamp(x, 0, this.width);
-            this._opts.y = clamp(y, 0, this.height);
-            return this;
-        }
-        moveTo(x, y) {
-            return this.pos(x, y);
-        }
-        move(dx, dy) {
-            this._opts.x = clamp(this._opts.x + dx, 0, this.width);
-            this._opts.y = clamp(this._opts.y + dy, 0, this.height);
-            return this;
-        }
-        up(n = 1) {
-            return this.move(0, -n);
-        }
-        down(n = 1) {
-            return this.move(0, n);
-        }
-        left(n = 1) {
-            return this.move(-n, 0);
-        }
-        right(n = 1) {
-            return this.move(n, 0);
-        }
-        nextLine(n = 1) {
-            return this.pos(0, this._opts.y + n);
-        }
-        prevLine(n = 1) {
-            return this.pos(0, this._opts.y - n);
-        }
-        grid() {
-            return new Grid(this);
-        }
-        // EDIT
-        // erase and move back to top left
-        clear(color) {
-            this.body.children = [];
-            this._depthOrder = [this.body];
-            if (color) {
-                this.body.style().set('bg', color);
-            }
-            else {
-                this.body.style().unset('bg');
-            }
-            return this;
-        }
-        // Widgets
-        // create(tag: string, opts: any): UIWidget {
-        //     const options = Object.assign({ tag }, this._opts, opts);
-        //     const widget = createWidget(tag, this, options);
-        //     this.addWidget(widget);
-        //     return widget;
-        // }
-        sortWidgets() {
-            this._depthOrder.sort((a, b) => b.depth - a.depth);
-            return this;
-        }
-        attach(w) {
-            if (!this._attachOrder.includes(w)) {
-                const index = this._depthOrder.findIndex((aw) => aw.depth <= w.depth);
-                if (index < 0) {
-                    this._depthOrder.push(w);
-                }
-                else {
-                    this._depthOrder.splice(index, 0, w);
-                }
-                this._attachOrder.push(w);
-                this.needsDraw = true;
-            }
-            if (!w.parent && w !== this.body && this.body) {
-                w.setParent(this.body);
-                this.needsDraw = true;
-            }
-            this._hasTabStop = this._hasTabStop || w._propBool('tabStop');
-            return this;
-        }
-        detach(w) {
-            // Utils.arrayDelete(this.widgets, w);
-            w.setParent(null);
-            arrayDelete(this._depthOrder, w);
-            arrayDelete(this._attachOrder, w);
-            if (this._focusWidget === w) {
-                this.nextTabStop();
-            }
-            this.needsDraw = true;
-            return this;
-        }
-        widgetAt(...args) {
-            return (this._depthOrder.find((w) => w.contains(args[0], args[1]) && !w.hidden) || this.body);
-        }
-        get focusWidget() {
-            return this._focusWidget;
-        }
-        setFocusWidget(w, reverse = false) {
-            if (w === this._focusWidget)
-                return;
-            if (this._focusWidget && this._focusWidget.blur(reverse))
-                return;
-            if (w && w.focus(reverse))
-                return;
-            this._focusWidget = w;
-        }
-        getWidget(id) {
-            return this._depthOrder.find((w) => w.attr('id') === id) || null;
-        }
-        nextTabStop() {
-            if (!this.focusWidget) {
-                this.setFocusWidget(this._attachOrder.find((w) => !!w.prop('tabStop') && !w.prop('disabled') && !w.hidden) || null);
-                return !!this.focusWidget;
-            }
-            const next = arrayNext(this._attachOrder, this.focusWidget, (w) => !!w.prop('tabStop') && !w.prop('disabled') && !w.hidden);
-            if (next) {
-                this.setFocusWidget(next);
-                return true;
-            }
-            return false;
-        }
-        prevTabStop() {
-            if (!this.focusWidget) {
-                this.setFocusWidget(this._attachOrder.find((w) => !!w.prop('tabStop') && !w.prop('disabled') && !w.hidden) || null);
-                return !!this.focusWidget;
-            }
-            const prev = arrayPrev(this._attachOrder, this.focusWidget, (w) => !!w.prop('tabStop') && !w.prop('disabled') && !w.hidden);
-            if (prev) {
-                this.setFocusWidget(prev, true);
-                return true;
-            }
-            return false;
-        }
-        // EVENTS
-        on(event, cb) {
-            this.body.on(event, cb);
-            return this;
-        }
-        off(event, cb) {
-            this.body.off(event, cb);
-            return this;
-        }
-        mousemove(e) {
-            const over = this.widgetAt(e);
-            over.mouseenter(e, over);
-            this._depthOrder.forEach((w) => w.mousemove(e));
-            return false; // TODO - this._done
-        }
-        click(e) {
-            let w = this.widgetAt(e);
-            let setFocus = false;
-            while (w) {
-                if (!setFocus && w.prop('tabStop') && !w.prop('disabled')) {
-                    this.setFocusWidget(w);
-                    setFocus = true;
-                }
-                if (w.click(e))
-                    return false;
-                w = w.parent;
-            }
-            return false; // TODO - this._done
-        }
-        keypress(e) {
-            if (!e.key)
-                return false;
-            let w = this.focusWidget || this.body;
-            while (w) {
-                if (w.keypress(e))
-                    return false;
-                w = w.parent;
-            }
-            if (e.defaultPrevented)
-                return false;
-            if (e.key === 'Tab') {
-                // Next widget
-                this.nextTabStop();
-            }
-            else if (e.key === 'TAB') {
-                // Prev Widget
-                this.prevTabStop();
-            }
-            //         return this.done;
-            return false;
-        }
-        dir(e) {
-            let target = this.focusWidget || this.body;
-            while (target) {
-                if (target.dir(e))
-                    return false;
-                target = target.parent;
-            }
-            // return this.done;
-            return false;
-        }
-        tick(e) {
-            super.tick(e);
-            for (let w of this._depthOrder) {
-                w.tick(e);
-            }
-            return false;
-        }
-        draw() {
-            if (this._hasTabStop && !this._focusWidget) {
-                this.nextTabStop();
-            }
-            if (this.styles.dirty) {
-                this.needsDraw = true;
-                this._depthOrder.forEach((w) => w.updateStyle());
-                this.styles.dirty = false;
-            }
-            if (!this.needsDraw)
-                return;
-            this.needsDraw = false;
-            this.buffer.reset();
-            // draw from low depth to high depth
-            for (let i = this._depthOrder.length - 1; i >= 0; --i) {
-                const w = this._depthOrder[i];
-                w.draw(this.buffer);
-            }
-            console.log('draw');
-            this.buffer.render();
-        }
-        finish(result) {
-            super.finish(result);
-            this.body._fireEvent('finish', this.body, result);
-        }
-    }
-    // declare module '../ui/ui' {
-    //     interface UI {
-    //         startWidgetLayer(opts?: WidgetLayerOptions): WidgetLayer;
-    //     }
-    // }
-    // UI.prototype.startWidgetLayer = function (
-    //     opts: WidgetLayerOptions = {}
-    // ): WidgetLayer {
-    //     opts.styles = this.layer ? this.layer.styles : this.styles;
-    //     const layer = new WidgetLayer(this, opts);
-    //     this.startLayer(layer);
-    //     return layer;
-    // };
-
-    // import * as GWU from 'gw-utils';
-    // extend WidgetLayer
-    // declare module './ui' {
-    //     interface UI {
-    //         alert(
-    //             opts: AlertOptions | number,
-    //             text: string,
-    //             args?: any
-    //         ): Promise<boolean>;
-    //     }
-    // }
-    UI.prototype.alert = function (...args) {
-        let opts = {};
-        let text;
-        let textArgs = {};
-        if (typeof args[0] === 'number') {
-            opts.duration = args[0];
-            text = args[1];
-            textArgs = args[2];
-        }
-        else if (typeof args[0] === 'string') {
-            text = args[0];
-            textArgs = args[1];
+        else if (align === 'right') {
+            const right = widget.children.reduce((out, c) => Math.max(out, c.bounds.right), 0);
+            widget.children.forEach((c) => (c.bounds.right = right));
         }
         else {
-            opts = args[0];
-            text = args[1];
-            textArgs = args[2];
-        }
-        if (textArgs) {
-            text = apply(text, textArgs);
-        }
-        opts.class = opts.class || 'alert';
-        opts.border = opts.border || 'ascii';
-        opts.pad = opts.pad || 1;
-        const layer = new WidgetLayer(this);
-        // Fade the background
-        const opacity = opts.opacity !== undefined ? opts.opacity : 50;
-        layer.body.style().set('bg', BLACK.alpha(opacity));
-        // create the text widget
-        const textWidget = layer
-            .text(text, {
-            id: 'TEXT',
-            class: opts.textClass || opts.class,
-            width: opts.width,
-            height: opts.height,
-        })
-            .center();
-        Object.assign(opts, {
-            width: textWidget.bounds.width,
-            height: textWidget.bounds.height,
-            x: textWidget.bounds.x,
-            y: textWidget.bounds.y,
-            id: 'DIALOG',
-        });
-        const dialog = layer.dialog(opts);
-        textWidget.setParent(dialog);
-        layer.on('click', () => {
-            layer.finish(true);
-            return true;
-        });
-        layer.on('keypress', () => {
-            layer.finish(true);
-            return true;
-        });
-        layer.setTimeout(() => {
-            layer.finish(false);
-        }, opts.duration || 3000);
-        return layer.run();
-    };
-
-    // import * as GWU from 'gw-utils';
-    // extend WidgetLayer
-    // declare module './ui' {
-    //     interface UI {
-    //         confirm(text: string, args?: any): Promise<boolean>;
-    //         confirm(
-    //             opts: ConfirmOptions,
-    //             text: string,
-    //             args?: any
-    //         ): Promise<boolean>;
-    //     }
-    // }
-    UI.prototype.confirm = function (...args) {
-        let opts = {};
-        let text;
-        let textArgs = {};
-        if (typeof args[0] === 'string') {
-            text = args[0];
-            textArgs = args[1];
-        }
-        else {
-            opts = args[0];
-            text = args[1];
-            textArgs = args[2];
-        }
-        if (textArgs) {
-            text = apply(text, textArgs);
-        }
-        opts.class = opts.class || 'confirm';
-        opts.border = opts.border || 'ascii';
-        opts.pad = opts.pad || 1;
-        const layer = new WidgetLayer(this);
-        // Fade the background
-        const opacity = opts.opacity !== undefined ? opts.opacity : 50;
-        layer.body.style().set('bg', BLACK.alpha(opacity));
-        if (opts.cancel === undefined) {
-            opts.cancel = 'Cancel';
-        }
-        else if (opts.cancel === true) {
-            opts.cancel = 'Cancel';
-        }
-        else if (!opts.cancel) {
-            opts.cancel = '';
-        }
-        opts.ok = opts.ok || 'Ok';
-        let buttonWidth = opts.buttonWidth || 0;
-        if (!buttonWidth) {
-            buttonWidth = Math.max(opts.ok.length, opts.cancel.length);
-        }
-        const width = Math.max(opts.width || 0, buttonWidth * 2 + 2);
-        // create the text widget
-        const textWidget = layer
-            .text(text, {
-            class: opts.textClass || opts.class,
-            width: width,
-            height: opts.height,
-        })
-            .center();
-        Object.assign(opts, {
-            width: textWidget.bounds.width,
-            height: textWidget.bounds.height + 2,
-            x: textWidget.bounds.x,
-            y: textWidget.bounds.y,
-            tag: 'confirm',
-        });
-        const dialog = layer.dialog(opts);
-        textWidget.setParent(dialog);
-        layer
-            .button(opts.ok, {
-            class: opts.okClass || opts.class,
-            width: buttonWidth,
-            id: 'OK',
-            parent: dialog,
-            x: dialog._innerLeft + dialog._innerWidth - buttonWidth,
-            y: dialog._innerTop + dialog._innerHeight - 1,
-        })
-            .on('click', () => {
-            layer.finish(true);
-            return true;
-        });
-        if (opts.cancel.length) {
-            layer
-                .button(opts.cancel, {
-                class: opts.cancelClass || opts.class,
-                width: buttonWidth,
-                id: 'CANCEL',
-                parent: dialog,
-                x: dialog._innerLeft,
-                y: dialog._innerTop + dialog._innerHeight - 1,
-            })
-                .on('click', () => {
-                layer.finish(false);
-                return true;
+            // center
+            const right = widget.children.reduce((out, c) => Math.max(out, c.bounds.right), 0);
+            const left = widget.children.reduce((out, c) => Math.min(out, c.bounds.left), 999);
+            const center = left + Math.floor((right - left) / 2);
+            widget.children.forEach((c) => {
+                c.bounds.center = center;
             });
         }
-        layer.on('keypress', (_n, _w, e) => {
-            if (e.key === 'Escape') {
-                layer.finish(false);
-            }
-            else if (e.key === 'Enter') {
-                layer.finish(true);
-            }
-            return true;
+    }
+    function spaceChildren(widget, space = 0) {
+        if (widget.children.length < 2)
+            return;
+        let y = widget.children.reduce((out, c) => Math.min(out, c.bounds.top), 999);
+        widget.children
+            .slice()
+            .sort((a, b) => a.bounds.top - b.bounds.top)
+            .forEach((c) => {
+            c.bounds.top = y;
+            y = c.bounds.bottom + space;
         });
-        return layer.run();
-    };
+    }
+    function wrapChildren(widget, pad = 0) {
+        if (widget.children.length < 1)
+            return;
+        widget.bounds.copy(widget.children[0].bounds);
+        widget.children.forEach((c) => {
+            widget.bounds.include(c.bounds);
+        });
+        widget.bounds.pad(pad);
+    }
+    // export interface WidgetOptions extends StyleOptions, SetParentOptions {
+    //     id?: string;
+    //     disabled?: boolean;
+    //     hidden?: boolean;
+    //     opacity?: number;
+    //     x?: number;
+    //     y?: number;
+    //     width?: number;
+    //     height?: number;
+    //     class?: string;
+    //     tag?: string;
+    //     tabStop?: boolean;
+    //     action?: string | boolean;
+    //     // depth?: number;
+    // }
+    // Style.defaultStyle.add('*', {
+    //     fg: 'white',
+    //     bg: -1,
+    //     align: 'left',
+    //     valign: 'top',
+    // });
+    // export class Widget implements UIStylable {
+    //     tag: string = 'text';
+    //     body!: Body; // So that Body can => this.body = this;
+    //     bounds: XY.Bounds = new XY.Bounds(0, 0, 0, 1);
+    //     // _depth = 0;
+    //     events: EVENTS.Events;
+    //     // action: string = '';
+    //     children: Widget[] = [];
+    //     _style = new Style.Style();
+    //     _used!: Style.ComputedStyle;
+    //     _parent: Widget | null = null;
+    //     classes: string[] = [];
+    //     _props: Record<string, PropType> = {
+    //         needsDraw: true,
+    //         needsStyle: true,
+    //         hover: false,
+    //     };
+    //     _attrs: Record<string, PropType> = {};
+    //     constructor(parent: Body | Widget, opts?: WidgetOptions);
+    //     constructor(opts?: WidgetOptions);
+    //     constructor(parent?: Body | Widget | WidgetOptions, opts?: WidgetOptions) {
+    //         opts = opts || {};
+    //         if (!parent) {
+    //         } else if (parent instanceof Body) {
+    //             this.body = parent;
+    //         } else if (parent instanceof Widget) {
+    //             this.body = parent.body;
+    //         } else {
+    //             opts = parent;
+    //             parent = undefined;
+    //         }
+    //         // this.bounds.x = term.x;
+    //         // this.bounds.y = term.y;
+    //         this.events = new EVENTS.Events(this);
+    //         this.bounds.x = opts.x || 0;
+    //         this.bounds.y = opts.y || 0;
+    //         this.bounds.width = opts.width || 0;
+    //         this.bounds.height = opts.height || 1;
+    //         if (opts.tag) {
+    //             this.tag = opts.tag;
+    //         }
+    //         if (opts.id) {
+    //             this.attr('id', opts.id);
+    //             this.attr('action', opts.id);
+    //         }
+    //         // if (opts.depth !== undefined) {
+    //         //     this._depth = opts.depth;
+    //         // }
+    //         this._style.set(opts);
+    //         if (opts.class) {
+    //             this.classes = opts.class.split(/ +/g).map((c) => c.trim());
+    //         }
+    //         if (opts.tabStop) {
+    //             this.prop('tabStop', true);
+    //         }
+    //         if (opts.disabled) {
+    //             this.prop('disabled', true);
+    //         }
+    //         if (opts.hidden) {
+    //             this.prop('hidden', true);
+    //         }
+    //         opts.action = opts.action || opts.id;
+    //         if (opts.action) {
+    //             if (opts.action === true) {
+    //                 if (!opts.id) throw new Error('boolean action requires id.');
+    //                 opts.action = opts.id;
+    //             }
+    //             this.attr('action', opts.action);
+    //         }
+    //         this.updateStyle();
+    //         if (opts.opacity !== undefined) {
+    //             this._used.opacity = opts.opacity;
+    //         }
+    //         if (parent) {
+    //             parent.addChild(this, opts);
+    //         }
+    //     }
+    //     // get depth(): number {
+    //     //     return this._depth;
+    //     // }
+    //     // set depth(v: number) {
+    //     //     this._depth = v;
+    //     //     this.scene.sortWidgets();
+    //     // }
+    //     get parent(): Widget | null {
+    //         return this._parent;
+    //     }
+    //     set parent(v: Widget | null) {
+    //         this.setParent(v);
+    //     }
+    //     setParent(v: Widget | null, opts: SetParentOptions = {}) {
+    //         if (this._parent) {
+    //             this._parent.removeChild(this);
+    //         }
+    //         this._parent = v;
+    //         if (this._parent) {
+    //             // this.depth = this._depth || this._parent.depth + 1;
+    //             this._parent.addChild(this, opts);
+    //         }
+    //     }
+    //     get needsDraw() {
+    //         return this.body.needsDraw;
+    //     }
+    //     set needsDraw(v: boolean) {
+    //         if (v) this.body.needsDraw = true;
+    //     }
+    //     get id(): string {
+    //         return this._attrStr('id');
+    //     }
+    //     //////////////////////////////////////////
+    //     pos(): XY.XY;
+    //     pos(xy: XY.XY): this;
+    //     pos(x: number, y: number): this;
+    //     pos(x?: number | XY.XY, y?: number): this | XY.XY {
+    //         if (x === undefined) return this.bounds;
+    //         if (typeof x === 'number') {
+    //             this.bounds.x = x;
+    //             this.bounds.y = y || 0;
+    //         } else {
+    //             this.bounds.x = x.x;
+    //             this.bounds.y = x.y;
+    //         }
+    //         this.needsDraw = true;
+    //         return this;
+    //     }
+    //     center(bounds?: XY.Bounds): this {
+    //         return this.centerX(bounds).centerY(bounds);
+    //     }
+    //     centerX(bounds?: XY.Bounds): this {
+    //         if (bounds) {
+    //             const w = this.bounds.width;
+    //             const mid = Math.round((bounds.width - w) / 2);
+    //             this.bounds.x = bounds.x + mid;
+    //         } else {
+    //             this.bounds.x = Math.round(
+    //                 (this.body.width - this.bounds.width) / 2
+    //             );
+    //         }
+    //         return this;
+    //     }
+    //     centerY(bounds?: XY.Bounds): this {
+    //         if (bounds) {
+    //             const h = this.bounds.height;
+    //             const mid = Math.round((bounds.height - h) / 2);
+    //             this.bounds.y = bounds.y + mid;
+    //         } else {
+    //             this.bounds.y = Math.round(
+    //                 (this.body.height - this.bounds.height) / 2
+    //             );
+    //         }
+    //         return this;
+    //     }
+    //     //////////////////////////////////////////
+    //     text(): string;
+    //     text(v: string): this;
+    //     text(v?: string): this | string {
+    //         if (v === undefined) return this._attrStr('text');
+    //         this.attr('text', v);
+    //         return this;
+    //     }
+    //     attr(name: string): PropType;
+    //     attr(name: string, v: PropType): this;
+    //     attr(name: string, v?: PropType): PropType | this {
+    //         if (v === undefined) return this._attrs[name];
+    //         this._attrs[name] = v;
+    //         return this;
+    //     }
+    //     _attrInt(name: string): number {
+    //         const n = this._attrs[name] || 0;
+    //         if (typeof n === 'number') return n;
+    //         if (typeof n === 'string') return Number.parseInt(n);
+    //         return n ? 1 : 0;
+    //     }
+    //     _attrStr(name: string): string {
+    //         const n = this._attrs[name] || '';
+    //         if (typeof n === 'string') return n;
+    //         if (typeof n === 'number') return '' + n;
+    //         return n ? 'true' : 'false';
+    //     }
+    //     _attrBool(name: string): boolean {
+    //         return !!this._attrs[name];
+    //     }
+    //     prop(name: string): PropType | undefined;
+    //     prop(name: string, v: PropType): this;
+    //     prop(name: string, v?: PropType): this | PropType | undefined {
+    //         if (v === undefined) return this._props[name];
+    //         const current = this._props[name];
+    //         if (current !== v) {
+    //             this._setProp(name, v);
+    //         }
+    //         return this;
+    //     }
+    //     _setProp(name: string, v: PropType): void {
+    //         // console.log(`${this.tag}.${name}=${v} (was:${this._props[name]})`);
+    //         this._props[name] = v;
+    //         this.updateStyle();
+    //     }
+    //     _propInt(name: string): number {
+    //         const n = this._props[name] || 0;
+    //         if (typeof n === 'number') return n;
+    //         if (typeof n === 'string') return Number.parseInt(n);
+    //         return n ? 1 : 0;
+    //     }
+    //     _propStr(name: string): string {
+    //         const n = this._props[name] || '';
+    //         if (typeof n === 'string') return n;
+    //         if (typeof n === 'number') return '' + n;
+    //         return n ? 'true' : 'false';
+    //     }
+    //     _propBool(name: string): boolean {
+    //         return !!this._props[name];
+    //     }
+    //     toggleProp(name: string): this {
+    //         const current = !!this._props[name];
+    //         this.prop(name, !current);
+    //         return this;
+    //     }
+    //     incProp(name: string, n = 1): this {
+    //         let current = this.prop(name) || 0;
+    //         if (typeof current === 'boolean') {
+    //             current = current ? 1 : 0;
+    //         } else if (typeof current === 'string') {
+    //             current = Number.parseInt(current) || 0;
+    //         }
+    //         current += n;
+    //         this.prop(name, current);
+    //         return this;
+    //     }
+    //     contains(e: XY.XY): boolean;
+    //     contains(x: number, y: number): boolean;
+    //     contains(...args: any[]): boolean {
+    //         return this.bounds.contains(args[0], args[1]);
+    //     }
+    //     style(): Style.Style;
+    //     style(opts: StyleOptions): this;
+    //     style(opts?: StyleOptions): this | Style.Style {
+    //         if (opts === undefined) return this._style;
+    //         this._style.set(opts);
+    //         this.updateStyle();
+    //         return this;
+    //     }
+    //     addClass(c: string): this {
+    //         const all = c.split(/ +/g);
+    //         all.forEach((a) => {
+    //             if (this.classes.includes(a)) return;
+    //             this.classes.push(a);
+    //         });
+    //         return this;
+    //     }
+    //     removeClass(c: string): this {
+    //         const all = c.split(/ +/g);
+    //         all.forEach((a) => {
+    //             Utils.arrayDelete(this.classes, a);
+    //         });
+    //         return this;
+    //     }
+    //     hasClass(c: string): boolean {
+    //         const all = c.split(/ +/g);
+    //         return Utils.arrayIncludesAll(this.classes, all);
+    //     }
+    //     toggleClass(c: string): this {
+    //         const all = c.split(/ +/g);
+    //         all.forEach((a) => {
+    //             if (this.classes.includes(a)) {
+    //                 Utils.arrayDelete(this.classes, a);
+    //             } else {
+    //                 this.classes.push(a);
+    //             }
+    //         });
+    //         return this;
+    //     }
+    //     get focused(): boolean {
+    //         return !!this.prop('focus');
+    //     }
+    //     focus(reverse = false): boolean {
+    //         if (this.prop('focus')) return true;
+    //         this.prop('focus', true);
+    //         return this.trigger('focus', { reverse });
+    //     }
+    //     blur(reverse = false): boolean {
+    //         if (!this.prop('focus')) return false;
+    //         this.prop('focus', false);
+    //         return this.trigger('blur', { reverse });
+    //     }
+    //     get hovered(): boolean {
+    //         return !!this.prop('hover');
+    //     }
+    //     set hovered(v: boolean) {
+    //         this.prop('hover', v);
+    //     }
+    //     get disabled(): boolean {
+    //         let current: Widget | null = this;
+    //         while (current) {
+    //             if (current.prop('disabled')) return true;
+    //             current = current.parent;
+    //         }
+    //         return false;
+    //     }
+    //     set disabled(v: boolean) {
+    //         this.prop('disabled', v);
+    //     }
+    //     get hidden(): boolean {
+    //         let current: Widget | null = this;
+    //         while (current) {
+    //             if (current.prop('hidden')) return true;
+    //             current = current.parent;
+    //         }
+    //         return false;
+    //     }
+    //     set hidden(v: boolean) {
+    //         this.prop('hidden', v);
+    //         if (!v && this._used.opacity == 0) {
+    //             this._used.opacity = 100;
+    //         }
+    //     }
+    //     get opacity(): number {
+    //         let opacity = 100;
+    //         let current: Widget | null = this;
+    //         while (current) {
+    //             if (current._used) {
+    //                 opacity = Math.min(opacity, current._used.opacity); // TODO - opacity = Math.floor(opacity * current._used.opacity / 100);
+    //             }
+    //             current = current.parent;
+    //         }
+    //         return opacity;
+    //     }
+    //     set opacity(v: number) {
+    //         if (v !== this._used.opacity) {
+    //             this._used.opacity = v;
+    //             this.hidden = this._used.opacity == 0;
+    //             this.needsDraw = true;
+    //         }
+    //     }
+    //     updateStyle() {
+    //         // this._used = this.scene.styles.computeFor(this);
+    //         this._props.needsStyle = true;
+    //         this.needsDraw = true; // changed style or state
+    //     }
+    //     draw(buffer: Buffer.Buffer, styles: Style.Sheet): boolean {
+    //         if (this.hidden) return false;
+    //         let needsStyle = this._props.needsStyle;
+    //         let needsDraw = needsStyle || this.needsDraw;
+    //         if (!needsDraw) return false;
+    //         if (needsStyle) {
+    //             this._used = styles.computeFor(this);
+    //             this._props.needsStyle = false;
+    //         }
+    //         this._draw(buffer);
+    //         for (let child of this.children) {
+    //             child.draw(buffer, styles);
+    //         }
+    //         this.needsDraw = false;
+    //         return true;
+    //     }
+    //     // Draw
+    //     protected _draw(buffer: Buffer.Buffer): boolean {
+    //         this._drawFill(buffer);
+    //         return true;
+    //     }
+    //     protected _drawFill(buffer: Buffer.Buffer): void {
+    //         if (!this._used) return;
+    //         buffer.fillRect(
+    //             this.bounds.x,
+    //             this.bounds.y,
+    //             this.bounds.width,
+    //             this.bounds.height,
+    //             ' ',
+    //             this._used.bg,
+    //             this._used.bg
+    //         );
+    //     }
+    //     // Children
+    //     childAt(xy: XY.XY): Widget | null;
+    //     childAt(x: number, y: number): Widget | null;
+    //     childAt(...args: any[]): Widget | null {
+    //         return this.children.find((c) => c.contains(args[0], args[1])) || null;
+    //     }
+    //     _attach(w: Widget) {
+    //         w._parent = this;
+    //         this.body.attach(w);
+    //     }
+    //     addChild(w: Widget, opts: SetParentOptions = {}): void {
+    //         if (w === this) return;
+    //         let beforeIndex = -1;
+    //         if (opts.beforeIndex !== undefined) {
+    //             beforeIndex = opts.beforeIndex;
+    //         }
+    //         if (w._parent && w._parent !== this)
+    //             throw new Error('Trying to add child that already has a parent.');
+    //         if (!this.children.includes(w)) {
+    //             if (beforeIndex < 0 || beforeIndex >= this.children.length) {
+    //                 this.children.push(w);
+    //             } else {
+    //                 this.children.splice(beforeIndex, 0, w);
+    //             }
+    //         }
+    //         this._attach(w);
+    //         if (opts.center) {
+    //             opts.centerX = opts.centerY = true;
+    //         }
+    //         if (opts.centerX) {
+    //             opts.left = Math.floor((this.bounds.width - w.bounds.width) / 2);
+    //         }
+    //         if (opts.centerY) {
+    //             opts.top = Math.floor((this.bounds.height - w.bounds.height) / 2);
+    //         }
+    //         if (opts.left !== undefined) {
+    //             w.bounds.left = this.bounds.left + opts.left;
+    //         } else if (opts.right !== undefined) {
+    //             w.bounds.right = this.bounds.right - opts.right;
+    //         }
+    //         if (opts.top !== undefined) {
+    //             w.bounds.top = this.bounds.top + opts.top;
+    //         } else if (opts.bottom !== undefined) {
+    //             w.bounds.bottom = this.bounds.bottom - opts.bottom;
+    //         }
+    //     }
+    //     _detach(w: Widget) {
+    //         this.body.detach(w);
+    //         w._parent = null;
+    //     }
+    //     removeChild(w: Widget): void {
+    //         if (!w._parent || w._parent !== this)
+    //             throw new Error(
+    //                 'Removing child that does not have this widget as parent.'
+    //             );
+    //         Utils.arrayDelete(this.children, w);
+    //         this._detach(w);
+    //     }
+    //     resize(w: number, h: number): this {
+    //         this.bounds.width = w || this.bounds.width;
+    //         this.bounds.height = h || this.bounds.height;
+    //         this.needsDraw = true;
+    //         return this;
+    //     }
+    //     // Events
+    //     input(e: IO.Event) {
+    //         if (e.type === IO.KEYPRESS) {
+    //             this.keypress(e);
+    //         } else if (e.type === IO.MOUSEMOVE) {
+    //             this.mousemove(e);
+    //         } else if (e.type === IO.CLICK) {
+    //             this.click(e);
+    //         }
+    //     }
+    //     _mouseenter(e: IO.Event): void {
+    //         if (!this.contains(e)) return;
+    //         if (this.hovered) return;
+    //         this.hovered = true;
+    //         this.trigger('mouseenter', e);
+    //         // if (this._parent) {
+    //         //     this._parent._mouseenter(e);
+    //         // }
+    //     }
+    //     mousemove(e: IO.Event): boolean {
+    //         for (let child of this.children) {
+    //             child.mousemove(e);
+    //         }
+    //         if (this.contains(e) && !e.defaultPrevented && !this.hidden) {
+    //             this._mouseenter(e);
+    //             this.trigger('mousemove', e);
+    //             // e.preventDefault();
+    //         } else {
+    //             this._mouseleave(e);
+    //         }
+    //         return false;
+    //     }
+    //     _mouseleave(e: IO.Event): void {
+    //         if (!this.hovered) return;
+    //         if (this.contains(e)) return;
+    //         this.hovered = false;
+    //         this.trigger('mouseleave', e);
+    //         // if (this._parent) {
+    //         //     this._parent.mouseleave(e);
+    //         // }
+    //     }
+    //     click(e: IO.Event): boolean {
+    //         if (this.hidden || !this.contains(e) || this.disabled) return false;
+    //         for (let child of this.children) {
+    //             if (child.click(e)) return true;
+    //         }
+    //         let current: Widget | null = this;
+    //         while (current && !e.propagationStopped) {
+    //             current.trigger('click', e);
+    //             current = current.parent;
+    //         }
+    //         return true;
+    //     }
+    //     keypress(e: IO.Event): void {
+    //         if (this.hidden || this.disabled) return;
+    //         let current: Widget | null = this;
+    //         let evs = [e.key, e.code, 'keypress'];
+    //         if (e.dir) {
+    //             evs.unshift('dir');
+    //         }
+    //         while (current && !e.propagationStopped) {
+    //             current.trigger(evs, e);
+    //             current = current.parent;
+    //         }
+    //     }
+    //     update(dt: number): void {
+    //         this.trigger('update', dt);
+    //         this.children.forEach((c) => c.update(dt));
+    //     }
+    //     destroy() {
+    //         this.trigger('destroy');
+    //         this.events.clear();
+    //         this.children.forEach((c) => c.destroy());
+    //         this.children = [];
+    //         if (this.parent) {
+    //             this.parent.removeChild(this);
+    //         }
+    //     }
+    //     // events
+    //     on(event: string, cb: EVENTS.CallbackFn): EVENTS.CancelFn {
+    //         return this.events.on(event, cb);
+    //     }
+    //     off(event: string, cb: EventCb): void {
+    //         this.events.off(event, cb);
+    //     }
+    //     trigger(name: string | string[], ...args: any[]): boolean {
+    //         return this.events.trigger(name, ...args);
+    //     }
+    //     _bubble(name: string, ...args: any[]): boolean {
+    //         let current: Widget | null = this;
+    //         let fired = false;
+    //         while (current) {
+    //             fired = current.trigger(name, ...args) || fired;
+    //             current = current.parent;
+    //         }
+    //         fired = this.body.trigger(name, ...args) || fired;
+    //         return fired;
+    //     }
+    //     _triggerAction(ev: IO.Event) {
+    //         if (ev && (ev.propagationStopped || ev.defaultPrevented)) return;
+    //         const action = this._attrStr('action');
+    //         if (action && action.length) {
+    //             this._bubble(action);
+    //         }
+    //     }
+    // }
 
     // import * as GWU from 'gw-utils';
     class Text extends Widget {
-        constructor(layer, opts) {
-            super(layer, opts);
+        constructor(opts) {
+            super(opts);
             this._text = '';
             this._lines = [];
             this._fixedWidth = false;
@@ -11135,7 +11009,7 @@ void main() {
             this._fixedWidth = !!opts.width;
             this.bounds.width = opts.width || 0;
             this.bounds.height = opts.height || 1;
-            this.text(opts.text);
+            this.text(opts.text || '');
         }
         text(v) {
             if (v === undefined)
@@ -11154,7 +11028,7 @@ void main() {
             else {
                 this.bounds.height = Math.max(1, this._lines.length);
             }
-            this.layer.needsDraw = true;
+            this.needsDraw = true;
             return this;
         }
         resize(w, h) {
@@ -11164,8 +11038,11 @@ void main() {
             this.text(this._text);
             return this;
         }
+        addChild() {
+            throw new Error('Text widgets cannot have children.');
+        }
         _draw(buffer) {
-            this._drawFill(buffer);
+            super._draw(buffer);
             let vOffset = 0;
             if (this._used.valign === 'bottom') {
                 vOffset = this.bounds.height - this._lines.length;
@@ -11179,169 +11056,16 @@ void main() {
             return true;
         }
     }
-    WidgetLayer.prototype.text = function (text, opts = {}) {
-        const options = Object.assign({}, this._opts, opts, { text });
-        const list = new Text(this, options);
-        if (opts.parent) {
-            list.setParent(opts.parent, opts);
-        }
-        this.pos(list.bounds.x, list.bounds.bottom);
-        return list;
-    };
-
-    class Button extends Text {
-        constructor(layer, opts) {
-            super(layer, (() => {
-                opts.text = opts.text || '';
-                opts.action = opts.action || opts.id;
-                opts.tag = opts.tag || 'button';
-                if (!opts.text && !opts.width)
-                    throw new Error('Buttons must have text or width.');
-                return opts;
-            })());
-        }
-        keypress(ev) {
-            if (!ev.key)
-                return false;
-            if (this._fireEvent('keypress', this, ev))
-                return true;
-            if (ev.key === 'Enter') {
-                const action = this._attrStr('action');
-                if (action && action.length)
-                    this._bubbleEvent(action, this);
-                return true;
-            }
-            return false;
-        }
-        click(ev) {
-            if (!this.contains(ev))
-                return false;
-            if (this._fireEvent('click', this, ev))
-                return true;
-            const action = this._attrStr('action');
-            if (action && action.length)
-                return this._bubbleEvent(action, this);
-            return false;
-        }
-    }
-    WidgetLayer.prototype.button = function (text, opts) {
-        const options = Object.assign({}, this._opts, opts, {
-            text,
-        });
-        const widget = new Button(this, options);
-        if (opts.parent) {
-            widget.setParent(opts.parent, opts);
-        }
-        this.pos(widget.bounds.x, widget.bounds.bottom);
-        return widget;
-    };
-
-    // import * as GWU from 'gw-utils';
-    // extend WidgetLayer
-    // declare module './ui' {
-    //     interface UI {
-    //         inputbox(text: string, args?: any): Promise<string>;
-    //         inputbox(
-    //             opts: InputBoxOptions,
-    //             text: string,
-    //             args?: any
-    //         ): Promise<string>;
-    //     }
+    // // extend Layer
+    // export type AddTextOptions = TextOptions & UpdatePosOpts & { parent?: Widget };
+    // export function text(opts: AddTextOptions = {}): Text {
+    //     const widget = new Text(opts);
+    //     return widget;
     // }
-    UI.prototype.inputbox = function (...args) {
-        let opts = {};
-        let text;
-        let textArgs = {};
-        if (typeof args[1] === 'string') {
-            opts.default = args[0];
-            text = args[1];
-            textArgs = args[2];
-        }
-        else {
-            text = args[0];
-            textArgs = args[1];
-        }
-        if (textArgs) {
-            text = apply(text, textArgs);
-        }
-        opts.class = opts.class || 'confirm';
-        opts.border = opts.border || 'ascii';
-        opts.pad = opts.pad || 1;
-        const layer = new WidgetLayer(this);
-        // Fade the background
-        const opacity = opts.opacity !== undefined ? opts.opacity : 50;
-        layer.body.style().set('bg', BLACK.alpha(opacity));
-        // create the text widget
-        const textWidget = layer
-            .text(text, {
-            class: opts.textClass || opts.class,
-            width: opts.width,
-            height: opts.height,
-        })
-            .center();
-        Object.assign(opts, {
-            width: textWidget.bounds.width,
-            height: textWidget.bounds.height + 2,
-            x: textWidget.bounds.x,
-            y: textWidget.bounds.y,
-            tag: 'inputbox',
-        });
-        const dialog = layer.dialog(opts);
-        textWidget.setParent(dialog);
-        let width = dialog._innerWidth;
-        let x = dialog._innerLeft;
-        if (opts.label) {
-            const label = layer.text(opts.label, {
-                class: opts.labelClass || opts.class,
-                tag: 'label',
-                parent: dialog,
-                x,
-                y: dialog._innerTop + dialog._innerHeight - 1,
-            });
-            x += label.bounds.width + 1;
-            width -= label.bounds.width + 1;
-        }
-        layer
-            .input({
-            class: opts.inputClass || opts.class,
-            width,
-            id: 'INPUT',
-            parent: dialog,
-            x,
-            y: dialog._innerTop + dialog._innerHeight - 1,
-        })
-            .on('INPUT', (_n, w, _e) => {
-            w && layer.finish(w.text());
-            return true;
-        });
-        layer.on('keypress', (_n, _w, e) => {
-            if (e.key === 'Escape') {
-                layer.finish(null);
-                return true;
-            }
-            return false;
-        });
-        return layer.run();
-    };
-
-    var index$2 = /*#__PURE__*/Object.freeze({
-        __proto__: null,
-        Grid: Grid,
-        Selector: Selector,
-        compile: compile,
-        Style: Style,
-        makeStyle: makeStyle,
-        ComputedStyle: ComputedStyle,
-        Sheet: Sheet,
-        defaultStyle: defaultStyle,
-        Layer: Layer,
-        UI: UI,
-        make: make
-    });
 
     class Border extends Widget {
-        constructor(layer, opts) {
-            super(layer, opts);
+        constructor(opts) {
+            super(opts);
             this.ascii = false;
             if (opts.ascii) {
                 this.ascii = true;
@@ -11350,10 +11074,13 @@ void main() {
                 this.ascii = true;
             }
         }
-        contains(..._args) {
+        // contains(e: XY.XY): boolean;
+        // contains(x: number, y: number): boolean;
+        contains() {
             return false;
         }
         _draw(buffer) {
+            super._draw(buffer);
             const w = this.bounds.width;
             const h = this.bounds.height;
             const x = this.bounds.x;
@@ -11363,7 +11090,17 @@ void main() {
             return true;
         }
     }
-    WidgetLayer.prototype.border = function (opts) {
+    /*
+    // extend WidgetLayer
+    export type AddBorderOptions = BorderOptions &
+        Widget.SetParentOptions & { parent?: Widget.Widget };
+
+    declare module './layer' {
+        interface WidgetLayer {
+            border(opts: AddBorderOptions): Border;
+        }
+    }
+    WidgetLayer.prototype.border = function (opts: AddBorderOptions): Border {
         const options = Object.assign({}, this._opts, opts);
         const list = new Border(this, options);
         if (opts.parent) {
@@ -11371,6 +11108,7 @@ void main() {
         }
         return list;
     };
+    */
     function drawBorder(buffer, x, y, w, h, style, ascii) {
         const fg = style.fg;
         const bg = style.bg;
@@ -11420,8 +11158,8 @@ void main() {
         fg: 'light_gray',
     });
     class Dialog extends Widget {
-        constructor(layer, opts) {
-            super(layer, (() => {
+        constructor(opts) {
+            super((() => {
                 opts.tag = opts.tag || Dialog.default.tag;
                 return opts;
             })());
@@ -11490,11 +11228,12 @@ void main() {
             else if (align === 'right') {
                 x += width - textWidth;
             }
-            this.legend = new Text(this.layer, {
+            this.legend = new Text({
+                parent: this,
                 text: opts.legend,
                 x,
                 y: this.bounds.y,
-                depth: this.depth + 1,
+                // depth: this.depth + 1,
                 tag: this._attrStr('legendTag'),
                 class: this._attrStr('legendClass'),
             });
@@ -11503,11 +11242,11 @@ void main() {
             // }
             // this.bounds.height +=
             //     this._attrInt('padTop') + this._attrInt('padBottom');
-            this.legend.setParent(this);
+            this.bounds.height = Math.max(1, this.bounds.height);
             return this;
         }
         _draw(buffer) {
-            this._drawFill(buffer);
+            super._draw(buffer);
             const border = this._attrStr('border');
             if (border === 'none')
                 return false;
@@ -11523,19 +11262,828 @@ void main() {
         legendClass: '',
         legendAlign: 'left',
     };
-    WidgetLayer.prototype.dialog = function (opts) {
-        const options = Object.assign({}, this._opts, opts);
-        const widget = new Dialog(this, options);
+    function dialog(opts) {
+        const widget = new Dialog(opts);
+        return widget;
+    }
+
+    // import * as Color from '../color';
+    const AlertScene = {
+        create() {
+            this.on('click', () => {
+                this.stop({ click: true });
+            });
+            this.on('keypress', () => {
+                this.stop({ keypress: true });
+            });
+        },
+        start(data) {
+            if (data.args) {
+                data.text = apply(data.text, data.args);
+            }
+            data.class = data.class || 'alert';
+            data.border = data.border || 'ascii';
+            data.pad = data.pad || 1;
+            const text = new Text(data);
+            if (!data.height) {
+                data.height = text.bounds.height;
+            }
+            if (!data.width) {
+                data.width = text.bounds.width;
+            }
+            data.scene = this;
+            data.center = true;
+            const dialog = new Dialog(data);
+            text.setParent(dialog, { center: true });
+            if (!data.waitForAck) {
+                this.wait(data.duration || 3000, () => this.stop({}));
+            }
+        },
+        stop() {
+            this.children.forEach((c) => c.destroy());
+            this.children = [];
+            this.timers.clear();
+        },
+    };
+    // extend WidgetLayer
+    // declare module './ui' {
+    //     interface UI {
+    //         alert(
+    //             opts: AlertOptions | number,
+    //             text: string,
+    //             args?: any
+    //         ): Promise<boolean>;
+    //     }
+    // }
+    // export function alert(app: App, text: string): Promise<boolean> {
+    //     const scenes = app.scenes;
+    //     let done: (v: boolean) => void;
+    //     const promise = new Promise((resolve) => {
+    //         done = resolve;
+    //     });
+    //     scenes.pause();
+    //     const alert = scenes.start('alert', { text });
+    //     alert.on('stop', (data) => {
+    //         scenes.resume();
+    //         done(data.click || data.keypress);
+    //     });
+    //     return promise as Promise<boolean>;
+    // }
+    // UI.UI.prototype.alert = function (...args: any[]): Promise<boolean> {
+    //     let opts = {} as UI.AlertOptions;
+    //     let text: string;
+    //     let textArgs: any = {};
+    //     if (typeof args[0] === 'number') {
+    //         opts.duration = args[0];
+    //         text = args[1];
+    //         textArgs = args[2];
+    //     } else if (typeof args[0] === 'string') {
+    //         text = args[0];
+    //         textArgs = args[1];
+    //     } else {
+    //         opts = args[0];
+    //         text = args[1];
+    //         textArgs = args[2];
+    //     }
+    //     if (textArgs) {
+    //         text = Text.apply(text, textArgs);
+    //     }
+    //     opts.class = opts.class || 'alert';
+    //     opts.border = opts.border || 'ascii';
+    //     opts.pad = opts.pad || 1;
+    //     const layer = new WidgetLayer(this);
+    //     // Fade the background
+    //     const opacity = opts.opacity !== undefined ? opts.opacity : 50;
+    //     layer.body.style().set('bg', Color.BLACK.alpha(opacity));
+    //     // create the text widget
+    //     const textWidget = layer
+    //         .text(text, {
+    //             id: 'TEXT',
+    //             class: opts.textClass || opts.class,
+    //             width: opts.width,
+    //             height: opts.height,
+    //         })
+    //         .center();
+    //     Object.assign(opts, {
+    //         width: textWidget.bounds.width,
+    //         height: textWidget.bounds.height,
+    //         x: textWidget.bounds.x,
+    //         y: textWidget.bounds.y,
+    //         id: 'DIALOG',
+    //     });
+    //     const dialog = layer.dialog(opts);
+    //     textWidget.setParent(dialog);
+    //     layer.on('click', () => {
+    //         layer.finish(true);
+    //         return true;
+    //     });
+    //     layer.on('keypress', () => {
+    //         layer.finish(true);
+    //         return true;
+    //     });
+    //     layer.setTimeout(() => {
+    //         layer.finish(false);
+    //     }, opts.duration || 3000);
+    //     return layer.run();
+    // };
+    /*
+        // dialogs
+
+        alert(text: string, args?: any): Promise<boolean>;
+        alert(
+            opts: AlertOptions | number,
+            text: string,
+            args?: any
+        ): Promise<boolean>;
+        alert(...args: any[]): Promise<boolean> {
+            let opts = {} as AlertOptions;
+            let text: string;
+            let textArgs: any = {};
+
+            if (typeof args[0] === 'number') {
+                opts.duration = args[0];
+                text = args[1];
+                textArgs = args[2];
+            } else if (typeof args[0] === 'string') {
+                text = args[0];
+                textArgs = args[1];
+            } else {
+                opts = args[0];
+                text = args[1];
+                textArgs = args[2];
+            }
+
+            if (textArgs) {
+                text = TEXT.apply(text, textArgs);
+            }
+
+            opts.class = opts.class || 'alert';
+            opts.border = opts.border || 'ascii';
+            opts.pad = opts.pad || 1;
+
+            const scene = new SCENE.Scene('alert', {
+                create() {
+                    // Fade the background
+                    const opacity = opts.opacity !== undefined ? opts.opacity : 50;
+                    scene.body.style().set('bg', COLOR.BLACK.alpha(opacity));
+
+                    // create the text widget
+                    const textWidget = TEXTWIDGET.text(scene, {
+                        text,
+                        id: 'TEXT',
+                        class: opts.textClass || opts.class,
+                        width: opts.width,
+                        height: opts.height,
+                    });
+
+                    Object.assign(opts, {
+                        width: textWidget.bounds.width,
+                        height: textWidget.bounds.height,
+                        x: textWidget.bounds.x,
+                        y: textWidget.bounds.y,
+                        id: 'DIALOG',
+                    });
+                    const dialog = DIALOG.dialog(scene, opts);
+                    dialog.addChild(textWidget, { center: true });
+                    scene.body.addChild(dialog, { center: true });
+                },
+            });
+
+            scene.on('click', () => {
+                scene.stop({ interruped: true });
+            });
+
+            scene.on('keypress', () => {
+                scene.stop({ interupted: true });
+            });
+
+            scene.wait(opts.duration || 3000, () => {
+                scene.stop({ interrupted: false });
+            });
+
+            return new Promise((resolve) => {
+                scene.on('stop', (data) => {
+                    resolve(data.interruped);
+                });
+
+                this.scenes.start(scene);
+            });
+        }
+    */
+
+    // import * as GWU from 'gw-utils';
+    class Button extends Text {
+        constructor(opts) {
+            super((() => {
+                opts.text = opts.text || '';
+                opts.tabStop = opts.tabStop === undefined ? true : opts.tabStop;
+                opts.tag = opts.tag || 'button';
+                if (!opts.text && !opts.width)
+                    throw new Error('Buttons must have text or width.');
+                if (opts.text.length == 0) {
+                    opts.width = opts.width || 2;
+                }
+                return opts;
+            })());
+            this.on('click', this.action.bind(this));
+            this.on('Enter', this.action.bind(this));
+        }
+    }
+    /*
+    // extend Layer
+
+    export type AddButtonOptions = Omit<ButtonOptions, 'text'> &
+        Widget.SetParentOptions & { parent?: Widget.Widget };
+
+    declare module './layer' {
+        interface WidgetLayer {
+            button(text: string, opts?: AddButtonOptions): Button;
+        }
+    }
+    WidgetLayer.prototype.button = function (
+        text: string,
+        opts: AddButtonOptions
+    ): Button {
+        const options: ButtonOptions = Object.assign({}, this._opts, opts, {
+            text,
+        });
+        const widget = new Button(this, options);
         if (opts.parent) {
             widget.setParent(opts.parent, opts);
         }
+        this.pos(widget.bounds.x, widget.bounds.bottom);
         return widget;
     };
+    */
+
+    // import * as GWU from 'gw-utils';
+    const ConfirmScene = {
+        create() {
+            this.on('keypress', (e) => {
+                if (e.key === 'Escape') {
+                    this.trigger('CANCEL');
+                }
+                else if (e.key === 'Enter') {
+                    this.trigger('OK');
+                }
+            });
+            this.on('OK', () => {
+                this.stop(true);
+            });
+            this.on('CANCEL', () => {
+                this.stop(false);
+            });
+        },
+        start(opts) {
+            opts.class = opts.class || 'confirm';
+            opts.border = opts.border || 'ascii';
+            opts.pad = opts.pad || 1;
+            // Fade the background
+            const opacity = opts.opacity !== undefined ? opts.opacity : 50;
+            this.bg = BLACK.alpha(opacity);
+            if (opts.cancel === undefined) {
+                opts.cancel = 'Cancel';
+            }
+            else if (opts.cancel === true) {
+                opts.cancel = 'Cancel';
+            }
+            else if (!opts.cancel) {
+                opts.cancel = '';
+            }
+            opts.ok = opts.ok || 'Ok';
+            let buttonWidth = opts.buttonWidth || 0;
+            if (!buttonWidth) {
+                buttonWidth = Math.max(opts.ok.length, opts.cancel.length);
+            }
+            const width = Math.max(opts.width || 0, buttonWidth * 2 + 2);
+            // create the text widget
+            const textWidget = new Text({
+                scene: this,
+                text: opts.text,
+                class: opts.textClass || opts.class,
+                width: width,
+                height: opts.height,
+            }).center();
+            Object.assign(opts, {
+                scene: this,
+                width: textWidget.bounds.width + 2,
+                height: textWidget.bounds.height + 2,
+                x: textWidget.bounds.x,
+                y: textWidget.bounds.y,
+                tag: 'confirm',
+            });
+            const dialog = new Dialog(opts);
+            dialog.addChild(textWidget);
+            new Button({
+                parent: dialog,
+                text: opts.ok,
+                class: opts.okClass || opts.class,
+                width: buttonWidth,
+                id: 'OK',
+                right: -1 - dialog._attrInt('padRight'),
+                bottom: -1 - dialog._attrInt('padBottom'),
+            });
+            if (opts.cancel.length) {
+                new Button({
+                    parent: dialog,
+                    text: opts.cancel,
+                    class: opts.cancelClass || opts.class,
+                    width: buttonWidth,
+                    id: 'CANCEL',
+                    left: 1 + dialog._attrInt('padLeft'),
+                    bottom: -1 - dialog._attrInt('padBottom'),
+                });
+            }
+            if (opts.done) {
+                const done = opts.done;
+                this.once('OK', () => {
+                    done(true);
+                });
+                this.once('CANCEL', () => {
+                    done(false);
+                });
+            }
+        },
+        stop() {
+            this.children.forEach((c) => c.destroy());
+            this.children = [];
+        },
+    };
+    // extend WidgetLayer
+    // declare module './ui' {
+    //     interface UI {
+    //         confirm(text: string, args?: any): Promise<boolean>;
+    //         confirm(
+    //             opts: ConfirmOptions,
+    //             text: string,
+    //             args?: any
+    //         ): Promise<boolean>;
+    //     }
+    // }
+    // UI.prototype.confirm = function (...args: any[]): Promise<boolean> {
+    //     let opts = {} as ConfirmOptions;
+    //     let text: string;
+    //     let textArgs: any = {};
+    //     if (typeof args[0] === 'string') {
+    //         text = args[0];
+    //         textArgs = args[1];
+    //     } else {
+    //         opts = args[0];
+    //         text = args[1];
+    //         textArgs = args[2];
+    //     }
+    //     if (textArgs) {
+    //         text = TextUtils.apply(text, textArgs);
+    //     }
+    //     opts.class = opts.class || 'confirm';
+    //     opts.border = opts.border || 'ascii';
+    //     opts.pad = opts.pad || 1;
+    //     const layer = new WidgetLayer(this);
+    //     // Fade the background
+    //     const opacity = opts.opacity !== undefined ? opts.opacity : 50;
+    //     layer.body.style().set('bg', Color.BLACK.alpha(opacity));
+    //     if (opts.cancel === undefined) {
+    //         opts.cancel = 'Cancel';
+    //     } else if (opts.cancel === true) {
+    //         opts.cancel = 'Cancel';
+    //     } else if (!opts.cancel) {
+    //         opts.cancel = '';
+    //     }
+    //     opts.ok = opts.ok || 'Ok';
+    //     let buttonWidth = opts.buttonWidth || 0;
+    //     if (!buttonWidth) {
+    //         buttonWidth = Math.max(opts.ok.length, opts.cancel.length);
+    //     }
+    //     const width = Math.max(opts.width || 0, buttonWidth * 2 + 2);
+    //     // create the text widget
+    //     const textWidget = layer
+    //         .text(text!, {
+    //             class: opts.textClass || opts.class,
+    //             width: width,
+    //             height: opts.height,
+    //         })
+    //         .center();
+    //     Object.assign(opts, {
+    //         width: textWidget.bounds.width,
+    //         height: textWidget.bounds.height + 2, // for buttons
+    //         x: textWidget.bounds.x,
+    //         y: textWidget.bounds.y,
+    //         tag: 'confirm',
+    //     });
+    //     const dialog = layer.dialog(opts as DialogOptions);
+    //     textWidget.setParent(dialog);
+    //     layer
+    //         .button(opts.ok, {
+    //             class: opts.okClass || opts.class,
+    //             width: buttonWidth,
+    //             id: 'OK',
+    //             parent: dialog,
+    //             x: dialog._innerLeft + dialog._innerWidth - buttonWidth,
+    //             y: dialog._innerTop + dialog._innerHeight - 1,
+    //         })
+    //         .on('click', () => {
+    //             layer.finish(true);
+    //             return true;
+    //         });
+    //     if (opts.cancel.length) {
+    //         layer
+    //             .button(opts.cancel, {
+    //                 class: opts.cancelClass || opts.class,
+    //                 width: buttonWidth,
+    //                 id: 'CANCEL',
+    //                 parent: dialog,
+    //                 x: dialog._innerLeft,
+    //                 y: dialog._innerTop + dialog._innerHeight - 1,
+    //             })
+    //             .on('click', () => {
+    //                 layer.finish(false);
+    //                 return true;
+    //             });
+    //     }
+    //     layer.on('keypress', (_n, _w, e) => {
+    //         if (e.key === 'Escape') {
+    //             layer.finish(false);
+    //         } else if (e.key === 'Enter') {
+    //             layer.finish(true);
+    //         }
+    //         return true;
+    //     });
+    //     return layer.run();
+    // };
+
+    // import * as GWU from 'gw-utils';
+    defaultStyle.add('input', {
+        bg: 'light_gray',
+        fg: 'black',
+        align: 'left',
+        valign: 'top',
+    });
+    defaultStyle.add('input:invalid', {
+        fg: 'red',
+    });
+    defaultStyle.add('input:empty', {
+        fg: 'darkest_green',
+    });
+    defaultStyle.add('input:focus', {
+        bg: 'lighter_gray',
+    });
+    class Input extends Text {
+        constructor(opts) {
+            super((() => {
+                opts.text = opts.text || '';
+                opts.tag = opts.tag || 'input';
+                opts.tabStop = opts.tabStop === undefined ? true : opts.tabStop;
+                opts.width =
+                    opts.width ||
+                        opts.maxLength ||
+                        Math.max(opts.minLength || 0, 10);
+                return opts;
+            })());
+            this.minLength = 0;
+            this.maxLength = 0;
+            this.numbersOnly = false;
+            this.min = 0;
+            this.max = 0;
+            this.attr('default', this._text);
+            this.attr('placeholder', opts.placeholder || Input.default.placeholder);
+            if (opts.numbersOnly) {
+                this.numbersOnly = true;
+                this.min = opts.min || 0;
+                this.max = opts.max || 0;
+            }
+            else {
+                this.minLength = opts.minLength || 0;
+                this.maxLength = opts.maxLength || 0;
+            }
+            if (opts.required) {
+                this.attr('required', true);
+                this.prop('required', true);
+            }
+            if (opts.disabled) {
+                this.attr('disabled', true);
+                this.prop('disabled', true);
+            }
+            this.prop('valid', this.isValid()); // redo b/c rules are now set
+            this.on('blur', this.action.bind(this));
+            // this.on('click', this.action.bind(this));
+            this.reset();
+        }
+        reset() {
+            this.text(this._attrStr('default'));
+        }
+        _setProp(name, v) {
+            super._setProp(name, v);
+            this._props.valid = this.isValid();
+        }
+        isValid() {
+            const t = this._text || '';
+            if (this.numbersOnly) {
+                const val = Number.parseInt(t);
+                if (this.min !== undefined && val < this.min)
+                    return false;
+                if (this.max !== undefined && val > this.max)
+                    return false;
+                return val > 0;
+            }
+            const minLength = Math.max(this.minLength, this.prop('required') ? 1 : 0);
+            return (t.length >= minLength &&
+                (!this.maxLength || t.length <= this.maxLength));
+        }
+        keypress(ev) {
+            if (!ev.key)
+                return;
+            const textEntryBounds = this.numbersOnly ? ['0', '9'] : [' ', '~'];
+            if (ev.key === 'Enter' && this.isValid()) {
+                this.action();
+                this.scene.nextTabStop();
+                ev.stopPropagation();
+                return;
+            }
+            if (ev.key == 'Delete' || ev.key == 'Backspace') {
+                if (this._text.length) {
+                    this.text(spliceRaw(this._text, this._text.length - 1, 1));
+                    this.trigger('change');
+                    this._used && this._draw(this.scene.buffer); // save some work?
+                }
+                ev.stopPropagation();
+                return;
+            }
+            else if (isControlCode(ev)) {
+                // ignore other special keys...
+                return;
+            }
+            // eat/use all other keys
+            if (ev.key >= textEntryBounds[0] && ev.key <= textEntryBounds[1]) {
+                // allow only permitted input
+                if (!this.maxLength || this._text.length < this.maxLength) {
+                    this.text(this._text + ev.key);
+                    this.trigger('change');
+                    this._used && this._draw(this.scene.buffer); // save some work?
+                }
+            }
+            ev.stopPropagation();
+        }
+        click(e) {
+            if (this.disabled || this.hidden)
+                return;
+            e.target = this;
+            const c = this.childAt(e);
+            if (c) {
+                c.click(e);
+            }
+            if (!this.bounds.contains(e))
+                return;
+            if (e.propagationStopped)
+                return;
+            this.events.dispatch(e);
+        }
+        text(v) {
+            if (v === undefined)
+                return this._text;
+            super.text(v);
+            this.prop('empty', this._text.length === 0);
+            this.prop('valid', this.isValid());
+            return this;
+        }
+        _draw(buffer, _force = false) {
+            this._drawFill(buffer);
+            let vOffset = 0;
+            if (!this._used) ;
+            else if (this._used.valign === 'bottom') {
+                vOffset = this.bounds.height - this._lines.length;
+            }
+            else if (this._used.valign === 'middle') {
+                vOffset = Math.floor((this.bounds.height - this._lines.length) / 2);
+            }
+            let show = this._text;
+            if (show.length == 0) {
+                show = this._attrStr('placeholder');
+            }
+            if (this._text.length > this.bounds.width) {
+                show = this._text.slice(this._text.length - this.bounds.width);
+            }
+            const fg = this._used ? this._used.fg : 'white';
+            const align = this._used ? this._used.align : 'left';
+            buffer.drawText(this.bounds.x, this.bounds.y + vOffset, show, fg, -1, this.bounds.width, align);
+            return true;
+        }
+    }
+    Input.default = {
+        tag: 'input',
+        width: 10,
+        placeholder: '',
+    };
+    /*
+    // extend WidgetLayer
+
+    export type AddInputOptions = InputOptions &
+        Widget.SetParentOptions & { parent?: Widget.Widget };
+
+    declare module './layer' {
+        interface WidgetLayer {
+            input(opts: AddInputOptions): Input;
+        }
+    }
+    WidgetLayer.prototype.input = function (opts: AddInputOptions): Input {
+        const options = Object.assign({}, this._opts, opts);
+        const list = new Input(this, options);
+        if (opts.parent) {
+            list.setParent(opts.parent, opts);
+        }
+        return list;
+    };
+    */
+
+    // import * as GWU from 'gw-utils';
+    const PromptScene = {
+        create() {
+            this.on('INPUT', () => {
+                const input = this.get('INPUT');
+                this.stop(input ? input.text() : null);
+            });
+            this.on('Escape', () => {
+                this.stop(null);
+            });
+        },
+        start(opts) {
+            opts.class = opts.class || 'confirm';
+            opts.border = opts.border || 'ascii';
+            opts.pad = opts.pad || 0;
+            // Fade the background
+            const opacity = opts.opacity !== undefined ? opts.opacity : 50;
+            this.bg = BLACK.alpha(opacity);
+            // create the text widget
+            const textWidget = new Text({
+                text: opts.prompt,
+                class: opts.textClass || opts.class,
+                width: opts.width,
+                height: opts.height,
+            });
+            Object.assign(opts, {
+                width: textWidget.bounds.width + 2,
+                height: textWidget.bounds.height + 1,
+                x: textWidget.bounds.x - 1,
+                y: textWidget.bounds.y - 1,
+                tag: 'inputbox',
+                scene: this,
+                center: true,
+            });
+            const dialog = new Dialog(opts);
+            textWidget.setParent(dialog, { top: 1, centerX: true });
+            let width = dialog._innerWidth - 2;
+            let x = textWidget.bounds.left;
+            if (opts.label) {
+                const label = new Text({
+                    parent: dialog,
+                    text: opts.label,
+                    class: opts.labelClass || opts.class,
+                    tag: 'label',
+                    x,
+                    bottom: -1,
+                });
+                x += label.bounds.width + 1;
+                width -= label.bounds.width + 1;
+            }
+            const input = new Input({
+                parent: dialog,
+                class: opts.inputClass || opts.class,
+                width,
+                id: 'INPUT',
+                x,
+                bottom: -1,
+            });
+            this.once('INPUT', () => {
+                if (opts.done)
+                    opts.done(input.text());
+            });
+            this.once('Escape', () => {
+                if (opts.done)
+                    opts.done(null);
+            });
+        },
+        stop() { },
+    };
+    // extend WidgetLayer
+    // declare module './ui' {
+    //     interface UI {
+    //         inputbox(text: string, args?: any): Promise<string>;
+    //         inputbox(
+    //             opts: InputBoxOptions,
+    //             text: string,
+    //             args?: any
+    //         ): Promise<string>;
+    //     }
+    // }
+    /*
+    UI.prototype.inputbox = function (...args: any[]): Promise<string | null> {
+        let opts = {} as InputBoxOptions;
+        let text: string;
+        let textArgs: any = {};
+
+        if (typeof args[1] === 'string') {
+            opts.default = args[0];
+            text = args[1];
+            textArgs = args[2];
+        } else {
+            text = args[0];
+            textArgs = args[1];
+        }
+
+        if (textArgs) {
+            text = TextUtils.apply(text, textArgs);
+        }
+
+        opts.class = opts.class || 'confirm';
+        opts.border = opts.border || 'ascii';
+        opts.pad = opts.pad || 1;
+
+        const layer = new WidgetLayer(this);
+
+        // Fade the background
+        const opacity = opts.opacity !== undefined ? opts.opacity : 50;
+        layer.body.style().set('bg', Color.BLACK.alpha(opacity));
+
+        // create the text widget
+        const textWidget = layer
+            .text(text!, {
+                class: opts.textClass || opts.class,
+                width: opts.width,
+                height: opts.height,
+            })
+            .center();
+
+        Object.assign(opts, {
+            width: textWidget.bounds.width,
+            height: textWidget.bounds.height + 2, // for input
+            x: textWidget.bounds.x,
+            y: textWidget.bounds.y,
+            tag: 'inputbox',
+        });
+        const dialog = layer.dialog(opts as DialogOptions);
+        textWidget.setParent(dialog);
+
+        let width = dialog._innerWidth;
+        let x = dialog._innerLeft;
+        if (opts.label) {
+            const label = layer.text(opts.label, {
+                class: opts.labelClass || opts.class,
+                tag: 'label',
+                parent: dialog,
+                x,
+                y: dialog._innerTop + dialog._innerHeight - 1,
+            });
+
+            x += label.bounds.width + 1;
+            width -= label.bounds.width + 1;
+        }
+
+        layer
+            .input({
+                class: opts.inputClass || opts.class,
+                width,
+                id: 'INPUT',
+                parent: dialog,
+                x,
+                y: dialog._innerTop + dialog._innerHeight - 1,
+            })
+            .on('INPUT', (_n, w, _e) => {
+                w && layer.finish(w.text());
+                return true;
+            });
+
+        layer.on('keypress', (_n, _w, e) => {
+            if (e.key === 'Escape') {
+                layer.finish(null);
+                return true;
+            }
+            return false;
+        });
+
+        return layer.run();
+    };
+    */
+
+    // export * from './types';
+
+    var index$2 = /*#__PURE__*/Object.freeze({
+        __proto__: null,
+        Grid: Grid,
+        Selector: Selector,
+        compile: compile,
+        Style: Style,
+        makeStyle: makeStyle,
+        ComputedStyle: ComputedStyle,
+        Sheet: Sheet,
+        defaultStyle: defaultStyle,
+        AlertScene: AlertScene,
+        ConfirmScene: ConfirmScene,
+        PromptScene: PromptScene
+    });
 
     // import * as GWU from 'gw-utils';
     class Fieldset extends Dialog {
-        constructor(layer, opts) {
-            super(layer, (() => {
+        constructor(opts) {
+            super((() => {
                 opts.tag = opts.tag || Fieldset.default.tag;
                 opts.border = opts.border || Fieldset.default.border;
                 opts.legendTag = opts.legendTag || Fieldset.default.legendTag;
@@ -11571,14 +12119,16 @@ void main() {
             return this._labelLeft + this._attrInt('labelWidth');
         }
         get _nextY() {
-            const border = this._attrStr('border');
+            let border = this._attrStr('border') === 'none' ? 0 : 1;
             const padBottom = this._attrInt('padBottom');
-            return this.bounds.bottom - (border === 'none' ? 0 : 1) - padBottom;
+            return this.bounds.bottom - border - padBottom;
         }
         add(label, format) {
             const sep = this._attrStr('separator');
             const labelText = padEnd(label, this._attrInt('labelWidth') - sep.length, ' ') + sep;
-            this.layer.text(labelText, {
+            new Text({
+                parent: this,
+                text: labelText,
                 x: this._labelLeft,
                 y: this._nextY,
                 width: this._attrInt('labelWidth'),
@@ -11593,16 +12143,19 @@ void main() {
             format.width = this._attrInt('dataWidth');
             format.tag = format.tag || this._attrStr('dataTag');
             format.class = format.class || this._attrStr('dataClass');
-            const field = new Field(this.layer, format);
-            field.setParent(this);
+            format.parent = this;
+            const field = new Field(format);
             this.bounds.height += 1;
             this.fields.push(field);
             return this;
         }
-        data(d) {
-            this.fields.forEach((f) => f.data(d));
-            this.layer.needsDraw = true;
-            return this;
+        _setData(v) {
+            super._setData(v);
+            this.fields.forEach((f) => f.format(v));
+        }
+        _setDataItem(key, v) {
+            super._setDataItem(key, v);
+            this.fields.forEach((f) => f.format(v));
         }
     }
     Fieldset.default = {
@@ -11618,17 +12171,9 @@ void main() {
         dataTag: 'field',
         dataClass: '',
     };
-    WidgetLayer.prototype.fieldset = function (opts) {
-        const options = Object.assign({}, this._opts, opts);
-        const widget = new Fieldset(this, options);
-        if (opts.parent) {
-            widget.setParent(opts.parent, opts);
-        }
-        return widget;
-    };
     class Field extends Text {
-        constructor(layer, opts) {
-            super(layer, (() => {
+        constructor(opts) {
+            super((() => {
                 // @ts-ignore
                 const topts = opts;
                 topts.tag = topts.tag || 'field';
@@ -11642,15 +12187,15 @@ void main() {
                 this._format = opts.format;
             }
         }
-        data(v) {
+        format(v) {
             const t = this._format(v) || '';
             return this.text(t);
         }
     }
 
     class OrderedList extends Widget {
-        constructor(layer, opts) {
-            super(layer, (() => {
+        constructor(opts) {
+            super((() => {
                 opts.tag = opts.tag || 'ol';
                 return opts;
             })());
@@ -11660,7 +12205,7 @@ void main() {
             this._fixedWidth = !!opts.width;
             this.prop('pad', opts.pad || OrderedList.default.pad);
         }
-        _addChild(w, opts = {}) {
+        addChild(w) {
             w.bounds.x = this.bounds.x + 2;
             if (!this._fixedHeight) {
                 w.bounds.y = this.bounds.bottom - 2;
@@ -11672,7 +12217,7 @@ void main() {
             else if (w.bounds.width > this.bounds.width - 4) {
                 this.bounds.width = w.bounds.width + 4;
             }
-            return super._addChild(w, opts);
+            return super.addChild(w);
         }
         _draw(buffer) {
             this._drawFill(buffer);
@@ -11696,8 +12241,8 @@ void main() {
         pad: 1,
     };
     class UnorderedList extends OrderedList {
-        constructor(layer, opts) {
-            super(layer, (() => {
+        constructor(opts) {
+            super((() => {
                 opts.tag = opts.tag || 'ul';
                 return opts;
             })());
@@ -11712,181 +12257,52 @@ void main() {
         bullet: '\u2022',
         pad: 1,
     };
-    WidgetLayer.prototype.ol = function (opts = {}) {
-        const options = Object.assign({}, this._opts, opts);
+    /*
+    // extend WidgetLayer
+
+    export type AddOrderedListOptions = OrderedListOptions &
+        Widget.SetParentOptions & { parent?: Widget.Widget };
+
+    export type AddUnorderedListOptions = UnorderedListOptions &
+        Widget.SetParentOptions & { parent?: Widget.Widget };
+
+    declare module './layer' {
+        interface WidgetLayer {
+            ol(opts?: AddOrderedListOptions): OrderedList;
+            ul(opts?: AddUnorderedListOptions): UnorderedList;
+        }
+    }
+
+    WidgetLayer.prototype.ol = function (
+        opts: AddOrderedListOptions = {}
+    ): OrderedList {
+        const options = Object.assign({}, this._opts, opts) as OrderedListOptions;
         const widget = new OrderedList(this, options);
         if (opts.parent) {
             widget.setParent(opts.parent, opts);
         }
         return widget;
     };
-    WidgetLayer.prototype.ul = function (opts = {}) {
-        const options = Object.assign({}, this._opts, opts);
+
+    WidgetLayer.prototype.ul = function (
+        opts: AddUnorderedListOptions = {}
+    ): UnorderedList {
+        const options = Object.assign({}, this._opts, opts) as UnorderedListOptions;
         const widget = new UnorderedList(this, options);
         if (opts.parent) {
             widget.setParent(opts.parent, opts);
         }
         return widget;
     };
+    */
 
     // import * as GWU from 'gw-utils';
-    defaultStyle.add('input', {
-        bg: 'light_gray',
-        fg: 'black',
-        align: 'left',
-        valign: 'top',
-    });
-    defaultStyle.add('input:invalid', {
-        fg: 'red',
-    });
-    defaultStyle.add('input:empty', {
-        fg: 'darkest_green',
-    });
-    defaultStyle.add('input:focus', {
-        bg: 'lighter_gray',
-    });
-    class Input extends Text {
-        constructor(layer, opts) {
-            super(layer, (() => {
-                opts.text = opts.text || '';
-                opts.tag = opts.tag || 'input';
-                opts.tabStop = opts.tabStop === undefined ? true : opts.tabStop;
-                opts.action = opts.action || opts.id;
-                opts.width =
-                    opts.width ||
-                        opts.maxLength ||
-                        Math.max(opts.minLength || 0, 10);
-                return opts;
-            })());
-            this.minLength = 0;
-            this.maxLength = 0;
-            this.numbersOnly = false;
-            this.min = 0;
-            this.max = 0;
-            this.attr('default', this._text);
-            this.attr('placeholder', opts.placeholder || Input.default.placeholder);
-            if (opts.numbersOnly) {
-                this.numbersOnly = true;
-                this.min = opts.min || 0;
-                this.max = opts.max || 0;
-            }
-            else {
-                this.minLength = opts.minLength || 0;
-                this.maxLength = opts.maxLength || 0;
-            }
-            if (opts.required) {
-                this.attr('required', true);
-                this.prop('required', true);
-            }
-            if (opts.disabled) {
-                this.attr('disabled', true);
-                this.prop('disabled', true);
-            }
-            this.prop('valid', this.isValid()); // redo b/c rules are now set
-            this.on('blur', () => this._fireEvent('change', this));
-            this.reset();
-        }
-        reset() {
-            this.text(this._attrStr('default'));
-        }
-        _setProp(name, v) {
-            super._setProp(name, v);
-            this._props.valid = this.isValid();
-        }
-        isValid() {
-            const t = this._text || '';
-            if (this.numbersOnly) {
-                const val = Number.parseInt(t);
-                if (this.min !== undefined && val < this.min)
-                    return false;
-                if (this.max !== undefined && val > this.max)
-                    return false;
-                return val > 0;
-            }
-            const minLength = Math.max(this.minLength, this.prop('required') ? 1 : 0);
-            return (t.length >= minLength &&
-                (!this.maxLength || t.length <= this.maxLength));
-        }
-        keypress(ev) {
-            if (!ev.key)
-                return false;
-            const textEntryBounds = this.numbersOnly ? ['0', '9'] : [' ', '~'];
-            if (ev.key === 'Enter' && this.isValid()) {
-                const action = this._attrStr('action');
-                if (action && action.length) {
-                    this._fireEvent(action, this);
-                }
-                else {
-                    this.layer.nextTabStop();
-                }
-                return true;
-            }
-            if (ev.key == 'Delete' || ev.key == 'Backspace') {
-                if (this._text.length) {
-                    this.text(spliceRaw(this._text, this._text.length - 1, 1));
-                    this._fireEvent('input', this);
-                    this._draw(this.layer.buffer); // save some work?
-                }
-                return true;
-            }
-            else if (ev.key.length > 1) {
-                // ignore other special keys...
-                return false;
-            }
-            // eat/use all other keys
-            if (ev.key >= textEntryBounds[0] && ev.key <= textEntryBounds[1]) {
-                // allow only permitted input
-                if (!this.maxLength || this._text.length < this.maxLength) {
-                    this.text(this._text + ev.key);
-                    this._fireEvent('input', this);
-                    this._draw(this.layer.buffer); // save some work?
-                }
-            }
-            return true;
-        }
-        text(v) {
-            if (v === undefined)
-                return this._text;
-            super.text(v);
-            this.prop('empty', this._text.length === 0);
-            this.prop('valid', this.isValid());
-            return this;
-        }
-        _draw(buffer, _force = false) {
-            this._drawFill(buffer);
-            let vOffset = 0;
-            if (this._used.valign === 'bottom') {
-                vOffset = this.bounds.height - this._lines.length;
-            }
-            else if (this._used.valign === 'middle') {
-                vOffset = Math.floor((this.bounds.height - this._lines.length) / 2);
-            }
-            let show = this._text;
-            if (show.length == 0) {
-                show = this._attrStr('placeholder');
-            }
-            if (this._text.length > this.bounds.width) {
-                show = this._text.slice(this._text.length - this.bounds.width);
-            }
-            buffer.drawText(this.bounds.x, this.bounds.y + vOffset, show, this._used.fg, -1, this.bounds.width, this._used.align);
-            return true;
-        }
-    }
-    Input.default = {
-        tag: 'input',
-        width: 10,
-        placeholder: '',
-    };
-    WidgetLayer.prototype.input = function (opts) {
-        const options = Object.assign({}, this._opts, opts);
-        const list = new Input(this, options);
-        if (opts.parent) {
-            list.setParent(opts.parent, opts);
-        }
-        return list;
-    };
-
-    // import * as GWU from 'gw-utils';
+    defaultStyle.add('datatable', { bg: 'black' });
+    // STYLE.defaultStyle.add('th', { bg: 'light_teal', fg: 'dark_blue' });
+    // STYLE.defaultStyle.add('td', { bg: 'darker_gray' });
+    // STYLE.defaultStyle.add('td:odd', { bg: 'gray' });
+    // STYLE.defaultStyle.add('td:hover', { bg: 'light_gray' });
+    defaultStyle.add('td:selected', { bg: 'gray' });
     class Column {
         constructor(opts) {
             this.format = IDENTITY;
@@ -11903,20 +12319,20 @@ void main() {
             this.dataTag = opts.dataTag || DataTable.default.dataTag;
         }
         addHeader(table, x, y, col) {
-            const t = new Text(table.layer, {
+            const t = new Text({
+                parent: table,
                 x,
                 y,
                 class: table.classes.join(' '),
                 tag: table._attrStr('headerTag'),
                 width: this.width,
                 height: table.rowHeight,
-                depth: table.depth + 1,
+                // depth: table.depth + 1,
                 text: this.header,
             });
             t.prop('row', -1);
             t.prop('col', col);
-            t.setParent(table);
-            table.layer.attach(t);
+            // table.scene.attach(t);
             return t;
         }
         addData(table, data, x, y, col, row) {
@@ -11930,7 +12346,11 @@ void main() {
             else {
                 text = this.format(data);
             }
-            const widget = new TD(table.layer, {
+            if (text === '') {
+                text = this.empty;
+            }
+            const widget = new Text({
+                parent: table,
                 text,
                 x,
                 y,
@@ -11938,41 +12358,48 @@ void main() {
                 tag: table._attrStr('dataTag'),
                 width: this.width,
                 height: table.rowHeight,
-                depth: table.depth + 1,
+                // depth: table.depth + 1,
+            });
+            widget.on('mouseenter', () => {
+                table.select(col, row);
             });
             widget.prop(row % 2 == 0 ? 'even' : 'odd', true);
             widget.prop('row', row);
             widget.prop('col', col);
-            widget.setParent(table);
-            table.layer.attach(widget);
+            // table.addChild(widget);
             return widget;
         }
         addEmpty(table, x, y, col, row) {
             return this.addData(table, [], x, y, col, row);
         }
     }
-    Column.default = {
-        select: 'row',
-        hover: 'select',
-        tag: 'datatable',
-        headerTag: 'th',
-        dataTag: 'td',
-        border: 'ascii',
-    };
     class DataTable extends Widget {
-        constructor(layer, opts) {
-            super(layer, (() => {
+        constructor(opts) {
+            super((() => {
                 opts.tag = opts.tag || DataTable.default.tag;
                 opts.tabStop = opts.tabStop === undefined ? true : opts.tabStop;
+                if (opts.data) {
+                    if (!Array.isArray(opts.data)) {
+                        opts.data = [opts.data];
+                    }
+                }
+                else {
+                    opts.data = [];
+                }
                 return opts;
             })());
-            this._data = [];
             this.columns = [];
             this.showHeader = false;
             this.rowHeight = 1;
             this.selectedRow = -1;
             this.selectedColumn = 0;
-            this.size = opts.size || layer.height;
+            this.size =
+                opts.size ||
+                    (this.parent
+                        ? this.parent.bounds.height
+                        : this.scene
+                            ? this.scene.height
+                            : 0);
             this.bounds.width = 0;
             opts.columns.forEach((o) => {
                 const col = new Column(o);
@@ -11996,7 +12423,7 @@ void main() {
             this.attr('prefix', opts.prefix || DataTable.default.prefix);
             this.attr('select', opts.select || DataTable.default.select);
             this.attr('hover', opts.hover || DataTable.default.hover);
-            this.data(opts.data || []);
+            this._setData(this._data);
         }
         get selectedData() {
             if (this.selectedRow < 0)
@@ -12004,6 +12431,7 @@ void main() {
             return this._data[this.selectedRow];
         }
         select(col, row) {
+            // console.log('select', col, row);
             if (!this._data || this._data.length == 0) {
                 this.selectedRow = this.selectedColumn = 0;
                 return this;
@@ -12044,7 +12472,7 @@ void main() {
                     c.prop('selected', active);
                 });
             }
-            this._bubbleEvent('input', this, {
+            this.trigger('change', {
                 row,
                 col,
                 data: this.selectedData,
@@ -12064,21 +12492,19 @@ void main() {
             return this.select(this.selectedColumn - 1, this.selectedRow);
         }
         blur(reverse) {
-            this._bubbleEvent('change', this, {
+            this.trigger('change', {
                 col: this.selectedColumn,
                 row: this.selectedRow,
                 data: this.selectedData,
             });
             return super.blur(reverse);
         }
-        data(data) {
-            if (!data)
-                return this._data;
-            this._data = data;
+        _setData(v) {
+            this._data = v;
             for (let i = this.children.length - 1; i >= 0; --i) {
                 const c = this.children[i];
                 if (c.tag !== this.attr('headerTag')) {
-                    this.layer.detach(c);
+                    this.removeChild(c);
                 }
             }
             const borderAdj = this.attr('border') !== 'none' ? 1 : 0;
@@ -12115,7 +12541,7 @@ void main() {
             }
             this.bounds.height = y - this.bounds.y;
             this.bounds.width = x - this.bounds.x;
-            this.updateStyle(); // sets this.needsDraw
+            this.needsStyle = true; // sets this.needsDraw
             return this;
         }
         _draw(buffer) {
@@ -12129,81 +12555,79 @@ void main() {
             });
             return true;
         }
-        mouseenter(e, over) {
-            super.mouseenter(e, over);
-            if (!this.hovered)
-                return;
-            const hovered = this.children.find((c) => c.contains(e));
-            if (hovered) {
-                const col = hovered._propInt('col');
-                const row = hovered._propInt('row');
-                if (col !== this.selectedColumn || row !== this.selectedRow) {
-                    this.selectedColumn = col;
-                    this.selectedRow = row;
-                    let select = false;
-                    let hover = this._attrStr('hover');
-                    if (hover === 'select') {
-                        hover = this._attrStr('select');
-                        select = true;
-                    }
-                    if (hover === 'none') {
-                        this.children.forEach((c) => {
-                            c.hovered = false;
-                            if (select)
-                                c.prop('selected', false);
-                        });
-                    }
-                    else if (hover === 'row') {
-                        this.children.forEach((c) => {
-                            const active = row == c.prop('row');
-                            c.hovered = active;
-                            if (select)
-                                c.prop('selected', active);
-                        });
-                    }
-                    else if (hover === 'column') {
-                        this.children.forEach((c) => {
-                            const active = col == c.prop('col');
-                            c.hovered = active;
-                            if (select)
-                                c.prop('selected', active);
-                        });
-                    }
-                    else if (hover === 'cell') {
-                        this.children.forEach((c) => {
-                            const active = col == c.prop('col') && row == c.prop('row');
-                            c.hovered = active;
-                            if (select)
-                                c.prop('selected', active);
-                        });
-                    }
-                    this._bubbleEvent('input', this, {
-                        row,
-                        col,
-                        data: this.selectedData,
-                    });
-                }
-            }
-        }
-        click(e) {
-            if (!this.contains(e))
-                return false;
-            this._bubbleEvent('change', this, {
-                row: this.selectedRow,
-                col: this.selectedColumn,
-                data: this.selectedData,
-            });
-            return false;
-        }
+        // _mouseenter(e: IO.Event): void {
+        //     super._mouseenter(e);
+        //     if (!this.hovered) return;
+        //     const hovered = this.children.find((c) => c.contains(e));
+        //     if (hovered) {
+        //         const col = hovered._propInt('col');
+        //         const row = hovered._propInt('row');
+        //         if (col !== this.selectedColumn || row !== this.selectedRow) {
+        //             this.selectedColumn = col;
+        //             this.selectedRow = row;
+        //             let select = false;
+        //             let hover = this._attrStr('hover');
+        //             if (hover === 'select') {
+        //                 hover = this._attrStr('select');
+        //                 select = true;
+        //             }
+        //             if (hover === 'none') {
+        //                 this.children.forEach((c) => {
+        //                     c.hovered = false;
+        //                     if (select) c.prop('selected', false);
+        //                 });
+        //             } else if (hover === 'row') {
+        //                 this.children.forEach((c) => {
+        //                     const active = row == c.prop('row');
+        //                     c.hovered = active;
+        //                     if (select) c.prop('selected', active);
+        //                 });
+        //             } else if (hover === 'column') {
+        //                 this.children.forEach((c) => {
+        //                     const active = col == c.prop('col');
+        //                     c.hovered = active;
+        //                     if (select) c.prop('selected', active);
+        //                 });
+        //             } else if (hover === 'cell') {
+        //                 this.children.forEach((c) => {
+        //                     const active =
+        //                         col == c.prop('col') && row == c.prop('row');
+        //                     c.hovered = active;
+        //                     if (select) c.prop('selected', active);
+        //                 });
+        //             }
+        //             this.trigger('change', {
+        //                 row,
+        //                 col,
+        //                 data: this.selectedData,
+        //             });
+        //         }
+        //     }
+        // }
+        // click(e: IO.Event): boolean {
+        //     if (!this.contains(e) || this.disabled || this.hidden) return false;
+        //     this.action();
+        //     // this.trigger('change', {
+        //     //     row: this.selectedRow,
+        //     //     col: this.selectedColumn,
+        //     //     data: this.selectedData,
+        //     // });
+        //     // return false;
+        //     return true;
+        // }
         keypress(e) {
             if (!e.key)
                 return false;
+            if (e.dir) {
+                return this.dir(e);
+            }
             if (e.key === 'Enter') {
-                this._bubbleEvent('change', this, {
-                    row: this.selectedRow,
-                    col: this.selectedColumn,
-                    data: this.selectedData,
-                });
+                this.action();
+                // this.trigger('change', {
+                //     row: this.selectedRow,
+                //     col: this.selectedColumn,
+                //     data: this.selectedData,
+                // });
                 return true;
             }
             return false;
@@ -12229,7 +12653,7 @@ void main() {
     DataTable.default = {
         columnWidth: 10,
         header: true,
-        empty: '-',
+        empty: '',
         tag: 'datatable',
         headerTag: 'th',
         dataTag: 'td',
@@ -12239,21 +12663,20 @@ void main() {
         border: 'ascii',
         wrap: true,
     };
-    class TD extends Text {
-        mouseleave(e) {
-            super.mouseleave(e);
-            if (this.parent) {
-                const table = this.parent;
-                if (table.attr('select') === 'row') {
-                    this.hovered = this._propInt('row') === table.selectedRow;
-                }
-                else if (table.attr('select') === 'column') {
-                    this.hovered = this._propInt('col') === table.selectedColumn;
-                }
-            }
+    /*
+    // extend WidgetLayer
+
+    export type AddDataTableOptions = DataTableOptions &
+        SetParentOptions & { parent?: Widget };
+
+    declare module './layer' {
+        interface WidgetLayer {
+            datatable(opts: AddDataTableOptions): DataTable;
         }
     }
-    WidgetLayer.prototype.datatable = function (opts) {
+    WidgetLayer.prototype.datatable = function (
+        opts: AddDataTableOptions
+    ): DataTable {
         const options = Object.assign({}, this._opts, opts);
         const list = new DataTable(this, options);
         if (opts.parent) {
@@ -12261,10 +12684,11 @@ void main() {
         }
         return list;
     };
+    */
 
     class DataList extends DataTable {
-        constructor(layer, opts) {
-            super(layer, (() => {
+        constructor(opts) {
+            super((() => {
                 // @ts-ignore
                 const tableOpts = opts;
                 if (opts.border !== 'none' && opts.width) {
@@ -12278,7 +12702,18 @@ void main() {
             })());
         }
     }
-    WidgetLayer.prototype.datalist = function (opts) {
+    /*
+    // extend WidgetLayer
+
+    export type AddDataListOptions = DataListOptions &
+        Widget.SetParentOptions & { parent?: Widget.Widget };
+
+    declare module './layer' {
+        interface WidgetLayer {
+            datalist(opts: AddDataListOptions): DataList;
+        }
+    }
+    WidgetLayer.prototype.datalist = function (opts: AddDataListOptions): DataList {
         const options = Object.assign({}, this._opts, opts);
         const list = new DataList(this, options);
         if (opts.parent) {
@@ -12286,14 +12721,17 @@ void main() {
         }
         return list;
     };
+    */
 
     class Menu extends Widget {
-        constructor(layer, opts) {
-            super(layer, (() => {
+        constructor(opts) {
+            super((() => {
                 opts.tag = opts.tag || Menu.default.tag;
                 opts.class = opts.class || Menu.default.class;
+                opts.tabStop = opts.tabStop === undefined ? true : opts.tabStop;
                 return opts;
             })());
+            this._selectedIndex = 0;
             if (Array.isArray(opts.buttonClass)) {
                 this.attr('buttonClass', opts.buttonClass.join(' '));
             }
@@ -12304,7 +12742,7 @@ void main() {
             this.attr('marker', opts.marker || Menu.default.marker);
             this._initButtons(opts);
             this.bounds.height = this.children.length;
-            this.on('mouseenter', (_n, _w, e) => {
+            this.on('mouseenter', (e) => {
                 this.children.forEach((c) => {
                     if (!c.contains(e)) {
                         c.collapse();
@@ -12315,19 +12753,39 @@ void main() {
                 });
                 return true;
             });
+            this.on('dir', (e) => {
+                if (!e.dir)
+                    return;
+                if (e.dir[0] < 0) {
+                    this.hide();
+                }
+                else if (e.dir[0] > 0) {
+                    this.expandItem();
+                }
+                else if (e.dir[1] < 0) {
+                    this.prevItem();
+                }
+                else if (e.dir[1] > 0) {
+                    this.nextItem();
+                }
+                e.stopPropagation();
+            });
+            this.on(['Enter', ' '], () => {
+                const btn = this.children[this._selectedIndex];
+                btn.action();
+                this.hide();
+            });
         }
         _initButtons(opts) {
             this.children = [];
             const buttons = opts.buttons;
             const marker = this._attrStr('marker');
             const entries = Object.entries(buttons);
-            if (this.bounds.width <= 0) {
-                this.bounds.width = Math.max(opts.minWidth || 0, entries.reduce((out, [key, value]) => {
-                    const textLen = length(key) +
-                        (typeof value === 'string' ? 0 : marker.length);
-                    return Math.max(out, textLen);
-                }, 0));
-            }
+            this.bounds.width = Math.max(opts.minWidth || 0, this.bounds.width, entries.reduce((out, [key, value]) => {
+                const textLen = length(key) +
+                    (typeof value === 'string' ? 0 : marker.length);
+                return Math.max(out, textLen);
+            }, 0));
             entries.forEach(([key, value], i) => {
                 const opts = {
                     x: this.bounds.x,
@@ -12336,9 +12794,10 @@ void main() {
                     tag: this._attrStr('buttonTag'),
                     width: this.bounds.width,
                     height: 1,
-                    depth: this.depth + 1,
+                    // depth: this.depth + 1,
                     buttons: value,
                     text: key,
+                    parent: this,
                 };
                 if (typeof value === 'string') {
                     opts.action = value;
@@ -12347,20 +12806,56 @@ void main() {
                     opts.text =
                         padEnd(key, this.bounds.width - marker.length, ' ') + marker;
                 }
-                const menuItem = new MenuButton(this.layer, opts);
-                menuItem.setParent(this);
+                const menuItem = new MenuButton(opts);
                 menuItem.on('mouseenter', () => {
-                    this._bubbleEvent('change', menuItem);
-                    return false;
+                    this.trigger('change');
                 });
-                menuItem.setParent(this);
+                menuItem.on('click', () => {
+                    this.hide();
+                });
+                if (menuItem.menu) {
+                    menuItem.menu.on('hide', () => {
+                        this.scene.setFocusWidget(this);
+                    });
+                }
             });
         }
-        collapse() {
+        show() {
+            this.hidden = false;
+            this._selectedIndex = 0;
+            this.scene.setFocusWidget(this);
+            this.trigger('show');
+        }
+        hide() {
+            this.hidden = true;
+            this.trigger('hide');
+        }
+        nextItem() {
+            ++this._selectedIndex;
+            if (this._selectedIndex >= this.children.length) {
+                this._selectedIndex = 0;
+            }
+        }
+        prevItem() {
+            --this._selectedIndex;
+            if (this._selectedIndex < 0) {
+                this._selectedIndex = this.children.length - 1;
+            }
+        }
+        expandItem() {
+            const c = this.children[this._selectedIndex];
+            return c.expand();
+        }
+        selectItemWithKey(key) {
+            let found = false;
             this.children.forEach((c) => {
-                c.collapse();
+                if (found)
+                    return;
+                if (c.text().startsWith(key)) {
+                    found = true;
+                    // ???
+                }
             });
-            return this;
         }
     }
     Menu.default = {
@@ -12372,52 +12867,50 @@ void main() {
         minWidth: 4,
     };
     class MenuButton extends Text {
-        constructor(layer, opts) {
-            super(layer, (() => {
+        constructor(opts) {
+            super((() => {
                 opts.tag = opts.tag || 'mi';
+                opts.tabStop = false;
                 return opts;
             })());
             this.menu = null;
-            this.tag = opts.tag || 'mi';
+            // this.tag = opts.tag || 'mi';
             if (typeof opts.buttons !== 'string') {
                 this.menu = this._initMenu(opts);
                 this.on('mouseenter', () => {
                     this.menu.hidden = false;
-                    this.menu._bubbleEvent('change', this);
-                    return true;
+                    this.menu.trigger('change');
                 });
                 this.on('mouseleave', (_n, _w, e) => {
                     var _a;
-                    if ((_a = this.parent) === null || _a === void 0 ? void 0 : _a.contains(e)) {
+                    if ((_a = this.parent) === null || _a === void 0 ? void 0 : _a.bounds.contains(e)) {
                         this.menu.hidden = true;
-                        return true;
                     }
-                    return false;
                 });
                 this.on('click', () => {
                     return true; // eat clicks
                 });
             }
+            this.on('click', this.action.bind(this));
         }
         collapse() {
             if (this.menu) {
-                this.menu.collapse();
-                this.menu.hidden = true;
+                this.menu.hide();
             }
-            return this;
         }
         expand() {
-            if (this.menu) {
-                this.menu.hidden = false;
-            }
-            return this;
+            if (!this.menu)
+                return null;
+            this.menu.show();
+            // this.scene!.setFocusWidget(this.menu);
+            return this.menu;
         }
         _setMenuPos(xy, opts) {
             xy.x = this.bounds.x + this.bounds.width;
             xy.y = this.bounds.y;
             const height = Object.keys(opts.buttons).length;
-            if (xy.y + height >= this.layer.height) {
-                xy.y = this.layer.height - height - 1;
+            if (this.scene && xy.y + height >= this.scene.height) {
+                xy.y = this.scene.height - height - 1;
             }
         }
         _initMenu(opts) {
@@ -12429,16 +12922,27 @@ void main() {
                 class: opts.class,
                 tag: opts.tag || 'mi',
                 buttons: opts.buttons,
-                depth: this.depth + 1,
+                // depth: this.depth + 1,
             };
             this._setMenuPos(menuOpts, opts);
-            const menu = new Menu(this.layer, menuOpts);
+            menuOpts.parent = this;
+            const menu = new Menu(menuOpts);
             menu.hidden = true;
-            menu.setParent(this);
             return menu;
         }
     }
-    WidgetLayer.prototype.menu = function (opts) {
+    /*
+    // extend WidgetLayer
+
+    export type AddMenuOptions = MenuOptions &
+        Widget.SetParentOptions & { parent?: Widget.Widget };
+
+    declare module './layer' {
+        interface WidgetLayer {
+            menu(opts: AddMenuOptions): Menu;
+        }
+    }
+    WidgetLayer.prototype.menu = function (opts: AddMenuOptions): Menu {
         const options = Object.assign({}, this._opts, opts);
         const list = new Menu(this, options);
         if (opts.parent) {
@@ -12446,16 +12950,18 @@ void main() {
         }
         return list;
     };
+    */
 
     class Menubar extends Widget {
-        constructor(layer, opts) {
-            super(layer, (() => {
-                opts.tabStop = true;
+        // _config!: DropdownConfig;
+        // _buttons: MenubarButton[] = [];
+        // _selectedIndex: number;
+        constructor(opts) {
+            super((() => {
+                opts.tabStop = false;
                 opts.tag = opts.tag || 'menu';
                 return opts;
             })());
-            this._buttons = [];
-            this._selectedIndex = -1;
             if (opts.buttonClass) {
                 if (Array.isArray(opts.buttonClass)) {
                     this.attr('buttonClass', opts.buttonClass.join(' '));
@@ -12482,107 +12988,118 @@ void main() {
             this.attr('menuTag', opts.menuTag || Menubar.default.menuTag);
             this.attr('prefix', opts.prefix || Menubar.default.prefix);
             this.attr('separator', opts.separator || Menubar.default.separator);
+            this.bounds.height = 1;
             this._initButtons(opts);
-            this.on('click', this._buttonClick.bind(this));
+            // // @ts-ignore
+            // if (this._selectedIndex === undefined) {
+            //     this._selectedIndex = -1;
+            // } else if (this._selectedIndex == -2) {
+            //     this._selectedIndex = 0;
+            // }
         }
-        get selectedIndex() {
-            return this._selectedIndex;
-        }
-        set selectedIndex(v) {
-            if (this._selectedIndex >= 0) {
-                this._buttons[this._selectedIndex].prop('focus', false).collapse();
-            }
-            this._selectedIndex = v;
-            if (v >= 0 && v < this._buttons.length) {
-                this._buttons[v].prop('focus', true).expand();
-            }
-            else {
-                this._selectedIndex = -1;
-            }
-        }
-        get selectedButton() {
-            return this._buttons[this._selectedIndex];
-        }
-        focus(reverse = false) {
-            if (reverse) {
-                this.selectedIndex = this._buttons.length - 1;
-            }
-            else {
-                this.selectedIndex = 0;
-            }
-            return super.focus(reverse);
-        }
-        blur(reverse = false) {
-            this.selectedIndex = -1;
-            return super.blur(reverse);
-        }
-        collapse() {
-            return this._buttons.reduce((out, b) => b.collapse() || out, false);
-        }
-        keypress(e) {
-            if (!e.key)
-                return false;
-            if (!this.focused)
-                return false;
-            if (e.key === 'Tab') {
-                this.selectedIndex += 1;
-                return this._selectedIndex >= 0;
-            }
-            else if (e.key === 'TAB') {
-                this.selectedIndex -= 1;
-                return this._selectedIndex >= 0;
-            }
-            return false;
-        }
-        mousemove(e) {
-            if (!this.contains(e) || !this.focused)
-                return super.mousemove(e);
-            const active = this._buttons.findIndex((c) => c.contains(e));
-            if (active < 0 || active === this._selectedIndex)
-                return false;
-            this.selectedIndex = active;
-            return true;
-        }
+        // get selectedIndex(): number {
+        //     return this._selectedIndex;
+        // }
+        // set selectedIndex(v: number) {
+        //     if (this._selectedIndex >= 0) {
+        //         this._buttons[this._selectedIndex].prop('focus', false).expand();
+        //     }
+        //     this._selectedIndex = v;
+        //     if (v >= 0 && this._buttons && v < this._buttons.length) {
+        //         this._buttons[v].prop('focus', true).expand();
+        //     } else {
+        //         this._selectedIndex = this._buttons ? -1 : -2;
+        //     }
+        // }
+        // get selectedButton(): Widget.Widget {
+        //     return this._buttons[this._selectedIndex];
+        // }
+        // focus(reverse = false): void {
+        //     if (reverse) {
+        //         this.selectedIndex = this._buttons.length - 1;
+        //     } else {
+        //         this.selectedIndex = 0;
+        //     }
+        //     super.focus(reverse);
+        // }
+        // blur(reverse = false): void {
+        //     this.selectedIndex = -1;
+        //     super.blur(reverse);
+        // }
+        // keypress(e: IO.Event): void {
+        //     if (!e.key) return;
+        //     this.events.dispatch(e);
+        //     if (e.defaultPrevented) return;
+        //     if (e.key === 'Tab') {
+        //         this.selectedIndex += 1;
+        //         if (this._selectedIndex !== -1) {
+        //             e.preventDefault();
+        //         }
+        //     } else if (e.key === 'TAB') {
+        //         this.selectedIndex -= 1;
+        //         if (this._selectedIndex !== -1) {
+        //             e.preventDefault();
+        //         }
+        //     } else if (this._selectedIndex >= 0) {
+        //         super.keypress(e);
+        //     }
+        // }
+        // mousemove(e: IO.Event): void {
+        //     super.mousemove(e);
+        //     if (!this.contains(e) || !this.focused) return;
+        //     const active = this._buttons.findIndex((c) => c.contains(e));
+        //     if (active < 0 || active === this._selectedIndex) return;
+        //     this.selectedIndex = active;
+        // }
         _initButtons(opts) {
-            this._config = opts.buttons;
-            const entries = Object.entries(this._config);
+            // this._config = opts.buttons;
+            const entries = Object.entries(opts.buttons);
             const buttonTag = this._attrStr('buttonTag');
             const buttonClass = this._attrStr('buttonClass');
             let x = this.bounds.x;
             const y = this.bounds.y;
             entries.forEach(([key, value], i) => {
                 const prefix = i == 0 ? this._attrStr('prefix') : this._attrStr('separator');
-                this.layer.text(prefix, { x, y, parent: this });
+                new Text({ parent: this, text: prefix, x, y });
                 x += prefix.length;
-                const button = new MenubarButton(this.layer, {
+                this.bounds.width += prefix.length;
+                const button = new Button({
+                    parent: this,
+                    id: key,
                     text: key,
                     x,
                     y,
                     tag: buttonTag,
                     class: buttonClass,
-                    depth: this.depth + 1,
-                    buttons: value,
-                    // data: value,
+                    // buttons: value,
                 });
-                button.setParent(this);
-                this._buttons.push(button);
                 x += button.bounds.width;
+                this.bounds.width += button.bounds.width;
+                let menu = null;
+                if (typeof value !== 'string') {
+                    menu = new Menu({
+                        buttons: value,
+                        buttonClass: this._attrStr('menuClass'),
+                        buttonTag: this._attrStr('menuTag'),
+                        x: button.bounds.x,
+                        y: button.bounds.y + 1,
+                    });
+                    button.data('menu', menu);
+                }
+                button.on(['click', 'Enter', ' '], () => {
+                    if (typeof value === 'string') {
+                        // simulate action
+                        this.trigger(value);
+                        this.scene.trigger(value);
+                    }
+                    else {
+                        this.scene.app.scenes.run('menu', {
+                            menu,
+                            origin: this.scene,
+                        });
+                    }
+                });
             });
-        }
-        _buttonClick(_action, button) {
-            if (!button)
-                return false;
-            this.layer.setFocusWidget(this);
-            console.log('clicked = ' + button.text(), button._attrStr('action'));
-            const barButton = button;
-            this.selectedIndex = this._buttons.indexOf(barButton);
-            if (barButton.menu) {
-                barButton.expand();
-            }
-            else {
-                this.collapse();
-            }
-            return true;
         }
     }
     Menubar.default = {
@@ -12593,28 +13110,41 @@ void main() {
         prefix: ' ',
         separator: ' | ',
     };
-    class MenubarButton extends Text {
-        constructor(layer, opts) {
-            super(layer, (() => {
-                opts.tag = opts.tag || 'mi';
-                if (typeof opts.buttons === 'string') {
-                    opts.action = opts.buttons;
-                }
-                return opts;
-            })());
-            this.menu = null;
+    /*
+    export interface MenubarButtonOptions extends Widget.WidgetOpts {
+        text: string;
+        buttons: ButtonConfig;
+        action?: string | boolean;
+    }
+
+    export class MenubarButton extends Text.Text {
+        menu: Menu | null = null;
+        parent!: Menubar;
+
+        constructor(opts: MenubarButtonOptions) {
+            super(
+                (() => {
+                    opts.tag = opts.tag || 'mi';
+                    if (typeof opts.buttons === 'string' && !opts.action) {
+                        opts.action = opts.buttons;
+                    }
+                    return opts;
+                })()
+            );
+
             this.tag = opts.tag || 'mi';
+
             if (typeof opts.buttons !== 'string') {
-                this.menu = this._initMenu(opts);
+                const menu = (this.menu = this._initMenu(opts)) as Menu;
+
                 this.on('mouseenter', () => {
-                    this.menu.hidden = false;
-                    this.menu._bubbleEvent('change', this);
+                    menu.hidden = false;
+                    menu.trigger('change');
                     return true;
                 });
-                this.on('mouseleave', (_n, _w, e) => {
-                    var _a;
-                    if ((_a = this.parent) === null || _a === void 0 ? void 0 : _a.contains(e)) {
-                        this.menu.hidden = true;
+                this.on('mouseleave', (e) => {
+                    if (this.parent!.contains(e)) {
+                        menu.hidden = true;
                         return true;
                     }
                     return false;
@@ -12623,120 +13153,177 @@ void main() {
                     return true; // eat clicks
                 });
             }
+
+            this.on('click', () => {
+                this.parent.activate(this);
+            });
+            this.on('Enter', () => {
+                this.parent.activate(this);
+            });
+            this.on(' ', () => {
+                this.parent.activate(this);
+            });
         }
-        collapse() {
-            if (!this.menu || this.menu.hidden)
-                return false;
-            this.menu.collapse();
-            this.menu.hidden = true;
-            return true;
+
+        collapse(): void {
+            if (!this.menu || this.menu.hidden) return;
+            this.menu.hide();
         }
-        expand() {
-            if (this.menu) {
-                this.menu.hidden = false;
-            }
-            return this;
+
+        expand(): Menu | null {
+            if (!this.menu) return null;
+            this.menu.show();
+            return this.menu;
         }
-        _setMenuPos(xy, opts) {
+
+        _setMenuPos(xy: XY.XY, opts: MenubarButtonOptions) {
             xy.x = this.bounds.x;
             const height = opts.height || Object.keys(opts.buttons).length;
             if (this.bounds.y < height) {
                 xy.y = this.bounds.y + 1;
-            }
-            else {
+            } else {
                 xy.y = this.bounds.top - height;
             }
         }
-        _initMenu(opts) {
-            if (typeof opts.buttons === 'string')
-                return null;
+
+        _initMenu(opts: MenubarButtonOptions): Menu | null {
+            if (typeof opts.buttons === 'string') return null;
+
             const menuOpts = {
+                parent: this,
                 x: this.bounds.x,
                 y: this.bounds.y,
                 class: opts.class,
                 tag: opts.tag || 'mi',
                 height: opts.height,
                 buttons: opts.buttons,
-                depth: this.depth + 1,
+                // depth: this.depth + 1,
             };
             this._setMenuPos(menuOpts, opts);
-            const menu = new Menu(this.layer, menuOpts);
+            const menu = new Menu(menuOpts);
             menu.hidden = true;
-            menu.setParent(this);
+
             return menu;
         }
     }
-    WidgetLayer.prototype.menubar = function (opts) {
-        const options = Object.assign({}, this._opts, opts);
-        const menubar = new Menubar(this, options);
-        if (opts.parent) {
-            menubar.setParent(opts.parent, opts);
-        }
-        return menubar;
-    };
-    // MENU
-    class MenuViewer extends Widget {
-        constructor(menubar, buttons) {
-            super(menubar.layer, {
-                tabStop: true,
-                x: 0,
-                y: 0,
-                width: menubar.layer.width,
-                height: menubar.layer.height,
-                // @ts-ignore
-                tag: menubar.attr('menuTag'),
-                // @ts-ignore
-                class: menubar.attr('menuClass'),
-            });
-            this.menubar = menubar;
-            this.mainMenu = this._initMenu(buttons);
-        }
-        contains() {
-            return true;
-        }
-        finish() {
-            this.layer.finish();
-        }
-        _initMenu(buttons) {
-            return new Menu(this.layer, {
-                buttonTag: this.menubar._attrStr('buttonTag'),
-                buttonClass: this.menubar._attrStr('buttonClass'),
-                minWidth: this.menubar.selectedButton.bounds.width,
-                buttons,
-            });
-        }
-        keypress(e) {
-            if (!e.key)
-                return false;
-            if (e.key === 'Escape') {
-                this.finish();
-                return true;
+
+    export function runMenu(owner: Menubar, menu: Menu) {
+        if (!owner || !owner.scene)
+            throw new Error('need an owner that is attached to a scene.');
+
+        let menus: Menu[] = [menu];
+        let current = menu;
+
+        menu.hidden = false;
+        const scene = owner.scene;
+
+        const offInput = scene.on('input', (e) => {
+            if (e.type === IO.KEYPRESS) {
+                if (e.dir) {
+                    if (e.dir[0] > 0) {
+                        const next = current.expandItem();
+                        if (next) {
+                            menus.push(next);
+                            current = next;
+                        }
+                    } else if (e.dir[0] < 0) {
+                        current.hide();
+                        menus.pop();
+                        if (menus.length == 0) {
+                            return done(e);
+                        } else {
+                            current = menus[menus.length - 1];
+                        }
+                    } else if (e.dir[1] > 0) {
+                        current.nextItem();
+                    } else if (e.dir[1] < 0) {
+                        current.prevItem();
+                    }
+                } else if (e.key === 'Enter' || e.key === ' ') {
+                    const next = current.expandItem();
+                    if (next) {
+                        menus.push(next);
+                        current = next;
+                    } else {
+                        done(e);
+                        current.action();
+                        return;
+                    }
+                } else if (e.key === 'Escape') {
+                    current.hide();
+                    menus.pop();
+                    if (menus.length == 0) {
+                        return done(e);
+                    }
+                    current = menus[menus.length - 1];
+                } else if (e.key === 'Tab' || e.key === 'TAB') {
+                    return done();
+                } else {
+                    current.selectItemWithKey(e.key);
+                }
+            } else if (e.type === IO.MOUSEMOVE) {
+                if (!current.contains(e)) {
+                    let found = -1;
+                    for (let i = 0; i < menus.length; ++i) {
+                        const m = menus[i];
+                        if (found >= 0) {
+                            m.hide();
+                        } else {
+                            if (m.contains(e)) {
+                                current = m;
+                                found = i;
+                            }
+                        }
+                    }
+                    if (found >= 0) {
+                        menus.length = found + 1;
+                    }
+                }
+                if (current.contains(e)) {
+                    current.mousemove(e);
+                } else if (owner.contains(e)) {
+                    done();
+                    return owner.mousemove(e);
+                }
+            } else if (e.type === IO.CLICK) {
+                // assumes mousemove was called for this spot before click
+                const btn = current.childAt(e);
+                if (btn) {
+                    btn.click(e);
+                }
+                done(e);
             }
-            else if (e.key === 'Tab') {
-                this.finish();
-                this.menubar.keypress(e);
-                return true;
+
+            e.stopPropagation();
+            e.preventDefault();
+        });
+
+        function done(e?: IO.Event) {
+            offInput();
+            menus.forEach((m) => (m.hidden = true));
+            scene.setFocusWidget(owner);
+            if (e) {
+                e.stopPropagation();
+                e.preventDefault();
             }
-            else if (e.key === 'TAB') {
-                this.finish();
-                this.menubar.keypress(e);
-                return true;
-            }
-            return false;
         }
     }
+    */
 
     // import * as GWU from 'gw-utils';
     class Select extends Widget {
-        constructor(layer, opts) {
-            super(layer, opts);
-            this.tag = opts.tag || 'select';
+        constructor(opts) {
+            super((() => {
+                opts.tag = opts.tag || 'select';
+                return opts;
+            })());
             this._initText(opts);
             this._initMenu(opts);
             this.bounds.height = 1; // just the text component
         }
         _initText(opts) {
-            this.dropdown = new Text(this.layer, {
+            this.dropdown = new Text({
+                parent: this,
                 text: opts.text + ' \u25bc',
                 x: this.bounds.x,
                 y: this.bounds.y,
@@ -12744,15 +13331,17 @@ void main() {
                 tag: opts.tag || 'select',
                 width: this.bounds.width,
                 height: 1,
-                depth: this.depth + 1,
-            }).on('click', () => {
+                // depth: this.depth + 1,
+            });
+            this.dropdown.on('click', () => {
                 this.menu.toggleProp('hidden');
                 return false;
             });
-            this.dropdown.setParent(this, { beforeIndex: 0 });
+            // this.dropdown.setParent(this, { beforeIndex: 0 });
         }
         _initMenu(opts) {
-            this.menu = new Menu(this.layer, {
+            this.menu = new Menu({
+                parent: this,
                 x: this.bounds.x,
                 y: this.bounds.y + 1,
                 class: opts.buttonClass,
@@ -12761,23 +13350,35 @@ void main() {
                 minWidth: this.dropdown.bounds.width,
                 height: opts.height,
                 buttons: opts.buttons,
-                depth: this.depth + 1,
-            }).on('click', () => {
+                // depth: this.depth + 1,
+            });
+            this.menu.on('click', () => {
                 this.menu.hidden = true;
                 return false;
             });
             this.menu.hidden = true;
-            this.menu.setParent(this);
         }
     }
-    WidgetLayer.prototype.select = function (opts) {
-        const options = Object.assign({}, this._opts, opts);
+    /*
+    // extend WidgetLayer
+
+    export type AddSelectOptions = SelectOptions &
+        Widget.SetParentOptions & { parent?: Widget.Widget };
+
+    declare module './layer' {
+        interface WidgetLayer {
+            select(opts: AddSelectOptions): Select;
+        }
+    }
+    WidgetLayer.prototype.select = function (opts: AddSelectOptions): Select {
+        const options: SelectOptions = Object.assign({}, this._opts, opts);
         const list = new Select(this, options);
         if (opts.parent) {
             list.setParent(opts.parent, opts);
         }
         return list;
     };
+    */
 
     // import * as GWU from 'gw-utils';
     class Prompt {
@@ -12876,8 +13477,8 @@ void main() {
         }
     }
     class Choice extends Widget {
-        constructor(layer, opts) {
-            super(layer, (() => {
+        constructor(opts) {
+            super((() => {
                 opts.tag = opts.tag || Choice.default.tag;
                 return opts;
             })());
@@ -12898,17 +13499,21 @@ void main() {
                 this.showPrompt(opts.prompt);
             }
         }
+        get prompt() {
+            return this._prompt;
+        }
         showPrompt(prompt, arg) {
             this._prompt = prompt;
             prompt.choose(0);
-            this.prompt.text(prompt.prompt(arg));
-            this.list.data(prompt.choices());
-            this.info.text(prompt.info(arg));
-            this._bubbleEvent('input', this, this._prompt);
+            this._text.text(prompt.prompt(arg));
+            this._list.data(prompt.choices());
+            this._info.text(prompt.info(arg));
+            this.trigger('prompt', this._prompt);
             return new Promise((resolve) => (this._done = resolve));
         }
         _addList() {
-            this.list = new DataList(this.layer, {
+            this._list = new DataList({
+                parent: this,
                 height: this.bounds.height - 2,
                 x: this.bounds.x + 1,
                 width: this.choiceWidth,
@@ -12919,30 +13524,30 @@ void main() {
                 border: 'none',
                 hover: 'select',
             });
-            this.list.setParent(this);
-            this.list.on('input', () => {
+            this._list.on('change', () => {
                 if (!this._prompt)
                     return false;
                 const p = this._prompt;
-                const row = this.list.selectedRow;
+                const row = this._list.selectedRow;
                 p.choose(row);
-                this.info.text(p.info());
-                this._bubbleEvent('input', this, p);
-                return true; // I want to eat this event
+                this._info.text(p.info());
+                this.trigger('change', p);
+                // e.stopPropagation(); // I want to eat this event
             });
-            this.list.on('change', () => {
+            this._list.on('action', () => {
                 if (!this._prompt)
                     return false;
                 const p = this._prompt;
-                p.choose(this.list.selectedRow);
-                this._bubbleEvent('change', this, p);
+                p.choose(this._list.selectedRow);
+                this.action();
                 this._done(p.value());
-                return true; // eat this event
+                // e.stopPropagation(); // eat this event
             });
             return this;
         }
         _addInfo() {
-            this.info = new Text(this.layer, {
+            this._info = new Text({
+                parent: this,
                 text: '',
                 x: this.bounds.x + this.choiceWidth + 2,
                 y: this.bounds.y + 1,
@@ -12951,11 +13556,11 @@ void main() {
                 tag: this._attrStr('infoTag'),
                 class: this._attrStr('infoClass'),
             });
-            this.info.setParent(this);
             return this;
         }
         _addLegend() {
-            this.prompt = new Text(this.layer, {
+            this._text = new Text({
+                parent: this,
                 text: '',
                 width: this.bounds.width - 4,
                 x: this.bounds.x + 2,
@@ -12963,7 +13568,6 @@ void main() {
                 tag: this._attrStr('promptTag'),
                 class: this._attrStr('promptClass'),
             });
-            this.prompt.setParent(this);
             return this;
         }
         _draw(buffer) {
@@ -12989,14 +13593,26 @@ void main() {
         infoTag: 'info',
         infoClass: '',
     };
-    WidgetLayer.prototype.choice = function (opts) {
-        const options = Object.assign({}, this._opts, opts);
+    /*
+    // extend WidgetLayer
+
+    export type AddChoiceOptions = ChoiceOptions &
+        Widget.SetParentOptions & { parent?: Widget.Widget };
+
+    declare module './layer' {
+        interface WidgetLayer {
+            choice(opts?: AddChoiceOptions): Choice;
+        }
+    }
+    WidgetLayer.prototype.choice = function (opts: AddChoiceOptions): Choice {
+        const options = Object.assign({}, this._opts, opts) as ChoiceOptions;
         const widget = new Choice(this, options);
         if (opts.parent) {
             widget.setParent(opts.parent, opts);
         }
         return widget;
     };
+    */
     ////////////////////////////////////////////////////////////////////////////////
     // INQUIRY
     class Inquiry {
@@ -13123,7 +13739,7 @@ void main() {
                 handled = handler(name, source || this.widget, args) || handled;
             }
             if (!handled) {
-                handled = this.widget._bubbleEvent(name, source || this.widget, args);
+                handled = this.widget.trigger(name, args);
             }
             return handled;
         }
@@ -13132,14 +13748,16 @@ void main() {
     var index$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
         Widget: Widget,
-        WidgetLayer: WidgetLayer,
-        Body: Body,
+        alignChildren: alignChildren,
+        spaceChildren: spaceChildren,
+        wrapChildren: wrapChildren,
         Text: Text,
         Border: Border,
         drawBorder: drawBorder,
         Button: Button,
         toPadArray: toPadArray,
         Dialog: Dialog,
+        dialog: dialog,
         Fieldset: Fieldset,
         Field: Field,
         OrderedList: OrderedList,
@@ -13147,121 +13765,22 @@ void main() {
         Input: Input,
         Column: Column,
         DataTable: DataTable,
-        TD: TD,
         DataList: DataList,
         Menu: Menu,
         MenuButton: MenuButton,
         Menubar: Menubar,
-        MenubarButton: MenubarButton,
-        MenuViewer: MenuViewer,
         Select: Select,
         Prompt: Prompt,
         Choice: Choice,
         Inquiry: Inquiry
     });
 
-    class IOQueue {
-        constructor() {
-            this.lastClick = { x: -1, y: -1 };
-            this._events = [];
-        }
-        get length() {
-            return this._events.length;
-        }
-        clear() {
-            this._events.length = 0;
-        }
-        enqueue(ev) {
-            if (this._events.length) {
-                const last = this._events[this._events.length - 1];
-                if (last.type === ev.type) {
-                    if (last.type === MOUSEMOVE) {
-                        last.x = ev.x;
-                        last.y = ev.y;
-                        recycleEvent(ev);
-                        return;
-                    }
-                }
-            }
-            // Keep clicks down to one per cell if holding down mouse button
-            if (ev.type === CLICK) {
-                if (this.lastClick.x == ev.x && this.lastClick.y == ev.y) {
-                    if (this._events.findIndex((e) => e.type === CLICK) >= 0) {
-                        recycleEvent(ev);
-                        return;
-                    }
-                }
-                this.lastClick.x = ev.x;
-                this.lastClick.y = ev.y;
-            }
-            else if (ev.type == MOUSEUP) {
-                this.lastClick.x = -1;
-                this.lastClick.y = -1;
-                recycleEvent(ev);
-                return;
-            }
-            if (ev.type === TICK) {
-                const first = this._events[0];
-                if (first && first.type === TICK) {
-                    first.dt += ev.dt;
-                    recycleEvent(ev);
-                    return;
-                }
-                this._events.unshift(ev); // ticks go first
-            }
-            else {
-                this._events.push(ev);
-            }
-        }
-        dequeue() {
-            return this._events.shift();
-        }
-    }
-
-    class Events {
-        constructor(ctx) {
-            this._events = {};
-            this._ctx = ctx;
-        }
-        on(ev, cb) {
-            if (!(ev in this._events)) {
-                this._events[ev] = new DeleteArray();
-            }
-            return this._events[ev].pushd(cb);
-        }
-        trigger(ev, ...args) {
-            const events = this._events[ev];
-            if (!events) {
-                return false;
-            }
-            events.forEach((fn) => fn.call(this._ctx, ...args));
-            return events.length > 0;
-        }
-    }
-    /*
-            let fired = false;
-            next = next || UTILS.NOOP;
-            const events = this._events[ev];
-            if (!events) {
-                next();
-                return fired;
-            }
-            let index = -1;
-
-            const ctx = this._ctx;
-            function _next() {
-                ++index;
-                if (index >= events.length) return next!();
-                events[index].call(ctx, args, _next);
-                fired = true;
-            }
-            _next();
-            return fired;
-    */
-
     class Loop {
         constructor() {
             this._timer = 0;
+        }
+        get isRunning() {
+            return this._timer != 0;
         }
         start(cb, dt = 16) {
             let busy = false;
@@ -13288,6 +13807,16 @@ void main() {
             this._timers = [];
             this._ctx = ctx;
         }
+        clear() {
+            this._timers = [];
+        }
+        // Clears all one time timers and resets all repeating timers
+        restart() {
+            this._timers.forEach((i) => {
+                i.delay = i.repeat || 0;
+            });
+            this._timers = this._timers.filter((i) => i.delay > 0);
+        }
         setTimeout(fn, delay) {
             const info = {
                 fn,
@@ -13313,8 +13842,8 @@ void main() {
             this._timers.forEach((info) => {
                 info.delay -= dt;
                 if (info.delay <= 0) {
-                    info.fn.call(this._ctx);
-                    if (info.repeat) {
+                    const result = info.fn.call(this._ctx);
+                    if (info.repeat && result !== false) {
                         info.delay += info.repeat;
                         if (info.delay < 0) {
                             info.delay = info.repeat;
@@ -13329,19 +13858,312 @@ void main() {
         }
     }
 
+    class Tweens {
+        constructor() {
+            this._tweens = [];
+        }
+        clear() {
+            this._tweens = [];
+        }
+        add(tween) {
+            this._tweens.push(tween);
+        }
+        remove(tween) {
+            arrayDelete(this._tweens, tween);
+        }
+        update(dt) {
+            // // fire animations
+            this._tweens.forEach((tw) => tw.tick(dt));
+            this._tweens = this._tweens.filter((tw) => tw.isRunning());
+        }
+    }
+
+    class Checkbox extends Text {
+        constructor(opts) {
+            var _a;
+            super((() => {
+                // opts.action = opts.action || opts.id || 'input';
+                opts.tag = opts.tag || 'checkbox';
+                opts.tabStop = opts.tabStop === undefined ? true : opts.tabStop;
+                return opts;
+            })());
+            this.attr('uncheck', opts.uncheck || Checkbox.default.uncheck);
+            this.attr('check', opts.check || Checkbox.default.check);
+            this.attr('pad', (_a = opts.pad) !== null && _a !== void 0 ? _a : Checkbox.default.pad);
+            this.attr('offValue', '');
+            if (Array.isArray(opts.value)) {
+                this.attr('offValue', opts.value[0] || '');
+                this.attr('value', opts.value[1] || Checkbox.default.value);
+            }
+            else {
+                this.attr('value', opts.value || Checkbox.default.value);
+            }
+            this.bounds.width += this._attrInt('pad');
+            if (opts.checked) {
+                this.prop('checked', true);
+            }
+            this.on('click', (ev) => {
+                if (ev.defaultPrevented)
+                    return;
+                this.toggleProp('checked');
+            });
+        }
+        value() {
+            return this._propBool('checked')
+                ? this._attrStr('value')
+                : this._attrStr('offValue');
+        }
+        text(v) {
+            if (v === undefined)
+                return super.text();
+            super.text(v);
+            this.bounds.width += 1 + this._attrInt('pad');
+            return this;
+        }
+        keypress(ev) {
+            if (!ev.key)
+                return;
+            super.keypress(ev);
+            if (ev.defaultPrevented)
+                return;
+            if (ev.key === 'Enter' || ev.key === ' ') {
+                this.toggleProp('checked');
+                this.trigger('change');
+            }
+            else if (ev.key === 'Backspace' || ev.key === 'Delete') {
+                this.prop('checked', false);
+                this.trigger('change');
+            }
+        }
+        _draw(buffer) {
+            const fg = this._used.fg || WHITE;
+            const bg = this._used.bg || NONE;
+            const align = this._used.align;
+            buffer.fillBounds(this.bounds, 0, 0, bg);
+            const state = this.prop('checked') ? 'check' : 'uncheck';
+            let v = '' + this._attrs[state];
+            buffer.drawText(this.bounds.x, this.bounds.y, v, fg, bg);
+            let vOffset = 0;
+            if (this._used.valign === 'bottom') {
+                vOffset = this.bounds.height - this._lines.length;
+            }
+            else if (this._used.valign === 'middle') {
+                vOffset = Math.floor((this.bounds.height - this._lines.length) / 2);
+            }
+            const pad = this._attrInt('pad') + 1;
+            this._lines.forEach((line, i) => {
+                buffer.drawText(this.bounds.x + pad, this.bounds.y + i + vOffset, line, fg, bg, this.bounds.width - pad, align);
+            });
+            return true;
+        }
+    }
+    Checkbox.default = {
+        uncheck: '\u2610',
+        check: '\u2612',
+        pad: 1,
+        value: 'on',
+    };
+
+    // export interface WidgetLayerOptions extends LayerOptions {}
+    class Builder {
+        constructor(scene) {
+            this._opts = { x: 0, y: 0 };
+            this.scene = scene;
+            this._opts.scene = scene;
+        }
+        // Style and Opts
+        reset() {
+            this._opts = { x: 0, y: 0, scene: this.scene };
+            return this;
+        }
+        fg(v) {
+            this._opts.fg = v;
+            return this;
+        }
+        bg(v) {
+            this._opts.bg = v;
+            return this;
+        }
+        dim(pct = 25, fg = true, bg = false) {
+            if (fg) {
+                this._opts.fg = from$2(this._opts.fg || 'white').darken(pct);
+            }
+            if (bg) {
+                this._opts.bg = from$2(this._opts.bg || 'black').darken(pct);
+            }
+            return this;
+        }
+        bright(pct = 25, fg = true, bg = false) {
+            if (fg) {
+                this._opts.fg = from$2(this._opts.fg || 'white').lighten(pct);
+            }
+            if (bg) {
+                this._opts.bg = from$2(this._opts.bg || 'black').lighten(pct);
+            }
+            return this;
+        }
+        invert() {
+            [this._opts.fg, this._opts.bg] = [this._opts.bg, this._opts.fg];
+            return this;
+        }
+        // STYLE
+        style(opts) {
+            Object.assign(this._opts, opts);
+            return this;
+        }
+        class(c) {
+            this._opts.class = this._opts.class || '';
+            this._opts.class += ' ' + c;
+            return this;
+        }
+        pos(x, y) {
+            if (x === undefined)
+                return this._opts;
+            this._opts.x = clamp(x, 0, this.scene.width);
+            this._opts.y = clamp(y, 0, this.scene.height);
+            return this;
+        }
+        moveTo(x, y) {
+            return this.pos(x, y);
+        }
+        move(dx, dy) {
+            this._opts.x = clamp(this._opts.x + dx, 0, this.scene.width);
+            this._opts.y = clamp(this._opts.y + dy, 0, this.scene.height);
+            return this;
+        }
+        up(n = 1) {
+            return this.move(0, -n);
+        }
+        down(n = 1) {
+            return this.move(0, n);
+        }
+        left(n = 1) {
+            return this.move(-n, 0);
+        }
+        right(n = 1) {
+            return this.move(n, 0);
+        }
+        nextLine(n = 1) {
+            return this.pos(0, this._opts.y + n);
+        }
+        prevLine(n = 1) {
+            return this.pos(0, this._opts.y - n);
+        }
+        // grid(): Grid {
+        //     return new Grid(this);
+        // }
+        // EDIT
+        // erase and move back to top left
+        clear(color) {
+            this.scene.destroy();
+            if (color) {
+                this.scene.bg = from$2(color);
+            }
+            else {
+                this.scene.bg = NONE;
+            }
+            return this;
+        }
+        // Widgets
+        text(info = {}, opts) {
+            if (typeof info === 'string') {
+                opts = opts || {};
+                opts.text = info;
+            }
+            else {
+                opts = info;
+            }
+            const _opts = Object.assign({}, this._opts, opts);
+            const widget = new Text(_opts);
+            this.move(0, 1); // next line
+            return widget;
+        }
+        border(opts) {
+            const _opts = Object.assign({}, this._opts, opts);
+            const widget = new Border(_opts);
+            this.move(1, 1); // step inside border
+            return widget;
+        }
+        button(opts) {
+            const _opts = Object.assign({}, this._opts, opts);
+            const widget = new Button(_opts);
+            this.move(0, 1); // step inside border
+            return widget;
+        }
+        checkbox(opts) {
+            const _opts = Object.assign({}, this._opts, opts);
+            const widget = new Checkbox(_opts);
+            this.move(0, 1); // step inside border
+            return widget;
+        }
+        input(opts) {
+            const _opts = Object.assign({}, this._opts, opts);
+            const widget = new Input(_opts);
+            this.move(0, 1); // step inside border
+            return widget;
+        }
+        fieldset(opts) {
+            const _opts = Object.assign({}, this._opts, opts);
+            const widget = new Fieldset(_opts);
+            this.move(1, 1); // step inside border
+            return widget;
+        }
+        datatable(opts) {
+            const _opts = Object.assign({}, this._opts, opts);
+            const widget = new DataTable(_opts);
+            this.move(0, widget.bounds.height); // step inside border
+            return widget;
+        }
+        datalist(opts) {
+            const _opts = Object.assign({}, this._opts, opts);
+            const widget = new DataList(_opts);
+            this.move(0, widget.bounds.height); // step inside border
+            return widget;
+        }
+        menubar(opts) {
+            const _opts = Object.assign({}, this._opts, opts);
+            const widget = new Menubar(_opts);
+            this.move(0, widget.bounds.height); // step below menubar
+            return widget;
+        }
+    }
+    // // declare module '../ui/ui' {
+    // //     interface UI {
+    // //         startWidgetLayer(opts?: WidgetLayerOptions): WidgetLayer;
+    // //     }
+    // // }
+    // // UI.prototype.startWidgetLayer = function (
+    // //     opts: WidgetLayerOptions = {}
+    // // ): WidgetLayer {
+    // //     opts.styles = this.layer ? this.layer.styles : this.styles;
+    // //     const layer = new WidgetLayer(this, opts);
+    // //     this.startLayer(layer);
+    // //     return layer;
+    // // };
+
+    // Scene
     class Scene {
         constructor(id, opts = {}) {
+            this.build = new Builder(this);
+            this.events = new Events(this);
+            this.tweens = new Tweens();
+            this.timers = new Timers(this);
+            this.all = [];
+            this.children = [];
+            this.focused = null;
             this.dt = 0;
             this.time = 0;
             this.realTime = 0;
             this.skipTime = false;
             this.stopped = true;
-            this.paused = false;
-            this.sleeping = false;
+            this.paused = {};
             this.debug = false;
+            this.needsDraw = true;
+            this.bg = BLACK;
+            this.data = {};
             this.id = id;
-            this.events = new Events(this);
-            this.timers = new Timers(this);
+            this.styles = opts.styles || new Sheet();
+            opts.bg && (this.bg = from$2(opts.bg));
             if (opts.on) {
                 Object.entries(opts.on).forEach(([ev, fn]) => {
                     this.on(ev, fn);
@@ -13353,6 +14175,12 @@ void main() {
                 this.on(ev, fn);
             });
         }
+        get width() {
+            return this.buffer.width;
+        }
+        get height() {
+            return this.buffer.height;
+        }
         isActive() {
             return !this.stopped;
         }
@@ -13362,8 +14190,356 @@ void main() {
         isSleeping() {
             return this.isSleeping;
         }
-        on(ev, fn) {
-            return this.events.on(ev, fn);
+        // GENERAL
+        create(app) {
+            this.app = app;
+            this.buffer = app.buffer.clone();
+            this.styles.setParent(app.styles);
+            this.trigger('create', this.build);
+        }
+        destroy() {
+            this.trigger('destroy');
+            this.all.forEach((c) => c.destroy());
+            this.children = [];
+            this.all = [];
+            this.timers.clear();
+            this.tweens.clear();
+        }
+        start(data) {
+            this.stopped = false;
+            this.timers.restart();
+            this.events.restart();
+            this.tweens.clear();
+            this.needsDraw = true;
+            this.events.trigger('start', data);
+        }
+        run(data) {
+            this.app.scenes.pause();
+            this.start(data);
+            this.once('stop', () => this.app.scenes.resume());
+            return new Promise((resolve) => {
+                if (this.stopped) {
+                    resolve(false);
+                }
+                else {
+                    this.once('stop', (d) => {
+                        resolve(d);
+                    });
+                }
+            });
+        }
+        stop(data) {
+            this.stopped = true;
+            this.events.trigger('stop', data);
+        }
+        pause(opts) {
+            opts = opts || {
+                timers: true,
+                tweens: true,
+                update: true,
+                input: true,
+                draw: true,
+            };
+            Object.assign(this.paused, opts);
+            this.events.trigger('pause');
+        }
+        resume(opts) {
+            opts = opts || {
+                timers: true,
+                tweens: true,
+                update: true,
+                input: true,
+                draw: true,
+            };
+            Object.entries(opts).forEach(([key, value]) => {
+                if (value === true) {
+                    this.paused[key] = false;
+                }
+            });
+            this.needsDraw = true;
+            this.events.trigger('resume');
+        }
+        // FRAME STEPS
+        frameStart() {
+            this.events.trigger('frameStart');
+        }
+        input(e) {
+            if (this.paused.input || this.stopped)
+                return;
+            this.trigger('input', e);
+            if (e.defaultPrevented)
+                return;
+            if (e.type === KEYPRESS) {
+                let w = this.focused;
+                if (w && (w.hidden || w.disabled)) {
+                    this.nextTabStop();
+                    w = this.focused;
+                }
+                w && w.keypress(e);
+                if (!e.defaultPrevented) {
+                    if (e.key === 'Tab') {
+                        this.nextTabStop();
+                    }
+                    else if (e.key === 'TAB') {
+                        this.prevTabStop();
+                    }
+                }
+            }
+            else if (e.type === MOUSEMOVE) {
+                this.children.forEach((c) => c.mousemove(e));
+            }
+            else {
+                // click
+                const c = this.childAt(e);
+                if (c) {
+                    c.click(e);
+                    if (c.prop('tabStop') && !e.defaultPrevented) {
+                        this.setFocusWidget(c);
+                    }
+                }
+            }
+            if (!e.propagationStopped) {
+                this.events.dispatch(e);
+            }
+        }
+        update(dt) {
+            if (this.stopped)
+                return;
+            if (!this.paused.timers)
+                this.timers.update(dt);
+            if (!this.paused.tweens)
+                this.tweens.update(dt);
+            if (!this.paused.update) {
+                this.events.trigger('update', dt);
+                this.all.forEach((c) => c.update(dt));
+            }
+        }
+        draw(buffer) {
+            if (this.stopped)
+                return;
+            if (!this.paused.draw && this.needsDraw) {
+                this._draw(this.buffer);
+                this.trigger('draw', this.buffer);
+                this.children.forEach((c) => c.draw(this.buffer));
+                this.needsDraw = false;
+            }
+            // if (this.buffer.changed) {
+            buffer.apply(this.buffer);
+            this.buffer.changed = false;
+            // }
+        }
+        _draw(buffer) {
+            buffer.fill(0, 0, this.bg);
+        }
+        frameDebug(buffer) {
+            this.events.trigger('frameDebug', buffer);
+        }
+        frameEnd(buffer) {
+            this.events.trigger('frameEnd', buffer);
+        }
+        // ANIMATION
+        fadeIn(widget, ms) {
+            return this.fadeTo(widget, 100, ms);
+        }
+        fadeOut(widget, ms) {
+            return this.fadeTo(widget, 0, ms);
+        }
+        fadeTo(widget, opacity, ms) {
+            const tween$1 = make$1({ pct: widget.style('opacity') })
+                .to({ pct: opacity })
+                .duration(ms)
+                .onUpdate((info) => {
+                widget.style('opacity', info.pct);
+            });
+            this.tweens.add(tween$1);
+            return this;
+        }
+        fadeToggle(widget, ms) {
+            return this.fadeTo(widget, widget._used.opacity ? 0 : 100, ms);
+        }
+        slideIn(widget, x, y, from, ms) {
+            let start = { x, y };
+            if (from === 'left') {
+                start.x = -widget.bounds.width;
+            }
+            else if (from === 'right') {
+                start.x = this.width + widget.bounds.width;
+            }
+            else if (from === 'top') {
+                start.y = -widget.bounds.height;
+            }
+            else if (from === 'bottom') {
+                start.y = this.height + widget.bounds.height;
+            }
+            return this.slide(widget, start, { x, y }, ms);
+        }
+        slideOut(widget, dir, ms) {
+            let dest = { x: widget.bounds.x, y: widget.bounds.y };
+            if (dir === 'left') {
+                dest.x = -widget.bounds.width;
+            }
+            else if (dir === 'right') {
+                dest.x = this.width + widget.bounds.width;
+            }
+            else if (dir === 'top') {
+                dest.y = -widget.bounds.height;
+            }
+            else if (dir === 'bottom') {
+                dest.y = this.height + widget.bounds.height;
+            }
+            return this.slide(widget, widget.bounds, dest, ms);
+        }
+        slide(widget, from, to, ms) {
+            const tween$1 = make$1({ x: x(from), y: y(from) })
+                .to({ x: x(to), y: y(to) })
+                .duration(ms)
+                .onUpdate((info) => {
+                widget.pos(info.x, info.y);
+            });
+            this.tweens.add(tween$1);
+            return this;
+        }
+        // async fadeTo(
+        //     color: COLOR.ColorBase = 'black',
+        //     duration = 1000
+        // ): Promise<void> {
+        //     return new Promise<void>((resolve) => {
+        //         color = COLOR.from(color);
+        //         this.pause();
+        //         const buffer = this.buffer.clone();
+        //         let pct = 0;
+        //         let elapsed = 0;
+        //         this.app.repeat(32, () => {
+        //             elapsed += 32;
+        //             pct = Math.floor((100 * elapsed) / duration);
+        //             this.buffer.copy(buffer);
+        //             this.buffer.mix(color, pct);
+        //             if (elapsed >= duration) {
+        //                 this.resume();
+        //                 resolve();
+        //                 return false; // end timer
+        //             }
+        //         });
+        //     });
+        // }
+        // CHILDREN
+        get(id) {
+            return this.all.find((c) => c.id === id) || null;
+        }
+        _attach(widget) {
+            if (this.all.includes(widget))
+                return;
+            if (widget.scene)
+                throw new Error('Widget on another scene!');
+            this.all.push(widget);
+            widget.scene = this;
+            widget.children.forEach((c) => this._attach(c));
+            if (widget.prop('tabStop') &&
+                !this.focused &&
+                !widget.hidden &&
+                !widget.disabled) {
+                this.setFocusWidget(widget);
+            }
+        }
+        _detach(widget) {
+            const index = this.all.indexOf(widget);
+            if (index < 0)
+                return;
+            this.all.splice(index, 1);
+            widget.scene = null;
+            widget.children.forEach((c) => this._detach(c));
+        }
+        addChild(child, opts) {
+            if (this.children.includes(child))
+                return;
+            child.setParent(null);
+            this.children.push(child);
+            this._attach(child);
+            if (opts) {
+                child.updatePos(opts);
+                if (opts.focused) {
+                    this.setFocusWidget(child);
+                }
+            }
+        }
+        removeChild(child) {
+            const index = this.children.indexOf(child);
+            if (index < 0)
+                return;
+            this.children.splice(index, 1);
+            child.setParent(null);
+            this._detach(child);
+        }
+        childAt(xy, y) {
+            let x = 0;
+            if (typeof xy === 'number') {
+                x = xy;
+                y = y || 0;
+            }
+            else {
+                x = xy.x;
+                y = xy.y;
+            }
+            return (arrayFindRight(this.children, (c) => c.contains(x, y)) ||
+                null);
+        }
+        widgetAt(xy, y) {
+            let x = 0;
+            if (typeof xy === 'number') {
+                x = xy;
+                y = y || 0;
+            }
+            else {
+                x = xy.x;
+                y = xy.y;
+            }
+            return arrayFindRight(this.all, (c) => c.contains(x, y)) || null;
+        }
+        // FOCUS
+        setFocusWidget(w, reverse = false) {
+            if (w === this.focused)
+                return;
+            const was = this.focused;
+            const want = w;
+            this.focused = null;
+            was && was.blur(reverse);
+            if (this.focused === null) {
+                this.focused = want;
+                want && want.focus(reverse);
+            }
+        }
+        nextTabStop() {
+            if (!this.focused) {
+                this.setFocusWidget(this.all.find((w) => !!w.prop('tabStop') && !w.disabled && !w.hidden) || null);
+                return !!this.focused;
+            }
+            const next = arrayNext(this.all, this.focused, (w) => !!w.prop('tabStop') && !w.disabled && !w.hidden);
+            if (next) {
+                this.setFocusWidget(next);
+                return true;
+            }
+            this.setFocusWidget(null);
+            return false;
+        }
+        prevTabStop() {
+            if (!this.focused) {
+                this.setFocusWidget(this.all.find((w) => !!w.prop('tabStop') && !w.disabled && !w.hidden) || null);
+                return !!this.focused;
+            }
+            const prev = arrayPrev(this.all, this.focused, (w) => !!w.prop('tabStop') && !w.disabled && !w.hidden);
+            if (prev) {
+                this.setFocusWidget(prev, true);
+                return true;
+            }
+            this.setFocusWidget(null, true);
+            return false;
+        }
+        // EVENTS
+        on(ev, cb) {
+            return this.events.on(ev, cb);
+        }
+        once(ev, cb) {
+            return this.events.once(ev, cb);
         }
         trigger(ev, ...args) {
             return this.events.trigger(ev, ...args);
@@ -13384,94 +14560,267 @@ void main() {
             }
             return this.timers.setInterval(fn, delay);
         }
-        // run() {
-        //     this.trigger('run', this);
-        //     let running = false;
-        //     this.loopID = (setInterval(() => {
-        //         if (!running) {
-        //             running = true;
-        //             this._frame();
-        //             running = false;
-        //         }
-        //     }, 16) as unknown) as number;
-        //     this.stopped = false;
-        // }
-        create(app) {
-            this.app = app;
-            this.buffer = app.buffer.clone();
-            this.trigger('create');
-        }
-        destroy() {
-            this.trigger('destroy');
-        }
-        start(data) {
-            this.stopped = false;
-            this.events.trigger('start', data || {});
-        }
-        stop(data) {
-            this.stopped = true;
-            this.events.trigger('stop', data || {});
-        }
-        pause(data) {
-            this.paused = true;
-            this.events.trigger('pause', data || {});
-        }
-        resume(data) {
-            this.paused = false;
-            this.events.trigger('resume', data || {});
-        }
-        sleep(data) {
-            this.sleeping = true;
-            this.events.trigger('sleep', data || {});
-        }
-        wake(data) {
-            this.sleeping = false;
-            this.events.trigger('wake', data || {});
-        }
-        // FRAME STEPS
-        frameStart() {
-            this.events.trigger('frameStart');
-        }
-        input() {
-            if (this.paused || this.sleeping || this.stopped)
-                return;
-            const io$1 = this.app.io;
-            while (io$1.length) {
-                const ev = io$1.dequeue();
-                if (ev.type === KEYPRESS) {
-                    if ((ev.dir && this.events.trigger('dir', ev)) ||
-                        this.events.trigger(ev.key, ev) ||
-                        this.events.trigger(ev.code, ev)) {
-                        continue;
-                    }
-                }
-                this.events.trigger(ev.type, ev) || this.events.trigger('io', ev);
-            }
-        }
-        update() {
-            if (this.paused || this.sleeping || this.stopped)
-                return;
-            this.timers.update(this.app.dt);
-            this.events.trigger('update');
-        }
-        draw() {
-            if (this.sleeping || this.stopped)
-                return;
-            this.events.trigger('draw');
-        }
-        frameDebug(_buffer) {
-            this.events.trigger('frameDebug');
-        }
-        frameEnd() {
-            this.events.trigger('frameEnd');
-        }
     }
+    // export class Scene {
+    //     id: string;
+    //     app!: App;
+    //     events: EVENTS.Events;
+    //     timers: TIMERS.Timers;
+    //     buffer!: CANVAS.Buffer;
+    //     tweens: Tweens;
+    //     dt = 0;
+    //     time = 0;
+    //     realTime = 0;
+    //     skipTime = false;
+    //     stopped = true;
+    //     paused: PauseOpts = {};
+    //     debug = false;
+    //     children: SceneObj[] = [];
+    //     data: Record<string, any> = {};
+    //     constructor(id: string, opts: SceneOpts = {}) {
+    //         this.id = id;
+    //         this.events = new EVENTS.Events(this);
+    //         this.timers = new TIMERS.Timers(this);
+    //         this.tweens = new Tweens();
+    //         if (opts.on) {
+    //             Object.entries(opts.on).forEach(([ev, fn]) => {
+    //                 this.on(ev, fn);
+    //             });
+    //         }
+    //         Object.entries(opts).forEach(([ev, fn]) => {
+    //             if (typeof fn !== 'function') return;
+    //             this.on(ev, fn);
+    //         });
+    //     }
+    //     get width() {
+    //         return this.buffer.width;
+    //     }
+    //     get height() {
+    //         return this.buffer.height;
+    //     }
+    //     isActive() {
+    //         return !this.stopped;
+    //     }
+    //     isPaused() {
+    //         return this.isPaused;
+    //     }
+    //     isSleeping() {
+    //         return this.isSleeping;
+    //     }
+    //     on(ev: string, fn: EVENTS.CallbackFn): EVENTS.CancelFn;
+    //     on(ev: string, fn: EVENTS.CallbackFn): EVENTS.CancelFn {
+    //         return this.events.on(ev, fn);
+    //     }
+    //     trigger(ev: string, ...args: any[]) {
+    //         return this.events.trigger(ev, ...args);
+    //     }
+    //     wait(delay: number, fn: TIMERS.TimerFn): EVENTS.CancelFn;
+    //     wait(delay: number, fn: string, ctx?: Record<string, any>): EVENTS.CancelFn;
+    //     wait(
+    //         delay: number,
+    //         fn: TIMERS.TimerFn | string,
+    //         ctx?: Record<string, any>
+    //     ): EVENTS.CancelFn {
+    //         if (typeof fn === 'string') {
+    //             const ev = fn;
+    //             ctx = ctx || {};
+    //             fn = () => this.trigger(ev, ctx!);
+    //         }
+    //         return this.timers.setTimeout(fn, delay);
+    //     }
+    //     repeat(delay: number, fn: TIMERS.TimerFn): EVENTS.CancelFn;
+    //     repeat(
+    //         delay: number,
+    //         fn: string,
+    //         ctx?: Record<string, any>
+    //     ): EVENTS.CancelFn;
+    //     repeat(
+    //         delay: number,
+    //         fn: TIMERS.TimerFn | string,
+    //         ctx?: Record<string, any>
+    //     ): EVENTS.CancelFn {
+    //         if (typeof fn === 'string') {
+    //             const ev = fn;
+    //             ctx = ctx || {};
+    //             fn = () => this.trigger(ev, ctx!);
+    //         }
+    //         return this.timers.setInterval(fn, delay);
+    //     }
+    //     // run() {
+    //     //     this.trigger('run', this);
+    //     //     let running = false;
+    //     //     this.loopID = (setInterval(() => {
+    //     //         if (!running) {
+    //     //             running = true;
+    //     //             this._frame();
+    //     //             running = false;
+    //     //         }
+    //     //     }, 16) as unknown) as number;
+    //     //     this.stopped = false;
+    //     // }
+    //     create(app: App) {
+    //         this.app = app;
+    //         this.buffer = app.buffer.clone();
+    //         this.trigger('create');
+    //     }
+    //     destroy() {
+    //         this.trigger('destroy');
+    //     }
+    //     start(data?: Record<string, any>) {
+    //         this.stopped = false;
+    //         this.timers.clear();
+    //         this.tweens.clear();
+    //         this.events.trigger('start', data || {});
+    //     }
+    //     run(data?: Record<string, any>): Promise<any> {
+    //         return new Promise((resolve) => {
+    //             this.app.scenes.pause();
+    //             const cleanup = this.once('stop', (d) => {
+    //                 cleanup();
+    //                 this.app.scenes.resume();
+    //                 resolve(d);
+    //             });
+    //             this.start(data);
+    //         });
+    //     }
+    //     stop(data?: Record<string, any>) {
+    //         this.stopped = true;
+    //         this.events.trigger('stop', data || {});
+    //     }
+    //     pause(opts?: PauseOpts): void {
+    //         opts = opts || {
+    //             timers: true,
+    //             tweens: true,
+    //             update: true,
+    //             input: true,
+    //             draw: true,
+    //         };
+    //         Object.assign(this.paused, opts);
+    //         this.events.trigger('pause');
+    //     }
+    //     resume(opts?: ResumeOpts) {
+    //         opts = opts || {
+    //             timers: true,
+    //             tweens: true,
+    //             update: true,
+    //             input: true,
+    //             draw: true,
+    //         };
+    //         Object.entries(opts).forEach(([key, value]) => {
+    //             if (value === true) {
+    //                 this.paused[key as keyof ResumeOpts] = false;
+    //             }
+    //         });
+    //         this.events.trigger('resume');
+    //     }
+    //     // CHILDREN
+    //     add(obj: SceneObj) {
+    //         this.children.push(obj);
+    //         obj.trigger('add', this);
+    //     }
+    //     remove(obj: SceneObj) {
+    //         UTILS.arrayDelete(this.children, obj);
+    //         obj.trigger('remove', this);
+    //     }
+    //     // FRAME STEPS
+    //     frameStart() {
+    //         this.events.trigger('frameStart');
+    //     }
+    //     input(ev: IO.Event) {
+    //         if (this.stopped || this.paused.input) return;
+    //         this.events.dispatch(ev);
+    //     }
+    //     update(dt: number) {
+    //         if (this.stopped) return;
+    //         if (!this.paused.timers) this.timers.update(dt);
+    //         if (!this.paused.tweens) this.tweens.update(dt);
+    //         if (!this.paused.update) {
+    //             this.children.forEach((c) => c.update(dt));
+    //             this.events.trigger('update', dt);
+    //         }
+    //     }
+    //     draw(buffer: CANVAS.Buffer) {
+    //         if (this.stopped) return;
+    //         if (!this.paused.draw) {
+    //             this.events.trigger('draw', this.buffer);
+    //             this.children.forEach((c) => c.draw(this.buffer));
+    //         }
+    //         if (this.buffer.changed) {
+    //             buffer.apply(this.buffer);
+    //             this.buffer.changed = false;
+    //         }
+    //     }
+    //     frameDebug(buffer: CANVAS.Buffer) {
+    //         this.events.trigger('frameDebug', buffer);
+    //     }
+    //     frameEnd(buffer: CANVAS.Buffer) {
+    //         this.events.trigger('frameEnd', buffer);
+    //         // if (this.buffer.changed) {
+    //         //     buffer.apply(this.buffer);
+    //         //     this.buffer.changed = false;
+    //         // }
+    //     }
+    //     // UI
+    //     alert(text: string): Promise<boolean> {
+    //         return this.app.scenes.run('alert', { text });
+    //     }
+    //     async fadeTo(
+    //         color: COLOR.ColorBase = 'black',
+    //         duration = 1000
+    //     ): Promise<void> {
+    //         return new Promise<void>((resolve) => {
+    //             color = COLOR.from(color);
+    //             this.pause();
+    //             const buffer = this.buffer.clone();
+    //             let pct = 0;
+    //             let elapsed = 0;
+    //             this.app.repeat(32, () => {
+    //                 elapsed += 32;
+    //                 pct = Math.floor((100 * elapsed) / duration);
+    //                 this.buffer.copy(buffer);
+    //                 this.buffer.mix(color, pct);
+    //                 if (elapsed >= duration) {
+    //                     this.resume();
+    //                     resolve();
+    //                     return false; // end timer
+    //                 }
+    //             });
+    //         });
+    //     }
+    // }
+
+    // import * as Color from '../color';
+    const MenuScene = {
+        create() {
+            this.on('click', () => {
+                this.stop();
+            });
+            this.on('Escape', () => {
+                this.stop();
+            });
+        },
+        start(data) {
+            if (!data.menu)
+                throw new Error('Must supply a menu to show!');
+            this.addChild(data.menu);
+            this.events.onUnhandled = (ev, ...args) => {
+                data.origin.trigger(ev, ...args);
+            };
+        },
+        stop() {
+            this.children = [];
+        },
+    };
 
     class Scenes {
         constructor(gw) {
             this._scenes = {};
             this._active = [];
             this._app = gw;
+            this.install('alert', AlertScene);
+            this.install('confirm', ConfirmScene);
+            this.install('prompt', PromptScene);
+            this.install('menu', MenuScene);
         }
         install(id, opts) {
             let scene;
@@ -13489,91 +14838,102 @@ void main() {
             scene.on('start', () => this._start(scene));
             scene.on('stop', () => this._stop(scene));
         }
+        load(scenes) {
+            Object.entries(scenes).forEach(([id, fns]) => this.install(id, fns));
+        }
         get(id) {
             if (id === undefined) {
-                return this._active[this._active.length - 1] || null;
+                return this._active[this._active.length - 1];
             }
             return this._scenes[id] || null;
         }
+        trigger(ev, ...args) {
+            this._active.forEach((a) => a.trigger(ev, ...args));
+        }
         start(id, data) {
-            const scene = this._scenes[id];
+            const scene = id instanceof Scene ? id : this._scenes[id];
             if (!scene)
                 throw new Error('Unknown scene:' + id);
-            this._active.forEach((a) => a.stop());
             scene.start(data);
+            return scene;
+        }
+        run(id, data) {
+            const scene = id instanceof Scene ? id : this._scenes[id];
+            if (!scene)
+                throw new Error('Unknown scene:' + id);
+            return scene.run(data);
         }
         _start(scene) {
             this._active.push(scene);
         }
-        push(id, data) {
-            const scene = this._scenes[id];
-            if (!scene)
-                throw new Error('Unknown scene:' + id);
-            scene.start(data);
-        }
         stop(id, data) {
-            const scene = this._scenes[id];
-            if (!scene)
-                throw new Error('Unknown scene:' + id);
-            scene.stop(data);
+            if (typeof id === 'string') {
+                const scene = this._scenes[id];
+                if (!scene)
+                    throw new Error('Unknown scene:' + id);
+                scene.stop(data);
+            }
+            else if (id instanceof Scene) {
+                id.stop(data);
+            }
+            else {
+                this._active.forEach((s) => s.stop(id));
+            }
         }
         _stop(_scene) {
             this._active = this._active.filter((s) => s.isActive());
         }
-        pause(id, data) {
-            const scene = this._scenes[id];
-            if (!scene)
-                throw new Error('Unknown scene:' + id);
-            scene.pause(data);
+        pause(id, opts) {
+            if (typeof id === 'string') {
+                const scene = this._scenes[id];
+                if (!scene)
+                    throw new Error('Unknown scene:' + id);
+                scene.pause(opts);
+            }
+            else {
+                this._active.forEach((s) => s.pause(id));
+            }
         }
-        resume(id, data) {
-            const scene = this._scenes[id];
-            if (!scene)
-                throw new Error('Unknown scene:' + id);
-            scene.resume(data);
-        }
-        sleep(id, data) {
-            const scene = this._scenes[id];
-            if (!scene)
-                throw new Error('Unknown scene:' + id);
-            scene.sleep(data);
-        }
-        wake(id, data) {
-            const scene = this._scenes[id];
-            if (!scene)
-                throw new Error('Unknown scene:' + id);
-            scene.wake(data);
+        resume(id, opts) {
+            if (typeof id === 'string') {
+                const scene = this._scenes[id];
+                if (!scene)
+                    throw new Error('Unknown scene:' + id);
+                scene.resume(opts);
+            }
+            else {
+                this._active.forEach((s) => s.resume(id));
+            }
         }
         // FRAME
         frameStart() {
             this._active.forEach((s) => s.frameStart());
         }
-        input() {
-            arrayRevEach(this._active, (s) => s.input());
-        }
-        update() {
-            this._active.forEach((s) => s.update());
-        }
-        draw() {
-            this._active.forEach((s, i) => {
-                if (i > 0) {
-                    s.buffer.copy(this._active[i - 1].buffer);
-                }
-                s.draw();
+        input(ev) {
+            arrayRevEach(this._active, (s) => {
+                if (!ev.propagationStopped)
+                    s.input(ev);
             });
         }
-        frameEnd() {
-            const last = this._active[this._active.length - 1];
-            if (last) {
-                this._active.forEach((s) => s.frameEnd());
-                last.buffer.render();
+        update(dt) {
+            this._active.forEach((s) => s.update(dt));
+        }
+        draw(buffer) {
+            this._active.forEach((s) => {
+                // if (i > 0) {
+                //     s.buffer.copy(this._active[i - 1].buffer);
+                // }
+                s.draw(buffer);
+            });
+        }
+        frameEnd(buffer) {
+            if (this._active.length) {
+                this._active.forEach((s) => s.frameEnd(buffer));
             }
         }
-        frameDebug() {
-            const last = this._active[this._active.length - 1];
-            if (last) {
-                this._active.forEach((s) => s.frameDebug(last.buffer));
-                last.buffer.render();
+        frameDebug(buffer) {
+            if (this._active.length) {
+                this._active.forEach((s) => s.frameDebug(buffer));
             }
         }
     }
@@ -13599,9 +14959,9 @@ void main() {
             else {
                 this.loop = new Loop();
             }
-            // @ts-ignore
-            this.canvas = make$5(opts);
-            this.io = new IOQueue();
+            this.styles = defaultStyle;
+            this.canvas = opts.canvas || make$5(opts);
+            this.io = new Queue();
             this.events = new Events(this);
             this.timers = new Timers(this);
             this.scenes = new Scenes(this);
@@ -13609,12 +14969,20 @@ void main() {
             this.canvas.onmousemove = this.io.enqueue.bind(this.io);
             this.canvas.onclick = this.io.enqueue.bind(this.io);
             this.canvas.onkeydown = this.io.enqueue.bind(this.io);
-            if (opts.on) {
-                Object.entries(opts.on).forEach(([ev, fn]) => {
-                    this.on(ev, fn);
-                });
+            if (opts.scenes) {
+                this.scenes.load(opts.scenes);
             }
-            this.loop.start(this._frame.bind(this));
+            else if (opts.scene) {
+                this.scenes.install('default', opts.scene);
+                this.scenes.start('default');
+            }
+            else {
+                this.scenes.install('default', {});
+                this.scenes.start('default');
+            }
+            if (opts.start !== false) {
+                this.start();
+            }
         }
         get buffer() {
             return this.canvas.buffer;
@@ -13625,27 +14993,36 @@ void main() {
         get mouseXY() {
             return this.canvas.mouse;
         }
+        get scene() {
+            return this.scenes.get();
+        }
         on(ev, fn) {
+            // return this.scene.on(ev, fn);
             return this.events.on(ev, fn);
         }
         trigger(ev, ...args) {
-            return this.events.trigger(ev, ...args);
+            this.scenes.trigger(ev, ...args);
+            this.events.trigger(ev, ...args);
         }
-        wait(delay, fn, ctx) {
-            if (typeof fn === 'string') {
-                const ev = fn;
-                ctx = ctx || {};
-                fn = () => this.trigger(ev, ctx);
+        wait(...args) {
+            // @ts-ignore
+            // return this.scene.wait.apply(this.scene, args);
+            if (typeof args[1] === 'string') {
+                const ev = args[1];
+                args[2] = args[2] || {};
+                args[1] = () => this.trigger(ev, args[2]);
             }
-            return this.timers.setTimeout(fn, delay);
+            return this.timers.setTimeout(args[1], args[0]);
         }
-        repeat(delay, fn, ctx) {
+        repeat(...args) {
+            // @ts-ignore
+            // return this.scene.repeat.apply(this.scene, args);
             if (typeof fn === 'string') {
-                const ev = fn;
-                ctx = ctx || {};
-                fn = () => this.trigger(ev, ctx);
+                const ev = args[1];
+                args[2] = args[2] || {};
+                args[1] = () => this.trigger(ev, args[2]);
             }
-            return this.timers.setInterval(fn, delay);
+            return this.timers.setInterval(args[1], args[0]);
         }
         // run() {
         //     this.trigger('run', this);
@@ -13659,14 +15036,24 @@ void main() {
         //     }, 16) as unknown) as number;
         //     this.stopped = false;
         // }
+        start() {
+            if (this.loop.isRunning)
+                return;
+            this.loop.start(this._frame.bind(this));
+        }
         stop() {
             this.trigger('stop', this);
             this.loop.stop();
             this.stopped = true;
         }
-        _frame() {
-            const t = Date.now();
-            if (document && document.visibilityState !== 'visible') {
+        _frame(t = 0) {
+            t = t || Date.now();
+            if (typeof document !== 'undefined' &&
+                document.visibilityState !== 'visible') {
+                return;
+            }
+            if (this.realTime == 0) {
+                this.realTime = t;
                 return;
             }
             const realTime = t;
@@ -13686,76 +15073,99 @@ void main() {
             this.skipTime = false;
             this.numFrames++;
             this._frameStart();
-            this._input();
+            // // unprocessed io is handled here
+            while (this.io.length) {
+                const ev = this.io.dequeue();
+                this._input(ev);
+            }
             if (!this.paused && this.debug !== true) {
-                this._update();
+                this._update(this.dt);
             }
             this._draw();
-            this._frameEnd();
             if (this.debug !== false) {
                 this._frameDebug();
             }
+            this._frameEnd();
             this.io.clear();
         }
-        _input() {
-            // let the scenes try it first
-            this.scenes.input();
-            // unprocessed io is handled here
-            while (this.io.length) {
-                const ev = this.io.dequeue();
-                if (ev.type === KEYPRESS) {
-                    if ((ev.dir && this.events.trigger('dir', ev)) ||
-                        this.events.trigger(ev.key, ev) ||
-                        this.events.trigger(ev.code, ev)) {
-                        continue;
-                    }
-                }
-                this.events.trigger(ev.type, ev) || this.events.trigger('io', ev);
-            }
+        _input(ev) {
+            this.scenes.input(ev);
+            if (ev.propagationStopped)
+                return;
+            this.events.dispatch(ev);
         }
-        _update() {
-            this.timers.update(this.dt);
-            this.events.trigger('update');
-            this.scenes.update();
+        _update(dt = 0) {
+            dt = dt || this.dt;
+            this.scenes.update(dt);
+            this.timers.update(dt);
+            this.events.trigger('update', dt);
         }
         _frameStart() {
-            this.events.trigger('frameStart');
             this.scenes.frameStart();
+            this.events.trigger('frameStart');
         }
         _draw() {
-            this.events.trigger('draw');
-            this.scenes.draw();
+            this.buffer.fill(0);
+            this.scenes.draw(this.buffer);
+            this.events.trigger('draw', this.buffer);
         }
         _frameDebug() {
-            this.events.trigger('frameDebug');
-            this.scenes.frameDebug();
+            this.scenes.frameDebug(this.buffer);
+            this.events.trigger('frameDebug', this.buffer);
         }
         _frameEnd() {
-            this.events.trigger('frameEnd');
-            this.scenes.frameEnd();
+            this.scenes.frameEnd(this.buffer);
+            this.events.trigger('frameEnd', this.buffer);
             if (this.buffer.changed) {
                 this.buffer.render();
             }
         }
+        alert(text, opts = {}) {
+            opts.text = text;
+            return this.scenes.run('alert', opts);
+        }
+        confirm(text, opts = {}) {
+            opts.text = text;
+            return this.scenes.run('confirm', opts);
+        }
+        prompt(text, opts = {}) {
+            opts.prompt = text;
+            return this.scenes.run('prompt', opts);
+        }
     }
-    function gw(opts) {
+    function make(opts) {
         const app = new App(opts);
         return app;
     }
 
     var index = /*#__PURE__*/Object.freeze({
         __proto__: null,
-        IOQueue: IOQueue,
+        Event: Event,
+        KEYPRESS: KEYPRESS,
+        MOUSEMOVE: MOUSEMOVE,
+        CLICK: CLICK,
+        TICK: TICK,
+        MOUSEUP: MOUSEUP,
+        STOP: STOP,
+        isControlCode: isControlCode,
+        recycleEvent: recycleEvent,
+        makeStopEvent: makeStopEvent,
+        makeCustomEvent: makeCustomEvent,
+        makeTickEvent: makeTickEvent,
+        makeKeyEvent: makeKeyEvent,
+        keyCodeDirection: keyCodeDirection,
+        ignoreKeyEvent: ignoreKeyEvent,
+        makeMouseEvent: makeMouseEvent,
+        Queue: Queue,
         Events: Events,
         Loop: Loop,
         Timers: Timers,
         Scene: Scene,
         Scenes: Scenes,
         App: App,
-        gw: gw
+        make: make
     });
 
-    exports.DeleteArray = DeleteArray;
     exports.ERROR = ERROR;
     exports.FALSE = FALSE;
     exports.IDENTITY = IDENTITY;
@@ -13766,6 +15176,7 @@ void main() {
     exports.TRUE = TRUE;
     exports.WARN = WARN;
     exports.ZERO = ZERO;
+    exports.app = index;
     exports.arrayDelete = arrayDelete;
     exports.arrayFindRight = arrayFindRight;
     exports.arrayIncludesAll = arrayIncludesAll;
@@ -13790,8 +15201,6 @@ void main() {
     exports.fov = index$6;
     exports.frequency = frequency;
     exports.grid = grid;
-    exports.gw = index;
-    exports.io = io;
     exports.lerp = lerp;
     exports.light = index$3;
     exports.list = list;

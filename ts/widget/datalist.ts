@@ -1,11 +1,9 @@
 import * as DataTable from './datatable';
-import { PrefixType } from '../ui/types';
 import * as Widget from './widget';
-import { WidgetLayer } from './layer';
 
 export interface DataListOptions
     extends DataTable.ColumnOptions,
-        Widget.WidgetOptions {
+        Widget.WidgetOpts {
     size?: number;
     rowHeight?: number;
     hover?: DataTable.HoverType;
@@ -13,19 +11,19 @@ export interface DataListOptions
     headerTag?: string;
     dataTag?: string;
 
-    prefix?: PrefixType;
+    prefix?: DataTable.PrefixType;
 
-    data?: DataTable.DataType;
+    data?: Widget.DataItem[];
     border?: boolean | DataTable.BorderType;
 }
 
 export class DataList extends DataTable.DataTable {
-    constructor(layer: WidgetLayer, opts: DataListOptions) {
+    constructor(opts: DataListOptions) {
         super(
-            layer,
             (() => {
                 // @ts-ignore
                 const tableOpts: DataList.TableOptions = opts;
+
                 if (opts.border !== 'none' && opts.width) {
                     opts.width -= 2;
                 }
@@ -39,6 +37,7 @@ export class DataList extends DataTable.DataTable {
     }
 }
 
+/*
 // extend WidgetLayer
 
 export type AddDataListOptions = DataListOptions &
@@ -57,3 +56,4 @@ WidgetLayer.prototype.datalist = function (opts: AddDataListOptions): DataList {
     }
     return list;
 };
+*/

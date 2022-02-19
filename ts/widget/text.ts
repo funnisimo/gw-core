@@ -1,12 +1,11 @@
 // import * as GWU from 'gw-utils';
-import * as TextUtils from '../text';
+import * as TEXT from '../text';
 import * as Buffer from '../buffer';
 
-import { Widget, WidgetOptions, SetParentOptions } from './widget';
-import { WidgetLayer } from './layer';
+import { Widget, WidgetOpts } from './widget';
 
-export interface TextOptions extends WidgetOptions {
-    text: string;
+export interface TextOptions extends WidgetOpts {
+    text?: string;
 }
 
 export class Text extends Widget {
@@ -15,14 +14,14 @@ export class Text extends Widget {
     _fixedWidth = false;
     _fixedHeight = false;
 
-    constructor(layer: WidgetLayer, opts: TextOptions) {
-        super(layer, opts);
+    constructor(opts: TextOptions) {
+        super(opts);
         this._fixedHeight = !!opts.height;
         this._fixedWidth = !!opts.width;
         this.bounds.width = opts.width || 0;
         this.bounds.height = opts.height || 1;
 
-        this.text(opts.text);
+        this.text(opts.text || '');
     }
 
     text(): string;
@@ -32,10 +31,10 @@ export class Text extends Widget {
 
         this._text = v;
         let w = this._fixedWidth ? this.bounds.width : 100;
-        this._lines = TextUtils.splitIntoLines(this._text, w);
+        this._lines = TEXT.splitIntoLines(this._text, w);
         if (!this._fixedWidth) {
             this.bounds.width = this._lines.reduce(
-                (out, line) => Math.max(out, TextUtils.length(line)),
+                (out, line) => Math.max(out, TEXT.length(line)),
                 0
             );
         }
@@ -47,7 +46,7 @@ export class Text extends Widget {
             this.bounds.height = Math.max(1, this._lines.length);
         }
 
-        this.layer.needsDraw = true;
+        this.needsDraw = true;
         return this;
     }
 
@@ -59,8 +58,12 @@ export class Text extends Widget {
         return this;
     }
 
+    addChild(): this {
+        throw new Error('Text widgets cannot have children.');
+    }
+
     _draw(buffer: Buffer.Buffer): boolean {
-        this._drawFill(buffer);
+        super._draw(buffer);
 
         let vOffset = 0;
         if (this._used.valign === 'bottom') {
@@ -84,25 +87,11 @@ export class Text extends Widget {
     }
 }
 
-// extend Layer
+// // extend Layer
 
-export type AddTextOptions = Omit<TextOptions, 'text'> &
-    SetParentOptions & { parent?: Widget };
+// export type AddTextOptions = TextOptions & UpdatePosOpts & { parent?: Widget };
 
-declare module './layer' {
-    interface WidgetLayer {
-        text(text: string, opts?: AddTextOptions): Text;
-    }
-}
-WidgetLayer.prototype.text = function (
-    text: string,
-    opts: AddTextOptions = {}
-): Text {
-    const options: TextOptions = Object.assign({}, this._opts, opts, { text });
-    const list = new Text(this, options);
-    if (opts.parent) {
-        list.setParent(opts.parent, opts);
-    }
-    this.pos(list.bounds.x, list.bounds.bottom);
-    return list;
-};
+// export function text(opts: AddTextOptions = {}): Text {
+//     const widget = new Text(opts);
+//     return widget;
+// }

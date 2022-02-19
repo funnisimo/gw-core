@@ -1,7 +1,7 @@
 # GW
 
 ```js
-const gw = GWU.gw.gw({
+const gw = GWU.app.make({
     font: 'monospace',
     width: 30,
     height: 20,
@@ -33,11 +33,11 @@ gw.on('keypress', (ev) => {
 ## Second example
 
 ```js
-const gw = GWU.gw.gw({
+const gw = GWU.app.make({
     width: 30,
     height: 20,
     loop: LOOP,
-    on: {
+    scene: {
         click(ev) {
             console.log('click', ev.x, ev.y);
         },

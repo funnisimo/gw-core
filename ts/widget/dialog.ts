@@ -2,7 +2,6 @@
 import * as TextUtils from '../text';
 import * as Buffer from '../buffer';
 
-import { WidgetLayer } from './layer';
 import * as Text from './text';
 import * as Widget from './widget';
 import { BorderType } from './datatable';
@@ -16,7 +15,7 @@ export type PadInfo =
     | [number, number]
     | [number, number, number, number];
 
-export interface DialogOptions extends Widget.WidgetOptions {
+export interface DialogOptions extends Widget.WidgetOpts {
     width: number;
     height: number;
 
@@ -63,9 +62,8 @@ export class Dialog extends Widget.Widget {
 
     legend: Widget.Widget | null = null;
 
-    constructor(layer: WidgetLayer, opts: DialogOptions) {
+    constructor(opts: DialogOptions) {
         super(
-            layer,
             (() => {
                 opts.tag = opts.tag || Dialog.default.tag;
                 return opts;
@@ -154,11 +152,12 @@ export class Dialog extends Widget.Widget {
             x += width - textWidth;
         }
 
-        this.legend = new Text.Text(this.layer, {
+        this.legend = new Text.Text({
+            parent: this,
             text: opts.legend,
             x,
             y: this.bounds.y,
-            depth: this.depth + 1,
+            // depth: this.depth + 1,
             tag: this._attrStr('legendTag'),
             class: this._attrStr('legendClass'),
         });
@@ -169,12 +168,12 @@ export class Dialog extends Widget.Widget {
         // this.bounds.height +=
         //     this._attrInt('padTop') + this._attrInt('padBottom');
 
-        this.legend.setParent(this);
+        this.bounds.height = Math.max(1, this.bounds.height);
         return this;
     }
 
     _draw(buffer: Buffer.Buffer): boolean {
-        this._drawFill(buffer);
+        super._draw(buffer);
 
         const border = this._attrStr('border');
         if (border === 'none') return false;
@@ -195,18 +194,9 @@ export class Dialog extends Widget.Widget {
 // extend WidgetLayer
 
 export type AddDialogOptions = DialogOptions &
-    Widget.SetParentOptions & { parent?: Widget.Widget };
+    Widget.UpdatePosOpts & { parent?: Widget.Widget };
 
-declare module './layer' {
-    interface WidgetLayer {
-        dialog(opts?: AddDialogOptions): Dialog;
-    }
-}
-WidgetLayer.prototype.dialog = function (opts: AddDialogOptions): Dialog {
-    const options = Object.assign({}, this._opts, opts) as DialogOptions;
-    const widget = new Dialog(this, options);
-    if (opts.parent) {
-        widget.setParent(opts.parent, opts);
-    }
+export function dialog(opts: AddDialogOptions): Dialog {
+    const widget = new Dialog(opts);
     return widget;
-};
+}

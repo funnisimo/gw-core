@@ -5,7 +5,7 @@ import * as Light from '.';
 import * as Color from '../color';
 import * as Grid from '../grid';
 import * as XY from '../xy';
-import { data as DATA } from '../gw';
+import { data as DATA } from '../data';
 
 interface TestLightSite extends Light.LightSystemSite {
     grid: Grid.NumGrid;

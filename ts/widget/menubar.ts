@@ -1,13 +1,9 @@
-// import * as GWU from 'gw-utils';
-import * as XY from '../xy';
-import * as IO from '../io';
-
 import * as Widget from './widget';
-import { WidgetLayer } from './layer';
-import { DropdownConfig, Menu, ButtonConfig } from './menu';
-import * as Text from './text';
+import { DropdownConfig, Menu } from './menu';
+import * as TEXT from './text';
+import * as BUTTON from './button';
 
-export interface MenubarOptions extends Widget.WidgetOptions {
+export interface MenubarOptions extends Widget.WidgetOpts {
     buttons: DropdownConfig;
     buttonClass?: string | string[];
     buttonTag?: string;
@@ -32,15 +28,14 @@ export class Menubar extends Widget.Widget {
         separator: ' | ',
     };
 
-    _config!: DropdownConfig;
-    _buttons: MenubarButton[] = [];
-    _selectedIndex = -1;
+    // _config!: DropdownConfig;
+    // _buttons: MenubarButton[] = [];
+    // _selectedIndex: number;
 
-    constructor(layer: WidgetLayer, opts: MenubarOptions) {
+    constructor(opts: MenubarOptions) {
         super(
-            layer,
             (() => {
-                opts.tabStop = true;
+                opts.tabStop = false;
                 opts.tag = opts.tag || 'menu';
                 return opts;
             })()
@@ -70,76 +65,84 @@ export class Menubar extends Widget.Widget {
         this.attr('prefix', opts.prefix || Menubar.default.prefix);
         this.attr('separator', opts.separator || Menubar.default.separator);
 
+        this.bounds.height = 1;
         this._initButtons(opts);
-        this.on('click', this._buttonClick.bind(this));
+
+        // // @ts-ignore
+        // if (this._selectedIndex === undefined) {
+        //     this._selectedIndex = -1;
+        // } else if (this._selectedIndex == -2) {
+        //     this._selectedIndex = 0;
+        // }
     }
 
-    get selectedIndex(): number {
-        return this._selectedIndex;
-    }
-    set selectedIndex(v: number) {
-        if (this._selectedIndex >= 0) {
-            this._buttons[this._selectedIndex].prop('focus', false).collapse();
-        }
-        this._selectedIndex = v;
-        if (v >= 0 && v < this._buttons.length) {
-            this._buttons[v].prop('focus', true).expand();
-        } else {
-            this._selectedIndex = -1;
-        }
-    }
+    // get selectedIndex(): number {
+    //     return this._selectedIndex;
+    // }
+    // set selectedIndex(v: number) {
+    //     if (this._selectedIndex >= 0) {
+    //         this._buttons[this._selectedIndex].prop('focus', false).expand();
+    //     }
+    //     this._selectedIndex = v;
+    //     if (v >= 0 && this._buttons && v < this._buttons.length) {
+    //         this._buttons[v].prop('focus', true).expand();
+    //     } else {
+    //         this._selectedIndex = this._buttons ? -1 : -2;
+    //     }
+    // }
 
-    get selectedButton(): Widget.Widget {
-        return this._buttons[this._selectedIndex];
-    }
+    // get selectedButton(): Widget.Widget {
+    //     return this._buttons[this._selectedIndex];
+    // }
 
-    focus(reverse = false): boolean {
-        if (reverse) {
-            this.selectedIndex = this._buttons.length - 1;
-        } else {
-            this.selectedIndex = 0;
-        }
-        return super.focus(reverse);
-    }
+    // focus(reverse = false): void {
+    //     if (reverse) {
+    //         this.selectedIndex = this._buttons.length - 1;
+    //     } else {
+    //         this.selectedIndex = 0;
+    //     }
+    //     super.focus(reverse);
+    // }
 
-    blur(reverse = false): boolean {
-        this.selectedIndex = -1;
-        return super.blur(reverse);
-    }
+    // blur(reverse = false): void {
+    //     this.selectedIndex = -1;
+    //     super.blur(reverse);
+    // }
 
-    collapse(): boolean {
-        return this._buttons.reduce(
-            (out: boolean, b) => b.collapse() || out,
-            false
-        );
-    }
+    // keypress(e: IO.Event): void {
+    //     if (!e.key) return;
 
-    keypress(e: IO.Event): boolean {
-        if (!e.key) return false;
-        if (!this.focused) return false;
+    //     this.events.dispatch(e);
+    //     if (e.defaultPrevented) return;
 
-        if (e.key === 'Tab') {
-            this.selectedIndex += 1;
-            return this._selectedIndex >= 0;
-        } else if (e.key === 'TAB') {
-            this.selectedIndex -= 1;
-            return this._selectedIndex >= 0;
-        }
-        return false;
-    }
+    //     if (e.key === 'Tab') {
+    //         this.selectedIndex += 1;
+    //         if (this._selectedIndex !== -1) {
+    //             e.preventDefault();
+    //         }
+    //     } else if (e.key === 'TAB') {
+    //         this.selectedIndex -= 1;
+    //         if (this._selectedIndex !== -1) {
+    //             e.preventDefault();
+    //         }
+    //     } else if (this._selectedIndex >= 0) {
+    //         super.keypress(e);
+    //     }
+    // }
 
-    mousemove(e: IO.Event): boolean {
-        if (!this.contains(e) || !this.focused) return super.mousemove(e);
-        const active = this._buttons.findIndex((c) => c.contains(e));
-        if (active < 0 || active === this._selectedIndex) return false;
-        this.selectedIndex = active;
-        return true;
-    }
+    // mousemove(e: IO.Event): void {
+    //     super.mousemove(e);
+    //     if (!this.contains(e) || !this.focused) return;
+
+    //     const active = this._buttons.findIndex((c) => c.contains(e));
+    //     if (active < 0 || active === this._selectedIndex) return;
+    //     this.selectedIndex = active;
+    // }
 
     _initButtons(opts: MenubarOptions) {
-        this._config = opts.buttons;
+        // this._config = opts.buttons;
 
-        const entries = Object.entries(this._config);
+        const entries = Object.entries(opts.buttons);
 
         const buttonTag = this._attrStr('buttonTag');
         const buttonClass = this._attrStr('buttonClass');
@@ -148,55 +151,68 @@ export class Menubar extends Widget.Widget {
         entries.forEach(([key, value], i) => {
             const prefix =
                 i == 0 ? this._attrStr('prefix') : this._attrStr('separator');
-            this.layer.text(prefix, { x, y, parent: this });
+            new TEXT.Text({ parent: this, text: prefix, x, y });
             x += prefix.length;
+            this.bounds.width += prefix.length;
 
-            const button = new MenubarButton(this.layer, {
+            const button = new BUTTON.Button({
+                parent: this,
+                id: key,
                 text: key,
                 x,
                 y,
                 tag: buttonTag,
                 class: buttonClass,
-                depth: this.depth + 1,
-                buttons: value,
-                // data: value,
+                // buttons: value,
             });
-            button.setParent(this);
-            this._buttons.push(button);
             x += button.bounds.width;
+            this.bounds.width += button.bounds.width;
+
+            let menu: Menu | null = null;
+            if (typeof value !== 'string') {
+                menu = new Menu({
+                    buttons: value,
+                    buttonClass: this._attrStr('menuClass'),
+                    buttonTag: this._attrStr('menuTag'),
+                    x: button.bounds.x,
+                    y: button.bounds.y + 1,
+                });
+
+                button.data('menu', menu);
+            }
+
+            button.on(['click', 'Enter', ' '], () => {
+                if (typeof value === 'string') {
+                    // simulate action
+                    this.trigger(value);
+                    this.scene!.trigger(value);
+                } else {
+                    this.scene!.app.scenes.run('menu', {
+                        menu,
+                        origin: this.scene,
+                    });
+                }
+            });
         });
-    }
-
-    _buttonClick(_action: string, button: Widget.Widget | null): boolean {
-        if (!button) return false;
-        this.layer.setFocusWidget(this);
-        console.log('clicked = ' + button.text(), button._attrStr('action'));
-
-        const barButton = button as MenubarButton;
-        this.selectedIndex = this._buttons.indexOf(barButton);
-        if (barButton.menu) {
-            barButton.expand();
-        } else {
-            this.collapse();
-        }
-        return true;
     }
 }
 
-export interface MenubarButtonOptions extends Widget.WidgetOptions {
+/*
+export interface MenubarButtonOptions extends Widget.WidgetOpts {
     text: string;
     buttons: ButtonConfig;
+    action?: string | boolean;
 }
 
 export class MenubarButton extends Text.Text {
     menu: Menu | null = null;
+    parent!: Menubar;
 
-    constructor(layer: WidgetLayer, opts: MenubarButtonOptions) {
+    constructor(opts: MenubarButtonOptions) {
         super(
-            layer,
             (() => {
                 opts.tag = opts.tag || 'mi';
-                if (typeof opts.buttons === 'string') {
+                if (typeof opts.buttons === 'string' && !opts.action) {
                     opts.action = opts.buttons;
                 }
                 return opts;
@@ -206,16 +222,16 @@ export class MenubarButton extends Text.Text {
         this.tag = opts.tag || 'mi';
 
         if (typeof opts.buttons !== 'string') {
-            this.menu = this._initMenu(opts);
+            const menu = (this.menu = this._initMenu(opts)) as Menu;
 
             this.on('mouseenter', () => {
-                this.menu!.hidden = false;
-                this.menu!._bubbleEvent('change', this);
+                menu.hidden = false;
+                menu.trigger('change');
                 return true;
             });
-            this.on('mouseleave', (_n, _w, e) => {
-                if (this.parent?.contains(e)) {
-                    this.menu!.hidden = true;
+            this.on('mouseleave', (e) => {
+                if (this.parent!.contains(e)) {
+                    menu.hidden = true;
                     return true;
                 }
                 return false;
@@ -224,21 +240,27 @@ export class MenubarButton extends Text.Text {
                 return true; // eat clicks
             });
         }
+
+        this.on('click', () => {
+            this.parent.activate(this);
+        });
+        this.on('Enter', () => {
+            this.parent.activate(this);
+        });
+        this.on(' ', () => {
+            this.parent.activate(this);
+        });
     }
 
-    collapse(): boolean {
-        if (!this.menu || this.menu.hidden) return false;
-
-        this.menu.collapse();
-        this.menu.hidden = true;
-        return true;
+    collapse(): void {
+        if (!this.menu || this.menu.hidden) return;
+        this.menu.hide();
     }
 
-    expand(): this {
-        if (this.menu) {
-            this.menu.hidden = false;
-        }
-        return this;
+    expand(): Menu | null {
+        if (!this.menu) return null;
+        this.menu.show();
+        return this.menu;
     }
 
     _setMenuPos(xy: XY.XY, opts: MenubarButtonOptions) {
@@ -255,94 +277,122 @@ export class MenubarButton extends Text.Text {
         if (typeof opts.buttons === 'string') return null;
 
         const menuOpts = {
+            parent: this,
             x: this.bounds.x,
             y: this.bounds.y,
             class: opts.class,
             tag: opts.tag || 'mi',
             height: opts.height,
             buttons: opts.buttons,
-            depth: this.depth + 1,
+            // depth: this.depth + 1,
         };
         this._setMenuPos(menuOpts, opts);
-        const menu = new Menu(this.layer, menuOpts);
+        const menu = new Menu(menuOpts);
         menu.hidden = true;
-        menu.setParent(this);
+
         return menu;
     }
 }
 
-// extend WidgetLayer
+export function runMenu(owner: Menubar, menu: Menu) {
+    if (!owner || !owner.scene)
+        throw new Error('need an owner that is attached to a scene.');
 
-export type AddMenubarOptions = MenubarOptions &
-    Widget.SetParentOptions & { parent?: Widget.Widget };
+    let menus: Menu[] = [menu];
+    let current = menu;
 
-declare module './layer' {
-    interface WidgetLayer {
-        menubar(opts?: AddMenubarOptions): Menubar;
-    }
-}
-WidgetLayer.prototype.menubar = function (opts: AddMenubarOptions): Menubar {
-    const options: MenubarOptions = Object.assign({}, this._opts, opts);
-    const menubar = new Menubar(this, options);
-    if (opts.parent) {
-        menubar.setParent(opts.parent, opts);
-    }
-    return menubar;
-};
+    menu.hidden = false;
+    const scene = owner.scene;
 
-// MENU
-
-export class MenuViewer extends Widget.Widget {
-    menubar: Menubar;
-    mainMenu: Menu;
-
-    constructor(menubar: Menubar, buttons: DropdownConfig) {
-        super(menubar.layer, {
-            tabStop: true,
-            x: 0,
-            y: 0,
-            width: menubar.layer.width,
-            height: menubar.layer.height,
-            // @ts-ignore
-            tag: menubar.attr('menuTag'),
-            // @ts-ignore
-            class: menubar.attr('menuClass'),
-        });
-        this.menubar = menubar;
-        this.mainMenu = this._initMenu(buttons);
-    }
-    contains(): boolean {
-        return true;
-    }
-
-    finish() {
-        this.layer.finish();
-    }
-
-    _initMenu(buttons: DropdownConfig): Menu {
-        return new Menu(this.layer, {
-            buttonTag: this.menubar._attrStr('buttonTag'),
-            buttonClass: this.menubar._attrStr('buttonClass'),
-            minWidth: this.menubar.selectedButton.bounds.width,
-            buttons,
-        });
-    }
-
-    keypress(e: IO.Event): boolean {
-        if (!e.key) return false;
-
-        if (e.key === 'Escape') {
-            this.finish();
-            return true;
-        } else if (e.key === 'Tab') {
-            this.finish();
-            this.menubar.keypress(e);
-            return true;
-        } else if (e.key === 'TAB') {
-            this.finish();
-            this.menubar.keypress(e);
-            return true;
+    const offInput = scene.on('input', (e) => {
+        if (e.type === IO.KEYPRESS) {
+            if (e.dir) {
+                if (e.dir[0] > 0) {
+                    const next = current.expandItem();
+                    if (next) {
+                        menus.push(next);
+                        current = next;
+                    }
+                } else if (e.dir[0] < 0) {
+                    current.hide();
+                    menus.pop();
+                    if (menus.length == 0) {
+                        return done(e);
+                    } else {
+                        current = menus[menus.length - 1];
+                    }
+                } else if (e.dir[1] > 0) {
+                    current.nextItem();
+                } else if (e.dir[1] < 0) {
+                    current.prevItem();
+                }
+            } else if (e.key === 'Enter' || e.key === ' ') {
+                const next = current.expandItem();
+                if (next) {
+                    menus.push(next);
+                    current = next;
+                } else {
+                    done(e);
+                    current.action();
+                    return;
+                }
+            } else if (e.key === 'Escape') {
+                current.hide();
+                menus.pop();
+                if (menus.length == 0) {
+                    return done(e);
+                }
+                current = menus[menus.length - 1];
+            } else if (e.key === 'Tab' || e.key === 'TAB') {
+                return done();
+            } else {
+                current.selectItemWithKey(e.key);
+            }
+        } else if (e.type === IO.MOUSEMOVE) {
+            if (!current.contains(e)) {
+                let found = -1;
+                for (let i = 0; i < menus.length; ++i) {
+                    const m = menus[i];
+                    if (found >= 0) {
+                        m.hide();
+                    } else {
+                        if (m.contains(e)) {
+                            current = m;
+                            found = i;
+                        }
+                    }
+                }
+                if (found >= 0) {
+                    menus.length = found + 1;
+                }
+            }
+            if (current.contains(e)) {
+                current.mousemove(e);
+            } else if (owner.contains(e)) {
+                done();
+                return owner.mousemove(e);
+            }
+        } else if (e.type === IO.CLICK) {
+            // assumes mousemove was called for this spot before click
+            const btn = current.childAt(e);
+            if (btn) {
+                btn.click(e);
+            }
+            done(e);
         }
-        return false;
+
+        e.stopPropagation();
+        e.preventDefault();
+    });
+
+    function done(e?: IO.Event) {
+        offInput();
+        menus.forEach((m) => (m.hidden = true));
+        scene.setFocusWidget(owner);
+        if (e) {
+            e.stopPropagation();
+            e.preventDefault();
+        }
     }
 }
+*/

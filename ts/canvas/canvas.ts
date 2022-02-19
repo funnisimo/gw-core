@@ -1,7 +1,7 @@
 import { Glyphs } from './glyphs';
 import { BufferTarget, Buffer as CanvasBuffer } from './buffer';
 import * as Buffer from '../buffer';
-import * as IO from '../io';
+import * as IO from '../app/io';
 import * as Utils from '../utils';
 import * as XY from '../xy';
 
@@ -21,7 +21,51 @@ export class NotSupportedError extends Error {
     }
 }
 
-export abstract class BaseCanvas implements BufferTarget {
+export type IOCallback = IO.EventFn | null;
+
+export interface CanvasType extends BufferTarget {
+    mouse: XY.XY;
+    // loop: IO.Loop;
+
+    // new (width: number, height: number, glyphs: Glyphs): CanvasType;
+
+    readonly node: HTMLCanvasElement;
+    readonly width: number;
+    readonly height: number;
+    readonly tileWidth: number;
+    readonly tileHeight: number;
+    readonly pxWidth: number;
+    readonly pxHeight: number;
+
+    glyphs: Glyphs;
+
+    toGlyph(ch: string | number): number;
+
+    readonly buffer: CanvasBuffer;
+    readonly parentBuffer: CanvasBuffer;
+    readonly root: CanvasBuffer;
+
+    pushBuffer(): CanvasBuffer;
+
+    popBuffer(): void;
+
+    resize(width: number, height: number): void;
+
+    draw(data: Buffer.Buffer): boolean;
+
+    copyTo(data: Buffer.Buffer): void;
+
+    render(): void;
+
+    hasXY(x: number, y: number): boolean;
+
+    onclick: IOCallback;
+    onmousemove: IOCallback;
+    onmouseup: IOCallback;
+    onkeydown: IOCallback;
+}
+
+export abstract class BaseCanvas implements CanvasType {
     mouse: XY.XY = { x: -1, y: -1 };
     _data!: Uint32Array;
     _renderRequested: boolean = false;
@@ -32,7 +76,7 @@ export abstract class BaseCanvas implements BufferTarget {
     _height: number = 38;
     _buffers: CanvasBuffer[] = [];
     _current = 0;
-    loop: IO.Loop = IO.loop;
+    // loop: IO.Loop = IO.loop;
 
     constructor(width: number, height: number, glyphs: Glyphs) {
         this._node = this._createNode();
@@ -161,7 +205,10 @@ export abstract class BaseCanvas implements BufferTarget {
         return x >= 0 && y >= 0 && x < this.width && y < this.height;
     }
 
-    set onclick(fn: IO.EventFn | null) {
+    get onclick(): IOCallback {
+        throw new Error('write only.');
+    }
+    set onclick(fn: IOCallback) {
         if (fn) {
             this.node.onclick = (e: MouseEvent) => {
                 const x = this._toX(e.offsetX);
@@ -175,7 +222,10 @@ export abstract class BaseCanvas implements BufferTarget {
         }
     }
 
-    set onmousemove(fn: IO.EventFn | null) {
+    get onmousemove(): IOCallback {
+        throw new Error('write only.');
+    }
+    set onmousemove(fn: IOCallback) {
         if (fn) {
             this.node.onmousemove = (e: MouseEvent) => {
                 const x = this._toX(e.offsetX);
@@ -192,7 +242,10 @@ export abstract class BaseCanvas implements BufferTarget {
         }
     }
 
-    set onmouseup(fn: IO.EventFn | null) {
+    get onmouseup(): IOCallback {
+        throw new Error('write only.');
+    }
+    set onmouseup(fn: IOCallback) {
         if (fn) {
             this.node.onmouseup = (e: MouseEvent) => {
                 const x = this._toX(e.offsetX);
@@ -206,7 +259,10 @@ export abstract class BaseCanvas implements BufferTarget {
         }
     }
 
-    set onkeydown(fn: IO.EventFn | null) {
+    get onkeydown(): IOCallback {
+        throw new Error('write only.');
+    }
+    set onkeydown(fn: IOCallback) {
         if (fn) {
             this.node.onkeydown = (e: KeyboardEvent) => {
                 e.stopPropagation();

@@ -1,23 +1,28 @@
-import * as UTILS from '../../test/utils';
-// import * as GWU from 'gw-utils';
-import * as IO from '../io';
+import '../../test/matchers';
 
-import * as Checkbox from './checkbox';
-import * as Layer from './layer';
+import * as TEST from '../../test/utils';
+// import * as COLOR from '../color';
+import * as APP from '../app';
+import * as CANVAS from '../canvas';
 
-describe('Checkbox Widget', () => {
-    let layer: Layer.WidgetLayer;
+// import * as CHECK from './checkbox';
+
+describe('Checkbox', () => {
+    let canvas: CANVAS.CanvasType;
+    let app: APP.App;
+    let scene: APP.Scene;
+    let buffer: CANVAS.Buffer;
 
     beforeEach(() => {
-        layer = UTILS.mockWidgetLayer(50, 30);
-    });
-
-    afterEach(() => {
-        layer.finish();
+        canvas = TEST.mockCanvas();
+        app = APP.make({ canvas, start: false });
+        scene = app.scene;
+        buffer = canvas.buffer;
     });
 
     test('create obj', () => {
-        const e = new Checkbox.Checkbox(layer, { text: 'checkbox' });
+        const e = scene.build.checkbox({ text: 'checkbox' });
+
         expect(e.tag).toEqual('checkbox');
         expect(e.attr('value')).toEqual('on');
         expect(e.attr('check')).toEqual('\u2612');
@@ -25,74 +30,55 @@ describe('Checkbox Widget', () => {
     });
 
     test('keypress', async () => {
-        const el = new Checkbox.Checkbox(layer, { text: 'checkbox' });
-        jest.spyOn(el, '_fireEvent');
+        const el = scene.build.checkbox({ text: 'checkbox' });
+        expect(scene.focused).toBe(el);
+
+        const inputFn = jest.fn();
+        el.on('change', inputFn);
 
         expect(el.prop('checked')).toBeFalsy();
-        await el.keypress(UTILS.keypress(' '));
-        expect(el._fireEvent).toHaveBeenCalledWith(
-            'input',
-            el,
-            expect.any(IO.Event)
-        );
-        expect(el._fireEvent).not.toHaveBeenCalledWith(
-            'change',
-            el,
-            expect.any(IO.Event)
-        );
+        app._input(TEST.keypress(' '));
+        expect(inputFn).toHaveBeenCalled();
         expect(el.prop('checked')).toBeTruthy();
 
-        // @ts-ignore
-        el._fireEvent.mockClear();
-        await el.keypress(UTILS.keypress(' '));
-        expect(el._fireEvent).toHaveBeenCalledWith(
-            'input',
-            el,
-            expect.any(IO.Event)
-        );
-        expect(el._fireEvent).not.toHaveBeenCalledWith(
-            'change',
-            el,
-            expect.any(IO.Event)
-        );
+        inputFn.mockClear();
+        app._input(TEST.keypress(' '));
+        expect(inputFn).toHaveBeenCalled();
         expect(el.prop('checked')).toBeFalsy();
     });
 
     test('click', async () => {
-        const el = new Checkbox.Checkbox(layer, { text: 'checkbox' });
-        jest.spyOn(el, '_fireEvent');
+        const el = scene.build.checkbox({ text: 'checkbox' });
 
         expect(el.contains(0, 0)).toBeTruthy();
+        const inputFn = jest.fn();
+        el.on('click', inputFn);
 
         expect(el.prop('checked')).toBeFalsy();
-        await el.click(UTILS.click(0, 0));
-        expect(el._fireEvent).toHaveBeenCalledWith(
-            'input',
-            el,
-            expect.any(IO.Event)
-        );
-        expect(el._fireEvent).not.toHaveBeenCalledWith(
-            'change',
-            el,
-            expect.any(IO.Event)
-        );
+        app._input(TEST.click(0, 0));
+        expect(inputFn).toHaveBeenCalled();
         expect(el.focused).toBeTruthy();
-        expect(layer._focusWidget).toBe(el);
+        expect(scene.focused).toBe(el);
         expect(el.prop('checked')).toBeTruthy();
 
-        // @ts-ignore
-        el._fireEvent.mockClear();
-        await el.click(UTILS.click(0, 0));
-        expect(el._fireEvent).toHaveBeenCalledWith(
-            'input',
-            el,
-            expect.any(IO.Event)
-        );
-        expect(el._fireEvent).not.toHaveBeenCalledWith(
-            'change',
-            el,
-            expect.any(IO.Event)
-        );
+        inputFn.mockClear();
+        app._input(TEST.click(0, 0));
+        expect(inputFn).toHaveBeenCalled();
         expect(el.prop('checked')).toBeFalsy();
+    });
+
+    test('draw', () => {
+        const text = 'checkbox';
+        const w = scene.build.checkbox({ text, uncheck: 'O' });
+
+        expect(w._fixedWidth).toBeFalsy();
+        expect(w._attrInt('pad')).toEqual(1);
+        expect(w.bounds.width).toEqual(text.length + 1 + 1);
+
+        app._draw();
+
+        // buffer.dump();
+
+        expect(TEST.extractBufferText(buffer, 0, 0, 20)).toEqual('O checkbox');
     });
 });

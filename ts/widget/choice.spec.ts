@@ -1,13 +1,15 @@
-import * as UTILS from '../../test/utils';
+import * as TEST from '../../test/utils';
+// import * as TEXT from '../text';
+import * as APP from '../app';
+import * as CANVAS from '../canvas';
+// import * as BODY from './body';
 
-import * as Choice from './choice';
-import { WidgetLayer } from './layer';
-import { UI } from '../ui/ui';
+import * as CHOICE from './choice';
 
 describe('Prompt', () => {
     test('basic', () => {
         // fields
-        const p = new Choice.Prompt('question?')
+        const p = new CHOICE.Prompt('question?')
             .choice('a')
             .choice('b')
             .choice('c');
@@ -18,7 +20,7 @@ describe('Prompt', () => {
     });
 
     test('basic - choice only', () => {
-        const p2 = new Choice.Prompt('question?', 'field').choices([
+        const p2 = new CHOICE.Prompt('question?', 'field').choices([
             'a',
             'b',
             'c',
@@ -30,7 +32,7 @@ describe('Prompt', () => {
     });
 
     test('basic - object', () => {
-        const q = new Choice.Prompt('question?', 'field').choices({
+        const q = new CHOICE.Prompt('question?', 'field').choices({
             A: 'text A',
             B: 'text B',
             C: 'text C',
@@ -43,7 +45,7 @@ describe('Prompt', () => {
     });
 
     test('basic - array', () => {
-        const q = new Choice.Prompt('question?', 'field').choices(
+        const q = new CHOICE.Prompt('question?', 'field').choices(
             ['A', 'B', 'C'],
             ['text A', 'text B', 'text C']
         );
@@ -56,7 +58,7 @@ describe('Prompt', () => {
     });
 
     test('basic - build', () => {
-        const q = new Choice.Prompt('question?', 'field')
+        const q = new CHOICE.Prompt('question?', 'field')
             .choice('A', 'text A')
             .choice('B', 'text B')
             .choice('C', 'text C');
@@ -68,7 +70,7 @@ describe('Prompt', () => {
     });
 
     test('next - individual', () => {
-        const q = new Choice.Prompt('question?', {
+        const q = new CHOICE.Prompt('question?', {
             field: 'field',
             next: 'NEXT',
             id: 'ID',
@@ -95,64 +97,58 @@ describe('Prompt', () => {
 });
 
 describe('Choice', () => {
-    let canvas: UI;
-    let layer: WidgetLayer;
+    let canvas: CANVAS.CanvasType;
+    let app: APP.App;
+    let scene: APP.Scene;
 
     beforeEach(() => {
-        canvas = UTILS.mockUI(100, 38);
-        layer = new WidgetLayer(canvas);
-    });
-
-    afterEach(() => {
-        // ui.stop();
-        layer.finish();
+        canvas = TEST.mockCanvas();
+        app = APP.make({ canvas, start: false });
+        scene = app.scene;
     });
 
     test('create', async () => {
-        const choice = new Choice.Choice(layer, {
+        const choice = new CHOICE.Choice({
+            scene,
             width: 60,
             choiceWidth: 20,
             height: 20,
         });
+        expect(scene.focused).toBe(choice._list); // enables keypress,dir
 
-        layer.draw(); // sets focusWidget
-        expect(layer.focusWidget).toBe(choice.list); // enables keypress,dir
-
-        const prompt = new Choice.Prompt('question?').choices(['A', 'B', 'C']);
+        const prompt = new CHOICE.Prompt('question?').choices(['A', 'B', 'C']);
         expect(prompt.selection).toEqual(-1);
 
         const changeFn = jest.fn();
         choice.on('change', changeFn);
 
-        const inputFn = jest.fn();
-        choice.on('input', inputFn);
+        const actionFn = jest.fn();
+        choice.on('action', actionFn);
 
         const promise = choice.showPrompt(prompt);
-        expect(changeFn).not.toHaveBeenCalled();
-        expect(inputFn).toHaveBeenCalledWith('input', choice, prompt);
+
         expect(prompt.selection).toEqual(0);
         expect(prompt.value()).toEqual('A');
+        expect(changeFn).toHaveBeenCalled(); // new value selected
+        expect(actionFn).not.toHaveBeenCalled();
 
-        const p = layer.run(); // in case we want to test click
+        actionFn.mockClear();
+        changeFn.mockClear();
+        app._input(TEST.dir('down'));
+        expect(prompt.selection).toEqual(1);
+        expect(prompt.value()).toEqual('B');
+        expect(changeFn).toHaveBeenCalled();
+        expect(actionFn).not.toHaveBeenCalled();
 
-        inputFn.mockClear();
-        await UTILS.pushEvent(canvas.loop, UTILS.dir('down'));
+        actionFn.mockClear();
+        changeFn.mockClear();
+        app._input(TEST.keypress('Enter'));
+        expect(prompt.selection).toEqual(1);
+        expect(prompt.value()).toEqual('B');
+        expect(actionFn).toHaveBeenCalled();
         expect(changeFn).not.toHaveBeenCalled();
-        expect(inputFn).toHaveBeenCalledWith('input', choice, prompt);
-        expect(prompt.selection).toEqual(1);
-        expect(prompt.value()).toEqual('B');
-
-        inputFn.mockClear();
-        await UTILS.pushEvent(canvas.loop, UTILS.keypress('Enter'));
-        expect(inputFn).not.toHaveBeenCalled();
-        expect(changeFn).toHaveBeenCalledWith('change', choice, prompt);
-        expect(prompt.selection).toEqual(1);
-        expect(prompt.value()).toEqual('B');
 
         expect(await promise).toEqual('B');
-
-        layer.finish();
-        await p;
     });
 });
 

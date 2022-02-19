@@ -55,7 +55,7 @@ export class Tween implements Animation {
     }
 
     isRunning(): boolean {
-        return this._time < this._duration;
+        return this._startTime > 0 || this._time < this._duration;
     }
 
     onStart(cb: TweenCb): this {
@@ -189,7 +189,7 @@ export class Tween implements Animation {
         }
 
         if (this._time >= this._duration) {
-            if (this._repeat > this._count) {
+            if (this._repeat > this._count || this._repeat < 0) {
                 this._time -= this._duration;
                 this._startTime =
                     this._repeatDelay > -1 ? this._repeatDelay : this._delay;
@@ -254,8 +254,8 @@ export class Tween implements Animation {
     }
 }
 
-export function make(src: AnyObj): Tween {
-    return new Tween(src);
+export function make(src: AnyObj, duration = 1000): Tween {
+    return new Tween(src).duration(duration);
 }
 
 export function linear(pct: number): number {

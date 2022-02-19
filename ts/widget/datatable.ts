@@ -2,23 +2,26 @@
 import * as Utils from '../utils';
 import * as TextUtils from '../text';
 import * as Buffer from '../buffer';
-import * as IO from '../io';
+import * as IO from '../app/io';
 
-import { Widget, WidgetOptions, SetParentOptions } from './widget';
-import { PrefixType } from '../ui/types';
+import * as WIDGET from './widget';
 import { Text } from './text';
 import { drawBorder } from './border';
-import { WidgetLayer } from './layer';
+import * as STYLE from '../ui/style';
+
+STYLE.defaultStyle.add('datatable', { bg: 'black' });
+// STYLE.defaultStyle.add('th', { bg: 'light_teal', fg: 'dark_blue' });
+// STYLE.defaultStyle.add('td', { bg: 'darker_gray' });
+// STYLE.defaultStyle.add('td:odd', { bg: 'gray' });
+// STYLE.defaultStyle.add('td:hover', { bg: 'light_gray' });
+STYLE.defaultStyle.add('td:selected', { bg: 'gray' });
+
+export type PrefixType = 'none' | 'letter' | 'number' | 'bullet';
 
 export type FormatFn = TextUtils.Template; // (data: any, index: number) => string;
-export type Value = string | number;
 
 export type SelectType = 'none' | 'column' | 'row' | 'cell';
 export type HoverType = 'none' | 'column' | 'row' | 'cell' | 'select';
-
-export type DataObject = Record<string, any>;
-export type DataItem = Value | Value[] | DataObject;
-export type DataType = DataItem[];
 
 export type BorderType = 'ascii' | 'fill' | 'none';
 
@@ -35,7 +38,7 @@ export interface ColumnOptions {
     dataClass?: string;
 }
 
-export interface DataTableOptions extends Omit<WidgetOptions, 'height'> {
+export interface DataTableOptions extends Omit<WIDGET.WidgetOpts, 'height'> {
     size?: number;
     rowHeight?: number;
 
@@ -50,21 +53,11 @@ export interface DataTableOptions extends Omit<WidgetOptions, 'height'> {
 
     columns: ColumnOptions[]; // must have at least 1
 
-    data?: DataType;
+    data?: WIDGET.DataItem[];
     border?: boolean | BorderType;
 }
 
 export class Column {
-    static default = {
-        select: 'row',
-        hover: 'select',
-
-        tag: 'datatable',
-        headerTag: 'th',
-        dataTag: 'td',
-        border: 'ascii',
-    };
-
     width: number;
     format: TextUtils.Template = Utils.IDENTITY;
     header: string;
@@ -87,28 +80,28 @@ export class Column {
     }
 
     addHeader(table: DataTable, x: number, y: number, col: number): Text {
-        const t = new Text(table.layer, {
+        const t = new Text({
+            parent: table,
             x,
             y,
             class: table.classes.join(' '),
             tag: table._attrStr('headerTag'),
             width: this.width,
             height: table.rowHeight,
-            depth: table.depth + 1,
+            // depth: table.depth + 1,
             text: this.header,
         });
         t.prop('row', -1);
         t.prop('col', col);
 
-        t.setParent(table);
-        table.layer.attach(t);
+        // table.scene.attach(t);
 
         return t;
     }
 
     addData(
         table: DataTable,
-        data: DataItem,
+        data: WIDGET.DataItem,
         x: number,
         y: number,
         col: number,
@@ -122,8 +115,12 @@ export class Column {
         } else {
             text = this.format(data);
         }
+        if (text === '') {
+            text = this.empty;
+        }
 
-        const widget = new TD(table.layer, {
+        const widget = new Text({
+            parent: table,
             text,
             x,
             y,
@@ -131,13 +128,15 @@ export class Column {
             tag: table._attrStr('dataTag'),
             width: this.width,
             height: table.rowHeight,
-            depth: table.depth + 1,
+            // depth: table.depth + 1,
+        });
+        widget.on('mouseenter', () => {
+            table.select(col, row);
         });
         widget.prop(row % 2 == 0 ? 'even' : 'odd', true);
         widget.prop('row', row);
         widget.prop('col', col);
-        widget.setParent(table);
-        table.layer.attach(widget);
+        // table.addChild(widget);
         return widget;
     }
 
@@ -152,11 +151,11 @@ export class Column {
     }
 }
 
-export class DataTable extends Widget {
+export class DataTable extends WIDGET.Widget {
     static default = {
         columnWidth: 10,
         header: true,
-        empty: '-',
+        empty: '',
         tag: 'datatable',
         headerTag: 'th',
         dataTag: 'td',
@@ -167,7 +166,6 @@ export class DataTable extends Widget {
         wrap: true,
     };
 
-    _data: DataType = [];
     columns: Column[] = [];
     showHeader = false;
     rowHeight = 1;
@@ -176,17 +174,31 @@ export class DataTable extends Widget {
     selectedRow = -1;
     selectedColumn = 0;
 
-    constructor(layer: WidgetLayer, opts: DataTableOptions) {
+    _data!: WIDGET.DataItem[];
+
+    constructor(opts: DataTableOptions) {
         super(
-            layer,
             (() => {
                 opts.tag = opts.tag || DataTable.default.tag;
                 opts.tabStop = opts.tabStop === undefined ? true : opts.tabStop;
+                if (opts.data) {
+                    if (!Array.isArray(opts.data)) {
+                        opts.data = [opts.data];
+                    }
+                } else {
+                    opts.data = [];
+                }
                 return opts;
             })()
         );
 
-        this.size = opts.size || layer.height;
+        this.size =
+            opts.size ||
+            (this.parent
+                ? this.parent.bounds.height
+                : this.scene
+                ? this.scene.height
+                : 0);
 
         this.bounds.width = 0;
         opts.columns.forEach((o) => {
@@ -219,7 +231,7 @@ export class DataTable extends Widget {
         this.attr('select', opts.select || DataTable.default.select);
         this.attr('hover', opts.hover || DataTable.default.hover);
 
-        this.data(opts.data || []);
+        this._setData(this._data);
     }
 
     get selectedData(): any {
@@ -228,6 +240,7 @@ export class DataTable extends Widget {
     }
 
     select(col: number, row: number): this {
+        // console.log('select', col, row);
         if (!this._data || this._data.length == 0) {
             this.selectedRow = this.selectedColumn = 0;
             return this;
@@ -272,7 +285,7 @@ export class DataTable extends Widget {
             });
         }
 
-        this._bubbleEvent('input', this, {
+        this.trigger('change', {
             row,
             col,
             data: this.selectedData,
@@ -297,8 +310,8 @@ export class DataTable extends Widget {
         return this.select(this.selectedColumn - 1, this.selectedRow);
     }
 
-    blur(reverse?: boolean): boolean {
-        this._bubbleEvent('change', this, {
+    blur(reverse?: boolean): void {
+        this.trigger('change', {
             col: this.selectedColumn,
             row: this.selectedRow,
             data: this.selectedData,
@@ -306,15 +319,12 @@ export class DataTable extends Widget {
         return super.blur(reverse);
     }
 
-    data(): DataType;
-    data(data: DataType): this;
-    data(data?: DataType): this | DataType {
-        if (!data) return this._data;
-        this._data = data;
+    _setData(v: WIDGET.DataItem[]) {
+        this._data = v;
         for (let i = this.children.length - 1; i >= 0; --i) {
             const c = this.children[i];
             if (c.tag !== this.attr('headerTag')) {
-                this.layer.detach(c);
+                this.removeChild(c);
             }
         }
 
@@ -354,7 +364,7 @@ export class DataTable extends Widget {
 
         this.bounds.height = y - this.bounds.y;
         this.bounds.width = x - this.bounds.x;
-        this.updateStyle(); // sets this.needsDraw
+        this.needsStyle = true; // sets this.needsDraw
 
         return this;
     }
@@ -379,80 +389,87 @@ export class DataTable extends Widget {
         return true;
     }
 
-    mouseenter(e: IO.Event, over: Widget): void {
-        super.mouseenter(e, over);
-        if (!this.hovered) return;
+    // _mouseenter(e: IO.Event): void {
+    //     super._mouseenter(e);
+    //     if (!this.hovered) return;
 
-        const hovered = this.children.find((c) => c.contains(e));
+    //     const hovered = this.children.find((c) => c.contains(e));
 
-        if (hovered) {
-            const col = hovered._propInt('col');
-            const row = hovered._propInt('row');
-            if (col !== this.selectedColumn || row !== this.selectedRow) {
-                this.selectedColumn = col;
-                this.selectedRow = row;
+    //     if (hovered) {
+    //         const col = hovered._propInt('col');
+    //         const row = hovered._propInt('row');
+    //         if (col !== this.selectedColumn || row !== this.selectedRow) {
+    //             this.selectedColumn = col;
+    //             this.selectedRow = row;
 
-                let select = false;
-                let hover = this._attrStr('hover');
-                if (hover === 'select') {
-                    hover = this._attrStr('select');
-                    select = true;
-                }
+    //             let select = false;
+    //             let hover = this._attrStr('hover');
+    //             if (hover === 'select') {
+    //                 hover = this._attrStr('select');
+    //                 select = true;
+    //             }
 
-                if (hover === 'none') {
-                    this.children.forEach((c) => {
-                        c.hovered = false;
-                        if (select) c.prop('selected', false);
-                    });
-                } else if (hover === 'row') {
-                    this.children.forEach((c) => {
-                        const active = row == c.prop('row');
-                        c.hovered = active;
-                        if (select) c.prop('selected', active);
-                    });
-                } else if (hover === 'column') {
-                    this.children.forEach((c) => {
-                        const active = col == c.prop('col');
-                        c.hovered = active;
-                        if (select) c.prop('selected', active);
-                    });
-                } else if (hover === 'cell') {
-                    this.children.forEach((c) => {
-                        const active =
-                            col == c.prop('col') && row == c.prop('row');
-                        c.hovered = active;
-                        if (select) c.prop('selected', active);
-                    });
-                }
-                this._bubbleEvent('input', this, {
-                    row,
-                    col,
-                    data: this.selectedData,
-                });
-            }
-        }
-    }
+    //             if (hover === 'none') {
+    //                 this.children.forEach((c) => {
+    //                     c.hovered = false;
+    //                     if (select) c.prop('selected', false);
+    //                 });
+    //             } else if (hover === 'row') {
+    //                 this.children.forEach((c) => {
+    //                     const active = row == c.prop('row');
+    //                     c.hovered = active;
+    //                     if (select) c.prop('selected', active);
+    //                 });
+    //             } else if (hover === 'column') {
+    //                 this.children.forEach((c) => {
+    //                     const active = col == c.prop('col');
+    //                     c.hovered = active;
+    //                     if (select) c.prop('selected', active);
+    //                 });
+    //             } else if (hover === 'cell') {
+    //                 this.children.forEach((c) => {
+    //                     const active =
+    //                         col == c.prop('col') && row == c.prop('row');
+    //                     c.hovered = active;
+    //                     if (select) c.prop('selected', active);
+    //                 });
+    //             }
+    //             this.trigger('change', {
+    //                 row,
+    //                 col,
+    //                 data: this.selectedData,
+    //             });
+    //         }
+    //     }
+    // }
 
-    click(e: IO.Event): boolean {
-        if (!this.contains(e)) return false;
+    // click(e: IO.Event): boolean {
+    //     if (!this.contains(e) || this.disabled || this.hidden) return false;
 
-        this._bubbleEvent('change', this, {
-            row: this.selectedRow,
-            col: this.selectedColumn,
-            data: this.selectedData,
-        });
-        return false;
-    }
+    //     this.action();
+    //     // this.trigger('change', {
+    //     //     row: this.selectedRow,
+    //     //     col: this.selectedColumn,
+    //     //     data: this.selectedData,
+    //     // });
+    //     // return false;
+    //     return true;
+    // }
 
     keypress(e: IO.Event): boolean {
         if (!e.key) return false;
 
+        if (e.dir) {
+            return this.dir(e);
+        }
+
         if (e.key === 'Enter') {
-            this._bubbleEvent('change', this, {
-                row: this.selectedRow,
-                col: this.selectedColumn,
-                data: this.selectedData,
-            });
+            this.action();
+            // this.trigger('change', {
+            //     row: this.selectedRow,
+            //     col: this.selectedColumn,
+            //     data: this.selectedData,
+            // });
             return true;
         }
         return false;
@@ -477,20 +494,7 @@ export class DataTable extends Widget {
     }
 }
 
-export class TD extends Text {
-    mouseleave(e: IO.Event) {
-        super.mouseleave(e);
-        if (this.parent) {
-            const table = this.parent as DataTable;
-            if (table.attr('select') === 'row') {
-                this.hovered = this._propInt('row') === table.selectedRow;
-            } else if (table.attr('select') === 'column') {
-                this.hovered = this._propInt('col') === table.selectedColumn;
-            }
-        }
-    }
-}
-
+/*
 // extend WidgetLayer
 
 export type AddDataTableOptions = DataTableOptions &
@@ -511,3 +515,4 @@ WidgetLayer.prototype.datatable = function (
     }
     return list;
 };
+*/

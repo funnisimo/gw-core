@@ -7,7 +7,7 @@ describe('GW', () => {
         expect(GW.range).toBeDefined();
         expect(GW.flag).toBeDefined();
         expect(GW.grid).toBeDefined();
-        expect(GW.io).toBeDefined();
+        // expect(GW.io).toBeDefined();
         expect(GW.fov).toBeDefined();
         expect(GW.path).toBeDefined();
         expect(GW.events).toBeDefined();

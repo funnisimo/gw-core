@@ -2,11 +2,10 @@
 import * as Buffer from '../buffer';
 import * as XY from '../xy';
 
-import { UIStyle } from '../ui/types';
+import { UIStyle } from '../ui/style';
 import * as Widget from './widget';
-import { WidgetLayer } from './layer';
 
-export interface BorderOptions extends Widget.WidgetOptions {
+export interface BorderOptions extends Widget.WidgetOpts {
     width: number;
     height: number;
 
@@ -16,8 +15,8 @@ export interface BorderOptions extends Widget.WidgetOptions {
 export class Border extends Widget.Widget {
     ascii = false;
 
-    constructor(layer: WidgetLayer, opts: BorderOptions) {
-        super(layer, opts);
+    constructor(opts: BorderOptions) {
+        super(opts);
         if (opts.ascii) {
             this.ascii = true;
         } else if (opts.fg && opts.ascii !== false) {
@@ -25,13 +24,15 @@ export class Border extends Widget.Widget {
         }
     }
 
-    contains(e: XY.XY): boolean;
-    contains(x: number, y: number): boolean;
-    contains(..._args: any[]): boolean {
+    // contains(e: XY.XY): boolean;
+    // contains(x: number, y: number): boolean;
+    contains(): boolean {
         return false;
     }
 
     _draw(buffer: Buffer.Buffer): boolean {
+        super._draw(buffer);
+
         const w = this.bounds.width;
         const h = this.bounds.height;
         const x = this.bounds.x;
@@ -43,6 +44,7 @@ export class Border extends Widget.Widget {
     }
 }
 
+/*
 // extend WidgetLayer
 export type AddBorderOptions = BorderOptions &
     Widget.SetParentOptions & { parent?: Widget.Widget };
@@ -60,6 +62,7 @@ WidgetLayer.prototype.border = function (opts: AddBorderOptions): Border {
     }
     return list;
 };
+*/
 
 export function drawBorder(
     buffer: Buffer.Buffer,

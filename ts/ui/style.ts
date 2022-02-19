@@ -2,10 +2,45 @@ import * as Color from '../color';
 import * as Text from '../text';
 import * as Utils from '../utils';
 
-import { UIStyle, StyleOptions, UIStylable } from './types';
+import { UISelectable } from './selector';
 import { Selector } from './selector';
 
+export interface UIStyle {
+    readonly selector: Selector;
+    dirty: boolean;
+
+    readonly fg?: Color.ColorBase;
+    readonly bg?: Color.ColorBase;
+    readonly align?: Text.Align;
+    readonly valign?: Text.VAlign;
+    readonly opacity?: number;
+
+    get(key: keyof UIStyle): any;
+    set(key: keyof UIStyle, value: any): this;
+    set(values: StyleOptions): this;
+    unset(key: keyof UIStyle): this;
+}
+
+export interface StyleOptions {
+    fg?: Color.ColorBase;
+    bg?: Color.ColorBase;
+    align?: Text.Align;
+    valign?: Text.VAlign;
+}
+
+export interface UIStylable extends UISelectable {
+    style(): UIStyle;
+}
+
 export type StyleType = string | StyleOptions;
+
+export interface StyleOptions {
+    fg?: Color.ColorBase;
+    bg?: Color.ColorBase;
+    align?: Text.Align;
+    valign?: Text.VAlign;
+    opacity?: number;
+}
 
 // static - size/pos automatic (ignore TRBL)
 // relative - size automatic, pos = automatic + TRBL
@@ -82,6 +117,8 @@ export class Style implements UIStyle {
     _align?: Text.Align;
     _valign?: Text.VAlign;
 
+    _opacity?: number;
+
     selector: Selector;
     protected _dirty = false;
 
@@ -105,6 +142,10 @@ export class Style implements UIStyle {
     }
     get bg(): Color.ColorBase | undefined {
         return this._bg;
+    }
+
+    get opacity(): number | undefined {
+        return this._opacity;
     }
 
     dim(pct = 25, fg = true, bg = false): this {
@@ -240,12 +281,12 @@ export function makeStyle(style: string, selector = '$'): Style {
 export class ComputedStyle extends Style {
     // obj: Stylable;
     sources: UIStyle[] = [];
-    _opacity = 100;
+    // _opacity = 100;
     _baseFg: Color.Color | null = null;
     _baseBg: Color.Color | null = null;
 
     // constructor(source: Stylable, sources?: Style[]) {
-    constructor(sources?: UIStyle[], opacity = 100) {
+    constructor(sources?: UIStyle[]) {
         super();
         // this.obj = source;
         if (sources) {
@@ -255,12 +296,12 @@ export class ComputedStyle extends Style {
         }
 
         this.sources.forEach((s) => super.set(s));
-        this.opacity = opacity;
+        // this.opacity = opacity;
         this._dirty = false; // As far as I know I reflect all of the current source values.
     }
 
     get opacity() {
-        return this._opacity;
+        return this._opacity ?? 100;
     }
     set opacity(v: number) {
         v = Utils.clamp(v, 0, 100);
@@ -291,15 +332,17 @@ export class ComputedStyle extends Style {
 
 export class Sheet {
     rules: UIStyle[] = [];
+    _parent: Sheet | null;
     _dirty = true;
 
     constructor(parentSheet?: Sheet | null) {
-        if (parentSheet === undefined) {
-            parentSheet = defaultStyle;
-        }
-        if (parentSheet) {
-            this.rules = parentSheet.rules.slice();
-        }
+        // if (parentSheet === undefined) {
+        //     parentSheet = defaultStyle;
+        // }
+        // if (parentSheet) {
+        //     this.rules = parentSheet.rules.slice();
+        // }
+        this._parent = parentSheet || null;
     }
 
     get dirty(): boolean {
@@ -310,6 +353,10 @@ export class Sheet {
         if (!this._dirty) {
             this.rules.forEach((r) => (r.dirty = false));
         }
+    }
+
+    setParent(sheet: Sheet | null) {
+        this._parent = sheet;
     }
 
     add(selector: string, props: StyleOptions): this {
@@ -327,17 +374,18 @@ export class Sheet {
         // if '&' - Error('Not supported.')
 
         let rule: UIStyle = new Style(selector, props);
-        const existing = this.rules.findIndex(
-            (s) => s.selector.text === rule.selector.text
-        );
+        // const existing = this.rules.findIndex(
+        //     (s) => s.selector.text === rule.selector.text
+        // );
 
-        if (existing > -1) {
-            const current = this.rules[existing];
-            current.set(rule);
-            rule = current;
-        } else {
-            this.rules.push(rule);
-        }
+        // if (existing > -1) {
+        //     // TODO - Should this delete the rule and add the new one at the end?
+        //     const current = this.rules[existing];
+        //     current.set(rule);
+        //     rule = current;
+        // } else {
+        this.rules.push(rule);
+        // }
         // rulesChanged = true;
         this.dirty = true;
         return this;
@@ -358,15 +406,25 @@ export class Sheet {
         }
     }
 
+    _rulesFor(widget: UIStylable): UIStyle[] {
+        let rules = this.rules.filter((r) => r.selector.matches(widget));
+        if (this._parent) {
+            rules = this._parent._rulesFor(widget).concat(rules);
+        }
+        return rules;
+    }
+
     computeFor(widget: UIStylable): ComputedStyle {
-        const sources = this.rules.filter((r) => r.selector.matches(widget));
+        const sources = this._rulesFor(widget);
         const widgetStyle = widget.style();
         if (widgetStyle) {
             sources.push(widgetStyle);
+            widgetStyle.dirty = false;
         }
-        widgetStyle.dirty = false;
-        return new ComputedStyle(sources, widget.opacity);
+        return new ComputedStyle(sources);
     }
 }
 
 export const defaultStyle = new Sheet(null);
+
+defaultStyle.add('*', { fg: 'white' });

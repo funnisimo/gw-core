@@ -1,81 +1,89 @@
-import * as UTILS from '../../test/utils';
-// import * as GWU from 'gw-utils';
-import * as DataList from './datalist';
-import * as Layer from './layer';
+import * as TEST from '../../test/utils';
+// import * as TEXT from '../text';
+import * as APP from '../app';
+import * as CANVAS from '../canvas';
 
-describe('DataList Widget', () => {
-    let layer: Layer.WidgetLayer;
+import * as LIST from './datalist';
+
+describe('DataTable', () => {
+    let canvas: CANVAS.CanvasType;
+    let app: APP.App;
+    let scene: APP.Scene;
 
     beforeEach(() => {
-        layer = UTILS.mockWidgetLayer(50, 30);
-    });
-
-    afterEach(() => {
-        layer.finish();
+        canvas = TEST.mockCanvas();
+        app = APP.make({ canvas, start: false });
+        scene = app.scene;
     });
 
     test('constructor', () => {
-        const dl = new DataList.DataList(layer, {});
+        const dl = new LIST.DataList({ scene });
         expect(dl.columns).toHaveLength(1);
         expect(dl.columns[0]).toMatchObject({ width: 10 });
     });
 
-    test.only('default', () => {
-        const dl = layer.datalist({
+    test('default', () => {
+        const dl = new LIST.DataList({
+            scene,
             x: 10,
             y: 5,
             empty: '-',
             border: 'none',
         });
 
-        layer.draw();
-        // layer.buffer.dump();
+        app._draw();
+        // canvas.buffer.dump();
 
         expect(dl.bounds).toMatchObject({ x: 10, y: 5, width: 10, height: 1 }); // default width, height
-        expect(UTILS.getBufferText(layer.buffer, 10, 5, 10)).toEqual('-'); // default empty text
+        expect(TEST.getBufferText(canvas.buffer, 10, 5, 10)).toEqual('-'); // default empty text
 
         dl.data(['Taco', 'Salad', 'Sandwich']);
-        layer.draw();
+        app._draw();
 
-        // layer.buffer.dump();
+        // canvas.buffer.dump();
 
         expect(dl.bounds).toMatchObject({ x: 10, y: 5, width: 10, height: 3 }); // width, height from content
-        expect(UTILS.getBufferText(layer.buffer, 10, 5, 10)).toEqual('Taco');
-        expect(UTILS.getBufferText(layer.buffer, 10, 6, 10)).toEqual('Salad');
-        expect(UTILS.getBufferText(layer.buffer, 10, 7, 10)).toEqual(
+        expect(TEST.getBufferText(canvas.buffer, 10, 5, 10)).toEqual('Taco');
+        expect(TEST.getBufferText(canvas.buffer, 10, 6, 10)).toEqual('Salad');
+        expect(TEST.getBufferText(canvas.buffer, 10, 7, 10)).toEqual(
             'Sandwich'
         );
     });
 
     test('legend', () => {
-        const dl = layer
-            .pos(10, 5)
-            .datalist({ header: 'Foods', border: 'none' });
+        const dl = new LIST.DataList({
+            scene,
+            header: 'Foods',
+            border: 'none',
+            x: 10,
+            y: 5,
+        });
 
-        layer.draw(); // calculateStyles, updateLayout, draw
+        app._draw(); // calculateStyles, updateLayout, draw
 
-        // layer.buffer.dump();
+        // canvas.buffer.dump();
 
         expect(dl.bounds).toMatchObject({ x: 10, y: 5, width: 10, height: 2 }); // default width, height=legend + empty
-        expect(UTILS.getBufferText(layer.buffer, 10, 5, 10)).toEqual('Foods'); // legend
-        expect(UTILS.getBufferText(layer.buffer, 10, 6, 10)).toEqual('-'); // default empty text
+        expect(TEST.getBufferText(canvas.buffer, 10, 5, 10)).toEqual('Foods'); // legend
+        expect(TEST.getBufferText(canvas.buffer, 10, 6, 10)).toEqual(''); // default empty text
 
         dl.data(['Taco', 'Salad', 'Sandwich']);
-        layer.draw();
+        app._draw();
 
-        // layer.buffer.dump();
+        // canvas.buffer.dump();
 
         expect(dl.bounds).toMatchObject({ x: 10, y: 5, width: 10, height: 4 }); // width, height from content + legend
-        expect(UTILS.getBufferText(layer.buffer, 10, 5, 10)).toEqual('Foods'); // legend
-        expect(UTILS.getBufferText(layer.buffer, 10, 6, 10)).toEqual('Taco');
-        expect(UTILS.getBufferText(layer.buffer, 10, 7, 10)).toEqual('Salad');
-        expect(UTILS.getBufferText(layer.buffer, 10, 8, 10)).toEqual(
+        expect(TEST.getBufferText(canvas.buffer, 10, 5, 10)).toEqual('Foods'); // legend
+        expect(TEST.getBufferText(canvas.buffer, 10, 6, 10)).toEqual('Taco');
+        expect(TEST.getBufferText(canvas.buffer, 10, 7, 10)).toEqual('Salad');
+        expect(TEST.getBufferText(canvas.buffer, 10, 8, 10)).toEqual(
             'Sandwich'
         );
     });
 
     test('data', () => {
-        const dl = new DataList.DataList(layer, {
+        const dl = new LIST.DataList({
+            scene,
             x: 10,
             y: 5,
             data: ['Apple', 'Banana', 'Carrot'],
@@ -85,9 +93,9 @@ describe('DataList Widget', () => {
         expect(dl._data).toHaveLength(3);
         expect(dl.children).toHaveLength(3);
 
-        expect(layer._depthOrder.includes(dl.children[0]));
-        expect(layer._depthOrder.includes(dl.children[1]));
-        expect(layer._depthOrder.includes(dl.children[2]));
+        // expect(layer._depthOrder.includes(dl.children[0]));
+        // expect(layer._depthOrder.includes(dl.children[1]));
+        // expect(layer._depthOrder.includes(dl.children[2]));
 
         expect(dl.children[0].tag).toEqual('td');
         expect(dl.children[0].text()).toEqual('Apple');
@@ -96,41 +104,41 @@ describe('DataList Widget', () => {
         expect(dl.children[2].tag).toEqual('td');
         expect(dl.children[2].text()).toEqual('Carrot');
 
-        layer.draw();
+        app._draw();
         expect(dl.bounds).toMatchObject({ x: 10, y: 5, width: 10, height: 3 });
 
-        expect(layer._depthOrder).toContain(dl.children[0]);
-        expect(layer._depthOrder).toContain(dl.children[1]);
-        expect(layer._depthOrder).toContain(dl.children[2]);
+        // expect(layer._depthOrder).toContain(dl.children[0]);
+        // expect(layer._depthOrder).toContain(dl.children[1]);
+        // expect(layer._depthOrder).toContain(dl.children[2]);
 
-        const oldChildren = dl.children.slice();
+        // const oldChildren = dl.children.slice();
 
         dl.data(['1234567890', 'HUMMINGBIRD', 'CRANE', 'BLUE-JAY', 'ROBIN']);
         expect(dl.data()).toHaveLength(5);
         expect(dl.children).toHaveLength(5);
 
-        expect(layer._depthOrder).not.toContain(oldChildren[0]);
-        expect(layer._depthOrder).not.toContain(oldChildren[1]);
-        expect(layer._depthOrder).not.toContain(oldChildren[2]);
+        // expect(layer._depthOrder).not.toContain(oldChildren[0]);
+        // expect(layer._depthOrder).not.toContain(oldChildren[1]);
+        // expect(layer._depthOrder).not.toContain(oldChildren[2]);
 
-        layer.draw();
-        expect(layer._depthOrder).toContain(dl.children[0]);
-        expect(layer._depthOrder).toContain(dl.children[1]);
-        expect(layer._depthOrder).toContain(dl.children[2]);
-        expect(layer._depthOrder).toContain(dl.children[3]);
-        expect(layer._depthOrder).toContain(dl.children[4]);
+        app._draw();
+        // expect(layer._depthOrder).toContain(dl.children[0]);
+        // expect(layer._depthOrder).toContain(dl.children[1]);
+        // expect(layer._depthOrder).toContain(dl.children[2]);
+        // expect(layer._depthOrder).toContain(dl.children[3]);
+        // expect(layer._depthOrder).toContain(dl.children[4]);
         expect(dl.bounds).toMatchObject({ x: 10, y: 5, width: 10, height: 5 });
 
-        expect(UTILS.getBufferText(layer.buffer, 10, 5, 20)).toEqual(
+        expect(TEST.getBufferText(canvas.buffer, 10, 5, 20)).toEqual(
             '1234567890'
         );
-        expect(UTILS.getBufferText(layer.buffer, 10, 6, 20)).toEqual(
+        expect(TEST.getBufferText(canvas.buffer, 10, 6, 20)).toEqual(
             'HUMMINGBI-'
         ); // truncated!
-        expect(UTILS.getBufferText(layer.buffer, 10, 7, 20)).toEqual('CRANE');
-        expect(UTILS.getBufferText(layer.buffer, 10, 8, 20)).toEqual(
+        expect(TEST.getBufferText(canvas.buffer, 10, 7, 20)).toEqual('CRANE');
+        expect(TEST.getBufferText(canvas.buffer, 10, 8, 20)).toEqual(
             'BLUE-JAY'
         );
-        expect(UTILS.getBufferText(layer.buffer, 10, 9, 20)).toEqual('ROBIN');
+        expect(TEST.getBufferText(canvas.buffer, 10, 9, 20)).toEqual('ROBIN');
     });
 });

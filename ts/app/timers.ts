@@ -1,7 +1,7 @@
 import * as EVENTS from './events';
 import * as UTILS from '../utils';
 
-export type TimerFn = () => void;
+export type TimerFn = () => void | boolean;
 
 interface TimerInfo {
     delay: number;
@@ -15,6 +15,18 @@ export class Timers {
 
     constructor(ctx?: any) {
         this._ctx = ctx;
+    }
+
+    clear() {
+        this._timers = [];
+    }
+
+    // Clears all one time timers and resets all repeating timers
+    restart() {
+        this._timers.forEach((i) => {
+            i.delay = i.repeat || 0;
+        });
+        this._timers = this._timers.filter((i) => i.delay > 0);
     }
 
     setTimeout(fn: TimerFn, delay: number): EVENTS.CancelFn {
@@ -44,8 +56,8 @@ export class Timers {
         this._timers.forEach((info) => {
             info.delay -= dt;
             if (info.delay <= 0) {
-                info.fn.call(this._ctx);
-                if (info.repeat) {
+                const result = info.fn.call(this._ctx);
+                if (info.repeat && result !== false) {
                     info.delay += info.repeat;
                     if (info.delay < 0) {
                         info.delay = info.repeat;

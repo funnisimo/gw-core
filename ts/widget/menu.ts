@@ -3,9 +3,8 @@ import * as XY from '../xy';
 import * as TextUtils from '../text';
 
 import * as Widget from './widget';
-// import * as Button from './button';
 import * as Text from './text';
-import { WidgetLayer } from './layer';
+import * as IO from '../app/io';
 
 export interface Rec<T> {
     [keys: string]: T;
@@ -14,7 +13,7 @@ export type DropdownConfig = Rec<ButtonConfig>;
 export type ActionConfig = string;
 export type ButtonConfig = ActionConfig | DropdownConfig;
 
-export interface MenuOptions extends Widget.WidgetOptions {
+export interface MenuOptions extends Widget.WidgetOpts {
     buttons: DropdownConfig;
     buttonClass?: string | string[];
     buttonTag?: string;
@@ -32,12 +31,15 @@ export class Menu extends Widget.Widget {
         minWidth: 4,
     };
 
-    constructor(layer: WidgetLayer, opts: MenuOptions) {
+    _selectedIndex = 0;
+    children!: MenuButton[];
+
+    constructor(opts: MenuOptions) {
         super(
-            layer,
             (() => {
                 opts.tag = opts.tag || Menu.default.tag;
                 opts.class = opts.class || Menu.default.class;
+                opts.tabStop = opts.tabStop === undefined ? true : opts.tabStop;
                 return opts;
             })()
         );
@@ -56,15 +58,35 @@ export class Menu extends Widget.Widget {
         this._initButtons(opts);
         this.bounds.height = this.children.length;
 
-        this.on('mouseenter', (_n, _w, e) => {
+        this.on('mouseenter', (e) => {
             this.children.forEach((c) => {
                 if (!c.contains(e)) {
-                    (<MenuButton>c).collapse();
+                    c.collapse();
                 } else {
-                    (<MenuButton>c).expand();
+                    c.expand();
                 }
             });
             return true;
+        });
+
+        this.on('dir', (e: IO.Event) => {
+            if (!e.dir) return;
+            if (e.dir[0] < 0) {
+                this.hide();
+            } else if (e.dir[0] > 0) {
+                this.expandItem();
+            } else if (e.dir[1] < 0) {
+                this.prevItem();
+            } else if (e.dir[1] > 0) {
+                this.nextItem();
+            }
+            e.stopPropagation();
+        });
+
+        this.on(['Enter', ' '], () => {
+            const btn = this.children[this._selectedIndex];
+            btn.action();
+            this.hide();
         });
     }
 
@@ -74,17 +96,18 @@ export class Menu extends Widget.Widget {
 
         const marker = this._attrStr('marker');
         const entries = Object.entries(buttons);
-        if (this.bounds.width <= 0) {
-            this.bounds.width = Math.max(
-                opts.minWidth || 0,
-                entries.reduce((out, [key, value]) => {
-                    const textLen =
-                        TextUtils.length(key) +
-                        (typeof value === 'string' ? 0 : marker.length);
-                    return Math.max(out, textLen);
-                }, 0)
-            );
-        }
+
+        this.bounds.width = Math.max(
+            opts.minWidth || 0,
+            this.bounds.width,
+            entries.reduce((out, [key, value]) => {
+                const textLen =
+                    TextUtils.length(key) +
+                    (typeof value === 'string' ? 0 : marker.length);
+                return Math.max(out, textLen);
+            }, 0)
+        );
+
         entries.forEach(([key, value], i) => {
             const opts: MenuButtonOptions = {
                 x: this.bounds.x,
@@ -93,9 +116,10 @@ export class Menu extends Widget.Widget {
                 tag: this._attrStr('buttonTag'),
                 width: this.bounds.width,
                 height: 1,
-                depth: this.depth + 1,
+                // depth: this.depth + 1,
                 buttons: value,
                 text: key,
+                parent: this,
             };
 
             if (typeof value === 'string') {
@@ -108,25 +132,67 @@ export class Menu extends Widget.Widget {
                         ' '
                     ) + marker;
             }
-            const menuItem = new MenuButton(this.layer, opts);
-            menuItem.setParent(this);
+            const menuItem = new MenuButton(opts);
             menuItem.on('mouseenter', () => {
-                this._bubbleEvent('change', menuItem);
-                return false;
+                this.trigger('change');
             });
-            menuItem.setParent(this);
+            menuItem.on('click', () => {
+                this.hide();
+            });
+
+            if (menuItem.menu) {
+                menuItem.menu.on('hide', () => {
+                    this.scene!.setFocusWidget(this);
+                });
+            }
         });
     }
 
-    collapse(): this {
+    show(): void {
+        this.hidden = false;
+        this._selectedIndex = 0;
+        this.scene!.setFocusWidget(this);
+
+        this.trigger('show');
+    }
+
+    hide(): void {
+        this.hidden = true;
+        this.trigger('hide');
+    }
+
+    nextItem() {
+        ++this._selectedIndex;
+        if (this._selectedIndex >= this.children.length) {
+            this._selectedIndex = 0;
+        }
+    }
+
+    prevItem() {
+        --this._selectedIndex;
+        if (this._selectedIndex < 0) {
+            this._selectedIndex = this.children.length - 1;
+        }
+    }
+
+    expandItem(): Menu | null {
+        const c = this.children[this._selectedIndex];
+        return c.expand();
+    }
+
+    selectItemWithKey(key: string) {
+        let found = false;
         this.children.forEach((c) => {
-            (<MenuButton>c).collapse();
+            if (found) return;
+            if (c.text().startsWith(key)) {
+                found = true;
+                // ???
+            }
         });
-        return this;
     }
 }
 
-export interface MenuButtonOptions extends Widget.WidgetOptions {
+export interface MenuButtonOptions extends Widget.WidgetOpts {
     text: string;
     buttons: ButtonConfig;
 }
@@ -134,81 +200,79 @@ export interface MenuButtonOptions extends Widget.WidgetOptions {
 export class MenuButton extends Text.Text {
     menu: Menu | null = null;
 
-    constructor(layer: WidgetLayer, opts: MenuButtonOptions) {
+    constructor(opts: MenuButtonOptions) {
         super(
-            layer,
             (() => {
                 opts.tag = opts.tag || 'mi';
+                opts.tabStop = false;
                 return opts;
             })()
         );
 
-        this.tag = opts.tag || 'mi';
+        // this.tag = opts.tag || 'mi';
 
         if (typeof opts.buttons !== 'string') {
             this.menu = this._initMenu(opts);
 
             this.on('mouseenter', () => {
                 this.menu!.hidden = false;
-                this.menu!._bubbleEvent('change', this);
-                return true;
+                this.menu!.trigger('change');
             });
             this.on('mouseleave', (_n, _w, e) => {
-                if (this.parent?.contains(e)) {
+                if (this.parent?.bounds.contains(e)) {
                     this.menu!.hidden = true;
-                    return true;
                 }
-                return false;
             });
             this.on('click', () => {
                 return true; // eat clicks
             });
         }
+
+        this.on('click', this.action.bind(this));
     }
 
-    collapse(): this {
+    collapse(): void {
         if (this.menu) {
-            this.menu.collapse();
-            this.menu.hidden = true;
+            this.menu.hide();
         }
-        return this;
     }
 
-    expand(): this {
-        if (this.menu) {
-            this.menu.hidden = false;
-        }
-        return this;
+    expand(): Menu | null {
+        if (!this.menu) return null;
+        this.menu.show();
+        // this.scene!.setFocusWidget(this.menu);
+        return this.menu;
     }
 
     _setMenuPos(xy: XY.XY, opts: MenuButtonOptions) {
         xy.x = this.bounds.x + this.bounds.width;
         xy.y = this.bounds.y;
         const height = Object.keys(opts.buttons).length;
-        if (xy.y + height >= this.layer.height) {
-            xy.y = this.layer.height - height - 1;
+        if (this.scene && xy.y + height >= this.scene.height) {
+            xy.y = this.scene.height - height - 1;
         }
     }
 
     _initMenu(opts: MenuButtonOptions): Menu | null {
         if (typeof opts.buttons === 'string') return null;
 
-        const menuOpts = {
+        const menuOpts: MenuOptions = {
             x: this.bounds.x + this.bounds.width,
             y: this.bounds.y,
             class: opts.class,
             tag: opts.tag || 'mi',
             buttons: opts.buttons,
-            depth: this.depth + 1,
+            // depth: this.depth + 1,
         };
-        this._setMenuPos(menuOpts, opts);
-        const menu = new Menu(this.layer, menuOpts);
+        this._setMenuPos(menuOpts as XY.XY, opts);
+        menuOpts.parent = this;
+        const menu = new Menu(menuOpts);
         menu.hidden = true;
-        menu.setParent(this);
         return menu;
     }
 }
 
+/*
 // extend WidgetLayer
 
 export type AddMenuOptions = MenuOptions &
@@ -227,3 +291,4 @@ WidgetLayer.prototype.menu = function (opts: AddMenuOptions): Menu {
     }
     return list;
 };
+*/

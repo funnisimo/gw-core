@@ -3,6 +3,10 @@ export type Callback = () => void;
 export class Loop {
     _timer = 0;
 
+    get isRunning(): boolean {
+        return this._timer != 0;
+    }
+
     start(cb: Callback, dt = 16): void {
         let busy = false;
 

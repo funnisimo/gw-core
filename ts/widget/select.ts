@@ -2,9 +2,9 @@
 import * as Widget from './widget';
 import * as Menu from './menu';
 import * as Text from './text';
-import { WidgetLayer } from './layer';
+// import { Body } from './body';
 
-export interface SelectOptions extends Widget.WidgetOptions {
+export interface SelectOptions extends Widget.WidgetOpts {
     text: string;
     buttons: Menu.DropdownConfig;
     buttonClass?: string;
@@ -15,17 +15,22 @@ export class Select extends Widget.Widget {
     dropdown!: Text.Text;
     menu!: Menu.Menu;
 
-    constructor(layer: WidgetLayer, opts: SelectOptions) {
-        super(layer, opts);
+    constructor(opts: SelectOptions) {
+        super(
+            (() => {
+                opts.tag = opts.tag || 'select';
+                return opts;
+            })()
+        );
 
-        this.tag = opts.tag || 'select';
         this._initText(opts);
         this._initMenu(opts);
         this.bounds.height = 1; // just the text component
     }
 
     _initText(opts: SelectOptions) {
-        this.dropdown = new Text.Text(this.layer, {
+        this.dropdown = new Text.Text({
+            parent: this,
             text: opts.text + ' \u25bc',
             x: this.bounds.x,
             y: this.bounds.y,
@@ -33,16 +38,18 @@ export class Select extends Widget.Widget {
             tag: opts.tag || 'select',
             width: this.bounds.width,
             height: 1,
-            depth: this.depth + 1,
-        }).on('click', () => {
+            // depth: this.depth + 1,
+        });
+        this.dropdown.on('click', () => {
             this.menu.toggleProp('hidden');
             return false;
         });
-        this.dropdown.setParent(this, { beforeIndex: 0 });
+        // this.dropdown.setParent(this, { beforeIndex: 0 });
     }
 
     _initMenu(opts: SelectOptions) {
-        this.menu = new Menu.Menu(this.layer, {
+        this.menu = new Menu.Menu({
+            parent: this,
             x: this.bounds.x,
             y: this.bounds.y + 1,
             class: opts.buttonClass,
@@ -51,16 +58,17 @@ export class Select extends Widget.Widget {
             minWidth: this.dropdown.bounds.width,
             height: opts.height,
             buttons: opts.buttons,
-            depth: this.depth + 1,
-        }).on('click', () => {
+            // depth: this.depth + 1,
+        });
+        this.menu.on('click', () => {
             this.menu.hidden = true;
             return false;
         });
         this.menu.hidden = true;
-        this.menu.setParent(this);
     }
 }
 
+/*
 // extend WidgetLayer
 
 export type AddSelectOptions = SelectOptions &
@@ -79,3 +87,4 @@ WidgetLayer.prototype.select = function (opts: AddSelectOptions): Select {
     }
     return list;
 };
+*/

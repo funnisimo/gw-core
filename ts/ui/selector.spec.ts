@@ -1,6 +1,6 @@
 // import * as GWU from 'gw-utils';
 import * as Selector from './selector';
-import * as Types from './types';
+// import * as Types from './types';
 
 describe('selector', () => {
     interface SelectableOptions {
@@ -9,8 +9,8 @@ describe('selector', () => {
         props?: Record<string, boolean>;
         attrs?: Record<string, string>;
         classes?: string[];
-        parent?: Types.UISelectable;
-        children?: Types.UISelectable[];
+        parent?: Selector.UISelectable;
+        children?: Selector.UISelectable[];
     }
 
     function mockSelectable(opts: SelectableOptions = {}) {
@@ -35,24 +35,27 @@ describe('selector', () => {
     test('priority', () => {
         // global
         expect(Selector.compile('*').priority).toEqual(0);
-        expect(Selector.compile('*:hovered').priority).toEqual(1);
-        expect(Selector.compile(':hovered').priority).toEqual(1);
+        expect(Selector.compile('*:hovered').priority).toEqual(2);
+        expect(Selector.compile(':hovered').priority).toEqual(2);
 
         // tag (+/- class)
         expect(Selector.compile('text').priority).toEqual(10);
-        expect(Selector.compile('text:hovered').priority).toEqual(11);
+        expect(Selector.compile('text:hovered').priority).toEqual(12);
         expect(Selector.compile('text.class').priority).toEqual(110);
-        expect(Selector.compile('text.class:hovered').priority).toEqual(111);
+        expect(Selector.compile('text.class:hovered').priority).toEqual(112);
+
+        expect(Selector.compile('td:odd').priority).toEqual(11);
+        expect(Selector.compile('td:even').priority).toEqual(11);
 
         // class
         expect(Selector.compile('.class').priority).toEqual(100);
-        expect(Selector.compile('.class:hovered').priority).toEqual(101);
+        expect(Selector.compile('.class:hovered').priority).toEqual(102);
 
         // id
         expect(Selector.compile('#id').priority).toEqual(1000);
         expect(Selector.compile('#id.class').priority).toEqual(1100);
-        expect(Selector.compile('#id.class:hovered').priority).toEqual(1101);
-        expect(Selector.compile('#id:hovered').priority).toEqual(1001);
+        expect(Selector.compile('#id.class:hovered').priority).toEqual(1102);
+        expect(Selector.compile('#id:hovered').priority).toEqual(1002);
 
         // local
         expect(Selector.compile('$').priority).toEqual(10000);

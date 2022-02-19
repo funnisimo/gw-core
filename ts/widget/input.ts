@@ -1,16 +1,14 @@
 // import * as GWU from 'gw-utils';
 import * as TextUtils from '../text';
-import * as IO from '../io';
+import * as IO from '../app/io';
 import * as Buffer from '../buffer';
 
-import { WidgetLayer } from './layer';
 import * as Text from './text';
-import * as Widget from './widget';
-import { PropType } from '../ui/types';
+// import * as Widget from './widget';
+import { PropType } from './widget';
 import * as Style from '../ui/style';
 
-export interface InputOptions extends Omit<Text.TextOptions, 'text'> {
-    text?: string; // don't have to have text
+export interface InputOptions extends Text.TextOptions {
     id: string; // have to have id
     placeholder?: string;
 
@@ -58,14 +56,12 @@ export class Input extends Text.Text {
     min = 0;
     max = 0;
 
-    constructor(layer: WidgetLayer, opts: InputOptions) {
+    constructor(opts: InputOptions) {
         super(
-            layer,
             (() => {
                 opts.text = opts.text || '';
                 opts.tag = opts.tag || 'input';
                 opts.tabStop = opts.tabStop === undefined ? true : opts.tabStop;
-                opts.action = opts.action || opts.id;
                 opts.width =
                     opts.width ||
                     opts.maxLength ||
@@ -95,8 +91,8 @@ export class Input extends Text.Text {
         }
 
         this.prop('valid', this.isValid()); // redo b/c rules are now set
-        this.on('blur', () => this._fireEvent('change', this));
-
+        this.on('blur', this.action.bind(this));
+        // this.on('click', this.action.bind(this));
         this.reset();
     }
 
@@ -127,32 +123,30 @@ export class Input extends Text.Text {
         );
     }
 
-    keypress(ev: IO.Event): boolean {
-        if (!ev.key) return false;
+    keypress(ev: IO.Event): void {
+        if (!ev.key) return;
 
         const textEntryBounds = this.numbersOnly ? ['0', '9'] : [' ', '~'];
 
         if (ev.key === 'Enter' && this.isValid()) {
-            const action = this._attrStr('action');
-            if (action && action.length) {
-                this._fireEvent(action, this);
-            } else {
-                this.layer.nextTabStop();
-            }
-            return true;
+            this.action();
+            this.scene!.nextTabStop();
+            ev.stopPropagation();
+            return;
         }
         if (ev.key == 'Delete' || ev.key == 'Backspace') {
             if (this._text.length) {
                 this.text(
                     TextUtils.spliceRaw(this._text, this._text.length - 1, 1)
                 );
-                this._fireEvent('input', this);
-                this._draw(this.layer.buffer); // save some work?
+                this.trigger('change');
+                this._used && this._draw(this.scene!.buffer); // save some work?
             }
-            return true;
-        } else if (ev.key.length > 1) {
+            ev.stopPropagation();
+            return;
+        } else if (IO.isControlCode(ev)) {
             // ignore other special keys...
-            return false;
+            return;
         }
 
         // eat/use all other keys
@@ -160,11 +154,26 @@ export class Input extends Text.Text {
             // allow only permitted input
             if (!this.maxLength || this._text.length < this.maxLength) {
                 this.text(this._text + ev.key);
-                this._fireEvent('input', this);
-                this._draw(this.layer.buffer); // save some work?
+                this.trigger('change');
+                this._used && this._draw(this.scene!.buffer); // save some work?
             }
         }
-        return true;
+        ev.stopPropagation();
+    }
+
+    click(e: IO.Event): void {
+        if (this.disabled || this.hidden) return;
+
+        e.target = this;
+
+        const c = this.childAt(e);
+        if (c) {
+            c.click(e);
+        }
+
+        if (!this.bounds.contains(e)) return;
+        if (e.propagationStopped) return;
+        this.events.dispatch(e);
     }
 
     text(): string;
@@ -181,7 +190,8 @@ export class Input extends Text.Text {
         this._drawFill(buffer);
 
         let vOffset = 0;
-        if (this._used.valign === 'bottom') {
+        if (!this._used) {
+        } else if (this._used.valign === 'bottom') {
             vOffset = this.bounds.height - this._lines.length;
         } else if (this._used.valign === 'middle') {
             vOffset = Math.floor((this.bounds.height - this._lines.length) / 2);
@@ -195,19 +205,23 @@ export class Input extends Text.Text {
             show = this._text.slice(this._text.length - this.bounds.width);
         }
 
+        const fg = this._used ? this._used.fg : 'white';
+        const align = this._used ? this._used.align : 'left';
+
         buffer.drawText(
             this.bounds.x,
             this.bounds.y + vOffset,
             show,
-            this._used.fg,
+            fg,
             -1,
             this.bounds.width,
-            this._used.align
+            align
         );
         return true;
     }
 }
 
+/*
 // extend WidgetLayer
 
 export type AddInputOptions = InputOptions &
@@ -226,3 +240,4 @@ WidgetLayer.prototype.input = function (opts: AddInputOptions): Input {
     }
     return list;
 };
+*/

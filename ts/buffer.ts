@@ -189,6 +189,12 @@ export class Buffer {
         return this;
     }
 
+    apply(other: Buffer): this {
+        this._data.set(other._data);
+        this.changed = true;
+        return this;
+    }
+
     drawText(
         x: number,
         y: number,

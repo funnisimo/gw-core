@@ -65,10 +65,9 @@ export function arrayIncludesAll(a: any[], b: any[]) {
     return b.every((av) => a.includes(av));
 }
 
-export function arrayRevEach<T>(a: T[], fn: (v: T, i: number) => void) {
-    for (let i = a.length; i > 0; --i) {
-        --i;
-        fn(a[i], i);
+export function arrayRevEach<T>(a: T[], fn: (v: T, i: number, a: T[]) => void) {
+    for (let i = a.length - 1; i > -1; --i) {
+        fn(a[i], i, a);
     }
 }
 
@@ -169,14 +168,4 @@ export function prevIndex(index: number, length: number, wrap = true): number {
         return -1;
     }
     return index;
-}
-
-export class DeleteArray<T> extends Array<T> {
-    constructor(...args: any[]) {
-        super(...args);
-    }
-    pushd(v: T): () => void {
-        this.push(v);
-        return () => arrayDelete(this, v);
-    }
 }

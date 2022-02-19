@@ -1,56 +1,33 @@
 // import * as GWU from 'gw-utils';
-import * as IO from '../io';
-
-import { WidgetLayer } from './layer';
 import * as Text from './text';
-import * as Widget from './widget';
+// import * as Widget from './widget';
 
 export interface ButtonOptions extends Omit<Text.TextOptions, 'text'> {
     text?: string; // don't have to have text
-    id: string; // have to have id
 }
 
 export class Button extends Text.Text {
-    constructor(layer: WidgetLayer, opts: ButtonOptions) {
+    constructor(opts: ButtonOptions) {
         super(
-            layer,
             (() => {
                 opts.text = opts.text || '';
-                opts.action = opts.action || opts.id;
+                opts.tabStop = opts.tabStop === undefined ? true : opts.tabStop;
                 opts.tag = opts.tag || 'button';
                 if (!opts.text && !opts.width)
                     throw new Error('Buttons must have text or width.');
+                if (opts.text.length == 0) {
+                    opts.width = opts.width || 2;
+                }
                 return opts as Text.TextOptions;
             })()
         );
-    }
 
-    keypress(ev: IO.Event): boolean {
-        if (!ev.key) return false;
-
-        if (this._fireEvent('keypress', this, ev)) return true;
-
-        if (ev.key === 'Enter') {
-            const action = this._attrStr('action');
-            if (action && action.length) this._bubbleEvent(action, this);
-            return true;
-        }
-
-        return false;
-    }
-
-    click(ev: IO.Event): boolean {
-        if (!this.contains(ev)) return false;
-
-        if (this._fireEvent('click', this, ev)) return true;
-
-        const action = this._attrStr('action');
-        if (action && action.length) return this._bubbleEvent(action, this);
-
-        return false;
+        this.on('click', this.action.bind(this));
+        this.on('Enter', this.action.bind(this));
     }
 }
 
+/*
 // extend Layer
 
 export type AddButtonOptions = Omit<ButtonOptions, 'text'> &
@@ -75,3 +52,4 @@ WidgetLayer.prototype.button = function (
     this.pos(widget.bounds.x, widget.bounds.bottom);
     return widget;
 };
+*/

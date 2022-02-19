@@ -1,16 +1,17 @@
 // import * as GWU from 'gw-utils';
-import * as IO from '../io';
+import * as IO from '../app/io';
 import * as Buffer from '../buffer';
+import * as COLOR from '../color';
 
-import { WidgetLayer } from './layer';
 import * as Text from './text';
+// import { Widget } from './widget';
 
 export interface CheckboxOptions extends Text.TextOptions {
     uncheck?: string;
     check?: string;
     checked?: boolean;
     pad?: number;
-    value?: string;
+    value?: string | [string, string]; // on | [off,on]
 }
 
 export class Checkbox extends Text.Text {
@@ -21,57 +22,79 @@ export class Checkbox extends Text.Text {
         value: 'on',
     };
 
-    constructor(layer: WidgetLayer, opts: CheckboxOptions) {
+    constructor(opts: CheckboxOptions) {
         super(
-            layer,
             (() => {
-                opts.action = opts.action || opts.id || 'input';
+                // opts.action = opts.action || opts.id || 'input';
                 opts.tag = opts.tag || 'checkbox';
+                opts.tabStop = opts.tabStop === undefined ? true : opts.tabStop;
                 return opts as Text.TextOptions;
             })()
         );
 
         this.attr('uncheck', opts.uncheck || Checkbox.default.uncheck);
         this.attr('check', opts.check || Checkbox.default.check);
-        this.attr('pad', opts.pad || Checkbox.default.pad);
-        this.attr('value', opts.value || Checkbox.default.value);
+        this.attr('pad', opts.pad ?? Checkbox.default.pad);
+        this.attr('offValue', '');
+        if (Array.isArray(opts.value)) {
+            this.attr('offValue', opts.value[0] || '');
+            this.attr('value', opts.value[1] || Checkbox.default.value);
+        } else {
+            this.attr('value', opts.value || Checkbox.default.value);
+        }
+
+        this.bounds.width += this._attrInt('pad');
 
         if (opts.checked) {
             this.prop('checked', true);
         }
+
+        this.on('click', (ev) => {
+            if (ev.defaultPrevented) return;
+            this.toggleProp('checked');
+        });
     }
 
-    keypress(ev: IO.Event): boolean {
-        if (!ev.key) return false;
+    value(): string {
+        return this._propBool('checked')
+            ? this._attrStr('value')
+            : this._attrStr('offValue');
+    }
+
+    text(): string;
+    text(v: string): this;
+    text(v?: string): this | string {
+        if (v === undefined) return super.text();
+        super.text(v);
+        this.bounds.width += 1 + this._attrInt('pad');
+        return this;
+    }
+
+    keypress(ev: IO.Event): void {
+        if (!ev.key) return;
+
+        super.keypress(ev);
+        if (ev.defaultPrevented) return;
 
         if (ev.key === 'Enter' || ev.key === ' ') {
             this.toggleProp('checked');
-            this._fireEvent('input', this, ev);
-            return true;
-        }
-        if (ev.key === 'Backspace' || ev.key === 'Delete') {
+            this.trigger('change');
+        } else if (ev.key === 'Backspace' || ev.key === 'Delete') {
             this.prop('checked', false);
-            this._fireEvent('input', this, ev);
-            return true;
+            this.trigger('change');
         }
-        return false;
-    }
-
-    click(ev: IO.Event): boolean {
-        if (!this.contains(ev)) return false;
-        this.toggleProp('checked');
-        this.layer.setFocusWidget(this);
-        this._fireEvent('input', this, ev);
-        return true;
     }
 
     _draw(buffer: Buffer.Buffer): boolean {
-        const fg = this._used.fg || 'white';
+        const fg = this._used.fg || COLOR.WHITE;
+        const bg = this._used.bg || COLOR.NONE;
         const align = this._used.align;
+
+        buffer.fillBounds(this.bounds, 0, 0, bg);
 
         const state = this.prop('checked') ? 'check' : 'uncheck';
         let v = '' + this._attrs[state];
-        buffer.drawText(this.bounds.x, this.bounds.y, v, fg, -1);
+        buffer.drawText(this.bounds.x, this.bounds.y, v, fg, bg);
 
         let vOffset = 0;
         if (this._used.valign === 'bottom') {
@@ -87,7 +110,7 @@ export class Checkbox extends Text.Text {
                 this.bounds.y + i + vOffset,
                 line,
                 fg,
-                -1,
+                bg,
                 this.bounds.width - pad,
                 align
             );

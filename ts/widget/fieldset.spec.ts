@@ -1,22 +1,23 @@
-import * as UTILS from '../../test/utils';
-// import * as GWU from 'gw-utils';
-import * as Fieldset from './fieldset';
-import * as Layer from './layer';
-// import { Widget } from '.';
+import * as TEST from '../../test/utils';
+// import * as TEXT from '../text';
+import * as APP from '../app';
+import * as CANVAS from '../canvas';
 
-describe('Fieldset Widget', () => {
-    let layer: Layer.WidgetLayer;
+// import * as FIELD from './fieldset';
+
+describe('Fieldset', () => {
+    let canvas: CANVAS.CanvasType;
+    let app: APP.App;
+    let scene: APP.Scene;
 
     beforeEach(() => {
-        layer = UTILS.mockWidgetLayer(50, 30);
-    });
-
-    afterEach(() => {
-        layer.finish();
+        canvas = TEST.mockCanvas(50, 30);
+        app = APP.make({ canvas, start: false });
+        scene = app.scene;
     });
 
     test('create obj', () => {
-        const e = new Fieldset.Fieldset(layer, {
+        const e = scene.build.fieldset({
             width: 30,
             dataWidth: 10,
             height: 10,
@@ -27,10 +28,10 @@ describe('Fieldset Widget', () => {
 
         expect(e.bounds).toMatchObject({ x: 5, y: 5, width: 30, height: 10 });
 
-        layer.draw();
+        app._draw();
 
-        expect(UTILS.getBufferText(layer.buffer, 5, 5, 20)).toEqual('LEGEND');
-        // layer.buffer.dump();
+        expect(TEST.getBufferText(canvas.buffer, 5, 5, 20)).toEqual('LEGEND');
+        // canvas.buffer.dump();
     });
 
     // function info(w: Widget) {
@@ -41,7 +42,7 @@ describe('Fieldset Widget', () => {
     test('add children', () => {
         // console.log(layer.allWidgets.map((w) => info(w)));
 
-        const fs = layer.fieldset({
+        const fs = scene.build.fieldset({
             legend: 'LEGEND',
             x: 10,
             y: 5,
@@ -58,18 +59,18 @@ describe('Fieldset Widget', () => {
         fs.data({ age: 4, height: "6'2", weight: 190 });
 
         // console.log(layer.allWidgets.map((w) => info(w)));
-        layer.draw();
+        app._draw();
 
-        // layer.buffer.dump();
+        // canvas.buffer.dump();
 
-        expect(UTILS.getBufferText(layer.buffer, 10, 5, 20)).toEqual('LEGEND');
-        expect(UTILS.getBufferText(layer.buffer, 10, 6, 20)).toEqual(
+        expect(TEST.getBufferText(canvas.buffer, 10, 5, 20)).toEqual('LEGEND');
+        expect(TEST.getBufferText(canvas.buffer, 10, 6, 20)).toEqual(
             'Age      :         4'
         );
-        expect(UTILS.getBufferText(layer.buffer, 10, 7, 20)).toEqual(
+        expect(TEST.getBufferText(canvas.buffer, 10, 7, 20)).toEqual(
             "Height   :       6'2"
         );
-        expect(UTILS.getBufferText(layer.buffer, 10, 8, 20)).toEqual(
+        expect(TEST.getBufferText(canvas.buffer, 10, 8, 20)).toEqual(
             'Weight   :       190'
         );
 
@@ -84,7 +85,7 @@ describe('Fieldset Widget', () => {
     test('border + pad', () => {
         // console.log(layer.allWidgets.map((w) => info(w)));
 
-        const fs = layer.fieldset({
+        const fs = scene.build.fieldset({
             legend: 'LEGEND',
             x: 10,
             y: 5,
@@ -103,20 +104,20 @@ describe('Fieldset Widget', () => {
         fs.data({ age: 4, height: "6'2", weight: 190 });
 
         // console.log(layer.allWidgets.map((w) => info(w)));
-        layer.draw();
+        scene.draw(canvas.buffer);
 
-        // layer.buffer.dump();
+        // canvas.buffer.dump();
 
-        expect(UTILS.getBufferText(layer.buffer, 10, 5, 30)).toEqual(
+        expect(TEST.getBufferText(canvas.buffer, 10, 5, 30)).toEqual(
             '+-LEGEND----------------+'
         );
-        expect(UTILS.getBufferText(layer.buffer, 10, 6, 30)).toEqual(
+        expect(TEST.getBufferText(canvas.buffer, 10, 6, 30)).toEqual(
             '| Age      :          4 |'
         );
-        expect(UTILS.getBufferText(layer.buffer, 10, 7, 30)).toEqual(
+        expect(TEST.getBufferText(canvas.buffer, 10, 7, 30)).toEqual(
             "| Height   :        6'2 |"
         );
-        expect(UTILS.getBufferText(layer.buffer, 10, 8, 30)).toEqual(
+        expect(TEST.getBufferText(canvas.buffer, 10, 8, 30)).toEqual(
             '| Weight   :        190 |'
         );
 

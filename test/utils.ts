@@ -1,22 +1,26 @@
 // import { Random } from '../ts/random';
 import { Buffer } from '../ts/buffer';
 import * as Canvas from '../ts/canvas';
-import * as IO from '../ts/io';
-import * as Layer from '../ts/ui/layer';
-import * as WidgetLayer from '../ts/widget/layer';
-import * as UI from '../ts/ui/ui';
+import * as IO from '../ts/app/io';
+// import * as Layer from '../ts/ui/layer';
+// import * as WidgetLayer from '../ts/widget/layer';
+// import * as UI from '../ts/ui/ui';
+
+const GLYPHS: string[] = [];
+Canvas.initGlyphs({ draw: (n, ch) => (GLYPHS[n] = ch) });
 
 export function extractBufferText(
     buffer: Buffer,
     x: number,
     y: number,
-    width: number,
+    width: number = 99,
     trim = true
 ) {
     let output = '';
+    width = Math.min(buffer.width - x, width);
     for (let i = x; i < x + width; ++i) {
         const data = buffer.info(i, y);
-        const ch = String.fromCharCode(data.glyph || 32);
+        const ch = GLYPHS[data.glyph || 32] || ' ';
         output += ch;
     }
     if (!trim) return output;
@@ -57,63 +61,109 @@ export function mockLoop() {
     return loop;
 }
 
-export function bufferStack(w: number, h: number): Layer.BufferStack {
+// export function bufferStack(w: number, h: number): Layer.BufferStack {
+//     const target: Canvas.BufferTarget = {
+//         width: w,
+//         height: h,
+//         copyTo: jest.fn(),
+//         toGlyph(ch: string | number): number {
+//             if (typeof ch === 'string') return GLYPHS.indexOf(ch);
+//             return ch;
+//         },
+//         draw: jest.fn(),
+//     };
+
+//     const loop = new IO.Loop();
+
+//     const buffer = new Canvas.Buffer(target);
+
+//     return {
+//         buffer,
+//         parentBuffer: buffer,
+//         pushBuffer() {
+//             return buffer;
+//         },
+//         popBuffer() {},
+//         loop,
+//     };
+// }
+
+export function mockCanvas(width = 30, height = 30): Canvas.CanvasType {
     const target: Canvas.BufferTarget = {
-        width: w,
-        height: h,
+        width,
+        height,
         copyTo: jest.fn(),
         toGlyph(ch: string | number): number {
-            if (typeof ch === 'string') return ch.charCodeAt(0);
+            if (typeof ch === 'string') return GLYPHS.indexOf(ch); // ch.charCodeAt(0);
             return ch;
         },
-        draw: jest.fn(),
+        draw: jest.fn().mockReturnValue(true),
     };
-
-    const loop = new IO.Loop();
 
     const buffer = new Canvas.Buffer(target);
+    const node = {} as HTMLCanvasElement;
+    const glyphs = {} as Canvas.Glyphs;
 
-    return {
+    return Object.assign(target, {
+        mouse: { x: -1, y: -1 },
+        node,
+        tileWidth: 16,
+        tileHeight: 16,
+        pxWidth: 16 * width,
+        pxHeight: 16 * height,
+
+        glyphs,
+
         buffer,
         parentBuffer: buffer,
-        pushBuffer() {
-            return buffer;
+        root: buffer,
+
+        pushBuffer: jest.fn().mockReturnValue(buffer),
+        popBuffer: jest.fn(),
+        resize: jest.fn(),
+
+        render: jest.fn(),
+        hasXY(x: number, y: number) {
+            return x >= 0 && y >= 0 && x < width && y < height;
         },
-        popBuffer() {},
-        loop,
-    };
+
+        onclick: null,
+        onmousemove: null,
+        onmouseup: null,
+        onkeydown: null,
+    }) as Canvas.CanvasType;
 }
 
-export function mockUI(width = 100, height = 38) {
-    // @ts-ignore
-    const canvas = bufferStack(width, height);
+// export function mockUI(width = 100, height = 38) {
+//     // @ts-ignore
+//     const canvas = bufferStack(width, height);
 
-    const ui = new UI.UI({
-        loop: canvas.loop,
-        canvas: canvas as Canvas.BaseCanvas,
-        layer: false,
-    });
+//     const ui = new UI.UI({
+//         loop: canvas.loop,
+//         canvas: canvas as Canvas.BaseCanvas,
+//         layer: false,
+//     });
 
-    return ui;
-}
+//     return ui;
+// }
 
-export function mockLayer(w: number, h: number): Layer.Layer {
-    const canvas = mockUI(w, h);
-    const layer = new Layer.Layer(canvas);
-    return layer;
-}
+// export function mockLayer(w: number, h: number): Layer.Layer {
+//     const canvas = mockUI(w, h);
+//     const layer = new Layer.Layer(canvas);
+//     return layer;
+// }
 
-export function mockWidgetLayer(w: number, h: number): WidgetLayer.WidgetLayer {
-    const canvas = mockUI(w, h);
-    const layer = new WidgetLayer.WidgetLayer(canvas);
-    return layer;
-}
+// export function mockWidgetLayer(w: number, h: number): WidgetLayer.WidgetLayer {
+//     const canvas = mockUI(w, h);
+//     const layer = new WidgetLayer.WidgetLayer(canvas);
+//     return layer;
+// }
 
 export function getBufferText(
     buffer: Buffer,
     x: number,
     y: number,
-    width: number
+    width: number = 99
 ): string {
     let text = '';
     for (let i = 0; i < width; ++i) {
@@ -134,24 +184,17 @@ export function getBufferBg(buffer: Buffer, x: number, y: number): number {
     return data.bg;
 }
 
-export async function pushEvent(
-    loop: IO.IOLoop,
-    event: IO.Event
-): Promise<void> {
-    loop.enqueue(event);
-
-    const l = loop as IO.Loop;
-    const h = l.currentHandler as IO.Handler;
-
-    do {
-        await wait(10);
-    } while (h._events.length);
-}
-
 export function keypress(key: string): IO.Event {
+    let code = 'Key' + key.toUpperCase();
+    if (key.length > 1) {
+        code = key;
+    } else if (key >= '0' && key <= '9') {
+        code = 'Digit' + key;
+    }
+
     return IO.makeKeyEvent({
         key,
-        code: 'KEY_' + key.toUpperCase(),
+        code,
     } as KeyboardEvent);
 }
 

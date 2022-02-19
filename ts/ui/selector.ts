@@ -1,5 +1,14 @@
 import * as Utils from '../utils';
-import { UISelectable } from './types';
+import { PropType } from '../widget';
+
+export interface UISelectable {
+    readonly tag: string;
+    readonly classes: string[];
+    children: UISelectable[];
+    attr(name: string): PropType | undefined;
+    prop(name: string): PropType | undefined;
+    parent: UISelectable | null;
+}
 
 export type MatchFn = (el: UISelectable) => boolean;
 type BuildFn = (next: MatchFn, e: UISelectable) => boolean;
@@ -121,7 +130,10 @@ export class Selector {
             return this._matchNot(this._matchProp('checked'));
         }
 
-        this.priority += 1; // prop
+        this.priority += 2; // prop
+        if (['odd', 'even'].includes(prop)) {
+            this.priority -= 1;
+        }
         return (el: UISelectable) => !!el.prop(prop);
     }
 

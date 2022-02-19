@@ -4,4 +4,4 @@ export * from './loop';
 export * from './timers';
 export * from './scene';
 export * from './scenes';
-export * from './gw';
+export * from './app';

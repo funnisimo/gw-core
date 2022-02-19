@@ -1,35 +1,52 @@
 import * as EVENTS from './events';
 
-type Tag = string;
+export type Tag = string;
 
 /**
  * Cancel the event.
  */
-
-class IDList<T> extends Map<number, T> {
-    _lastID: number;
-    constructor(...args: any[]) {
-        super(...args);
-        this._lastID = 0;
-    }
-    push(v: T): number {
-        const id = this._lastID;
-        this.set(id, v);
-        this._lastID++;
-        return id;
-    }
-    pushd(v: T): EVENTS.CancelFn {
-        const id = this.push(v);
-        return () => this.delete(id);
-    }
-}
 
 const uid = (() => {
     let id = 0;
     return () => id++;
 })();
 
-interface Comp {
+export interface Comp {
+    /**
+     * Component ID (if left out won't be treated as a comp).
+     */
+    id?: Tag;
+    /**
+     * What other comps this comp depends on.
+     */
+    require?: Tag[];
+    /**
+     * Event that runs when host game obj is added to scene.
+     */
+    add?: () => void;
+    /**
+     * Event that runs when host game obj is added to scene and game is loaded.
+     */
+    load?: () => void;
+    /**
+     * Event that runs every frame.
+     */
+    update?: () => void;
+    /**
+     * Event that runs every frame.
+     */
+    draw?: () => void;
+    /**
+     * Event that runs when obj is removed from scene.
+     */
+    destroy?: () => void;
+    /**
+     * Debug info for inspect mode.
+     */
+    inspect?: () => string;
+}
+
+export class CompObj implements Comp {
     /**
      * Component ID (if left out won't be treated as a comp).
      */
@@ -79,21 +96,26 @@ type Expand<T> = T extends infer U ? { [K in keyof U]: U[K] } : never;
 type MergeObj<T> = Expand<UnionToIntersection<Defined<T>>>;
 type MergeComps<T> = Omit<MergeObj<T>, keyof Comp>;
 
-type CompList<T> = Array<T | Tag>;
+export type CompList<T> = Array<T | Tag>;
 
 /**
  * Inspect info for a character.
  */
-type GameObjInspect = Record<Tag, string | null>;
+export type GameObjInspect = Record<Tag, string | null>;
 
 /**
  * Base interface of all game objects.
  */
-interface GameObjRaw {
+export interface GameObjRaw {
     /**
      * Internal GameObj ID.
      */
     _id: number | null;
+
+    /**
+     * Events object.
+     */
+    events: EVENTS.Events;
     /**
      * If draw the game obj (run "draw" event or not).
      */
@@ -181,19 +203,19 @@ interface GameObjRaw {
      *
      * @since v2000.1
      */
-    onUpdate(action: () => void): EVENTS.CancelFn;
+    // onUpdate(action: () => void): EVENTS.CancelFn;
     /**
      * Register an event that runs every frame as long as the game obj exists (this is the same as `onUpdate()`, but all draw events are run after all update events).
      *
      * @since v2000.1
      */
-    onDraw(action: () => void): EVENTS.CancelFn;
+    // onDraw(action: () => void): EVENTS.CancelFn;
     /**
      * Register an event that runs when the game obj is destroyed.
      *
      * @since v2000.1
      */
-    onDestroy(action: () => void): EVENTS.CancelFn;
+    // onDestroy(action: () => void): EVENTS.CancelFn;
     /**
      * Register an event that runs every frame as long as the game obj exists (alias to onUpdate).
      *
@@ -205,7 +227,7 @@ interface GameObjRaw {
 /**
  * The basic unit of object in Kaboom. The player, a butterfly, a tree, or even a piece of text.
  */
-type GameObj<T = any> = GameObjRaw & MergeComps<T>;
+export type GameObj<T = any> = GameObjRaw & MergeComps<T>;
 
 const COMP_DESC = new Set(['id', 'require']);
 
@@ -234,7 +256,6 @@ interface CompState extends Comp {
 export function make<T>(comps: CompList<T>): GameObj<T> {
     const compStates: Map<string, CompState> = new Map();
     const customState = { cleanups: [] } as CompState;
-    const events: Record<string, IDList<EVENTS.CallbackFn>> = {};
 
     const obj = {
         _id: uid(),
@@ -242,6 +263,8 @@ export function make<T>(comps: CompList<T>): GameObj<T> {
         paused: false,
         children: [] as GameObj[],
         parent: null,
+        events: new EVENTS.Events(),
+        comps: compStates,
 
         add<T2>(comps: CompList<T2>): GameObj<T2> {
             const obj = make(comps);
@@ -283,8 +306,8 @@ export function make<T>(comps: CompList<T>): GameObj<T> {
             // gfx.pushTranslate(this.pos);
             // gfx.pushScale(this.scale);
             // gfx.pushRotateZ(this.angle);
-            this.every((child) => child.draw());
             this.trigger('draw');
+            this.every((child) => child.draw());
             // gfx.popTransform();
         },
 
@@ -466,11 +489,7 @@ export function make<T>(comps: CompList<T>): GameObj<T> {
         },
 
         on(ev: string, cb: EVENTS.CallbackFn): EVENTS.CancelFn {
-            if (!events[ev]) {
-                events[ev] = new IDList();
-            }
-            const cancel = events[ev].pushd(cb);
-            return cancel;
+            return this.events.on(ev, cb);
         },
 
         // action(...args): EVENTS.CancelFn {
@@ -478,9 +497,7 @@ export function make<T>(comps: CompList<T>): GameObj<T> {
         // },
 
         trigger(ev: string, ...args: any[]): void {
-            if (events[ev]) {
-                events[ev].forEach((cb) => cb.call(this, ...args));
-            }
+            this.events.trigger(ev, ...args);
 
             // const gEvents = game.objEvents[ev];
 
@@ -518,6 +535,8 @@ export function make<T>(comps: CompList<T>): GameObj<T> {
             return this.on('destroy', action);
         },
     };
+
+    obj.events._ctx = obj;
 
     for (const comp of comps) {
         obj.use(comp);

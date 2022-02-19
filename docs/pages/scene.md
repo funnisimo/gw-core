@@ -1,7 +1,7 @@
 ### Third Example - Scene
 
 ```js
-const gw = GWU.gw.gw({
+const gw = GWU.app.make({
     width: 30,
     height: 20,
     loop: LOOP,

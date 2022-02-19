@@ -488,15 +488,7 @@ describe('GW.grid', () => {
         // expect(a.randomMatchingLoc(one)).toEqual([4, 1]);
 
         // some kind of error!
-        let ok = false;
-        const test = jest
-            .fn()
-            .mockImplementation((v: number, x: number, y: number) => {
-                if (x == 0 && y == 0) ok = !ok;
-                if (!v) return false;
-                return ok;
-            });
-
+        const test = jest.fn().mockReturnValue(false);
         expect(a.randomMatchingLoc(test)).toEqual([-1, -1]);
     });
 

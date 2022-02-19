@@ -4,7 +4,7 @@ export interface BufferTarget {
     readonly width: number;
     readonly height: number;
     copyTo(dest: BUFFER.Buffer): void;
-    draw(src: BUFFER.Buffer): void;
+    draw(src: BUFFER.Buffer): boolean;
     toGlyph(ch: string | number): number;
 }
 
@@ -27,6 +27,7 @@ export class Buffer extends BUFFER.Buffer {
             new (canvas: BufferTarget, parent?: Buffer) => this
         >this.constructor)(this._target, this._parent);
         other.copy(this);
+        other.changed = false;
         return other;
     }
 

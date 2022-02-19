@@ -2,9 +2,9 @@
 import * as Utils from '../utils';
 import * as TextUtils from '../text';
 import * as Buffer from '../buffer';
-import * as IO from '../io';
+import * as IO from '../app/io';
 
-import { WidgetLayer } from './layer';
+// import { Body } from './body';
 import * as Text from './text';
 import * as Widget from './widget';
 import { BorderType } from './datatable';
@@ -156,7 +156,7 @@ export class Prompt {
 ////////////////////////////////////////////////////////////////////////////////
 // CHOICE
 
-export interface ChoiceOptions extends Widget.WidgetOptions {
+export interface ChoiceOptions extends Widget.WidgetOpts {
     width: number;
     height: number;
     choiceWidth: number;
@@ -190,15 +190,14 @@ export class Choice extends Widget.Widget {
     };
 
     choiceWidth: number;
-    prompt!: Widget.Widget;
-    list!: DataList;
-    info!: Text.Text;
+    _text!: Widget.Widget;
+    _list!: DataList;
+    _info!: Text.Text;
     _prompt: Prompt | null = null;
     _done: null | ((v: any) => void) = null;
 
-    constructor(layer: WidgetLayer, opts: ChoiceOptions) {
+    constructor(opts: ChoiceOptions) {
         super(
-            layer,
             (() => {
                 opts.tag = opts.tag || Choice.default.tag;
                 return opts;
@@ -229,19 +228,24 @@ export class Choice extends Widget.Widget {
         }
     }
 
+    get prompt() {
+        return this._prompt;
+    }
+
     showPrompt(prompt: Prompt, arg?: any): Promise<any> {
         this._prompt = prompt;
         prompt.choose(0);
-        this.prompt.text(prompt.prompt(arg));
-        this.list.data(prompt.choices());
-        this.info.text(prompt.info(arg));
+        this._text.text(prompt.prompt(arg));
+        this._list.data(prompt.choices());
+        this._info.text(prompt.info(arg));
 
-        this._bubbleEvent('input', this, this._prompt);
+        this.trigger('prompt', this._prompt);
         return new Promise((resolve) => (this._done = resolve));
     }
 
     _addList(): this {
-        this.list = new DataList(this.layer, {
+        this._list = new DataList({
+            parent: this,
             height: this.bounds.height - 2,
             x: this.bounds.x + 1,
             width: this.choiceWidth,
@@ -252,29 +256,30 @@ export class Choice extends Widget.Widget {
             border: 'none',
             hover: 'select',
         });
-        this.list.setParent(this);
-        this.list.on('input', () => {
+
+        this._list.on('change', () => {
             if (!this._prompt) return false;
             const p = this._prompt;
-            const row = this.list.selectedRow;
+            const row = this._list.selectedRow;
             p.choose(row);
-            this.info.text(p.info());
-            this._bubbleEvent('input', this, p);
-            return true; // I want to eat this event
+            this._info.text(p.info());
+            this.trigger('change', p);
+            // e.stopPropagation(); // I want to eat this event
         });
-        this.list.on('change', () => {
+        this._list.on('action', () => {
             if (!this._prompt) return false;
             const p = this._prompt;
-            p.choose(this.list.selectedRow);
-            this._bubbleEvent('change', this, p);
+            p.choose(this._list.selectedRow);
+            this.action();
             this._done!(p.value());
-            return true; // eat this event
+            // e.stopPropagation(); // eat this event
         });
         return this;
     }
 
     _addInfo(): this {
-        this.info = new Text.Text(this.layer, {
+        this._info = new Text.Text({
+            parent: this,
             text: '',
             x: this.bounds.x + this.choiceWidth + 2,
             y: this.bounds.y + 1,
@@ -284,12 +289,12 @@ export class Choice extends Widget.Widget {
             class: this._attrStr('infoClass'),
         });
 
-        this.info.setParent(this);
         return this;
     }
 
     _addLegend(): this {
-        this.prompt = new Text.Text(this.layer, {
+        this._text = new Text.Text({
+            parent: this,
             text: '',
             width: this.bounds.width - 4,
             x: this.bounds.x + 2,
@@ -298,7 +303,6 @@ export class Choice extends Widget.Widget {
             class: this._attrStr('promptClass'),
         });
 
-        this.prompt.setParent(this);
         return this;
     }
 
@@ -319,6 +323,7 @@ export class Choice extends Widget.Widget {
     }
 }
 
+/*
 // extend WidgetLayer
 
 export type AddChoiceOptions = ChoiceOptions &
@@ -337,6 +342,7 @@ WidgetLayer.prototype.choice = function (opts: AddChoiceOptions): Choice {
     }
     return widget;
 };
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 // INQUIRY
@@ -482,11 +488,7 @@ export class Inquiry {
         }
 
         if (!handled) {
-            handled = this.widget._bubbleEvent(
-                name,
-                source || this.widget,
-                args
-            );
+            handled = this.widget.trigger(name, args);
         }
         return handled;
     }

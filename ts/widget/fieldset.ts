@@ -1,7 +1,7 @@
 // import * as GWU from 'gw-utils';
 import * as TextUtils from '../text';
 
-import { WidgetLayer } from './layer';
+// import { Body } from './body';
 import * as Text from './text';
 import * as Widget from './widget';
 import * as Dialog from './dialog';
@@ -42,9 +42,8 @@ export class Fieldset extends Dialog.Dialog {
 
     fields: Field[] = [];
 
-    constructor(layer: WidgetLayer, opts: FieldsetOptions) {
+    constructor(opts: FieldsetOptions) {
         super(
-            layer,
             (() => {
                 opts.tag = opts.tag || Fieldset.default.tag;
                 opts.border = opts.border || Fieldset.default.border;
@@ -88,9 +87,9 @@ export class Fieldset extends Dialog.Dialog {
     }
 
     get _nextY(): number {
-        const border = this._attrStr('border');
+        let border = this._attrStr('border') === 'none' ? 0 : 1;
         const padBottom = this._attrInt('padBottom');
-        return this.bounds.bottom - (border === 'none' ? 0 : 1) - padBottom;
+        return this.bounds.bottom - border - padBottom;
     }
 
     add(label: string, format: string | FieldOptions): this {
@@ -102,7 +101,9 @@ export class Fieldset extends Dialog.Dialog {
                 ' '
             ) + sep;
 
-        this.layer.text(labelText, {
+        new Text.Text({
+            parent: this,
+            text: labelText,
             x: this._labelLeft,
             y: this._nextY,
             width: this._attrInt('labelWidth'),
@@ -118,21 +119,25 @@ export class Fieldset extends Dialog.Dialog {
         format.width = this._attrInt('dataWidth');
         format.tag = format.tag || this._attrStr('dataTag');
         format.class = format.class || this._attrStr('dataClass');
+        format.parent = this;
 
-        const field = new Field(this.layer, format);
-        field.setParent(this);
+        const field = new Field(format);
         this.bounds.height += 1;
         this.fields.push(field);
         return this;
     }
 
-    data(d: any): this {
-        this.fields.forEach((f) => f.data(d));
-        this.layer.needsDraw = true;
-        return this;
+    _setData(v: Record<string, any>) {
+        super._setData(v);
+        this.fields.forEach((f) => f.format(v));
+    }
+    _setDataItem(key: string, v: any) {
+        super._setDataItem(key, v);
+        this.fields.forEach((f) => f.format(v));
     }
 }
 
+/*
 // extend WidgetLayer
 
 export type AddFieldsetOptions = FieldsetOptions &
@@ -151,20 +156,20 @@ WidgetLayer.prototype.fieldset = function (opts: AddFieldsetOptions): Fieldset {
     }
     return widget;
 };
+*/
 
 ///////////////////////////////
 // FIELD
 
-export interface FieldOptions extends Widget.WidgetOptions {
+export interface FieldOptions extends Widget.WidgetOpts {
     format: string | TextUtils.Template;
 }
 
 export class Field extends Text.Text {
     _format: TextUtils.Template;
 
-    constructor(layer: WidgetLayer, opts: FieldOptions) {
+    constructor(opts: FieldOptions) {
         super(
-            layer,
             (() => {
                 // @ts-ignore
                 const topts: Text.TextOptions = opts;
@@ -181,7 +186,7 @@ export class Field extends Text.Text {
         }
     }
 
-    data(v: any): this {
+    format(v: any): this {
         const t = this._format(v) || '';
         return this.text(t);
     }

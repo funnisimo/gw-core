@@ -1,7 +1,7 @@
 import { Glyphs, GlyphOptions } from './glyphs';
 import { BaseCanvas, Canvas2D, NotSupportedError } from './canvas';
 import { CanvasGL } from './canvasGL';
-import * as IO from '../io';
+// import * as IO from '../io';
 
 interface BaseOptions {
     width?: number;
@@ -9,7 +9,7 @@ interface BaseOptions {
     glyphs?: Glyphs;
     div?: HTMLElement | string;
     io?: true; // if true, hookup events to standard IO loop.
-    loop?: IO.Loop; // The loop to attach to
+    // loop?: IO.Loop; // The loop to attach to
     image?: HTMLImageElement | string;
 }
 
@@ -66,16 +66,16 @@ export function make(...args: any[]): BaseCanvas {
         }
     }
 
-    if (opts.loop) {
-        canvas.loop = opts.loop;
-    }
+    // if (opts.loop) {
+    //     canvas.loop = opts.loop;
+    // }
 
-    if (opts.io || opts.loop) {
-        canvas.onclick = (e) => canvas.loop.enqueue(e);
-        canvas.onmousemove = (e) => canvas.loop.enqueue(e);
-        canvas.onmouseup = (e) => canvas.loop.enqueue(e);
-        // canvas.onkeydown = (e) => loop.enqueue(e); // Keyboard events require tabindex to be set, better to let user do this.
-    }
+    // if (opts.io || opts.loop) {
+    //     canvas.onclick = (e) => canvas.loop.enqueue(e);
+    //     canvas.onmousemove = (e) => canvas.loop.enqueue(e);
+    //     canvas.onmouseup = (e) => canvas.loop.enqueue(e);
+    //     // canvas.onkeydown = (e) => loop.enqueue(e); // Keyboard events require tabindex to be set, better to let user do this.
+    // }
 
     return canvas;
 }

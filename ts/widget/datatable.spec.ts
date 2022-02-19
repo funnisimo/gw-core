@@ -1,22 +1,24 @@
-import * as UTILS from '../../test/utils';
-// import * as GWU from 'gw-utils';
-import * as TextUtils from '../text';
-import * as DataTable from './datatable';
-import * as Layer from './layer';
+import * as TEST from '../../test/utils';
+import * as TEXT from '../text';
+import * as APP from '../app';
+import * as CANVAS from '../canvas';
+// import * as BODY from './body';
 
-describe('Table Widget', () => {
-    let layer: Layer.WidgetLayer;
+import * as TABLE from './datatable';
+
+describe('DataTable', () => {
+    let canvas: CANVAS.CanvasType;
+    let app: APP.App;
+    let scene: APP.Scene;
 
     beforeEach(() => {
-        layer = UTILS.mockWidgetLayer(50, 30);
-    });
-
-    afterEach(() => {
-        layer.finish();
+        canvas = TEST.mockCanvas();
+        app = APP.make({ canvas, start: false });
+        scene = app.scene;
     });
 
     test('Column', () => {
-        const col = new DataTable.Column({
+        const col = new TABLE.Column({
             header: 'HEADER',
             width: 10,
             format: '{{age}} years',
@@ -28,7 +30,7 @@ describe('Table Widget', () => {
     test('no size', () => {
         expect(
             () =>
-                new DataTable.DataTable(layer, {
+                new TABLE.DataTable({
                     id: 'ID',
                     columns: [{ width: 3, header: 'ID', format: '§id§' }],
                 })
@@ -38,16 +40,13 @@ describe('Table Widget', () => {
     test('no columns', () => {
         expect(
             () =>
-                new DataTable.DataTable(layer, {
-                    id: 'ID',
-                    size: 10,
-                    columns: [],
-                })
+                new TABLE.DataTable({ scene, id: 'ID', size: 10, columns: [] })
         ).not.toThrow();
     });
 
     test('simple', () => {
-        const table = new DataTable.DataTable(layer, {
+        const table = new TABLE.DataTable({
+            scene,
             id: 'TABLE',
             header: true, // show a header on top of each column
             size: 10,
@@ -59,7 +58,7 @@ describe('Table Widget', () => {
                     format: ((d: { count: number; name: string }) => {
                         if (d.count) return `${d.count} ${d.name}s`;
                         return d.name;
-                    }) as TextUtils.Template,
+                    }) as TEXT.Template,
                 },
                 { width: 5, header: 'Each', format: '${{price%4d}}' },
             ],

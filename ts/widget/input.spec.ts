@@ -1,23 +1,30 @@
-import * as UTILS from '../../test/utils';
-// import * as GWU from 'gw-utils';
-import * as Buffer from '../buffer';
+import 'jest-extended';
+import '../../test/matchers';
+
+import * as TEST from '../../test/utils';
+// import * as Color from '../color';
+// import * as Buffer from '../buffer';
+
+import * as APP from '../app';
+import * as CANVAS from '../canvas';
 
 import * as Input from './input';
-import * as Layer from './layer';
 
 describe('Input Widget', () => {
-    let layer: Layer.WidgetLayer;
+    let canvas: CANVAS.CanvasType;
+    let app: APP.App;
+    let scene: APP.Scene;
+    let buffer: CANVAS.Buffer;
 
     beforeEach(() => {
-        layer = UTILS.mockWidgetLayer(50, 30);
-    });
-
-    afterEach(() => {
-        layer.finish();
+        canvas = TEST.mockCanvas();
+        app = APP.make({ canvas, start: false });
+        scene = app.scene;
+        buffer = canvas.buffer;
     });
 
     test('create', () => {
-        const widget = new Input.Input(layer, { id: 'ID', text: 'Test' });
+        const widget = scene.build.input({ id: 'ID', text: 'Test' });
 
         expect(widget.bounds.x).toEqual(0);
         expect(widget.bounds.y).toEqual(0);
@@ -25,24 +32,21 @@ describe('Input Widget', () => {
         expect(widget.bounds.height).toEqual(1);
         expect(widget.text()).toEqual('Test');
 
-        widget.bounds.x = widget.bounds.y = 0;
-
-        const buffer = new Buffer.Buffer(40, 40);
-        widget.draw(buffer);
-        expect(UTILS.getBufferText(buffer, 0, 0, 10)).toEqual('Test'); // default
+        app._draw();
+        expect(TEST.getBufferText(buffer, 0, 0, 10)).toEqual('Test'); // default
 
         widget.text('');
-        widget.keypress(UTILS.keypress('e'));
-        widget.keypress(UTILS.keypress('a'));
-        widget.keypress(UTILS.keypress('t'));
-        widget.draw(buffer);
-        expect(UTILS.getBufferText(buffer, 0, 0, 10)).toEqual('eat');
+        app._input(TEST.keypress('e'));
+        app._input(TEST.keypress('a'));
+        app._input(TEST.keypress('t'));
+        app._draw();
+        expect(TEST.getBufferText(buffer, 0, 0, 10)).toEqual('eat');
         expect(widget.text()).toEqual('eat');
         expect(widget.isValid()).toBeTruthy();
     });
 
     test('make', () => {
-        const e = layer.input({
+        const e = scene.build.input({
             id: 'ID',
             text: 'val',
             min: 4,
@@ -53,6 +57,7 @@ describe('Input Widget', () => {
             required: true,
             disabled: true,
         });
+
         expect(e).toBeInstanceOf(Input.Input);
         expect(e.attr('default')).toEqual('val');
         expect(e.text()).toEqual('val');
@@ -67,7 +72,7 @@ describe('Input Widget', () => {
     });
 
     test('make - numbersOnly', () => {
-        const e = layer.input({
+        const e = scene.build.input({
             id: 'ID',
             text: 'val',
             numbersOnly: true,
@@ -93,39 +98,38 @@ describe('Input Widget', () => {
     });
 
     test('typing', async () => {
-        const el = layer.input({ width: 10, id: 'ID' });
-        jest.spyOn(el, '_fireEvent');
-        await el.focus();
+        const el = scene.build.input({ width: 10, id: 'ID' });
+
+        jest.spyOn(el, 'trigger');
+        el.focus();
         // @ts-ignore
-        el._fireEvent.mockClear();
+        el.trigger.mockClear();
 
-        await el.keypress(UTILS.keypress('t'));
-        expect(el._fireEvent).toHaveBeenCalledWith('input', el);
-        expect(el._fireEvent).not.toHaveBeenCalledWith(el, 'change');
+        app._input(TEST.keypress('t'));
+        expect(el.trigger).toHaveBeenCalledWith('change');
 
-        await el.keypress(UTILS.keypress('e'));
-        await el.keypress(UTILS.keypress('s'));
-        await el.keypress(UTILS.keypress('t'));
-        expect(el._fireEvent).toHaveBeenCalledTimes(4);
+        app._input(TEST.keypress('e'));
+        app._input(TEST.keypress('s'));
+        app._input(TEST.keypress('t'));
+        expect(el.trigger).toHaveBeenCalledTimes(4);
 
         expect(el.text()).toEqual('test');
 
         // @ts-ignore
-        el._fireEvent.mockClear();
-        await el.keypress(UTILS.keypress('Backspace'));
+        el.trigger.mockClear();
+        app._input(TEST.keypress('Backspace'));
         expect(el.text()).toEqual('tes');
-        expect(el._fireEvent).toHaveBeenCalledWith('input', el);
-        expect(el._fireEvent).not.toHaveBeenCalledWith(el, 'change');
+        expect(el.trigger).toHaveBeenCalledWith('change');
 
         // @ts-ignore
-        el._fireEvent.mockClear();
-        await el.blur();
-        expect(el._fireEvent).not.toHaveBeenCalledWith('input', el);
-        expect(el._fireEvent).toHaveBeenCalledWith('change', el);
+        el.trigger.mockClear();
+        el.blur();
+        expect(el.trigger).not.toHaveBeenCalledWith('change');
+        expect(el.trigger).toHaveBeenCalledWith('action');
     });
 
     test('backspace + delete', () => {
-        const widget = new Input.Input(layer, {
+        const widget = scene.build.input({
             id: 'ID',
             width: 15,
             text: 'Test',
@@ -139,63 +143,54 @@ describe('Input Widget', () => {
         expect(widget.bounds.height).toEqual(1);
         expect(widget.text()).toEqual('Test');
 
-        const buffer = new Buffer.Buffer(40, 40);
-        widget.draw(buffer);
-        expect(UTILS.getBufferText(buffer, 0, 0, 10)).toEqual('Test'); // default
+        app._draw();
+        expect(TEST.getBufferText(buffer, 0, 0, 10)).toEqual('Test'); // default
 
-        widget.keypress(UTILS.keypress('Backspace'));
-        widget.keypress(UTILS.keypress('Delete'));
-        widget.keypress(UTILS.keypress('Backspace'));
-        widget.keypress(UTILS.keypress('a'));
-        widget.keypress(UTILS.keypress('c'));
-        widget.keypress(UTILS.keypress('o'));
+        app._input(TEST.keypress('Backspace'));
+        app._input(TEST.keypress('Delete'));
+        app._input(TEST.keypress('Backspace'));
+        app._input(TEST.keypress('a'));
+        app._input(TEST.keypress('c'));
+        app._input(TEST.keypress('o'));
         expect(widget.text()).toEqual('Taco');
 
-        widget.draw(buffer);
-        expect(UTILS.getBufferText(buffer, 0, 0, 10)).toEqual('Taco');
+        app._draw();
+        expect(TEST.getBufferText(buffer, 0, 0, 10)).toEqual('Taco');
         expect(widget.isValid()).toBeTruthy();
     });
 
     test('Enter - fire Event', async () => {
-        let widget = new Input.Input(layer, {
+        let widget = scene.build.input({
             id: 'ID',
             width: 10,
             text: 'Test',
         });
-        jest.spyOn(widget, '_fireEvent');
+
+        const actionFn = jest.fn();
+        scene.on('ID', actionFn);
         expect(widget.attr('action')).toEqual('ID');
 
-        expect(await widget.keypress(UTILS.keypress('Enter'))).toBeTruthy();
-        expect(widget._fireEvent).toHaveBeenCalledWith('ID', widget);
+        app._input(TEST.keypress('Enter'));
+        expect(actionFn).toHaveBeenCalled();
 
-        // @ts-ignore
-        widget._fireEvent.mockClear();
-        // @ts-ignore
-        widget._fireEvent.mockResolvedValue(void 0);
-
-        await widget.keypress(UTILS.keypress('Enter'));
-        expect(widget._fireEvent).toHaveBeenCalledWith('ID', widget);
-
-        // @ts-ignore
-        widget._fireEvent.mockClear();
-        // @ts-ignore
-        widget._fireEvent.mockReturnValue(void 0);
-
-        widget = new Input.Input(layer, {
+        widget = scene.build.input({
             id: 'ID',
             width: 10,
             text: 'Test',
             action: 'DONE',
         });
-        jest.spyOn(widget, '_fireEvent');
+        scene.setFocusWidget(widget);
+        const doneFn = jest.fn();
+        widget.on('action', doneFn);
 
-        expect(await widget.keypress(UTILS.keypress('Enter'))).toBeTruthy();
-        expect(widget._fireEvent).toHaveBeenCalledWith('DONE', widget);
+        app._input(TEST.keypress('Enter'));
+        expect(doneFn).toHaveBeenCalled();
     });
 
     describe('isValid', () => {
         test('basic text', () => {
-            const el = layer.input({ id: 'ID ' });
+            const el = scene.build.input({ id: 'ID ' });
+
             expect(el.prop('empty')).toBeTruthy();
             expect(el.prop('valid')).toBeTruthy();
 
@@ -209,11 +204,11 @@ describe('Input Widget', () => {
         });
 
         test('min/max Length', () => {
-            const el = layer.input({
+            const el = scene.build.input({
                 id: 'ID',
                 minLength: 3,
                 maxLength: 6,
-            }) as Input.Input;
+            });
 
             expect(el.maxLength).toEqual(6);
             expect(el.minLength).toEqual(3);
@@ -236,7 +231,8 @@ describe('Input Widget', () => {
         });
 
         test('required', () => {
-            const el = layer.input({ id: 'ID', required: true });
+            const el = scene.build.input({ id: 'ID', required: true });
+
             // console.log(el._props, el._attrs);
             expect(el.text()).toEqual('');
             expect(el.prop('required')).toBeTruthy();
@@ -261,12 +257,13 @@ describe('Input Widget', () => {
         });
 
         test('min/max', () => {
-            const el = layer.input({
+            const el = scene.build.input({
                 id: 'ID',
                 numbersOnly: true,
                 min: 3,
                 max: 16,
             });
+
             expect(el.text()).toEqual('');
             expect(el.prop('valid')).toBeFalsy();
 
@@ -285,7 +282,8 @@ describe('Input Widget', () => {
         });
 
         test('min/max - text ignores', () => {
-            const el = layer.input({ id: 'ID', min: 3, max: 16 });
+            const el = scene.build.input({ id: 'ID', min: 3, max: 16 });
+
             expect(el.text()).toEqual('');
             expect(el.prop('valid')).toBeTruthy();
 

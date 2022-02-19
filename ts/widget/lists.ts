@@ -1,10 +1,9 @@
 // import * as GWU from 'gw-utils';
 import * as Buffer from '../buffer';
 
-import { WidgetLayer } from './layer';
 import * as Widget from './widget';
 
-export interface OrderedListOptions extends Widget.WidgetOptions {
+export interface OrderedListOptions extends Widget.WidgetOpts {
     pad?: number;
 }
 
@@ -16,9 +15,8 @@ export class OrderedList extends Widget.Widget {
     _fixedWidth = false;
     _fixedHeight = false;
 
-    constructor(layer: WidgetLayer, opts: OrderedListOptions) {
+    constructor(opts: OrderedListOptions) {
         super(
-            layer,
             (() => {
                 opts.tag = opts.tag || 'ol';
                 return opts;
@@ -30,7 +28,7 @@ export class OrderedList extends Widget.Widget {
         this.prop('pad', opts.pad || OrderedList.default.pad);
     }
 
-    _addChild(w: Widget.Widget, opts: Widget.SetParentOptions = {}): this {
+    addChild(w: Widget.Widget): void {
         w.bounds.x = this.bounds.x + 2;
         if (!this._fixedHeight) {
             w.bounds.y = this.bounds.bottom - 2;
@@ -42,7 +40,7 @@ export class OrderedList extends Widget.Widget {
             this.bounds.width = w.bounds.width + 4;
         }
 
-        return super._addChild(w, opts);
+        return super.addChild(w);
     }
 
     _draw(buffer: Buffer.Buffer): boolean {
@@ -85,9 +83,8 @@ export class UnorderedList extends OrderedList {
         pad: 1,
     };
 
-    constructor(layer: WidgetLayer, opts: UnorderedListOptions) {
+    constructor(opts: UnorderedListOptions) {
         super(
-            layer,
             (() => {
                 opts.tag = opts.tag || 'ul';
                 return opts;
@@ -103,6 +100,7 @@ export class UnorderedList extends OrderedList {
     }
 }
 
+/*
 // extend WidgetLayer
 
 export type AddOrderedListOptions = OrderedListOptions &
@@ -139,3 +137,4 @@ WidgetLayer.prototype.ul = function (
     }
     return widget;
 };
+*/

@@ -73,13 +73,29 @@ export function contains(size: Size, x: number, y: number) {
     return x >= 0 && y >= 0 && x < size.width && y < size.height;
 }
 
+export interface BoundsOpts {
+    x?: number;
+    y?: number;
+    width?: number;
+    height?: number;
+}
+
 export class Bounds {
     x: number;
     y: number;
     width: number;
     height: number;
 
-    constructor(x = 0, y = 0, w = 0, h = 0) {
+    constructor(bounds: BoundsOpts);
+    constructor(x?: number, y?: number, w?: number, h?: number);
+    constructor(x: number | BoundsOpts = 0, y = 0, w = 0, h = 0) {
+        if (typeof x !== 'number') {
+            const opts = x;
+            h = opts.height || 0;
+            w = opts.width || 0;
+            y = opts.y || 0;
+            x = opts.x || 0;
+        }
         this.x = x;
         this.y = y;
         this.width = w;
@@ -111,8 +127,29 @@ export class Bounds {
         this.y = v - this.height;
     }
 
+    get center() {
+        return this.x + Math.floor(this.width / 2);
+    }
+    set center(v: number) {
+        this.x += v - this.center;
+    }
+
+    get middle() {
+        return this.y + Math.floor(this.height / 2);
+    }
+    set middle(v: number) {
+        this.y += v - this.middle;
+    }
+
     clone(): Bounds {
         return new Bounds(this.x, this.y, this.width, this.height);
+    }
+
+    copy(other: Bounds) {
+        this.x = other.x;
+        this.y = other.y;
+        this.width = other.width;
+        this.height = other.height;
     }
 
     contains(x: number, y: number): boolean;
@@ -130,6 +167,31 @@ export class Bounds {
             this.x + this.width > i &&
             this.y + this.height > j
         );
+    }
+
+    include(xy: Loc | XY | Bounds) {
+        const left = Math.min(x(xy), this.x);
+        const top = Math.min(y(xy), this.y);
+        const right = Math.max(
+            xy instanceof Bounds ? xy.right : left,
+            this.right
+        );
+        const bottom = Math.max(
+            xy instanceof Bounds ? xy.bottom : top,
+            this.bottom
+        );
+
+        this.left = left;
+        this.top = top;
+        this.width = right - left;
+        this.height = bottom - top;
+    }
+
+    pad(n = 1) {
+        this.x -= n;
+        this.y -= n;
+        this.width += n * 2;
+        this.height += n * 2;
     }
 
     toString() {
