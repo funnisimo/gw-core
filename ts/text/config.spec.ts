@@ -1,18 +1,30 @@
-import "jest-extended";
-import * as Config from "./config";
+import 'jest-extended';
+import * as Config from './config';
 
-describe("Config", () => {
-  it("will add helpers", () => {
-    expect(Config.helpers).toBeObject();
-    expect(Config.helpers.eachColor).toBeDefined();
+describe('Config', () => {
+    const THIS = {
+        get: jest.fn(),
+    };
 
-    const fn = jest.fn();
-    Config.addHelper("test", fn);
-    expect(Config.helpers.test).toBe(fn);
-  });
+    it('will add helpers', () => {
+        expect(Config.helpers).toBeObject();
 
-  test("default helper", () => {
-    expect(Config.helpers.default).toBeFunction();
-    expect(Config.helpers.default("test")).toEqual("!!test!!");
-  });
+        const fn = jest.fn();
+        Config.addHelper('test', fn);
+        expect(Config.helpers.test).toBe(fn);
+    });
+
+    test('default helper', () => {
+        expect(Config.helpers.default).toBeFunction();
+        expect(Config.helpers.default.call(THIS, 'test', {}, [])).toEqual(
+            'test'
+        );
+    });
+
+    test('debug helper', () => {
+        expect(Config.helpers.debug).toBeFunction();
+        expect(Config.helpers.debug.call(THIS, 'test', {}, [])).toEqual(
+            '{{test}}'
+        );
+    });
 });

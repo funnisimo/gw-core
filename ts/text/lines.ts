@@ -1,225 +1,202 @@
-import { Color } from "../color";
-import * as Config from "./config";
-import * as Utils from "./utils";
-import { eachChar } from "./each";
+// import { Color } from '../color';
+// import * as Utils from './utils';
+import { eachWord } from './each';
+import * as UTILS from '../utils';
 
-export function nextBreak(text: string, start: number) {
-    const CS = Config.options.colorStart;
-    const CE = Config.options.colorEnd;
-
-    let i = start;
-    let l = 0;
-    let count = true;
-
-    while (i < text.length) {
-        const ch = text[i];
-        if (ch == " ") {
-            while (text[i + 1] == " ") {
-                ++i;
-                ++l; // need to count the extra spaces as part of the word
-            }
-            return [i, l];
-        }
-        if (ch == "-") {
-            return [i, l];
-        }
-        if (ch == "\n") {
-            return [i, l];
-        }
-        if (ch == CS) {
-            if (text[i + 1] == CS && count) {
-                l += 1;
-                i += 2;
-                continue;
-            }
-            count = !count;
-            ++i;
-            continue;
-        } else if (ch == CE) {
-            if (text[i + 1] == CE) {
-                l += 1;
-                ++i;
-            }
-            i++;
-            continue;
-        }
-        l += count ? 1 : 0;
-        ++i;
-    }
-
-    return [i, l];
+export interface WrapOptions {
+    hyphenate?: number | boolean;
+    indent?: number;
 }
 
-export function splice(
+export function wordWrap(
     text: string,
-    start: number,
-    len: number,
-    add: string = ""
-) {
-    return text.substring(0, start) + add + text.substring(start + len);
-}
+    lineWidth: number,
+    opts: WrapOptions = {}
+): string {
+    // let inside = false;
+    // let inline = false;
 
-export function hyphenate(
-    text: string,
-    width: number,
-    start: number,
-    end: number,
-    wordWidth: number,
-    spaceLeftOnLine: number
-): [string, number] {
-    // do not need to hyphenate
-    if (spaceLeftOnLine >= wordWidth) return [text, end];
+    if (lineWidth < 5) return text;
 
-    // do not have a strategy for this right now...
-    if (wordWidth + 1 > width * 2) {
-        throw new Error("Cannot hyphenate - word length > 2 * width");
+    // hyphenate is the wordlen needed to hyphenate
+    // smaller words are not hyphenated
+    let hyphenLen = lineWidth;
+    if (opts.hyphenate) {
+        if (opts.hyphenate === true) {
+            opts.hyphenate = Math.floor(lineWidth / 2);
+        }
+        hyphenLen = UTILS.clamp(opts.hyphenate, 6, lineWidth + 1);
     }
 
-    // not much room left and word fits on next line
-    if (spaceLeftOnLine < 4 && wordWidth <= width) {
-        text = splice(text, start - 1, 1, "\n");
-        return [text, end + 1];
-    }
+    opts.indent = opts.indent || 0;
+    const indent = ' '.repeat(opts.indent);
 
-    // will not fit on this line + next, but will fit on next 2 lines...
-    // so end this line and reset for placing on next 2 lines.
-    if (spaceLeftOnLine + width <= wordWidth) {
-        text = splice(text, start - 1, 1, "\n");
-        spaceLeftOnLine = width;
-    }
+    let output = '';
 
-    // one hyphen will work...
-    // if (spaceLeftOnLine + width > wordWidth) {
-    const hyphenAt = Math.min(Math.floor(wordWidth / 2), spaceLeftOnLine - 1);
-    const w = Utils.advanceChars(text, start, hyphenAt);
-    text = splice(text, w, 0, "-\n");
+    let lastFg: null | string = null;
+    let lastBg: null | string = null;
 
-    return [text, end + 2];
-    // }
+    let lineLeft = lineWidth;
+    lineWidth -= opts.indent;
 
-    // if (width >= wordWidth) {
-    //     return [text, end];
-    // }
+    eachWord(text, (word, fg, bg, prefix) => {
+        let totalLen = prefix.length + word.length;
 
-    // console.log('hyphenate', { text, start, end, width, wordWidth, spaceLeftOnLine });
-    // throw new Error('Did not expect to get here...');
+        // console.log('word', word, lineLen, newLen);
+        if (totalLen > lineLeft && word.length > hyphenLen) {
+            const parts = splitWord(word, lineWidth, lineLeft - prefix.length);
 
-    // wordWidth >= spaceLeftOnLine + width
-    // text = splice(text, start - 1, 1, "\n");
-    // spaceLeftOnLine = width;
-    // const hyphenAt = Math.min(wordWidth, width - 1);
-    // const w = Utils.advanceChars(text, start, hyphenAt);
-    // text = splice(text, w, 0, "-\n");
+            if (parts[0].length === 0) {
+                // line doesn't have enough space left, end it
+                output += '\n';
+                if (fg || bg) {
+                    output += `#{${fg ? fg : ''}${bg ? ':' + bg : ''}}`;
+                }
 
-    // return [text, end + 2];
-}
+                lineLeft = lineWidth;
+                parts.shift();
+            } else {
+                output += prefix;
+                lineLeft -= prefix.length;
+            }
 
-export function wordWrap(text: string, width: number, indent = 0) {
-    if (!width) throw new Error("Need string and width");
-    if (text.length < width) return text;
-    if (Utils.length(text) < width) return text;
+            while (parts.length > 1) {
+                output += parts.shift() + '-\n';
+                if (fg || bg) {
+                    output += `#{${fg ? fg : ''}${bg ? ':' + bg : ''}}`;
+                }
+                output += indent;
+            }
 
-    if (text.indexOf("\n") == -1) {
-        return wrapLine(text, width, indent);
-    }
-
-    const lines = text.split("\n");
-    const split = lines.map((line, i) => wrapLine(line, width, i ? indent : 0));
-
-    return split.join("\n");
-}
-
-// Returns the number of lines, including the newlines already in the text.
-// Puts the output in "to" only if we receive a "to" -- can make it null and just get a line count.
-function wrapLine(text: string, width: number, indent: number) {
-    if (text.length < width) return text;
-    if (Utils.length(text) < width) return text;
-
-    let spaceLeftOnLine = width;
-    width = width - indent;
-
-    let printString = text;
-
-    // Now go through and replace spaces with newlines as needed.
-
-    // console.log('wordWrap - ', text, width, indent);
-
-    let removeSpace = true;
-    let i = -1;
-    while (i < printString.length) {
-        // wordWidth counts the word width of the next word without color escapes.
-        // w indicates the position of the space or newline or null terminator that terminates the word.
-        let [w, wordWidth] = nextBreak(printString, i + (removeSpace ? 1 : 0));
-
-        let hyphen = false;
-        if (printString[w] == "-") {
-            w++;
-            wordWidth++;
-            hyphen = true;
+            output += parts[0];
+            lineLeft = lineWidth - parts[0].length - indent.length;
+            return;
         }
 
-        // console.log('- w=%d, width=%d, space=%d, word=%s', w, wordWidth, spaceLeftOnLine, printString.substring(i, w));
+        if (word === '\n' || totalLen > lineLeft) {
+            output += '\n';
+            // if (fg || bg || lastFg !== fg || lastBg !== bg) {
+            //     output += `#{${fg ? fg : ''}${bg ? ':' + bg : ''}}`;
+            // }
+            // lastFg = fg;
+            // lastBg = bg;
 
-        if (wordWidth > width) {
-            [printString, w] = hyphenate(
-                printString,
-                width,
-                i + 1,
-                w,
-                wordWidth,
-                spaceLeftOnLine
-            );
-        } else if (wordWidth == spaceLeftOnLine) {
-            const nl = w < printString.length ? "\n" : "";
-            const remove = hyphen ? 0 : 1;
-            printString = splice(printString, w, remove, nl); // [i] = '\n';
-            w += 1 - remove; // if we change the length we need to advance our pointer
-
-            spaceLeftOnLine = width;
-        } else if (wordWidth > spaceLeftOnLine) {
-            const remove = removeSpace ? 1 : 0;
-            printString = splice(printString, i, remove, "\n"); // [i] = '\n';
-            w += 1 - remove; // if we change the length we need to advance our pointer
-
-            const extra = hyphen ? 0 : 1;
-            spaceLeftOnLine = width - wordWidth - extra; // line width minus the width of the word we just wrapped and the space
-            //printf("\n\n%s", printString);
-        } else {
-            const extra = hyphen ? 0 : 1;
-            spaceLeftOnLine -= wordWidth + extra;
+            if (fg || bg) {
+                lastFg = 'INVALID';
+                lastBg = 'INVALID';
+            }
+            lineLeft = lineWidth;
+            output += indent;
+            lineLeft -= indent.length;
+            if (word === '\n') return;
+            // lineLeft -= word.length;
+            prefix = '';
         }
 
-        removeSpace = !hyphen;
-        i = w; // Advance to the terminator that follows the word.
-    }
-
-    return printString;
-}
-
-// Returns the number of lines, including the newlines already in the text.
-// Puts the output in "to" only if we receive a "to" -- can make it null and just get a line count.
-export function splitIntoLines(source: string, width: number, indent = 0) {
-    const CS = Config.options.colorStart;
-    const output = [];
-    let text = wordWrap(source, width, indent);
-
-    let start = 0;
-    let fg0: Color | number | null = null;
-    let bg0: Color | number | null = null;
-    eachChar(text, (ch, fg, bg, _, n) => {
-        if (ch == "\n") {
-            let color =
-                fg0 || bg0 ? `${CS}${fg0 ? fg0 : ""}${bg0 ? "|" + bg0 : ""}${CS}` : "";
-            output.push(color + text.substring(start, n));
-            start = n + 1;
-            fg0 = fg;
-            bg0 = bg;
+        if (prefix.length) {
+            output += prefix;
+            lineLeft -= prefix.length;
         }
+
+        if (fg !== lastFg || bg !== lastBg) {
+            lastFg = fg;
+            lastBg = bg;
+            output += `#{${fg ? fg : ''}${bg ? ':' + bg : ''}}`;
+        }
+
+        lineLeft -= word.length;
+        output += word;
     });
 
-    let color =
-        fg0 || bg0 ? `${CS}${fg0 ? fg0 : ""}${bg0 ? "|" + bg0 : ""}${CS}` : "";
-    output.push(color + text.substring(start));
+    return output;
+}
+
+export function splitWord(
+    word: string,
+    lineWidth: number,
+    firstWidth?: number
+): string[] {
+    let index = 0;
+    let output: string[] = [];
+    let spaceLeftOnLine = firstWidth || lineWidth;
+
+    while (index < word.length) {
+        const wordWidth = word.length - index;
+
+        // do not need to hyphenate
+        if (spaceLeftOnLine >= wordWidth) {
+            output.push(word.substring(index));
+            return output;
+        }
+
+        // not much room left
+        if (spaceLeftOnLine < 4) {
+            spaceLeftOnLine = lineWidth;
+            output.push(''); // need to fill first line
+        }
+
+        // if will fit on this line and next...
+        if (wordWidth < spaceLeftOnLine + lineWidth) {
+            output.push(word.substring(index, index + spaceLeftOnLine - 1));
+            output.push(word.substring(index + spaceLeftOnLine - 1));
+            return output;
+        }
+
+        // hyphenate next part
+        const hyphenAt = Math.min(
+            spaceLeftOnLine - 1,
+            Math.floor(wordWidth / 2)
+        );
+        const hyphen = word.substring(index, index + hyphenAt);
+        output.push(hyphen);
+        index += hyphenAt;
+        spaceLeftOnLine = lineWidth;
+    }
 
     return output;
+}
+
+// // Returns the number of lines, including the newlines already in the text.
+// // Puts the output in "to" only if we receive a "to" -- can make it null and just get a line count.
+// export function splitIntoLines(source: string, width = 200, indent = 0) {
+//     const output: string[] = [];
+//     if (!source) return output;
+//     if (width <= 0) width = 200;
+//     let text = wordWrap(source, width, indent);
+
+//     let start = 0;
+//     let fg0: Color | number | null = null;
+//     let bg0: Color | number | null = null;
+//     eachChar(text, (ch, fg, bg, _, n) => {
+//         if (ch == '\n') {
+//             let color =
+//                 fg0 || bg0 ? `#{${fg0 ? fg0 : ''}${bg0 ? ':' + bg0 : ''}}` : '';
+//             output.push(color + text.substring(start, n));
+//             start = n + 1;
+//             fg0 = fg;
+//             bg0 = bg;
+//         }
+//     });
+
+//     let color = fg0 || bg0 ? `#{${fg0 ? fg0 : ''}${bg0 ? ':' + bg0 : ''}}` : '';
+
+//     if (start < text.length) {
+//         output.push(color + text.substring(start));
+//     }
+
+//     return output;
+// }
+
+export function splitIntoLines(
+    text: string,
+    width = 200,
+    opts: WrapOptions = {}
+): string[] {
+    if (typeof text !== 'string') return [];
+    text = text.trimEnd();
+    // if (text.endsWith('\n')) {
+    //     text = text.trimEnd();
+    // }
+    const updated = wordWrap(text, width, opts);
+    return updated.split('\n');
 }

@@ -1,86 +1,82 @@
-export type ScheduleFn = Function;
-
 interface Event {
-  fn: ScheduleFn | null;
-  time: number;
-  next: Event | null;
+    item: any;
+    time: number;
+    next: Event | null;
 }
 
 export class Scheduler {
-  private next: Event | null;
-  public time: number;
-  private cache: Event | null;
+    private next: Event | null;
+    public time: number;
+    private cache: Event | null;
 
-  constructor() {
-    this.next = null;
-    this.time = 0;
-    this.cache = null;
-  }
-
-  clear() {
-    while (this.next) {
-      const current = this.next;
-      this.next = current.next;
-      current.next = this.cache;
-      this.cache = current;
-    }
-  }
-
-  push(fn: ScheduleFn, delay = 1) {
-    let item;
-    if (this.cache) {
-      item = this.cache;
-      this.cache = item.next;
-      item.next = null;
-    } else {
-      item = { fn: null, time: 0, next: null };
-    }
-    item.fn = fn;
-    item.time = this.time + delay;
-    if (!this.next) {
-      this.next = item;
-    } else {
-      let current = (this as unknown) as Event;
-      let next = current.next;
-      while (next && next.time <= item.time) {
-        current = next;
-        next = current.next;
-      }
-      item.next = current.next;
-      current.next = item;
-    }
-    return item;
-  }
-
-  pop() {
-    const n = this.next;
-    if (!n) return null;
-
-    this.next = n.next;
-    n.next = this.cache;
-    this.cache = n;
-
-    this.time = Math.max(n.time, this.time); // so you can schedule -1 as a time uint
-    return n.fn;
-  }
-
-  remove(item: Event) {
-    if (!item || !this.next) return;
-    if (this.next === item) {
-      this.next = item.next;
-      return;
-    }
-    let prev = this.next;
-    let current = prev.next;
-    while (current && current !== item) {
-      prev = current;
-      current = current.next;
+    constructor() {
+        this.next = null;
+        this.time = 0;
+        this.cache = null;
     }
 
-    if (current === item) {
-      prev.next = current.next;
+    clear() {
+        while (this.next) {
+            const current = this.next;
+            this.next = current.next;
+            current.next = this.cache;
+            this.cache = current;
+        }
     }
-  }
+
+    push(item: any, delay = 1) {
+        let entry;
+        if (this.cache) {
+            entry = this.cache;
+            this.cache = entry.next;
+            entry.next = null;
+        } else {
+            entry = { item: null, time: 0, next: null };
+        }
+        entry.item = item;
+        entry.time = this.time + delay;
+        if (!this.next) {
+            this.next = entry;
+        } else {
+            let current = (this as unknown) as Event;
+            let next = current.next;
+            while (next && next.time <= entry.time) {
+                current = next;
+                next = current.next;
+            }
+            entry.next = current.next;
+            current.next = entry;
+        }
+        return entry;
+    }
+
+    pop(): any {
+        const n = this.next;
+        if (!n) return null;
+
+        this.next = n.next;
+        n.next = this.cache;
+        this.cache = n;
+
+        this.time = Math.max(n.time, this.time); // so you can schedule -1 as a time uint
+        return n.item;
+    }
+
+    remove(item: any) {
+        if (!item || !this.next) return;
+        if (this.next.item === item) {
+            this.next = item.next;
+            return;
+        }
+        let prev = this.next;
+        let current = prev.next;
+        while (current && current.item !== item) {
+            prev = current;
+            current = current.next;
+        }
+
+        if (current && current.item === item) {
+            prev.next = current.next;
+        }
+    }
 }
-
-// export const scheduler = new Scheduler();

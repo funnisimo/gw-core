@@ -1,64 +1,63 @@
 {
-  "name": "gw-utils",
-  "version": "0.3.1",
-  "description": "Basic Roguelike functionality",
-  "main": "dist/gw-utils.cjs",
-  "browser": "dist/gw-utils.min.js",
-  "module": "dist/gw-utils.mjs",
-  "type": "commonjs",
-  "types": "dist/gw-utils.d.ts",
-  "exports": {
-    ".": {
-      "require": "./dist/gw-utils.cjs",
-      "import": "./dist/gw-utils.mjs"
+    "name": "gw-utils",
+    "version": "0.6.0",
+    "description": "Basic Roguelike functionality",
+    "main": "dist/gw-utils.js",
+    "browser": "dist/gw-utils.min.js",
+    "module": "dist/gw-utils.mjs",
+    "types": "dist/gw-utils.d.ts",
+    "devDependencies": {
+        "@babel/types": "^7.12.10",
+        "@rollup/plugin-commonjs": "^21.0.1",
+        "@rollup/plugin-node-resolve": "^13.0.6",
+        "@types/jest": "^27.0",
+        "http-server": "^0.12.3",
+        "jest": "^27.0",
+        "jest-extended": "^0.11.5",
+        "lodash": "^4.17.21",
+        "prettier": "^2.2.1",
+        "replace": "^1.2.0",
+        "rollup": "^2.60.0",
+        "rollup-plugin-dts": "^4.1.0",
+        "rollup-plugin-terser": "^7.0.2",
+        "ts-jest": "^27.0",
+        "typescript": "^4.5.2"
+    },
+    "scripts": {
+        "compile": "tsc --build tsconfig.json",
+        "bundle": "rollup -c",
+        "copy": "cp dist/gw-utils.js* docs/js",
+        "fixTypes": "replace '\\*\\W+TSIGNORE\\W*(\n)(\\W*)(\\*\\/)' '$3$1$2// @ts-ignore$1' js/grid.d.ts",
+        "build": "npm run compile && npm run fixTypes && npm run bundle && npm run copy && npm run version",
+        "serve": "cd docs && http-server -p 8080",
+        "test": "jest",
+        "coverage": "jest --coverage",
+        "test-debug": "node --inspect-brk node_modules/.bin/jest --runInBand",
+        "version": "node -e 'const v = require(\"./package.json\").version; console.log(v);' > docs/VERSION"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/funnisimo/gw-utils.git"
+    },
+    "keywords": [
+        "Roguelike"
+    ],
+    "author": "Funnisimo",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/funnisimo/gw-utils/issues"
+    },
+    "homepage": "https://github.com/funnisimo/gw-utils#readme",
+    "files": [
+        "dist"
+    ],
+    "prettier": {
+        "trailingComma": "es5",
+        "tabWidth": 4,
+        "semi": true,
+        "singleQuote": true
+    },
+    "dependencies": {
+        "@types/lodash": "^4.14.178"
     }
-  },
-  "devDependencies": {
-    "@babel/types": "^7.12.10",
-    "@types/jest": "^26.0.19",
-    "http-server": "^0.12.3",
-    "jest": "^26.6.3",
-    "jest-extended": "^0.11.5",
-    "prettier": "^2.2.1",
-    "replace": "^1.2.0",
-    "rollup": "^2.35.0",
-    "rollup-plugin-dts": "^2.0.1",
-    "rollup-plugin-terser": "^7.0.2",
-    "ts-jest": "^26.4.4",
-    "typescript": "^4.1.3"
-  },
-  "scripts": {
-    "compile": "tsc --build tsconfig.json",
-    "bundle": "rollup -c",
-    "copy": "cp dist/gw-utils.min.js docs/js",
-    "fixTypes": "replace '\\*\\W+TSIGNORE\\W*(\n)(\\W*)(\\*\\/)' '$3$1$2// @ts-ignore$1' js/grid.d.ts",
-    "build": "npm run compile && npm run fixTypes && npm run bundle && npm run copy && npm run version",
-    "serve": "cd docs && http-server -p 8080",
-    "test": "jest",
-    "coverage": "jest --coverage",
-    "test-debug": "node --inspect-brk node_modules/.bin/jest --runInBand",
-    "version": "node -e 'const v = require(\"./package.json\").version; console.log(v);' > docs/VERSION"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/funnisimo/gw-utils.git"
-  },
-  "keywords": [
-    "Roguelike"
-  ],
-  "author": "Funnisimo",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/funnisimo/gw-utils/issues"
-  },
-  "homepage": "https://github.com/funnisimo/gw-utils#readme",
-  "files": [
-    "dist"
-  ],
-  "prettier": {
-    "trailingComma": "es5",
-    "tabWidth": 4,
-    "semi": true,
-    "singleQuote": true
-  }
 }

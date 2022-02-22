@@ -1,11 +1,10 @@
-import { random } from './random';
+import * as xy from './xy';
+import { random } from './rng';
 import * as Utils from './utils';
-import { Bounds } from './types';
-import { make as Make } from './gw';
+import * as XY from './xy';
 
-type Loc = Utils.Loc;
-const DIRS = Utils.DIRS;
-const CDIRS = Utils.CLOCK_DIRS;
+type Loc = XY.Loc;
+const DIRS = XY.DIRS;
 
 // var GRID = {};
 // export { GRID as grid };
@@ -14,10 +13,15 @@ export type ArrayInit<T> = (i: number) => T;
 
 export function makeArray<T>(l: number, fn?: T | ArrayInit<T>): Array<T> {
     if (fn === undefined) return new Array(l).fill(0);
-    fn = (fn as ArrayInit<T>) || (() => 0);
+    let initFn: ArrayInit<T>;
+    if (typeof fn !== 'function') {
+        initFn = () => fn;
+    } else {
+        initFn = fn as ArrayInit<T>;
+    }
     const arr = new Array(l);
     for (let i = 0; i < l; ++i) {
-        arr[i] = fn(i);
+        arr[i] = initFn(i);
     }
     return arr;
 }
@@ -40,7 +44,7 @@ function _formatGridValue(v: any) {
     }
 }
 
-export type GridInit<T> = (x: number, y: number) => T;
+export type GridInit<T> = (x: number, y: number, grid: Grid<T>) => T;
 export type GridEach<T> = (
     value: T,
     x: number,
@@ -74,11 +78,12 @@ export class Grid<T> extends Array<Array<T>> {
 
     constructor(w: number, h: number, v: GridInit<T> | T) {
         super(w);
+        const grid = this;
         for (let x = 0; x < w; ++x) {
             if (typeof v === 'function') {
                 this[x] = new Array(h)
                     .fill(0)
-                    .map((_: any, i: number) => (v as GridInit<T>)(x, i));
+                    .map((_: any, i: number) => (v as GridInit<T>)(x, i, grid));
             } else {
                 this[x] = new Array(h).fill(v);
             }
@@ -130,15 +135,16 @@ export class Grid<T> extends Array<Array<T>> {
     }
 
     eachNeighbor(x: number, y: number, fn: GridEach<T>, only4dirs = false) {
-        const maxIndex = only4dirs ? 4 : 8;
-        for (let d = 0; d < maxIndex; ++d) {
-            const dir = DIRS[d];
-            const i = x + dir[0];
-            const j = y + dir[1];
-            if (this.hasXY(i, j)) {
-                fn(this[i][j], i, j, this);
-            }
-        }
+        XY.eachNeighbor(
+            x,
+            y,
+            (i, j) => {
+                if (this.hasXY(i, j)) {
+                    fn(this[i][j], i, j, this);
+                }
+            },
+            only4dirs
+        );
     }
 
     async eachNeighborAsync(
@@ -159,23 +165,22 @@ export class Grid<T> extends Array<Array<T>> {
     }
 
     forRect(x: number, y: number, w: number, h: number, fn: GridEach<T>) {
-        w = Math.min(this.width - x, w);
-        h = Math.min(this.height - y, h);
-
-        for (let i = x; i < x + w; ++i) {
-            for (let j = y; j < y + h; ++j) {
+        XY.forRect(x, y, w, h, (i, j) => {
+            if (this.hasXY(i, j)) {
                 fn(this[i][j], i, j, this);
             }
-        }
+        });
     }
 
-    randomEach(fn: GridEach<T>) {
+    randomEach(fn: GridEach<T>): boolean {
         const sequence = random.sequence(this.width * this.height);
-        sequence.forEach((n) => {
+        for (let i = 0; i < sequence.length; ++i) {
+            const n = sequence[i];
             const x = n % this.width;
             const y = Math.floor(n / this.width);
-            fn(this[x][y], x, y, this);
-        });
+            if (fn(this[x][y], x, y, this) === true) return true;
+        }
+        return false;
     }
 
     /**
@@ -195,29 +200,25 @@ export class Grid<T> extends Array<Array<T>> {
         return other;
     }
 
-    forCircle(x: number, y: number, radius: number, fn: GridEach<T>) {
-        let i, j;
+    /**
+     * Returns whether or not an item in the grid matches the provided function.
+     * @param fn - The function that matches
+     * TODO - Do we need this???
+     * TODO - Should this only be in NumGrid?
+     * TODO - Should it alloc instead of using constructor?
+     * TSIGNORE
+     */
+    // @ts-ignore
+    some(fn: GridMatch<T>): boolean {
+        return super.some((col, x) =>
+            col.some((data, y) => fn(data, x, y, this))
+        );
+    }
 
-        for (
-            i = Math.max(0, x - radius - 1);
-            i < Math.min(this.width, x + radius + 1);
-            i++
-        ) {
-            for (
-                j = Math.max(0, y - radius - 1);
-                j < Math.min(this.height, y + radius + 1);
-                j++
-            ) {
-                if (
-                    this.hasXY(i, j) &&
-                    (i - x) * (i - x) + (j - y) * (j - y) <
-                        radius * radius + radius
-                ) {
-                    // + radius softens the circle
-                    fn(this[i][j], i, j, this);
-                }
-            }
-        }
+    forCircle(x: number, y: number, radius: number, fn: GridEach<T>) {
+        XY.forCircle(x, y, radius, (i, j) => {
+            if (this.hasXY(i, j)) fn(this[i][j], i, j, this);
+        });
     }
 
     hasXY(x: number, y: number) {
@@ -249,12 +250,9 @@ export class Grid<T> extends Array<Array<T>> {
     }
 
     update(fn: GridUpdate<T>) {
-        let i, j;
-        for (i = 0; i < this.width; i++) {
-            for (j = 0; j < this.height; j++) {
-                this[i][j] = fn(this[i][j], i, j, this);
-            }
-        }
+        XY.forRect(this.width, this.height, (i, j) => {
+            this[i][j] = fn(this[i][j], i, j, this);
+        });
     }
 
     updateRect(
@@ -264,39 +262,17 @@ export class Grid<T> extends Array<Array<T>> {
         height: number,
         fn: GridUpdate<T>
     ) {
-        let i, j;
-        for (i = x; i < x + width; i++) {
-            for (j = y; j < y + height; j++) {
-                if (this.hasXY(i, j)) {
-                    this[i][j] = fn(this[i][j], i, j, this);
-                }
-            }
-        }
+        XY.forRect(x, y, width, height, (i, j) => {
+            if (this.hasXY(i, j)) this[i][j] = fn(this[i][j], i, j, this);
+        });
     }
 
     updateCircle(x: number, y: number, radius: number, fn: GridUpdate<T>) {
-        let i, j;
-
-        for (
-            i = Math.max(0, x - radius - 1);
-            i < Math.min(this.width, x + radius + 1);
-            i++
-        ) {
-            for (
-                j = Math.max(0, y - radius - 1);
-                j < Math.min(this.height, y + radius + 1);
-                j++
-            ) {
-                if (
-                    this.hasXY(i, j) &&
-                    (i - x) * (i - x) + (j - y) * (j - y) <
-                        radius * radius + radius
-                ) {
-                    // + radius softens the circle
-                    this[i][j] = fn(this[i][j], i, j, this);
-                }
+        XY.forCircle(x, y, radius, (i, j) => {
+            if (this.hasXY(i, j)) {
+                this[i][j] = fn(this[i][j], i, j, this);
             }
-        }
+        });
     }
 
     /**
@@ -344,8 +320,29 @@ export class Grid<T> extends Array<Array<T>> {
         return count;
     }
 
-    dump(fmtFn?: GridFormat<T>) {
-        this.dumpRect(0, 0, this.width, this.height, fmtFn);
+    /**
+     * Finds the first matching value/result and returns that location as an xy.Loc
+     * @param v - The fill value or a function that returns the fill value.
+     * @returns xy.Loc | null - The location of the first cell matching the criteria or null if not found.
+     * TSIGNORE
+     */
+    // @ts-ignore
+    find(match: GridMatch<T> | T): xy.Loc | null {
+        const fn: GridMatch<T> =
+            typeof match === 'function'
+                ? (match as GridMatch<T>)
+                : (v: T) => v == match;
+        for (let x = 0; x < this.width; ++x) {
+            for (let y = 0; y < this.height; ++y) {
+                const v = this[x][y];
+                if (fn(v, x, y, this)) return [x, y] as xy.Loc;
+            }
+        }
+        return null;
+    }
+
+    dump(fmtFn?: GridFormat<T>, log = console.log) {
+        this.dumpRect(0, 0, this.width, this.height, fmtFn, log);
     }
 
     dumpRect(
@@ -353,7 +350,8 @@ export class Grid<T> extends Array<Array<T>> {
         top: number,
         width: number,
         height: number,
-        fmtFn?: GridFormat<T>
+        fmtFn?: GridFormat<T>,
+        log = console.log
     ) {
         let i, j;
 
@@ -378,11 +376,24 @@ export class Grid<T> extends Array<Array<T>> {
             }
             output.push(line);
         }
-        console.log(output.join('\n'));
+        log(output.join('\n'));
     }
 
-    dumpAround(x: number, y: number, radius: number) {
-        this.dumpRect(x - radius, y - radius, 2 * radius, 2 * radius);
+    dumpAround(
+        x: number,
+        y: number,
+        radius: number,
+        fmtFn?: GridFormat<T>,
+        log = console.log
+    ) {
+        this.dumpRect(
+            x - radius,
+            y - radius,
+            2 * radius,
+            2 * radius,
+            fmtFn,
+            log
+        );
     }
 
     // TODO - Use for(radius) loop to speed this up (do not look at each cell)
@@ -397,9 +408,7 @@ export class Grid<T> extends Array<Array<T>> {
 
         this.forEach((v, i, j) => {
             if (fn(v, i, j, this)) {
-                const dist = Math.floor(
-                    100 * Utils.distanceBetween(x, y, i, j)
-                );
+                const dist = Math.floor(100 * XY.distanceBetween(x, y, i, j));
                 if (dist < bestDistance) {
                     bestLoc[0] = i;
                     bestLoc[1] = j;
@@ -430,114 +439,22 @@ export class Grid<T> extends Array<Array<T>> {
         return [-1, -1];
     }
 
-    randomMatchingLoc(v: T | GridMatch<T>, deterministic = false): Loc {
-        let locationCount = 0;
-        let i, j, index;
-
-        const fn: GridMatch<T> =
+    randomMatchingLoc(v: T | GridMatch<T>): Loc {
+        const fn: XY.XYMatchFunc =
             typeof v === 'function'
-                ? (v as GridMatch<T>)
-                : (val: T) => val == v;
+                ? (x, y) => (v as GridMatch<T>)(this[x][y], x, y, this)
+                : (x, y) => this.get(x, y) === v;
 
-        locationCount = 0;
-        this.forEach((v, i, j) => {
-            if (fn(v, i, j, this)) {
-                locationCount++;
-            }
-        });
-
-        if (locationCount == 0) {
-            return [-1, -1];
-        } else if (deterministic) {
-            index = Math.floor(locationCount / 2);
-        } else {
-            index = random.range(0, locationCount - 1);
-        }
-
-        for (i = 0; i < this.width && index >= 0; i++) {
-            for (j = 0; j < this.height && index >= 0; j++) {
-                if (fn(this[i][j], i, j, this)) {
-                    if (index == 0) {
-                        return [i, j];
-                    }
-                    index--;
-                }
-            }
-        }
-        return [-1, -1];
+        return random.matchingLoc(this.width, this.height, fn);
     }
 
-    matchingLocNear(
-        x: number,
-        y: number,
-        v: T | GridMatch<T>,
-        deterministic = false
-    ): Loc {
-        let loc: Loc = [-1, -1];
-        let i, j, k, candidateLocs, randIndex;
-
-        const fn: GridMatch<T> =
+    matchingLocNear(x: number, y: number, v: T | GridMatch<T>): Loc {
+        const fn: XY.XYMatchFunc =
             typeof v === 'function'
-                ? (v as GridMatch<T>)
-                : (val: T) => val == v;
-        candidateLocs = 0;
+                ? (x, y) => (v as GridMatch<T>)(this[x][y], x, y, this)
+                : (x, y) => this.get(x, y) === v;
 
-        // count up the number of candidate locations
-        for (
-            k = 0;
-            k < Math.max(this.width, this.height) && !candidateLocs;
-            k++
-        ) {
-            for (i = x - k; i <= x + k; i++) {
-                for (j = y - k; j <= y + k; j++) {
-                    if (
-                        this.hasXY(i, j) &&
-                        (i == x - k ||
-                            i == x + k ||
-                            j == y - k ||
-                            j == y + k) &&
-                        fn(this[i][j], i, j, this)
-                    ) {
-                        candidateLocs++;
-                    }
-                }
-            }
-        }
-
-        if (candidateLocs == 0) {
-            return [-1, -1];
-        }
-
-        // and pick one
-        if (deterministic) {
-            randIndex = 1 + Math.floor(candidateLocs / 2);
-        } else {
-            randIndex = 1 + random.number(candidateLocs);
-        }
-
-        for (k = 0; k < Math.max(this.width, this.height); k++) {
-            for (i = x - k; i <= x + k; i++) {
-                for (j = y - k; j <= y + k; j++) {
-                    if (
-                        this.hasXY(i, j) &&
-                        (i == x - k ||
-                            i == x + k ||
-                            j == y - k ||
-                            j == y + k) &&
-                        fn(this[i][j], i, j, this)
-                    ) {
-                        if (--randIndex == 0) {
-                            loc[0] = i;
-                            loc[1] = j;
-                            return loc;
-                        }
-                    }
-                }
-            }
-        }
-
-        // brogueAssert(false);
-        return [-1, -1]; // should never reach this point
+        return random.matchingLocNear(x, y, fn);
     }
 
     // Rotates around the cell, counting up the number of distinct strings of neighbors with the same test result in a single revolution.
@@ -548,65 +465,49 @@ export class Grid<T> extends Array<Array<T>> {
     //		Four means it is in the intersection of two hallways.
     //		Five or more means there is a bug.
     arcCount(x: number, y: number, testFn: GridMatch<T>) {
-        let oldX, oldY, newX, newY;
-
-        // brogueAssert(grid.hasXY(x, y));
-
-        testFn = testFn || Utils.IS_NONZERO;
-
-        let arcCount = 0;
-        let matchCount = 0;
-        for (let dir = 0; dir < CDIRS.length; dir++) {
-            oldX = x + CDIRS[(dir + 7) % 8][0];
-            oldY = y + CDIRS[(dir + 7) % 8][1];
-            newX = x + CDIRS[dir][0];
-            newY = y + CDIRS[dir][1];
-            // Counts every transition from passable to impassable or vice-versa on the way around the cell:
-            const newOk =
-                this.hasXY(newX, newY) &&
-                testFn(this[newX][newY], newX, newY, this);
-            const oldOk =
-                this.hasXY(oldX, oldY) &&
-                testFn(this[oldX][oldY], oldX, oldY, this);
-            if (newOk) ++matchCount;
-            if (newOk != oldOk) {
-                arcCount++;
-            }
-        }
-        if (arcCount == 0 && matchCount) return 1;
-        return Math.floor(arcCount / 2); // Since we added one when we entered a wall and another when we left.
+        return XY.arcCount(x, y, (i, j) => {
+            return this.hasXY(i, j) && testFn(this[i][j], i, j, this);
+        });
     }
 }
 
 const GRID_CACHE: NumGrid[] = [];
 
-// @ts-ignore
-let GRID_ACTIVE_COUNT = 0;
-// @ts-ignore
-let GRID_ALLOC_COUNT = 0;
-// @ts-ignore
-let GRID_CREATE_COUNT = 0;
-// @ts-ignore
-let GRID_FREE_COUNT = 0;
+export const stats = {
+    active: 0,
+    alloc: 0,
+    create: 0,
+    free: 0,
+};
 
 export class NumGrid extends Grid<number> {
     public x?: number;
     public y?: number;
 
-    static alloc(
-        w: number,
-        h: number,
-        v: GridInit<number> | number = 0
-    ): NumGrid {
+    static alloc(w: number, h: number, v: GridInit<number> | number): NumGrid;
+    static alloc(w: number, h: number): NumGrid;
+    static alloc(source: NumGrid): NumGrid;
+    static alloc(...args: any[]): NumGrid {
+        let w = args[0] || 0;
+        let h = args[1] || 0;
+        let v = args[2] || 0;
+
+        if (args.length == 1) {
+            // clone from NumGrid
+            w = args[0].width;
+            h = args[0].height;
+            v = args[0].get.bind(args[0]);
+        }
+
         if (!w || !h)
             throw new Error('Grid alloc requires width and height parameters.');
 
-        ++GRID_ACTIVE_COUNT;
-        ++GRID_ALLOC_COUNT;
+        ++stats.active;
+        ++stats.alloc;
 
         let grid = GRID_CACHE.pop();
         if (!grid) {
-            ++GRID_CREATE_COUNT;
+            ++stats.create;
             return new NumGrid(w, h, v);
         }
         grid._resize(w, h, v);
@@ -618,8 +519,8 @@ export class NumGrid extends Grid<number> {
             if (GRID_CACHE.indexOf(grid) >= 0) return;
 
             GRID_CACHE.push(grid);
-            ++GRID_FREE_COUNT;
-            --GRID_ACTIVE_COUNT;
+            ++stats.free;
+            --stats.active;
         }
     }
 
@@ -630,7 +531,7 @@ export class NumGrid extends Grid<number> {
     protected _resize(
         width: number,
         height: number,
-        v: GridInit<number> | number = 0
+        v: GridInit<number> | number
     ) {
         const fn: GridInit<number> =
             typeof v === 'function' ? (v as GridInit<number>) : () => v;
@@ -643,7 +544,7 @@ export class NumGrid extends Grid<number> {
         for (x = 0; x < width; ++x) {
             const col = this[x];
             for (y = 0; y < height; ++y) {
-                col[y] = fn(x, y);
+                col[y] = fn(x, y, this);
             }
             col.length = height;
         }
@@ -673,9 +574,9 @@ export class NumGrid extends Grid<number> {
     floodFillRange(
         x: number,
         y: number,
-        eligibleValueMin = 0,
-        eligibleValueMax = 0,
-        fillValue = 0
+        eligibleValueMin: number,
+        eligibleValueMax: number,
+        fillValue: number
     ) {
         let dir;
         let newX,
@@ -726,12 +627,12 @@ export class NumGrid extends Grid<number> {
         return least;
     }
 
-    randomLeastPositiveLoc(deterministic = false): Loc {
+    randomLeastPositiveLoc(): Loc {
         const targetValue = this.leastPositiveValue();
-        return this.randomMatchingLoc(targetValue, deterministic);
+        return this.randomMatchingLoc(targetValue);
     }
 
-    valueBounds(value: number) {
+    valueBounds(value: number, bounds?: XY.Bounds) {
         let foundValueAtThisLine = false;
         let i: number, j: number;
         let left = this.width - 1,
@@ -778,7 +679,12 @@ export class NumGrid extends Grid<number> {
             }
         }
 
-        return new Bounds(left, top, right - left + 1, bottom - top + 1);
+        bounds = bounds || new XY.Bounds(0, 0, 0, 0);
+        bounds.x = left;
+        bounds.y = top;
+        bounds.width = right - left + 1;
+        bounds.height = bottom - top + 1;
+        return bounds;
     }
 
     // Marks a cell as being a member of blobNumber, then recursively iterates through the rest of the blob
@@ -788,11 +694,6 @@ export class NumGrid extends Grid<number> {
         matchValue: number | GridMatch<number>,
         fillValue: number | GridUpdate<number>
     ) {
-        let dir;
-        let newX,
-            newY,
-            numberOfCells = 1;
-
         const matchFn =
             typeof matchValue == 'function'
                 ? matchValue
@@ -800,168 +701,39 @@ export class NumGrid extends Grid<number> {
         const fillFn =
             typeof fillValue == 'function' ? fillValue : () => fillValue;
 
-        this[x][y] = fillFn(this[x][y], x, y, this);
+        let done = NumGrid.alloc(this.width, this.height);
+        let newX, newY;
 
-        // Iterate through the four cardinal neighbors.
-        for (dir = 0; dir < 4; dir++) {
-            newX = x + DIRS[dir][0];
-            newY = y + DIRS[dir][1];
-            if (!this.hasXY(newX, newY)) {
-                continue;
-            }
-            if (matchFn(this[newX][newY], newX, newY, this)) {
+        const todo: XY.Loc[] = [[x, y]];
+        const free: XY.Loc[] = [];
+
+        let count = 1;
+
+        while (todo.length) {
+            const item = todo.pop()!;
+            [x, y] = item;
+            free.push(item);
+
+            if (!this.hasXY(x, y) || done[x][y]) continue;
+            if (!matchFn(this[x][y], x, y, this)) continue;
+            this[x][y] = fillFn(this[x][y], x, y, this);
+            done[x][y] = 1;
+            ++count;
+
+            // Iterate through the four cardinal neighbors.
+            for (let dir = 0; dir < 4; dir++) {
+                newX = x + DIRS[dir][0];
+                newY = y + DIRS[dir][1];
                 // If the neighbor is an unmarked region cell,
-                numberOfCells += this.floodFill(newX, newY, matchFn, fillFn); // then recurse.
-            }
-        }
-        return numberOfCells;
-    }
-
-    protected _cellularAutomataRound(
-        birthParameters: string /* char[9] */,
-        survivalParameters: string /* char[9] */
-    ) {
-        let i, j, nbCount, newX, newY;
-        let dir;
-        let buffer2;
-
-        buffer2 = NumGrid.alloc(this.width, this.height);
-        buffer2.copy(this); // Make a backup of this in buffer2, so that each generation is isolated.
-
-        let didSomething = false;
-        for (i = 0; i < this.width; i++) {
-            for (j = 0; j < this.height; j++) {
-                nbCount = 0;
-                for (dir = 0; dir < DIRS.length; dir++) {
-                    newX = i + DIRS[dir][0];
-                    newY = j + DIRS[dir][1];
-                    if (this.hasXY(newX, newY) && buffer2[newX][newY]) {
-                        nbCount++;
-                    }
-                }
-                if (!buffer2[i][j] && birthParameters[nbCount] == 't') {
-                    this[i][j] = 1; // birth
-                    didSomething = true;
-                } else if (
-                    buffer2[i][j] &&
-                    survivalParameters[nbCount] == 't'
-                ) {
-                    // survival
-                } else {
-                    this[i][j] = 0; // death
-                    didSomething = true;
-                }
+                const item = free.pop() || [-1, -1];
+                item[0] = newX;
+                item[1] = newY;
+                todo.push(item);
             }
         }
 
-        NumGrid.free(buffer2);
-        return didSomething;
-    }
-
-    // Loads up **grid with the results of a cellular automata simulation.
-    fillBlob(
-        roundCount: number,
-        minBlobWidth: number,
-        minBlobHeight: number,
-        maxBlobWidth: number,
-        maxBlobHeight: number,
-        percentSeeded: number = 50,
-        birthParameters: string = 'ffffffttt',
-        survivalParameters: string = 'ffffttttt'
-    ) {
-        let i, j, k;
-        let blobNumber, blobSize, topBlobNumber, topBlobSize;
-
-        let bounds: Bounds;
-
-        birthParameters = birthParameters.toLowerCase();
-        survivalParameters = survivalParameters.toLowerCase();
-
-        if (minBlobWidth >= maxBlobWidth) {
-            minBlobWidth = Math.round(0.75 * maxBlobWidth);
-            maxBlobWidth = Math.round(1.25 * maxBlobWidth);
-        }
-        if (minBlobHeight >= maxBlobHeight) {
-            minBlobHeight = Math.round(0.75 * maxBlobHeight);
-            maxBlobHeight = Math.round(1.25 * maxBlobHeight);
-        }
-
-        const left = Math.floor((this.width - maxBlobWidth) / 2);
-        const top = Math.floor((this.height - maxBlobHeight) / 2);
-
-        let tries = 10;
-
-        // Generate blobs until they satisfy the minBlobWidth and minBlobHeight restraints
-        do {
-            // Clear buffer.
-            this.fill(0);
-
-            // Fill relevant portion with noise based on the percentSeeded argument.
-            for (i = 0; i < maxBlobWidth; i++) {
-                for (j = 0; j < maxBlobHeight; j++) {
-                    this[i + left][j + top] = random.chance(percentSeeded)
-                        ? 1
-                        : 0;
-                }
-            }
-
-            // Some iterations of cellular automata
-            for (k = 0; k < roundCount; k++) {
-                if (
-                    !this._cellularAutomataRound(
-                        birthParameters,
-                        survivalParameters
-                    )
-                ) {
-                    k = roundCount; // cellularAutomataRound did not make any changes
-                }
-            }
-
-            // Now to measure the result. These are best-of variables; start them out at worst-case values.
-            topBlobSize = 0;
-            topBlobNumber = 0;
-
-            // Fill each blob with its own number, starting with 2 (since 1 means floor), and keeping track of the biggest:
-            blobNumber = 2;
-
-            for (i = 0; i < this.width; i++) {
-                for (j = 0; j < this.height; j++) {
-                    if (this[i][j] == 1) {
-                        // an unmarked blob
-                        // Mark all the cells and returns the total size:
-                        blobSize = this.floodFill(i, j, 1, blobNumber);
-                        if (blobSize > topBlobSize) {
-                            // if this blob is a new record
-                            topBlobSize = blobSize;
-                            topBlobNumber = blobNumber;
-                        }
-                        blobNumber++;
-                    }
-                }
-            }
-
-            // Figure out the top blob's height and width:
-            bounds = this.valueBounds(topBlobNumber);
-        } while (
-            (bounds.width < minBlobWidth ||
-                bounds.height < minBlobHeight ||
-                topBlobNumber == 0) &&
-            --tries
-        );
-
-        // Replace the winning blob with 1's, and everything else with 0's:
-        for (i = 0; i < this.width; i++) {
-            for (j = 0; j < this.height; j++) {
-                if (this[i][j] == topBlobNumber) {
-                    this[i][j] = 1;
-                } else {
-                    this[i][j] = 0;
-                }
-            }
-        }
-
-        // Populate the returned variables.
-        return bounds;
+        NumGrid.free(done);
+        return count;
     }
 }
 
@@ -981,8 +753,6 @@ export function make<T>(w: number, h: number, v?: T | GridInit<T>) {
     if (typeof v === 'number') return new NumGrid(w, h, v);
     return new Grid<T>(w, h, v);
 }
-
-Make.grid = make;
 
 export type GridZip<T, U> = (
     destVal: T,

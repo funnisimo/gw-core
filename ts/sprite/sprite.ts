@@ -1,34 +1,46 @@
 import * as Color from '../color';
-import { SpriteType } from '../types';
-import { make as Make } from '../gw';
+import { SpriteData } from '../types';
+import { clamp } from '../utils';
 
 export interface SpriteConfig {
-    ch?: string | number | null;
+    ch?: string | null;
     fg?: Color.ColorBase | null;
     bg?: Color.ColorBase | null;
     opacity?: number;
 }
 
-export class Sprite implements SpriteType {
-    public ch: string | number;
-    public fg: number | Color.Color;
-    public bg: number | Color.Color;
-    public opacity?: number;
+export class Sprite implements SpriteData {
+    public ch: string | null;
+    public fg: Color.Color;
+    public bg: Color.Color;
+    public opacity: number;
     public name?: string;
 
     constructor(
-        ch?: string | number | null,
+        ch?: string | null,
         fg?: Color.ColorBase | null,
         bg?: Color.ColorBase | null,
-        opacity?: number
+        opacity = 100
     ) {
-        if (!ch && ch !== 0) ch = -1;
-        if (typeof fg !== 'number') fg = Color.from(fg);
-        if (typeof bg !== 'number') bg = Color.from(bg);
+        if (!ch) ch = null;
         this.ch = ch;
-        this.fg = fg;
-        this.bg = bg;
-        this.opacity = opacity;
+        this.fg = Color.from(fg);
+        this.bg = Color.from(bg);
+        this.opacity = clamp(opacity, 0, 100);
+    }
+
+    clone() {
+        return new Sprite(this.ch, this.fg, this.bg, this.opacity);
+    }
+
+    toString() {
+        const parts = [];
+        if (this.ch) parts.push('ch: ' + this.ch);
+        if (!this.fg.isNull()) parts.push('fg: ' + this.fg.toString());
+        if (!this.bg.isNull()) parts.push('bg: ' + this.bg.toString());
+        if (this.opacity !== 100) parts.push('opacity: ' + this.opacity);
+
+        return '{ ' + parts.join(', ') + ' }';
     }
 }
 
@@ -37,13 +49,13 @@ export const sprites: Record<string, Sprite> = {};
 export function make(): Sprite;
 export function make(bg: Color.ColorBase, opacity?: number): Sprite;
 export function make(
-    ch: string | null,
-    fg: Color.ColorBase | null,
-    bg: Color.ColorBase | null,
+    ch?: string | null,
+    fg?: Color.ColorBase | null,
+    bg?: Color.ColorBase | null,
     opacity?: number
 ): Sprite;
 export function make(args: any[]): Sprite;
-export function make(info: Partial<SpriteConfig>): Sprite;
+export function make(info: SpriteConfig): Sprite;
 export function make(...args: any[]) {
     let ch = null,
         fg: Color.ColorBase | null = -1,
@@ -66,7 +78,7 @@ export function make(...args: any[]) {
         opacity = args.pop();
     }
     if (args.length > 1) {
-        ch = args[0] || -1;
+        ch = args[0] || null;
         fg = args[1];
         bg = args[2];
     } else {
@@ -82,7 +94,7 @@ export function make(...args: any[]) {
             bg = args[0];
         } else {
             const sprite = args[0] as SpriteConfig;
-            ch = sprite.ch || -1;
+            ch = sprite.ch || null;
             fg = sprite.fg || -1;
             bg = sprite.bg || -1;
             opacity = sprite.opacity;
@@ -99,7 +111,16 @@ export function make(...args: any[]) {
     return new Sprite(ch, fg, bg, opacity);
 }
 
-Make.sprite = make;
+export function from(name: string): Sprite;
+export function from(config: SpriteConfig): Sprite;
+export function from(config: string | SpriteConfig): Sprite {
+    if (typeof config === 'string') {
+        const sprite = sprites[config];
+        if (!sprite) throw new Error('Failed to find sprite: ' + config);
+        return sprite;
+    }
+    return make(config);
+}
 
 export function install(
     name: string,
@@ -114,7 +135,7 @@ export function install(
     opacity?: number
 ): Sprite;
 export function install(name: string, args: any[]): Sprite;
-export function install(name: string, info: Partial<SpriteConfig>): Sprite;
+export function install(name: string, info: SpriteConfig): Sprite;
 export function install(name: string, ...args: any[]) {
     let sprite;
     // @ts-ignore

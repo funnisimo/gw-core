@@ -1,18 +1,19 @@
-
-
-
-
+import * as OBJECT from '../object';
 
 export var options = {
-  colorStart: 'Ω',
-  colorEnd: '∆',
-  field: '§',
-  defaultFg: null,
-  defaultBg: null,
+    colorStart: '#{', // alt-z
+    colorEnd: '}', // alt-j
+    field: '{{', // alt-6
+    fieldEnd: '}}',
+    defaultFg: null,
+    defaultBg: null,
 };
 
+export type Align = 'left' | 'center' | 'right';
+export type VAlign = 'top' | 'middle' | 'bottom';
+
 // const RE_RGB = /^[a-fA-F0-9]*$/;
-// 
+//
 // export function parseColor(color:string) {
 //   if (color.startsWith('#')) {
 //     color = color.substring(1);
@@ -37,14 +38,34 @@ export var options = {
 //   return 0xFFF;
 // }
 
-export var helpers: Record<string,Function> = {
-  eachColor: (() => {}),
-  default: ((name:string, _:Record<string,any>, value:any) => {
-    if (value !== undefined) return `${value}.!!${name}!!`;
-    return `!!${name}!!`;
-  }),
+export type View = Record<string, any>;
+
+export interface HelperObj {
+    get: (view: View, pattern: string) => any;
+}
+export type HelperFn = (
+    this: HelperObj,
+    name: string,
+    data: View,
+    args: string[]
+) => string;
+
+export var helpers: Record<string, HelperFn> = {
+    default: (name: string, view: View, args: string[]) => {
+        if (args.length === 0) return name;
+        if (args.length === 1) {
+            return '' + OBJECT.getValue(view, args[0]);
+        }
+        return args.map((a) => OBJECT.getValue(view, a)).join(' ');
+    },
+    debug: (name: string, _view: View, args: string[]) => {
+        if (args.length) {
+            return `{{${name} ${args.join(' ')}}}`;
+        }
+        return `{{${name}}}`;
+    },
 };
 
-export function addHelper(name: string, fn: Function) {
-  helpers[name] = fn;
+export function addHelper(name: string, fn: HelperFn) {
+    helpers[name] = fn;
 }

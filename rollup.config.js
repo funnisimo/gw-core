@@ -1,36 +1,42 @@
-
 // GW-UTILS: rollup.config.js
 
-import { terser } from "rollup-plugin-terser";
-import dts from "rollup-plugin-dts";
+import { terser } from 'rollup-plugin-terser';
+import dts from 'rollup-plugin-dts';
+import { nodeResolve } from '@rollup/plugin-node-resolve';
+import commonjs from '@rollup/plugin-commonjs';
 
 export default [
-{
-  input: 'js/index.js',
-  output: [{
-    file: 'dist/gw-utils.min.js',
-    format: 'umd',
-    name: 'GW',
-    freeze: false,
-    extend: true,
-    sourcemap: true,
-    plugins: [terser()]
-  },
-  {
-    file: 'dist/gw-utils.mjs',
-    format: 'es',
-    freeze: false,
-  },
-  {
-    file: 'dist/gw-utils.cjs',
-    format: 'cjs',
-    freeze: false,
-  }
-  ]
-},
-{
-  input: "./js/index.d.ts",
-  output: [{ file: "dist/gw-utils.d.ts", format: "es" }],
-  plugins: [dts()],
-},
+    {
+        input: 'js/index.js',
+        plugins: [nodeResolve(), commonjs()],
+        output: [
+            {
+                file: 'dist/gw-utils.min.js',
+                format: 'umd',
+                name: 'GWU',
+                // freeze: false,
+                // extend: true,
+                sourcemap: true,
+                plugins: [terser()],
+            },
+            {
+                file: 'dist/gw-utils.mjs',
+                format: 'es',
+                // freeze: false,
+            },
+            {
+                file: 'dist/gw-utils.js',
+                format: 'umd',
+                name: 'GWU',
+                // freeze: false,
+                // extend: true,
+                sourcemap: true,
+            },
+        ],
+    },
+    {
+        input: './js/index.d.ts',
+        output: [{ file: 'dist/gw-utils.d.ts', format: 'es' }],
+        plugins: [dts()],
+    },
 ];
