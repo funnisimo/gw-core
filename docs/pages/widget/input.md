@@ -7,7 +7,7 @@ There are some functions in the UI library that allow you to accept use input.
 This function allows you to read text from the user at a provided location on the current screen. It will return the text that you provided and will cleanup the screen after itself. If you want the text to remain, just draw it back after the return.
 
 ```js
-const app = GWU.app.make({ width: 60, height: 20, loop: LOOP });
+const app = GWU.app.make({ width: 60, height: 20, loop: LOOP, scene: true });
 SHOW(app);
 
 const scene = app.scene;

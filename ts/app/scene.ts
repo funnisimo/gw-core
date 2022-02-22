@@ -132,7 +132,7 @@ export class Scene {
     // GENERAL
     create(app: App) {
         this.app = app;
-        this.buffer = app.buffer.clone();
+        this.buffer = new BUFFER.Buffer(app.width, app.height);
         this.styles.setParent(app.styles);
         this.trigger('create', this.build);
     }
@@ -151,6 +151,7 @@ export class Scene {
         this.timers.restart();
         this.events.restart();
         this.tweens.clear();
+        this.buffer.nullify();
         this.needsDraw = true;
         this.events.trigger('start', data);
     }
@@ -275,7 +276,7 @@ export class Scene {
     }
 
     _draw(buffer: BUFFER.Buffer) {
-        buffer.fill(0, 0, this.bg);
+        buffer.fill(this.bg);
     }
 
     frameDebug(buffer: BUFFER.Buffer) {

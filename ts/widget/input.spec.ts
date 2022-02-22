@@ -3,7 +3,7 @@ import '../../test/matchers';
 
 import * as TEST from '../../test/utils';
 // import * as Color from '../color';
-// import * as Buffer from '../buffer';
+import * as Buffer from '../buffer';
 
 import * as APP from '../app';
 import * as CANVAS from '../canvas';
@@ -11,16 +11,16 @@ import * as CANVAS from '../canvas';
 import * as Input from './input';
 
 describe('Input Widget', () => {
-    let canvas: CANVAS.CanvasType;
+    let canvas: CANVAS.Canvas;
     let app: APP.App;
     let scene: APP.Scene;
-    let buffer: CANVAS.Buffer;
+    let buffer: Buffer.Buffer;
 
     beforeEach(() => {
         canvas = TEST.mockCanvas();
-        app = APP.make({ canvas, start: false });
+        app = APP.make({ canvas, start: false, scene: true });
         scene = app.scene;
-        buffer = canvas.buffer;
+        buffer = scene.buffer;
     });
 
     test('create', () => {
@@ -39,6 +39,7 @@ describe('Input Widget', () => {
         app._input(TEST.keypress('e'));
         app._input(TEST.keypress('a'));
         app._input(TEST.keypress('t'));
+
         app._draw();
         expect(TEST.getBufferText(buffer, 0, 0, 10)).toEqual('eat');
         expect(widget.text()).toEqual('eat');
@@ -144,6 +145,7 @@ describe('Input Widget', () => {
         expect(widget.text()).toEqual('Test');
 
         app._draw();
+        // buffer.dump();
         expect(TEST.getBufferText(buffer, 0, 0, 10)).toEqual('Test'); // default
 
         app._input(TEST.keypress('Backspace'));

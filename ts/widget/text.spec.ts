@@ -11,13 +11,13 @@ import * as CANVAS from '../canvas';
 import * as Text from './text';
 
 describe('Text Widget', () => {
-    let canvas: CANVAS.CanvasType;
+    let canvas: CANVAS.Canvas;
     let app: APP.App;
     let scene: APP.Scene;
 
     beforeEach(() => {
         canvas = TEST.mockCanvas();
-        app = APP.make({ canvas, start: false });
+        app = APP.make({ canvas, start: false, scene: true });
         scene = app.scene;
     });
 
@@ -144,10 +144,10 @@ describe('Text Widget', () => {
         widget.draw(buffer);
         // buffer.dump();
         expect(TEST.getBufferText(buffer, 0, 0, 10)).toEqual('Test');
-        expect(buffer.info(0, 0).fg).toEqual(Color.colors.red);
-        expect(buffer.info(1, 0).fg).toEqual(Color.colors.red);
-        expect(buffer.info(2, 0).fg).toEqual(Color.colors.red);
-        expect(buffer.info(3, 0).fg).toEqual(Color.colors.red);
-        expect(buffer.info(4, 0).fg).toEqual(Color.colors.black);
+        expect(buffer.get(0, 0).fg).toEqual(Color.colors.red);
+        expect(buffer.get(1, 0).fg).toEqual(Color.colors.red);
+        expect(buffer.get(2, 0).fg).toEqual(Color.colors.red);
+        expect(buffer.get(3, 0).fg).toEqual(Color.colors.red);
+        expect(buffer.get(4, 0).fg).toEqual(Color.colors.NONE); // TODO < Is this correct?  Should it be BLACK
     });
 });

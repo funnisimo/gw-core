@@ -90,7 +90,7 @@ export class Checkbox extends Text.Text {
         const bg = this._used.bg || COLOR.NONE;
         const align = this._used.align;
 
-        buffer.fillBounds(this.bounds, 0, 0, bg);
+        buffer.fillBounds(this.bounds, ' ', 0, bg);
 
         const state = this.prop('checked') ? 'check' : 'uncheck';
         let v = '' + this._attrs[state];

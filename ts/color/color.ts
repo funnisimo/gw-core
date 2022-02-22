@@ -4,22 +4,22 @@ import { clamp } from '../utils';
 export type ColorData =
     | [number, number, number]
     | [number, number, number, number];
-export type ColorBase = string | number | ColorData | Color;
+export type ColorBase = string | number | ColorData | Color | null;
 
 export type LightValue = [number, number, number];
 
-function toColorInt(r: number, g: number, b: number, base256: boolean) {
-    if (base256) {
-        r = Math.max(0, Math.min(255, Math.round(r * 2.550001)));
-        g = Math.max(0, Math.min(255, Math.round(g * 2.550001)));
-        b = Math.max(0, Math.min(255, Math.round(b * 2.550001)));
-        return (r << 16) + (g << 8) + b;
-    }
-    r = Math.max(0, Math.min(15, Math.round((r / 100) * 15)));
-    g = Math.max(0, Math.min(15, Math.round((g / 100) * 15)));
-    b = Math.max(0, Math.min(15, Math.round((b / 100) * 15)));
-    return (r << 8) + (g << 4) + b;
-}
+// function toColorInt(r: number, g: number, b: number, base256: boolean) {
+//     if (base256) {
+//         r = Math.max(0, Math.min(255, Math.round(r * 2.550001)));
+//         g = Math.max(0, Math.min(255, Math.round(g * 2.550001)));
+//         b = Math.max(0, Math.min(255, Math.round(b * 2.550001)));
+//         return (r << 16) + (g << 8) + b;
+//     }
+//     r = Math.max(0, Math.min(15, Math.round((r / 100) * 15)));
+//     g = Math.max(0, Math.min(15, Math.round((g / 100) * 15)));
+//     b = Math.max(0, Math.min(15, Math.round((b / 100) * 15)));
+//     return (r << 8) + (g << 4) + b;
+// }
 
 export const colors: Record<string, Color> = {};
 
@@ -40,6 +40,10 @@ export class Color {
     }
 
     rgb() {
+        return [this.r, this.g, this.b];
+    }
+
+    rgba() {
         return [this.r, this.g, this.b, this.a];
     }
 
@@ -145,41 +149,45 @@ export class Color {
         return Math.round(H) || 0;
     }
 
-    equals(other: Color | ColorBase) {
+    equals(other: Color | ColorBase): boolean {
         if (typeof other === 'string') {
             if (other.startsWith('#')) {
-                if (other.length == 4) {
-                    return this.css() === other;
-                }
-                return this.css(true) === other;
+                other = from(other);
+                return other.equals(this);
             }
             if (this.name) return this.name === other;
         } else if (typeof other === 'number') {
-            return this.toInt() === other || this.toInt(true) === other;
+            return this.toInt() === other;
         }
         const O = from(other);
         if (this.isNull()) return O.isNull();
         if (O.isNull()) return false;
 
-        return this._data.every((v: number, i: number) => {
-            return v == O._data[i];
-        });
+        return this.toInt() === O.toInt();
     }
 
-    toInt(base256 = false) {
-        if (this.isNull()) return -1;
-        if (!this._rand || !this.dances) {
-            return toColorInt(this._ra, this._ga, this._ba, base256);
+    toInt(useRand = true) {
+        if (this.isNull()) return 0x0000;
+        let r = this._r;
+        let g = this._g;
+        let b = this._b;
+        let a = this._a;
+
+        if (useRand && (this._rand || this.dances)) {
+            const rand = cosmetic.number(this._rand![0]);
+            const redRand = cosmetic.number(this._rand![1]);
+            const greenRand = cosmetic.number(this._rand![2]);
+            const blueRand = cosmetic.number(this._rand![3]);
+            r = Math.round(((r + rand + redRand) * a) / 100);
+            g = Math.round(((g + rand + greenRand) * a) / 100);
+            b = Math.round(((b + rand + blueRand) * a) / 100);
         }
 
-        const rand = cosmetic.number(this._rand[0]);
-        const redRand = cosmetic.number(this._rand[1]);
-        const greenRand = cosmetic.number(this._rand[2]);
-        const blueRand = cosmetic.number(this._rand[3]);
-        const r = Math.round(((this._r + rand + redRand) * this._a) / 100);
-        const g = Math.round(((this._g + rand + greenRand) * this._a) / 100);
-        const b = Math.round(((this._b + rand + blueRand) * this._a) / 100);
-        return toColorInt(r, g, b, base256);
+        r = Math.max(0, Math.min(15, Math.round((r / 100) * 15)));
+        g = Math.max(0, Math.min(15, Math.round((g / 100) * 15)));
+        b = Math.max(0, Math.min(15, Math.round((b / 100) * 15)));
+        a = Math.max(0, Math.min(15, Math.round((a / 100) * 15)));
+        return (r << 12) + (g << 8) + (b << 4) + a;
     }
 
     toLight(): LightValue {
@@ -404,18 +412,23 @@ export class Color {
 
     /**
      * Returns the css code for the current RGB values of the color.
-     * @param base256 - Show in base 256 (#abcdef) instead of base 16 (#abc)
      */
-    css(base256 = false): string {
-        const v = this.toInt(base256);
-        if (v < 0) return 'transparent';
-        return '#' + v.toString(16).padStart(base256 ? 6 : 3, '0');
+    css(useRand = true): string {
+        if (this.a !== 100) {
+            const v = this.toInt(useRand);
+            if (v <= 0) return 'transparent';
+            return '#' + v.toString(16).padStart(4, '0');
+        }
+
+        const v = this.toInt(useRand);
+        if (v <= 0) return 'transparent';
+        return '#' + v.toString(16).padStart(4, '0').substring(0, 3);
     }
 
-    toString(base256 = false): string {
+    toString(): string {
         if (this.name) return this.name;
         if (this.isNull()) return 'null color';
-        return this.css(base256);
+        return this.css();
     }
 }
 
@@ -493,7 +506,7 @@ export function make(...args: any[]): Color {
         arg = args;
         base256 = false; // TODO - Change this!!!
     }
-    if (arg === undefined || arg === null) return new Color(-1);
+    if (arg === undefined || arg === null) return new Color();
     if (arg instanceof Color) {
         return arg;
     }
@@ -520,11 +533,14 @@ export function from(...rgb: number[]): Color; // TODO - Remove!
 export function from(...args: any[]): Color {
     const arg = args[0];
     if (arg instanceof Color) return arg;
-    if (arg === undefined) return new Color(-1);
+    if (arg === undefined) return NONE;
+    if (arg === null) return NONE;
     if (typeof arg === 'string') {
         if (!arg.startsWith('#')) {
             return fromName(arg);
         }
+    } else if (arg === -1) {
+        return NONE;
     }
     return make(arg, args[1]);
 }

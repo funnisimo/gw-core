@@ -1,6 +1,5 @@
 import { Glyphs, GlyphOptions } from './glyphs';
-import { BaseCanvas, Canvas2D, NotSupportedError } from './canvas';
-import { CanvasGL } from './canvasGL';
+import { Canvas } from './canvas';
 // import * as IO from '../io';
 
 interface BaseOptions {
@@ -15,13 +14,13 @@ interface BaseOptions {
 
 export type CanvasOptions = BaseOptions & GlyphOptions;
 
-export function make(opts: Partial<CanvasOptions>): BaseCanvas;
+export function make(opts: Partial<CanvasOptions>): Canvas;
 export function make(
     width: number,
     height: number,
     opts?: Partial<CanvasOptions>
-): BaseCanvas;
-export function make(...args: any[]): BaseCanvas {
+): Canvas;
+export function make(...args: any[]): Canvas {
     let width: number = args[0];
     let height: number = args[1];
     let opts: Partial<CanvasOptions> = args[2];
@@ -38,16 +37,7 @@ export function make(...args: any[]): BaseCanvas {
         glyphs = Glyphs.fromFont(opts);
     }
 
-    let canvas: CanvasGL | Canvas2D;
-    try {
-        canvas = new CanvasGL(width, height, glyphs);
-    } catch (e) {
-        if (!(e instanceof NotSupportedError)) throw e;
-    }
-
-    if (canvas! === undefined) {
-        canvas = new Canvas2D(width, height, glyphs);
-    }
+    const canvas: Canvas = new Canvas({ width, height, glyphs });
 
     if (opts.div) {
         let el;
@@ -65,17 +55,6 @@ export function make(...args: any[]): BaseCanvas {
             el.appendChild(canvas.node);
         }
     }
-
-    // if (opts.loop) {
-    //     canvas.loop = opts.loop;
-    // }
-
-    // if (opts.io || opts.loop) {
-    //     canvas.onclick = (e) => canvas.loop.enqueue(e);
-    //     canvas.onmousemove = (e) => canvas.loop.enqueue(e);
-    //     canvas.onmouseup = (e) => canvas.loop.enqueue(e);
-    //     // canvas.onkeydown = (e) => loop.enqueue(e); // Keyboard events require tabindex to be set, better to let user do this.
-    // }
 
     return canvas;
 }

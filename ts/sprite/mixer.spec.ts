@@ -15,12 +15,12 @@ describe('Mixer', () => {
 
     test('create', () => {
         const mixer = new Mixer();
-        expect(mixer.ch).toEqual(-1);
+        expect(mixer.ch).toEqual(null);
         expect(mixer.fg.isNull()).toBeTruthy();
         expect(mixer.bg.isNull()).toBeTruthy();
 
         const b = makeMixer();
-        expect(b.ch).toEqual(-1);
+        expect(b.ch).toEqual(null);
         expect(b.fg.isNull()).toBeTruthy();
         expect(b.bg.isNull()).toBeTruthy();
     });
@@ -41,7 +41,7 @@ describe('Mixer', () => {
         expect(a.equals(b)).toBeTruthy();
 
         b.copy({});
-        expect(b.ch).toEqual(-1);
+        expect(b.ch).toEqual(null);
         expect(b.fg.css()).toEqual('transparent');
         expect(b.bg.css()).toEqual('transparent');
     });
@@ -67,9 +67,9 @@ describe('Mixer', () => {
         expect(a.bg.css()).toEqual('#333');
 
         a.nullify();
-        expect(a.ch).toEqual(-1);
-        expect(a.fg.toInt()).toEqual(-1);
-        expect(a.bg.toInt()).toEqual(-1);
+        expect(a.ch).toEqual(null);
+        expect(a.fg.toInt()).toEqual(0x0000);
+        expect(a.bg.toInt()).toEqual(0x0000);
     });
 
     test('blackOut', () => {
@@ -80,9 +80,9 @@ describe('Mixer', () => {
         expect(a.bg.css()).toEqual('#333');
 
         a.blackOut();
-        expect(a.ch).toEqual(-1);
-        expect(a.fg.toInt()).toEqual(0);
-        expect(a.bg.toInt()).toEqual(0);
+        expect(a.ch).toEqual(null);
+        expect(a.fg.toInt()).toEqual(0x000f);
+        expect(a.bg.toInt()).toEqual(0x000f);
     });
 
     test('draw', () => {
@@ -92,7 +92,7 @@ describe('Mixer', () => {
         expect(mixer.fg.css()).toEqual('#f00');
         expect(mixer.bg.css()).toEqual('#00f');
 
-        mixer.draw(-1, 0x00f, 0x666);
+        mixer.draw(null, 0x00f, 0x666);
         expect(mixer.ch).toEqual('@');
         expect(mixer.fg.css()).toEqual('#00f');
         expect(mixer.bg.css()).toEqual('#666');
@@ -242,7 +242,7 @@ describe('Mixer', () => {
         expect(mixer.bg.css()).toEqual('#742');
     });
 
-    test('bake', () => {
+    test('bake - dancing', () => {
         const mixer = new Mixer();
         mixer.draw(
             '@',
@@ -251,17 +251,45 @@ describe('Mixer', () => {
         );
         expect(mixer.ch).toEqual('@');
         expect(mixer.fg.css()).toEqual('#d73');
-        expect(mixer.bg.rgb()).toEqual([128, 128, 128, 100]);
+        expect(mixer.bg.rgb()).toEqual([128, 128, 128]);
         expect(mixer.dances).toBeTruthy();
-        expect(mixer.bg.css()).toEqual('#ccc');
+        expect(mixer.bg.css(false)).toEqual('#888');
+        expect(mixer.bg.css(true)).toEqual('#ccc');
 
-        const data = mixer.bake();
-        expect(data.ch).toEqual('@');
-        expect(data.fg).toEqual(3443);
-        expect(data.bg).toEqual(3276);
+        const baked = mixer.bake();
+        expect(baked.ch).toEqual('@');
+        expect(baked.fg.css()).toEqual('#d73');
+        expect(baked.bg.css(false)).toEqual('#888');
+        expect(baked.bg.css(true)).toEqual('#ccc');
+        expect(baked.fg.toInt()).toEqual(0xd73f);
+        expect(baked.bg.toInt(false)).toEqual(0x888f);
+        expect(baked.bg.toInt(true)).toEqual(0xcccf);
+        expect(baked.dances).toBeTruthy();
+    });
+
+    test('bake - rand', () => {
+        const mixer = new Mixer();
+        mixer.draw(
+            '@',
+            0xd73,
+            Color.fromArray([50, 50, 50]).rand(50, 10, 10, 10)
+        );
+        expect(mixer.ch).toEqual('@');
         expect(mixer.fg.css()).toEqual('#d73');
-        expect(mixer.bg.css()).toEqual('#ccc');
-        expect(mixer.dances).toBeTruthy();
+        expect(mixer.bg.rgb()).toEqual([128, 128, 128]);
+        expect(mixer.dances).toBeFalsy();
+        expect(mixer.bg.css(false)).toEqual('#888');
+        expect(mixer.bg.css(true)).toEqual('#ccc');
+
+        const baked = mixer.bake();
+        expect(baked.ch).toEqual('@');
+        expect(baked.fg.css()).toEqual('#d73');
+        expect(baked.bg.css(false)).toEqual('#ccc');
+        expect(baked.bg.css(true)).toEqual('#ccc');
+        expect(baked.fg.toInt()).toEqual(0xd73f);
+        expect(baked.bg.toInt(false)).toEqual(0xcccf);
+        expect(baked.bg.toInt(true)).toEqual(0xcccf);
+        expect(baked.dances).toBeFalsy();
     });
 
     test('scale', () => {

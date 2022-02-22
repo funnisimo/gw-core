@@ -1,20 +1,21 @@
 import * as TEST from '../../test/utils';
 import * as APP from '../app';
 import * as CANVAS from '../canvas';
+import * as BUFFER from '../buffer';
 
 // import * as BORDER from './border';
 
-describe('Body', () => {
-    let canvas: CANVAS.CanvasType;
+describe('Confirm', () => {
+    let canvas: CANVAS.Canvas;
     let app: APP.App;
     let scene: APP.Scene;
-    let buffer: CANVAS.Buffer;
+    let buffer: BUFFER.Buffer;
 
     beforeEach(() => {
         canvas = TEST.mockCanvas(50, 30);
-        app = APP.make({ canvas, start: false });
+        app = APP.make({ canvas, start: false, scene: true });
         scene = app.scene;
-        buffer = canvas.buffer;
+        buffer = app.buffer;
     });
 
     test('basic async confirm', async () => {

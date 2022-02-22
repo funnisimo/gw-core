@@ -9,13 +9,13 @@ import * as APP from '../app';
 import * as CANVAS from '../canvas';
 
 describe('Scene', () => {
-    let canvas: CANVAS.CanvasType;
+    let canvas: CANVAS.Canvas;
     let app: APP.App;
     let scene: APP.Scene;
 
     beforeEach(() => {
         canvas = TEST.mockCanvas();
-        app = APP.make({ canvas, start: false });
+        app = APP.make({ canvas, start: false, scene: true });
         scene = app.scene;
     });
 
@@ -28,16 +28,20 @@ describe('Scene', () => {
     test('bg', () => {
         scene.bg = COLOR.WHITE;
 
-        app.buffer.fill(0);
+        app.buffer.fill(COLOR.BLACK);
         expect(app.buffer.info(0, 0)).toEqual({
-            glyph: 0,
-            fg: 0,
-            bg: 0,
+            ch: ' ',
+            fg: 0x000f,
+            bg: 0x000f,
         });
 
         app._draw();
 
-        expect(app.buffer.info(0, 0)).toEqual({ glyph: 0, fg: 0, bg: 0xfff });
+        expect(app.buffer.info(0, 0)).toEqual({
+            ch: ' ',
+            fg: 0xffff,
+            bg: 0xffff,
+        });
     });
 
     // test('hidden widgets do not draw', () => {

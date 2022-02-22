@@ -775,7 +775,7 @@ export class Widget {
 
     _drawFill(buffer: BUFFER.Buffer) {
         const b = this.bounds;
-        buffer.fillRect(b.x, b.y, b.width, b.height, 0, 0, this._used.bg);
+        buffer.fillRect(b.x, b.y, b.width, b.height, ' ', 0, this._used.bg);
     }
 
     update(dt: number) {

@@ -6,13 +6,13 @@ import * as CANVAS from '../canvas';
 // import * as FIELD from './fieldset';
 
 describe('Fieldset', () => {
-    let canvas: CANVAS.CanvasType;
+    let canvas: CANVAS.Canvas;
     let app: APP.App;
     let scene: APP.Scene;
 
     beforeEach(() => {
         canvas = TEST.mockCanvas(50, 30);
-        app = APP.make({ canvas, start: false });
+        app = APP.make({ canvas, start: false, scene: true });
         scene = app.scene;
     });
 
@@ -30,8 +30,8 @@ describe('Fieldset', () => {
 
         app._draw();
 
-        expect(TEST.getBufferText(canvas.buffer, 5, 5, 20)).toEqual('LEGEND');
-        // canvas.buffer.dump();
+        expect(TEST.getBufferText(scene.buffer, 5, 5, 20)).toEqual('LEGEND');
+        // scene.buffer.dump();
     });
 
     // function info(w: Widget) {
@@ -61,16 +61,16 @@ describe('Fieldset', () => {
         // console.log(layer.allWidgets.map((w) => info(w)));
         app._draw();
 
-        // canvas.buffer.dump();
+        // scene.buffer.dump();
 
-        expect(TEST.getBufferText(canvas.buffer, 10, 5, 20)).toEqual('LEGEND');
-        expect(TEST.getBufferText(canvas.buffer, 10, 6, 20)).toEqual(
+        expect(TEST.getBufferText(scene.buffer, 10, 5, 20)).toEqual('LEGEND');
+        expect(TEST.getBufferText(scene.buffer, 10, 6, 20)).toEqual(
             'Age      :         4'
         );
-        expect(TEST.getBufferText(canvas.buffer, 10, 7, 20)).toEqual(
+        expect(TEST.getBufferText(scene.buffer, 10, 7, 20)).toEqual(
             "Height   :       6'2"
         );
-        expect(TEST.getBufferText(canvas.buffer, 10, 8, 20)).toEqual(
+        expect(TEST.getBufferText(scene.buffer, 10, 8, 20)).toEqual(
             'Weight   :       190'
         );
 
@@ -104,20 +104,20 @@ describe('Fieldset', () => {
         fs.data({ age: 4, height: "6'2", weight: 190 });
 
         // console.log(layer.allWidgets.map((w) => info(w)));
-        scene.draw(canvas.buffer);
+        scene.draw(scene.buffer);
 
-        // canvas.buffer.dump();
+        // scene.buffer.dump();
 
-        expect(TEST.getBufferText(canvas.buffer, 10, 5, 30)).toEqual(
+        expect(TEST.getBufferText(scene.buffer, 10, 5, 30)).toEqual(
             '+-LEGEND----------------+'
         );
-        expect(TEST.getBufferText(canvas.buffer, 10, 6, 30)).toEqual(
+        expect(TEST.getBufferText(scene.buffer, 10, 6, 30)).toEqual(
             '| Age      :          4 |'
         );
-        expect(TEST.getBufferText(canvas.buffer, 10, 7, 30)).toEqual(
+        expect(TEST.getBufferText(scene.buffer, 10, 7, 30)).toEqual(
             "| Height   :        6'2 |"
         );
-        expect(TEST.getBufferText(canvas.buffer, 10, 8, 30)).toEqual(
+        expect(TEST.getBufferText(scene.buffer, 10, 8, 30)).toEqual(
             '| Weight   :        190 |'
         );
 

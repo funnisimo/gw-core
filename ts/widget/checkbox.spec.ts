@@ -4,20 +4,21 @@ import * as TEST from '../../test/utils';
 // import * as COLOR from '../color';
 import * as APP from '../app';
 import * as CANVAS from '../canvas';
+import * as BUFFER from '../buffer';
 
 // import * as CHECK from './checkbox';
 
 describe('Checkbox', () => {
-    let canvas: CANVAS.CanvasType;
+    let canvas: CANVAS.Canvas;
     let app: APP.App;
     let scene: APP.Scene;
-    let buffer: CANVAS.Buffer;
+    let buffer: BUFFER.Buffer;
 
     beforeEach(() => {
         canvas = TEST.mockCanvas();
-        app = APP.make({ canvas, start: false });
+        app = APP.make({ canvas, start: false, scene: true });
         scene = app.scene;
-        buffer = canvas.buffer;
+        buffer = scene.buffer;
     });
 
     test('create obj', () => {
@@ -79,6 +80,6 @@ describe('Checkbox', () => {
 
         // buffer.dump();
 
-        expect(TEST.extractBufferText(buffer, 0, 0, 20)).toEqual('O checkbox');
+        expect(TEST.getBufferText(buffer, 0, 0, 20)).toEqual('O checkbox');
     });
 });

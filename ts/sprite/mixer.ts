@@ -3,30 +3,37 @@ import { SpriteData } from '../types';
 import * as Utils from '../utils';
 
 export interface DrawInfo {
-    ch: string | number | null;
-    fg: Color.ColorBase;
-    bg: Color.ColorBase;
+    ch?: string | null;
+    fg?: Color.ColorBase;
+    bg?: Color.ColorBase;
 }
 
 export class Mixer implements DrawInfo {
-    public ch: string | number;
+    public ch: string | null;
     public fg: Color.Color;
     public bg: Color.Color;
 
-    constructor(base?: Partial<DrawInfo>) {
-        this.ch = Utils.first(base?.ch, -1);
-        this.fg = Color.make(base?.fg);
-        this.bg = Color.make(base?.bg);
+    constructor(base: DrawInfo = {}) {
+        this.ch = Utils.first(base.ch, null);
+        this.fg = Color.make(base.fg);
+        this.bg = Color.make(base.bg);
     }
 
     protected _changed() {
         return this;
     }
 
-    copy(other: Partial<DrawInfo>) {
-        this.ch = other.ch || -1;
+    copy(other: DrawInfo) {
+        this.ch = other.ch || null;
         this.fg = Color.from(other.fg);
         this.bg = Color.from(other.bg);
+        return this._changed();
+    }
+
+    fill(ch: string | null, fg: Color.ColorBase, bg: Color.ColorBase) {
+        if (ch !== null) this.ch = ch;
+        if (fg !== null) this.fg = Color.from(fg);
+        if (bg !== null) this.bg = Color.from(bg);
         return this._changed();
     }
 
@@ -49,32 +56,32 @@ export class Mixer implements DrawInfo {
     }
 
     nullify() {
-        this.ch = -1;
+        this.ch = null;
         this.fg = Color.NONE;
         this.bg = Color.NONE;
         return this._changed();
     }
 
     blackOut() {
-        this.ch = -1;
+        this.ch = null;
         this.fg = Color.BLACK;
         this.bg = Color.BLACK;
         return this._changed();
     }
 
     draw(
-        ch: string | number = -1,
-        fg: Color.ColorBase = -1,
-        bg: Color.ColorBase = -1
+        ch: string | null = null,
+        fg: Color.ColorBase = null,
+        bg: Color.ColorBase = null
     ) {
-        if (ch && ch !== -1) {
+        if (ch !== null) {
             this.ch = ch;
         }
-        if (fg !== -1 && fg !== null) {
+        if (fg !== null) {
             fg = Color.from(fg);
             this.fg = this.fg.blend(fg);
         }
-        if (bg !== -1 && bg !== null) {
+        if (bg !== null) {
             bg = Color.from(bg);
             this.bg = this.bg.blend(bg);
         }
@@ -97,14 +104,14 @@ export class Mixer implements DrawInfo {
         return this._changed();
     }
 
-    swap() {
-        [this.bg, this.fg] = [this.fg, this.bg];
-        return this._changed();
-    }
-
     invert() {
         this.bg = this.bg.inverse();
         this.fg = this.fg.inverse();
+        return this._changed();
+    }
+
+    swap() {
+        [this.bg, this.fg] = [this.fg, this.bg];
         return this._changed();
     }
 
@@ -155,17 +162,12 @@ export class Mixer implements DrawInfo {
     bake(clearDancing = false) {
         this.fg = this.fg.bake(clearDancing);
         this.bg = this.bg.bake(clearDancing);
-        this._changed();
-        return {
-            ch: this.ch,
-            fg: this.fg.toInt(),
-            bg: this.bg.toInt(),
-        };
+        return this._changed();
     }
 
     toString() {
         // prettier-ignore
-        return `{ ch: ${this.ch}, fg: ${this.fg.toString(true)}, bg: ${this.bg.toString(true)} }`;
+        return `{ ch: ${this.ch}, fg: ${this.fg.toString()}, bg: ${this.bg.toString()} }`;
     }
 }
 

@@ -38,7 +38,7 @@ declare function nextIndex(index: number, length: number, wrap?: boolean): numbe
 declare function prevIndex(index: number, length: number, wrap?: boolean): number;
 
 declare type ColorData = [number, number, number] | [number, number, number, number];
-declare type ColorBase = string | number | ColorData | Color;
+declare type ColorBase = string | number | ColorData | Color | null;
 declare type LightValue = [number, number, number];
 declare const colors: Record<string, Color>;
 declare class Color {
@@ -48,6 +48,7 @@ declare class Color {
     name?: string;
     constructor(r?: number, g?: number, b?: number, a?: number);
     rgb(): number[];
+    rgba(): number[];
     get r(): number;
     get _r(): number;
     get _ra(): number;
@@ -67,7 +68,7 @@ declare class Color {
     get s(): number;
     get h(): number;
     equals(other: Color | ColorBase): boolean;
-    toInt(base256?: boolean): number;
+    toInt(useRand?: boolean): number;
     toLight(): LightValue;
     clamp(): Color;
     blend(other: ColorBase): Color;
@@ -82,10 +83,9 @@ declare class Color {
     inverse(): Color;
     /**
      * Returns the css code for the current RGB values of the color.
-     * @param base256 - Show in base 256 (#abcdef) instead of base 16 (#abc)
      */
-    css(base256?: boolean): string;
-    toString(base256?: boolean): string;
+    css(useRand?: boolean): string;
+    toString(): string;
 }
 declare function fromArray(vals: ColorData, base256?: boolean): Color;
 declare function fromCss(css: string): Color;
@@ -841,36 +841,33 @@ declare namespace queue_d {
 }
 
 interface DrawInfo {
-    ch: string | number | null;
-    fg: ColorBase;
-    bg: ColorBase;
+    ch?: string | null;
+    fg?: ColorBase;
+    bg?: ColorBase;
 }
 declare class Mixer implements DrawInfo {
-    ch: string | number;
+    ch: string | null;
     fg: Color;
     bg: Color;
-    constructor(base?: Partial<DrawInfo>);
+    constructor(base?: DrawInfo);
     protected _changed(): this;
-    copy(other: Partial<DrawInfo>): this;
+    copy(other: DrawInfo): this;
+    fill(ch: string | null, fg: ColorBase, bg: ColorBase): this;
     clone(): Mixer;
     equals(other: Mixer): boolean;
     get dances(): boolean;
     nullify(): this;
     blackOut(): this;
-    draw(ch?: string | number, fg?: ColorBase, bg?: ColorBase): this;
+    draw(ch?: string | null, fg?: ColorBase, bg?: ColorBase): this;
     drawSprite(src: SpriteData$1 | Mixer, opacity?: number): this | undefined;
-    swap(): this;
     invert(): this;
+    swap(): this;
     multiply(color: ColorBase, fg?: boolean, bg?: boolean): this;
     scale(multiplier: number, fg?: boolean, bg?: boolean): this;
     mix(color: ColorBase, fg?: number, bg?: number): this;
     add(color: ColorBase, fg?: number, bg?: number): this;
     separate(): this;
-    bake(clearDancing?: boolean): {
-        ch: string | number;
-        fg: number;
-        bg: number;
-    };
+    bake(clearDancing?: boolean): this;
     toString(): string;
 }
 declare function makeMixer(base?: Partial<DrawInfo>): Mixer;
@@ -942,14 +939,14 @@ declare function toSingularNoun(text: string): string;
 declare function toPluralNoun(text: string): string;
 declare function toQuantity(text: string, count: number): string;
 
-interface Options {
+interface Options$1 {
     fg?: any;
     bg?: any;
     colorStart?: string;
     colorEnd?: string;
     field?: string;
 }
-declare function configure(opts?: Options): void;
+declare function configure(opts?: Options$1): void;
 
 declare const index_d$7_configure: typeof configure;
 declare const index_d$7_apply: typeof apply;
@@ -1030,36 +1027,34 @@ interface DrawData {
     fg: number;
     bg: number;
 }
-declare class Buffer$1 {
-    _data: Uint32Array;
-    protected _width: number;
-    protected _height: number;
-    changed: boolean;
+declare abstract class BufferBase {
+    _width: number;
+    _height: number;
+    constructor(opts: {
+        width: number;
+        height: number;
+    });
     constructor(width: number, height: number);
-    protected _makeData(): Uint32Array;
     get width(): number;
     get height(): number;
     hasXY(x: number, y: number): boolean;
-    clone(): this;
-    resize(width: number, height: number): void;
-    protected _index(x: number, y: number): number;
-    get(x: number, y: number): number;
-    info(x: number, y: number): DrawData;
-    set(x: number, y: number, style: number): boolean | undefined;
-    toGlyph(ch: string | number): number;
-    draw(x: number, y: number, glyph?: number | string, fg?: ColorBase, // TODO - White?
+    abstract get(x: number, y: number): DrawInfo;
+    abstract draw(x: number, y: number, glyph?: string | null, fg?: ColorBase, // TODO - White?
     bg?: ColorBase): this;
+    abstract set(x: number, y: number, glyph?: string | null, fg?: ColorBase, // TODO - White?
+    bg?: ColorBase): this;
+    abstract nullify(x: number, y: number): void;
+    abstract nullify(): void;
+    abstract dump(): void;
     drawSprite(x: number, y: number, sprite: Partial<DrawInfo>): this;
     blackOut(x: number, y: number): void;
     blackOut(): void;
     fill(color: ColorBase): this;
-    fill(glyph?: number | string, fg?: ColorBase, bg?: ColorBase): this;
-    copy(other: Buffer$1): this;
-    apply(other: Buffer$1): this;
+    fill(glyph?: string | null, fg?: ColorBase, bg?: ColorBase): this;
     drawText(x: number, y: number, text: string, fg?: ColorBase, bg?: ColorBase, maxWidth?: number, align?: Align): number;
     wrapText(x: number, y: number, width: number, text: string, fg?: ColorBase, bg?: ColorBase, indent?: number): number;
-    fillBounds(bounds: Bounds, ch?: string | number | null, fg?: ColorBase | null, bg?: ColorBase | null): this;
-    fillRect(x: number, y: number, w: number, h: number, ch?: string | number | null, fg?: ColorBase | null, bg?: ColorBase | null): this;
+    fillBounds(bounds: Bounds, ch?: string | null, fg?: ColorBase, bg?: ColorBase): this;
+    fillRect(x: number, y: number, w: number, h: number, ch?: string | null, fg?: ColorBase, bg?: ColorBase): this;
     blackOutBounds(bounds: Bounds, bg?: ColorBase): this;
     blackOutRect(x: number, y: number, w: number, h: number, bg?: ColorBase): this;
     highlight(x: number, y: number, color: ColorBase, strength: number): this;
@@ -1069,14 +1064,46 @@ declare class Buffer$1 {
     blend(color: ColorBase): this;
     blend(color: ColorBase, x: number, y: number): this;
     blend(color: ColorBase, x: number, y: number, width: number, height: number): this;
+}
+declare class Buffer$1 extends BufferBase {
+    _data: Mixer[];
+    changed: boolean;
+    constructor(opts: {
+        width: number;
+        height: number;
+    });
+    constructor(width: number, height: number);
+    clone(): this;
+    resize(width: number, height: number): void;
+    _index(x: number, y: number): number;
+    get(x: number, y: number): Mixer;
+    set(x: number, y: number, ch?: string | null, fg?: ColorBase | null, bg?: ColorBase | null): this;
+    info(x: number, y: number): {
+        ch: string | null;
+        fg: number;
+        bg: number;
+    };
+    copy(other: Buffer$1): this;
+    apply(other: Buffer$1): this;
+    draw(x: number, y: number, glyph?: string | null, fg?: ColorBase, // TODO - White?
+    bg?: ColorBase): this;
+    nullify(x: number, y: number): void;
+    nullify(): void;
     dump(): void;
 }
+declare function make$7(opts: {
+    width: number;
+    height: number;
+}): Buffer$1;
 declare function make$7(width: number, height: number): Buffer$1;
 
 type buffer_d_DrawData = DrawData;
+type buffer_d_BufferBase = BufferBase;
+declare const buffer_d_BufferBase: typeof BufferBase;
 declare namespace buffer_d {
   export {
     buffer_d_DrawData as DrawData,
+    buffer_d_BufferBase as BufferBase,
     Buffer$1 as Buffer,
     make$7 as make,
   };
@@ -1461,23 +1488,6 @@ declare namespace scheduler_d {
   };
 }
 
-interface BufferTarget {
-    readonly width: number;
-    readonly height: number;
-    copyTo(dest: Buffer$1): void;
-    draw(src: Buffer$1): boolean;
-    toGlyph(ch: string | number): number;
-}
-declare class Buffer extends Buffer$1 {
-    _target: BufferTarget;
-    _parent?: Buffer;
-    constructor(canvas: BufferTarget, parent?: Buffer);
-    clone(): this;
-    toGlyph(ch: string | number): number;
-    render(): this;
-    reset(): void;
-}
-
 declare type CTX = CanvasRenderingContext2D;
 declare type DrawFunction = (ctx: CTX, x: number, y: number, width: number, height: number) => void;
 declare type DrawType = string | DrawFunction;
@@ -1493,12 +1503,13 @@ interface GlyphOptions {
     basic?: boolean;
 }
 declare class Glyphs {
-    private _node;
-    private _ctx;
-    private _tileWidth;
-    private _tileHeight;
+    _node: HTMLCanvasElement;
+    _ctx: CanvasRenderingContext2D;
+    _tileWidth: number;
+    _tileHeight: number;
     needsUpdate: boolean;
-    private _map;
+    _toGlyph: Record<string, number>;
+    _toChar: string[];
     static fromImage(src: string | HTMLImageElement): Glyphs;
     static fromFont(src: GlyphOptions | string): Glyphs;
     private constructor();
@@ -1509,6 +1520,7 @@ declare class Glyphs {
     get pxWidth(): number;
     get pxHeight(): number;
     forChar(ch: string): number;
+    toChar(n: number): string;
     private _configure;
     draw(n: number, ch: DrawType): void;
 }
@@ -2396,9 +2408,9 @@ declare class Scenes {
     frameStart(): void;
     input(ev: Event): void;
     update(dt: number): void;
-    draw(buffer: Buffer): void;
-    frameEnd(buffer: Buffer): void;
-    frameDebug(buffer: Buffer): void;
+    draw(buffer: Buffer$1): void;
+    frameEnd(buffer: Buffer$1): void;
+    frameDebug(buffer: Buffer$1): void;
 }
 
 interface AlertOptions extends Partial<DialogOptions> {
@@ -2470,14 +2482,14 @@ interface AppOpts {
     tileHeight?: number;
     basicOnly?: boolean;
     basic?: boolean;
-    scene?: SceneOpts;
+    scene?: SceneOpts | boolean;
     scenes?: Record<string, SceneOpts>;
     loop?: Loop;
-    canvas?: CanvasType;
+    canvas?: Canvas;
     start?: boolean;
 }
 declare class App {
-    canvas: CanvasType;
+    canvas: Canvas;
     events: Events;
     timers: Timers;
     scenes: Scenes;
@@ -2496,8 +2508,10 @@ declare class App {
     stopped: boolean;
     paused: boolean;
     debug: boolean;
+    buffer: Buffer$1;
     constructor(opts?: Partial<AppOpts>);
-    get buffer(): Buffer;
+    get width(): number;
+    get height(): number;
     get node(): HTMLCanvasElement;
     get mouseXY(): XY;
     get scene(): Scene;
@@ -2989,47 +3003,42 @@ declare class Queue {
     peek(): Event | undefined;
 }
 
+declare type IOCallback = EventFn | null;
+declare type GL = WebGL2RenderingContext;
+declare const VERTICES_PER_TILE = 6;
+interface Options {
+    width?: number;
+    height?: number;
+    glyphs: Glyphs;
+    div?: HTMLElement | string;
+    render?: boolean;
+    bg?: ColorBase;
+}
 declare class NotSupportedError extends Error {
     constructor(...params: any[]);
 }
-declare type IOCallback = EventFn | null;
-interface CanvasType extends BufferTarget {
+declare class Canvas {
     mouse: XY;
-    readonly node: HTMLCanvasElement;
-    readonly width: number;
-    readonly height: number;
-    readonly tileWidth: number;
-    readonly tileHeight: number;
-    readonly pxWidth: number;
-    readonly pxHeight: number;
-    glyphs: Glyphs;
-    toGlyph(ch: string | number): number;
-    readonly buffer: Buffer;
-    readonly parentBuffer: Buffer;
-    readonly root: Buffer;
-    pushBuffer(): Buffer;
-    popBuffer(): void;
-    resize(width: number, height: number): void;
-    draw(data: Buffer$1): boolean;
-    copyTo(data: Buffer$1): void;
-    render(): void;
-    hasXY(x: number, y: number): boolean;
-    onclick: IOCallback;
-    onmousemove: IOCallback;
-    onmouseup: IOCallback;
-    onkeydown: IOCallback;
-}
-declare abstract class BaseCanvas implements CanvasType {
-    mouse: XY;
-    _data: Uint32Array;
     _renderRequested: boolean;
     _glyphs: Glyphs;
+    _autoRender: boolean;
     _node: HTMLCanvasElement;
     _width: number;
     _height: number;
-    _buffers: Buffer[];
-    _current: number;
-    constructor(width: number, height: number, glyphs: Glyphs);
+    _gl: GL;
+    _buffers: {
+        position?: WebGLBuffer;
+        uv?: WebGLBuffer;
+        fg?: WebGLBuffer;
+        bg?: WebGLBuffer;
+        glyph?: WebGLBuffer;
+    };
+    _layers: Layer[];
+    _attribs: Record<string, number>;
+    _uniforms: Record<string, WebGLUniformLocation>;
+    _texture: WebGLTexture;
+    bg: Color;
+    constructor(options: Options);
     get node(): HTMLCanvasElement;
     get width(): number;
     get height(): number;
@@ -3039,23 +3048,17 @@ declare abstract class BaseCanvas implements CanvasType {
     get pxHeight(): number;
     get glyphs(): Glyphs;
     set glyphs(glyphs: Glyphs);
-    toGlyph(ch: string | number): number;
-    get buffer(): Buffer;
-    get parentBuffer(): Buffer;
-    get root(): Buffer;
-    pushBuffer(): Buffer;
-    popBuffer(): void;
-    protected _createNode(): HTMLCanvasElement;
-    protected abstract _createContext(): void;
-    private _configure;
-    protected _setGlyphs(glyphs: Glyphs): boolean;
+    layer(depth?: number): Layer;
+    clearLayer(depth?: number): void;
+    removeLayer(depth?: number): void;
+    _createNode(): HTMLCanvasElement;
+    _configure(options: Options): void;
+    _setGlyphs(glyphs: Glyphs): boolean;
     resize(width: number, height: number): void;
-    protected _requestRender(): void;
-    abstract draw(data: Buffer$1): boolean;
-    copyTo(data: Buffer$1): void;
-    render(): void;
-    abstract _render(): void;
+    _requestRender(): void;
     hasXY(x: number, y: number): boolean;
+    toX(x: number): number;
+    toY(y: number): number;
     get onclick(): IOCallback;
     set onclick(fn: IOCallback);
     get onmousemove(): IOCallback;
@@ -3064,36 +3067,65 @@ declare abstract class BaseCanvas implements CanvasType {
     set onmouseup(fn: IOCallback);
     get onkeydown(): IOCallback;
     set onkeydown(fn: IOCallback);
-    protected _toX(offsetX: number): number;
-    protected _toY(offsetY: number): number;
-}
-declare class Canvas2D extends BaseCanvas {
-    private _ctx;
-    private _changed;
-    constructor(width: number, height: number, glyphs: Glyphs);
-    protected _createContext(): void;
-    resize(width: number, height: number): void;
-    draw(data: Buffer$1): boolean;
+    _createContext(): void;
+    _createGeometry(): void;
+    _createData(): void;
+    _uploadGlyphs(): void;
+    draw(x: number, y: number, glyph: number, fg: number, bg: number): void;
+    render(buffer?: Buffer$1): void;
     _render(): void;
-    protected _renderCell(index: number): void;
+}
+interface ImageOptions extends Options {
+    image: HTMLImageElement | string;
+}
+declare type FontOptions = Options & GlyphOptions;
+declare function withImage(image: ImageOptions | HTMLImageElement | string): Canvas;
+declare function withFont(src: FontOptions | string): Canvas;
+declare function createProgram(gl: GL, ...sources: string[]): WebGLProgram;
+declare const QUAD: number[];
+
+interface BufferTarget {
+    readonly width: number;
+    readonly height: number;
+    toGlyph(ch: string): number;
+    copy(buffer: Buffer): void;
+    copyTo(buffer: Buffer): void;
+}
+declare class Buffer extends Buffer$1 {
+    _layer: BufferTarget;
+    constructor(layer: BufferTarget);
+    toGlyph(ch: string | number): number;
+    render(): this;
+    copyFromLayer(): this;
 }
 
-declare class CanvasGL extends BaseCanvas {
-    private _gl;
-    private _glBuffers;
-    private _attribs;
-    private _uniforms;
-    private _texture;
-    constructor(width: number, height: number, glyphs: Glyphs);
-    protected _createContext(): void;
-    private _createGeometry;
-    private _createData;
-    protected _setGlyphs(glyphs: Glyphs): boolean;
-    _uploadGlyphs(): void;
+declare class Layer extends BufferBase implements BufferTarget {
+    canvas: Canvas;
+    fg: Uint16Array;
+    bg: Uint16Array;
+    glyph: Uint8Array;
+    _depth: number;
+    _empty: boolean;
+    constructor(canvas: Canvas, depth?: number);
+    get width(): number;
+    get height(): number;
+    get depth(): number;
+    get empty(): boolean;
+    detach(): void;
     resize(width: number, height: number): void;
-    draw(buffer: Buffer$1): boolean;
-    copyTo(data: Buffer$1): void;
-    _render(): void;
+    clear(): void;
+    get(x: number, y: number): DrawInfo;
+    set(x: number, y: number, glyph?: string | null, fg?: number | ColorData, bg?: number | ColorData): this;
+    draw(x: number, y: number, glyph?: string | number | null, fg?: number | ColorData, bg?: number | ColorData): this;
+    _set(index: number, glyph: number, fg: number, bg: number): void;
+    nullify(x: number, y: number): void;
+    nullify(): void;
+    dump(): void;
+    copy(buffer: Buffer$1): void;
+    copyTo(buffer: Buffer$1): void;
+    toGlyph(ch: string): number;
+    fromGlyph(n: number): string;
+    toChar(n: number): string;
 }
 
 interface BaseOptions {
@@ -3105,42 +3137,53 @@ interface BaseOptions {
     image?: HTMLImageElement | string;
 }
 declare type CanvasOptions = BaseOptions & GlyphOptions;
-declare function make$3(opts: Partial<CanvasOptions>): BaseCanvas;
-declare function make$3(width: number, height: number, opts?: Partial<CanvasOptions>): BaseCanvas;
+declare function make$3(opts: Partial<CanvasOptions>): Canvas;
+declare function make$3(width: number, height: number, opts?: Partial<CanvasOptions>): Canvas;
 
-type index_d$3_BufferTarget = BufferTarget;
-type index_d$3_Buffer = Buffer;
-declare const index_d$3_Buffer: typeof Buffer;
 type index_d$3_GlyphInitFn = GlyphInitFn;
 type index_d$3_GlyphOptions = GlyphOptions;
 type index_d$3_Glyphs = Glyphs;
 declare const index_d$3_Glyphs: typeof Glyphs;
 declare const index_d$3_initGlyphs: typeof initGlyphs;
+type index_d$3_Layer = Layer;
+declare const index_d$3_Layer: typeof Layer;
+type index_d$3_BufferTarget = BufferTarget;
+type index_d$3_Buffer = Buffer;
+declare const index_d$3_Buffer: typeof Buffer;
+type index_d$3_IOCallback = IOCallback;
+declare const index_d$3_VERTICES_PER_TILE: typeof VERTICES_PER_TILE;
+type index_d$3_Options = Options;
 type index_d$3_NotSupportedError = NotSupportedError;
 declare const index_d$3_NotSupportedError: typeof NotSupportedError;
-type index_d$3_IOCallback = IOCallback;
-type index_d$3_CanvasType = CanvasType;
-type index_d$3_BaseCanvas = BaseCanvas;
-declare const index_d$3_BaseCanvas: typeof BaseCanvas;
-type index_d$3_Canvas2D = Canvas2D;
-declare const index_d$3_Canvas2D: typeof Canvas2D;
-type index_d$3_CanvasGL = CanvasGL;
-declare const index_d$3_CanvasGL: typeof CanvasGL;
+type index_d$3_Canvas = Canvas;
+declare const index_d$3_Canvas: typeof Canvas;
+type index_d$3_ImageOptions = ImageOptions;
+type index_d$3_FontOptions = FontOptions;
+declare const index_d$3_withImage: typeof withImage;
+declare const index_d$3_withFont: typeof withFont;
+declare const index_d$3_createProgram: typeof createProgram;
+declare const index_d$3_QUAD: typeof QUAD;
 type index_d$3_CanvasOptions = CanvasOptions;
 declare namespace index_d$3 {
   export {
-    index_d$3_BufferTarget as BufferTarget,
-    index_d$3_Buffer as Buffer,
     index_d$3_GlyphInitFn as GlyphInitFn,
     index_d$3_GlyphOptions as GlyphOptions,
     index_d$3_Glyphs as Glyphs,
     index_d$3_initGlyphs as initGlyphs,
-    index_d$3_NotSupportedError as NotSupportedError,
+    index_d$3_Layer as Layer,
+    index_d$3_BufferTarget as BufferTarget,
+    index_d$3_Buffer as Buffer,
     index_d$3_IOCallback as IOCallback,
-    index_d$3_CanvasType as CanvasType,
-    index_d$3_BaseCanvas as BaseCanvas,
-    index_d$3_Canvas2D as Canvas2D,
-    index_d$3_CanvasGL as CanvasGL,
+    index_d$3_VERTICES_PER_TILE as VERTICES_PER_TILE,
+    index_d$3_Options as Options,
+    index_d$3_NotSupportedError as NotSupportedError,
+    index_d$3_Canvas as Canvas,
+    index_d$3_ImageOptions as ImageOptions,
+    index_d$3_FontOptions as FontOptions,
+    index_d$3_withImage as withImage,
+    index_d$3_withFont as withFont,
+    index_d$3_createProgram as createProgram,
+    index_d$3_QUAD as QUAD,
     index_d$3_CanvasOptions as CanvasOptions,
     make$3 as make,
   };

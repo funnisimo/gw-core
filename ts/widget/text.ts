@@ -30,7 +30,11 @@ export class Text extends Widget {
         if (v === undefined) return this._text;
 
         this._text = v;
-        let w = this._fixedWidth ? this.bounds.width : 100;
+        let w = this._fixedWidth
+            ? this.bounds.width
+            : this.scene
+            ? this.scene.width
+            : 100;
         this._lines = TEXT.splitIntoLines(this._text, w);
         if (!this._fixedWidth) {
             this.bounds.width = this._lines.reduce(

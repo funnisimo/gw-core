@@ -190,7 +190,7 @@ export class Tween implements Animation {
 
         if (this._time >= this._duration) {
             if (this._repeat > this._count || this._repeat < 0) {
-                this._time -= this._duration;
+                this._time = this._time % this._duration;
                 this._startTime =
                     this._repeatDelay > -1 ? this._repeatDelay : this._delay;
                 if (this._yoyo) {

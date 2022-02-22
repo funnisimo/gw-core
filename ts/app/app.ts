@@ -10,6 +10,8 @@ import { AlertOptions } from '../ui/alert';
 import { ConfirmOptions } from '../ui/confirm';
 import { PromptOptions } from '../ui/prompt';
 import * as STYLE from '../ui/style';
+import { Buffer } from '../buffer';
+// import * as COLOR from '../color';
 
 export interface AppOpts /* extends CANVAS.CanvasOptions */ {
     // CanvasBase
@@ -31,17 +33,17 @@ export interface AppOpts /* extends CANVAS.CanvasOptions */ {
     basic?: boolean; // alias for basicOnly
 
     // on?: SCENE.SceneOpts;
-    scene?: SCENE.SceneOpts;
+    scene?: SCENE.SceneOpts | boolean;
     scenes?: Record<string, SCENE.SceneOpts>;
 
     loop?: Loop;
-    canvas?: CANVAS.CanvasType;
+    canvas?: CANVAS.Canvas;
 
     start?: boolean;
 }
 
 export class App {
-    canvas: CANVAS.CanvasType;
+    canvas: CANVAS.Canvas;
     events: EVENTS.Events;
     timers: TIMERS.Timers;
     scenes: Scenes;
@@ -63,6 +65,8 @@ export class App {
     stopped = true;
     paused = false;
     debug = false;
+
+    buffer: Buffer;
 
     constructor(opts: Partial<AppOpts> = {}) {
         if ('loop' in opts) {
@@ -87,20 +91,30 @@ export class App {
         if (opts.scenes) {
             this.scenes.load(opts.scenes);
         } else if (opts.scene) {
+            if (opts.scene === true) opts.scene = {};
             this.scenes.install('default', opts.scene);
             this.scenes.start('default');
-        } else {
-            this.scenes.install('default', {});
-            this.scenes.start('default');
+            // } else {
+            //     this.scenes.install('default', { bg: COLOR.colors.NONE }); // NONE just in case you draw directly on app.buffer
+            //     this.scenes.start('default');
         }
+
+        this.buffer = new Buffer(this.canvas.width, this.canvas.height);
 
         if (opts.start !== false) {
             this.start();
         }
     }
 
-    get buffer() {
-        return this.canvas.buffer;
+    // get buffer() {
+    //     return this.scene.buffer;
+    // }
+
+    get width() {
+        return this.canvas.width;
+    }
+    get height() {
+        return this.canvas.height;
     }
 
     get node() {
@@ -252,11 +266,11 @@ export class App {
     }
 
     _frameStart() {
+        // this.buffer.nullify();
         this.scenes.frameStart();
         this.events.trigger('frameStart');
     }
     _draw() {
-        this.buffer.fill(0);
         this.scenes.draw(this.buffer);
         this.events.trigger('draw', this.buffer);
     }
@@ -267,10 +281,7 @@ export class App {
     _frameEnd() {
         this.scenes.frameEnd(this.buffer);
         this.events.trigger('frameEnd', this.buffer);
-
-        if (this.buffer.changed) {
-            this.buffer.render();
-        }
+        this.canvas.render(this.buffer);
     }
 
     alert(

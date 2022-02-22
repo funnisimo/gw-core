@@ -97,13 +97,13 @@ describe('Prompt', () => {
 });
 
 describe('Choice', () => {
-    let canvas: CANVAS.CanvasType;
+    let canvas: CANVAS.Canvas;
     let app: APP.App;
     let scene: APP.Scene;
 
     beforeEach(() => {
         canvas = TEST.mockCanvas();
-        app = APP.make({ canvas, start: false });
+        app = APP.make({ canvas, start: false, scene: true });
         scene = app.scene;
     });
 

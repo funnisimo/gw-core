@@ -83,7 +83,7 @@ The table widget will not automatically redraw itself if the underlying data cha
 ## Example - List
 
 ```js
-const app = GWU.app.make({ width: 100, height: 38, loop: LOOP });
+const app = GWU.app.make({ width: 100, height: 38, loop: LOOP, scene: true });
 SHOW(app);
 
 const scene = app.scene;
@@ -102,7 +102,7 @@ build.pos(5, 5).datatable({
 ## Example - Multiple Columns
 
 ```js
-const app = GWU.app.make({ width: 100, height: 38, loop: LOOP });
+const app = GWU.app.make({ width: 100, height: 38, loop: LOOP, scene: true });
 SHOW(app);
 
 const scene = app.scene;
@@ -145,7 +145,7 @@ build.pos(5, 5).datatable({
 Whenever the hovered or selected cell changes, there is a `change` event. If you click or hit enter and the datatable has focus, it will fire an `action` event.
 
 ```js
-const app = GWU.app.make({ width: 100, height: 38, loop: LOOP });
+const app = GWU.app.make({ width: 100, height: 38, loop: LOOP, scene: true });
 SHOW(app);
 
 const scene = app.scene;

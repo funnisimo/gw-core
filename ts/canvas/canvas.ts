@@ -1,9 +1,26 @@
-import { Glyphs } from './glyphs';
-import { BufferTarget, Buffer as CanvasBuffer } from './buffer';
-import * as Buffer from '../buffer';
+// Based on: https://github.com/ondras/fastiles/blob/master/ts/scene.ts (v2.1.0)
+
+import * as shaders from './shaders';
+import { Glyphs, GlyphOptions } from './glyphs';
+import { Layer } from './layer';
+import * as Color from '../color';
 import * as IO from '../app/io';
-import * as Utils from '../utils';
 import * as XY from '../xy';
+import { Buffer } from '../buffer';
+
+export type IOCallback = IO.EventFn | null;
+
+type GL = WebGL2RenderingContext;
+export const VERTICES_PER_TILE = 6;
+
+export interface Options {
+    width?: number;
+    height?: number;
+    glyphs: Glyphs;
+    div?: HTMLElement | string;
+    render?: boolean;
+    bg?: Color.ColorBase;
+}
 
 export class NotSupportedError extends Error {
     constructor(...params: any[]) {
@@ -21,68 +38,38 @@ export class NotSupportedError extends Error {
     }
 }
 
-export type IOCallback = IO.EventFn | null;
-
-export interface CanvasType extends BufferTarget {
-    mouse: XY.XY;
-    // loop: IO.Loop;
-
-    // new (width: number, height: number, glyphs: Glyphs): CanvasType;
-
-    readonly node: HTMLCanvasElement;
-    readonly width: number;
-    readonly height: number;
-    readonly tileWidth: number;
-    readonly tileHeight: number;
-    readonly pxWidth: number;
-    readonly pxHeight: number;
-
-    glyphs: Glyphs;
-
-    toGlyph(ch: string | number): number;
-
-    readonly buffer: CanvasBuffer;
-    readonly parentBuffer: CanvasBuffer;
-    readonly root: CanvasBuffer;
-
-    pushBuffer(): CanvasBuffer;
-
-    popBuffer(): void;
-
-    resize(width: number, height: number): void;
-
-    draw(data: Buffer.Buffer): boolean;
-
-    copyTo(data: Buffer.Buffer): void;
-
-    render(): void;
-
-    hasXY(x: number, y: number): boolean;
-
-    onclick: IOCallback;
-    onmousemove: IOCallback;
-    onmouseup: IOCallback;
-    onkeydown: IOCallback;
-}
-
-export abstract class BaseCanvas implements CanvasType {
+export class Canvas {
     mouse: XY.XY = { x: -1, y: -1 };
-    _data!: Uint32Array;
     _renderRequested: boolean = false;
     _glyphs!: Glyphs;
+    _autoRender: boolean = true;
     _node: HTMLCanvasElement;
 
-    _width: number = 100;
-    _height: number = 38;
-    _buffers: CanvasBuffer[] = [];
-    _current = 0;
-    // loop: IO.Loop = IO.loop;
+    _width: number = 50;
+    _height: number = 25;
 
-    constructor(width: number, height: number, glyphs: Glyphs) {
+    _gl!: GL;
+    _buffers!: {
+        position?: WebGLBuffer;
+        uv?: WebGLBuffer;
+        fg?: WebGLBuffer;
+        bg?: WebGLBuffer;
+        glyph?: WebGLBuffer;
+    };
+    _layers: Layer[] = [];
+
+    _attribs!: Record<string, number>;
+    _uniforms!: Record<string, WebGLUniformLocation>;
+    _texture!: WebGLTexture;
+
+    bg!: Color.Color;
+
+    constructor(options: Options) {
+        if (!options.glyphs)
+            throw new Error('You must supply glyphs for the canvas.');
         this._node = this._createNode();
         this._createContext();
-        this._configure(width, height, glyphs);
-        this._buffers.push(new CanvasBuffer(this));
+        this._configure(options);
     }
 
     get node(): HTMLCanvasElement {
@@ -114,60 +101,68 @@ export abstract class BaseCanvas implements CanvasType {
         this._setGlyphs(glyphs);
     }
 
-    toGlyph(ch: string | number) {
-        if (typeof ch === 'number') return ch;
-        return this._glyphs.forChar(ch);
+    layer(depth = 0): Layer {
+        let layer = this._layers.find((l) => l.depth === depth);
+        if (layer) return layer;
+
+        layer = new Layer(this, depth);
+        this._layers.push(layer);
+        this._layers.sort((a, b) => a.depth - b.depth);
+        return layer;
     }
 
-    get buffer(): CanvasBuffer {
-        return this._buffers[this._current];
+    clearLayer(depth = 0) {
+        const layer = this._layers.find((l) => l.depth === depth);
+        if (layer) layer.clear();
     }
 
-    get parentBuffer(): CanvasBuffer {
-        const index = Math.max(0, this._current - 1);
-        return this._buffers[index];
-    }
-
-    get root(): CanvasBuffer {
-        return this._buffers[0];
-    }
-
-    pushBuffer(): CanvasBuffer {
-        const current = this.buffer;
-        ++this._current;
-        if (this._current >= this._buffers.length) {
-            const newBuffer = new CanvasBuffer(this, current);
-            newBuffer.reset();
-            this._buffers.push(newBuffer);
-        } else {
-            this.buffer.copy(current);
+    removeLayer(depth = 0) {
+        const index = this._layers.findIndex((l) => l.depth === depth);
+        if (index > -1) {
+            this._layers.splice(index, 1);
         }
-        return this.buffer;
     }
 
-    popBuffer() {
-        this._current = Math.max(0, this._current - 1);
+    _createNode() {
+        return document.createElement('canvas');
     }
 
-    protected _createNode() {
-        const canvas = document.createElement('canvas');
-        canvas.setAttribute('tabindex', '0');
-        return canvas;
+    _configure(options: Options) {
+        this._width = options.width || this._width;
+        this._height = options.height || this._height;
+        this._autoRender = options.render !== false;
+        this._setGlyphs(options.glyphs);
+        this.bg = Color.from(options.bg || Color.BLACK);
+
+        if (options.div) {
+            let el;
+            if (typeof options.div === 'string') {
+                el = document.getElementById(options.div);
+                if (!el) {
+                    console.warn(
+                        'Failed to find parent element by ID: ' + options.div
+                    );
+                }
+            } else {
+                el = options.div;
+            }
+            if (el && el.appendChild) {
+                el.appendChild(this.node);
+            }
+        }
     }
 
-    protected abstract _createContext(): void;
-
-    private _configure(width: number, height: number, glyphs: Glyphs) {
-        this._width = width;
-        this._height = height;
-        this._setGlyphs(glyphs);
-    }
-
-    protected _setGlyphs(glyphs: Glyphs) {
+    _setGlyphs(glyphs: Glyphs) {
         if (glyphs === this._glyphs) return false;
 
         this._glyphs = glyphs;
         this.resize(this._width, this._height);
+
+        const gl = this._gl;
+        const uniforms = this._uniforms;
+        gl.uniform2uiv(uniforms['tileSize'], [this.tileWidth, this.tileHeight]);
+
+        this._uploadGlyphs();
         return true;
     }
 
@@ -175,44 +170,46 @@ export abstract class BaseCanvas implements CanvasType {
         this._width = width;
         this._height = height;
 
-        this._buffers.forEach((b) => b.resize(width, height));
-
         const node = this.node;
         node.width = this._width * this.tileWidth;
         node.height = this._height * this.tileHeight;
+
+        const gl = this._gl;
+        // const uniforms = this._uniforms;
+        gl.viewport(0, 0, this.node.width, this.node.height);
+        // gl.uniform2ui(uniforms["viewportSize"], this.node.width, this.node.height);
+
+        this._createGeometry();
+        this._createData();
     }
 
-    protected _requestRender() {
+    _requestRender() {
         if (this._renderRequested) return;
         this._renderRequested = true;
+        if (!this._autoRender) return;
         requestAnimationFrame(() => this._render());
     }
-
-    abstract draw(data: Buffer.Buffer): boolean;
-
-    copyTo(data: Buffer.Buffer) {
-        if (!this.buffer) return; // startup/constructor
-        data.copy(this.buffer);
-    }
-
-    render(): void {
-        this.buffer.render();
-    }
-
-    abstract _render(): void;
 
     hasXY(x: number, y: number) {
         return x >= 0 && y >= 0 && x < this.width && y < this.height;
     }
 
+    toX(x: number) {
+        return Math.floor((this.width * x) / this.node.clientWidth);
+    }
+
+    toY(y: number) {
+        return Math.floor((this.height * y) / this.node.clientHeight);
+    }
+
     get onclick(): IOCallback {
-        throw new Error('write only.');
+        throw new Error('Write only.');
     }
     set onclick(fn: IOCallback) {
         if (fn) {
             this.node.onclick = (e: MouseEvent) => {
-                const x = this._toX(e.offsetX);
-                const y = this._toY(e.offsetY);
+                const x = this.toX(e.offsetX);
+                const y = this.toY(e.offsetY);
                 const ev = IO.makeMouseEvent(e, x, y);
                 fn(ev);
                 e.preventDefault();
@@ -228,8 +225,8 @@ export abstract class BaseCanvas implements CanvasType {
     set onmousemove(fn: IOCallback) {
         if (fn) {
             this.node.onmousemove = (e: MouseEvent) => {
-                const x = this._toX(e.offsetX);
-                const y = this._toY(e.offsetY);
+                const x = this.toX(e.offsetX);
+                const y = this.toY(e.offsetY);
                 if (x == this.mouse.x && y == this.mouse.y) return;
                 this.mouse.x = x;
                 this.mouse.y = y;
@@ -248,8 +245,8 @@ export abstract class BaseCanvas implements CanvasType {
     set onmouseup(fn: IOCallback) {
         if (fn) {
             this.node.onmouseup = (e: MouseEvent) => {
-                const x = this._toX(e.offsetX);
-                const y = this._toY(e.offsetY);
+                const x = this.toX(e.offsetX);
+                const y = this.toY(e.offsetY);
                 const ev = IO.makeMouseEvent(e, x, y);
                 fn(ev);
                 e.preventDefault();
@@ -264,6 +261,7 @@ export abstract class BaseCanvas implements CanvasType {
     }
     set onkeydown(fn: IOCallback) {
         if (fn) {
+            this.node.tabIndex = 0;
             this.node.onkeydown = (e: KeyboardEvent) => {
                 e.stopPropagation();
                 const ev = IO.makeKeyEvent(e);
@@ -275,117 +273,257 @@ export abstract class BaseCanvas implements CanvasType {
         }
     }
 
-    protected _toX(offsetX: number) {
-        return Utils.clamp(
-            Math.floor(this.width * (offsetX / this.node.clientWidth)),
-            0,
-            this.width - 1
-        );
-    }
-
-    protected _toY(offsetY: number) {
-        return Utils.clamp(
-            Math.floor(this.height * (offsetY / this.node.clientHeight)),
-            0,
-            this.height - 1
-        );
-    }
-}
-
-export class Canvas2D extends BaseCanvas {
-    private _ctx!: CanvasRenderingContext2D;
-    private _changed!: Int8Array;
-
-    constructor(width: number, height: number, glyphs: Glyphs) {
-        super(width, height, glyphs);
-    }
-
-    protected _createContext() {
-        const ctx = this.node.getContext('2d');
-        if (!ctx) {
-            throw new NotSupportedError('2d context not supported!');
+    _createContext() {
+        let gl = this.node.getContext('webgl2');
+        if (!gl) {
+            throw new NotSupportedError('WebGL 2 not supported');
         }
-        this._ctx = ctx;
-    }
+        this._gl = gl;
+        this._buffers = {};
+        this._attribs = {};
+        this._uniforms = {};
 
-    // protected _set(x: number, y: number, style: number) {
-    //     const result = super._set(x, y, style);
-    //     if (result) {
-    //         this._changed[y * this.width + x] = 1;
-    //     }
-    //     return result;
-    // }
-
-    resize(width: number, height: number) {
-        super.resize(width, height);
-        this._data = new Uint32Array(width * height);
-        this._changed = new Int8Array(width * height);
-    }
-
-    draw(data: Buffer.Buffer): boolean {
-        // TODO - Remove?
-        if (data._data.every((style, i) => style === this._data[i]))
-            return false;
-        data.changed = false;
-        let changed = false;
-        const src = data._data;
-        const raw = this._data;
-        for (let i = 0; i < raw.length; ++i) {
-            if (raw[i] !== src[i]) {
-                raw[i] = src[i];
-                this._changed[i] = 1;
-                changed = true;
-            }
+        const p = createProgram(gl, shaders.VS, shaders.FS);
+        gl.useProgram(p);
+        const attributeCount = gl.getProgramParameter(p, gl.ACTIVE_ATTRIBUTES);
+        for (let i = 0; i < attributeCount; i++) {
+            gl.enableVertexAttribArray(i);
+            let info = gl.getActiveAttrib(p, i) as WebGLActiveInfo;
+            this._attribs[info.name] = i;
         }
-        if (!changed) return false;
-        this.buffer.changed = true;
+        const uniformCount = gl.getProgramParameter(p, gl.ACTIVE_UNIFORMS);
+        for (let i = 0; i < uniformCount; i++) {
+            let info = gl.getActiveUniform(p, i) as WebGLActiveInfo;
+            this._uniforms[info.name] = gl.getUniformLocation(
+                p,
+                info.name
+            ) as WebGLUniformLocation;
+        }
+        gl.uniform1i(this._uniforms['font'], 0);
+        this._texture = createTexture(gl);
+    }
+
+    _createGeometry() {
+        const gl = this._gl;
+        this._buffers.position && gl.deleteBuffer(this._buffers.position);
+        this._buffers.uv && gl.deleteBuffer(this._buffers.uv);
+        let buffers = createGeometry(
+            gl,
+            this._attribs,
+            this.width,
+            this.height
+        );
+        Object.assign(this._buffers, buffers);
+    }
+
+    _createData() {
+        const gl = this._gl;
+        const attribs = this._attribs;
+        this._buffers.fg && gl.deleteBuffer(this._buffers.fg);
+        this._buffers.bg && gl.deleteBuffer(this._buffers.bg);
+        this._buffers.glyph && gl.deleteBuffer(this._buffers.glyph);
+        if (this._layers.length) {
+            this._layers.forEach((l) => l.detach());
+            this._layers.length = 0;
+        }
+
+        const fg = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, fg);
+        gl.vertexAttribIPointer(attribs['fg'], 1, gl.UNSIGNED_SHORT, 0, 0);
+
+        const bg = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, bg);
+        gl.vertexAttribIPointer(attribs['bg'], 1, gl.UNSIGNED_SHORT, 0, 0);
+
+        const glyph = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, glyph);
+        gl.vertexAttribIPointer(attribs['glyph'], 1, gl.UNSIGNED_BYTE, 0, 0);
+
+        Object.assign(this._buffers, { fg, bg, glyph });
+    }
+
+    _uploadGlyphs() {
+        if (!this._glyphs.needsUpdate) return;
+
+        const gl = this._gl;
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, this._texture);
+        gl.texImage2D(
+            gl.TEXTURE_2D,
+            0,
+            gl.RGBA,
+            gl.RGBA,
+            gl.UNSIGNED_BYTE,
+            this._glyphs.node
+        );
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+
         this._requestRender();
-        return true;
+        this._glyphs.needsUpdate = false;
+    }
+
+    draw(x: number, y: number, glyph: number, fg: number, bg: number): void {
+        this.layer(0).draw(x, y, glyph, fg, bg);
+    }
+
+    render(buffer?: Buffer) {
+        if (buffer) {
+            this.layer().copy(buffer);
+        }
+        this._requestRender();
     }
 
     _render() {
+        const gl = this._gl;
+
+        if (this._glyphs.needsUpdate) {
+            // auto keep glyphs up to date
+            this._uploadGlyphs();
+        } else if (!this._renderRequested) {
+            return;
+        }
+
         this._renderRequested = false;
-        for (let i = 0; i < this._changed.length; ++i) {
-            if (this._changed[i]) this._renderCell(i);
-            this._changed[i] = 0;
-        }
-        this.buffer.changed = false;
-    }
 
-    protected _renderCell(index: number) {
-        const x = index % this.width;
-        const y = Math.floor(index / this.width);
+        // clear to bg color?
+        gl.enable(gl.BLEND);
+        gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
-        const style = this._data[index];
-        const glyph = (style / (1 << 24)) >> 0;
-        const bg = (style >> 12) & 0xfff;
-        const fg = style & 0xfff;
-
-        const px = x * this.tileWidth;
-        const py = y * this.tileHeight;
-
-        const gx = (glyph % 16) * this.tileWidth;
-        const gy = Math.floor(glyph / 16) * this.tileHeight;
-
-        const d = this.glyphs.ctx.getImageData(
-            gx,
-            gy,
-            this.tileWidth,
-            this.tileHeight
+        gl.clearColor(
+            this.bg.r / 100,
+            this.bg.g / 100,
+            this.bg.b / 100,
+            this.bg.a / 100
         );
-        for (let di = 0; di < d.width * d.height; ++di) {
-            const pct = d.data[di * 4] / 255;
-            const inv = 1.0 - pct;
-            d.data[di * 4 + 0] =
-                pct * (((fg & 0xf00) >> 8) * 17) +
-                inv * (((bg & 0xf00) >> 8) * 17);
-            d.data[di * 4 + 1] =
-                pct * (((fg & 0xf0) >> 4) * 17) +
-                inv * (((bg & 0xf0) >> 4) * 17);
-            d.data[di * 4 + 2] =
-                pct * ((fg & 0xf) * 17) + inv * ((bg & 0xf) * 17);
-            d.data[di * 4 + 3] = 255; // not transparent anymore
-        }
-        this._ctx.putImageData(d, px, py);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+
+        // sort layers?
+
+        this._layers.forEach((layer) => {
+            if (layer.empty) return;
+
+            // set depth
+            gl.uniform1i(this._uniforms['depth'], layer.depth);
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, this._buffers.fg!);
+            gl.bufferData(gl.ARRAY_BUFFER, layer.fg, gl.DYNAMIC_DRAW);
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, this._buffers.bg!);
+            gl.bufferData(gl.ARRAY_BUFFER, layer.bg, gl.DYNAMIC_DRAW);
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, this._buffers.glyph!);
+            gl.bufferData(gl.ARRAY_BUFFER, layer.glyph, gl.DYNAMIC_DRAW);
+
+            gl.drawArrays(
+                gl.TRIANGLES,
+                0,
+                this._width * this._height * VERTICES_PER_TILE
+            );
+        });
     }
+}
+
+export interface ImageOptions extends Options {
+    image: HTMLImageElement | string;
+}
+
+export type FontOptions = Options & GlyphOptions;
+
+export function withImage(image: ImageOptions | HTMLImageElement | string) {
+    let opts = {} as Options;
+    if (typeof image === 'string') {
+        opts.glyphs = Glyphs.fromImage(image);
+    } else if (image instanceof HTMLImageElement) {
+        opts.glyphs = Glyphs.fromImage(image);
+    } else {
+        if (!image.image) throw new Error('You must supply the image.');
+        Object.assign(opts, image);
+        opts.glyphs = Glyphs.fromImage(image.image);
+    }
+
+    return new Canvas(opts);
+}
+
+export function withFont(src: FontOptions | string) {
+    if (typeof src === 'string') {
+        src = { font: src } as FontOptions;
+    }
+    src.glyphs = Glyphs.fromFont(src);
+    return new Canvas(src);
+}
+
+// Copy of: https://github.com/ondras/fastiles/blob/master/ts/utils.ts (v2.1.0)
+
+export function createProgram(gl: GL, ...sources: string[]) {
+    const p = gl.createProgram() as WebGLProgram;
+
+    [gl.VERTEX_SHADER, gl.FRAGMENT_SHADER].forEach((type, index) => {
+        const shader = gl.createShader(type) as WebGLShader;
+        gl.shaderSource(shader, sources[index]);
+        gl.compileShader(shader);
+        if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+            throw new Error(gl.getShaderInfoLog(shader) as string);
+        }
+        gl.attachShader(p, shader);
+    });
+
+    gl.linkProgram(p);
+    if (!gl.getProgramParameter(p, gl.LINK_STATUS)) {
+        throw new Error(gl.getProgramInfoLog(p) as string);
+    }
+
+    return p;
+}
+
+function createTexture(gl: GL) {
+    let t = gl.createTexture() as WebGLTexture;
+    gl.bindTexture(gl.TEXTURE_2D, t);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    return t;
+}
+
+// x, y offsets for 6 verticies (2 triangles) in square
+export const QUAD = [0, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 1];
+
+function createGeometry(
+    gl: GL,
+    attribs: Record<string, number>,
+    width: number,
+    height: number
+) {
+    let tileCount = width * height;
+    let positionData = new Float32Array(tileCount * QUAD.length);
+    let offsetData = new Uint8Array(tileCount * QUAD.length);
+
+    for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+            const index = (x + y * width) * QUAD.length;
+            positionData.set(
+                QUAD.map((v, i) => {
+                    if (i % 2) {
+                        // y
+                        return 1 - (2 * (y + v)) / height;
+                    } else {
+                        return (2 * (x + v)) / width - 1;
+                    }
+                }),
+                index
+            );
+            offsetData.set(QUAD, index);
+        }
+    }
+
+    const position = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, position);
+    gl.vertexAttribPointer(attribs['position'], 2, gl.FLOAT, false, 0, 0);
+    gl.bufferData(gl.ARRAY_BUFFER, positionData, gl.STATIC_DRAW);
+
+    const uv = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, uv);
+    gl.vertexAttribIPointer(attribs['offset'], 2, gl.UNSIGNED_BYTE, 0, 0);
+    gl.bufferData(gl.ARRAY_BUFFER, offsetData, gl.STATIC_DRAW);
+
+    return { position, uv };
 }

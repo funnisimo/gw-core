@@ -3,7 +3,7 @@
 Here is an example of an HTML style checkbox field. Notice that it is a <checkbox> element and not <input type=checkbox>.
 
 ```js
-const app = GWU.app.make({ width: 60, height: 20, loop: LOOP });
+const app = GWU.app.make({ width: 60, height: 20, loop: LOOP, scene: true });
 SHOW(app);
 
 const scene = app.scene;

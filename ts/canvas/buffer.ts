@@ -3,53 +3,35 @@ import * as BUFFER from '../buffer';
 export interface BufferTarget {
     readonly width: number;
     readonly height: number;
-    copyTo(dest: BUFFER.Buffer): void;
-    draw(src: BUFFER.Buffer): boolean;
-    toGlyph(ch: string | number): number;
+
+    toGlyph(ch: string): number;
+    copy(buffer: Buffer): void;
+    copyTo(buffer: Buffer): void;
 }
 
 export class Buffer extends BUFFER.Buffer {
-    _target: BufferTarget;
-    _parent?: Buffer;
+    _layer: BufferTarget;
 
-    constructor(canvas: BufferTarget, parent?: Buffer) {
-        super(canvas.width, canvas.height);
-        this._target = canvas;
-        this._parent = parent;
-
-        canvas.copyTo(this);
+    constructor(layer: BufferTarget) {
+        super(layer.width, layer.height);
+        this._layer = layer;
+        layer.copyTo(this);
     }
 
     // get canvas() { return this._target; }
 
-    clone(): this {
-        const other = new (<
-            new (canvas: BufferTarget, parent?: Buffer) => this
-        >this.constructor)(this._target, this._parent);
-        other.copy(this);
-        other.changed = false;
-        return other;
-    }
-
     toGlyph(ch: string | number) {
-        return this._target.toGlyph(ch);
+        if (typeof ch === 'number') return ch;
+        return this._layer.toGlyph(ch);
     }
 
     render() {
-        this._target.draw(this);
+        this._layer.copy(this);
         return this;
     }
 
-    // load() {
-    //     this._target.copyTo(this);
-    //     return this;
-    // }
-
-    reset() {
-        if (this._parent) {
-            this.copy(this._parent);
-        } else {
-            this.fill(0);
-        }
+    copyFromLayer() {
+        this._layer.copyTo(this);
+        return this;
     }
 }

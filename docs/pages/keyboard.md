@@ -16,32 +16,31 @@ In addition to handling events with the `keypress` event, you can also catch eve
 The following example lets you type into the canvas.
 
 ```js
-const gw = GWU.app.make({
-    font: 'monospace',
+const app = GWU.app.make({
     width: 30,
     height: 20,
     loop: LOOP,
 });
-SHOW(gw.node);
+SHOW(app);
 
-const buffer = gw.buffer;
+const buffer = app.buffer;
 let x = 0;
 let y = 0;
 
-gw.on('Enter', (e) => {
+app.on('Enter', (e) => {
     y = (y + 1) % buffer.height;
     x = 0;
 
     buffer.fillRect(x, y, buffer.width, 1, 0, 0, 0);
 });
 
-gw.on('Backspace', (e) => {
+app.on('Backspace', (e) => {
     if (x > 0) x -= 1;
     buffer.draw(x, y, ' ', 'white');
 });
 
-gw.on('keypress', (ev) => {
-    if (GWU.app.isControlKey(ev)) return;
+app.on('keypress', (ev) => {
+    if (GWU.app.isControlCode(ev)) return;
     buffer.draw(x, y, ev.key[0], 'white');
     x += 1;
     if (x >= buffer.width) {

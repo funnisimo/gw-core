@@ -13,28 +13,25 @@ const canvas = GWU.canvas.make({
     height: 30,
     loop: LOOP,
 });
-SHOW(canvas.node);
-SHOW(canvas.glyphs.node);
-
-const buffer = canvas.buffer;
+SHOW(canvas);
+SHOW(canvas.glyphs);
 
 function draw() {
-    GWU.xy.forRect(buffer.width, buffer.height, (x, y) => {
+    GWU.xy.forRect(canvas.width, canvas.height, (x, y) => {
         const ch = String.fromCharCode(65 + GWU.rng.random.number(26));
         const fg = GWU.rng.random.number(0x1000);
         const bg = GWU.rng.random.number(0x1000);
-        buffer.draw(x, y, ch, fg, bg);
+        canvas.draw(x, y, ch, fg, bg);
     });
-    buffer.render();
 }
 
 draw();
 setInterval(draw, 500);
 ```
 
-## Draw using cloned buffer
+## Draw using a buffer
 
-Here we clone the canvas buffer and draw on it.
+Here we make a buffer and use it to draw.
 
 ```js
 const canvas = GWU.canvas.make({
@@ -43,10 +40,10 @@ const canvas = GWU.canvas.make({
     height: 30,
     loop: LOOP,
 });
-SHOW(canvas.node);
-SHOW(canvas.glyphs.node);
+SHOW(canvas);
+SHOW(canvas.glyphs);
 
-const buffer = canvas.buffer.clone();
+const buffer = new GWU.canvas.Buffer(canvas.layer());
 
 function draw() {
     GWU.xy.forRect(buffer.width, buffer.height, (x, y) => {
@@ -87,7 +84,7 @@ function draw() {
         const bg = GWU.rng.random.number(0x1000);
         buffer.draw(x, y, ch, fg, bg);
     });
-    canvas.draw(buffer);
+    canvas.layer().copy(buffer);
 }
 
 draw();

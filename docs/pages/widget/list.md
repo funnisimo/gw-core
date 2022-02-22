@@ -3,7 +3,7 @@
 The List widget shows a list of choices.
 
 ```js
-const app = GWU.app.make({ width: 100, height: 38, loop: LOOP });
+const app = GWU.app.make({ width: 100, height: 38, loop: LOOP, scene: true });
 SHOW(app);
 
 app.styles.add('th', { bg: 'light_teal', fg: 'dark_blue' });

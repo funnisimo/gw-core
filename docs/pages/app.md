@@ -1,8 +1,15 @@
-# GW
+# App
+
+An app is a way to handle events, drawing, and updates to the game all in one package.
+
+Apps also allow you to run different scenes. (More on that later).
+
+## Simple
+
+This example creates a bare bones App that draws on a timer and handles keyboard input as well as mouse clicks.
 
 ```js
 const gw = GWU.app.make({
-    font: 'monospace',
     width: 30,
     height: 20,
     loop: LOOP,
@@ -32,6 +39,8 @@ gw.on('keypress', (ev) => {
 
 ## Second example
 
+This example introduces that concept of a scene that is configured at App creation time.
+
 ```js
 const gw = GWU.app.make({
     width: 30,
@@ -48,7 +57,8 @@ const gw = GWU.app.make({
 });
 SHOW(gw.node);
 
-const buffer = gw.buffer;
+const scene = gw.scene;
+const buffer = scene.buffer;
 
 function draw() {
     GWU.xy.forRect(buffer.width, buffer.height, (x, y) => {
@@ -59,5 +69,5 @@ function draw() {
     });
 }
 
-gw.repeat(1000, draw);
+scene.repeat(1000, draw);
 ```

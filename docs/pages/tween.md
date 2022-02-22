@@ -9,7 +9,7 @@ const game = GWU.app.make({
     bg: '#2d2d2d',
     scene: {
         start,
-        destroy,
+        stop,
         draw,
     },
     loop: LOOP,
@@ -38,7 +38,7 @@ function start() {
     });
 }
 
-function destroy() {
+function stop() {
     GWU.grid.free(this.data);
     this.data = null;
 }
@@ -47,7 +47,7 @@ function draw(buffer) {
     if (!this.data) return;
     buffer.fill(this.bg);
     this.data.forEach((a, x, y) => {
-        const color = GWU.color.WHITE.alpha(a);
+        const color = GWU.color.WHITE.scale(a);
         buffer.draw(x, y, ' ', -1, color);
     });
 }

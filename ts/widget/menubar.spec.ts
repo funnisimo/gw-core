@@ -3,7 +3,7 @@ import '../../test/matchers';
 
 import * as TEST from '../../test/utils';
 // import * as Color from '../color';
-// import * as Buffer from '../buffer';
+import * as BUFFER from '../buffer';
 
 import * as APP from '../app';
 import * as CANVAS from '../canvas';
@@ -13,16 +13,16 @@ import * as MENUBAR from './menubar';
 // import { Widget } from './widget';
 
 describe('Text Widget', () => {
-    let canvas: CANVAS.CanvasType;
+    let canvas: CANVAS.Canvas;
     let app: APP.App;
     let scene: APP.Scene;
-    let buffer: CANVAS.Buffer;
+    let buffer: BUFFER.Buffer;
 
     beforeEach(() => {
         canvas = TEST.mockCanvas();
-        app = APP.make({ canvas, start: false });
+        app = APP.make({ canvas, start: false, scene: true });
         scene = app.scene;
-        buffer = app.buffer;
+        buffer = scene.buffer;
     });
 
     test('create', () => {
@@ -34,7 +34,7 @@ describe('Text Widget', () => {
         expect(scene.focused).toBe(menubar.getChild('File'));
 
         app._draw();
-        expect(TEST.extractBufferText(buffer, 0, 0, 30)).toEqual(
+        expect(TEST.getBufferText(buffer, 0, 0, 30)).toEqual(
             'File | Edit | View'
         );
     });
@@ -97,7 +97,7 @@ describe('Text Widget', () => {
         });
 
         app._draw();
-        expect(TEST.extractBufferText(buffer, 0, 0, 30)).toEqual(
+        expect(TEST.getBufferText(buffer, 0, 0, 30)).toEqual(
             'File | Edit | View'
         );
 
@@ -179,11 +179,11 @@ describe('Text Widget', () => {
             expect(app.scene).not.toBe(scene);
 
             app._draw();
-            // buffer.dump();
+            // app.scene.buffer.dump();
 
-            expect(TEST.extractBufferText(buffer, 1, 1)).toEqual('Open');
-            expect(TEST.extractBufferText(buffer, 1, 2)).toEqual('Close');
-            expect(TEST.extractBufferText(buffer, 1, 3)).toEqual('Save');
+            expect(TEST.getBufferText(app.scene.buffer, 1, 1)).toEqual('Open');
+            expect(TEST.getBufferText(app.scene.buffer, 1, 2)).toEqual('Close');
+            expect(TEST.getBufferText(app.scene.buffer, 1, 3)).toEqual('Save');
 
             // expect(scene.focused).not.toBe(menubar);
 

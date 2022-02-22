@@ -1,26 +1,27 @@
 import * as TEST from '../../test/utils';
 import * as APP from '../app';
 import * as CANVAS from '../canvas';
+import * as BUFFER from '../buffer';
 
 // import * as BORDER from './border';
 
 describe('Body', () => {
-    let canvas: CANVAS.CanvasType;
+    let canvas: CANVAS.Canvas;
     let app: APP.App;
     let scene: APP.Scene;
-    let buffer: CANVAS.Buffer;
+    let buffer: BUFFER.Buffer;
 
     beforeEach(() => {
         canvas = TEST.mockCanvas(50, 30);
-        app = APP.make({ canvas, start: false });
+        app = APP.make({ canvas, start: false, scene: true });
         scene = app.scene;
-        buffer = canvas.buffer;
     });
 
     test('async text', async () => {
         scene.build.pos(10, 10).text('testing testing testing');
 
         const r = app.prompt('What do you want to eat?');
+        buffer = app.scene.buffer;
 
         app._draw();
 
@@ -32,16 +33,16 @@ describe('Body', () => {
 
         app._draw();
         // buffer.dump();
-        expect(TEST.extractBufferText(buffer, 10, 13)).toEqual(
+        expect(TEST.getBufferText(buffer, 10, 13)).toEqual(
             '+--------------------------+'
         );
-        expect(TEST.extractBufferText(buffer, 10, 14)).toEqual(
+        expect(TEST.getBufferText(buffer, 10, 14)).toEqual(
             '| What do you want to eat? |'
         );
-        expect(TEST.extractBufferText(buffer, 10, 15)).toEqual(
+        expect(TEST.getBufferText(buffer, 10, 15)).toEqual(
             '| Tacos                    |'
         );
-        expect(TEST.extractBufferText(buffer, 10, 16)).toEqual(
+        expect(TEST.getBufferText(buffer, 10, 16)).toEqual(
             '+--------------------------+'
         );
 
@@ -56,6 +57,7 @@ describe('Body', () => {
         const r = app.prompt('What do you want to eat?');
 
         app._draw();
+        buffer = app.scene.buffer;
 
         app._input(TEST.keypress('T'));
         app._input(TEST.keypress('a'));
@@ -65,16 +67,16 @@ describe('Body', () => {
 
         app._draw();
         // buffer.dump();
-        expect(TEST.extractBufferText(buffer, 10, 13)).toEqual(
+        expect(TEST.getBufferText(buffer, 10, 13)).toEqual(
             '+--------------------------+'
         );
-        expect(TEST.extractBufferText(buffer, 10, 14)).toEqual(
+        expect(TEST.getBufferText(buffer, 10, 14)).toEqual(
             '| What do you want to eat? |'
         );
-        expect(TEST.extractBufferText(buffer, 10, 15)).toEqual(
+        expect(TEST.getBufferText(buffer, 10, 15)).toEqual(
             '| Tacos                    |'
         );
-        expect(TEST.extractBufferText(buffer, 10, 16)).toEqual(
+        expect(TEST.getBufferText(buffer, 10, 16)).toEqual(
             '+--------------------------+'
         );
 
@@ -87,6 +89,7 @@ describe('Body', () => {
         scene.build.pos(10, 10).text('testing testing testing');
 
         const r = app.prompt('What do you want to eat?', { label: 'Food:' });
+        buffer = app.scene.buffer;
 
         app._draw();
 
@@ -98,16 +101,16 @@ describe('Body', () => {
 
         app._draw();
         // buffer.dump();
-        expect(TEST.extractBufferText(buffer, 10, 13)).toEqual(
+        expect(TEST.getBufferText(buffer, 10, 13)).toEqual(
             '+--------------------------+'
         );
-        expect(TEST.extractBufferText(buffer, 10, 14)).toEqual(
+        expect(TEST.getBufferText(buffer, 10, 14)).toEqual(
             '| What do you want to eat? |'
         );
-        expect(TEST.extractBufferText(buffer, 10, 15)).toEqual(
+        expect(TEST.getBufferText(buffer, 10, 15)).toEqual(
             '| Food: Tacos              |'
         );
-        expect(TEST.extractBufferText(buffer, 10, 16)).toEqual(
+        expect(TEST.getBufferText(buffer, 10, 16)).toEqual(
             '+--------------------------+'
         );
 
@@ -122,6 +125,7 @@ describe('Body', () => {
         const doneFn = jest.fn();
 
         app.prompt('What do you want to eat?', { done: doneFn });
+        buffer = app.scene.buffer;
 
         app._draw();
 
@@ -133,16 +137,16 @@ describe('Body', () => {
 
         app._draw();
         // buffer.dump();
-        expect(TEST.extractBufferText(buffer, 10, 13)).toEqual(
+        expect(TEST.getBufferText(buffer, 10, 13)).toEqual(
             '+--------------------------+'
         );
-        expect(TEST.extractBufferText(buffer, 10, 14)).toEqual(
+        expect(TEST.getBufferText(buffer, 10, 14)).toEqual(
             '| What do you want to eat? |'
         );
-        expect(TEST.extractBufferText(buffer, 10, 15)).toEqual(
+        expect(TEST.getBufferText(buffer, 10, 15)).toEqual(
             '| Tacos                    |'
         );
-        expect(TEST.extractBufferText(buffer, 10, 16)).toEqual(
+        expect(TEST.getBufferText(buffer, 10, 16)).toEqual(
             '+--------------------------+'
         );
 
@@ -157,6 +161,7 @@ describe('Body', () => {
         const doneFn = jest.fn();
 
         app.prompt('What do you want to eat?', { done: doneFn });
+        buffer = app.scene.buffer;
 
         expect(app.scene).not.toBe(scene);
 
@@ -170,16 +175,16 @@ describe('Body', () => {
 
         app._draw();
         // buffer.dump();
-        expect(TEST.extractBufferText(buffer, 10, 13)).toEqual(
+        expect(TEST.getBufferText(buffer, 10, 13)).toEqual(
             '+--------------------------+'
         );
-        expect(TEST.extractBufferText(buffer, 10, 14)).toEqual(
+        expect(TEST.getBufferText(buffer, 10, 14)).toEqual(
             '| What do you want to eat? |'
         );
-        expect(TEST.extractBufferText(buffer, 10, 15)).toEqual(
+        expect(TEST.getBufferText(buffer, 10, 15)).toEqual(
             '| Tacos                    |'
         );
-        expect(TEST.extractBufferText(buffer, 10, 16)).toEqual(
+        expect(TEST.getBufferText(buffer, 10, 16)).toEqual(
             '+--------------------------+'
         );
 

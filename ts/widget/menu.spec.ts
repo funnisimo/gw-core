@@ -4,7 +4,7 @@ import '../../test/matchers';
 
 import * as TEST from '../../test/utils';
 // import * as Color from '../color';
-// import * as Buffer from '../buffer';
+import * as BUFFER from '../buffer';
 
 import * as APP from '../app';
 import * as CANVAS from '../canvas';
@@ -12,16 +12,16 @@ import * as CANVAS from '../canvas';
 import * as MENU from './menu';
 
 describe('Text Widget', () => {
-    let canvas: CANVAS.CanvasType;
+    let canvas: CANVAS.Canvas;
     let app: APP.App;
     let scene: APP.Scene;
-    let buffer: CANVAS.Buffer;
+    let buffer: BUFFER.Buffer;
 
     beforeEach(() => {
         canvas = TEST.mockCanvas();
-        app = APP.make({ canvas, start: false });
+        app = APP.make({ canvas, start: false, scene: true });
         scene = app.scene;
-        buffer = app.buffer;
+        buffer = scene.buffer;
     });
 
     test('create', () => {
@@ -37,15 +37,15 @@ describe('Text Widget', () => {
         expect(scene.focused).toBe(menu);
 
         app._draw();
-        expect(TEST.extractBufferText(buffer, 5, 5, 30)).toEqual('File');
-        expect(TEST.extractBufferText(buffer, 5, 6, 30)).toEqual('Edit');
-        expect(TEST.extractBufferText(buffer, 5, 7, 30)).toEqual('View');
+        expect(TEST.getBufferText(buffer, 5, 5, 30)).toEqual('File');
+        expect(TEST.getBufferText(buffer, 5, 6, 30)).toEqual('Edit');
+        expect(TEST.getBufferText(buffer, 5, 7, 30)).toEqual('View');
 
         menu.hidden = true;
         app._draw();
-        expect(TEST.extractBufferText(buffer, 5, 5, 30)).toEqual('');
-        expect(TEST.extractBufferText(buffer, 5, 6, 30)).toEqual('');
-        expect(TEST.extractBufferText(buffer, 5, 7, 30)).toEqual('');
+        expect(TEST.getBufferText(buffer, 5, 5, 30)).toEqual('');
+        expect(TEST.getBufferText(buffer, 5, 6, 30)).toEqual('');
+        expect(TEST.getBufferText(buffer, 5, 7, 30)).toEqual('');
     });
 
     test('show/hide - root', () => {
@@ -61,9 +61,9 @@ describe('Text Widget', () => {
         expect(scene.focused).toBe(menu);
 
         app._draw();
-        expect(TEST.extractBufferText(buffer, 5, 5, 30)).toEqual('File');
-        expect(TEST.extractBufferText(buffer, 5, 6, 30)).toEqual('Edit');
-        expect(TEST.extractBufferText(buffer, 5, 7, 30)).toEqual('View');
+        expect(TEST.getBufferText(buffer, 5, 5, 30)).toEqual('File');
+        expect(TEST.getBufferText(buffer, 5, 6, 30)).toEqual('Edit');
+        expect(TEST.getBufferText(buffer, 5, 7, 30)).toEqual('View');
 
         // input????
 
@@ -72,18 +72,18 @@ describe('Text Widget', () => {
         expect(scene.focused).not.toBe(menu);
 
         app._draw();
-        expect(TEST.extractBufferText(buffer, 5, 5, 30)).toEqual('');
-        expect(TEST.extractBufferText(buffer, 5, 6, 30)).toEqual('');
-        expect(TEST.extractBufferText(buffer, 5, 7, 30)).toEqual('');
+        expect(TEST.getBufferText(buffer, 5, 5, 30)).toEqual('');
+        expect(TEST.getBufferText(buffer, 5, 6, 30)).toEqual('');
+        expect(TEST.getBufferText(buffer, 5, 7, 30)).toEqual('');
 
         menu.show();
         expect(menu.hidden).toBeFalsy();
         expect(scene.focused).toBe(menu);
 
         app._draw();
-        expect(TEST.extractBufferText(buffer, 5, 5, 30)).toEqual('File');
-        expect(TEST.extractBufferText(buffer, 5, 6, 30)).toEqual('Edit');
-        expect(TEST.extractBufferText(buffer, 5, 7, 30)).toEqual('View');
+        expect(TEST.getBufferText(buffer, 5, 5, 30)).toEqual('File');
+        expect(TEST.getBufferText(buffer, 5, 6, 30)).toEqual('Edit');
+        expect(TEST.getBufferText(buffer, 5, 7, 30)).toEqual('View');
     });
 
     test('click - action', () => {
@@ -99,9 +99,9 @@ describe('Text Widget', () => {
         expect(scene.focused).toBe(menu);
 
         app._draw();
-        expect(TEST.extractBufferText(buffer, 5, 5, 30)).toEqual('File');
-        expect(TEST.extractBufferText(buffer, 5, 6, 30)).toEqual('Edit');
-        expect(TEST.extractBufferText(buffer, 5, 7, 30)).toEqual('View');
+        expect(TEST.getBufferText(buffer, 5, 5, 30)).toEqual('File');
+        expect(TEST.getBufferText(buffer, 5, 6, 30)).toEqual('Edit');
+        expect(TEST.getBufferText(buffer, 5, 7, 30)).toEqual('View');
 
         const fileFn = jest.fn();
         scene.on('FILE', fileFn);
@@ -112,9 +112,9 @@ describe('Text Widget', () => {
         expect(menu.hidden).toBeTruthy();
 
         app._draw();
-        expect(TEST.extractBufferText(buffer, 5, 5, 30)).toEqual('');
-        expect(TEST.extractBufferText(buffer, 5, 6, 30)).toEqual('');
-        expect(TEST.extractBufferText(buffer, 5, 7, 30)).toEqual('');
+        expect(TEST.getBufferText(buffer, 5, 5, 30)).toEqual('');
+        expect(TEST.getBufferText(buffer, 5, 6, 30)).toEqual('');
+        expect(TEST.getBufferText(buffer, 5, 7, 30)).toEqual('');
     });
 
     test('spacebar - action', () => {
@@ -130,9 +130,9 @@ describe('Text Widget', () => {
         expect(scene.focused).toBe(menu);
 
         app._draw();
-        expect(TEST.extractBufferText(buffer, 5, 5, 30)).toEqual('File');
-        expect(TEST.extractBufferText(buffer, 5, 6, 30)).toEqual('Edit');
-        expect(TEST.extractBufferText(buffer, 5, 7, 30)).toEqual('View');
+        expect(TEST.getBufferText(buffer, 5, 5, 30)).toEqual('File');
+        expect(TEST.getBufferText(buffer, 5, 6, 30)).toEqual('Edit');
+        expect(TEST.getBufferText(buffer, 5, 7, 30)).toEqual('View');
 
         expect(menu._selectedIndex).toEqual(0);
 
@@ -151,9 +151,9 @@ describe('Text Widget', () => {
         expect(menu.hidden).toBeTruthy();
 
         app._draw();
-        expect(TEST.extractBufferText(buffer, 5, 5, 30)).toEqual('');
-        expect(TEST.extractBufferText(buffer, 5, 6, 30)).toEqual('');
-        expect(TEST.extractBufferText(buffer, 5, 7, 30)).toEqual('');
+        expect(TEST.getBufferText(buffer, 5, 5, 30)).toEqual('');
+        expect(TEST.getBufferText(buffer, 5, 6, 30)).toEqual('');
+        expect(TEST.getBufferText(buffer, 5, 7, 30)).toEqual('');
     });
 
     test('Enter - action', () => {
@@ -169,9 +169,9 @@ describe('Text Widget', () => {
         expect(scene.focused).toBe(menu);
 
         app._draw();
-        expect(TEST.extractBufferText(buffer, 5, 5, 30)).toEqual('File');
-        expect(TEST.extractBufferText(buffer, 5, 6, 30)).toEqual('Edit');
-        expect(TEST.extractBufferText(buffer, 5, 7, 30)).toEqual('View');
+        expect(TEST.getBufferText(buffer, 5, 5, 30)).toEqual('File');
+        expect(TEST.getBufferText(buffer, 5, 6, 30)).toEqual('Edit');
+        expect(TEST.getBufferText(buffer, 5, 7, 30)).toEqual('View');
 
         expect(menu._selectedIndex).toEqual(0);
 
@@ -194,9 +194,9 @@ describe('Text Widget', () => {
         expect(menu.hidden).toBeTruthy();
 
         app._draw();
-        expect(TEST.extractBufferText(buffer, 5, 5, 30)).toEqual('');
-        expect(TEST.extractBufferText(buffer, 5, 6, 30)).toEqual('');
-        expect(TEST.extractBufferText(buffer, 5, 7, 30)).toEqual('');
+        expect(TEST.getBufferText(buffer, 5, 5, 30)).toEqual('');
+        expect(TEST.getBufferText(buffer, 5, 6, 30)).toEqual('');
+        expect(TEST.getBufferText(buffer, 5, 7, 30)).toEqual('');
     });
 
     test('expand submenu', () => {
@@ -228,9 +228,9 @@ describe('Text Widget', () => {
         expect(scene.focused).toBe(menu);
 
         app._draw();
-        expect(TEST.extractBufferText(buffer, 5, 5, 20)).toEqual('File ▶');
-        expect(TEST.extractBufferText(buffer, 5, 6, 20)).toEqual('Edit ▶');
-        expect(TEST.extractBufferText(buffer, 5, 7, 20)).toEqual('View ▶');
+        expect(TEST.getBufferText(buffer, 5, 5, 20)).toEqual('File ▶');
+        expect(TEST.getBufferText(buffer, 5, 6, 20)).toEqual('Edit ▶');
+        expect(TEST.getBufferText(buffer, 5, 7, 20)).toEqual('View ▶');
 
         expect(menu._selectedIndex).toEqual(0);
 
@@ -242,9 +242,9 @@ describe('Text Widget', () => {
 
         app._draw();
         // buffer.dump();
-        expect(TEST.extractBufferText(buffer, 5, 5, 30)).toEqual('File ▶Open');
-        expect(TEST.extractBufferText(buffer, 5, 6, 30)).toEqual('Edit ▶Close');
-        expect(TEST.extractBufferText(buffer, 5, 7, 30)).toEqual('View ▶Save');
+        expect(TEST.getBufferText(buffer, 5, 5, 30)).toEqual('File ▶Open');
+        expect(TEST.getBufferText(buffer, 5, 6, 30)).toEqual('Edit ▶Close');
+        expect(TEST.getBufferText(buffer, 5, 7, 30)).toEqual('View ▶Save');
 
         expect(scene.focused).not.toBe(menu);
         app._input(TEST.keypress('Enter'));
@@ -255,9 +255,9 @@ describe('Text Widget', () => {
         expect(scene.focused).toBe(null);
 
         app._draw();
-        expect(TEST.extractBufferText(buffer, 5, 5, 30)).toEqual('');
-        expect(TEST.extractBufferText(buffer, 5, 6, 30)).toEqual('');
-        expect(TEST.extractBufferText(buffer, 5, 7, 30)).toEqual('');
+        expect(TEST.getBufferText(buffer, 5, 5, 30)).toEqual('');
+        expect(TEST.getBufferText(buffer, 5, 6, 30)).toEqual('');
+        expect(TEST.getBufferText(buffer, 5, 7, 30)).toEqual('');
     });
 
     test('menu->submenu->submenu2', () => {
@@ -293,9 +293,9 @@ describe('Text Widget', () => {
         expect(scene.focused).toBe(menu);
 
         app._draw();
-        expect(TEST.extractBufferText(buffer, 5, 5, 20)).toEqual('File ▶');
-        expect(TEST.extractBufferText(buffer, 5, 6, 20)).toEqual('Edit ▶');
-        expect(TEST.extractBufferText(buffer, 5, 7, 20)).toEqual('View ▶');
+        expect(TEST.getBufferText(buffer, 5, 5, 20)).toEqual('File ▶');
+        expect(TEST.getBufferText(buffer, 5, 6, 20)).toEqual('Edit ▶');
+        expect(TEST.getBufferText(buffer, 5, 7, 20)).toEqual('View ▶');
 
         expect(menu._selectedIndex).toEqual(0);
 
@@ -311,11 +311,9 @@ describe('Text Widget', () => {
 
         app._draw();
         // buffer.dump();
-        expect(TEST.extractBufferText(buffer, 5, 5, 30)).toEqual(
-            'File ▶Open ▶'
-        );
-        expect(TEST.extractBufferText(buffer, 5, 6, 30)).toEqual('Edit ▶Close');
-        expect(TEST.extractBufferText(buffer, 5, 7, 30)).toEqual('View ▶Save');
+        expect(TEST.getBufferText(buffer, 5, 5, 30)).toEqual('File ▶Open ▶');
+        expect(TEST.getBufferText(buffer, 5, 6, 30)).toEqual('Edit ▶Close');
+        expect(TEST.getBufferText(buffer, 5, 7, 30)).toEqual('View ▶Save');
 
         app._input(TEST.dir('right'));
 
@@ -325,13 +323,11 @@ describe('Text Widget', () => {
 
         app._draw();
         // buffer.dump();
-        expect(TEST.extractBufferText(buffer, 5, 5, 30)).toEqual(
+        expect(TEST.getBufferText(buffer, 5, 5, 30)).toEqual(
             'File ▶Open ▶Existing'
         );
-        expect(TEST.extractBufferText(buffer, 5, 6, 30)).toEqual(
-            'Edit ▶Close New'
-        );
-        expect(TEST.extractBufferText(buffer, 5, 7, 30)).toEqual(
+        expect(TEST.getBufferText(buffer, 5, 6, 30)).toEqual('Edit ▶Close New');
+        expect(TEST.getBufferText(buffer, 5, 7, 30)).toEqual(
             'View ▶Save  Import'
         );
 
@@ -346,8 +342,8 @@ describe('Text Widget', () => {
         expect(scene.focused).toBe(null);
 
         app._draw();
-        expect(TEST.extractBufferText(buffer, 5, 5, 30)).toEqual('');
-        expect(TEST.extractBufferText(buffer, 5, 6, 30)).toEqual('');
-        expect(TEST.extractBufferText(buffer, 5, 7, 30)).toEqual('');
+        expect(TEST.getBufferText(buffer, 5, 5, 30)).toEqual('');
+        expect(TEST.getBufferText(buffer, 5, 6, 30)).toEqual('');
+        expect(TEST.getBufferText(buffer, 5, 7, 30)).toEqual('');
     });
 });

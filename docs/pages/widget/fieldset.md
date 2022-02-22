@@ -3,7 +3,7 @@
 FieldSets allow you to group things.
 
 ```js
-const app = GWU.app.make({ width: 60, height: 20, loop: LOOP });
+const app = GWU.app.make({ width: 60, height: 20, loop: LOOP, scene: true });
 SHOW(app);
 
 const scene = app.scene;

@@ -5,13 +5,13 @@ import * as CANVAS from '../canvas';
 // import * as BORDER from './border';
 
 describe('Body', () => {
-    let canvas: CANVAS.CanvasType;
+    let canvas: CANVAS.Canvas;
     let app: APP.App;
     let scene: APP.Scene;
 
     beforeEach(() => {
         canvas = TEST.mockCanvas();
-        app = APP.make({ canvas, start: false });
+        app = APP.make({ canvas, start: false, scene: true });
         scene = app.scene;
     });
 
@@ -25,13 +25,13 @@ describe('Body', () => {
 
         scene.build.text('Test');
 
-        scene.draw(canvas.buffer);
+        app._draw();
         // canvas.buffer.dump();
 
-        expect(TEST.extractBufferText(canvas.buffer, 0, 0, 30)).toEqual(
+        expect(TEST.getBufferText(scene.buffer, 0, 0, 30)).toEqual(
             '+----------------------------+'
         );
-        expect(TEST.extractBufferText(canvas.buffer, 0, 1, 30)).toEqual(
+        expect(TEST.getBufferText(scene.buffer, 0, 1, 30)).toEqual(
             '|Test                        |'
         );
     });

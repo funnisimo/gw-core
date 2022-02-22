@@ -25,12 +25,13 @@ export interface GlyphOptions {
 }
 
 export class Glyphs {
-    private _node: HTMLCanvasElement;
-    private _ctx: CanvasRenderingContext2D;
-    private _tileWidth: number = 12;
-    private _tileHeight: number = 16;
-    public needsUpdate: boolean = true;
-    private _map: Record<string, number> = {};
+    _node: HTMLCanvasElement;
+    _ctx: CanvasRenderingContext2D;
+    _tileWidth: number = 12;
+    _tileHeight: number = 16;
+    needsUpdate: boolean = true;
+    _toGlyph: Record<string, number> = {};
+    _toChar: string[] = [];
 
     static fromImage(src: string | HTMLImageElement) {
         if (typeof src === 'string') {
@@ -97,7 +98,11 @@ export class Glyphs {
 
     forChar(ch: string) {
         if (!ch || !ch.length) return -1;
-        return this._map[ch] || -1;
+        return this._toGlyph[ch] || -1;
+    }
+
+    toChar(n: number): string {
+        return this._toChar[n] || ' ';
     }
 
     private _configure(opts: GlyphOptions) {
@@ -139,7 +144,8 @@ export class Glyphs {
         if (typeof ch === 'function') {
             ch(this._ctx, x, y, this.tileWidth, this.tileHeight);
         } else {
-            if (this._map[ch] === undefined) this._map[ch] = n;
+            if (this._toGlyph[ch] === undefined) this._toGlyph[ch] = n;
+            this._toChar[n] = ch;
             this._ctx.fillText(ch, cx, cy);
         }
 

@@ -9,7 +9,7 @@ import * as APP from '../app';
 import * as CANVAS from '../canvas';
 
 describe('App', () => {
-    let canvas: CANVAS.CanvasType;
+    let canvas: CANVAS.Canvas;
     let app: APP.App;
     let scene: APP.Scene;
 
@@ -43,8 +43,6 @@ describe('App', () => {
         expect(enterFn).toHaveBeenCalled();
 
         app._draw();
-        expect(TEST.extractBufferText(app.buffer, 1, 1, 10, true)).toEqual(
-            'Test'
-        );
+        expect(TEST.getBufferText(app.buffer, 1, 1, 10, true)).toEqual('Test');
     });
 });

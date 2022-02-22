@@ -1,5 +1,5 @@
 import * as UTILS from '../utils';
-import * as CANVAS from '../canvas';
+import * as BUFFER from '../buffer';
 import { Scene, SceneOpts } from './scene';
 import { App } from './app';
 import * as EVENTS from './events';
@@ -129,7 +129,7 @@ export class Scenes {
     update(dt: number) {
         this._active.forEach((s) => s.update(dt));
     }
-    draw(buffer: CANVAS.Buffer) {
+    draw(buffer: BUFFER.Buffer) {
         this._active.forEach((s) => {
             // if (i > 0) {
             //     s.buffer.copy(this._active[i - 1].buffer);
@@ -137,12 +137,12 @@ export class Scenes {
             s.draw(buffer);
         });
     }
-    frameEnd(buffer: CANVAS.Buffer) {
+    frameEnd(buffer: BUFFER.Buffer) {
         if (this._active.length) {
             this._active.forEach((s) => s.frameEnd(buffer));
         }
     }
-    frameDebug(buffer: CANVAS.Buffer) {
+    frameDebug(buffer: BUFFER.Buffer) {
         if (this._active.length) {
             this._active.forEach((s) => s.frameDebug(buffer));
         }

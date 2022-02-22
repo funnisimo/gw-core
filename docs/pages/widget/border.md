@@ -3,7 +3,7 @@
 Elements can have a solid border around them.
 
 ```js
-const app = GWU.app.make({ width: 60, height: 20, loop: LOOP });
+const app = GWU.app.make({ width: 60, height: 20, loop: LOOP, scene: true });
 SHOW(app);
 
 const scene = app.scene;

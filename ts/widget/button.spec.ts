@@ -4,24 +4,29 @@ import * as TEST from '../../test/utils';
 import * as COLOR from '../color';
 import * as APP from '../app';
 import * as CANVAS from '../canvas';
+import * as BUFFER from '../buffer';
 
 // import * as BUTTON from './button';
 
 describe('Button', () => {
-    let canvas: CANVAS.CanvasType;
+    let canvas: CANVAS.Canvas;
     let app: APP.App;
     let scene: APP.Scene;
-    let buffer: CANVAS.Buffer;
+    let buffer: BUFFER.Buffer;
 
     beforeEach(() => {
         canvas = TEST.mockCanvas();
-        app = APP.make({ canvas, start: false });
+        app = APP.make({ canvas, start: false, scene: true });
         scene = app.scene;
-        buffer = canvas.buffer;
+        buffer = scene.buffer;
     });
 
     test('create', () => {
-        let widget = scene.build.button({ id: 'ID', text: 'Button' });
+        let widget = scene.build.button({
+            id: 'ID',
+            text: 'Button',
+            bg: 'black',
+        });
 
         expect(widget.bounds.x).toEqual(0);
         expect(widget.bounds.y).toEqual(0);
@@ -33,8 +38,8 @@ describe('Button', () => {
 
         app._draw();
         expect(TEST.getBufferText(buffer, 0, 0, 10)).toEqual('Button');
-        expect(buffer.info(0, 0).fg).toEqual(COLOR.colors.white);
-        expect(buffer.info(0, 0).bg).toEqual(COLOR.colors.black);
+        expect(buffer.get(0, 0).fg).toEqual(COLOR.colors.white);
+        expect(buffer.get(0, 0).bg).toEqual(COLOR.colors.black);
     });
 
     test('hover', () => {
@@ -54,22 +59,22 @@ describe('Button', () => {
 
         app._draw();
         expect(TEST.getBufferText(buffer, 0, 0, 10)).toEqual('Button');
-        expect(buffer.info(0, 0).fg).toEqual(COLOR.colors.red);
-        expect(buffer.info(0, 0).bg).toEqual(COLOR.colors.gray);
+        expect(buffer.get(0, 0).fg).toEqual(COLOR.colors.red);
+        expect(buffer.get(0, 0).bg).toEqual(COLOR.colors.gray);
 
         app._input(TEST.mousemove(0, 0));
         expect(widget.hovered).toBeTruthy();
         app._draw();
         expect(TEST.getBufferText(buffer, 0, 0, 10)).toEqual('Button');
-        expect(buffer.info(0, 0).fg).toEqual(COLOR.colors.red);
-        expect(buffer.info(0, 0).bg).toEqual(COLOR.colors.gray);
+        expect(buffer.get(0, 0).fg).toEqual(COLOR.colors.red);
+        expect(buffer.get(0, 0).bg).toEqual(COLOR.colors.gray);
 
         app._input(TEST.mousemove(10, 10));
         expect(widget.hovered).toBeFalsy();
         app._draw();
         expect(TEST.getBufferText(buffer, 0, 0, 10)).toEqual('Button');
-        expect(buffer.info(0, 0).fg).toEqual(COLOR.colors.red);
-        expect(buffer.info(0, 0).bg).toEqual(COLOR.colors.gray);
+        expect(buffer.get(0, 0).fg).toEqual(COLOR.colors.red);
+        expect(buffer.get(0, 0).bg).toEqual(COLOR.colors.gray);
     });
 
     test('hover - wide + tall', () => {
@@ -86,25 +91,25 @@ describe('Button', () => {
 
         app._draw();
         expect(TEST.getBufferText(buffer, 0, 0, 10)).toEqual('Button');
-        expect(buffer.info(0, 0).fg).toEqual(COLOR.colors.red.toInt());
-        expect(buffer.info(0, 0).bg).toEqual(COLOR.colors.gray.toInt());
-        expect(buffer.info(0, 1).bg).toEqual(COLOR.colors.gray.toInt());
+        expect(buffer.get(0, 0).fg).toEqual(COLOR.colors.red.toInt());
+        expect(buffer.get(0, 0).bg).toEqual(COLOR.colors.gray.toInt());
+        expect(buffer.get(0, 1).bg).toEqual(COLOR.colors.gray.toInt());
 
         app._input(TEST.mousemove(0, 0));
         expect(widget.hovered).toBeTruthy();
         app._draw();
         expect(TEST.getBufferText(buffer, 0, 0, 10)).toEqual('Button');
-        expect(buffer.info(0, 0).fg).toEqual(COLOR.colors.red.toInt());
-        expect(buffer.info(0, 0).bg).toEqual(COLOR.colors.gray.toInt());
-        expect(buffer.info(0, 1).bg).toEqual(COLOR.colors.gray.toInt());
+        expect(buffer.get(0, 0).fg).toEqual(COLOR.colors.red.toInt());
+        expect(buffer.get(0, 0).bg).toEqual(COLOR.colors.gray.toInt());
+        expect(buffer.get(0, 1).bg).toEqual(COLOR.colors.gray.toInt());
 
         app._input(TEST.mousemove(10, 10));
         expect(widget.hovered).toBeFalsy();
         app._draw();
         expect(TEST.getBufferText(buffer, 0, 0, 10)).toEqual('Button');
-        expect(buffer.info(0, 0).fg).toEqual(COLOR.colors.red.toInt());
-        expect(buffer.info(0, 0).bg).toEqual(COLOR.colors.gray.toInt());
-        expect(buffer.info(0, 1).bg).toEqual(COLOR.colors.gray.toInt());
+        expect(buffer.get(0, 0).fg).toEqual(COLOR.colors.red.toInt());
+        expect(buffer.get(0, 0).bg).toEqual(COLOR.colors.gray.toInt());
+        expect(buffer.get(0, 1).bg).toEqual(COLOR.colors.gray.toInt());
     });
 
     test('Enter', async () => {

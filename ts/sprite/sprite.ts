@@ -36,8 +36,8 @@ export class Sprite implements SpriteData {
     toString() {
         const parts = [];
         if (this.ch) parts.push('ch: ' + this.ch);
-        if (!this.fg.isNull()) parts.push('fg: ' + this.fg.toString(true));
-        if (!this.bg.isNull()) parts.push('bg: ' + this.bg.toString(true));
+        if (!this.fg.isNull()) parts.push('fg: ' + this.fg.toString());
+        if (!this.bg.isNull()) parts.push('bg: ' + this.bg.toString());
         if (this.opacity !== 100) parts.push('opacity: ' + this.opacity);
 
         return '{ ' + parts.join(', ') + ' }';

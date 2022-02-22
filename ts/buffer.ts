@@ -9,20 +9,22 @@ export interface DrawData {
     bg: number;
 }
 
-export class Buffer {
-    _data: Uint32Array;
-    protected _width: number;
-    protected _height: number;
-    changed = false;
+export abstract class BufferBase {
+    _width!: number;
+    _height!: number;
 
-    constructor(width: number, height: number) {
+    constructor(opts: { width: number; height: number });
+    constructor(width: number, height: number);
+    constructor(
+        width: number | { width: number; height: number },
+        height?: number
+    ) {
+        if (typeof width !== 'number') {
+            height = width.height;
+            width = width.width;
+        }
         this._width = width;
-        this._height = height;
-        this._data = this._makeData();
-    }
-
-    protected _makeData(): Uint32Array {
-        return new Uint32Array(this.width * this.height);
+        this._height = height!;
     }
 
     get width(): number {
@@ -36,112 +38,34 @@ export class Buffer {
         return x >= 0 && y >= 0 && x < this.width && y < this.height;
     }
 
-    clone(): this {
-        const other = new (<new (w: number, h: number) => this>(
-            this.constructor
-        ))(this._width, this._height);
-        other.copy(this);
-        return other;
-    }
+    abstract get(x: number, y: number): DrawInfo;
 
-    resize(width: number, height: number): void {
-        const orig = this._data;
-        this._width = width;
-        this._height = height;
-
-        if (orig.length < width * height) {
-            this._data = new Uint32Array(width * height);
-            this._data.set(orig, 0);
-        } else {
-            this._data = orig.slice(width * height);
-        }
-        this.changed = true;
-    }
-
-    protected _index(x: number, y: number): number {
-        return y * this.width + x;
-    }
-
-    get(x: number, y: number): number {
-        if (!this.hasXY(x, y)) return 0;
-
-        let index = this._index(x, y);
-        return this._data[index] || 0;
-    }
-
-    info(x: number, y: number): DrawData {
-        const style = this.get(x, y);
-        const glyph = style >> 24;
-        const bg = (style >> 12) & 0xfff;
-        const fg = style & 0xfff;
-        return { glyph, fg, bg };
-    }
-
-    set(x: number, y: number, style: number) {
-        if (!this.hasXY(x, y)) return;
-        let index = this._index(x, y);
-        const current = this._data[index];
-        if (current !== style) {
-            this._data[index] = style;
-            return true;
-        }
-        return false;
-    }
-
-    toGlyph(ch: string | number): number {
-        if (typeof ch === 'number') return ch;
-        if (!ch || !ch.length) return -1; // 0 handled elsewhere
-        return ch.charCodeAt(0);
-    }
-
-    draw(
+    abstract draw(
         x: number,
         y: number,
-        glyph: number | string = -1,
-        fg: Color.ColorBase = -1, // TODO - White?
-        bg: Color.ColorBase = -1 // TODO - Black?
-    ): this {
-        if (!this.hasXY(x, y)) return this;
+        glyph?: string | null,
+        fg?: Color.ColorBase, // TODO - White?
+        bg?: Color.ColorBase // TODO - Black?
+    ): this;
 
-        const current = this.get(x, y);
+    abstract set(
+        x: number,
+        y: number,
+        glyph?: string | null,
+        fg?: Color.ColorBase, // TODO - White?
+        bg?: Color.ColorBase // TODO - Black?
+    ): this;
 
-        if (typeof glyph !== 'number') {
-            glyph = this.toGlyph(glyph);
-        }
+    abstract nullify(x: number, y: number): void;
+    abstract nullify(): void;
 
-        glyph = glyph >= 0 ? glyph & 0xff : current >> 24;
-
-        if (typeof fg !== 'number') {
-            fg = Color.from(current & 0xfff)
-                .blend(fg)
-                .toInt();
-        } else if (fg < 0) {
-            fg = current & 0xfff;
-        } else {
-            fg = fg & 0xfff;
-        }
-
-        if (typeof bg !== 'number') {
-            bg = Color.from((current >> 12) & 0xfff)
-                .blend(bg)
-                .toInt();
-        } else if (bg < 0) {
-            bg = (current >> 12) & 0xfff;
-        } else {
-            bg = bg & 0xfff;
-        }
-
-        const style = (glyph << 24) + (bg << 12) + fg;
-        this.set(x, y, style);
-        if (style !== current) this.changed = true;
-        return this;
-    }
+    abstract dump(): void;
 
     // This is without opacity - opacity must be done in Mixer
     drawSprite(x: number, y: number, sprite: Partial<DrawInfo>): this {
-        const ch = sprite.ch === null ? -1 : sprite.ch;
-        const fg = sprite.fg === null ? -1 : sprite.fg;
-        const bg = sprite.bg === null ? -1 : sprite.bg;
+        const ch = sprite.ch;
+        const fg = sprite.fg;
+        const bg = sprite.bg;
         return this.draw(x, y, ch, fg, bg);
     }
 
@@ -149,50 +73,36 @@ export class Buffer {
     blackOut(): void;
     blackOut(...args: number[]) {
         if (args.length == 0) {
-            return this.fill(0, 0, 0);
+            return this.fill(' ', 0, 0);
         }
-        return this.draw(args[0], args[1], 0, 0, 0);
+        return this.draw(args[0], args[1], ' ', 0, 0);
     }
 
     fill(color: Color.ColorBase): this;
     fill(
-        glyph?: number | string,
+        glyph?: string | null,
         fg?: Color.ColorBase,
         bg?: Color.ColorBase
     ): this;
     fill(
-        glyph: number | string | Color.ColorBase = 0,
+        glyph: string | null | Color.ColorBase = ' ',
         fg: Color.ColorBase = 0xfff,
         bg: Color.ColorBase = 0
     ): this {
         if (arguments.length == 1) {
             bg = Color.from(glyph);
-            glyph = 0;
-            fg = 0;
+            glyph = ' ';
+            fg = bg;
         }
         return this.fillRect(
             0,
             0,
             this.width,
             this.height,
-            glyph as string | number,
+            glyph as string | null,
             fg,
             bg
         );
-    }
-
-    copy(other: Buffer): this {
-        this._width = other._width;
-        this._height = other._height;
-        this._data.set(other._data);
-        this.changed = true;
-        return this;
-    }
-
-    apply(other: Buffer): this {
-        this._data.set(other._data);
-        this.changed = true;
-        return this;
     }
 
     drawText(
@@ -200,7 +110,7 @@ export class Buffer {
         y: number,
         text: string,
         fg: Color.ColorBase = 0xfff,
-        bg: Color.ColorBase = -1,
+        bg: Color.ColorBase = null,
         maxWidth = 0,
         align: Text.Align = 'left'
     ): number {
@@ -235,13 +145,13 @@ export class Buffer {
         width: number,
         text: string,
         fg: Color.ColorBase = 0xfff,
-        bg: Color.ColorBase = -1,
+        bg: Color.ColorBase = null,
         indent = 0 // TODO - convert to WrapOptions
     ): number {
         // if (!this.hasXY(x, y)) return 0;
 
-        if (typeof fg !== 'number') fg = Color.from(fg);
-        if (typeof bg !== 'number') bg = Color.from(bg);
+        fg = Color.from(fg);
+        bg = Color.from(bg);
 
         width = Math.min(width, this.width - x);
         text = Text.wordWrap(text, width, { indent });
@@ -253,7 +163,7 @@ export class Buffer {
             (ch, fg0, bg0) => {
                 if (ch == '\n') {
                     while (xi < x + width) {
-                        this.draw(xi++, y + lineCount, 0, 0x000, bg0);
+                        this.draw(xi++, y + lineCount, ' ', 0x000, bg0);
                     }
                     ++lineCount;
                     xi = x + indent;
@@ -265,7 +175,7 @@ export class Buffer {
         );
 
         while (xi < x + width) {
-            this.draw(xi++, y + lineCount, 0, 0x000, bg);
+            this.draw(xi++, y + lineCount, ' ', 0x000, bg);
         }
 
         return lineCount + 1;
@@ -273,9 +183,9 @@ export class Buffer {
 
     fillBounds(
         bounds: Bounds,
-        ch: string | number | null = -1,
-        fg: Color.ColorBase | null = -1,
-        bg: Color.ColorBase | null = -1
+        ch: string | null = null,
+        fg: Color.ColorBase = null,
+        bg: Color.ColorBase = null
     ): this {
         return this.fillRect(
             bounds.x,
@@ -293,20 +203,18 @@ export class Buffer {
         y: number,
         w: number,
         h: number,
-        ch: string | number | null = -1,
-        fg: Color.ColorBase | null = -1,
-        bg: Color.ColorBase | null = -1
+        ch: string | null = null,
+        fg: Color.ColorBase = null,
+        bg: Color.ColorBase = null
     ): this {
-        if (ch === null) ch = -1;
-        if (typeof ch !== 'number') ch = this.toGlyph(ch);
-        if (typeof fg !== 'number') fg = Color.from(fg);
-        if (typeof bg !== 'number') bg = Color.from(bg);
+        fg = fg !== null ? Color.from(fg) : null;
+        bg = bg !== null ? Color.from(bg) : null;
 
         const xw = Math.min(x + w, this.width);
         const yh = Math.min(y + h, this.height);
         for (let i = x; i < xw; ++i) {
             for (let j = y; j < yh; ++j) {
-                this.draw(i, j, ch, fg, bg);
+                this.set(i, j, ch, fg, bg);
             }
         }
         return this;
@@ -327,10 +235,10 @@ export class Buffer {
         y: number,
         w: number,
         h: number,
-        bg: Color.ColorBase = 0
+        bg: Color.ColorBase = 'black'
     ): this {
-        if (typeof bg !== 'number') bg = Color.from(bg);
-        return this.fillRect(x, y, w, h, 0, bg, bg);
+        bg = Color.from(bg);
+        return this.fillRect(x, y, w, h, ' ', bg, bg);
     }
 
     highlight(
@@ -341,11 +249,9 @@ export class Buffer {
     ): this {
         if (!this.hasXY(x, y)) return this;
 
-        if (typeof color !== 'number') {
-            color = Color.from(color);
-        }
+        color = Color.from(color);
         const mixer = new Mixer();
-        const data = this.info(x, y);
+        const data = this.get(x, y);
         mixer.drawSprite(data);
         mixer.fg = mixer.fg.add(color, strength);
         mixer.bg = mixer.bg.add(color, strength);
@@ -383,7 +289,7 @@ export class Buffer {
 
         for (let i = x; i < endX; ++i) {
             for (let j = y; j < endY; ++j) {
-                const data = this.info(i, j);
+                const data = this.get(i, j);
                 mixer.drawSprite(data);
                 mixer.fg = mixer.fg.mix(color, percent);
                 mixer.bg = mixer.bg.mix(color, percent);
@@ -415,7 +321,7 @@ export class Buffer {
 
         for (let i = x; i < endX; ++i) {
             for (let j = y; j < endY; ++j) {
-                const data = this.info(i, j);
+                const data = this.get(i, j);
                 mixer.drawSprite(data);
                 mixer.fg = mixer.fg.blend(color);
                 mixer.bg = mixer.bg.blend(color);
@@ -423,6 +329,124 @@ export class Buffer {
             }
         }
         return this;
+    }
+}
+
+export class Buffer extends BufferBase {
+    _data: Mixer[];
+    changed = false;
+
+    constructor(opts: { width: number; height: number });
+    constructor(width: number, height: number);
+    constructor(...args: any[]) {
+        super(args[0], args[1]);
+        this._data = [];
+        this.resize(this._width, this._height!);
+    }
+
+    clone(): this {
+        const other = new (<new (w: number, h: number) => this>(
+            this.constructor
+        ))(this._width, this._height);
+        other.copy(this);
+        return other;
+    }
+
+    resize(width: number, height: number): void {
+        if (this._data.length === width * height) return;
+
+        this._width = width;
+        this._height = height;
+        while (this._data.length < width * height) {
+            this._data.push(new Mixer());
+        }
+        this._data.length = width * height; // truncate if was too large
+        this.changed = true;
+    }
+
+    _index(x: number, y: number): number {
+        return y * this.width + x;
+    }
+
+    get(x: number, y: number): Mixer {
+        if (!this.hasXY(x, y)) {
+            throw new Error(`Invalid loc - ${x},${y}`);
+        }
+
+        let index = y * this.width + x;
+        return this._data[index];
+    }
+
+    set(
+        x: number,
+        y: number,
+        ch: string | null = null,
+        fg: Color.ColorBase | null = null,
+        bg: Color.ColorBase | null = null
+    ) {
+        const m = this.get(x, y);
+        m.fill(ch, fg, bg);
+        return this;
+    }
+
+    info(x: number, y: number) {
+        if (!this.hasXY(x, y)) {
+            throw new Error(`Invalid loc - ${x},${y}`);
+        }
+
+        let index = y * this.width + x;
+        const m = this._data[index];
+        return {
+            ch: m.ch,
+            fg: m.fg.toInt(),
+            bg: m.bg.toInt(),
+        };
+    }
+
+    copy(other: Buffer): this {
+        this._data.forEach((m, i) => {
+            m.copy(other._data[i]);
+        });
+        this.changed = true;
+        return this;
+    }
+
+    apply(other: Buffer): this {
+        this._data.forEach((m, i) => {
+            m.drawSprite(other._data[i]);
+        });
+        this.changed = true;
+        return this;
+    }
+
+    // toGlyph(ch: string | number): number {
+    //     if (typeof ch === 'number') return ch;
+    //     if (!ch || !ch.length) return -1; // 0 handled elsewhere
+    //     return ch.charCodeAt(0);
+    // }
+
+    draw(
+        x: number,
+        y: number,
+        glyph: string | null = null,
+        fg: Color.ColorBase = null, // TODO - White?
+        bg: Color.ColorBase = null // TODO - Black?
+    ): this {
+        let index = y * this.width + x;
+        const current = this._data[index];
+        current.draw(glyph, fg, bg);
+        this.changed = true;
+        return this;
+    }
+
+    nullify(x: number, y: number): void;
+    nullify(): void;
+    nullify(...args: number[]) {
+        if (args.length == 0) {
+            this._data.forEach((d) => d.nullify());
+        } else {
+            this.get(args[0], args[1]).nullify();
+        }
     }
 
     dump(): void {
@@ -439,9 +463,10 @@ export class Buffer {
             let line = `${('' + y).padStart(2)}] `;
             for (let x = 0; x < this.width; ++x) {
                 if (x % 10 == 0) line += ' ';
-                const data = this.info(x, y);
-                const glyph = data.glyph;
-                line += String.fromCharCode(glyph || 32);
+                const data = this.get(x, y);
+                let glyph = data.ch;
+                if (glyph === null) glyph = ' ';
+                line += glyph;
             }
             data.push(line);
         }
@@ -449,6 +474,8 @@ export class Buffer {
     }
 }
 
-export function make(width: number, height: number): Buffer {
-    return new Buffer(width, height);
+export function make(opts: { width: number; height: number }): Buffer;
+export function make(width: number, height: number): Buffer;
+export function make(...args: any[]): Buffer {
+    return new Buffer(args[0], args[1]);
 }

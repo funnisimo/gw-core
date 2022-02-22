@@ -3,14 +3,16 @@
 Buttons are there for you to click!
 
 ```js
-const app = GWU.app.make({ width: 60, height: 20, loop: LOOP });
+const app = GWU.app.make({ width: 60, height: 20, loop: LOOP, scene: true });
 SHOW(app);
 
 const scene = app.scene;
 const build = scene.build;
 
+scene.bg = 'black';
+
 scene.styles.add('button:hover', { fg: 'teal', bg: 'gray' });
-scene.styles.add('button:focus', { fg: 'dark_teal', bg: 'light_gray' });
+scene.styles.add('button:focus', { fg: 'darkest_red', bg: 'light_gray' });
 scene.styles.add('#B:focus', { fg: 'yellow', bg: 'dark_gray' });
 
 const t = build

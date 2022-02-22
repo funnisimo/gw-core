@@ -2,6 +2,7 @@
 import { Buffer } from '../ts/buffer';
 import * as Canvas from '../ts/canvas';
 import * as IO from '../ts/app/io';
+import * as Color from '../ts/color';
 // import * as Layer from '../ts/ui/layer';
 // import * as WidgetLayer from '../ts/widget/layer';
 // import * as UI from '../ts/ui/ui';
@@ -9,23 +10,23 @@ import * as IO from '../ts/app/io';
 const GLYPHS: string[] = [];
 Canvas.initGlyphs({ draw: (n, ch) => (GLYPHS[n] = ch) });
 
-export function extractBufferText(
-    buffer: Buffer,
-    x: number,
-    y: number,
-    width: number = 99,
-    trim = true
-) {
-    let output = '';
-    width = Math.min(buffer.width - x, width);
-    for (let i = x; i < x + width; ++i) {
-        const data = buffer.info(i, y);
-        const ch = GLYPHS[data.glyph || 32] || ' ';
-        output += ch;
-    }
-    if (!trim) return output;
-    return output.trim();
-}
+// export function extractBufferText(
+//     buffer: Buffer,
+//     x: number,
+//     y: number,
+//     width: number = 99,
+//     trim = true
+// ) {
+//     let output = '';
+//     width = Math.min(buffer.width - x, width);
+//     for (let i = x; i < x + width; ++i) {
+//         const data = buffer.get(i, y);
+//         if (typeof data.ch === 'number') data.ch = GLYPHS[data.ch || 32];
+//         output += data.ch;
+//     }
+//     if (!trim) return output;
+//     return output.trim();
+// }
 
 // export const rnd = jest.fn();
 
@@ -88,23 +89,28 @@ export function mockLoop() {
 //     };
 // }
 
-export function mockCanvas(width = 30, height = 30): Canvas.CanvasType {
-    const target: Canvas.BufferTarget = {
-        width,
-        height,
-        copyTo: jest.fn(),
-        toGlyph(ch: string | number): number {
-            if (typeof ch === 'string') return GLYPHS.indexOf(ch); // ch.charCodeAt(0);
-            return ch;
-        },
-        draw: jest.fn().mockReturnValue(true),
-    };
+export function mockCanvas(width = 30, height = 30): Canvas.Canvas {
+    // const target: Canvas.Buffer = {
+    //     width,
+    //     height,
+    //     copyTo: jest.fn(),
+    //     toGlyph(ch: string | number): number {
+    //         if (typeof ch === 'string') return GLYPHS.indexOf(ch); // ch.charCodeAt(0);
+    //         return ch;
+    //     },
+    //     draw: jest.fn().mockReturnValue(true),
+    // };
 
-    const buffer = new Canvas.Buffer(target);
+    // const buffer = new Canvas.Buffer(target);
     const node = {} as HTMLCanvasElement;
     const glyphs = {} as Canvas.Glyphs;
 
-    return Object.assign(target, {
+    return ({
+        width,
+        height,
+
+        draw: jest.fn().mockReturnValue(true),
+
         mouse: { x: -1, y: -1 },
         node,
         tileWidth: 16,
@@ -114,12 +120,6 @@ export function mockCanvas(width = 30, height = 30): Canvas.CanvasType {
 
         glyphs,
 
-        buffer,
-        parentBuffer: buffer,
-        root: buffer,
-
-        pushBuffer: jest.fn().mockReturnValue(buffer),
-        popBuffer: jest.fn(),
         resize: jest.fn(),
 
         render: jest.fn(),
@@ -131,7 +131,7 @@ export function mockCanvas(width = 30, height = 30): Canvas.CanvasType {
         onmousemove: null,
         onmouseup: null,
         onkeydown: null,
-    }) as Canvas.CanvasType;
+    } as unknown) as Canvas.Canvas;
 }
 
 // export function mockUI(width = 100, height = 38) {
@@ -163,24 +163,26 @@ export function getBufferText(
     buffer: Buffer,
     x: number,
     y: number,
-    width: number = 99
+    width: number = 99,
+    trim = true
 ): string {
     let text = '';
+    width = Math.min(width, buffer.width - x);
     for (let i = 0; i < width; ++i) {
-        const data = buffer.info(x + i, y);
-        if (!data.glyph) data.glyph = 32;
-        text += String.fromCharCode(data.glyph);
+        const data = buffer.get(x + i, y);
+        text += data.ch || ' ';
     }
+    if (!trim) return text;
     return text.trim();
 }
 
-export function getBufferFg(buffer: Buffer, x: number, y: number): number {
-    const data = buffer.info(x, y);
+export function getBufferFg(buffer: Buffer, x: number, y: number): Color.Color {
+    const data = buffer.get(x, y);
     return data.fg;
 }
 
-export function getBufferBg(buffer: Buffer, x: number, y: number): number {
-    const data = buffer.info(x, y);
+export function getBufferBg(buffer: Buffer, x: number, y: number): Color.Color {
+    const data = buffer.get(x, y);
     return data.bg;
 }
 

@@ -131,9 +131,9 @@ describe('Color', () => {
         expect(a.equals([50, 50, 50])).toBeFalsy();
         expect(a.toString()).toEqual('#f80');
         expect(a.equals('#f80')).toBeTruthy();
-        expect(a.equals(0xf80)).toBeTruthy();
-        expect(a.equals(0xff8000)).toBeTruthy();
-        expect(a.toString(true)).toEqual('#ff8000');
+        expect(a.equals(0xf80)).toBeFalsy();
+        expect(a.equals(0xf80f)).toBeTruthy();
+        expect(a.toString()).toEqual('#f80');
         expect(a.equals('#ff8000')).toBeTruthy();
 
         // @ts-ignore
@@ -143,8 +143,8 @@ describe('Color', () => {
         expect(a.equals(d)).toBeFalsy();
         expect(d.equals(a)).toBeFalsy();
 
-        expect(a.toInt()).toEqual(0xf80);
-        expect(a.equals(0xf80)).toBeTruthy();
+        expect(a.toInt()).toEqual(0xf80f);
+        expect(a.equals(0xf80f)).toBeTruthy();
 
         expect(Color.colors.black.equals('black')).toBeTruthy();
         expect(Color.colors.black.equals('#000')).toBeTruthy();
@@ -153,16 +153,16 @@ describe('Color', () => {
 
     test('toInt', () => {
         const c = new Color.Color(100, 47, 0);
-        expect(c.toInt()).toEqual(0xf70);
-        expect(c.toInt(true)).toEqual(0xff7800);
+        expect(c.toInt()).toEqual(0xf70f);
+        // expect(c.toInt(true)).toEqual(0xff7800);
 
         const d = new Color.Color(100, 50, 0);
-        expect(d.toInt()).toEqual(0xf80);
-        expect(d.toInt(true)).toEqual(0xff8000);
+        expect(d.toInt()).toEqual(0xf80f);
+        // expect(d.toInt(true)).toEqual(0xff8000);
 
         const e = new Color.Color();
         expect(e.isNull()).toBeTruthy();
-        expect(e.toInt()).toEqual(-1);
+        expect(e.toInt()).toEqual(0x0000);
     });
 
     // test('fromInt', () => {
@@ -203,7 +203,7 @@ describe('Color', () => {
 
         const cr = cw.mix(red, 50);
         expect(cr.toString()).toEqual('#b44');
-        expect(cr.toString(true)).toEqual('#bf4040');
+        // expect(cr.toString(true)).toEqual('#bf4040');
 
         const crk = cr.mix(black, 50);
         expect(crk.toString()).toEqual('#622');
@@ -232,28 +232,35 @@ describe('Color', () => {
         expect(d.darken(50).isNull()).toBeTruthy();
     });
 
-    test('bake', () => {
+    test('bake - rand', () => {
         const c = new Color.Color(0, 0, 0).rand(20, 10, 10, 10);
-        expect(c.css()).toEqual('#000');
+        expect(c.css()).toEqual('#222');
+        expect(c.css(false)).toEqual('#000');
         const cb = c.bake();
-        expect(cb.css()).not.toEqual('#000');
+        expect(cb.css()).toEqual('#222');
+        expect(cb.css(false)).toEqual('#222');
         expect(cb.r).toBeWithin(0, 256);
         expect(cb.g).toBeWithin(0, 256);
         expect(cb.b).toBeWithin(0, 256);
+    });
 
+    test('bake - null', () => {
         const d = new Color.Color();
         expect(d.isNull()).toBeTruthy();
-        expect(d.bake().isNull()).toBeTruthy();
+        expect(d.bake()).toBe(d);
+    });
 
+    test('bake - dancing', () => {
         const e = Color.fromArray([50, 50, 50]);
         expect(e.bake().toString()).toEqual('#888');
 
         const f = Color.from('#888').dance(10, 10, 10, 10);
         const fb = f.bake();
-        expect(fb.toString()).toEqual('#999'); // dancing colors change every time you get the value
-        expect(fb._r).toEqual(53);
-        expect(fb._g).toEqual(53);
-        expect(fb._b).toEqual(53);
+        expect(fb.toString()).toEqual('#999'); // dancing
+        expect(fb.css()).toEqual('#999'); // dancing
+        expect(fb.css(false)).toEqual('#888'); // no dancing
+        expect(fb.toInt()).toEqual(0x999f); // dancing
+        expect(fb.toInt(false)).toEqual(0x888f); // no dancing
     });
 
     test('add', () => {
@@ -272,7 +279,7 @@ describe('Color', () => {
         const e = new Color.Color();
         expect(e.isNull()).toBeTruthy();
         const ed = e.add(d, 50);
-        expect(ed.toString()).toEqual('#111');
+        expect(ed.toString()).toEqual('#1118');
         expect(ed.isNull()).toBeFalsy();
     });
 
