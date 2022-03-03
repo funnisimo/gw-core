@@ -15,12 +15,12 @@ describe('Tween', () => {
             .onStart(startCb);
 
         expect(tween.isRunning()).toBeFalsy();
-        tween.tick(100);
+        tween.update(100);
         expect(tween.isRunning()).toBeFalsy();
         expect(startCb).not.toHaveBeenCalled();
     });
 
-    test('async finish', async () => {
+    test(' finish', () => {
         const obj = { x: 0, y: 0 };
         const finishCb = jest.fn().mockResolvedValue(123);
         const tween = Tween.make(obj)
@@ -30,12 +30,11 @@ describe('Tween', () => {
             .duration(1000)
             .onFinish(finishCb);
 
-        const p = tween.start();
+        tween.start();
         while (tween.isRunning()) {
-            tween.tick(100);
+            tween.update(100);
         }
 
-        expect(await p).toEqual(123);
         expect(finishCb).toHaveBeenCalledWith(obj, true);
     });
 
@@ -58,13 +57,13 @@ describe('Tween', () => {
         tween.start();
         expect(tween.isRunning()).toBeTruthy();
 
-        tween.tick(50);
+        tween.update(50);
         expect(obj.x).toEqual(0);
-        tween.tick(50);
+        tween.update(50);
         expect(obj.x).toEqual(1);
-        tween.tick(400);
+        tween.update(400);
         expect(obj.x).toEqual(5);
-        tween.tick(500);
+        tween.update(500);
         expect(obj.x).toEqual(10);
 
         expect(tween.isRunning()).toBeFalsy();
@@ -82,7 +81,7 @@ describe('Tween', () => {
         tween.start();
 
         while (tween.isRunning()) {
-            tween.tick(50);
+            tween.update(50);
         }
 
         // only called when there is a change
@@ -95,7 +94,7 @@ describe('Tween', () => {
         tw.start();
 
         while (tw.isRunning()) {
-            tw.tick(50);
+            tw.update(50);
         }
 
         expect(obj.x).toEqual(10);
@@ -104,13 +103,13 @@ describe('Tween', () => {
         tw.start();
 
         while (tw.isRunning()) {
-            tw.tick(50);
+            tw.update(50);
         }
 
         expect(obj.x).toEqual(10);
     });
 
-    test('repeat', async () => {
+    test('repeat', () => {
         const obj = { x: 0, y: 0 };
         const tween = Tween.make(obj);
         expect(tween).toBeInstanceOf(Tween.Tween);
@@ -138,16 +137,13 @@ describe('Tween', () => {
 
         const cbFinish = jest.fn().mockImplementation((o) => {
             expect(o.x).toEqual(10);
-            return 123; // You can change the return value of the promise
         });
         tween.onFinish(cbFinish);
 
-        const p = tween.start();
+        tween.start();
         while (tween.isRunning()) {
-            tween.tick(100);
+            tween.update(100);
         }
-
-        expect(await p).toEqual(123);
 
         expect(cbStart).toHaveBeenCalledTimes(1);
         expect(cbRepeat).toHaveBeenCalledTimes(2);
@@ -177,22 +173,22 @@ describe('Tween', () => {
 
         expect(cbStart).not.toHaveBeenCalled();
 
-        tween.tick(100);
+        tween.update(100);
         expect(cbStart).not.toHaveBeenCalled();
-        tween.tick(100);
+        tween.update(100);
         expect(cbStart).not.toHaveBeenCalled();
-        tween.tick(100);
+        tween.update(100);
         expect(cbStart).not.toHaveBeenCalled();
-        tween.tick(100);
+        tween.update(100);
         expect(cbStart).not.toHaveBeenCalled();
         expect(tween.isRunning()).toBeTruthy();
 
-        tween.tick(100);
+        tween.update(100);
         expect(cbStart).toHaveBeenCalled();
         expect(tween.isRunning()).toBeTruthy();
 
         while (tween.isRunning()) {
-            tween.tick(50);
+            tween.update(50);
         }
 
         expect(obj.x).toEqual(10);
@@ -214,7 +210,7 @@ describe('Tween', () => {
 
         let totalTime = 0;
         while (tween.isRunning()) {
-            tween.tick(100);
+            tween.update(100);
             totalTime += 100;
         }
 
@@ -235,7 +231,7 @@ describe('Tween', () => {
         expect(tween.yoyo()).toBeTruthy();
 
         while (tween.isRunning()) {
-            tween.tick(100);
+            tween.update(100);
         }
 
         // end up back where we started
@@ -255,13 +251,13 @@ describe('Tween', () => {
         expect(tween.isRunning()).toBeTruthy();
         expect(obj.x).toEqual(10);
 
-        tween.tick(50);
+        tween.update(50);
         expect(obj.x).toEqual(9);
-        tween.tick(50);
+        tween.update(50);
         expect(obj.x).toEqual(9);
-        tween.tick(400);
+        tween.update(400);
         expect(obj.x).toEqual(5);
-        tween.tick(500);
+        tween.update(500);
         expect(obj.x).toEqual(0);
 
         expect(tween.isRunning()).toBeFalsy();
@@ -280,36 +276,52 @@ describe('Tween', () => {
         expect(obj.visible).toBeTrue();
 
         // Repeat 1
-        tween.tick(90);
+        tween.update(90);
         expect(obj.visible).toBeTrue();
-        tween.tick(10);
+        tween.update(10);
         expect(obj.visible).toBeFalse();
 
         // Delay 1
-        tween.tick(90);
+        tween.update(90);
         expect(obj.visible).toBeFalse();
-        tween.tick(10);
+        tween.update(10);
         expect(obj.visible).toBeTrue();
 
         // Repeat 2
-        tween.tick(90);
+        tween.update(90);
         expect(obj.visible).toBeTrue();
-        tween.tick(10);
+        tween.update(10);
         expect(obj.visible).toBeFalse();
 
         // Delay 2
-        tween.tick(90);
+        tween.update(90);
         expect(obj.visible).toBeFalse();
-        tween.tick(10);
+        tween.update(10);
         expect(obj.visible).toBeTrue();
 
         // Repeat 3
-        tween.tick(90);
+        tween.update(90);
         expect(obj.visible).toBeTrue();
-        tween.tick(10);
+        tween.update(10);
         expect(obj.visible).toBeFalse();
 
         // done
         expect(tween.isRunning()).toBeFalsy();
+    });
+
+    test('child tween', () => {
+        const obj = { a: 0, b: 0 };
+        const tweenA = Tween.make(obj).to({ a: 100 }).duration(500);
+        tweenA.start();
+
+        const tweenB = Tween.make(obj).to({ b: 100 }).duration(1000);
+        tweenA.addChild(tweenB.start());
+
+        while (tweenA.isRunning()) {
+            tweenA.update(50);
+        }
+
+        expect(tweenA.isRunning()).toBeFalsy();
+        expect(tweenB.isRunning()).toBeFalsy();
     });
 });

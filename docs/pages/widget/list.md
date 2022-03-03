@@ -13,7 +13,7 @@ app.styles.add('td:hover', { bg: 'light_gray' });
 app.styles.add('td:selected', { bg: 'light_green' });
 
 const scene = app.scene;
-const build = scene.build;
+const build = new GWU.widget.Builder(scene);
 
 const list = build.datalist({
     id: 'LIST',

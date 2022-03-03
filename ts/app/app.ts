@@ -6,10 +6,10 @@ import { Loop } from './loop';
 import * as TIMERS from './timers';
 import { Scenes } from './scenes';
 import * as SCENE from './scene';
-import { AlertOptions } from '../ui/alert';
-import { ConfirmOptions } from '../ui/confirm';
-import { PromptOptions } from '../ui/prompt';
-import * as STYLE from '../ui/style';
+import { AlertOptions } from '../scenes/alert';
+import { ConfirmOptions } from '../scenes/confirm';
+import { PromptOptions } from '../scenes/prompt';
+import * as STYLE from './style';
 import { Buffer } from '../buffer';
 // import * as COLOR from '../color';
 
@@ -33,13 +33,13 @@ export interface AppOpts /* extends CANVAS.CanvasOptions */ {
     basic?: boolean; // alias for basicOnly
 
     // on?: SCENE.SceneOpts;
-    scene?: SCENE.SceneOpts | boolean;
-    scenes?: Record<string, SCENE.SceneOpts>;
+    scene?: SCENE.CreateOpts | boolean;
+    scenes?: Record<string, SCENE.CreateOpts>;
 
     loop?: Loop;
     canvas?: CANVAS.Canvas;
 
-    start?: boolean;
+    start?: boolean | string;
 }
 
 export class App {
@@ -88,18 +88,23 @@ export class App {
         this.canvas.onclick = this.io.enqueue.bind(this.io);
         this.canvas.onkeydown = this.io.enqueue.bind(this.io);
 
+        this.buffer = new Buffer(this.canvas.width, this.canvas.height);
+
         if (opts.scenes) {
             this.scenes.load(opts.scenes);
+            if (typeof opts.start === 'string') {
+                this.scenes.start(opts.start);
+            } else {
+                this.scenes.start(Object.keys(opts.scenes)[0]);
+            }
         } else if (opts.scene) {
             if (opts.scene === true) opts.scene = {};
-            this.scenes.install('default', opts.scene);
+            this.scenes.add('default', opts.scene);
             this.scenes.start('default');
             // } else {
             //     this.scenes.install('default', { bg: COLOR.colors.NONE }); // NONE just in case you draw directly on app.buffer
             //     this.scenes.start('default');
         }
-
-        this.buffer = new Buffer(this.canvas.width, this.canvas.height);
 
         if (opts.start !== false) {
             this.start();
@@ -284,10 +289,7 @@ export class App {
         this.canvas.render(this.buffer);
     }
 
-    alert(
-        text: string,
-        opts: Omit<AlertOptions, 'text'> = {}
-    ): Promise<boolean> {
+    alert(text: string, opts: Omit<AlertOptions, 'text'> = {}): SCENE.Scene {
         (<AlertOptions>opts).text = text;
         return this.scenes.run('alert', opts);
     }
@@ -295,7 +297,7 @@ export class App {
     confirm(
         text: string,
         opts: Omit<ConfirmOptions, 'text'> = {}
-    ): Promise<boolean> {
+    ): SCENE.Scene {
         (<ConfirmOptions>opts).text = text;
         return this.scenes.run('confirm', opts);
     }
@@ -303,7 +305,7 @@ export class App {
     prompt(
         text: string,
         opts: Omit<PromptOptions, 'prompt'> = {}
-    ): Promise<boolean> {
+    ): SCENE.Scene {
         (<PromptOptions>opts).prompt = text;
         return this.scenes.run('prompt', opts);
     }

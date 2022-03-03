@@ -6,6 +6,10 @@ export class Tweens {
 
     constructor() {}
 
+    get length() {
+        return this._tweens.length;
+    }
+
     clear() {
         this._tweens = [];
     }
@@ -20,7 +24,7 @@ export class Tweens {
 
     update(dt: number) {
         // // fire animations
-        this._tweens.forEach((tw) => tw.tick(dt));
+        this._tweens.forEach((tw) => tw.update(dt));
         this._tweens = this._tweens.filter((tw) => tw.isRunning());
     }
 }

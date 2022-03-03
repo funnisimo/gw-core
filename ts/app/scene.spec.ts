@@ -7,16 +7,19 @@ import * as COLOR from '../color';
 
 import * as APP from '../app';
 import * as CANVAS from '../canvas';
+import * as BUILD from '../widgets/builder';
 
 describe('Scene', () => {
     let canvas: CANVAS.Canvas;
     let app: APP.App;
     let scene: APP.Scene;
+    let build: BUILD.Builder;
 
     beforeEach(() => {
         canvas = TEST.mockCanvas();
         app = APP.make({ canvas, start: false, scene: true });
         scene = app.scene;
+        build = new BUILD.Builder(scene);
     });
 
     test('constructor', () => {
@@ -46,7 +49,7 @@ describe('Scene', () => {
 
     // test('hidden widgets do not draw', () => {
     //     scene.clear('black');
-    //     const text = scene.build.pos(2, 3).text('Hello World.');
+    //     const text = build.pos(2, 3).text('Hello World.');
     //     text.hidden = true;
     //     scene.draw();
 
@@ -65,8 +68,8 @@ describe('Scene', () => {
 
     // describe('depth drawing', () => {
     test('same depth - latest wins', () => {
-        scene.build.pos(2, 3).text({ text: 'AAAAAAAAAA', id: 'A' });
-        scene.build.pos(2, 3).text({ text: 'BBBBBBBBBB', id: 'B' });
+        build.pos(2, 3).text({ text: 'AAAAAAAAAA', id: 'A' });
+        build.pos(2, 3).text({ text: 'BBBBBBBBBB', id: 'B' });
         app._draw();
 
         expect(TEST.getBufferText(app.buffer, 2, 3, 20)).toEqual('BBBBBBBBBB');
@@ -74,8 +77,8 @@ describe('Scene', () => {
 
     //     test('higher depth first', () => {
     //         scene.clear('black');
-    //         const A = scene.build.pos(2, 3).text('AAAAAAAAAA', { id: 'A', depth: 1 });
-    //         const B = scene.build.pos(2, 3).text('BBBBBBBBBB', { id: 'B' });
+    //         const A = build.pos(2, 3).text('AAAAAAAAAA', { id: 'A', depth: 1 });
+    //         const B = build.pos(2, 3).text('BBBBBBBBBB', { id: 'B' });
     //         scene.draw();
 
     //         expect(A.depth).toEqual(1);
@@ -93,8 +96,8 @@ describe('Scene', () => {
 
     //     test('higher depth last', () => {
     //         scene.clear('black');
-    //         const A = scene.build.pos(2, 3).text('AAAAAAAAAA', { id: 'A' });
-    //         const B = scene.build.pos(2, 3).text('BBBBBBBBBB', { id: 'B', depth: 1 });
+    //         const A = build.pos(2, 3).text('AAAAAAAAAA', { id: 'A' });
+    //         const B = build.pos(2, 3).text('BBBBBBBBBB', { id: 'B', depth: 1 });
     //         scene.draw();
 
     //         expect(A.depth).toEqual(0);
@@ -113,9 +116,9 @@ describe('Scene', () => {
 
     describe('focus', () => {
         test('set focus automatically', async () => {
-            scene.build.text('A');
-            const divB = scene.build.pos(0, 1).text('B', { tabStop: true });
-            const divC = scene.build.pos(0, 2).text('C', { tabStop: true });
+            build.text('A');
+            const divB = build.pos(0, 1).text('B', { tabStop: true });
+            const divC = build.pos(0, 2).text('C', { tabStop: true });
 
             expect(scene.focused).toBe(divB);
             scene.nextTabStop();
@@ -133,9 +136,9 @@ describe('Scene', () => {
         });
 
         test('click to set focus', async () => {
-            scene.build.text('DIV A');
-            const divB = scene.build.pos(0, 1).text('DIV B', { tabStop: true });
-            const divC = scene.build.pos(0, 2).text('DIV C', { tabStop: true });
+            build.text('DIV A');
+            const divB = build.pos(0, 1).text('DIV B', { tabStop: true });
+            const divC = build.pos(0, 2).text('DIV C', { tabStop: true });
 
             // initial value
             expect(scene.focused).toBe(divB);
@@ -157,11 +160,11 @@ describe('Scene', () => {
         });
 
         test('tab + TAB - next/prev focus', async () => {
-            scene.build.text('DIV A');
-            const divB = scene.build.pos(0, 1).text('DIV B', { tabStop: true });
-            const divC = scene.build.pos(0, 2).text('DIV C', { tabStop: true });
-            scene.build.pos(0, 3).text('DIV D');
-            const divE = scene.build.pos(0, 4).text('DIV E', { tabStop: true });
+            build.text('DIV A');
+            const divB = build.pos(0, 1).text('DIV B', { tabStop: true });
+            const divC = build.pos(0, 2).text('DIV C', { tabStop: true });
+            build.pos(0, 3).text('DIV D');
+            const divE = build.pos(0, 4).text('DIV E', { tabStop: true });
 
             // initial value
             expect(scene.focused).toBe(divB);
@@ -191,10 +194,10 @@ describe('Scene', () => {
                 .fn()
                 .mockImplementation((e) => stop && e.preventDefault()); // We handled this keypress
 
-            scene.build.text('DIV A');
-            const divB = scene.build.pos(0, 1).text('DIV B', { tabStop: true });
+            build.text('DIV A');
+            const divB = build.pos(0, 1).text('DIV B', { tabStop: true });
             divB.on('keypress', keypressFn);
-            const divC = scene.build.pos(0, 2).text('DIV C', { tabStop: true });
+            const divC = build.pos(0, 2).text('DIV C', { tabStop: true });
             divC.on('keypress', keypressFn);
 
             // initial value
@@ -226,10 +229,10 @@ describe('Scene', () => {
             const blurFn = jest.fn();
             const focusFn = jest.fn();
 
-            scene.build.text('DIV A');
-            const divB = scene.build.pos(0, 1).text('DIV B', { tabStop: true });
+            build.text('DIV A');
+            const divB = build.pos(0, 1).text('DIV B', { tabStop: true });
             divB.on('blur', blurFn);
-            const divC = scene.build.pos(0, 2).text('DIV C', { tabStop: true });
+            const divC = build.pos(0, 2).text('DIV C', { tabStop: true });
             divC.on('focus', focusFn);
 
             // initial value
@@ -248,10 +251,10 @@ describe('Scene', () => {
             });
             const focusFn = jest.fn();
 
-            scene.build.text('DIV A');
-            const divB = scene.build.pos(0, 1).text('DIV B', { tabStop: true });
+            build.text('DIV A');
+            const divB = build.pos(0, 1).text('DIV B', { tabStop: true });
             divB.on('blur', blurFn);
-            const divC = scene.build.pos(0, 2).text('DIV C', { tabStop: true });
+            const divC = build.pos(0, 2).text('DIV C', { tabStop: true });
             divC.on('focus', focusFn);
 
             // initial value
@@ -270,10 +273,10 @@ describe('Scene', () => {
                 scene.setFocusWidget(divB);
             });
 
-            scene.build.text('DIV A');
-            const divB = scene.build.pos(0, 1).text('DIV B', { tabStop: true });
+            build.text('DIV A');
+            const divB = build.pos(0, 1).text('DIV B', { tabStop: true });
             divB.on('blur', blurFn);
-            const divC = scene.build.pos(0, 2).text('DIV C', { tabStop: true });
+            const divC = build.pos(0, 2).text('DIV C', { tabStop: true });
             divC.on('focus', focusFn);
 
             // initial value
@@ -287,13 +290,13 @@ describe('Scene', () => {
         });
 
         test('disabled elements skipped', async () => {
-            scene.build.text('DIV A');
-            const divB = scene.build.pos(0, 1).text('DIV B', { tabStop: true });
-            const divC = scene.build
+            build.text('DIV A');
+            const divB = build.pos(0, 1).text('DIV B', { tabStop: true });
+            const divC = build
                 .pos(0, 2)
                 .text('DIV C', { tabStop: true, disabled: true });
-            scene.build.pos(0, 3).text('DIV D');
-            const divE = scene.build.pos(0, 4).text('DIV E', { tabStop: true });
+            build.pos(0, 3).text('DIV D');
+            const divE = build.pos(0, 4).text('DIV E', { tabStop: true });
 
             // initial value
             expect(scene.focused).toBe(divB);
@@ -319,13 +322,13 @@ describe('Scene', () => {
         });
 
         test('hidden elements skipped', async () => {
-            scene.build.text('DIV A');
-            const divB = scene.build.pos(0, 1).text('DIV B', { tabStop: true });
-            const divC = scene.build
+            build.text('DIV A');
+            const divB = build.pos(0, 1).text('DIV B', { tabStop: true });
+            const divC = build
                 .pos(0, 2)
                 .text('DIV C', { tabStop: true, hidden: true });
-            scene.build.pos(0, 3).text('DIV D');
-            const divE = scene.build.pos(0, 4).text('DIV E', { tabStop: true });
+            build.pos(0, 3).text('DIV D');
+            const divE = build.pos(0, 4).text('DIV E', { tabStop: true });
 
             app._draw(); // sets the styles
 

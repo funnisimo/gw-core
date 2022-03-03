@@ -7,7 +7,7 @@ const app = GWU.app.make({ width: 60, height: 20, loop: LOOP, scene: true });
 SHOW(app);
 
 const scene = app.scene;
-const build = scene.build;
+const build = new GWU.widget.Builder(scene);
 
 scene.styles.add('field', { fg: 'light_blue' });
 scene.styles.add('fieldset', { fg: 'green' });

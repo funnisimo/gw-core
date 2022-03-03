@@ -19,7 +19,10 @@ declare function IS_NONZERO(x: number): boolean;
  * @param max {Number} the maximum value
  * @returns {Number} the clamped value
  */
-declare function clamp(v: number, min: number, max: number): number;
+declare const clamp: {
+    (number: number, lower: number, upper: number): number;
+    (number: number, upper: number): number;
+};
 declare function lerp(from: number, to: number, pct: number): number;
 declare function ERROR(message: string): void;
 declare function WARN(...args: string[]): void;
@@ -650,13 +653,13 @@ declare namespace flag_d {
 declare type Loc = Loc$1;
 declare type ArrayInit<T> = (i: number) => T;
 declare function makeArray<T>(l: number, fn?: T | ArrayInit<T>): Array<T>;
-declare type GridInit<T> = (x: number, y: number, grid: Grid$1<T>) => T;
-declare type GridEach<T> = (value: T, x: number, y: number, grid: Grid$1<T>) => any;
-declare type AsyncGridEach<T> = (value: T, x: number, y: number, grid: Grid$1<T>) => Promise<any>;
-declare type GridUpdate<T> = (value: T, x: number, y: number, grid: Grid$1<T>) => T;
-declare type GridMatch<T> = (value: T, x: number, y: number, grid: Grid$1<T>) => boolean;
+declare type GridInit<T> = (x: number, y: number, grid: Grid<T>) => T;
+declare type GridEach<T> = (value: T, x: number, y: number, grid: Grid<T>) => any;
+declare type AsyncGridEach<T> = (value: T, x: number, y: number, grid: Grid<T>) => Promise<any>;
+declare type GridUpdate<T> = (value: T, x: number, y: number, grid: Grid<T>) => T;
+declare type GridMatch<T> = (value: T, x: number, y: number, grid: Grid<T>) => boolean;
 declare type GridFormat<T> = (value: T, x: number, y: number) => string;
-declare class Grid$1<T> extends Array<Array<T>> {
+declare class Grid<T> extends Array<Array<T>> {
     protected _width: number;
     protected _height: number;
     constructor(w: number, h: number, v: GridInit<T> | T);
@@ -718,7 +721,7 @@ declare class Grid$1<T> extends Array<Array<T>> {
     fillRect(x: number, y: number, w: number, h: number, v: T | GridUpdate<T>): void;
     fillCircle(x: number, y: number, radius: number, v: T | GridUpdate<T>): void;
     replace(findValue: T, replaceValue: T): void;
-    copy(from: Grid$1<T>): void;
+    copy(from: Grid<T>): void;
     count(match: GridMatch<T> | T): number;
     /**
      * Finds the first matching value/result and returns that location as an xy.Loc
@@ -752,7 +755,7 @@ declare const stats: {
     create: number;
     free: number;
 };
-declare class NumGrid extends Grid$1<number> {
+declare class NumGrid extends Grid<number> {
     x?: number;
     y?: number;
     static alloc(w: number, h: number, v: GridInit<number> | number): NumGrid;
@@ -772,9 +775,9 @@ declare class NumGrid extends Grid$1<number> {
 declare const alloc: typeof NumGrid.alloc;
 declare const free: typeof NumGrid.free;
 declare function make$8<T>(w: number, h: number, v?: number | GridInit<number>): NumGrid;
-declare function make$8<T>(w: number, h: number, v?: T | GridInit<T>): Grid$1<T>;
-declare type GridZip<T, U> = (destVal: T, sourceVal: U, destX: number, destY: number, sourceX: number, sourceY: number, destGrid: Grid$1<T>, sourceGrid: Grid$1<U>) => void;
-declare function offsetZip<T, U>(destGrid: Grid$1<T>, srcGrid: Grid$1<U>, srcToDestX: number, srcToDestY: number, value: T | GridZip<T, U>): void;
+declare function make$8<T>(w: number, h: number, v?: T | GridInit<T>): Grid<T>;
+declare type GridZip<T, U> = (destVal: T, sourceVal: U, destX: number, destY: number, sourceX: number, sourceY: number, destGrid: Grid<T>, sourceGrid: Grid<U>) => void;
+declare function offsetZip<T, U>(destGrid: Grid<T>, srcGrid: Grid<U>, srcToDestX: number, srcToDestY: number, value: T | GridZip<T, U>): void;
 declare function intersection(onto: NumGrid, a: NumGrid, b?: NumGrid): void;
 declare function unite(onto: NumGrid, a: NumGrid, b?: NumGrid): void;
 
@@ -786,6 +789,8 @@ type grid_d_AsyncGridEach<T> = AsyncGridEach<T>;
 type grid_d_GridUpdate<T> = GridUpdate<T>;
 type grid_d_GridMatch<T> = GridMatch<T>;
 type grid_d_GridFormat<T> = GridFormat<T>;
+type grid_d_Grid<T> = Grid<T>;
+declare const grid_d_Grid: typeof Grid;
 declare const grid_d_stats: typeof stats;
 type grid_d_NumGrid = NumGrid;
 declare const grid_d_NumGrid: typeof NumGrid;
@@ -805,7 +810,7 @@ declare namespace grid_d {
     grid_d_GridUpdate as GridUpdate,
     grid_d_GridMatch as GridMatch,
     grid_d_GridFormat as GridFormat,
-    Grid$1 as Grid,
+    grid_d_Grid as Grid,
     grid_d_stats as stats,
     grid_d_NumGrid as NumGrid,
     grid_d_alloc as alloc,
@@ -1551,6 +1556,449 @@ declare class Events {
     restart(): void;
 }
 
+interface UISelectable {
+    readonly tag: string;
+    readonly classes: string[];
+    children: UISelectable[];
+    attr(name: string): PropType | undefined;
+    prop(name: string): PropType | undefined;
+    parent: UISelectable | null;
+}
+declare type MatchFn = (el: UISelectable) => boolean;
+declare type BuildFn = (next: MatchFn, e: UISelectable) => boolean;
+declare class Selector {
+    text: string;
+    priority: number;
+    matchFn: MatchFn;
+    constructor(text: string);
+    protected _parse(text: string): MatchFn;
+    protected _parentMatch(): BuildFn;
+    protected _ancestorMatch(): BuildFn;
+    protected _matchElement(text: string): BuildFn;
+    protected _matchTag(tag: string): MatchFn | null;
+    protected _matchClass(cls: string): MatchFn;
+    protected _matchProp(prop: string): MatchFn;
+    protected _matchId(id: string): MatchFn;
+    protected _matchFirst(): MatchFn;
+    protected _matchLast(): MatchFn;
+    protected _matchNot(fn: MatchFn): MatchFn;
+    matches(obj: UISelectable): boolean;
+}
+declare function compile(text: string): Selector;
+
+interface UIStyle {
+    readonly selector: Selector;
+    dirty: boolean;
+    readonly fg?: ColorBase;
+    readonly bg?: ColorBase;
+    readonly align?: Align;
+    readonly valign?: VAlign;
+    readonly opacity?: number;
+    get(key: keyof UIStyle): any;
+    set(key: keyof UIStyle, value: any): this;
+    set(values: StyleOptions): this;
+    unset(key: keyof UIStyle): this;
+}
+interface UIStylable extends UISelectable {
+    style(): UIStyle;
+}
+declare type StyleType = string | StyleOptions;
+interface StyleOptions {
+    fg?: ColorBase;
+    bg?: ColorBase;
+    align?: Align;
+    valign?: VAlign;
+}
+interface StyleOptions {
+    fg?: ColorBase;
+    bg?: ColorBase;
+    align?: Align;
+    valign?: VAlign;
+    opacity?: number;
+}
+declare class Style implements UIStyle {
+    _fg?: ColorBase;
+    _bg?: ColorBase;
+    _border?: ColorBase;
+    _align?: Align;
+    _valign?: VAlign;
+    _opacity?: number;
+    selector: Selector;
+    protected _dirty: boolean;
+    constructor(selector?: string, init?: StyleOptions);
+    get dirty(): boolean;
+    set dirty(v: boolean);
+    get fg(): ColorBase | undefined;
+    get bg(): ColorBase | undefined;
+    get opacity(): number | undefined;
+    dim(pct?: number, fg?: boolean, bg?: boolean): this;
+    bright(pct?: number, fg?: boolean, bg?: boolean): this;
+    invert(): this;
+    get align(): Align | undefined;
+    get valign(): VAlign | undefined;
+    get(key: keyof Style): any;
+    set(opts: StyleOptions, setDirty?: boolean): this;
+    set(key: keyof StyleOptions, value: any, setDirty?: boolean): this;
+    unset(key: keyof Style): this;
+    clone(): this;
+    copy(other: Style): this;
+}
+declare function makeStyle(style: string, selector?: string): Style;
+declare class ComputedStyle extends Style {
+    sources: UIStyle[];
+    _baseFg: Color | null;
+    _baseBg: Color | null;
+    constructor(sources?: UIStyle[]);
+    get opacity(): number;
+    set opacity(v: number);
+    get dirty(): boolean;
+    set dirty(v: boolean);
+}
+declare class Sheet {
+    rules: UIStyle[];
+    _parent: Sheet | null;
+    _dirty: boolean;
+    constructor(parentSheet?: Sheet | null);
+    get dirty(): boolean;
+    set dirty(v: boolean);
+    setParent(sheet: Sheet | null): void;
+    add(selector: string, props: StyleOptions): this;
+    get(selector: string): UIStyle | null;
+    load(styles: Record<string, StyleOptions>): this;
+    remove(selector: string): void;
+    _rulesFor(widget: UIStylable): UIStyle[];
+    computeFor(widget: UIStylable): ComputedStyle;
+}
+declare const defaultStyle: Sheet;
+
+declare type TimerFn = () => void | boolean;
+interface TimerInfo {
+    delay: number;
+    fn: TimerFn;
+    repeat: number;
+}
+declare class Timers {
+    _timers: TimerInfo[];
+    _ctx: any;
+    constructor(ctx?: any);
+    clear(): void;
+    restart(): void;
+    setTimeout(fn: TimerFn, delay: number): CancelFn;
+    setInterval(fn: TimerFn, delay: number): CancelFn;
+    update(dt: number): void;
+}
+
+declare type Callback = () => void;
+declare class Loop {
+    _timer: number;
+    get isRunning(): boolean;
+    start(cb: Callback, dt?: number): void;
+    stop(): void;
+}
+
+declare type AnyObj = Record<string, any>;
+declare type TweenCb = (obj: AnyObj, dt: number) => any;
+declare type TweenFinishCb = (obj: AnyObj, success: boolean) => any;
+declare type EasingFn = (v: number) => number;
+declare type InterpolateFn = (start: any, goal: any, pct: number) => any;
+declare class BaseObj<T extends {
+    update(t: number): void;
+}> {
+    events: Events;
+    children: T[];
+    on(ev: string | string[], fn: CallbackFn): this;
+    once(ev: string | string[], fn: CallbackFn): this;
+    off(ev: string | string[], fn: CallbackFn): this;
+    trigger(ev: string | string[], ...args: any[]): boolean;
+    addChild(t: T): this;
+    removeChild(t: T): this;
+    update(dt: number): void;
+}
+declare class Tween extends BaseObj<Tween> {
+    _obj: AnyObj;
+    _repeat: number;
+    _count: number;
+    _from: boolean;
+    _duration: number;
+    _delay: number;
+    _repeatDelay: number;
+    _yoyo: boolean;
+    _time: number;
+    _startTime: number;
+    _goal: AnyObj;
+    _start: AnyObj;
+    _easing: EasingFn;
+    _interpolate: InterpolateFn;
+    constructor(src: AnyObj);
+    isRunning(): boolean;
+    onStart(cb: TweenCb): this;
+    onUpdate(cb: TweenCb): this;
+    onRepeat(cb: TweenCb): this;
+    onFinish(cb: TweenFinishCb): this;
+    to(goal: AnyObj, duration?: number): this;
+    from(start: AnyObj, duration?: number): this;
+    duration(): number;
+    duration(v: number): this;
+    repeat(): number;
+    repeat(v: number): this;
+    delay(): number;
+    delay(v: number): this;
+    repeatDelay(): number;
+    repeatDelay(v: number): this;
+    yoyo(): boolean;
+    yoyo(v: boolean): this;
+    start(animator?: {
+        add: (tween: Tween) => void;
+    }): this;
+    update(dt: number): void;
+    _restart(): void;
+    stop(success?: boolean): void;
+    _updateProperties(obj: AnyObj, start: AnyObj, goal: AnyObj, pct: number): boolean;
+}
+declare function make$5(src: AnyObj, duration?: number): Tween;
+declare function linear(pct: number): number;
+declare function interpolate(start: any, goal: any, pct: number): any;
+
+type tween_d_AnyObj = AnyObj;
+type tween_d_TweenCb = TweenCb;
+type tween_d_TweenFinishCb = TweenFinishCb;
+type tween_d_EasingFn = EasingFn;
+type tween_d_InterpolateFn = InterpolateFn;
+type tween_d_BaseObj<T extends {
+    update(t: number): void;
+}> = BaseObj<T>;
+declare const tween_d_BaseObj: typeof BaseObj;
+type tween_d_Tween = Tween;
+declare const tween_d_Tween: typeof Tween;
+declare const tween_d_linear: typeof linear;
+declare const tween_d_interpolate: typeof interpolate;
+declare namespace tween_d {
+  export {
+    tween_d_AnyObj as AnyObj,
+    tween_d_TweenCb as TweenCb,
+    tween_d_TweenFinishCb as TweenFinishCb,
+    tween_d_EasingFn as EasingFn,
+    tween_d_InterpolateFn as InterpolateFn,
+    tween_d_BaseObj as BaseObj,
+    tween_d_Tween as Tween,
+    make$5 as make,
+    tween_d_linear as linear,
+    tween_d_interpolate as interpolate,
+  };
+}
+
+declare class Tweens {
+    _tweens: Tween[];
+    constructor();
+    get length(): number;
+    clear(): void;
+    add(tween: Tween): void;
+    remove(tween: Tween): void;
+    update(dt: number): void;
+}
+
+type index_d$5_EventType = EventType;
+type index_d$5_Event = Event;
+declare const index_d$5_Event: typeof Event;
+type index_d$5_ControlFn = ControlFn;
+type index_d$5_EventFn = EventFn;
+type index_d$5_IOMap = IOMap;
+type index_d$5_EventMatchFn = EventMatchFn;
+declare const index_d$5_KEYPRESS: typeof KEYPRESS;
+declare const index_d$5_MOUSEMOVE: typeof MOUSEMOVE;
+declare const index_d$5_CLICK: typeof CLICK;
+declare const index_d$5_TICK: typeof TICK;
+declare const index_d$5_MOUSEUP: typeof MOUSEUP;
+declare const index_d$5_STOP: typeof STOP;
+declare const index_d$5_isControlCode: typeof isControlCode;
+declare const index_d$5_recycleEvent: typeof recycleEvent;
+declare const index_d$5_makeStopEvent: typeof makeStopEvent;
+declare const index_d$5_makeCustomEvent: typeof makeCustomEvent;
+declare const index_d$5_makeTickEvent: typeof makeTickEvent;
+declare const index_d$5_makeKeyEvent: typeof makeKeyEvent;
+declare const index_d$5_keyCodeDirection: typeof keyCodeDirection;
+declare const index_d$5_ignoreKeyEvent: typeof ignoreKeyEvent;
+declare const index_d$5_makeMouseEvent: typeof makeMouseEvent;
+type index_d$5_Queue = Queue;
+declare const index_d$5_Queue: typeof Queue;
+type index_d$5_CancelFn = CancelFn;
+type index_d$5_CallbackFn = CallbackFn;
+type index_d$5_UnhandledFn = UnhandledFn;
+type index_d$5_Events = Events;
+declare const index_d$5_Events: typeof Events;
+type index_d$5_Callback = Callback;
+type index_d$5_Loop = Loop;
+declare const index_d$5_Loop: typeof Loop;
+type index_d$5_TimerFn = TimerFn;
+type index_d$5_Timers = Timers;
+declare const index_d$5_Timers: typeof Timers;
+type index_d$5_Tweens = Tweens;
+declare const index_d$5_Tweens: typeof Tweens;
+type index_d$5_UISelectable = UISelectable;
+type index_d$5_MatchFn = MatchFn;
+type index_d$5_Selector = Selector;
+declare const index_d$5_Selector: typeof Selector;
+declare const index_d$5_compile: typeof compile;
+type index_d$5_UIStyle = UIStyle;
+type index_d$5_StyleOptions = StyleOptions;
+type index_d$5_UIStylable = UIStylable;
+type index_d$5_StyleType = StyleType;
+type index_d$5_Style = Style;
+declare const index_d$5_Style: typeof Style;
+declare const index_d$5_makeStyle: typeof makeStyle;
+type index_d$5_ComputedStyle = ComputedStyle;
+declare const index_d$5_ComputedStyle: typeof ComputedStyle;
+type index_d$5_Sheet = Sheet;
+declare const index_d$5_Sheet: typeof Sheet;
+declare const index_d$5_defaultStyle: typeof defaultStyle;
+type index_d$5_DataValue = DataValue;
+type index_d$5_DataObject = DataObject;
+type index_d$5_DataItem = DataItem;
+type index_d$5_DataType = DataType;
+type index_d$5_EventCb = EventCb;
+type index_d$5_UpdatePosOpts = UpdatePosOpts;
+type index_d$5_SetParentOptions = SetParentOptions;
+type index_d$5_WidgetOpts = WidgetOpts;
+type index_d$5_PropType = PropType;
+type index_d$5_Widget = Widget;
+declare const index_d$5_Widget: typeof Widget;
+declare const index_d$5_alignChildren: typeof alignChildren;
+declare const index_d$5_spaceChildren: typeof spaceChildren;
+declare const index_d$5_wrapChildren: typeof wrapChildren;
+type index_d$5_SceneCallback = SceneCallback;
+type index_d$5_SceneMakeFn = SceneMakeFn;
+type index_d$5_CreateOpts = CreateOpts;
+type index_d$5_StartOpts = StartOpts;
+type index_d$5_ResumeOpts = ResumeOpts;
+type index_d$5_PauseOpts = PauseOpts;
+type index_d$5_SceneObj = SceneObj;
+type index_d$5_Scene = Scene;
+declare const index_d$5_Scene: typeof Scene;
+type index_d$5_Scenes = Scenes;
+declare const index_d$5_Scenes: typeof Scenes;
+declare const index_d$5_scenes: typeof scenes;
+declare const index_d$5_installScene: typeof installScene;
+type index_d$5_AppOpts = AppOpts;
+type index_d$5_App = App;
+declare const index_d$5_App: typeof App;
+declare namespace index_d$5 {
+  export {
+    index_d$5_EventType as EventType,
+    index_d$5_Event as Event,
+    index_d$5_ControlFn as ControlFn,
+    index_d$5_EventFn as EventFn,
+    index_d$5_IOMap as IOMap,
+    index_d$5_EventMatchFn as EventMatchFn,
+    index_d$5_KEYPRESS as KEYPRESS,
+    index_d$5_MOUSEMOVE as MOUSEMOVE,
+    index_d$5_CLICK as CLICK,
+    index_d$5_TICK as TICK,
+    index_d$5_MOUSEUP as MOUSEUP,
+    index_d$5_STOP as STOP,
+    index_d$5_isControlCode as isControlCode,
+    index_d$5_recycleEvent as recycleEvent,
+    index_d$5_makeStopEvent as makeStopEvent,
+    index_d$5_makeCustomEvent as makeCustomEvent,
+    index_d$5_makeTickEvent as makeTickEvent,
+    index_d$5_makeKeyEvent as makeKeyEvent,
+    index_d$5_keyCodeDirection as keyCodeDirection,
+    index_d$5_ignoreKeyEvent as ignoreKeyEvent,
+    index_d$5_makeMouseEvent as makeMouseEvent,
+    index_d$5_Queue as Queue,
+    index_d$5_CancelFn as CancelFn,
+    index_d$5_CallbackFn as CallbackFn,
+    index_d$5_UnhandledFn as UnhandledFn,
+    index_d$5_Events as Events,
+    index_d$5_Callback as Callback,
+    index_d$5_Loop as Loop,
+    index_d$5_TimerFn as TimerFn,
+    index_d$5_Timers as Timers,
+    index_d$5_Tweens as Tweens,
+    index_d$5_UISelectable as UISelectable,
+    index_d$5_MatchFn as MatchFn,
+    index_d$5_Selector as Selector,
+    index_d$5_compile as compile,
+    index_d$5_UIStyle as UIStyle,
+    index_d$5_StyleOptions as StyleOptions,
+    index_d$5_UIStylable as UIStylable,
+    index_d$5_StyleType as StyleType,
+    index_d$5_Style as Style,
+    index_d$5_makeStyle as makeStyle,
+    index_d$5_ComputedStyle as ComputedStyle,
+    index_d$5_Sheet as Sheet,
+    index_d$5_defaultStyle as defaultStyle,
+    index_d$5_DataValue as DataValue,
+    index_d$5_DataObject as DataObject,
+    index_d$5_DataItem as DataItem,
+    index_d$5_DataType as DataType,
+    index_d$5_EventCb as EventCb,
+    index_d$5_UpdatePosOpts as UpdatePosOpts,
+    index_d$5_SetParentOptions as SetParentOptions,
+    index_d$5_WidgetOpts as WidgetOpts,
+    index_d$5_PropType as PropType,
+    index_d$5_Widget as Widget,
+    index_d$5_alignChildren as alignChildren,
+    index_d$5_spaceChildren as spaceChildren,
+    index_d$5_wrapChildren as wrapChildren,
+    index_d$5_SceneCallback as SceneCallback,
+    index_d$5_SceneMakeFn as SceneMakeFn,
+    index_d$5_CreateOpts as CreateOpts,
+    index_d$5_StartOpts as StartOpts,
+    index_d$5_ResumeOpts as ResumeOpts,
+    index_d$5_PauseOpts as PauseOpts,
+    index_d$5_SceneObj as SceneObj,
+    index_d$5_Scene as Scene,
+    index_d$5_Scenes as Scenes,
+    index_d$5_scenes as scenes,
+    index_d$5_installScene as installScene,
+    index_d$5_AppOpts as AppOpts,
+    index_d$5_App as App,
+    make$4 as make,
+  };
+}
+
+interface PendingInfo {
+    action: 'start' | 'stop' | 'run';
+    scene: Scene;
+    data: any;
+}
+declare class Scenes {
+    _app: App;
+    _config: Record<string, CreateOpts>;
+    _scenes: Record<string, Scene>;
+    _active: Scene[];
+    _busy: boolean;
+    _pending: PendingInfo[];
+    constructor(gw: App);
+    get isBusy(): boolean;
+    add(id: string, opts: CreateOpts | SceneMakeFn): void;
+    load(scenes: Record<string, CreateOpts | SceneMakeFn>): void;
+    get(): Scene;
+    get(id?: string): Scene | null;
+    trigger(ev: string, ...args: any[]): void;
+    _create(id: string, opts?: CreateOpts): Scene;
+    create(id: string, data?: CreateOpts): Scene;
+    start(id: string, data?: StartOpts): Scene;
+    run(id: string, data?: StartOpts): Scene;
+    _start(scene: Scene): void;
+    stop(data?: any): void;
+    stop(id: string, data?: any): void;
+    _stop(_scene: Scene): void;
+    destroy(id: string, data?: any): void;
+    pause(id: string, opts?: PauseOpts): void;
+    pause(opts?: PauseOpts): void;
+    resume(opts?: PauseOpts): void;
+    resume(id: string, opts?: PauseOpts): void;
+    frameStart(): void;
+    input(ev: Event): void;
+    update(dt: number): void;
+    draw(buffer: Buffer$1): void;
+    frameDebug(buffer: Buffer$1): void;
+    frameEnd(buffer: Buffer$1): void;
+}
+declare const scenes: Record<string, CreateOpts>;
+declare function installScene(id: string, scene: CreateOpts | SceneMakeFn): void;
+
 interface TextOptions extends WidgetOpts {
     text?: string;
 }
@@ -1564,27 +2012,7 @@ declare class Text extends Widget {
     text(v: string): this;
     resize(w: number, h: number): this;
     addChild(): this;
-    _draw(buffer: Buffer$1): boolean;
-}
-
-interface BorderOptions extends WidgetOpts {
-    width: number;
-    height: number;
-    ascii?: boolean;
-}
-declare class Border extends Widget {
-    ascii: boolean;
-    constructor(opts: BorderOptions);
-    contains(): boolean;
-    _draw(buffer: Buffer$1): boolean;
-}
-declare function drawBorder(buffer: Buffer$1, x: number, y: number, w: number, h: number, style: UIStyle, ascii: boolean): void;
-
-interface ButtonOptions extends Omit<TextOptions, 'text'> {
-    text?: string;
-}
-declare class Button extends Text {
-    constructor(opts: ButtonOptions);
+    _draw(buffer: Buffer$1): void;
 }
 
 declare type PrefixType = 'none' | 'letter' | 'number' | 'bullet';
@@ -1699,720 +2127,6 @@ declare type AddDialogOptions = DialogOptions & UpdatePosOpts & {
 };
 declare function dialog(opts: AddDialogOptions): Dialog;
 
-interface FieldsetOptions extends Omit<DialogOptions, 'width' | 'height'> {
-    width?: number;
-    height?: number;
-    dataWidth: number;
-    separator?: string;
-    labelTag?: string;
-    labelClass?: string;
-    dataTag?: string;
-    dataClass?: string;
-}
-declare class Fieldset extends Dialog {
-    static default: {
-        tag: string;
-        border: BorderType;
-        separator: string;
-        pad: boolean;
-        legendTag: string;
-        legendClass: string;
-        legendAlign: Align;
-        labelTag: string;
-        labelClass: string;
-        dataTag: string;
-        dataClass: string;
-    };
-    fields: Field[];
-    constructor(opts: FieldsetOptions);
-    _adjustBounds(pad: [number, number, number, number]): this;
-    get _labelLeft(): number;
-    get _dataLeft(): number;
-    get _nextY(): number;
-    add(label: string, format: string | FieldOptions): this;
-    _setData(v: Record<string, any>): void;
-    _setDataItem(key: string, v: any): void;
-}
-interface FieldOptions extends WidgetOpts {
-    format: string | Template;
-}
-declare class Field extends Text {
-    _format: Template;
-    constructor(opts: FieldOptions);
-    format(v: any): this;
-}
-
-interface OrderedListOptions extends WidgetOpts {
-    pad?: number;
-}
-declare class OrderedList extends Widget {
-    static default: {
-        pad: number;
-    };
-    _fixedWidth: boolean;
-    _fixedHeight: boolean;
-    constructor(opts: OrderedListOptions);
-    addChild(w: Widget): void;
-    _draw(buffer: Buffer$1): boolean;
-    _getBullet(index: number): string;
-    _drawBulletFor(widget: Widget, buffer: Buffer$1, index: number): void;
-}
-interface UnorderedListOptions extends OrderedListOptions {
-    bullet?: string;
-}
-declare class UnorderedList extends OrderedList {
-    static default: {
-        bullet: string;
-        pad: number;
-    };
-    constructor(opts: UnorderedListOptions);
-    _getBullet(_index: number): string;
-}
-
-interface InputOptions extends TextOptions {
-    id: string;
-    placeholder?: string;
-    minLength?: number;
-    maxLength?: number;
-    numbersOnly?: boolean;
-    min?: number;
-    max?: number;
-    required?: boolean;
-    disabled?: boolean;
-}
-declare class Input extends Text {
-    static default: {
-        tag: string;
-        width: number;
-        placeholder: string;
-    };
-    minLength: number;
-    maxLength: number;
-    numbersOnly: boolean;
-    min: number;
-    max: number;
-    constructor(opts: InputOptions);
-    reset(): void;
-    _setProp(name: string, v: PropType): void;
-    isValid(): boolean;
-    keypress(ev: Event): void;
-    click(e: Event): void;
-    text(): string;
-    text(v: string): this;
-    _draw(buffer: Buffer$1, _force?: boolean): boolean;
-}
-
-interface DataListOptions extends ColumnOptions, WidgetOpts {
-    size?: number;
-    rowHeight?: number;
-    hover?: HoverType;
-    headerTag?: string;
-    dataTag?: string;
-    prefix?: PrefixType;
-    data?: DataItem[];
-    border?: boolean | BorderType;
-}
-declare class DataList extends DataTable {
-    constructor(opts: DataListOptions);
-}
-
-interface Rec<T> {
-    [keys: string]: T;
-}
-declare type DropdownConfig = Rec<ButtonConfig>;
-declare type ActionConfig = string;
-declare type ButtonConfig = ActionConfig | DropdownConfig;
-interface MenuOptions extends WidgetOpts {
-    buttons: DropdownConfig;
-    buttonClass?: string | string[];
-    buttonTag?: string;
-    minWidth?: number;
-    marker?: string;
-}
-declare class Menu extends Widget {
-    static default: {
-        tag: string;
-        class: string;
-        buttonClass: string;
-        buttonTag: string;
-        marker: string;
-        minWidth: number;
-    };
-    _selectedIndex: number;
-    children: MenuButton[];
-    constructor(opts: MenuOptions);
-    _initButtons(opts: MenuOptions): void;
-    show(): void;
-    hide(): void;
-    nextItem(): void;
-    prevItem(): void;
-    expandItem(): Menu | null;
-    selectItemWithKey(key: string): void;
-}
-interface MenuButtonOptions extends WidgetOpts {
-    text: string;
-    buttons: ButtonConfig;
-}
-declare class MenuButton extends Text {
-    menu: Menu | null;
-    constructor(opts: MenuButtonOptions);
-    collapse(): void;
-    expand(): Menu | null;
-    _setMenuPos(xy: XY, opts: MenuButtonOptions): void;
-    _initMenu(opts: MenuButtonOptions): Menu | null;
-}
-
-interface MenubarOptions extends WidgetOpts {
-    buttons: DropdownConfig;
-    buttonClass?: string | string[];
-    buttonTag?: string;
-    menuClass?: string | string[];
-    menuTag?: string;
-    minWidth?: number;
-    prefix?: string;
-    separator?: string;
-}
-declare class Menubar extends Widget {
-    static default: {
-        buttonClass: string;
-        buttonTag: string;
-        menuClass: string;
-        menuTag: string;
-        prefix: string;
-        separator: string;
-    };
-    constructor(opts: MenubarOptions);
-    _initButtons(opts: MenubarOptions): void;
-}
-
-interface SelectOptions extends WidgetOpts {
-    text: string;
-    buttons: DropdownConfig;
-    buttonClass?: string;
-    buttonTag?: string;
-}
-declare class Select extends Widget {
-    dropdown: Text;
-    menu: Menu;
-    constructor(opts: SelectOptions);
-    _initText(opts: SelectOptions): void;
-    _initMenu(opts: SelectOptions): void;
-}
-
-declare type NextType = string | null;
-interface PromptChoice {
-    info?: string | Template;
-    next?: string;
-    value?: any;
-}
-interface PromptOptions$1 {
-    field?: string;
-    next?: string;
-    id?: string;
-}
-declare class Prompt {
-    _id: string | null;
-    _field: string;
-    _prompt: string | Template;
-    _choices: string[];
-    _infos: (string | Template)[];
-    _next: NextType[];
-    _values: any[];
-    _defaultNext: NextType;
-    selection: number;
-    constructor(question: string | Template, field?: string | PromptOptions$1);
-    reset(): void;
-    field(): string;
-    field(v: string): this;
-    id(): string | null;
-    id(v: string | null): this;
-    prompt(arg?: any): string;
-    next(): string | null;
-    next(v: string | null): this;
-    choices(): string[];
-    choices(choices: Record<string, string | PromptChoice>): this;
-    choices(choices: string[], infos?: (string | PromptChoice)[]): this;
-    choice(choice: string, info?: string | PromptChoice): this;
-    info(arg?: any): string;
-    choose(n: number): this;
-    value(): any;
-    updateResult(res: any): this;
-}
-interface ChoiceOptions extends WidgetOpts {
-    width: number;
-    height: number;
-    choiceWidth: number;
-    border?: BorderType;
-    promptTag?: string;
-    promptClass?: string;
-    choiceTag?: string;
-    choiceClass?: string;
-    infoTag?: string;
-    infoClass?: string;
-    prompt?: Prompt;
-}
-declare class Choice extends Widget {
-    static default: {
-        tag: string;
-        border: string;
-        promptTag: string;
-        promptClass: string;
-        choiceTag: string;
-        choiceClass: string;
-        infoTag: string;
-        infoClass: string;
-    };
-    choiceWidth: number;
-    _text: Widget;
-    _list: DataList;
-    _info: Text;
-    _prompt: Prompt | null;
-    _done: null | ((v: any) => void);
-    constructor(opts: ChoiceOptions);
-    get prompt(): Prompt | null;
-    showPrompt(prompt: Prompt, arg?: any): Promise<any>;
-    _addList(): this;
-    _addInfo(): this;
-    _addLegend(): this;
-    _draw(buffer: Buffer$1): boolean;
-}
-declare class Inquiry {
-    widget: Choice;
-    _prompts: Prompt[];
-    events: Record<string, EventCb[]>;
-    _result: any;
-    _stack: Prompt[];
-    _current: Prompt | null;
-    constructor(widget: Choice);
-    prompts(v: Prompt[] | Prompt, ...args: Prompt[]): this;
-    _finish(): void;
-    _cancel(): void;
-    start(): void;
-    back(): void;
-    restart(): void;
-    quit(): void;
-    _keypress(_n: string, _w: Widget | null, e: Event): boolean;
-    _change(_n: string, _w: Widget | null, p: Prompt): boolean;
-    on(event: string, cb: EventCb): this;
-    off(event: string, cb?: EventCb): this;
-    _fireEvent(name: string, source: Widget | null, args?: any): boolean;
-}
-
-type index_d$5_DataValue = DataValue;
-type index_d$5_DataObject = DataObject;
-type index_d$5_DataItem = DataItem;
-type index_d$5_DataType = DataType;
-type index_d$5_EventCb = EventCb;
-type index_d$5_UpdatePosOpts = UpdatePosOpts;
-type index_d$5_SetParentOptions = SetParentOptions;
-type index_d$5_WidgetOpts = WidgetOpts;
-type index_d$5_PropType = PropType;
-type index_d$5_Widget = Widget;
-declare const index_d$5_Widget: typeof Widget;
-declare const index_d$5_alignChildren: typeof alignChildren;
-declare const index_d$5_spaceChildren: typeof spaceChildren;
-declare const index_d$5_wrapChildren: typeof wrapChildren;
-type index_d$5_TextOptions = TextOptions;
-type index_d$5_Text = Text;
-declare const index_d$5_Text: typeof Text;
-type index_d$5_BorderOptions = BorderOptions;
-type index_d$5_Border = Border;
-declare const index_d$5_Border: typeof Border;
-declare const index_d$5_drawBorder: typeof drawBorder;
-type index_d$5_ButtonOptions = ButtonOptions;
-type index_d$5_Button = Button;
-declare const index_d$5_Button: typeof Button;
-type index_d$5_PadInfo = PadInfo;
-type index_d$5_DialogOptions = DialogOptions;
-declare const index_d$5_toPadArray: typeof toPadArray;
-type index_d$5_Dialog = Dialog;
-declare const index_d$5_Dialog: typeof Dialog;
-type index_d$5_AddDialogOptions = AddDialogOptions;
-declare const index_d$5_dialog: typeof dialog;
-type index_d$5_FieldsetOptions = FieldsetOptions;
-type index_d$5_Fieldset = Fieldset;
-declare const index_d$5_Fieldset: typeof Fieldset;
-type index_d$5_FieldOptions = FieldOptions;
-type index_d$5_Field = Field;
-declare const index_d$5_Field: typeof Field;
-type index_d$5_OrderedListOptions = OrderedListOptions;
-type index_d$5_OrderedList = OrderedList;
-declare const index_d$5_OrderedList: typeof OrderedList;
-type index_d$5_UnorderedListOptions = UnorderedListOptions;
-type index_d$5_UnorderedList = UnorderedList;
-declare const index_d$5_UnorderedList: typeof UnorderedList;
-type index_d$5_InputOptions = InputOptions;
-type index_d$5_Input = Input;
-declare const index_d$5_Input: typeof Input;
-type index_d$5_PrefixType = PrefixType;
-type index_d$5_FormatFn = FormatFn;
-type index_d$5_SelectType = SelectType;
-type index_d$5_HoverType = HoverType;
-type index_d$5_BorderType = BorderType;
-type index_d$5_ColumnOptions = ColumnOptions;
-type index_d$5_DataTableOptions = DataTableOptions;
-type index_d$5_Column = Column;
-declare const index_d$5_Column: typeof Column;
-type index_d$5_DataTable = DataTable;
-declare const index_d$5_DataTable: typeof DataTable;
-type index_d$5_DataListOptions = DataListOptions;
-type index_d$5_DataList = DataList;
-declare const index_d$5_DataList: typeof DataList;
-type index_d$5_Rec<T> = Rec<T>;
-type index_d$5_DropdownConfig = DropdownConfig;
-type index_d$5_ActionConfig = ActionConfig;
-type index_d$5_ButtonConfig = ButtonConfig;
-type index_d$5_MenuOptions = MenuOptions;
-type index_d$5_Menu = Menu;
-declare const index_d$5_Menu: typeof Menu;
-type index_d$5_MenuButtonOptions = MenuButtonOptions;
-type index_d$5_MenuButton = MenuButton;
-declare const index_d$5_MenuButton: typeof MenuButton;
-type index_d$5_MenubarOptions = MenubarOptions;
-type index_d$5_Menubar = Menubar;
-declare const index_d$5_Menubar: typeof Menubar;
-type index_d$5_SelectOptions = SelectOptions;
-type index_d$5_Select = Select;
-declare const index_d$5_Select: typeof Select;
-type index_d$5_NextType = NextType;
-type index_d$5_PromptChoice = PromptChoice;
-type index_d$5_Prompt = Prompt;
-declare const index_d$5_Prompt: typeof Prompt;
-type index_d$5_ChoiceOptions = ChoiceOptions;
-type index_d$5_Choice = Choice;
-declare const index_d$5_Choice: typeof Choice;
-type index_d$5_Inquiry = Inquiry;
-declare const index_d$5_Inquiry: typeof Inquiry;
-declare namespace index_d$5 {
-  export {
-    index_d$5_DataValue as DataValue,
-    index_d$5_DataObject as DataObject,
-    index_d$5_DataItem as DataItem,
-    index_d$5_DataType as DataType,
-    index_d$5_EventCb as EventCb,
-    index_d$5_UpdatePosOpts as UpdatePosOpts,
-    index_d$5_SetParentOptions as SetParentOptions,
-    index_d$5_WidgetOpts as WidgetOpts,
-    index_d$5_PropType as PropType,
-    index_d$5_Widget as Widget,
-    index_d$5_alignChildren as alignChildren,
-    index_d$5_spaceChildren as spaceChildren,
-    index_d$5_wrapChildren as wrapChildren,
-    index_d$5_TextOptions as TextOptions,
-    index_d$5_Text as Text,
-    index_d$5_BorderOptions as BorderOptions,
-    index_d$5_Border as Border,
-    index_d$5_drawBorder as drawBorder,
-    index_d$5_ButtonOptions as ButtonOptions,
-    index_d$5_Button as Button,
-    index_d$5_PadInfo as PadInfo,
-    index_d$5_DialogOptions as DialogOptions,
-    index_d$5_toPadArray as toPadArray,
-    index_d$5_Dialog as Dialog,
-    index_d$5_AddDialogOptions as AddDialogOptions,
-    index_d$5_dialog as dialog,
-    index_d$5_FieldsetOptions as FieldsetOptions,
-    index_d$5_Fieldset as Fieldset,
-    index_d$5_FieldOptions as FieldOptions,
-    index_d$5_Field as Field,
-    index_d$5_OrderedListOptions as OrderedListOptions,
-    index_d$5_OrderedList as OrderedList,
-    index_d$5_UnorderedListOptions as UnorderedListOptions,
-    index_d$5_UnorderedList as UnorderedList,
-    index_d$5_InputOptions as InputOptions,
-    index_d$5_Input as Input,
-    index_d$5_PrefixType as PrefixType,
-    index_d$5_FormatFn as FormatFn,
-    index_d$5_SelectType as SelectType,
-    index_d$5_HoverType as HoverType,
-    index_d$5_BorderType as BorderType,
-    index_d$5_ColumnOptions as ColumnOptions,
-    index_d$5_DataTableOptions as DataTableOptions,
-    index_d$5_Column as Column,
-    index_d$5_DataTable as DataTable,
-    index_d$5_DataListOptions as DataListOptions,
-    index_d$5_DataList as DataList,
-    index_d$5_Rec as Rec,
-    index_d$5_DropdownConfig as DropdownConfig,
-    index_d$5_ActionConfig as ActionConfig,
-    index_d$5_ButtonConfig as ButtonConfig,
-    index_d$5_MenuOptions as MenuOptions,
-    index_d$5_Menu as Menu,
-    index_d$5_MenuButtonOptions as MenuButtonOptions,
-    index_d$5_MenuButton as MenuButton,
-    index_d$5_MenubarOptions as MenubarOptions,
-    index_d$5_Menubar as Menubar,
-    index_d$5_SelectOptions as SelectOptions,
-    index_d$5_Select as Select,
-    index_d$5_NextType as NextType,
-    index_d$5_PromptChoice as PromptChoice,
-    PromptOptions$1 as PromptOptions,
-    index_d$5_Prompt as Prompt,
-    index_d$5_ChoiceOptions as ChoiceOptions,
-    index_d$5_Choice as Choice,
-    index_d$5_Inquiry as Inquiry,
-  };
-}
-
-interface UISelectable {
-    readonly tag: string;
-    readonly classes: string[];
-    children: UISelectable[];
-    attr(name: string): PropType | undefined;
-    prop(name: string): PropType | undefined;
-    parent: UISelectable | null;
-}
-declare type MatchFn = (el: UISelectable) => boolean;
-declare type BuildFn = (next: MatchFn, e: UISelectable) => boolean;
-declare class Selector {
-    text: string;
-    priority: number;
-    matchFn: MatchFn;
-    constructor(text: string);
-    protected _parse(text: string): MatchFn;
-    protected _parentMatch(): BuildFn;
-    protected _ancestorMatch(): BuildFn;
-    protected _matchElement(text: string): BuildFn;
-    protected _matchTag(tag: string): MatchFn | null;
-    protected _matchClass(cls: string): MatchFn;
-    protected _matchProp(prop: string): MatchFn;
-    protected _matchId(id: string): MatchFn;
-    protected _matchFirst(): MatchFn;
-    protected _matchLast(): MatchFn;
-    protected _matchNot(fn: MatchFn): MatchFn;
-    matches(obj: UISelectable): boolean;
-}
-declare function compile(text: string): Selector;
-
-interface UIStyle {
-    readonly selector: Selector;
-    dirty: boolean;
-    readonly fg?: ColorBase;
-    readonly bg?: ColorBase;
-    readonly align?: Align;
-    readonly valign?: VAlign;
-    readonly opacity?: number;
-    get(key: keyof UIStyle): any;
-    set(key: keyof UIStyle, value: any): this;
-    set(values: StyleOptions): this;
-    unset(key: keyof UIStyle): this;
-}
-interface UIStylable extends UISelectable {
-    style(): UIStyle;
-}
-declare type StyleType = string | StyleOptions;
-interface StyleOptions {
-    fg?: ColorBase;
-    bg?: ColorBase;
-    align?: Align;
-    valign?: VAlign;
-}
-interface StyleOptions {
-    fg?: ColorBase;
-    bg?: ColorBase;
-    align?: Align;
-    valign?: VAlign;
-    opacity?: number;
-}
-declare class Style implements UIStyle {
-    _fg?: ColorBase;
-    _bg?: ColorBase;
-    _border?: ColorBase;
-    _align?: Align;
-    _valign?: VAlign;
-    _opacity?: number;
-    selector: Selector;
-    protected _dirty: boolean;
-    constructor(selector?: string, init?: StyleOptions);
-    get dirty(): boolean;
-    set dirty(v: boolean);
-    get fg(): ColorBase | undefined;
-    get bg(): ColorBase | undefined;
-    get opacity(): number | undefined;
-    dim(pct?: number, fg?: boolean, bg?: boolean): this;
-    bright(pct?: number, fg?: boolean, bg?: boolean): this;
-    invert(): this;
-    get align(): Align | undefined;
-    get valign(): VAlign | undefined;
-    get(key: keyof Style): any;
-    set(opts: StyleOptions, setDirty?: boolean): this;
-    set(key: keyof StyleOptions, value: any, setDirty?: boolean): this;
-    unset(key: keyof Style): this;
-    clone(): this;
-    copy(other: Style): this;
-}
-declare function makeStyle(style: string, selector?: string): Style;
-declare class ComputedStyle extends Style {
-    sources: UIStyle[];
-    _baseFg: Color | null;
-    _baseBg: Color | null;
-    constructor(sources?: UIStyle[]);
-    get opacity(): number;
-    set opacity(v: number);
-    get dirty(): boolean;
-    set dirty(v: boolean);
-}
-declare class Sheet {
-    rules: UIStyle[];
-    _parent: Sheet | null;
-    _dirty: boolean;
-    constructor(parentSheet?: Sheet | null);
-    get dirty(): boolean;
-    set dirty(v: boolean);
-    setParent(sheet: Sheet | null): void;
-    add(selector: string, props: StyleOptions): this;
-    get(selector: string): UIStyle | null;
-    remove(selector: string): void;
-    _rulesFor(widget: UIStylable): UIStyle[];
-    computeFor(widget: UIStylable): ComputedStyle;
-}
-declare const defaultStyle: Sheet;
-
-declare type TimerFn = () => void | boolean;
-interface TimerInfo {
-    delay: number;
-    fn: TimerFn;
-    repeat: number;
-}
-declare class Timers {
-    _timers: TimerInfo[];
-    _ctx: any;
-    constructor(ctx?: any);
-    clear(): void;
-    restart(): void;
-    setTimeout(fn: TimerFn, delay: number): CancelFn;
-    setInterval(fn: TimerFn, delay: number): CancelFn;
-    update(dt: number): void;
-}
-
-declare type Callback = () => void;
-declare class Loop {
-    _timer: number;
-    get isRunning(): boolean;
-    start(cb: Callback, dt?: number): void;
-    stop(): void;
-}
-
-type index_d$4_EventType = EventType;
-type index_d$4_Event = Event;
-declare const index_d$4_Event: typeof Event;
-type index_d$4_ControlFn = ControlFn;
-type index_d$4_EventFn = EventFn;
-type index_d$4_IOMap = IOMap;
-type index_d$4_EventMatchFn = EventMatchFn;
-declare const index_d$4_KEYPRESS: typeof KEYPRESS;
-declare const index_d$4_MOUSEMOVE: typeof MOUSEMOVE;
-declare const index_d$4_CLICK: typeof CLICK;
-declare const index_d$4_TICK: typeof TICK;
-declare const index_d$4_MOUSEUP: typeof MOUSEUP;
-declare const index_d$4_STOP: typeof STOP;
-declare const index_d$4_isControlCode: typeof isControlCode;
-declare const index_d$4_recycleEvent: typeof recycleEvent;
-declare const index_d$4_makeStopEvent: typeof makeStopEvent;
-declare const index_d$4_makeCustomEvent: typeof makeCustomEvent;
-declare const index_d$4_makeTickEvent: typeof makeTickEvent;
-declare const index_d$4_makeKeyEvent: typeof makeKeyEvent;
-declare const index_d$4_keyCodeDirection: typeof keyCodeDirection;
-declare const index_d$4_ignoreKeyEvent: typeof ignoreKeyEvent;
-declare const index_d$4_makeMouseEvent: typeof makeMouseEvent;
-type index_d$4_Queue = Queue;
-declare const index_d$4_Queue: typeof Queue;
-type index_d$4_CancelFn = CancelFn;
-type index_d$4_CallbackFn = CallbackFn;
-type index_d$4_UnhandledFn = UnhandledFn;
-type index_d$4_Events = Events;
-declare const index_d$4_Events: typeof Events;
-type index_d$4_Callback = Callback;
-type index_d$4_Loop = Loop;
-declare const index_d$4_Loop: typeof Loop;
-type index_d$4_TimerFn = TimerFn;
-type index_d$4_Timers = Timers;
-declare const index_d$4_Timers: typeof Timers;
-type index_d$4_SceneCallback = SceneCallback;
-type index_d$4_SceneOpts = SceneOpts;
-type index_d$4_ResumeOpts = ResumeOpts;
-type index_d$4_PauseOpts = PauseOpts;
-type index_d$4_SceneObj = SceneObj;
-type index_d$4_Scene = Scene;
-declare const index_d$4_Scene: typeof Scene;
-type index_d$4_Scenes = Scenes;
-declare const index_d$4_Scenes: typeof Scenes;
-type index_d$4_AppOpts = AppOpts;
-type index_d$4_App = App;
-declare const index_d$4_App: typeof App;
-declare namespace index_d$4 {
-  export {
-    index_d$4_EventType as EventType,
-    index_d$4_Event as Event,
-    index_d$4_ControlFn as ControlFn,
-    index_d$4_EventFn as EventFn,
-    index_d$4_IOMap as IOMap,
-    index_d$4_EventMatchFn as EventMatchFn,
-    index_d$4_KEYPRESS as KEYPRESS,
-    index_d$4_MOUSEMOVE as MOUSEMOVE,
-    index_d$4_CLICK as CLICK,
-    index_d$4_TICK as TICK,
-    index_d$4_MOUSEUP as MOUSEUP,
-    index_d$4_STOP as STOP,
-    index_d$4_isControlCode as isControlCode,
-    index_d$4_recycleEvent as recycleEvent,
-    index_d$4_makeStopEvent as makeStopEvent,
-    index_d$4_makeCustomEvent as makeCustomEvent,
-    index_d$4_makeTickEvent as makeTickEvent,
-    index_d$4_makeKeyEvent as makeKeyEvent,
-    index_d$4_keyCodeDirection as keyCodeDirection,
-    index_d$4_ignoreKeyEvent as ignoreKeyEvent,
-    index_d$4_makeMouseEvent as makeMouseEvent,
-    index_d$4_Queue as Queue,
-    index_d$4_CancelFn as CancelFn,
-    index_d$4_CallbackFn as CallbackFn,
-    index_d$4_UnhandledFn as UnhandledFn,
-    index_d$4_Events as Events,
-    index_d$4_Callback as Callback,
-    index_d$4_Loop as Loop,
-    index_d$4_TimerFn as TimerFn,
-    index_d$4_Timers as Timers,
-    index_d$4_SceneCallback as SceneCallback,
-    index_d$4_SceneOpts as SceneOpts,
-    index_d$4_ResumeOpts as ResumeOpts,
-    index_d$4_PauseOpts as PauseOpts,
-    index_d$4_SceneObj as SceneObj,
-    index_d$4_Scene as Scene,
-    index_d$4_Scenes as Scenes,
-    index_d$4_AppOpts as AppOpts,
-    index_d$4_App as App,
-    make$5 as make,
-  };
-}
-
-declare class Scenes {
-    _app: App;
-    _scenes: Record<string, Scene>;
-    _active: Scene[];
-    constructor(gw: App);
-    install(id: string, opts: SceneOpts | CallbackFn | Scene): void;
-    load(scenes: Record<string, SceneOpts>): void;
-    get(): Scene;
-    get(id?: string): Scene | null;
-    trigger(ev: string, ...args: any[]): void;
-    start(id: string | Scene, data?: any): Scene;
-    run(id: string | Scene, data?: any): Promise<any>;
-    _start(scene: Scene): void;
-    stop(data?: any): void;
-    stop(id: string | Scene, data?: any): void;
-    _stop(_scene: Scene): void;
-    pause(id: string, opts?: PauseOpts): void;
-    pause(opts?: PauseOpts): void;
-    resume(opts?: PauseOpts): void;
-    resume(id: string, opts?: PauseOpts): void;
-    frameStart(): void;
-    input(ev: Event): void;
-    update(dt: number): void;
-    draw(buffer: Buffer$1): void;
-    frameEnd(buffer: Buffer$1): void;
-    frameDebug(buffer: Buffer$1): void;
-}
-
 interface AlertOptions extends Partial<DialogOptions> {
     duration?: number;
     waitForAck?: boolean;
@@ -2444,7 +2158,14 @@ declare const ConfirmScene: {
     stop(this: Scene): void;
 };
 
-interface PromptOptions extends Omit<DialogOptions, 'width' | 'height'> {
+interface ButtonOptions extends Omit<TextOptions, 'text'> {
+    text?: string;
+}
+declare class Button extends Text {
+    constructor(opts: ButtonOptions);
+}
+
+interface PromptOptions$1 extends Omit<DialogOptions, 'width' | 'height'> {
     width?: number;
     height?: number;
     prompt: string;
@@ -2465,7 +2186,7 @@ interface PromptOptions extends Omit<DialogOptions, 'width' | 'height'> {
 }
 declare const PromptScene: {
     create(this: Scene): void;
-    start(this: Scene, opts: PromptOptions): void;
+    start(this: Scene, opts: PromptOptions$1): void;
     stop(this: Scene): void;
 };
 
@@ -2482,11 +2203,11 @@ interface AppOpts {
     tileHeight?: number;
     basicOnly?: boolean;
     basic?: boolean;
-    scene?: SceneOpts | boolean;
-    scenes?: Record<string, SceneOpts>;
+    scene?: CreateOpts | boolean;
+    scenes?: Record<string, CreateOpts>;
     loop?: Loop;
     canvas?: Canvas;
-    start?: boolean;
+    start?: boolean | string;
 }
 declare class App {
     canvas: Canvas;
@@ -2530,172 +2251,19 @@ declare class App {
     _draw(): void;
     _frameDebug(): void;
     _frameEnd(): void;
-    alert(text: string, opts?: Omit<AlertOptions, 'text'>): Promise<boolean>;
-    confirm(text: string, opts?: Omit<ConfirmOptions, 'text'>): Promise<boolean>;
-    prompt(text: string, opts?: Omit<PromptOptions, 'prompt'>): Promise<boolean>;
+    alert(text: string, opts?: Omit<AlertOptions, 'text'>): Scene;
+    confirm(text: string, opts?: Omit<ConfirmOptions, 'text'>): Scene;
+    prompt(text: string, opts?: Omit<PromptOptions$1, 'prompt'>): Scene;
 }
-declare function make$5(opts: Partial<AppOpts>): App;
-
-declare type AnyObj = Record<string, any>;
-declare type TweenCb = (obj: AnyObj, dt: number) => void;
-declare type TweenFinishCb = (obj: AnyObj, success: boolean) => any;
-declare type EasingFn = (v: number) => number;
-declare type InterpolateFn = (start: any, goal: any, pct: number) => any;
-interface Animation {
-    isRunning(): boolean;
-    start(): void;
-    tick(dt: number): boolean;
-    stop(): void;
-}
-interface Animator {
-    addAnimation(a: Animation): void;
-    removeAnimation(a: Animation): void;
-}
-declare class Tween implements Animation {
-    _obj: AnyObj;
-    _repeat: number;
-    _count: number;
-    _from: boolean;
-    _duration: number;
-    _delay: number;
-    _repeatDelay: number;
-    _yoyo: boolean;
-    _time: number;
-    _startTime: number;
-    _goal: AnyObj;
-    _start: AnyObj;
-    _startCb: TweenCb | null;
-    _updateCb: TweenCb | null;
-    _repeatCb: TweenCb | null;
-    _finishCb: TweenFinishCb | null;
-    _resolveCb: null | ((v?: any) => void);
-    _easing: EasingFn;
-    _interpolate: InterpolateFn;
-    constructor(src: AnyObj);
-    isRunning(): boolean;
-    onStart(cb: TweenCb): this;
-    onUpdate(cb: TweenCb): this;
-    onRepeat(cb: TweenCb): this;
-    onFinish(cb: TweenFinishCb): this;
-    to(goal: AnyObj, duration?: number): this;
-    from(start: AnyObj, duration?: number): this;
-    duration(): number;
-    duration(v: number): this;
-    repeat(): number;
-    repeat(v: number): this;
-    delay(): number;
-    delay(v: number): this;
-    repeatDelay(): number;
-    repeatDelay(v: number): this;
-    yoyo(): boolean;
-    yoyo(v: boolean): this;
-    start(): Promise<any>;
-    tick(dt: number): boolean;
-    _restart(): void;
-    stop(success?: boolean): void;
-    _updateProperties(obj: AnyObj, start: AnyObj, goal: AnyObj, pct: number): boolean;
-}
-declare function make$4(src: AnyObj, duration?: number): Tween;
-declare function linear(pct: number): number;
-declare function interpolate(start: any, goal: any, pct: number): any;
-
-type tween_d_AnyObj = AnyObj;
-type tween_d_TweenCb = TweenCb;
-type tween_d_TweenFinishCb = TweenFinishCb;
-type tween_d_EasingFn = EasingFn;
-type tween_d_InterpolateFn = InterpolateFn;
-type tween_d_Animation = Animation;
-type tween_d_Animator = Animator;
-type tween_d_Tween = Tween;
-declare const tween_d_Tween: typeof Tween;
-declare const tween_d_linear: typeof linear;
-declare const tween_d_interpolate: typeof interpolate;
-declare namespace tween_d {
-  export {
-    tween_d_AnyObj as AnyObj,
-    tween_d_TweenCb as TweenCb,
-    tween_d_TweenFinishCb as TweenFinishCb,
-    tween_d_EasingFn as EasingFn,
-    tween_d_InterpolateFn as InterpolateFn,
-    tween_d_Animation as Animation,
-    tween_d_Animator as Animator,
-    tween_d_Tween as Tween,
-    make$4 as make,
-    tween_d_linear as linear,
-    tween_d_interpolate as interpolate,
-  };
-}
-
-declare class Tweens {
-    _tweens: Tween[];
-    constructor();
-    clear(): void;
-    add(tween: Tween): void;
-    remove(tween: Tween): void;
-    update(dt: number): void;
-}
-
-interface CheckboxOptions extends TextOptions {
-    uncheck?: string;
-    check?: string;
-    checked?: boolean;
-    pad?: number;
-    value?: string | [string, string];
-}
-declare class Checkbox extends Text {
-    static default: {
-        uncheck: string;
-        check: string;
-        pad: number;
-        value: string;
-    };
-    constructor(opts: CheckboxOptions);
-    value(): string;
-    text(): string;
-    text(v: string): this;
-    keypress(ev: Event): void;
-    _draw(buffer: Buffer$1): boolean;
-}
-
-declare class Builder {
-    scene: Scene;
-    _opts: WidgetOpts;
-    constructor(scene: Scene);
-    reset(): this;
-    fg(v: ColorBase): this;
-    bg(v: ColorBase): this;
-    dim(pct?: number, fg?: boolean, bg?: boolean): this;
-    bright(pct?: number, fg?: boolean, bg?: boolean): this;
-    invert(): this;
-    style(opts: StyleOptions): this;
-    class(c: string): this;
-    pos(): XY;
-    pos(x: number, y: number): this;
-    moveTo(x: number, y: number): this;
-    move(dx: number, dy: number): this;
-    up(n?: number): this;
-    down(n?: number): this;
-    left(n?: number): this;
-    right(n?: number): this;
-    nextLine(n?: number): this;
-    prevLine(n?: number): this;
-    clear(color?: ColorBase): this;
-    text(info?: TextOptions | string, opts?: TextOptions): Text;
-    border(opts: BorderOptions): Border;
-    button(opts: ButtonOptions): Button;
-    checkbox(opts: CheckboxOptions): Checkbox;
-    input(opts: InputOptions): Input;
-    fieldset(opts: FieldsetOptions): Fieldset;
-    datatable(opts: DataTableOptions): DataTable;
-    datalist(opts: DataListOptions): DataList;
-    menubar(opts: MenubarOptions): Menubar;
-}
+declare function make$4(opts: Partial<AppOpts>): App;
 
 declare type SceneCallback = (this: Scene, ...args: any[]) => void;
-interface SceneOpts {
+declare type SceneMakeFn = (id: string, app: App) => Scene;
+interface CreateOpts {
     bg?: ColorBase;
     data?: Record<string, string>;
     styles?: Sheet;
+    make?: SceneMakeFn;
     create?: SceneCallback;
     delete?: SceneCallback;
     start?: SceneCallback;
@@ -2709,6 +2277,9 @@ interface SceneOpts {
     frameDebug?: SceneCallback;
     frameEnd?: SceneCallback;
     on?: Record<string, SceneCallback>;
+}
+interface StartOpts {
+    [key: string]: any;
 }
 interface ResumeOpts {
     timers?: boolean;
@@ -2729,7 +2300,6 @@ interface SceneObj {
 declare class Scene {
     id: string;
     app: App;
-    build: Builder;
     events: Events;
     tweens: Tweens;
     timers: Timers;
@@ -2748,16 +2318,16 @@ declare class Scene {
     styles: Sheet;
     bg: Color;
     data: Record<string, any>;
-    constructor(id: string, opts?: SceneOpts);
+    constructor(id: string, app: App);
     get width(): number;
     get height(): number;
     isActive(): boolean;
     isPaused(): () => any;
     isSleeping(): () => any;
-    create(app: App): void;
-    destroy(): void;
-    start(data?: any): void;
-    run(data?: any): Promise<any>;
+    create(opts?: CreateOpts): void;
+    destroy(data?: any): void;
+    start(opts?: StartOpts): void;
+    run(data?: StartOpts): void;
     stop(data?: any): void;
     pause(opts?: PauseOpts): void;
     resume(opts?: ResumeOpts): void;
@@ -2823,8 +2393,8 @@ interface WidgetOpts extends StyleOptions, SetParentOptions {
     tag?: string;
     id?: string;
     data?: DataType;
-    parent?: Widget;
-    scene?: Scene;
+    parent?: Widget | null;
+    scene?: Scene | null;
     width?: number;
     height?: number;
     class?: string;
@@ -2925,8 +2495,10 @@ declare class Widget {
     input(e: Event): void;
     _mouseenter(e: Event): void;
     mousemove(e: Event): void;
+    _mousemove(e: Event): void;
     _mouseleave(e: Event): void;
     click(e: Event): void;
+    _click(e: Event): void;
     keypress(e: Event): void;
     draw(buffer: Buffer$1): void;
     _draw(buffer: Buffer$1): void;
@@ -3140,51 +2712,51 @@ declare type CanvasOptions = BaseOptions & GlyphOptions;
 declare function make$3(opts: Partial<CanvasOptions>): Canvas;
 declare function make$3(width: number, height: number, opts?: Partial<CanvasOptions>): Canvas;
 
-type index_d$3_GlyphInitFn = GlyphInitFn;
-type index_d$3_GlyphOptions = GlyphOptions;
-type index_d$3_Glyphs = Glyphs;
-declare const index_d$3_Glyphs: typeof Glyphs;
-declare const index_d$3_initGlyphs: typeof initGlyphs;
-type index_d$3_Layer = Layer;
-declare const index_d$3_Layer: typeof Layer;
-type index_d$3_BufferTarget = BufferTarget;
-type index_d$3_Buffer = Buffer;
-declare const index_d$3_Buffer: typeof Buffer;
-type index_d$3_IOCallback = IOCallback;
-declare const index_d$3_VERTICES_PER_TILE: typeof VERTICES_PER_TILE;
-type index_d$3_Options = Options;
-type index_d$3_NotSupportedError = NotSupportedError;
-declare const index_d$3_NotSupportedError: typeof NotSupportedError;
-type index_d$3_Canvas = Canvas;
-declare const index_d$3_Canvas: typeof Canvas;
-type index_d$3_ImageOptions = ImageOptions;
-type index_d$3_FontOptions = FontOptions;
-declare const index_d$3_withImage: typeof withImage;
-declare const index_d$3_withFont: typeof withFont;
-declare const index_d$3_createProgram: typeof createProgram;
-declare const index_d$3_QUAD: typeof QUAD;
-type index_d$3_CanvasOptions = CanvasOptions;
-declare namespace index_d$3 {
+type index_d$4_GlyphInitFn = GlyphInitFn;
+type index_d$4_GlyphOptions = GlyphOptions;
+type index_d$4_Glyphs = Glyphs;
+declare const index_d$4_Glyphs: typeof Glyphs;
+declare const index_d$4_initGlyphs: typeof initGlyphs;
+type index_d$4_Layer = Layer;
+declare const index_d$4_Layer: typeof Layer;
+type index_d$4_BufferTarget = BufferTarget;
+type index_d$4_Buffer = Buffer;
+declare const index_d$4_Buffer: typeof Buffer;
+type index_d$4_IOCallback = IOCallback;
+declare const index_d$4_VERTICES_PER_TILE: typeof VERTICES_PER_TILE;
+type index_d$4_Options = Options;
+type index_d$4_NotSupportedError = NotSupportedError;
+declare const index_d$4_NotSupportedError: typeof NotSupportedError;
+type index_d$4_Canvas = Canvas;
+declare const index_d$4_Canvas: typeof Canvas;
+type index_d$4_ImageOptions = ImageOptions;
+type index_d$4_FontOptions = FontOptions;
+declare const index_d$4_withImage: typeof withImage;
+declare const index_d$4_withFont: typeof withFont;
+declare const index_d$4_createProgram: typeof createProgram;
+declare const index_d$4_QUAD: typeof QUAD;
+type index_d$4_CanvasOptions = CanvasOptions;
+declare namespace index_d$4 {
   export {
-    index_d$3_GlyphInitFn as GlyphInitFn,
-    index_d$3_GlyphOptions as GlyphOptions,
-    index_d$3_Glyphs as Glyphs,
-    index_d$3_initGlyphs as initGlyphs,
-    index_d$3_Layer as Layer,
-    index_d$3_BufferTarget as BufferTarget,
-    index_d$3_Buffer as Buffer,
-    index_d$3_IOCallback as IOCallback,
-    index_d$3_VERTICES_PER_TILE as VERTICES_PER_TILE,
-    index_d$3_Options as Options,
-    index_d$3_NotSupportedError as NotSupportedError,
-    index_d$3_Canvas as Canvas,
-    index_d$3_ImageOptions as ImageOptions,
-    index_d$3_FontOptions as FontOptions,
-    index_d$3_withImage as withImage,
-    index_d$3_withFont as withFont,
-    index_d$3_createProgram as createProgram,
-    index_d$3_QUAD as QUAD,
-    index_d$3_CanvasOptions as CanvasOptions,
+    index_d$4_GlyphInitFn as GlyphInitFn,
+    index_d$4_GlyphOptions as GlyphOptions,
+    index_d$4_Glyphs as Glyphs,
+    index_d$4_initGlyphs as initGlyphs,
+    index_d$4_Layer as Layer,
+    index_d$4_BufferTarget as BufferTarget,
+    index_d$4_Buffer as Buffer,
+    index_d$4_IOCallback as IOCallback,
+    index_d$4_VERTICES_PER_TILE as VERTICES_PER_TILE,
+    index_d$4_Options as Options,
+    index_d$4_NotSupportedError as NotSupportedError,
+    index_d$4_Canvas as Canvas,
+    index_d$4_ImageOptions as ImageOptions,
+    index_d$4_FontOptions as FontOptions,
+    index_d$4_withImage as withImage,
+    index_d$4_withFont as withFont,
+    index_d$4_createProgram as createProgram,
+    index_d$4_QUAD as QUAD,
+    index_d$4_CanvasOptions as CanvasOptions,
     make$3 as make,
   };
 }
@@ -3225,27 +2797,27 @@ interface SpriteData {
     readonly opacity: number;
 }
 
-type index_d$2_SpriteConfig = SpriteConfig;
-type index_d$2_Sprite = Sprite;
-declare const index_d$2_Sprite: typeof Sprite;
-declare const index_d$2_sprites: typeof sprites;
-type index_d$2_DrawInfo = DrawInfo;
-type index_d$2_Mixer = Mixer;
-declare const index_d$2_Mixer: typeof Mixer;
-declare const index_d$2_makeMixer: typeof makeMixer;
-type index_d$2_SpriteData = SpriteData;
-declare namespace index_d$2 {
+type index_d$3_SpriteConfig = SpriteConfig;
+type index_d$3_Sprite = Sprite;
+declare const index_d$3_Sprite: typeof Sprite;
+declare const index_d$3_sprites: typeof sprites;
+type index_d$3_DrawInfo = DrawInfo;
+type index_d$3_Mixer = Mixer;
+declare const index_d$3_Mixer: typeof Mixer;
+declare const index_d$3_makeMixer: typeof makeMixer;
+type index_d$3_SpriteData = SpriteData;
+declare namespace index_d$3 {
   export {
-    index_d$2_SpriteConfig as SpriteConfig,
-    index_d$2_Sprite as Sprite,
-    index_d$2_sprites as sprites,
+    index_d$3_SpriteConfig as SpriteConfig,
+    index_d$3_Sprite as Sprite,
+    index_d$3_sprites as sprites,
     make$2 as make,
     from$1 as from,
     install$2 as install,
-    index_d$2_DrawInfo as DrawInfo,
-    index_d$2_Mixer as Mixer,
-    index_d$2_makeMixer as makeMixer,
-    index_d$2_SpriteData as SpriteData,
+    index_d$3_DrawInfo as DrawInfo,
+    index_d$3_Mixer as Mixer,
+    index_d$3_makeMixer as makeMixer,
+    index_d$3_SpriteData as SpriteData,
   };
 }
 
@@ -3448,9 +3020,9 @@ declare class LightSystem implements LightSystemType, PaintSite {
     glowLightChanged: boolean;
     dynamicLightChanged: boolean;
     changed: boolean;
-    light: Grid$1<LightValue>;
-    oldLight: Grid$1<LightValue>;
-    glowLight: Grid$1<LightValue>;
+    light: Grid<LightValue>;
+    oldLight: Grid<LightValue>;
+    glowLight: Grid<LightValue>;
     flags: NumGrid;
     constructor(map: LightSystemSite, opts?: LightSystemOptions);
     copy(other: LightSystem): void;
@@ -3478,130 +3050,608 @@ declare class LightSystem implements LightSystemType, PaintSite {
     addCellLight(x: number, y: number, light: LightValue, dispelShadows: boolean): void;
 }
 
-type index_d$1_LightConfig = LightConfig;
-type index_d$1_LightBase = LightBase;
-type index_d$1_LightType = LightType;
-type index_d$1_LightCb = LightCb;
-type index_d$1_PaintSite = PaintSite;
-type index_d$1_LightSystemSite = LightSystemSite;
-type index_d$1_LightSystemType = LightSystemType;
-declare const index_d$1_config: typeof config;
-type index_d$1_Light = Light;
-declare const index_d$1_Light: typeof Light;
-declare const index_d$1_intensity: typeof intensity;
-declare const index_d$1_isDarkLight: typeof isDarkLight;
-declare const index_d$1_isShadowLight: typeof isShadowLight;
-declare const index_d$1_make: typeof make;
-declare const index_d$1_lights: typeof lights;
-declare const index_d$1_from: typeof from;
-declare const index_d$1_install: typeof install;
-declare const index_d$1_installAll: typeof installAll;
-type index_d$1_StaticLightInfo = StaticLightInfo;
-type index_d$1_LightSystemOptions = LightSystemOptions;
-type index_d$1_LightSystem = LightSystem;
-declare const index_d$1_LightSystem: typeof LightSystem;
+type index_d$2_LightConfig = LightConfig;
+type index_d$2_LightBase = LightBase;
+type index_d$2_LightType = LightType;
+type index_d$2_LightCb = LightCb;
+type index_d$2_PaintSite = PaintSite;
+type index_d$2_LightSystemSite = LightSystemSite;
+type index_d$2_LightSystemType = LightSystemType;
+declare const index_d$2_config: typeof config;
+type index_d$2_Light = Light;
+declare const index_d$2_Light: typeof Light;
+declare const index_d$2_intensity: typeof intensity;
+declare const index_d$2_isDarkLight: typeof isDarkLight;
+declare const index_d$2_isShadowLight: typeof isShadowLight;
+declare const index_d$2_make: typeof make;
+declare const index_d$2_lights: typeof lights;
+declare const index_d$2_from: typeof from;
+declare const index_d$2_install: typeof install;
+declare const index_d$2_installAll: typeof installAll;
+type index_d$2_StaticLightInfo = StaticLightInfo;
+type index_d$2_LightSystemOptions = LightSystemOptions;
+type index_d$2_LightSystem = LightSystem;
+declare const index_d$2_LightSystem: typeof LightSystem;
+declare namespace index_d$2 {
+  export {
+    index_d$2_LightConfig as LightConfig,
+    index_d$2_LightBase as LightBase,
+    index_d$2_LightType as LightType,
+    index_d$2_LightCb as LightCb,
+    index_d$2_PaintSite as PaintSite,
+    index_d$2_LightSystemSite as LightSystemSite,
+    index_d$2_LightSystemType as LightSystemType,
+    index_d$2_config as config,
+    index_d$2_Light as Light,
+    index_d$2_intensity as intensity,
+    index_d$2_isDarkLight as isDarkLight,
+    index_d$2_isShadowLight as isShadowLight,
+    index_d$2_make as make,
+    index_d$2_lights as lights,
+    index_d$2_from as from,
+    index_d$2_install as install,
+    index_d$2_installAll as installAll,
+    index_d$2_StaticLightInfo as StaticLightInfo,
+    index_d$2_LightSystemOptions as LightSystemOptions,
+    index_d$2_LightSystem as LightSystem,
+  };
+}
+
+interface Rec<T> {
+    [keys: string]: T;
+}
+declare type DropdownConfig = Rec<ButtonConfig>;
+declare type ActionConfig = string;
+declare type ButtonConfig = ActionConfig | DropdownConfig;
+interface MenuOptions$1 extends WidgetOpts {
+    buttons: DropdownConfig;
+    buttonClass?: string | string[];
+    buttonTag?: string;
+    minWidth?: number;
+    marker?: string;
+}
+declare class Menu extends Widget {
+    static default: {
+        tag: string;
+        class: string;
+        buttonClass: string;
+        buttonTag: string;
+        marker: string;
+        minWidth: number;
+    };
+    _selectedIndex: number;
+    children: MenuButton[];
+    constructor(opts: MenuOptions$1);
+    _initButtons(opts: MenuOptions$1): void;
+    show(): void;
+    hide(): void;
+    nextItem(): void;
+    prevItem(): void;
+    expandItem(): Menu | null;
+    selectItemWithKey(key: string): void;
+}
+interface MenuButtonOptions extends WidgetOpts {
+    text: string;
+    buttons: ButtonConfig;
+}
+declare class MenuButton extends Text {
+    menu: Menu | null;
+    constructor(opts: MenuButtonOptions);
+    collapse(): void;
+    expand(): Menu | null;
+    _setMenuPos(xy: XY, opts: MenuButtonOptions): void;
+    _initMenu(opts: MenuButtonOptions): Menu | null;
+}
+
+interface MenuOptions {
+    menu: Menu;
+    origin: Scene;
+}
+declare const MenuScene: {
+    create(this: Scene): void;
+    start(this: Scene, data: MenuOptions): void;
+    stop(this: Scene): void;
+};
+
+type index_d$1_AlertOptions = AlertOptions;
+declare const index_d$1_AlertScene: typeof AlertScene;
+type index_d$1_ConfirmOptions = ConfirmOptions;
+declare const index_d$1_ConfirmScene: typeof ConfirmScene;
+declare const index_d$1_PromptScene: typeof PromptScene;
+type index_d$1_MenuOptions = MenuOptions;
+declare const index_d$1_MenuScene: typeof MenuScene;
 declare namespace index_d$1 {
   export {
-    index_d$1_LightConfig as LightConfig,
-    index_d$1_LightBase as LightBase,
-    index_d$1_LightType as LightType,
-    index_d$1_LightCb as LightCb,
-    index_d$1_PaintSite as PaintSite,
-    index_d$1_LightSystemSite as LightSystemSite,
-    index_d$1_LightSystemType as LightSystemType,
-    index_d$1_config as config,
-    index_d$1_Light as Light,
-    index_d$1_intensity as intensity,
-    index_d$1_isDarkLight as isDarkLight,
-    index_d$1_isShadowLight as isShadowLight,
-    index_d$1_make as make,
-    index_d$1_lights as lights,
-    index_d$1_from as from,
-    index_d$1_install as install,
-    index_d$1_installAll as installAll,
-    index_d$1_StaticLightInfo as StaticLightInfo,
-    index_d$1_LightSystemOptions as LightSystemOptions,
-    index_d$1_LightSystem as LightSystem,
+    index_d$1_AlertOptions as AlertOptions,
+    index_d$1_AlertScene as AlertScene,
+    index_d$1_ConfirmOptions as ConfirmOptions,
+    index_d$1_ConfirmScene as ConfirmScene,
+    PromptOptions$1 as PromptOptions,
+    index_d$1_PromptScene as PromptScene,
+    index_d$1_MenuOptions as MenuOptions,
+    index_d$1_MenuScene as MenuScene,
   };
 }
 
-interface GridTarget {
-    pos(): XY;
-    pos(x: number, y: number): any;
+interface BorderOptions extends WidgetOpts {
+    width: number;
+    height: number;
+    ascii?: boolean;
 }
-declare class Grid {
-    _left: number;
-    _top: number;
-    _colWidths: number[];
-    _rowHeights: number[];
-    _col: number;
-    _row: number;
-    target: GridTarget;
-    constructor(target: GridTarget);
-    cols(): number[];
-    cols(count: number, width: number): this;
-    cols(widths: number[]): this;
-    rows(): number[];
-    rows(count: number, height?: number): this;
-    rows(heights: number[]): this;
-    col(n?: number): this;
-    nextCol(): this;
-    row(n?: number): this;
-    nextRow(): this;
-    endRow(h: number): this;
-    protected _setPos(): this;
+declare class Border extends Widget {
+    ascii: boolean;
+    constructor(opts: BorderOptions);
+    contains(): boolean;
+    _draw(buffer: Buffer$1): boolean;
+}
+declare function drawBorder(buffer: Buffer$1, x: number, y: number, w: number, h: number, style: UIStyle, ascii: boolean): void;
+
+interface FieldsetOptions extends Omit<DialogOptions, 'width' | 'height'> {
+    width?: number;
+    height?: number;
+    dataWidth: number;
+    separator?: string;
+    labelTag?: string;
+    labelClass?: string;
+    dataTag?: string;
+    dataClass?: string;
+}
+declare class Fieldset extends Dialog {
+    static default: {
+        tag: string;
+        border: BorderType;
+        separator: string;
+        pad: boolean;
+        legendTag: string;
+        legendClass: string;
+        legendAlign: Align;
+        labelTag: string;
+        labelClass: string;
+        dataTag: string;
+        dataClass: string;
+    };
+    fields: Field[];
+    constructor(opts: FieldsetOptions);
+    _adjustBounds(pad: [number, number, number, number]): this;
+    get _labelLeft(): number;
+    get _dataLeft(): number;
+    get _nextY(): number;
+    add(label: string, format: string | FieldOptions): this;
+    _setData(v: Record<string, any>): void;
+    _setDataItem(key: string, v: any): void;
+}
+interface FieldOptions extends WidgetOpts {
+    format: string | Template;
+}
+declare class Field extends Text {
+    _format: Template;
+    constructor(opts: FieldOptions);
+    format(v: any): this;
 }
 
-type index_d_GridTarget = GridTarget;
-type index_d_Grid = Grid;
-declare const index_d_Grid: typeof Grid;
-type index_d_UISelectable = UISelectable;
-type index_d_MatchFn = MatchFn;
-type index_d_Selector = Selector;
-declare const index_d_Selector: typeof Selector;
-declare const index_d_compile: typeof compile;
-type index_d_UIStyle = UIStyle;
-type index_d_StyleOptions = StyleOptions;
-type index_d_UIStylable = UIStylable;
-type index_d_StyleType = StyleType;
-type index_d_Style = Style;
-declare const index_d_Style: typeof Style;
-declare const index_d_makeStyle: typeof makeStyle;
-type index_d_ComputedStyle = ComputedStyle;
-declare const index_d_ComputedStyle: typeof ComputedStyle;
-type index_d_Sheet = Sheet;
-declare const index_d_Sheet: typeof Sheet;
-declare const index_d_defaultStyle: typeof defaultStyle;
-type index_d_AlertOptions = AlertOptions;
-declare const index_d_AlertScene: typeof AlertScene;
-type index_d_ConfirmOptions = ConfirmOptions;
-declare const index_d_ConfirmScene: typeof ConfirmScene;
+interface OrderedListOptions extends WidgetOpts {
+    pad?: number;
+}
+declare class OrderedList extends Widget {
+    static default: {
+        pad: number;
+    };
+    _fixedWidth: boolean;
+    _fixedHeight: boolean;
+    constructor(opts: OrderedListOptions);
+    addChild(w: Widget): void;
+    _draw(buffer: Buffer$1): boolean;
+    _getBullet(index: number): string;
+    _drawBulletFor(widget: Widget, buffer: Buffer$1, index: number): void;
+}
+interface UnorderedListOptions extends OrderedListOptions {
+    bullet?: string;
+}
+declare class UnorderedList extends OrderedList {
+    static default: {
+        bullet: string;
+        pad: number;
+    };
+    constructor(opts: UnorderedListOptions);
+    _getBullet(_index: number): string;
+}
+
+interface InputOptions extends TextOptions {
+    id: string;
+    placeholder?: string;
+    minLength?: number;
+    maxLength?: number;
+    numbersOnly?: boolean;
+    min?: number;
+    max?: number;
+    required?: boolean;
+    disabled?: boolean;
+}
+declare class Input extends Text {
+    static default: {
+        tag: string;
+        width: number;
+        placeholder: string;
+    };
+    minLength: number;
+    maxLength: number;
+    numbersOnly: boolean;
+    min: number;
+    max: number;
+    constructor(opts: InputOptions);
+    reset(): void;
+    _setProp(name: string, v: PropType): void;
+    isValid(): boolean;
+    keypress(ev: Event): void;
+    click(e: Event): void;
+    text(): string;
+    text(v: string): this;
+    _draw(buffer: Buffer$1, _force?: boolean): boolean;
+}
+
+interface DataListOptions extends ColumnOptions, WidgetOpts {
+    size?: number;
+    rowHeight?: number;
+    hover?: HoverType;
+    headerTag?: string;
+    dataTag?: string;
+    prefix?: PrefixType;
+    data?: DataItem[];
+    border?: boolean | BorderType;
+}
+declare class DataList extends DataTable {
+    constructor(opts: DataListOptions);
+}
+
+interface MenubarOptions extends WidgetOpts {
+    buttons: DropdownConfig;
+    buttonClass?: string | string[];
+    buttonTag?: string;
+    menuClass?: string | string[];
+    menuTag?: string;
+    minWidth?: number;
+    prefix?: string;
+    separator?: string;
+}
+declare class Menubar extends Widget {
+    static default: {
+        buttonClass: string;
+        buttonTag: string;
+        menuClass: string;
+        menuTag: string;
+        prefix: string;
+        separator: string;
+    };
+    constructor(opts: MenubarOptions);
+    _initButtons(opts: MenubarOptions): void;
+}
+
+interface SelectOptions extends WidgetOpts {
+    text: string;
+    buttons: DropdownConfig;
+    buttonClass?: string;
+    buttonTag?: string;
+}
+declare class Select extends Widget {
+    dropdown: Text;
+    menu: Menu;
+    constructor(opts: SelectOptions);
+    _initText(opts: SelectOptions): void;
+    _initMenu(opts: SelectOptions): void;
+}
+
+declare type NextType = string | null;
+interface PromptChoice {
+    info?: string | Template;
+    next?: string;
+    value?: any;
+}
+interface PromptOptions {
+    field?: string;
+    next?: string;
+    id?: string;
+}
+declare class Prompt {
+    _id: string | null;
+    _field: string;
+    _prompt: string | Template;
+    _choices: string[];
+    _infos: (string | Template)[];
+    _next: NextType[];
+    _values: any[];
+    _defaultNext: NextType;
+    selection: number;
+    constructor(question: string | Template, field?: string | PromptOptions);
+    reset(): void;
+    field(): string;
+    field(v: string): this;
+    id(): string | null;
+    id(v: string | null): this;
+    prompt(arg?: any): string;
+    next(): string | null;
+    next(v: string | null): this;
+    choices(): string[];
+    choices(choices: Record<string, string | PromptChoice>): this;
+    choices(choices: string[], infos?: (string | PromptChoice)[]): this;
+    choice(choice: string, info?: string | PromptChoice): this;
+    info(arg?: any): string;
+    choose(n: number): this;
+    value(): any;
+    updateResult(res: any): this;
+}
+interface ChoiceOptions extends WidgetOpts {
+    width: number;
+    height: number;
+    choiceWidth: number;
+    border?: BorderType;
+    promptTag?: string;
+    promptClass?: string;
+    choiceTag?: string;
+    choiceClass?: string;
+    infoTag?: string;
+    infoClass?: string;
+    prompt?: Prompt;
+}
+declare class Choice extends Widget {
+    static default: {
+        tag: string;
+        border: string;
+        promptTag: string;
+        promptClass: string;
+        choiceTag: string;
+        choiceClass: string;
+        infoTag: string;
+        infoClass: string;
+    };
+    choiceWidth: number;
+    _text: Widget;
+    _list: DataList;
+    _info: Text;
+    _prompt: Prompt | null;
+    _done: null | ((v: any) => void);
+    constructor(opts: ChoiceOptions);
+    get prompt(): Prompt | null;
+    showPrompt(prompt: Prompt, arg?: any): Promise<any>;
+    _addList(): this;
+    _addInfo(): this;
+    _addLegend(): this;
+    _draw(buffer: Buffer$1): boolean;
+}
+declare class Inquiry {
+    widget: Choice;
+    _prompts: Prompt[];
+    events: Record<string, EventCb[]>;
+    _result: any;
+    _stack: Prompt[];
+    _current: Prompt | null;
+    constructor(widget: Choice);
+    prompts(v: Prompt[] | Prompt, ...args: Prompt[]): this;
+    _finish(): void;
+    _cancel(): void;
+    start(): void;
+    back(): void;
+    restart(): void;
+    quit(): void;
+    _keypress(_n: string, _w: Widget | null, e: Event): boolean;
+    _change(_n: string, _w: Widget | null, p: Prompt): boolean;
+    on(event: string, cb: EventCb): this;
+    off(event: string, cb?: EventCb): this;
+    _fireEvent(name: string, source: Widget | null, args?: any): boolean;
+}
+
+interface CheckboxOptions extends TextOptions {
+    uncheck?: string;
+    check?: string;
+    checked?: boolean;
+    pad?: number;
+    value?: string | [string, string];
+}
+declare class Checkbox extends Text {
+    static default: {
+        uncheck: string;
+        check: string;
+        pad: number;
+        value: string;
+    };
+    constructor(opts: CheckboxOptions);
+    value(): string;
+    text(): string;
+    text(v: string): this;
+    keypress(ev: Event): void;
+    _draw(buffer: Buffer$1): boolean;
+}
+
+declare class Builder {
+    scene: Scene;
+    _opts: WidgetOpts;
+    constructor(scene: Scene);
+    reset(): this;
+    fg(v: ColorBase): this;
+    bg(v: ColorBase): this;
+    dim(pct?: number, fg?: boolean, bg?: boolean): this;
+    bright(pct?: number, fg?: boolean, bg?: boolean): this;
+    invert(): this;
+    style(opts: StyleOptions): this;
+    class(c: string): this;
+    pos(): XY;
+    pos(x: number, y: number): this;
+    moveTo(x: number, y: number): this;
+    move(dx: number, dy: number): this;
+    up(n?: number): this;
+    down(n?: number): this;
+    left(n?: number): this;
+    right(n?: number): this;
+    nextLine(n?: number): this;
+    prevLine(n?: number): this;
+    clear(color?: ColorBase): this;
+    text(info?: TextOptions | string, opts?: TextOptions): Text;
+    border(opts: BorderOptions): Border;
+    button(opts: ButtonOptions): Button;
+    checkbox(opts: CheckboxOptions): Checkbox;
+    input(opts: InputOptions): Input;
+    fieldset(opts: FieldsetOptions): Fieldset;
+    datatable(opts: DataTableOptions): DataTable;
+    datalist(opts: DataListOptions): DataList;
+    menubar(opts: MenubarOptions): Menubar;
+}
+
+type index_d_DataValue = DataValue;
+type index_d_DataObject = DataObject;
+type index_d_DataItem = DataItem;
+type index_d_DataType = DataType;
+type index_d_EventCb = EventCb;
+type index_d_UpdatePosOpts = UpdatePosOpts;
+type index_d_SetParentOptions = SetParentOptions;
+type index_d_WidgetOpts = WidgetOpts;
+type index_d_PropType = PropType;
+type index_d_Widget = Widget;
+declare const index_d_Widget: typeof Widget;
+declare const index_d_alignChildren: typeof alignChildren;
+declare const index_d_spaceChildren: typeof spaceChildren;
+declare const index_d_wrapChildren: typeof wrapChildren;
+type index_d_TextOptions = TextOptions;
+type index_d_Text = Text;
+declare const index_d_Text: typeof Text;
+type index_d_BorderOptions = BorderOptions;
+type index_d_Border = Border;
+declare const index_d_Border: typeof Border;
+declare const index_d_drawBorder: typeof drawBorder;
+type index_d_ButtonOptions = ButtonOptions;
+type index_d_Button = Button;
+declare const index_d_Button: typeof Button;
+type index_d_PadInfo = PadInfo;
+type index_d_DialogOptions = DialogOptions;
+declare const index_d_toPadArray: typeof toPadArray;
+type index_d_Dialog = Dialog;
+declare const index_d_Dialog: typeof Dialog;
+type index_d_AddDialogOptions = AddDialogOptions;
+declare const index_d_dialog: typeof dialog;
+type index_d_FieldsetOptions = FieldsetOptions;
+type index_d_Fieldset = Fieldset;
+declare const index_d_Fieldset: typeof Fieldset;
+type index_d_FieldOptions = FieldOptions;
+type index_d_Field = Field;
+declare const index_d_Field: typeof Field;
+type index_d_OrderedListOptions = OrderedListOptions;
+type index_d_OrderedList = OrderedList;
+declare const index_d_OrderedList: typeof OrderedList;
+type index_d_UnorderedListOptions = UnorderedListOptions;
+type index_d_UnorderedList = UnorderedList;
+declare const index_d_UnorderedList: typeof UnorderedList;
+type index_d_InputOptions = InputOptions;
+type index_d_Input = Input;
+declare const index_d_Input: typeof Input;
+type index_d_PrefixType = PrefixType;
+type index_d_FormatFn = FormatFn;
+type index_d_SelectType = SelectType;
+type index_d_HoverType = HoverType;
+type index_d_BorderType = BorderType;
+type index_d_ColumnOptions = ColumnOptions;
+type index_d_DataTableOptions = DataTableOptions;
+type index_d_Column = Column;
+declare const index_d_Column: typeof Column;
+type index_d_DataTable = DataTable;
+declare const index_d_DataTable: typeof DataTable;
+type index_d_DataListOptions = DataListOptions;
+type index_d_DataList = DataList;
+declare const index_d_DataList: typeof DataList;
+type index_d_Rec<T> = Rec<T>;
+type index_d_DropdownConfig = DropdownConfig;
+type index_d_ActionConfig = ActionConfig;
+type index_d_ButtonConfig = ButtonConfig;
+type index_d_Menu = Menu;
+declare const index_d_Menu: typeof Menu;
+type index_d_MenuButtonOptions = MenuButtonOptions;
+type index_d_MenuButton = MenuButton;
+declare const index_d_MenuButton: typeof MenuButton;
+type index_d_MenubarOptions = MenubarOptions;
+type index_d_Menubar = Menubar;
+declare const index_d_Menubar: typeof Menubar;
+type index_d_SelectOptions = SelectOptions;
+type index_d_Select = Select;
+declare const index_d_Select: typeof Select;
+type index_d_NextType = NextType;
+type index_d_PromptChoice = PromptChoice;
 type index_d_PromptOptions = PromptOptions;
-declare const index_d_PromptScene: typeof PromptScene;
+type index_d_Prompt = Prompt;
+declare const index_d_Prompt: typeof Prompt;
+type index_d_ChoiceOptions = ChoiceOptions;
+type index_d_Choice = Choice;
+declare const index_d_Choice: typeof Choice;
+type index_d_Inquiry = Inquiry;
+declare const index_d_Inquiry: typeof Inquiry;
+type index_d_Builder = Builder;
+declare const index_d_Builder: typeof Builder;
 declare namespace index_d {
   export {
-    index_d_GridTarget as GridTarget,
-    index_d_Grid as Grid,
-    index_d_UISelectable as UISelectable,
-    index_d_MatchFn as MatchFn,
-    index_d_Selector as Selector,
-    index_d_compile as compile,
-    index_d_UIStyle as UIStyle,
-    index_d_StyleOptions as StyleOptions,
-    index_d_UIStylable as UIStylable,
-    index_d_StyleType as StyleType,
-    index_d_Style as Style,
-    index_d_makeStyle as makeStyle,
-    index_d_ComputedStyle as ComputedStyle,
-    index_d_Sheet as Sheet,
-    index_d_defaultStyle as defaultStyle,
-    index_d_AlertOptions as AlertOptions,
-    index_d_AlertScene as AlertScene,
-    index_d_ConfirmOptions as ConfirmOptions,
-    index_d_ConfirmScene as ConfirmScene,
+    index_d_DataValue as DataValue,
+    index_d_DataObject as DataObject,
+    index_d_DataItem as DataItem,
+    index_d_DataType as DataType,
+    index_d_EventCb as EventCb,
+    index_d_UpdatePosOpts as UpdatePosOpts,
+    index_d_SetParentOptions as SetParentOptions,
+    index_d_WidgetOpts as WidgetOpts,
+    index_d_PropType as PropType,
+    index_d_Widget as Widget,
+    index_d_alignChildren as alignChildren,
+    index_d_spaceChildren as spaceChildren,
+    index_d_wrapChildren as wrapChildren,
+    index_d_TextOptions as TextOptions,
+    index_d_Text as Text,
+    index_d_BorderOptions as BorderOptions,
+    index_d_Border as Border,
+    index_d_drawBorder as drawBorder,
+    index_d_ButtonOptions as ButtonOptions,
+    index_d_Button as Button,
+    index_d_PadInfo as PadInfo,
+    index_d_DialogOptions as DialogOptions,
+    index_d_toPadArray as toPadArray,
+    index_d_Dialog as Dialog,
+    index_d_AddDialogOptions as AddDialogOptions,
+    index_d_dialog as dialog,
+    index_d_FieldsetOptions as FieldsetOptions,
+    index_d_Fieldset as Fieldset,
+    index_d_FieldOptions as FieldOptions,
+    index_d_Field as Field,
+    index_d_OrderedListOptions as OrderedListOptions,
+    index_d_OrderedList as OrderedList,
+    index_d_UnorderedListOptions as UnorderedListOptions,
+    index_d_UnorderedList as UnorderedList,
+    index_d_InputOptions as InputOptions,
+    index_d_Input as Input,
+    index_d_PrefixType as PrefixType,
+    index_d_FormatFn as FormatFn,
+    index_d_SelectType as SelectType,
+    index_d_HoverType as HoverType,
+    index_d_BorderType as BorderType,
+    index_d_ColumnOptions as ColumnOptions,
+    index_d_DataTableOptions as DataTableOptions,
+    index_d_Column as Column,
+    index_d_DataTable as DataTable,
+    index_d_DataListOptions as DataListOptions,
+    index_d_DataList as DataList,
+    index_d_Rec as Rec,
+    index_d_DropdownConfig as DropdownConfig,
+    index_d_ActionConfig as ActionConfig,
+    index_d_ButtonConfig as ButtonConfig,
+    MenuOptions$1 as MenuOptions,
+    index_d_Menu as Menu,
+    index_d_MenuButtonOptions as MenuButtonOptions,
+    index_d_MenuButton as MenuButton,
+    index_d_MenubarOptions as MenubarOptions,
+    index_d_Menubar as Menubar,
+    index_d_SelectOptions as SelectOptions,
+    index_d_Select as Select,
+    index_d_NextType as NextType,
+    index_d_PromptChoice as PromptChoice,
     index_d_PromptOptions as PromptOptions,
-    index_d_PromptScene as PromptScene,
+    index_d_Prompt as Prompt,
+    index_d_ChoiceOptions as ChoiceOptions,
+    index_d_Choice as Choice,
+    index_d_Inquiry as Inquiry,
+    index_d_Builder as Builder,
   };
 }
 
-export { ERROR, FALSE, IDENTITY, IS_NONZERO, IS_ZERO, NOOP, ONE, TRUE, WARN, ZERO, index_d$4 as app, arrayDelete, arrayFindRight, arrayIncludesAll, arrayInsert, arrayNext, arrayNullify, arrayPrev, arrayRevEach, arraysIntersect, blob_d as blob, buffer_d as buffer, index_d$3 as canvas, clamp, index_d$8 as color, colors, config$1 as config, cosmetic, data, events_d as events, first, flag_d as flag, index_d$6 as fov, frequency_d as frequency, grid_d as grid, lerp, index_d$1 as light, list_d as list, message_d as message, nextIndex, object_d as object, path_d as path, prevIndex, queue_d as queue, random, range_d as range, rng_d as rng, scheduler_d as scheduler, index_d$2 as sprite, sprites, sum, index_d$7 as text, tween_d as tween, types_d as types, index_d as ui, index_d$5 as widget, xy_d as xy };
+export { ERROR, FALSE, IDENTITY, IS_NONZERO, IS_ZERO, NOOP, ONE, TRUE, WARN, ZERO, index_d$5 as app, arrayDelete, arrayFindRight, arrayIncludesAll, arrayInsert, arrayNext, arrayNullify, arrayPrev, arrayRevEach, arraysIntersect, blob_d as blob, buffer_d as buffer, index_d$4 as canvas, clamp, index_d$8 as color, colors, config$1 as config, cosmetic, data, events_d as events, first, flag_d as flag, index_d$6 as fov, frequency_d as frequency, grid_d as grid, lerp, index_d$2 as light, list_d as list, message_d as message, nextIndex, object_d as object, path_d as path, prevIndex, queue_d as queue, random, range_d as range, rng_d as rng, scheduler_d as scheduler, index_d$3 as sprite, sprites, sum, index_d$7 as text, tween_d as tween, types_d as types, index_d$1 as ui, index_d as widget, xy_d as xy };

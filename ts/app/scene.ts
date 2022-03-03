@@ -10,18 +10,19 @@ import { App } from './app';
 // import * as CANVAS from '../canvas';
 import { Tweens } from './tweens';
 import * as BUFFER from '../buffer';
-import * as STYLE from '../ui/style';
-import { Widget, UpdatePosOpts } from '../widget/widget';
-
-import { Builder } from '../widget/builder';
+import * as STYLE from './style';
+import { Widget, UpdatePosOpts } from './widget';
 
 export type SceneCallback = (this: Scene, ...args: any[]) => void;
+export type SceneMakeFn = (id: string, app: App) => Scene;
 
-export interface SceneOpts {
+export interface CreateOpts {
     bg?: COLOR.ColorBase;
 
     data?: Record<string, string>;
     styles?: STYLE.Sheet;
+
+    make?: SceneMakeFn;
 
     // add/remove from scene manager (app)
     create?: SceneCallback;
@@ -44,6 +45,10 @@ export interface SceneOpts {
 
     // other event handlers
     on?: Record<string, SceneCallback>;
+}
+
+export interface StartOpts {
+    [key: string]: any;
 }
 
 export interface ResumeOpts {
@@ -69,7 +74,6 @@ export interface SceneObj {
 export class Scene {
     id: string;
     app!: App;
-    build = new Builder(this);
 
     events = new EVENTS.Events(this);
     tweens = new Tweens();
@@ -95,20 +99,12 @@ export class Scene {
     bg: COLOR.Color = COLOR.BLACK;
     data: Record<string, any> = {};
 
-    constructor(id: string, opts: SceneOpts = {}) {
+    constructor(id: string, app: App) {
         this.id = id;
-        this.styles = opts.styles || new STYLE.Sheet();
-        opts.bg && (this.bg = COLOR.from(opts.bg));
-
-        if (opts.on) {
-            Object.entries(opts.on).forEach(([ev, fn]) => {
-                this.on(ev, fn);
-            });
-        }
-        Object.entries(opts).forEach(([ev, fn]) => {
-            if (typeof fn !== 'function') return;
-            this.on(ev, fn);
-        });
+        this.styles = new STYLE.Sheet();
+        this.app = app;
+        this.buffer = new BUFFER.Buffer(app.width, app.height);
+        this.styles.setParent(app.styles);
     }
 
     get width() {
@@ -130,15 +126,24 @@ export class Scene {
     }
 
     // GENERAL
-    create(app: App) {
-        this.app = app;
-        this.buffer = new BUFFER.Buffer(app.width, app.height);
-        this.styles.setParent(app.styles);
-        this.trigger('create', this.build);
+    create(opts: CreateOpts = {}) {
+        opts.bg && (this.bg = COLOR.from(opts.bg));
+
+        if (opts.on) {
+            Object.entries(opts.on).forEach(([ev, fn]) => {
+                this.on(ev, fn);
+            });
+        }
+        Object.entries(opts).forEach(([ev, fn]) => {
+            if (typeof fn !== 'function') return;
+            this.on(ev, fn);
+        });
+
+        this.trigger('create', opts);
     }
 
-    destroy() {
-        this.trigger('destroy');
+    destroy(data?: any) {
+        this.trigger('destroy', data);
         this.all.forEach((c) => c.destroy());
         this.children = [];
         this.all = [];
@@ -146,30 +151,20 @@ export class Scene {
         this.tweens.clear();
     }
 
-    start(data?: any) {
+    start(opts: StartOpts = {}) {
         this.stopped = false;
         this.timers.restart();
         this.events.restart();
         this.tweens.clear();
         this.buffer.nullify();
         this.needsDraw = true;
-        this.events.trigger('start', data);
+        this.events.trigger('start', opts);
     }
 
-    run(data?: any): Promise<any> {
+    run(data: StartOpts = {}) {
         this.app.scenes.pause();
         this.start(data);
         this.once('stop', () => this.app.scenes.resume());
-
-        return new Promise((resolve) => {
-            if (this.stopped) {
-                resolve(false);
-            } else {
-                this.once('stop', (d) => {
-                    resolve(d);
-                });
-            }
-        });
     }
 
     stop(data?: any) {

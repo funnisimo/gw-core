@@ -1,29 +1,55 @@
 // Tweeing API based on - http://tweenjs.github.io/tween.js/
+
+import * as EVENTS from './app/events';
 import * as Utils from './utils';
 
 export type AnyObj = Record<string, any>;
-export type TweenCb = (obj: AnyObj, dt: number) => void;
+export type TweenCb = (obj: AnyObj, dt: number) => any;
 export type TweenFinishCb = (obj: AnyObj, success: boolean) => any;
 
 export type EasingFn = (v: number) => number;
 export type InterpolateFn = (start: any, goal: any, pct: number) => any;
 
-export interface Animation {
-    isRunning(): boolean;
+export class BaseObj<T extends { update(t: number): void }> {
+    events = new EVENTS.Events(this);
+    children: T[] = [];
 
-    start(): void;
-    tick(dt: number): boolean;
-    stop(): void;
+    on(ev: string | string[], fn: EVENTS.CallbackFn): this {
+        this.events.on(ev, fn);
+        return this;
+    }
 
-    // gameTick(dt: number): boolean;
+    once(ev: string | string[], fn: EVENTS.CallbackFn): this {
+        this.events.once(ev, fn);
+        return this;
+    }
+
+    off(ev: string | string[], fn: EVENTS.CallbackFn): this {
+        this.events.off(ev, fn);
+        return this;
+    }
+
+    trigger(ev: string | string[], ...args: any[]): boolean {
+        return this.events.trigger(ev, ...args);
+    }
+
+    addChild(t: T): this {
+        this.children.push(t);
+        return this;
+    }
+
+    removeChild(t: T): this {
+        Utils.arrayDelete(this.children, t);
+        return this;
+    }
+
+    update(dt: number) {
+        this.children.forEach((c) => c.update(dt));
+        this.trigger('update', dt);
+    }
 }
 
-export interface Animator {
-    addAnimation(a: Animation): void;
-    removeAnimation(a: Animation): void;
-}
-
-export class Tween implements Animation {
+export class Tween extends BaseObj<Tween> {
     _obj: AnyObj;
 
     _repeat = 0;
@@ -41,40 +67,44 @@ export class Tween implements Animation {
     _goal: AnyObj = {};
     _start: AnyObj = {};
 
-    _startCb: TweenCb | null = null;
-    _updateCb: TweenCb | null = null;
-    _repeatCb: TweenCb | null = null;
-    _finishCb: TweenFinishCb | null = null;
-    _resolveCb: null | ((v?: any) => void) = null;
+    // _startCb: TweenCb | null = null;
+    // _updateCb: TweenCb | null = null;
+    // _repeatCb: TweenCb | null = null;
+    // _finishCb: TweenFinishCb | null = null;
 
     _easing: EasingFn = linear;
     _interpolate: InterpolateFn = interpolate;
 
     constructor(src: AnyObj) {
+        super();
         this._obj = src;
     }
 
     isRunning(): boolean {
-        return this._startTime > 0 || this._time < this._duration;
+        return (
+            this._startTime > 0 ||
+            this._time < this._duration ||
+            this.children.length > 0
+        );
     }
 
     onStart(cb: TweenCb): this {
-        this._startCb = cb;
+        this.on('start', cb);
         return this;
     }
 
     onUpdate(cb: TweenCb): this {
-        this._updateCb = cb;
+        this.on('update', cb);
         return this;
     }
 
     onRepeat(cb: TweenCb): this {
-        this._repeatCb = cb;
+        this.on('repeat', cb);
         return this;
     }
 
     onFinish(cb: TweenFinishCb): this {
-        this._finishCb = cb;
+        this.on('stop', cb);
         return this;
     }
 
@@ -132,40 +162,41 @@ export class Tween implements Animation {
         return this;
     }
 
-    start(): Promise<any> {
-        this._time = 0;
-        this._startTime = this._delay;
-        this._count = 0;
-        if (this._from) {
-            this._goal = {};
-            Object.keys(this._start).forEach(
-                (key) => (this._goal[key] = this._obj[key])
-            );
-            this._updateProperties(this._obj, this._start, this._goal, 0);
-        } else {
-            this._start = {};
-            Object.keys(this._goal).forEach(
-                (key) => (this._start[key] = this._obj[key])
-            );
+    start(animator?: { add: (tween: Tween) => void }): this {
+        if (this._time > 0) {
+            this._time = 0;
+            this._startTime = this._delay;
+            this._count = 0;
+            if (this._from) {
+                this._goal = {};
+                Object.keys(this._start).forEach(
+                    (key) => (this._goal[key] = this._obj[key])
+                );
+                this._updateProperties(this._obj, this._start, this._goal, 0);
+            } else {
+                this._start = {};
+                Object.keys(this._goal).forEach(
+                    (key) => (this._start[key] = this._obj[key])
+                );
+            }
         }
 
-        let p = new Promise((resolve) => {
-            this._resolveCb = resolve;
-        });
-
-        if (this._finishCb) {
-            const cb = this._finishCb;
-            p = p.then((success) => cb.call(this, this._obj, !!success));
+        if (animator) {
+            animator.add(this);
         }
-        return p;
+
+        return this;
     }
 
-    tick(dt: number): boolean {
-        if (!this.isRunning()) return false;
+    update(dt: number): void {
+        if (!this.isRunning()) return;
+
+        this.children.forEach((c) => c.update(dt));
+        this.children = this.children.filter((c) => c.isRunning());
 
         this._time += dt;
         if (this._startTime) {
-            if (this._startTime > this._time) return true;
+            if (this._startTime > this._time) return;
             this._time -= this._startTime;
             this._startTime = 0;
             if (this._count > 0) this._restart();
@@ -184,8 +215,8 @@ export class Tween implements Animation {
             pct
         );
 
-        if (madeChange && this._updateCb) {
-            this._updateCb.call(this, this._obj, pct);
+        if (madeChange) {
+            this.trigger('update', this._obj, pct);
         }
 
         if (this._time >= this._duration) {
@@ -199,11 +230,10 @@ export class Tween implements Animation {
                 if (!this._startTime) {
                     this._restart();
                 }
-            } else {
+            } else if (!this.isRunning()) {
                 this.stop(true);
             }
         }
-        return true;
     }
 
     _restart() {
@@ -214,13 +244,10 @@ export class Tween implements Animation {
             this._obj[key] = value;
         });
         if (this._count == 1) {
-            if (this._startCb) {
-                this._startCb.call(this, this._obj, 0);
-            }
-        } else if (this._repeatCb) {
-            this._repeatCb.call(this, this._obj, this._count);
-        } else if (this._updateCb) {
-            this._updateCb.call(this, this._obj, 0);
+            this.trigger('start', this._obj, 0);
+        } else {
+            this.trigger('repeat', this._obj, this._count) ||
+                this.trigger('update', this._obj, 0);
         }
     }
 
@@ -231,7 +258,7 @@ export class Tween implements Animation {
     stop(success = false): void {
         this._time = Number.MAX_SAFE_INTEGER;
         // if (this._finishCb) this._finishCb.call(this, this._obj, 1);
-        if (this._resolveCb) this._resolveCb(success);
+        this.trigger('stop', this._obj, success);
     }
 
     _updateProperties(

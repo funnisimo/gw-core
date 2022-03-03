@@ -441,10 +441,10 @@ export function make<T>(comps: CompList<T>): GameObj<T> {
             t: Tag | Tag[] | ((obj: GameObj) => T),
             f?: (obj: GameObj) => T
         ) {
-            if (typeof t === 'function' && f === undefined) {
+            if (typeof t === 'function') {
                 return this.get().forEach((obj) => t(obj));
-            } else if (typeof t === 'string' || Array.isArray(t)) {
-                return this.get(t).forEach((obj) => f!(obj));
+            } else if (typeof f === 'function') {
+                return this.get(t).forEach((obj) => f(obj));
             }
         },
 
@@ -452,14 +452,14 @@ export function make<T>(comps: CompList<T>): GameObj<T> {
             t: Tag | Tag[] | ((obj: GameObj) => T),
             f?: (obj: GameObj) => T
         ) {
-            if (typeof t === 'function' && f === undefined) {
+            if (typeof t === 'function') {
                 return this.get()
                     .reverse()
                     .forEach((obj) => t(obj));
-            } else if (typeof t === 'string' || Array.isArray(t)) {
+            } else if (typeof f === 'function') {
                 return this.get(t)
                     .reverse()
-                    .forEach((obj) => f!(obj));
+                    .forEach((obj) => f(obj));
             }
         },
 

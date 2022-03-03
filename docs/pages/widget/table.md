@@ -87,7 +87,7 @@ const app = GWU.app.make({ width: 100, height: 38, loop: LOOP, scene: true });
 SHOW(app);
 
 const scene = app.scene;
-const build = scene.build;
+const build = new GWU.widget.Builder(scene);
 
 scene.styles.add('td', { bg: 'blue', align: 'center' });
 scene.styles.add('th', { bg: 'white', fg: 'blue', align: 'center' });
@@ -106,7 +106,7 @@ const app = GWU.app.make({ width: 100, height: 38, loop: LOOP, scene: true });
 SHOW(app);
 
 const scene = app.scene;
-const build = scene.build;
+const build = new GWU.widget.Builder(scene);
 
 scene.styles.add('.center', { align: 'center' });
 scene.styles.add('th', { bg: 'white', fg: 'blue' });
@@ -149,7 +149,7 @@ const app = GWU.app.make({ width: 100, height: 38, loop: LOOP, scene: true });
 SHOW(app);
 
 const scene = app.scene;
-const build = scene.build;
+const build = new GWU.widget.Builder(scene);
 
 app.styles.add('td', { fg: 'green' });
 app.styles.add('td:hover', { bg: 'light_gray' });

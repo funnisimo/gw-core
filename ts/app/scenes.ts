@@ -1,48 +1,44 @@
 import * as UTILS from '../utils';
 import * as BUFFER from '../buffer';
-import { Scene, SceneOpts } from './scene';
+import { Scene, CreateOpts, StartOpts, SceneMakeFn } from './scene';
 import { App } from './app';
-import * as EVENTS from './events';
 import * as IO from '../app/io';
 import { PauseOpts } from '.';
-import { AlertScene } from '../ui/alert';
-import { ConfirmScene } from '../ui/confirm';
-import { PromptScene } from '../ui/prompt';
-import { MenuScene } from '../ui/menu';
+
+interface PendingInfo {
+    action: 'start' | 'stop' | 'run';
+    scene: Scene;
+    data: any;
+}
 
 export class Scenes {
     _app: App;
+    _config: Record<string, CreateOpts>;
     _scenes: Record<string, Scene> = {};
     _active: Scene[] = [];
+    _busy = false;
+    _pending: PendingInfo[] = [];
 
     constructor(gw: App) {
         this._app = gw;
-        this.install('alert', AlertScene);
-        this.install('confirm', ConfirmScene);
-        this.install('prompt', PromptScene);
-        this.install('menu', MenuScene);
+        this._config = Object.assign({}, scenes);
     }
 
-    install(id: string, opts: SceneOpts | EVENTS.CallbackFn | Scene) {
-        let scene: Scene;
-        if (opts instanceof Scene) {
-            scene = opts;
-        } else {
-            if (typeof opts === 'function') {
-                opts = { create: opts };
-            }
-            scene = new Scene(id, opts);
+    get isBusy() {
+        return this._busy;
+    }
+
+    add(id: string, opts: CreateOpts | SceneMakeFn) {
+        const current = this._config[id] || {};
+        if (typeof opts === 'function') {
+            opts = { make: opts };
         }
-        this._scenes[id] = scene;
-
-        scene.create(this._app);
-
-        scene.on('start', () => this._start(scene));
-        scene.on('stop', () => this._stop(scene));
+        Object.assign(current, opts);
+        this._config[id] = current;
     }
 
-    load(scenes: Record<string, SceneOpts>) {
-        Object.entries(scenes).forEach(([id, fns]) => this.install(id, fns));
+    load(scenes: Record<string, CreateOpts | SceneMakeFn>) {
+        Object.entries(scenes).forEach(([id, fns]) => this.add(id, fns));
     }
 
     get(): Scene;
@@ -58,17 +54,52 @@ export class Scenes {
         this._active.forEach((a) => a.trigger(ev, ...args));
     }
 
-    start(id: string | Scene, data?: any): Scene {
-        const scene = id instanceof Scene ? id : this._scenes[id];
-        if (!scene) throw new Error('Unknown scene:' + id);
-        scene.start(data);
+    _create(id: string, opts: CreateOpts = {}): Scene {
+        let cfg = this._config[id] || {};
+        const used = Object.assign({}, cfg, opts);
+
+        let scene: Scene;
+
+        if (used.make) {
+            scene = used.make(id, this._app);
+        } else {
+            scene = new Scene(id, this._app);
+        }
+
+        scene.on('start', () => this._start(scene));
+        scene.on('stop', () => this._stop(scene));
+        scene.create(used);
+
         return scene;
     }
 
-    run(id: string | Scene, data?: any): Promise<any> {
-        const scene = id instanceof Scene ? id : this._scenes[id];
-        if (!scene) throw new Error('Unknown scene:' + id);
-        return scene.run(data);
+    create(id: string, data: CreateOpts = {}): Scene {
+        if (id in this._scenes) {
+            console.log('Scene already created - ' + id);
+            return this._scenes[id];
+        }
+        return this._create(id, data);
+    }
+
+    start(id: string, data?: StartOpts): Scene {
+        let scene: Scene = this._scenes[id] || this._create(id, data);
+        if (this.isBusy) {
+            this._pending.push({ action: 'start', scene, data });
+        } else {
+            scene.start(data);
+        }
+        return scene;
+    }
+
+    run(id: string, data?: StartOpts): Scene {
+        let scene: Scene = this._scenes[id] || this._create(id, data);
+        if (this.isBusy) {
+            this._pending.push({ action: 'run', scene, data });
+        } else {
+            scene.run(data);
+        }
+
+        return scene;
     }
 
     _start(scene: Scene) {
@@ -76,20 +107,36 @@ export class Scenes {
     }
 
     stop(data?: any): void;
-    stop(id: string | Scene, data?: any): void;
-    stop(id?: string | Scene | any, data?: any): void {
+    stop(id: string, data?: any): void;
+    stop(id?: string | any, data?: any): void {
         if (typeof id === 'string') {
             const scene = this._scenes[id];
             if (!scene) throw new Error('Unknown scene:' + id);
-            scene.stop(data);
-        } else if (id instanceof Scene) {
-            id.stop(data);
+            id = scene;
+        }
+
+        if (id instanceof Scene) {
+            if (this.isBusy) {
+                this._pending.push({ action: 'stop', scene: id, data });
+            } else {
+                id.stop(data);
+            }
         } else {
-            this._active.forEach((s) => s.stop(id));
+            this._active.forEach((s) => this.stop(s.id, id));
         }
     }
     _stop(_scene: Scene) {
         this._active = this._active.filter((s) => s.isActive());
+    }
+
+    destroy(id: string, data?: any) {
+        const scene = this._scenes[id];
+        if (!scene) return;
+        if (scene.isActive()) {
+            scene.stop(data);
+        }
+        scene.destroy(data);
+        delete this._scenes[id];
     }
 
     pause(id: string, opts?: PauseOpts): void;
@@ -119,6 +166,7 @@ export class Scenes {
     // FRAME
 
     frameStart() {
+        this._busy = true;
         this._active.forEach((s) => s.frameStart());
     }
     input(ev: IO.Event) {
@@ -137,14 +185,30 @@ export class Scenes {
             s.draw(buffer);
         });
     }
-    frameEnd(buffer: BUFFER.Buffer) {
-        if (this._active.length) {
-            this._active.forEach((s) => s.frameEnd(buffer));
-        }
-    }
     frameDebug(buffer: BUFFER.Buffer) {
         if (this._active.length) {
             this._active.forEach((s) => s.frameDebug(buffer));
         }
     }
+    frameEnd(buffer: BUFFER.Buffer) {
+        if (this._active.length) {
+            this._active.forEach((s) => s.frameEnd(buffer));
+        }
+        this._busy = false;
+
+        for (let i = 0; i < this._pending.length; ++i) {
+            const todo = this._pending[i];
+            todo.scene[todo.action](todo.data);
+        }
+        this._pending.length = 0;
+    }
+}
+
+export const scenes: Record<string, CreateOpts> = {};
+
+export function installScene(id: string, scene: CreateOpts | SceneMakeFn) {
+    if (typeof scene === 'function') {
+        scene = { make: scene };
+    }
+    scenes[id] = scene;
 }

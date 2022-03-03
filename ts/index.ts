@@ -28,6 +28,6 @@ export * from './data';
 export * as blob from './blob';
 export * as light from './light';
 export * as tween from './tween';
-export * as ui from './ui';
-export * as widget from './widget';
+export * as ui from './scenes';
+export * as widget from './widgets';
 export * as app from './app';

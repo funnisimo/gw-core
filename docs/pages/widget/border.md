@@ -7,7 +7,7 @@ const app = GWU.app.make({ width: 60, height: 20, loop: LOOP, scene: true });
 SHOW(app);
 
 const scene = app.scene;
-const build = scene.build;
+const build = new GWU.widget.Builder(scene);
 
 // gives us inner dimensions of 9 x 3
 build.pos(5, 5).border({ width: 11, height: 5, fg: 'green' });

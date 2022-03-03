@@ -3,6 +3,8 @@
  * @module utils
  */
 
+import { default as _clamp } from 'lodash/clamp';
+
 export function NOOP() {}
 export function TRUE() {
     return true;
@@ -33,11 +35,13 @@ export function IS_NONZERO(x: number) {
  * @param max {Number} the maximum value
  * @returns {Number} the clamped value
  */
-export function clamp(v: number, min: number, max: number) {
-    if (v < min) return min;
-    if (v > max) return max;
-    return v;
-}
+export const clamp = _clamp;
+
+// export function clamp(v: number, min: number, max: number) {
+//     if (v < min) return min;
+//     if (v > max) return max;
+//     return v;
+// }
 
 export function lerp(from: number, to: number, pct: number) {
     if (pct > 1) pct = 1;

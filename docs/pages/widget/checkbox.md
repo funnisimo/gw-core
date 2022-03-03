@@ -7,7 +7,7 @@ const app = GWU.app.make({ width: 60, height: 20, loop: LOOP, scene: true });
 SHOW(app);
 
 const scene = app.scene;
-const build = scene.build;
+const build = new GWU.widget.Builder(scene);
 
 scene.styles.add('checkbox:hover', { fg: 'teal' });
 scene.styles.add('checkbox:focus', { fg: 'dark_teal' });

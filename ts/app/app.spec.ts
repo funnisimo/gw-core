@@ -7,6 +7,7 @@ import * as TEST from '../../test/utils';
 
 import * as APP from '../app';
 import * as CANVAS from '../canvas';
+import * as BUILD from '../widgets/builder';
 
 describe('App', () => {
     let canvas: CANVAS.Canvas;
@@ -26,7 +27,8 @@ describe('App', () => {
             start: false,
             scene: {
                 bg: 'blue',
-                create(b) {
+                create() {
+                    const b = new BUILD.Builder(this);
                     b.pos(1, 1).text('Test');
                 },
                 on: {

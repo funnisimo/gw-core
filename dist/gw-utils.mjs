@@ -1,3 +1,392 @@
+var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
+
+/**
+ * The base implementation of `_.clamp` which doesn't coerce arguments.
+ *
+ * @private
+ * @param {number} number The number to clamp.
+ * @param {number} [lower] The lower bound.
+ * @param {number} upper The upper bound.
+ * @returns {number} Returns the clamped number.
+ */
+
+function baseClamp$1(number, lower, upper) {
+  if (number === number) {
+    if (upper !== undefined) {
+      number = number <= upper ? number : upper;
+    }
+    if (lower !== undefined) {
+      number = number >= lower ? number : lower;
+    }
+  }
+  return number;
+}
+
+var _baseClamp = baseClamp$1;
+
+/** Used to match a single whitespace character. */
+
+var reWhitespace = /\s/;
+
+/**
+ * Used by `_.trim` and `_.trimEnd` to get the index of the last non-whitespace
+ * character of `string`.
+ *
+ * @private
+ * @param {string} string The string to inspect.
+ * @returns {number} Returns the index of the last non-whitespace character.
+ */
+function trimmedEndIndex$1(string) {
+  var index = string.length;
+
+  while (index-- && reWhitespace.test(string.charAt(index))) {}
+  return index;
+}
+
+var _trimmedEndIndex = trimmedEndIndex$1;
+
+var trimmedEndIndex = _trimmedEndIndex;
+
+/** Used to match leading whitespace. */
+var reTrimStart = /^\s+/;
+
+/**
+ * The base implementation of `_.trim`.
+ *
+ * @private
+ * @param {string} string The string to trim.
+ * @returns {string} Returns the trimmed string.
+ */
+function baseTrim$1(string) {
+  return string
+    ? string.slice(0, trimmedEndIndex(string) + 1).replace(reTrimStart, '')
+    : string;
+}
+
+var _baseTrim = baseTrim$1;
+
+/**
+ * Checks if `value` is the
+ * [language type](http://www.ecma-international.org/ecma-262/7.0/#sec-ecmascript-language-types)
+ * of `Object`. (e.g. arrays, functions, objects, regexes, `new Number(0)`, and `new String('')`)
+ *
+ * @static
+ * @memberOf _
+ * @since 0.1.0
+ * @category Lang
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is an object, else `false`.
+ * @example
+ *
+ * _.isObject({});
+ * // => true
+ *
+ * _.isObject([1, 2, 3]);
+ * // => true
+ *
+ * _.isObject(_.noop);
+ * // => true
+ *
+ * _.isObject(null);
+ * // => false
+ */
+
+function isObject$3(value) {
+  var type = typeof value;
+  return value != null && (type == 'object' || type == 'function');
+}
+
+var isObject_1 = isObject$3;
+
+/** Detect free variable `global` from Node.js. */
+
+var freeGlobal$1 = typeof commonjsGlobal == 'object' && commonjsGlobal && commonjsGlobal.Object === Object && commonjsGlobal;
+
+var _freeGlobal = freeGlobal$1;
+
+var freeGlobal = _freeGlobal;
+
+/** Detect free variable `self`. */
+var freeSelf = typeof self == 'object' && self && self.Object === Object && self;
+
+/** Used as a reference to the global object. */
+var root$3 = freeGlobal || freeSelf || Function('return this')();
+
+var _root = root$3;
+
+var root$2 = _root;
+
+/** Built-in value references. */
+var Symbol$3 = root$2.Symbol;
+
+var _Symbol = Symbol$3;
+
+var Symbol$2 = _Symbol;
+
+/** Used for built-in method references. */
+var objectProto$4 = Object.prototype;
+
+/** Used to check objects for own properties. */
+var hasOwnProperty$3 = objectProto$4.hasOwnProperty;
+
+/**
+ * Used to resolve the
+ * [`toStringTag`](http://ecma-international.org/ecma-262/7.0/#sec-object.prototype.tostring)
+ * of values.
+ */
+var nativeObjectToString$1 = objectProto$4.toString;
+
+/** Built-in value references. */
+var symToStringTag$1 = Symbol$2 ? Symbol$2.toStringTag : undefined;
+
+/**
+ * A specialized version of `baseGetTag` which ignores `Symbol.toStringTag` values.
+ *
+ * @private
+ * @param {*} value The value to query.
+ * @returns {string} Returns the raw `toStringTag`.
+ */
+function getRawTag$1(value) {
+  var isOwn = hasOwnProperty$3.call(value, symToStringTag$1),
+      tag = value[symToStringTag$1];
+
+  try {
+    value[symToStringTag$1] = undefined;
+    var unmasked = true;
+  } catch (e) {}
+
+  var result = nativeObjectToString$1.call(value);
+  if (unmasked) {
+    if (isOwn) {
+      value[symToStringTag$1] = tag;
+    } else {
+      delete value[symToStringTag$1];
+    }
+  }
+  return result;
+}
+
+var _getRawTag = getRawTag$1;
+
+/** Used for built-in method references. */
+
+var objectProto$3 = Object.prototype;
+
+/**
+ * Used to resolve the
+ * [`toStringTag`](http://ecma-international.org/ecma-262/7.0/#sec-object.prototype.tostring)
+ * of values.
+ */
+var nativeObjectToString = objectProto$3.toString;
+
+/**
+ * Converts `value` to a string using `Object.prototype.toString`.
+ *
+ * @private
+ * @param {*} value The value to convert.
+ * @returns {string} Returns the converted string.
+ */
+function objectToString$1(value) {
+  return nativeObjectToString.call(value);
+}
+
+var _objectToString = objectToString$1;
+
+var Symbol$1 = _Symbol,
+    getRawTag = _getRawTag,
+    objectToString = _objectToString;
+
+/** `Object#toString` result references. */
+var nullTag = '[object Null]',
+    undefinedTag = '[object Undefined]';
+
+/** Built-in value references. */
+var symToStringTag = Symbol$1 ? Symbol$1.toStringTag : undefined;
+
+/**
+ * The base implementation of `getTag` without fallbacks for buggy environments.
+ *
+ * @private
+ * @param {*} value The value to query.
+ * @returns {string} Returns the `toStringTag`.
+ */
+function baseGetTag$2(value) {
+  if (value == null) {
+    return value === undefined ? undefinedTag : nullTag;
+  }
+  return (symToStringTag && symToStringTag in Object(value))
+    ? getRawTag(value)
+    : objectToString(value);
+}
+
+var _baseGetTag = baseGetTag$2;
+
+/**
+ * Checks if `value` is object-like. A value is object-like if it's not `null`
+ * and has a `typeof` result of "object".
+ *
+ * @static
+ * @memberOf _
+ * @since 4.0.0
+ * @category Lang
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is object-like, else `false`.
+ * @example
+ *
+ * _.isObjectLike({});
+ * // => true
+ *
+ * _.isObjectLike([1, 2, 3]);
+ * // => true
+ *
+ * _.isObjectLike(_.noop);
+ * // => false
+ *
+ * _.isObjectLike(null);
+ * // => false
+ */
+
+function isObjectLike$1(value) {
+  return value != null && typeof value == 'object';
+}
+
+var isObjectLike_1 = isObjectLike$1;
+
+var baseGetTag$1 = _baseGetTag,
+    isObjectLike = isObjectLike_1;
+
+/** `Object#toString` result references. */
+var symbolTag = '[object Symbol]';
+
+/**
+ * Checks if `value` is classified as a `Symbol` primitive or object.
+ *
+ * @static
+ * @memberOf _
+ * @since 4.0.0
+ * @category Lang
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is a symbol, else `false`.
+ * @example
+ *
+ * _.isSymbol(Symbol.iterator);
+ * // => true
+ *
+ * _.isSymbol('abc');
+ * // => false
+ */
+function isSymbol$4(value) {
+  return typeof value == 'symbol' ||
+    (isObjectLike(value) && baseGetTag$1(value) == symbolTag);
+}
+
+var isSymbol_1 = isSymbol$4;
+
+var baseTrim = _baseTrim,
+    isObject$2 = isObject_1,
+    isSymbol$3 = isSymbol_1;
+
+/** Used as references for various `Number` constants. */
+var NAN = 0 / 0;
+
+/** Used to detect bad signed hexadecimal string values. */
+var reIsBadHex = /^[-+]0x[0-9a-f]+$/i;
+
+/** Used to detect binary string values. */
+var reIsBinary = /^0b[01]+$/i;
+
+/** Used to detect octal string values. */
+var reIsOctal = /^0o[0-7]+$/i;
+
+/** Built-in method references without a dependency on `root`. */
+var freeParseInt = parseInt;
+
+/**
+ * Converts `value` to a number.
+ *
+ * @static
+ * @memberOf _
+ * @since 4.0.0
+ * @category Lang
+ * @param {*} value The value to process.
+ * @returns {number} Returns the number.
+ * @example
+ *
+ * _.toNumber(3.2);
+ * // => 3.2
+ *
+ * _.toNumber(Number.MIN_VALUE);
+ * // => 5e-324
+ *
+ * _.toNumber(Infinity);
+ * // => Infinity
+ *
+ * _.toNumber('3.2');
+ * // => 3.2
+ */
+function toNumber$1(value) {
+  if (typeof value == 'number') {
+    return value;
+  }
+  if (isSymbol$3(value)) {
+    return NAN;
+  }
+  if (isObject$2(value)) {
+    var other = typeof value.valueOf == 'function' ? value.valueOf() : value;
+    value = isObject$2(other) ? (other + '') : other;
+  }
+  if (typeof value != 'string') {
+    return value === 0 ? value : +value;
+  }
+  value = baseTrim(value);
+  var isBinary = reIsBinary.test(value);
+  return (isBinary || reIsOctal.test(value))
+    ? freeParseInt(value.slice(2), isBinary ? 2 : 8)
+    : (reIsBadHex.test(value) ? NAN : +value);
+}
+
+var toNumber_1 = toNumber$1;
+
+var baseClamp = _baseClamp,
+    toNumber = toNumber_1;
+
+/**
+ * Clamps `number` within the inclusive `lower` and `upper` bounds.
+ *
+ * @static
+ * @memberOf _
+ * @since 4.0.0
+ * @category Number
+ * @param {number} number The number to clamp.
+ * @param {number} [lower] The lower bound.
+ * @param {number} upper The upper bound.
+ * @returns {number} Returns the clamped number.
+ * @example
+ *
+ * _.clamp(-10, -5, 5);
+ * // => -5
+ *
+ * _.clamp(10, -5, 5);
+ * // => 5
+ */
+function clamp$1(number, lower, upper) {
+  if (upper === undefined) {
+    upper = lower;
+    lower = undefined;
+  }
+  if (upper !== undefined) {
+    upper = toNumber(upper);
+    upper = upper === upper ? upper : 0;
+  }
+  if (lower !== undefined) {
+    lower = toNumber(lower);
+    lower = lower === lower ? lower : 0;
+  }
+  return baseClamp(toNumber(number), lower, upper);
+}
+
+var clamp_1 = clamp$1;
+
 /**
  * GW.utils
  * @module utils
@@ -31,13 +420,12 @@ function IS_NONZERO(x) {
  * @param max {Number} the maximum value
  * @returns {Number} the clamped value
  */
-function clamp(v, min, max) {
-    if (v < min)
-        return min;
-    if (v > max)
-        return max;
-    return v;
-}
+const clamp = clamp_1;
+// export function clamp(v: number, min: number, max: number) {
+//     if (v < min) return min;
+//     if (v > max) return max;
+//     return v;
+// }
 function lerp(from, to, pct) {
     if (pct > 1)
         pct = 1;
@@ -618,54 +1006,54 @@ function arcCount(x, y, testFn) {
 }
 
 var xy = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    DIRS: DIRS$2,
-    NO_DIRECTION: NO_DIRECTION,
-    UP: UP,
-    RIGHT: RIGHT,
-    DOWN: DOWN,
-    LEFT: LEFT,
-    RIGHT_UP: RIGHT_UP,
-    RIGHT_DOWN: RIGHT_DOWN,
-    LEFT_DOWN: LEFT_DOWN,
-    LEFT_UP: LEFT_UP,
-    CLOCK_DIRS: CLOCK_DIRS,
-    isLoc: isLoc,
-    isXY: isXY,
-    x: x,
-    y: y,
-    contains: contains,
-    Bounds: Bounds,
-    copy: copy,
-    addTo: addTo,
-    add: add$1,
-    equalsXY: equalsXY,
-    lerpXY: lerpXY,
-    eachNeighbor: eachNeighbor,
-    eachNeighborAsync: eachNeighborAsync,
-    matchingNeighbor: matchingNeighbor,
-    straightDistanceBetween: straightDistanceBetween,
-    maxAxisFromTo: maxAxisFromTo,
-    maxAxisBetween: maxAxisBetween,
-    distanceBetween: distanceBetween,
-    distanceFromTo: distanceFromTo,
-    calcRadius: calcRadius,
-    dirBetween: dirBetween,
-    dirFromTo: dirFromTo,
-    dirIndex: dirIndex,
-    isOppositeDir: isOppositeDir,
-    isSameDir: isSameDir,
-    dirSpread: dirSpread,
-    stepFromTo: stepFromTo,
-    forLine: forLine,
-    forLineBetween: forLineBetween,
-    forLineFromTo: forLineFromTo,
-    getLine: getLine,
-    getLineThru: getLineThru,
-    forCircle: forCircle,
-    forRect: forRect,
-    forBorder: forBorder,
-    arcCount: arcCount
+	__proto__: null,
+	DIRS: DIRS$2,
+	NO_DIRECTION: NO_DIRECTION,
+	UP: UP,
+	RIGHT: RIGHT,
+	DOWN: DOWN,
+	LEFT: LEFT,
+	RIGHT_UP: RIGHT_UP,
+	RIGHT_DOWN: RIGHT_DOWN,
+	LEFT_DOWN: LEFT_DOWN,
+	LEFT_UP: LEFT_UP,
+	CLOCK_DIRS: CLOCK_DIRS,
+	isLoc: isLoc,
+	isXY: isXY,
+	x: x,
+	y: y,
+	contains: contains,
+	Bounds: Bounds,
+	copy: copy,
+	addTo: addTo,
+	add: add$1,
+	equalsXY: equalsXY,
+	lerpXY: lerpXY,
+	eachNeighbor: eachNeighbor,
+	eachNeighborAsync: eachNeighborAsync,
+	matchingNeighbor: matchingNeighbor,
+	straightDistanceBetween: straightDistanceBetween,
+	maxAxisFromTo: maxAxisFromTo,
+	maxAxisBetween: maxAxisBetween,
+	distanceBetween: distanceBetween,
+	distanceFromTo: distanceFromTo,
+	calcRadius: calcRadius,
+	dirBetween: dirBetween,
+	dirFromTo: dirFromTo,
+	dirIndex: dirIndex,
+	isOppositeDir: isOppositeDir,
+	isSameDir: isSameDir,
+	dirSpread: dirSpread,
+	stepFromTo: stepFromTo,
+	forLine: forLine,
+	forLineBetween: forLineBetween,
+	forLineFromTo: forLineFromTo,
+	getLine: getLine,
+	getLineThru: getLineThru,
+	forCircle: forCircle,
+	forRect: forRect,
+	forBorder: forBorder,
+	arcCount: arcCount
 });
 
 // CHAIN
@@ -787,21 +1175,19 @@ function every(root, cb) {
 }
 
 var list = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    length: length$1,
-    at: at,
-    includes: includes,
-    forEach: forEach,
-    push: push,
-    remove: remove,
-    find: find,
-    insert: insert,
-    reduce: reduce,
-    some: some,
-    every: every
+	__proto__: null,
+	length: length$1,
+	at: at,
+	includes: includes,
+	forEach: forEach,
+	push: push,
+	remove: remove,
+	find: find,
+	insert: insert,
+	reduce: reduce,
+	some: some,
+	every: every
 });
-
-var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
 
 /**
  * Checks if `value` is classified as an `Array` object.
@@ -830,190 +1216,6 @@ var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof win
 var isArray$3 = Array.isArray;
 
 var isArray_1 = isArray$3;
-
-/** Detect free variable `global` from Node.js. */
-
-var freeGlobal$1 = typeof commonjsGlobal == 'object' && commonjsGlobal && commonjsGlobal.Object === Object && commonjsGlobal;
-
-var _freeGlobal = freeGlobal$1;
-
-var freeGlobal = _freeGlobal;
-
-/** Detect free variable `self`. */
-var freeSelf = typeof self == 'object' && self && self.Object === Object && self;
-
-/** Used as a reference to the global object. */
-var root$3 = freeGlobal || freeSelf || Function('return this')();
-
-var _root = root$3;
-
-var root$2 = _root;
-
-/** Built-in value references. */
-var Symbol$3 = root$2.Symbol;
-
-var _Symbol = Symbol$3;
-
-var Symbol$2 = _Symbol;
-
-/** Used for built-in method references. */
-var objectProto$4 = Object.prototype;
-
-/** Used to check objects for own properties. */
-var hasOwnProperty$3 = objectProto$4.hasOwnProperty;
-
-/**
- * Used to resolve the
- * [`toStringTag`](http://ecma-international.org/ecma-262/7.0/#sec-object.prototype.tostring)
- * of values.
- */
-var nativeObjectToString$1 = objectProto$4.toString;
-
-/** Built-in value references. */
-var symToStringTag$1 = Symbol$2 ? Symbol$2.toStringTag : undefined;
-
-/**
- * A specialized version of `baseGetTag` which ignores `Symbol.toStringTag` values.
- *
- * @private
- * @param {*} value The value to query.
- * @returns {string} Returns the raw `toStringTag`.
- */
-function getRawTag$1(value) {
-  var isOwn = hasOwnProperty$3.call(value, symToStringTag$1),
-      tag = value[symToStringTag$1];
-
-  try {
-    value[symToStringTag$1] = undefined;
-    var unmasked = true;
-  } catch (e) {}
-
-  var result = nativeObjectToString$1.call(value);
-  if (unmasked) {
-    if (isOwn) {
-      value[symToStringTag$1] = tag;
-    } else {
-      delete value[symToStringTag$1];
-    }
-  }
-  return result;
-}
-
-var _getRawTag = getRawTag$1;
-
-/** Used for built-in method references. */
-
-var objectProto$3 = Object.prototype;
-
-/**
- * Used to resolve the
- * [`toStringTag`](http://ecma-international.org/ecma-262/7.0/#sec-object.prototype.tostring)
- * of values.
- */
-var nativeObjectToString = objectProto$3.toString;
-
-/**
- * Converts `value` to a string using `Object.prototype.toString`.
- *
- * @private
- * @param {*} value The value to convert.
- * @returns {string} Returns the converted string.
- */
-function objectToString$1(value) {
-  return nativeObjectToString.call(value);
-}
-
-var _objectToString = objectToString$1;
-
-var Symbol$1 = _Symbol,
-    getRawTag = _getRawTag,
-    objectToString = _objectToString;
-
-/** `Object#toString` result references. */
-var nullTag = '[object Null]',
-    undefinedTag = '[object Undefined]';
-
-/** Built-in value references. */
-var symToStringTag = Symbol$1 ? Symbol$1.toStringTag : undefined;
-
-/**
- * The base implementation of `getTag` without fallbacks for buggy environments.
- *
- * @private
- * @param {*} value The value to query.
- * @returns {string} Returns the `toStringTag`.
- */
-function baseGetTag$2(value) {
-  if (value == null) {
-    return value === undefined ? undefinedTag : nullTag;
-  }
-  return (symToStringTag && symToStringTag in Object(value))
-    ? getRawTag(value)
-    : objectToString(value);
-}
-
-var _baseGetTag = baseGetTag$2;
-
-/**
- * Checks if `value` is object-like. A value is object-like if it's not `null`
- * and has a `typeof` result of "object".
- *
- * @static
- * @memberOf _
- * @since 4.0.0
- * @category Lang
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is object-like, else `false`.
- * @example
- *
- * _.isObjectLike({});
- * // => true
- *
- * _.isObjectLike([1, 2, 3]);
- * // => true
- *
- * _.isObjectLike(_.noop);
- * // => false
- *
- * _.isObjectLike(null);
- * // => false
- */
-
-function isObjectLike$1(value) {
-  return value != null && typeof value == 'object';
-}
-
-var isObjectLike_1 = isObjectLike$1;
-
-var baseGetTag$1 = _baseGetTag,
-    isObjectLike = isObjectLike_1;
-
-/** `Object#toString` result references. */
-var symbolTag = '[object Symbol]';
-
-/**
- * Checks if `value` is classified as a `Symbol` primitive or object.
- *
- * @static
- * @memberOf _
- * @since 4.0.0
- * @category Lang
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is a symbol, else `false`.
- * @example
- *
- * _.isSymbol(Symbol.iterator);
- * // => true
- *
- * _.isSymbol('abc');
- * // => false
- */
-function isSymbol$3(value) {
-  return typeof value == 'symbol' ||
-    (isObjectLike(value) && baseGetTag$1(value) == symbolTag);
-}
-
-var isSymbol_1 = isSymbol$3;
 
 var isArray$2 = isArray_1,
     isSymbol$2 = isSymbol_1;
@@ -1044,39 +1246,6 @@ function isKey$1(value, object) {
 }
 
 var _isKey = isKey$1;
-
-/**
- * Checks if `value` is the
- * [language type](http://www.ecma-international.org/ecma-262/7.0/#sec-ecmascript-language-types)
- * of `Object`. (e.g. arrays, functions, objects, regexes, `new Number(0)`, and `new String('')`)
- *
- * @static
- * @memberOf _
- * @since 0.1.0
- * @category Lang
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is an object, else `false`.
- * @example
- *
- * _.isObject({});
- * // => true
- *
- * _.isObject([1, 2, 3]);
- * // => true
- *
- * _.isObject(_.noop);
- * // => true
- *
- * _.isObject(null);
- * // => false
- */
-
-function isObject$2(value) {
-  var type = typeof value;
-  return value != null && (type == 'object' || type == 'function');
-}
-
-var isObject_1 = isObject$2;
 
 var baseGetTag = _baseGetTag,
     isObject$1 = isObject_1;
@@ -2306,19 +2475,19 @@ function firstOpt(field, ...args) {
 }
 
 var object = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    getValue: getValue,
-    copyObject: copyObject,
-    assignObject: assignObject,
-    assignOmitting: assignOmitting,
-    setDefault: setDefault,
-    setDefaults: setDefaults,
-    setOptions: setOptions,
-    kindDefaults: kindDefaults,
-    pick: pick,
-    clearObject: clearObject,
-    getOpt: getOpt,
-    firstOpt: firstOpt
+	__proto__: null,
+	getValue: getValue,
+	copyObject: copyObject,
+	assignObject: assignObject,
+	assignOmitting: assignOmitting,
+	setDefault: setDefault,
+	setDefaults: setDefaults,
+	setOptions: setOptions,
+	kindDefaults: kindDefaults,
+	pick: pick,
+	clearObject: clearObject,
+	getOpt: getOpt,
+	firstOpt: firstOpt
 });
 
 const DIRS$1 = DIRS$2;
@@ -2361,7 +2530,7 @@ function _formatGridValue(v) {
         return '#';
     }
 }
-class Grid$1 extends Array {
+class Grid extends Array {
     constructor(w, h, v) {
         super(w);
         const grid = this;
@@ -2684,7 +2853,7 @@ const stats = {
     create: 0,
     free: 0,
 };
-class NumGrid extends Grid$1 {
+class NumGrid extends Grid {
     constructor(w, h, v = 0) {
         super(w, h, v);
     }
@@ -2882,7 +3051,7 @@ function make$c(w, h, v) {
         return new NumGrid(w, h, 0);
     if (typeof v === 'number')
         return new NumGrid(w, h, v);
-    return new Grid$1(w, h, v);
+    return new Grid(w, h, v);
 }
 function offsetZip(destGrid, srcGrid, srcToDestX, srcToDestY, value) {
     const fn = typeof value === 'function'
@@ -2912,17 +3081,17 @@ function unite(onto, a, b) {
 }
 
 var grid = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    makeArray: makeArray,
-    Grid: Grid$1,
-    stats: stats,
-    NumGrid: NumGrid,
-    alloc: alloc,
-    free: free,
-    make: make$c,
-    offsetZip: offsetZip,
-    intersection: intersection,
-    unite: unite
+	__proto__: null,
+	makeArray: makeArray,
+	Grid: Grid,
+	stats: stats,
+	NumGrid: NumGrid,
+	alloc: alloc,
+	free: free,
+	make: make$c,
+	offsetZip: offsetZip,
+	intersection: intersection,
+	unite: unite
 });
 
 /**
@@ -3227,13 +3396,13 @@ function make$b(seed) {
 }
 
 var rng = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    Alea: Alea,
-    configure: configure$1,
-    Random: Random,
-    random: random,
-    cosmetic: cosmetic,
-    make: make$b
+	__proto__: null,
+	Alea: Alea,
+	configure: configure$1,
+	Random: Random,
+	random: random,
+	cosmetic: cosmetic,
+	make: make$b
 });
 
 class Range {
@@ -3340,12 +3509,12 @@ function value(base) {
 }
 
 var range = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    Range: Range,
-    make: make$a,
-    from: from$4,
-    asFn: asFn,
-    value: value
+	__proto__: null,
+	Range: Range,
+	make: make$a,
+	from: from$4,
+	asFn: asFn,
+	value: value
 });
 
 ///////////////////////////////////
@@ -3443,11 +3612,11 @@ function make$9(obj) {
 }
 
 var flag = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    fl: fl,
-    toString: toString,
-    from: from$3,
-    make: make$9
+	__proto__: null,
+	fl: fl,
+	toString: toString,
+	from: from$3,
+	make: make$9
 });
 
 class AsyncQueue {
@@ -3502,8 +3671,8 @@ class AsyncQueue {
 }
 
 var queue = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    AsyncQueue: AsyncQueue
+	__proto__: null,
+	AsyncQueue: AsyncQueue
 });
 
 // function toColorInt(r: number, g: number, b: number, base256: boolean) {
@@ -4029,24 +4198,24 @@ installSpread('silver', [75, 75, 75]);
 installSpread('gold', [100, 85, 0]);
 
 var index$8 = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    colors: colors,
-    Color: Color,
-    fromArray: fromArray,
-    fromCss: fromCss,
-    fromName: fromName,
-    fromNumber: fromNumber,
-    make: make$8,
-    from: from$2,
-    separate: separate,
-    relativeLuminance: relativeLuminance,
-    distance: distance,
-    smoothScalar: smoothScalar,
-    install: install$3,
-    installSpread: installSpread,
-    NONE: NONE,
-    BLACK: BLACK,
-    WHITE: WHITE
+	__proto__: null,
+	colors: colors,
+	Color: Color,
+	fromArray: fromArray,
+	fromCss: fromCss,
+	fromName: fromName,
+	fromNumber: fromNumber,
+	make: make$8,
+	from: from$2,
+	separate: separate,
+	relativeLuminance: relativeLuminance,
+	distance: distance,
+	smoothScalar: smoothScalar,
+	install: install$3,
+	installSpread: installSpread,
+	NONE: NONE,
+	BLACK: BLACK,
+	WHITE: WHITE
 });
 
 class Mixer {
@@ -5229,34 +5398,34 @@ function configure(opts = {}) {
 }
 
 var index$7 = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    configure: configure,
-    compile: compile$1,
-    apply: apply,
-    eachChar: eachChar,
-    wordWrap: wordWrap,
-    splitIntoLines: splitIntoLines,
-    addHelper: addHelper,
-    options: options,
-    length: length,
-    advanceChars: advanceChars,
-    findChar: findChar,
-    firstChar: firstChar,
-    startsWith: startsWith,
-    padStart: padStart,
-    padEnd: padEnd,
-    center: center,
-    truncate: truncate,
-    capitalize: capitalize,
-    removeColors: removeColors,
-    spliceRaw: spliceRaw,
-    hash: hash,
-    splitArgs: splitArgs,
-    toSingularVerb: toSingularVerb,
-    toPluralVerb: toPluralVerb,
-    toSingularNoun: toSingularNoun,
-    toPluralNoun: toPluralNoun,
-    toQuantity: toQuantity
+	__proto__: null,
+	configure: configure,
+	compile: compile$1,
+	apply: apply,
+	eachChar: eachChar,
+	wordWrap: wordWrap,
+	splitIntoLines: splitIntoLines,
+	addHelper: addHelper,
+	options: options,
+	length: length,
+	advanceChars: advanceChars,
+	findChar: findChar,
+	firstChar: firstChar,
+	startsWith: startsWith,
+	padStart: padStart,
+	padEnd: padEnd,
+	center: center,
+	truncate: truncate,
+	capitalize: capitalize,
+	removeColors: removeColors,
+	spliceRaw: spliceRaw,
+	hash: hash,
+	splitArgs: splitArgs,
+	toSingularVerb: toSingularVerb,
+	toPluralVerb: toPluralVerb,
+	toSingularNoun: toSingularNoun,
+	toPluralNoun: toPluralNoun,
+	toQuantity: toQuantity
 });
 
 class BufferBase {
@@ -5541,10 +5710,10 @@ function make$7(...args) {
 }
 
 var buffer = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    BufferBase: BufferBase,
-    Buffer: Buffer$1,
-    make: make$7
+	__proto__: null,
+	BufferBase: BufferBase,
+	Buffer: Buffer$1,
+	make: make$7
 });
 
 var FovFlags;
@@ -6094,10 +6263,10 @@ class FovSystem {
 }
 
 var index$6 = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    get FovFlags () { return FovFlags; },
-    FOV: FOV,
-    FovSystem: FovSystem
+	__proto__: null,
+	get FovFlags () { return FovFlags; },
+	FOV: FOV,
+	FovSystem: FovSystem
 });
 
 const FORBIDDEN = -1;
@@ -6432,17 +6601,17 @@ function getPath(distanceMap, originX, originY, isBlocked, eightWays = false) {
 }
 
 var path = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    FORBIDDEN: FORBIDDEN,
-    OBSTRUCTION: OBSTRUCTION,
-    AVOIDED: AVOIDED,
-    OK: OK,
-    NO_PATH: NO_PATH,
-    calculateDistances: calculateDistances,
-    rescan: rescan,
-    nextStep: nextStep,
-    getClosestValidLocation: getClosestValidLocation,
-    getPath: getPath
+	__proto__: null,
+	FORBIDDEN: FORBIDDEN,
+	OBSTRUCTION: OBSTRUCTION,
+	AVOIDED: AVOIDED,
+	OK: OK,
+	NO_PATH: NO_PATH,
+	calculateDistances: calculateDistances,
+	rescan: rescan,
+	nextStep: nextStep,
+	getClosestValidLocation: getClosestValidLocation,
+	getPath: getPath
 });
 
 /**
@@ -6605,9 +6774,9 @@ class EventEmitter {
 }
 
 var events = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    EventListener: EventListener,
-    EventEmitter: EventEmitter
+	__proto__: null,
+	EventListener: EventListener,
+	EventEmitter: EventEmitter
 });
 
 function make$6(v) {
@@ -6662,8 +6831,8 @@ function make$6(v) {
 }
 
 var frequency = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    make: make$6
+	__proto__: null,
+	make: make$6
 });
 
 class Scheduler {
@@ -6737,8 +6906,8 @@ class Scheduler {
 }
 
 var scheduler = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    Scheduler: Scheduler
+	__proto__: null,
+	Scheduler: Scheduler
 });
 
 class Glyphs {
@@ -7995,19 +8164,19 @@ function make$5(...args) {
 }
 
 var index$5 = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    Glyphs: Glyphs,
-    initGlyphs: initGlyphs,
-    Layer: Layer,
-    Buffer: Buffer,
-    VERTICES_PER_TILE: VERTICES_PER_TILE,
-    NotSupportedError: NotSupportedError,
-    Canvas: Canvas,
-    withImage: withImage,
-    withFont: withFont,
-    createProgram: createProgram,
-    QUAD: QUAD,
-    make: make$5
+	__proto__: null,
+	Glyphs: Glyphs,
+	initGlyphs: initGlyphs,
+	Layer: Layer,
+	Buffer: Buffer,
+	VERTICES_PER_TILE: VERTICES_PER_TILE,
+	NotSupportedError: NotSupportedError,
+	Canvas: Canvas,
+	withImage: withImage,
+	withFont: withFont,
+	createProgram: createProgram,
+	QUAD: QUAD,
+	make: make$5
 });
 
 class Sprite {
@@ -8111,18 +8280,18 @@ function install$2(name, ...args) {
 }
 
 var index$4 = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    Sprite: Sprite,
-    sprites: sprites,
-    make: make$4,
-    from: from$1,
-    install: install$2,
-    Mixer: Mixer,
-    makeMixer: makeMixer
+	__proto__: null,
+	Sprite: Sprite,
+	sprites: sprites,
+	make: make$4,
+	from: from$1,
+	install: install$2,
+	Mixer: Mixer,
+	makeMixer: makeMixer
 });
 
 var types = /*#__PURE__*/Object.freeze({
-    __proto__: null
+	__proto__: null
 });
 
 const data = {};
@@ -8286,16 +8455,16 @@ class MessageCache {
 }
 
 var message = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    templates: templates,
-    install: install$1,
-    installAll: installAll$1,
-    get: get,
-    handlers: handlers,
-    add: add,
-    addAt: addAt,
-    addCombat: addCombat,
-    MessageCache: MessageCache
+	__proto__: null,
+	templates: templates,
+	install: install$1,
+	installAll: installAll$1,
+	get: get,
+	handlers: handlers,
+	add: add,
+	addAt: addAt,
+	addCombat: addCombat,
+	MessageCache: MessageCache
 });
 
 class Blob {
@@ -8430,10 +8599,10 @@ function make$3(opts = {}) {
 }
 
 var blob = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    Blob: Blob,
-    fillBlob: fillBlob,
-    make: make$3
+	__proto__: null,
+	Blob: Blob,
+	fillBlob: fillBlob,
+	make: make$3
 });
 
 // const LIGHT_SMOOTHING_THRESHOLD = 150;       // light components higher than this magnitude will be toned down a little
@@ -8868,23 +9037,180 @@ class LightSystem {
 }
 
 var index$3 = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    config: config,
-    Light: Light,
-    intensity: intensity,
-    isDarkLight: isDarkLight,
-    isShadowLight: isShadowLight,
-    make: make$2,
-    lights: lights,
-    from: from,
-    install: install,
-    installAll: installAll,
-    LightSystem: LightSystem
+	__proto__: null,
+	config: config,
+	Light: Light,
+	intensity: intensity,
+	isDarkLight: isDarkLight,
+	isShadowLight: isShadowLight,
+	make: make$2,
+	lights: lights,
+	from: from,
+	install: install,
+	installAll: installAll,
+	LightSystem: LightSystem
 });
 
+class Events {
+    constructor(ctx) {
+        this._events = {};
+        this.onUnhandled = null;
+        this._ctx = ctx;
+    }
+    on(ev, fn) {
+        if (Array.isArray(ev)) {
+            const cleanup = ev.map((e) => this.on(e, fn));
+            return () => {
+                cleanup.forEach((c) => c());
+            };
+        }
+        if (!(ev in this._events)) {
+            this._events[ev] = [];
+        }
+        const info = { fn };
+        this._events[ev].push(info);
+        return () => {
+            arrayNullify(this._events[ev], info);
+        };
+    }
+    once(ev, fn) {
+        if (Array.isArray(ev)) {
+            const cleanup = ev.map((e) => this.on(e, fn));
+            return () => {
+                cleanup.forEach((c) => c());
+            };
+        }
+        if (!(ev in this._events)) {
+            this._events[ev] = [];
+        }
+        const info = { fn, once: true };
+        this._events[ev].push(info);
+        return () => {
+            arrayNullify(this._events[ev], info);
+        };
+    }
+    off(ev, cb) {
+        if (Array.isArray(ev)) {
+            ev.forEach((e) => this.off(e, cb));
+            return;
+        }
+        const events = this._events[ev];
+        if (!events)
+            return;
+        const current = events.findIndex((i) => i && i.fn === cb);
+        if (current > -1) {
+            events[current] = null;
+        }
+    }
+    trigger(ev, ...args) {
+        if (Array.isArray(ev)) {
+            let success = false;
+            for (let name of ev) {
+                success = this.trigger(name, ...args) || success;
+            }
+            return success;
+        }
+        const events = this._events[ev];
+        if (!events || events.length == 0) {
+            return this._unhandled(ev, args);
+        }
+        // newer events first (especially for input)
+        arrayRevEach(events, (info) => {
+            info && info.fn.call(this._ctx, ...args);
+        });
+        this._events[ev] = events.filter((i) => i && !i.once);
+        return true;
+    }
+    _unhandled(ev, args) {
+        if (!this.onUnhandled)
+            return false;
+        this.onUnhandled(ev, ...args);
+        return true;
+    }
+    dispatch(e) {
+        if (e.type === KEYPRESS) {
+            const evs = [e.code, 'keypress'];
+            if (e.key !== e.code) {
+                evs.unshift(e.key);
+            }
+            if (e.dir) {
+                evs.unshift('dir');
+            }
+            this.trigger(evs, e);
+        }
+        else {
+            this.trigger(e.type, e);
+        }
+    }
+    clear() {
+        this._events = {};
+        this.onUnhandled = null;
+    }
+    restart() {
+        Object.keys(this._events).forEach((ev) => {
+            this._events[ev] = this._events[ev].filter((i) => i && !i.once);
+        });
+        this.onUnhandled = null;
+    }
+}
+/*
+        let fired = false;
+        next = next || UTILS.NOOP;
+        const events = this._events[ev];
+        if (!events) {
+            next();
+            return fired;
+        }
+        let index = -1;
+
+        const ctx = this._ctx;
+        function _next() {
+            ++index;
+            if (index >= events.length) return next!();
+            events[index].call(ctx, args, _next);
+            fired = true;
+        }
+        _next();
+        return fired;
+*/
+
 // Tweeing API based on - http://tweenjs.github.io/tween.js/
-class Tween {
+class BaseObj {
+    constructor() {
+        this.events = new Events(this);
+        this.children = [];
+    }
+    on(ev, fn) {
+        this.events.on(ev, fn);
+        return this;
+    }
+    once(ev, fn) {
+        this.events.once(ev, fn);
+        return this;
+    }
+    off(ev, fn) {
+        this.events.off(ev, fn);
+        return this;
+    }
+    trigger(ev, ...args) {
+        return this.events.trigger(ev, ...args);
+    }
+    addChild(t) {
+        this.children.push(t);
+        return this;
+    }
+    removeChild(t) {
+        arrayDelete(this.children, t);
+        return this;
+    }
+    update(dt) {
+        this.children.forEach((c) => c.update(dt));
+        this.trigger('update', dt);
+    }
+}
+class Tween extends BaseObj {
     constructor(src) {
+        super();
         this._repeat = 0;
         this._count = 0;
         this._from = false;
@@ -8896,32 +9222,33 @@ class Tween {
         this._startTime = 0;
         this._goal = {};
         this._start = {};
-        this._startCb = null;
-        this._updateCb = null;
-        this._repeatCb = null;
-        this._finishCb = null;
-        this._resolveCb = null;
+        // _startCb: TweenCb | null = null;
+        // _updateCb: TweenCb | null = null;
+        // _repeatCb: TweenCb | null = null;
+        // _finishCb: TweenFinishCb | null = null;
         this._easing = linear;
         this._interpolate = interpolate;
         this._obj = src;
     }
     isRunning() {
-        return this._startTime > 0 || this._time < this._duration;
+        return (this._startTime > 0 ||
+            this._time < this._duration ||
+            this.children.length > 0);
     }
     onStart(cb) {
-        this._startCb = cb;
+        this.on('start', cb);
         return this;
     }
     onUpdate(cb) {
-        this._updateCb = cb;
+        this.on('update', cb);
         return this;
     }
     onRepeat(cb) {
-        this._repeatCb = cb;
+        this.on('repeat', cb);
         return this;
     }
     onFinish(cb) {
-        this._finishCb = cb;
+        this.on('stop', cb);
         return this;
     }
     to(goal, duration) {
@@ -8968,35 +9295,35 @@ class Tween {
         this._yoyo = v;
         return this;
     }
-    start() {
-        this._time = 0;
-        this._startTime = this._delay;
-        this._count = 0;
-        if (this._from) {
-            this._goal = {};
-            Object.keys(this._start).forEach((key) => (this._goal[key] = this._obj[key]));
-            this._updateProperties(this._obj, this._start, this._goal, 0);
+    start(animator) {
+        if (this._time > 0) {
+            this._time = 0;
+            this._startTime = this._delay;
+            this._count = 0;
+            if (this._from) {
+                this._goal = {};
+                Object.keys(this._start).forEach((key) => (this._goal[key] = this._obj[key]));
+                this._updateProperties(this._obj, this._start, this._goal, 0);
+            }
+            else {
+                this._start = {};
+                Object.keys(this._goal).forEach((key) => (this._start[key] = this._obj[key]));
+            }
         }
-        else {
-            this._start = {};
-            Object.keys(this._goal).forEach((key) => (this._start[key] = this._obj[key]));
+        if (animator) {
+            animator.add(this);
         }
-        let p = new Promise((resolve) => {
-            this._resolveCb = resolve;
-        });
-        if (this._finishCb) {
-            const cb = this._finishCb;
-            p = p.then((success) => cb.call(this, this._obj, !!success));
-        }
-        return p;
+        return this;
     }
-    tick(dt) {
+    update(dt) {
         if (!this.isRunning())
-            return false;
+            return;
+        this.children.forEach((c) => c.update(dt));
+        this.children = this.children.filter((c) => c.isRunning());
         this._time += dt;
         if (this._startTime) {
             if (this._startTime > this._time)
-                return true;
+                return;
             this._time -= this._startTime;
             this._startTime = 0;
             if (this._count > 0)
@@ -9007,8 +9334,8 @@ class Tween {
         }
         const pct = this._easing(this._time / this._duration);
         let madeChange = this._updateProperties(this._obj, this._start, this._goal, pct);
-        if (madeChange && this._updateCb) {
-            this._updateCb.call(this, this._obj, pct);
+        if (madeChange) {
+            this.trigger('update', this._obj, pct);
         }
         if (this._time >= this._duration) {
             if (this._repeat > this._count || this._repeat < 0) {
@@ -9022,11 +9349,10 @@ class Tween {
                     this._restart();
                 }
             }
-            else {
+            else if (!this.isRunning()) {
                 this.stop(true);
             }
         }
-        return true;
     }
     _restart() {
         ++this._count;
@@ -9035,15 +9361,11 @@ class Tween {
             this._obj[key] = value;
         });
         if (this._count == 1) {
-            if (this._startCb) {
-                this._startCb.call(this, this._obj, 0);
-            }
+            this.trigger('start', this._obj, 0);
         }
-        else if (this._repeatCb) {
-            this._repeatCb.call(this, this._obj, this._count);
-        }
-        else if (this._updateCb) {
-            this._updateCb.call(this, this._obj, 0);
+        else {
+            this.trigger('repeat', this._obj, this._count) ||
+                this.trigger('update', this._obj, 0);
         }
     }
     // gameTick(_dt: number): boolean {
@@ -9052,8 +9374,7 @@ class Tween {
     stop(success = false) {
         this._time = Number.MAX_SAFE_INTEGER;
         // if (this._finishCb) this._finishCb.call(this, this._obj, 1);
-        if (this._resolveCb)
-            this._resolveCb(success);
+        this.trigger('stop', this._obj, success);
     }
     _updateProperties(obj, start, goal, pct) {
         let madeChange = false;
@@ -9084,83 +9405,90 @@ function interpolate(start, goal, pct) {
 }
 
 var tween = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    Tween: Tween,
-    make: make$1,
-    linear: linear,
-    interpolate: interpolate
+	__proto__: null,
+	BaseObj: BaseObj,
+	Tween: Tween,
+	make: make$1,
+	linear: linear,
+	interpolate: interpolate
 });
 
-class Grid {
-    constructor(target) {
-        this._left = 0;
-        this._top = 0;
-        this._colWidths = [];
-        this._rowHeights = [];
-        this._col = 0;
-        this._row = -1;
-        this.target = target;
-        const pos = target.pos();
-        this._left = pos.x;
-        this._top = pos.y;
+class Timers {
+    constructor(ctx) {
+        this._timers = [];
+        this._ctx = ctx;
     }
-    cols(...args) {
-        if (args.length === 0)
-            return this._colWidths;
-        if (args.length == 2) {
-            args[0] = new Array(args[0]).fill(args[1]);
+    clear() {
+        this._timers = [];
+    }
+    // Clears all one time timers and resets all repeating timers
+    restart() {
+        this._timers.forEach((i) => {
+            i.delay = i.repeat || 0;
+        });
+        this._timers = this._timers.filter((i) => i.delay > 0);
+    }
+    setTimeout(fn, delay) {
+        const info = {
+            fn,
+            delay,
+            repeat: 0,
+        };
+        this._timers.push(info);
+        return () => arrayDelete(this._timers, info);
+    }
+    setInterval(fn, delay) {
+        const info = {
+            fn,
+            delay,
+            repeat: delay,
+        };
+        this._timers.push(info);
+        return () => arrayDelete(this._timers, info);
+    }
+    update(dt) {
+        if (!this._timers.length)
+            return;
+        let needFilter = false;
+        this._timers.forEach((info) => {
+            info.delay -= dt;
+            if (info.delay <= 0) {
+                const result = info.fn.call(this._ctx);
+                if (info.repeat && result !== false) {
+                    info.delay += info.repeat;
+                    if (info.delay < 0) {
+                        info.delay = info.repeat;
+                    }
+                }
+            }
+            needFilter = needFilter || info.delay <= 0;
+        });
+        if (needFilter) {
+            this._timers = this._timers.filter((info) => info.delay > 0);
         }
-        if (Array.isArray(args[0])) {
-            this._colWidths = args[0];
-        }
-        return this;
     }
-    rows(...args) {
-        if (args.length === 0)
-            return this._rowHeights;
-        if (typeof args[0] === 'number') {
-            args[0] = new Array(args[0]).fill(args[1] || 1);
-        }
-        if (Array.isArray(args[0])) {
-            this._rowHeights = args[0];
-        }
-        return this;
+}
+
+class Tweens {
+    constructor() {
+        this._tweens = [];
     }
-    col(n) {
-        if (n === undefined)
-            n = this._col;
-        this._col = clamp(n, 0, this._colWidths.length - 1);
-        return this._setPos(); // move back to top of our current row
+    get length() {
+        return this._tweens.length;
     }
-    nextCol() {
-        return this.col(this._col + 1);
+    clear() {
+        this._tweens = [];
     }
-    row(n) {
-        if (n === undefined)
-            n = this._row;
-        this._row = clamp(n, 0, this._rowHeights.length - 1);
-        return this._setPos(); // move back to beginning of current column
+    add(tween) {
+        this._tweens.push(tween);
     }
-    nextRow() {
-        return this.row(this._row + 1).col(0);
+    remove(tween) {
+        arrayDelete(this._tweens, tween);
     }
-    endRow(h) {
-        if (h <= 0)
-            return this;
-        this._rowHeights[this._row] = h;
-        return this;
-    }
-    _setPos() {
-        let x = this._left;
-        for (let i = 0; i < this._col; ++i) {
-            x += this._colWidths[i];
-        }
-        let y = this._top;
-        for (let i = 0; i < this._row; ++i) {
-            y += this._rowHeights[i];
-        }
-        this.target.pos(x, y);
-        return this;
+    update(dt) {
+        // // fire animations
+        this._tweens.forEach((tw) => tw.update(dt));
+        this._tweens = this._tweens.filter((tw) => tw.isRunning());
     }
 }
 
@@ -9608,6 +9936,12 @@ class Sheet {
     get(selector) {
         return this.rules.find((s) => s.selector.text === selector) || null;
     }
+    load(styles) {
+        Object.entries(styles).forEach(([selector, props]) => {
+            this.add(selector, props);
+        });
+        return this;
+    }
     remove(selector) {
         const existing = this.rules.findIndex((s) => s.selector.text === selector);
         if (existing > -1) {
@@ -9635,128 +9969,821 @@ class Sheet {
 const defaultStyle = new Sheet(null);
 defaultStyle.add('*', { fg: 'white' });
 
-class Events {
-    constructor(ctx) {
-        this._events = {};
-        this.onUnhandled = null;
-        this._ctx = ctx;
+// Scene
+class Scene {
+    constructor(id, app) {
+        this.events = new Events(this);
+        this.tweens = new Tweens();
+        this.timers = new Timers(this);
+        this.all = [];
+        this.children = [];
+        this.focused = null;
+        this.dt = 0;
+        this.time = 0;
+        this.realTime = 0;
+        this.skipTime = false;
+        this.stopped = true;
+        this.paused = {};
+        this.debug = false;
+        this.needsDraw = true;
+        this.bg = BLACK;
+        this.data = {};
+        this.id = id;
+        this.styles = new Sheet();
+        this.app = app;
+        this.buffer = new Buffer$1(app.width, app.height);
+        this.styles.setParent(app.styles);
     }
-    on(ev, fn) {
-        if (Array.isArray(ev)) {
-            const cleanup = ev.map((e) => this.on(e, fn));
-            return () => {
-                cleanup.forEach((c) => c());
-            };
-        }
-        if (!(ev in this._events)) {
-            this._events[ev] = [];
-        }
-        const info = { fn };
-        this._events[ev].push(info);
-        return () => {
-            arrayNullify(this._events[ev], info);
-        };
+    get width() {
+        return this.buffer.width;
     }
-    once(ev, fn) {
-        if (Array.isArray(ev)) {
-            const cleanup = ev.map((e) => this.on(e, fn));
-            return () => {
-                cleanup.forEach((c) => c());
-            };
-        }
-        if (!(ev in this._events)) {
-            this._events[ev] = [];
-        }
-        const info = { fn, once: true };
-        this._events[ev].push(info);
-        return () => {
-            arrayNullify(this._events[ev], info);
-        };
+    get height() {
+        return this.buffer.height;
     }
-    off(ev, cb) {
-        if (Array.isArray(ev)) {
-            ev.forEach((e) => this.off(e, cb));
-            return;
-        }
-        const events = this._events[ev];
-        if (!events)
-            return;
-        const current = events.findIndex((i) => i && i.fn === cb);
-        if (current > -1) {
-            events[current] = null;
-        }
+    isActive() {
+        return !this.stopped;
     }
-    trigger(ev, ...args) {
-        if (Array.isArray(ev)) {
-            let success = false;
-            for (let name of ev) {
-                success = this.trigger(name, ...args) || success;
-            }
-            return success;
+    isPaused() {
+        return this.isPaused;
+    }
+    isSleeping() {
+        return this.isSleeping;
+    }
+    // GENERAL
+    create(opts = {}) {
+        opts.bg && (this.bg = from$2(opts.bg));
+        if (opts.on) {
+            Object.entries(opts.on).forEach(([ev, fn]) => {
+                this.on(ev, fn);
+            });
         }
-        const events = this._events[ev];
-        if (!events || events.length == 0) {
-            return this._unhandled(ev, args);
-        }
-        // newer events first (especially for input)
-        arrayRevEach(events, (info) => {
-            info && info.fn.call(this._ctx, ...args);
+        Object.entries(opts).forEach(([ev, fn]) => {
+            if (typeof fn !== 'function')
+                return;
+            this.on(ev, fn);
         });
-        this._events[ev] = events.filter((i) => i && !i.once);
-        return true;
+        this.trigger('create', opts);
     }
-    _unhandled(ev, args) {
-        if (!this.onUnhandled)
-            return false;
-        this.onUnhandled(ev, ...args);
-        return true;
+    destroy(data) {
+        this.trigger('destroy', data);
+        this.all.forEach((c) => c.destroy());
+        this.children = [];
+        this.all = [];
+        this.timers.clear();
+        this.tweens.clear();
     }
-    dispatch(e) {
+    start(opts = {}) {
+        this.stopped = false;
+        this.timers.restart();
+        this.events.restart();
+        this.tweens.clear();
+        this.buffer.nullify();
+        this.needsDraw = true;
+        this.events.trigger('start', opts);
+    }
+    run(data = {}) {
+        this.app.scenes.pause();
+        this.start(data);
+        this.once('stop', () => this.app.scenes.resume());
+    }
+    stop(data) {
+        this.stopped = true;
+        this.events.trigger('stop', data);
+    }
+    pause(opts) {
+        opts = opts || {
+            timers: true,
+            tweens: true,
+            update: true,
+            input: true,
+            draw: true,
+        };
+        Object.assign(this.paused, opts);
+        this.events.trigger('pause');
+    }
+    resume(opts) {
+        opts = opts || {
+            timers: true,
+            tweens: true,
+            update: true,
+            input: true,
+            draw: true,
+        };
+        Object.entries(opts).forEach(([key, value]) => {
+            if (value === true) {
+                this.paused[key] = false;
+            }
+        });
+        this.needsDraw = true;
+        this.events.trigger('resume');
+    }
+    // FRAME STEPS
+    frameStart() {
+        this.events.trigger('frameStart');
+    }
+    input(e) {
+        if (this.paused.input || this.stopped)
+            return;
+        this.trigger('input', e);
+        if (e.defaultPrevented)
+            return;
         if (e.type === KEYPRESS) {
-            const evs = [e.code, 'keypress'];
-            if (e.key !== e.code) {
-                evs.unshift(e.key);
+            let w = this.focused;
+            if (w && (w.hidden || w.disabled)) {
+                this.nextTabStop();
+                w = this.focused;
             }
-            if (e.dir) {
-                evs.unshift('dir');
+            w && w.keypress(e);
+            if (!e.defaultPrevented) {
+                if (e.key === 'Tab') {
+                    this.nextTabStop();
+                }
+                else if (e.key === 'TAB') {
+                    this.prevTabStop();
+                }
             }
-            this.trigger(evs, e);
+        }
+        else if (e.type === MOUSEMOVE) {
+            this.children.forEach((c) => c.mousemove(e));
         }
         else {
-            this.trigger(e.type, e);
+            // click
+            const c = this.childAt(e);
+            if (c) {
+                c.click(e);
+                if (c.prop('tabStop') && !e.defaultPrevented) {
+                    this.setFocusWidget(c);
+                }
+            }
+        }
+        if (!e.propagationStopped) {
+            this.events.dispatch(e);
         }
     }
-    clear() {
-        this._events = {};
-        this.onUnhandled = null;
+    update(dt) {
+        if (this.stopped)
+            return;
+        if (!this.paused.timers)
+            this.timers.update(dt);
+        if (!this.paused.tweens)
+            this.tweens.update(dt);
+        if (!this.paused.update) {
+            this.events.trigger('update', dt);
+            this.all.forEach((c) => c.update(dt));
+        }
     }
-    restart() {
-        Object.keys(this._events).forEach((ev) => {
-            this._events[ev] = this._events[ev].filter((i) => i && !i.once);
+    draw(buffer) {
+        if (this.stopped)
+            return;
+        if (!this.paused.draw && this.needsDraw) {
+            this._draw(this.buffer);
+            this.trigger('draw', this.buffer);
+            this.children.forEach((c) => c.draw(this.buffer));
+            this.needsDraw = false;
+        }
+        // if (this.buffer.changed) {
+        buffer.apply(this.buffer);
+        this.buffer.changed = false;
+        // }
+    }
+    _draw(buffer) {
+        buffer.fill(this.bg);
+    }
+    frameDebug(buffer) {
+        this.events.trigger('frameDebug', buffer);
+    }
+    frameEnd(buffer) {
+        this.events.trigger('frameEnd', buffer);
+    }
+    // ANIMATION
+    fadeIn(widget, ms) {
+        return this.fadeTo(widget, 100, ms);
+    }
+    fadeOut(widget, ms) {
+        return this.fadeTo(widget, 0, ms);
+    }
+    fadeTo(widget, opacity, ms) {
+        const tween$1 = make$1({ pct: widget.style('opacity') })
+            .to({ pct: opacity })
+            .duration(ms)
+            .onUpdate((info) => {
+            widget.style('opacity', info.pct);
         });
-        this.onUnhandled = null;
+        this.tweens.add(tween$1);
+        return this;
+    }
+    fadeToggle(widget, ms) {
+        return this.fadeTo(widget, widget._used.opacity ? 0 : 100, ms);
+    }
+    slideIn(widget, x, y, from, ms) {
+        let start = { x, y };
+        if (from === 'left') {
+            start.x = -widget.bounds.width;
+        }
+        else if (from === 'right') {
+            start.x = this.width + widget.bounds.width;
+        }
+        else if (from === 'top') {
+            start.y = -widget.bounds.height;
+        }
+        else if (from === 'bottom') {
+            start.y = this.height + widget.bounds.height;
+        }
+        return this.slide(widget, start, { x, y }, ms);
+    }
+    slideOut(widget, dir, ms) {
+        let dest = { x: widget.bounds.x, y: widget.bounds.y };
+        if (dir === 'left') {
+            dest.x = -widget.bounds.width;
+        }
+        else if (dir === 'right') {
+            dest.x = this.width + widget.bounds.width;
+        }
+        else if (dir === 'top') {
+            dest.y = -widget.bounds.height;
+        }
+        else if (dir === 'bottom') {
+            dest.y = this.height + widget.bounds.height;
+        }
+        return this.slide(widget, widget.bounds, dest, ms);
+    }
+    slide(widget, from, to, ms) {
+        const tween$1 = make$1({ x: x(from), y: y(from) })
+            .to({ x: x(to), y: y(to) })
+            .duration(ms)
+            .onUpdate((info) => {
+            widget.pos(info.x, info.y);
+        });
+        this.tweens.add(tween$1);
+        return this;
+    }
+    // async fadeTo(
+    //     color: COLOR.ColorBase = 'black',
+    //     duration = 1000
+    // ): Promise<void> {
+    //     return new Promise<void>((resolve) => {
+    //         color = COLOR.from(color);
+    //         this.pause();
+    //         const buffer = this.buffer.clone();
+    //         let pct = 0;
+    //         let elapsed = 0;
+    //         this.app.repeat(32, () => {
+    //             elapsed += 32;
+    //             pct = Math.floor((100 * elapsed) / duration);
+    //             this.buffer.copy(buffer);
+    //             this.buffer.mix(color, pct);
+    //             if (elapsed >= duration) {
+    //                 this.resume();
+    //                 resolve();
+    //                 return false; // end timer
+    //             }
+    //         });
+    //     });
+    // }
+    // CHILDREN
+    get(id) {
+        return this.all.find((c) => c.id === id) || null;
+    }
+    _attach(widget) {
+        if (this.all.includes(widget))
+            return;
+        if (widget.scene)
+            throw new Error('Widget on another scene!');
+        this.all.push(widget);
+        widget.scene = this;
+        widget.children.forEach((c) => this._attach(c));
+        if (widget.prop('tabStop') &&
+            !this.focused &&
+            !widget.hidden &&
+            !widget.disabled) {
+            this.setFocusWidget(widget);
+        }
+    }
+    _detach(widget) {
+        const index = this.all.indexOf(widget);
+        if (index < 0)
+            return;
+        this.all.splice(index, 1);
+        widget.scene = null;
+        widget.children.forEach((c) => this._detach(c));
+    }
+    addChild(child, opts) {
+        if (this.children.includes(child))
+            return;
+        child.setParent(null);
+        this.children.push(child);
+        this._attach(child);
+        if (opts) {
+            child.updatePos(opts);
+            if (opts.focused) {
+                this.setFocusWidget(child);
+            }
+        }
+    }
+    removeChild(child) {
+        const index = this.children.indexOf(child);
+        if (index < 0)
+            return;
+        this.children.splice(index, 1);
+        child.setParent(null);
+        this._detach(child);
+    }
+    childAt(xy, y) {
+        let x = 0;
+        if (typeof xy === 'number') {
+            x = xy;
+            y = y || 0;
+        }
+        else {
+            x = xy.x;
+            y = xy.y;
+        }
+        return (arrayFindRight(this.children, (c) => c.contains(x, y)) ||
+            null);
+    }
+    widgetAt(xy, y) {
+        let x = 0;
+        if (typeof xy === 'number') {
+            x = xy;
+            y = y || 0;
+        }
+        else {
+            x = xy.x;
+            y = xy.y;
+        }
+        return arrayFindRight(this.all, (c) => c.contains(x, y)) || null;
+    }
+    // FOCUS
+    setFocusWidget(w, reverse = false) {
+        if (w === this.focused)
+            return;
+        const was = this.focused;
+        const want = w;
+        this.focused = null;
+        was && was.blur(reverse);
+        if (this.focused === null) {
+            this.focused = want;
+            want && want.focus(reverse);
+        }
+    }
+    nextTabStop() {
+        if (!this.focused) {
+            this.setFocusWidget(this.all.find((w) => !!w.prop('tabStop') && !w.disabled && !w.hidden) || null);
+            return !!this.focused;
+        }
+        const next = arrayNext(this.all, this.focused, (w) => !!w.prop('tabStop') && !w.disabled && !w.hidden);
+        if (next) {
+            this.setFocusWidget(next);
+            return true;
+        }
+        this.setFocusWidget(null);
+        return false;
+    }
+    prevTabStop() {
+        if (!this.focused) {
+            this.setFocusWidget(this.all.find((w) => !!w.prop('tabStop') && !w.disabled && !w.hidden) || null);
+            return !!this.focused;
+        }
+        const prev = arrayPrev(this.all, this.focused, (w) => !!w.prop('tabStop') && !w.disabled && !w.hidden);
+        if (prev) {
+            this.setFocusWidget(prev, true);
+            return true;
+        }
+        this.setFocusWidget(null, true);
+        return false;
+    }
+    // EVENTS
+    on(ev, cb) {
+        return this.events.on(ev, cb);
+    }
+    once(ev, cb) {
+        return this.events.once(ev, cb);
+    }
+    trigger(ev, ...args) {
+        return this.events.trigger(ev, ...args);
+    }
+    wait(delay, fn, ctx) {
+        if (typeof fn === 'string') {
+            const ev = fn;
+            ctx = ctx || {};
+            fn = () => this.trigger(ev, ctx);
+        }
+        return this.timers.setTimeout(fn, delay);
+    }
+    repeat(delay, fn, ctx) {
+        if (typeof fn === 'string') {
+            const ev = fn;
+            ctx = ctx || {};
+            fn = () => this.trigger(ev, ctx);
+        }
+        return this.timers.setInterval(fn, delay);
     }
 }
-/*
-        let fired = false;
-        next = next || UTILS.NOOP;
-        const events = this._events[ev];
-        if (!events) {
-            next();
-            return fired;
-        }
-        let index = -1;
+// export class Scene {
+//     id: string;
+//     app!: App;
+//     events: EVENTS.Events;
+//     timers: TIMERS.Timers;
+//     buffer!: CANVAS.Buffer;
+//     tweens: Tweens;
+//     dt = 0;
+//     time = 0;
+//     realTime = 0;
+//     skipTime = false;
+//     stopped = true;
+//     paused: PauseOpts = {};
+//     debug = false;
+//     children: SceneObj[] = [];
+//     data: Record<string, any> = {};
+//     constructor(id: string, opts: SceneOpts = {}) {
+//         this.id = id;
+//         this.events = new EVENTS.Events(this);
+//         this.timers = new TIMERS.Timers(this);
+//         this.tweens = new Tweens();
+//         if (opts.on) {
+//             Object.entries(opts.on).forEach(([ev, fn]) => {
+//                 this.on(ev, fn);
+//             });
+//         }
+//         Object.entries(opts).forEach(([ev, fn]) => {
+//             if (typeof fn !== 'function') return;
+//             this.on(ev, fn);
+//         });
+//     }
+//     get width() {
+//         return this.buffer.width;
+//     }
+//     get height() {
+//         return this.buffer.height;
+//     }
+//     isActive() {
+//         return !this.stopped;
+//     }
+//     isPaused() {
+//         return this.isPaused;
+//     }
+//     isSleeping() {
+//         return this.isSleeping;
+//     }
+//     on(ev: string, fn: EVENTS.CallbackFn): EVENTS.CancelFn;
+//     on(ev: string, fn: EVENTS.CallbackFn): EVENTS.CancelFn {
+//         return this.events.on(ev, fn);
+//     }
+//     trigger(ev: string, ...args: any[]) {
+//         return this.events.trigger(ev, ...args);
+//     }
+//     wait(delay: number, fn: TIMERS.TimerFn): EVENTS.CancelFn;
+//     wait(delay: number, fn: string, ctx?: Record<string, any>): EVENTS.CancelFn;
+//     wait(
+//         delay: number,
+//         fn: TIMERS.TimerFn | string,
+//         ctx?: Record<string, any>
+//     ): EVENTS.CancelFn {
+//         if (typeof fn === 'string') {
+//             const ev = fn;
+//             ctx = ctx || {};
+//             fn = () => this.trigger(ev, ctx!);
+//         }
+//         return this.timers.setTimeout(fn, delay);
+//     }
+//     repeat(delay: number, fn: TIMERS.TimerFn): EVENTS.CancelFn;
+//     repeat(
+//         delay: number,
+//         fn: string,
+//         ctx?: Record<string, any>
+//     ): EVENTS.CancelFn;
+//     repeat(
+//         delay: number,
+//         fn: TIMERS.TimerFn | string,
+//         ctx?: Record<string, any>
+//     ): EVENTS.CancelFn {
+//         if (typeof fn === 'string') {
+//             const ev = fn;
+//             ctx = ctx || {};
+//             fn = () => this.trigger(ev, ctx!);
+//         }
+//         return this.timers.setInterval(fn, delay);
+//     }
+//     // run() {
+//     //     this.trigger('run', this);
+//     //     let running = false;
+//     //     this.loopID = (setInterval(() => {
+//     //         if (!running) {
+//     //             running = true;
+//     //             this._frame();
+//     //             running = false;
+//     //         }
+//     //     }, 16) as unknown) as number;
+//     //     this.stopped = false;
+//     // }
+//     create(app: App) {
+//         this.app = app;
+//         this.buffer = app.buffer.clone();
+//         this.trigger('create');
+//     }
+//     destroy() {
+//         this.trigger('destroy');
+//     }
+//     start(data?: Record<string, any>) {
+//         this.stopped = false;
+//         this.timers.clear();
+//         this.tweens.clear();
+//         this.events.trigger('start', data || {});
+//     }
+//     run(data?: Record<string, any>): Promise<any> {
+//         return new Promise((resolve) => {
+//             this.app.scenes.pause();
+//             const cleanup = this.once('stop', (d) => {
+//                 cleanup();
+//                 this.app.scenes.resume();
+//                 resolve(d);
+//             });
+//             this.start(data);
+//         });
+//     }
+//     stop(data?: Record<string, any>) {
+//         this.stopped = true;
+//         this.events.trigger('stop', data || {});
+//     }
+//     pause(opts?: PauseOpts): void {
+//         opts = opts || {
+//             timers: true,
+//             tweens: true,
+//             update: true,
+//             input: true,
+//             draw: true,
+//         };
+//         Object.assign(this.paused, opts);
+//         this.events.trigger('pause');
+//     }
+//     resume(opts?: ResumeOpts) {
+//         opts = opts || {
+//             timers: true,
+//             tweens: true,
+//             update: true,
+//             input: true,
+//             draw: true,
+//         };
+//         Object.entries(opts).forEach(([key, value]) => {
+//             if (value === true) {
+//                 this.paused[key as keyof ResumeOpts] = false;
+//             }
+//         });
+//         this.events.trigger('resume');
+//     }
+//     // CHILDREN
+//     add(obj: SceneObj) {
+//         this.children.push(obj);
+//         obj.trigger('add', this);
+//     }
+//     remove(obj: SceneObj) {
+//         UTILS.arrayDelete(this.children, obj);
+//         obj.trigger('remove', this);
+//     }
+//     // FRAME STEPS
+//     frameStart() {
+//         this.events.trigger('frameStart');
+//     }
+//     input(ev: IO.Event) {
+//         if (this.stopped || this.paused.input) return;
+//         this.events.dispatch(ev);
+//     }
+//     update(dt: number) {
+//         if (this.stopped) return;
+//         if (!this.paused.timers) this.timers.update(dt);
+//         if (!this.paused.tweens) this.tweens.update(dt);
+//         if (!this.paused.update) {
+//             this.children.forEach((c) => c.update(dt));
+//             this.events.trigger('update', dt);
+//         }
+//     }
+//     draw(buffer: CANVAS.Buffer) {
+//         if (this.stopped) return;
+//         if (!this.paused.draw) {
+//             this.events.trigger('draw', this.buffer);
+//             this.children.forEach((c) => c.draw(this.buffer));
+//         }
+//         if (this.buffer.changed) {
+//             buffer.apply(this.buffer);
+//             this.buffer.changed = false;
+//         }
+//     }
+//     frameDebug(buffer: CANVAS.Buffer) {
+//         this.events.trigger('frameDebug', buffer);
+//     }
+//     frameEnd(buffer: CANVAS.Buffer) {
+//         this.events.trigger('frameEnd', buffer);
+//         // if (this.buffer.changed) {
+//         //     buffer.apply(this.buffer);
+//         //     this.buffer.changed = false;
+//         // }
+//     }
+//     // UI
+//     alert(text: string): Promise<boolean> {
+//         return this.app.scenes.run('alert', { text });
+//     }
+//     async fadeTo(
+//         color: COLOR.ColorBase = 'black',
+//         duration = 1000
+//     ): Promise<void> {
+//         return new Promise<void>((resolve) => {
+//             color = COLOR.from(color);
+//             this.pause();
+//             const buffer = this.buffer.clone();
+//             let pct = 0;
+//             let elapsed = 0;
+//             this.app.repeat(32, () => {
+//                 elapsed += 32;
+//                 pct = Math.floor((100 * elapsed) / duration);
+//                 this.buffer.copy(buffer);
+//                 this.buffer.mix(color, pct);
+//                 if (elapsed >= duration) {
+//                     this.resume();
+//                     resolve();
+//                     return false; // end timer
+//                 }
+//             });
+//         });
+//     }
+// }
 
-        const ctx = this._ctx;
-        function _next() {
-            ++index;
-            if (index >= events.length) return next!();
-            events[index].call(ctx, args, _next);
-            fired = true;
+class Scenes {
+    constructor(gw) {
+        this._scenes = {};
+        this._active = [];
+        this._busy = false;
+        this._pending = [];
+        this._app = gw;
+        this._config = Object.assign({}, scenes);
+    }
+    get isBusy() {
+        return this._busy;
+    }
+    add(id, opts) {
+        const current = this._config[id] || {};
+        if (typeof opts === 'function') {
+            opts = { make: opts };
         }
-        _next();
-        return fired;
-*/
+        Object.assign(current, opts);
+        this._config[id] = current;
+    }
+    load(scenes) {
+        Object.entries(scenes).forEach(([id, fns]) => this.add(id, fns));
+    }
+    get(id) {
+        if (id === undefined) {
+            return this._active[this._active.length - 1];
+        }
+        return this._scenes[id] || null;
+    }
+    trigger(ev, ...args) {
+        this._active.forEach((a) => a.trigger(ev, ...args));
+    }
+    _create(id, opts = {}) {
+        let cfg = this._config[id] || {};
+        const used = Object.assign({}, cfg, opts);
+        let scene;
+        if (used.make) {
+            scene = used.make(id, this._app);
+        }
+        else {
+            scene = new Scene(id, this._app);
+        }
+        scene.on('start', () => this._start(scene));
+        scene.on('stop', () => this._stop(scene));
+        scene.create(used);
+        return scene;
+    }
+    create(id, data = {}) {
+        if (id in this._scenes) {
+            console.log('Scene already created - ' + id);
+            return this._scenes[id];
+        }
+        return this._create(id, data);
+    }
+    start(id, data) {
+        let scene = this._scenes[id] || this._create(id, data);
+        if (this.isBusy) {
+            this._pending.push({ action: 'start', scene, data });
+        }
+        else {
+            scene.start(data);
+        }
+        return scene;
+    }
+    run(id, data) {
+        let scene = this._scenes[id] || this._create(id, data);
+        if (this.isBusy) {
+            this._pending.push({ action: 'run', scene, data });
+        }
+        else {
+            scene.run(data);
+        }
+        return scene;
+    }
+    _start(scene) {
+        this._active.push(scene);
+    }
+    stop(id, data) {
+        if (typeof id === 'string') {
+            const scene = this._scenes[id];
+            if (!scene)
+                throw new Error('Unknown scene:' + id);
+            id = scene;
+        }
+        if (id instanceof Scene) {
+            if (this.isBusy) {
+                this._pending.push({ action: 'stop', scene: id, data });
+            }
+            else {
+                id.stop(data);
+            }
+        }
+        else {
+            this._active.forEach((s) => this.stop(s.id, id));
+        }
+    }
+    _stop(_scene) {
+        this._active = this._active.filter((s) => s.isActive());
+    }
+    destroy(id, data) {
+        const scene = this._scenes[id];
+        if (!scene)
+            return;
+        if (scene.isActive()) {
+            scene.stop(data);
+        }
+        scene.destroy(data);
+        delete this._scenes[id];
+    }
+    pause(id, opts) {
+        if (typeof id === 'string') {
+            const scene = this._scenes[id];
+            if (!scene)
+                throw new Error('Unknown scene:' + id);
+            scene.pause(opts);
+        }
+        else {
+            this._active.forEach((s) => s.pause(id));
+        }
+    }
+    resume(id, opts) {
+        if (typeof id === 'string') {
+            const scene = this._scenes[id];
+            if (!scene)
+                throw new Error('Unknown scene:' + id);
+            scene.resume(opts);
+        }
+        else {
+            this._active.forEach((s) => s.resume(id));
+        }
+    }
+    // FRAME
+    frameStart() {
+        this._busy = true;
+        this._active.forEach((s) => s.frameStart());
+    }
+    input(ev) {
+        arrayRevEach(this._active, (s) => {
+            if (!ev.propagationStopped)
+                s.input(ev);
+        });
+    }
+    update(dt) {
+        this._active.forEach((s) => s.update(dt));
+    }
+    draw(buffer) {
+        this._active.forEach((s) => {
+            // if (i > 0) {
+            //     s.buffer.copy(this._active[i - 1].buffer);
+            // }
+            s.draw(buffer);
+        });
+    }
+    frameDebug(buffer) {
+        if (this._active.length) {
+            this._active.forEach((s) => s.frameDebug(buffer));
+        }
+    }
+    frameEnd(buffer) {
+        if (this._active.length) {
+            this._active.forEach((s) => s.frameEnd(buffer));
+        }
+        this._busy = false;
+        for (let i = 0; i < this._pending.length; ++i) {
+            const todo = this._pending[i];
+            todo.scene[todo.action](todo.data);
+        }
+        this._pending.length = 0;
+    }
+}
+const scenes = {};
+function installScene(id, scene) {
+    if (typeof scene === 'function') {
+        scene = { make: scene };
+    }
+    scenes[id] = scene;
+}
 
 // Widget
 class Widget {
@@ -10324,12 +11351,15 @@ class Widget {
         if (this.bounds.contains(e) && !this.hidden) {
             //  && !e.defaultPrevented
             this._mouseenter(e);
-            this.trigger('mousemove', e);
+            this._mousemove(e);
             // e.preventDefault();
         }
         else {
             this._mouseleave(e);
         }
+    }
+    _mousemove(e) {
+        this.trigger('mousemove', e);
     }
     _mouseleave(e) {
         if (!this.hovered)
@@ -10354,10 +11384,13 @@ class Widget {
             return;
         if (e.propagationStopped)
             return;
-        this.events.dispatch(e);
+        this._click(e);
         if (!e.defaultPrevented) {
             this.action();
         }
+    }
+    _click(e) {
+        this.events.trigger('click', e);
     }
     // keypress bubbles
     keypress(e) {
@@ -10385,7 +11418,7 @@ class Widget {
     }
     _drawFill(buffer) {
         const b = this.bounds;
-        buffer.fillRect(b.x, b.y, b.width, b.height, ' ', 0, this._used.bg);
+        buffer.fillRect(b.x, b.y, b.width, b.height, ' ', this._used.bg, this._used.bg);
     }
     update(dt) {
         this.trigger('update', dt);
@@ -10399,6 +11432,8 @@ class Widget {
         }
         this.children.forEach((c) => c.destroy());
         this.children = [];
+        // @ts-ignore;
+        this._used = null;
     }
 }
 function alignChildren(widget, align = 'left') {
@@ -11066,7 +12101,6 @@ class Text extends Widget {
         this._lines.forEach((line, i) => {
             buffer.drawText(this.bounds.x, this.bounds.y + i + vOffset, line, this._used.fg, -1, this.bounds.width, this._used.align);
         });
-        return true;
     }
 }
 // // extend Layer
@@ -11318,171 +12352,7 @@ const AlertScene = {
         this.timers.clear();
     },
 };
-// extend WidgetLayer
-// declare module './ui' {
-//     interface UI {
-//         alert(
-//             opts: AlertOptions | number,
-//             text: string,
-//             args?: any
-//         ): Promise<boolean>;
-//     }
-// }
-// export function alert(app: App, text: string): Promise<boolean> {
-//     const scenes = app.scenes;
-//     let done: (v: boolean) => void;
-//     const promise = new Promise((resolve) => {
-//         done = resolve;
-//     });
-//     scenes.pause();
-//     const alert = scenes.start('alert', { text });
-//     alert.on('stop', (data) => {
-//         scenes.resume();
-//         done(data.click || data.keypress);
-//     });
-//     return promise as Promise<boolean>;
-// }
-// UI.UI.prototype.alert = function (...args: any[]): Promise<boolean> {
-//     let opts = {} as UI.AlertOptions;
-//     let text: string;
-//     let textArgs: any = {};
-//     if (typeof args[0] === 'number') {
-//         opts.duration = args[0];
-//         text = args[1];
-//         textArgs = args[2];
-//     } else if (typeof args[0] === 'string') {
-//         text = args[0];
-//         textArgs = args[1];
-//     } else {
-//         opts = args[0];
-//         text = args[1];
-//         textArgs = args[2];
-//     }
-//     if (textArgs) {
-//         text = Text.apply(text, textArgs);
-//     }
-//     opts.class = opts.class || 'alert';
-//     opts.border = opts.border || 'ascii';
-//     opts.pad = opts.pad || 1;
-//     const layer = new WidgetLayer(this);
-//     // Fade the background
-//     const opacity = opts.opacity !== undefined ? opts.opacity : 50;
-//     layer.body.style().set('bg', Color.BLACK.alpha(opacity));
-//     // create the text widget
-//     const textWidget = layer
-//         .text(text, {
-//             id: 'TEXT',
-//             class: opts.textClass || opts.class,
-//             width: opts.width,
-//             height: opts.height,
-//         })
-//         .center();
-//     Object.assign(opts, {
-//         width: textWidget.bounds.width,
-//         height: textWidget.bounds.height,
-//         x: textWidget.bounds.x,
-//         y: textWidget.bounds.y,
-//         id: 'DIALOG',
-//     });
-//     const dialog = layer.dialog(opts);
-//     textWidget.setParent(dialog);
-//     layer.on('click', () => {
-//         layer.finish(true);
-//         return true;
-//     });
-//     layer.on('keypress', () => {
-//         layer.finish(true);
-//         return true;
-//     });
-//     layer.setTimeout(() => {
-//         layer.finish(false);
-//     }, opts.duration || 3000);
-//     return layer.run();
-// };
-/*
-    // dialogs
-
-    alert(text: string, args?: any): Promise<boolean>;
-    alert(
-        opts: AlertOptions | number,
-        text: string,
-        args?: any
-    ): Promise<boolean>;
-    alert(...args: any[]): Promise<boolean> {
-        let opts = {} as AlertOptions;
-        let text: string;
-        let textArgs: any = {};
-
-        if (typeof args[0] === 'number') {
-            opts.duration = args[0];
-            text = args[1];
-            textArgs = args[2];
-        } else if (typeof args[0] === 'string') {
-            text = args[0];
-            textArgs = args[1];
-        } else {
-            opts = args[0];
-            text = args[1];
-            textArgs = args[2];
-        }
-
-        if (textArgs) {
-            text = TEXT.apply(text, textArgs);
-        }
-
-        opts.class = opts.class || 'alert';
-        opts.border = opts.border || 'ascii';
-        opts.pad = opts.pad || 1;
-
-        const scene = new SCENE.Scene('alert', {
-            create() {
-                // Fade the background
-                const opacity = opts.opacity !== undefined ? opts.opacity : 50;
-                scene.body.style().set('bg', COLOR.BLACK.alpha(opacity));
-
-                // create the text widget
-                const textWidget = TEXTWIDGET.text(scene, {
-                    text,
-                    id: 'TEXT',
-                    class: opts.textClass || opts.class,
-                    width: opts.width,
-                    height: opts.height,
-                });
-
-                Object.assign(opts, {
-                    width: textWidget.bounds.width,
-                    height: textWidget.bounds.height,
-                    x: textWidget.bounds.x,
-                    y: textWidget.bounds.y,
-                    id: 'DIALOG',
-                });
-                const dialog = DIALOG.dialog(scene, opts);
-                dialog.addChild(textWidget, { center: true });
-                scene.body.addChild(dialog, { center: true });
-            },
-        });
-
-        scene.on('click', () => {
-            scene.stop({ interruped: true });
-        });
-
-        scene.on('keypress', () => {
-            scene.stop({ interupted: true });
-        });
-
-        scene.wait(opts.duration || 3000, () => {
-            scene.stop({ interrupted: false });
-        });
-
-        return new Promise((resolve) => {
-            scene.on('stop', (data) => {
-                resolve(data.interruped);
-            });
-
-            this.scenes.start(scene);
-        });
-    }
-*/
+installScene('alert', AlertScene);
 
 // import * as GWU from 'gw-utils';
 class Button extends Text {
@@ -11622,107 +12492,7 @@ const ConfirmScene = {
         this.children = [];
     },
 };
-// extend WidgetLayer
-// declare module './ui' {
-//     interface UI {
-//         confirm(text: string, args?: any): Promise<boolean>;
-//         confirm(
-//             opts: ConfirmOptions,
-//             text: string,
-//             args?: any
-//         ): Promise<boolean>;
-//     }
-// }
-// UI.prototype.confirm = function (...args: any[]): Promise<boolean> {
-//     let opts = {} as ConfirmOptions;
-//     let text: string;
-//     let textArgs: any = {};
-//     if (typeof args[0] === 'string') {
-//         text = args[0];
-//         textArgs = args[1];
-//     } else {
-//         opts = args[0];
-//         text = args[1];
-//         textArgs = args[2];
-//     }
-//     if (textArgs) {
-//         text = TextUtils.apply(text, textArgs);
-//     }
-//     opts.class = opts.class || 'confirm';
-//     opts.border = opts.border || 'ascii';
-//     opts.pad = opts.pad || 1;
-//     const layer = new WidgetLayer(this);
-//     // Fade the background
-//     const opacity = opts.opacity !== undefined ? opts.opacity : 50;
-//     layer.body.style().set('bg', Color.BLACK.alpha(opacity));
-//     if (opts.cancel === undefined) {
-//         opts.cancel = 'Cancel';
-//     } else if (opts.cancel === true) {
-//         opts.cancel = 'Cancel';
-//     } else if (!opts.cancel) {
-//         opts.cancel = '';
-//     }
-//     opts.ok = opts.ok || 'Ok';
-//     let buttonWidth = opts.buttonWidth || 0;
-//     if (!buttonWidth) {
-//         buttonWidth = Math.max(opts.ok.length, opts.cancel.length);
-//     }
-//     const width = Math.max(opts.width || 0, buttonWidth * 2 + 2);
-//     // create the text widget
-//     const textWidget = layer
-//         .text(text!, {
-//             class: opts.textClass || opts.class,
-//             width: width,
-//             height: opts.height,
-//         })
-//         .center();
-//     Object.assign(opts, {
-//         width: textWidget.bounds.width,
-//         height: textWidget.bounds.height + 2, // for buttons
-//         x: textWidget.bounds.x,
-//         y: textWidget.bounds.y,
-//         tag: 'confirm',
-//     });
-//     const dialog = layer.dialog(opts as DialogOptions);
-//     textWidget.setParent(dialog);
-//     layer
-//         .button(opts.ok, {
-//             class: opts.okClass || opts.class,
-//             width: buttonWidth,
-//             id: 'OK',
-//             parent: dialog,
-//             x: dialog._innerLeft + dialog._innerWidth - buttonWidth,
-//             y: dialog._innerTop + dialog._innerHeight - 1,
-//         })
-//         .on('click', () => {
-//             layer.finish(true);
-//             return true;
-//         });
-//     if (opts.cancel.length) {
-//         layer
-//             .button(opts.cancel, {
-//                 class: opts.cancelClass || opts.class,
-//                 width: buttonWidth,
-//                 id: 'CANCEL',
-//                 parent: dialog,
-//                 x: dialog._innerLeft,
-//                 y: dialog._innerTop + dialog._innerHeight - 1,
-//             })
-//             .on('click', () => {
-//                 layer.finish(false);
-//                 return true;
-//             });
-//     }
-//     layer.on('keypress', (_n, _w, e) => {
-//         if (e.key === 'Escape') {
-//             layer.finish(false);
-//         } else if (e.key === 'Enter') {
-//             layer.finish(true);
-//         }
-//         return true;
-//     });
-//     return layer.run();
-// };
+installScene('confirm', ConfirmScene);
 
 // import * as GWU from 'gw-utils';
 defaultStyle.add('input', {
@@ -11808,7 +12578,7 @@ class Input extends Text {
         const textEntryBounds = this.numbersOnly ? ['0', '9'] : [' ', '~'];
         if (ev.key === 'Enter' && this.isValid()) {
             this.action();
-            this.scene.nextTabStop();
+            this.scene && this.scene.nextTabStop();
             ev.stopPropagation();
             return;
         }
@@ -11974,123 +12744,43 @@ const PromptScene = {
                 opts.done(null);
         });
     },
-    stop() { },
+    stop() {
+        this.children.forEach((c) => c.destroy());
+        this.children = [];
+    },
 };
-// extend WidgetLayer
-// declare module './ui' {
-//     interface UI {
-//         inputbox(text: string, args?: any): Promise<string>;
-//         inputbox(
-//             opts: InputBoxOptions,
-//             text: string,
-//             args?: any
-//         ): Promise<string>;
-//     }
-// }
-/*
-UI.prototype.inputbox = function (...args: any[]): Promise<string | null> {
-    let opts = {} as InputBoxOptions;
-    let text: string;
-    let textArgs: any = {};
+installScene('prompt', PromptScene);
 
-    if (typeof args[1] === 'string') {
-        opts.default = args[0];
-        text = args[1];
-        textArgs = args[2];
-    } else {
-        text = args[0];
-        textArgs = args[1];
-    }
-
-    if (textArgs) {
-        text = TextUtils.apply(text, textArgs);
-    }
-
-    opts.class = opts.class || 'confirm';
-    opts.border = opts.border || 'ascii';
-    opts.pad = opts.pad || 1;
-
-    const layer = new WidgetLayer(this);
-
-    // Fade the background
-    const opacity = opts.opacity !== undefined ? opts.opacity : 50;
-    layer.body.style().set('bg', Color.BLACK.alpha(opacity));
-
-    // create the text widget
-    const textWidget = layer
-        .text(text!, {
-            class: opts.textClass || opts.class,
-            width: opts.width,
-            height: opts.height,
-        })
-        .center();
-
-    Object.assign(opts, {
-        width: textWidget.bounds.width,
-        height: textWidget.bounds.height + 2, // for input
-        x: textWidget.bounds.x,
-        y: textWidget.bounds.y,
-        tag: 'inputbox',
-    });
-    const dialog = layer.dialog(opts as DialogOptions);
-    textWidget.setParent(dialog);
-
-    let width = dialog._innerWidth;
-    let x = dialog._innerLeft;
-    if (opts.label) {
-        const label = layer.text(opts.label, {
-            class: opts.labelClass || opts.class,
-            tag: 'label',
-            parent: dialog,
-            x,
-            y: dialog._innerTop + dialog._innerHeight - 1,
+// import * as Color from '../color';
+const MenuScene = {
+    create() {
+        this.on('click', () => {
+            this.stop();
         });
-
-        x += label.bounds.width + 1;
-        width -= label.bounds.width + 1;
-    }
-
-    layer
-        .input({
-            class: opts.inputClass || opts.class,
-            width,
-            id: 'INPUT',
-            parent: dialog,
-            x,
-            y: dialog._innerTop + dialog._innerHeight - 1,
-        })
-        .on('INPUT', (_n, w, _e) => {
-            w && layer.finish(w.text());
-            return true;
+        this.on('Escape', () => {
+            this.stop();
         });
-
-    layer.on('keypress', (_n, _w, e) => {
-        if (e.key === 'Escape') {
-            layer.finish(null);
-            return true;
-        }
-        return false;
-    });
-
-    return layer.run();
+    },
+    start(data) {
+        if (!data.menu)
+            throw new Error('Must supply a menu to show!');
+        this.addChild(data.menu);
+        this.events.onUnhandled = (ev, ...args) => {
+            data.origin.trigger(ev, ...args);
+        };
+    },
+    stop() {
+        this.children = [];
+    },
 };
-*/
-
-// export * from './types';
+installScene('menu', MenuScene);
 
 var index$2 = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    Grid: Grid,
-    Selector: Selector,
-    compile: compile,
-    Style: Style,
-    makeStyle: makeStyle,
-    ComputedStyle: ComputedStyle,
-    Sheet: Sheet,
-    defaultStyle: defaultStyle,
-    AlertScene: AlertScene,
-    ConfirmScene: ConfirmScene,
-    PromptScene: PromptScene
+	__proto__: null,
+	AlertScene: AlertScene,
+	ConfirmScene: ConfirmScene,
+	PromptScene: PromptScene,
+	MenuScene: MenuScene
 });
 
 // import * as GWU from 'gw-utils';
@@ -13758,139 +14448,6 @@ class Inquiry {
     }
 }
 
-var index$1 = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    Widget: Widget,
-    alignChildren: alignChildren,
-    spaceChildren: spaceChildren,
-    wrapChildren: wrapChildren,
-    Text: Text,
-    Border: Border,
-    drawBorder: drawBorder,
-    Button: Button,
-    toPadArray: toPadArray,
-    Dialog: Dialog,
-    dialog: dialog,
-    Fieldset: Fieldset,
-    Field: Field,
-    OrderedList: OrderedList,
-    UnorderedList: UnorderedList,
-    Input: Input,
-    Column: Column,
-    DataTable: DataTable,
-    DataList: DataList,
-    Menu: Menu,
-    MenuButton: MenuButton,
-    Menubar: Menubar,
-    Select: Select,
-    Prompt: Prompt,
-    Choice: Choice,
-    Inquiry: Inquiry
-});
-
-class Loop {
-    constructor() {
-        this._timer = 0;
-    }
-    get isRunning() {
-        return this._timer != 0;
-    }
-    start(cb, dt = 16) {
-        let busy = false;
-        if (this._timer)
-            throw new Error('Cannot start loop twice.');
-        this._timer = setInterval(() => {
-            if (!busy) {
-                busy = true;
-                cb();
-                busy = false;
-            }
-        }, dt);
-    }
-    stop() {
-        if (this._timer) {
-            clearInterval(this._timer);
-            this._timer = 0;
-        }
-    }
-}
-
-class Timers {
-    constructor(ctx) {
-        this._timers = [];
-        this._ctx = ctx;
-    }
-    clear() {
-        this._timers = [];
-    }
-    // Clears all one time timers and resets all repeating timers
-    restart() {
-        this._timers.forEach((i) => {
-            i.delay = i.repeat || 0;
-        });
-        this._timers = this._timers.filter((i) => i.delay > 0);
-    }
-    setTimeout(fn, delay) {
-        const info = {
-            fn,
-            delay,
-            repeat: 0,
-        };
-        this._timers.push(info);
-        return () => arrayDelete(this._timers, info);
-    }
-    setInterval(fn, delay) {
-        const info = {
-            fn,
-            delay,
-            repeat: delay,
-        };
-        this._timers.push(info);
-        return () => arrayDelete(this._timers, info);
-    }
-    update(dt) {
-        if (!this._timers.length)
-            return;
-        let needFilter = false;
-        this._timers.forEach((info) => {
-            info.delay -= dt;
-            if (info.delay <= 0) {
-                const result = info.fn.call(this._ctx);
-                if (info.repeat && result !== false) {
-                    info.delay += info.repeat;
-                    if (info.delay < 0) {
-                        info.delay = info.repeat;
-                    }
-                }
-            }
-            needFilter = needFilter || info.delay <= 0;
-        });
-        if (needFilter) {
-            this._timers = this._timers.filter((info) => info.delay > 0);
-        }
-    }
-}
-
-class Tweens {
-    constructor() {
-        this._tweens = [];
-    }
-    clear() {
-        this._tweens = [];
-    }
-    add(tween) {
-        this._tweens.push(tween);
-    }
-    remove(tween) {
-        arrayDelete(this._tweens, tween);
-    }
-    update(dt) {
-        // // fire animations
-        this._tweens.forEach((tw) => tw.tick(dt));
-        this._tweens = this._tweens.filter((tw) => tw.isRunning());
-    }
-}
-
 class Checkbox extends Text {
     constructor(opts) {
         var _a;
@@ -14154,800 +14711,60 @@ class Builder {
 // //     return layer;
 // // };
 
-// Scene
-class Scene {
-    constructor(id, opts = {}) {
-        this.build = new Builder(this);
-        this.events = new Events(this);
-        this.tweens = new Tweens();
-        this.timers = new Timers(this);
-        this.all = [];
-        this.children = [];
-        this.focused = null;
-        this.dt = 0;
-        this.time = 0;
-        this.realTime = 0;
-        this.skipTime = false;
-        this.stopped = true;
-        this.paused = {};
-        this.debug = false;
-        this.needsDraw = true;
-        this.bg = BLACK;
-        this.data = {};
-        this.id = id;
-        this.styles = opts.styles || new Sheet();
-        opts.bg && (this.bg = from$2(opts.bg));
-        if (opts.on) {
-            Object.entries(opts.on).forEach(([ev, fn]) => {
-                this.on(ev, fn);
-            });
-        }
-        Object.entries(opts).forEach(([ev, fn]) => {
-            if (typeof fn !== 'function')
-                return;
-            this.on(ev, fn);
-        });
-    }
-    get width() {
-        return this.buffer.width;
-    }
-    get height() {
-        return this.buffer.height;
-    }
-    isActive() {
-        return !this.stopped;
-    }
-    isPaused() {
-        return this.isPaused;
-    }
-    isSleeping() {
-        return this.isSleeping;
-    }
-    // GENERAL
-    create(app) {
-        this.app = app;
-        this.buffer = new Buffer$1(app.width, app.height);
-        this.styles.setParent(app.styles);
-        this.trigger('create', this.build);
-    }
-    destroy() {
-        this.trigger('destroy');
-        this.all.forEach((c) => c.destroy());
-        this.children = [];
-        this.all = [];
-        this.timers.clear();
-        this.tweens.clear();
-    }
-    start(data) {
-        this.stopped = false;
-        this.timers.restart();
-        this.events.restart();
-        this.tweens.clear();
-        this.buffer.nullify();
-        this.needsDraw = true;
-        this.events.trigger('start', data);
-    }
-    run(data) {
-        this.app.scenes.pause();
-        this.start(data);
-        this.once('stop', () => this.app.scenes.resume());
-        return new Promise((resolve) => {
-            if (this.stopped) {
-                resolve(false);
-            }
-            else {
-                this.once('stop', (d) => {
-                    resolve(d);
-                });
-            }
-        });
-    }
-    stop(data) {
-        this.stopped = true;
-        this.events.trigger('stop', data);
-    }
-    pause(opts) {
-        opts = opts || {
-            timers: true,
-            tweens: true,
-            update: true,
-            input: true,
-            draw: true,
-        };
-        Object.assign(this.paused, opts);
-        this.events.trigger('pause');
-    }
-    resume(opts) {
-        opts = opts || {
-            timers: true,
-            tweens: true,
-            update: true,
-            input: true,
-            draw: true,
-        };
-        Object.entries(opts).forEach(([key, value]) => {
-            if (value === true) {
-                this.paused[key] = false;
-            }
-        });
-        this.needsDraw = true;
-        this.events.trigger('resume');
-    }
-    // FRAME STEPS
-    frameStart() {
-        this.events.trigger('frameStart');
-    }
-    input(e) {
-        if (this.paused.input || this.stopped)
-            return;
-        this.trigger('input', e);
-        if (e.defaultPrevented)
-            return;
-        if (e.type === KEYPRESS) {
-            let w = this.focused;
-            if (w && (w.hidden || w.disabled)) {
-                this.nextTabStop();
-                w = this.focused;
-            }
-            w && w.keypress(e);
-            if (!e.defaultPrevented) {
-                if (e.key === 'Tab') {
-                    this.nextTabStop();
-                }
-                else if (e.key === 'TAB') {
-                    this.prevTabStop();
-                }
-            }
-        }
-        else if (e.type === MOUSEMOVE) {
-            this.children.forEach((c) => c.mousemove(e));
-        }
-        else {
-            // click
-            const c = this.childAt(e);
-            if (c) {
-                c.click(e);
-                if (c.prop('tabStop') && !e.defaultPrevented) {
-                    this.setFocusWidget(c);
-                }
-            }
-        }
-        if (!e.propagationStopped) {
-            this.events.dispatch(e);
-        }
-    }
-    update(dt) {
-        if (this.stopped)
-            return;
-        if (!this.paused.timers)
-            this.timers.update(dt);
-        if (!this.paused.tweens)
-            this.tweens.update(dt);
-        if (!this.paused.update) {
-            this.events.trigger('update', dt);
-            this.all.forEach((c) => c.update(dt));
-        }
-    }
-    draw(buffer) {
-        if (this.stopped)
-            return;
-        if (!this.paused.draw && this.needsDraw) {
-            this._draw(this.buffer);
-            this.trigger('draw', this.buffer);
-            this.children.forEach((c) => c.draw(this.buffer));
-            this.needsDraw = false;
-        }
-        // if (this.buffer.changed) {
-        buffer.apply(this.buffer);
-        this.buffer.changed = false;
-        // }
-    }
-    _draw(buffer) {
-        buffer.fill(this.bg);
-    }
-    frameDebug(buffer) {
-        this.events.trigger('frameDebug', buffer);
-    }
-    frameEnd(buffer) {
-        this.events.trigger('frameEnd', buffer);
-    }
-    // ANIMATION
-    fadeIn(widget, ms) {
-        return this.fadeTo(widget, 100, ms);
-    }
-    fadeOut(widget, ms) {
-        return this.fadeTo(widget, 0, ms);
-    }
-    fadeTo(widget, opacity, ms) {
-        const tween$1 = make$1({ pct: widget.style('opacity') })
-            .to({ pct: opacity })
-            .duration(ms)
-            .onUpdate((info) => {
-            widget.style('opacity', info.pct);
-        });
-        this.tweens.add(tween$1);
-        return this;
-    }
-    fadeToggle(widget, ms) {
-        return this.fadeTo(widget, widget._used.opacity ? 0 : 100, ms);
-    }
-    slideIn(widget, x, y, from, ms) {
-        let start = { x, y };
-        if (from === 'left') {
-            start.x = -widget.bounds.width;
-        }
-        else if (from === 'right') {
-            start.x = this.width + widget.bounds.width;
-        }
-        else if (from === 'top') {
-            start.y = -widget.bounds.height;
-        }
-        else if (from === 'bottom') {
-            start.y = this.height + widget.bounds.height;
-        }
-        return this.slide(widget, start, { x, y }, ms);
-    }
-    slideOut(widget, dir, ms) {
-        let dest = { x: widget.bounds.x, y: widget.bounds.y };
-        if (dir === 'left') {
-            dest.x = -widget.bounds.width;
-        }
-        else if (dir === 'right') {
-            dest.x = this.width + widget.bounds.width;
-        }
-        else if (dir === 'top') {
-            dest.y = -widget.bounds.height;
-        }
-        else if (dir === 'bottom') {
-            dest.y = this.height + widget.bounds.height;
-        }
-        return this.slide(widget, widget.bounds, dest, ms);
-    }
-    slide(widget, from, to, ms) {
-        const tween$1 = make$1({ x: x(from), y: y(from) })
-            .to({ x: x(to), y: y(to) })
-            .duration(ms)
-            .onUpdate((info) => {
-            widget.pos(info.x, info.y);
-        });
-        this.tweens.add(tween$1);
-        return this;
-    }
-    // async fadeTo(
-    //     color: COLOR.ColorBase = 'black',
-    //     duration = 1000
-    // ): Promise<void> {
-    //     return new Promise<void>((resolve) => {
-    //         color = COLOR.from(color);
-    //         this.pause();
-    //         const buffer = this.buffer.clone();
-    //         let pct = 0;
-    //         let elapsed = 0;
-    //         this.app.repeat(32, () => {
-    //             elapsed += 32;
-    //             pct = Math.floor((100 * elapsed) / duration);
-    //             this.buffer.copy(buffer);
-    //             this.buffer.mix(color, pct);
-    //             if (elapsed >= duration) {
-    //                 this.resume();
-    //                 resolve();
-    //                 return false; // end timer
-    //             }
-    //         });
-    //     });
-    // }
-    // CHILDREN
-    get(id) {
-        return this.all.find((c) => c.id === id) || null;
-    }
-    _attach(widget) {
-        if (this.all.includes(widget))
-            return;
-        if (widget.scene)
-            throw new Error('Widget on another scene!');
-        this.all.push(widget);
-        widget.scene = this;
-        widget.children.forEach((c) => this._attach(c));
-        if (widget.prop('tabStop') &&
-            !this.focused &&
-            !widget.hidden &&
-            !widget.disabled) {
-            this.setFocusWidget(widget);
-        }
-    }
-    _detach(widget) {
-        const index = this.all.indexOf(widget);
-        if (index < 0)
-            return;
-        this.all.splice(index, 1);
-        widget.scene = null;
-        widget.children.forEach((c) => this._detach(c));
-    }
-    addChild(child, opts) {
-        if (this.children.includes(child))
-            return;
-        child.setParent(null);
-        this.children.push(child);
-        this._attach(child);
-        if (opts) {
-            child.updatePos(opts);
-            if (opts.focused) {
-                this.setFocusWidget(child);
-            }
-        }
-    }
-    removeChild(child) {
-        const index = this.children.indexOf(child);
-        if (index < 0)
-            return;
-        this.children.splice(index, 1);
-        child.setParent(null);
-        this._detach(child);
-    }
-    childAt(xy, y) {
-        let x = 0;
-        if (typeof xy === 'number') {
-            x = xy;
-            y = y || 0;
-        }
-        else {
-            x = xy.x;
-            y = xy.y;
-        }
-        return (arrayFindRight(this.children, (c) => c.contains(x, y)) ||
-            null);
-    }
-    widgetAt(xy, y) {
-        let x = 0;
-        if (typeof xy === 'number') {
-            x = xy;
-            y = y || 0;
-        }
-        else {
-            x = xy.x;
-            y = xy.y;
-        }
-        return arrayFindRight(this.all, (c) => c.contains(x, y)) || null;
-    }
-    // FOCUS
-    setFocusWidget(w, reverse = false) {
-        if (w === this.focused)
-            return;
-        const was = this.focused;
-        const want = w;
-        this.focused = null;
-        was && was.blur(reverse);
-        if (this.focused === null) {
-            this.focused = want;
-            want && want.focus(reverse);
-        }
-    }
-    nextTabStop() {
-        if (!this.focused) {
-            this.setFocusWidget(this.all.find((w) => !!w.prop('tabStop') && !w.disabled && !w.hidden) || null);
-            return !!this.focused;
-        }
-        const next = arrayNext(this.all, this.focused, (w) => !!w.prop('tabStop') && !w.disabled && !w.hidden);
-        if (next) {
-            this.setFocusWidget(next);
-            return true;
-        }
-        this.setFocusWidget(null);
-        return false;
-    }
-    prevTabStop() {
-        if (!this.focused) {
-            this.setFocusWidget(this.all.find((w) => !!w.prop('tabStop') && !w.disabled && !w.hidden) || null);
-            return !!this.focused;
-        }
-        const prev = arrayPrev(this.all, this.focused, (w) => !!w.prop('tabStop') && !w.disabled && !w.hidden);
-        if (prev) {
-            this.setFocusWidget(prev, true);
-            return true;
-        }
-        this.setFocusWidget(null, true);
-        return false;
-    }
-    // EVENTS
-    on(ev, cb) {
-        return this.events.on(ev, cb);
-    }
-    once(ev, cb) {
-        return this.events.once(ev, cb);
-    }
-    trigger(ev, ...args) {
-        return this.events.trigger(ev, ...args);
-    }
-    wait(delay, fn, ctx) {
-        if (typeof fn === 'string') {
-            const ev = fn;
-            ctx = ctx || {};
-            fn = () => this.trigger(ev, ctx);
-        }
-        return this.timers.setTimeout(fn, delay);
-    }
-    repeat(delay, fn, ctx) {
-        if (typeof fn === 'string') {
-            const ev = fn;
-            ctx = ctx || {};
-            fn = () => this.trigger(ev, ctx);
-        }
-        return this.timers.setInterval(fn, delay);
-    }
-}
-// export class Scene {
-//     id: string;
-//     app!: App;
-//     events: EVENTS.Events;
-//     timers: TIMERS.Timers;
-//     buffer!: CANVAS.Buffer;
-//     tweens: Tweens;
-//     dt = 0;
-//     time = 0;
-//     realTime = 0;
-//     skipTime = false;
-//     stopped = true;
-//     paused: PauseOpts = {};
-//     debug = false;
-//     children: SceneObj[] = [];
-//     data: Record<string, any> = {};
-//     constructor(id: string, opts: SceneOpts = {}) {
-//         this.id = id;
-//         this.events = new EVENTS.Events(this);
-//         this.timers = new TIMERS.Timers(this);
-//         this.tweens = new Tweens();
-//         if (opts.on) {
-//             Object.entries(opts.on).forEach(([ev, fn]) => {
-//                 this.on(ev, fn);
-//             });
-//         }
-//         Object.entries(opts).forEach(([ev, fn]) => {
-//             if (typeof fn !== 'function') return;
-//             this.on(ev, fn);
-//         });
-//     }
-//     get width() {
-//         return this.buffer.width;
-//     }
-//     get height() {
-//         return this.buffer.height;
-//     }
-//     isActive() {
-//         return !this.stopped;
-//     }
-//     isPaused() {
-//         return this.isPaused;
-//     }
-//     isSleeping() {
-//         return this.isSleeping;
-//     }
-//     on(ev: string, fn: EVENTS.CallbackFn): EVENTS.CancelFn;
-//     on(ev: string, fn: EVENTS.CallbackFn): EVENTS.CancelFn {
-//         return this.events.on(ev, fn);
-//     }
-//     trigger(ev: string, ...args: any[]) {
-//         return this.events.trigger(ev, ...args);
-//     }
-//     wait(delay: number, fn: TIMERS.TimerFn): EVENTS.CancelFn;
-//     wait(delay: number, fn: string, ctx?: Record<string, any>): EVENTS.CancelFn;
-//     wait(
-//         delay: number,
-//         fn: TIMERS.TimerFn | string,
-//         ctx?: Record<string, any>
-//     ): EVENTS.CancelFn {
-//         if (typeof fn === 'string') {
-//             const ev = fn;
-//             ctx = ctx || {};
-//             fn = () => this.trigger(ev, ctx!);
-//         }
-//         return this.timers.setTimeout(fn, delay);
-//     }
-//     repeat(delay: number, fn: TIMERS.TimerFn): EVENTS.CancelFn;
-//     repeat(
-//         delay: number,
-//         fn: string,
-//         ctx?: Record<string, any>
-//     ): EVENTS.CancelFn;
-//     repeat(
-//         delay: number,
-//         fn: TIMERS.TimerFn | string,
-//         ctx?: Record<string, any>
-//     ): EVENTS.CancelFn {
-//         if (typeof fn === 'string') {
-//             const ev = fn;
-//             ctx = ctx || {};
-//             fn = () => this.trigger(ev, ctx!);
-//         }
-//         return this.timers.setInterval(fn, delay);
-//     }
-//     // run() {
-//     //     this.trigger('run', this);
-//     //     let running = false;
-//     //     this.loopID = (setInterval(() => {
-//     //         if (!running) {
-//     //             running = true;
-//     //             this._frame();
-//     //             running = false;
-//     //         }
-//     //     }, 16) as unknown) as number;
-//     //     this.stopped = false;
-//     // }
-//     create(app: App) {
-//         this.app = app;
-//         this.buffer = app.buffer.clone();
-//         this.trigger('create');
-//     }
-//     destroy() {
-//         this.trigger('destroy');
-//     }
-//     start(data?: Record<string, any>) {
-//         this.stopped = false;
-//         this.timers.clear();
-//         this.tweens.clear();
-//         this.events.trigger('start', data || {});
-//     }
-//     run(data?: Record<string, any>): Promise<any> {
-//         return new Promise((resolve) => {
-//             this.app.scenes.pause();
-//             const cleanup = this.once('stop', (d) => {
-//                 cleanup();
-//                 this.app.scenes.resume();
-//                 resolve(d);
-//             });
-//             this.start(data);
-//         });
-//     }
-//     stop(data?: Record<string, any>) {
-//         this.stopped = true;
-//         this.events.trigger('stop', data || {});
-//     }
-//     pause(opts?: PauseOpts): void {
-//         opts = opts || {
-//             timers: true,
-//             tweens: true,
-//             update: true,
-//             input: true,
-//             draw: true,
-//         };
-//         Object.assign(this.paused, opts);
-//         this.events.trigger('pause');
-//     }
-//     resume(opts?: ResumeOpts) {
-//         opts = opts || {
-//             timers: true,
-//             tweens: true,
-//             update: true,
-//             input: true,
-//             draw: true,
-//         };
-//         Object.entries(opts).forEach(([key, value]) => {
-//             if (value === true) {
-//                 this.paused[key as keyof ResumeOpts] = false;
-//             }
-//         });
-//         this.events.trigger('resume');
-//     }
-//     // CHILDREN
-//     add(obj: SceneObj) {
-//         this.children.push(obj);
-//         obj.trigger('add', this);
-//     }
-//     remove(obj: SceneObj) {
-//         UTILS.arrayDelete(this.children, obj);
-//         obj.trigger('remove', this);
-//     }
-//     // FRAME STEPS
-//     frameStart() {
-//         this.events.trigger('frameStart');
-//     }
-//     input(ev: IO.Event) {
-//         if (this.stopped || this.paused.input) return;
-//         this.events.dispatch(ev);
-//     }
-//     update(dt: number) {
-//         if (this.stopped) return;
-//         if (!this.paused.timers) this.timers.update(dt);
-//         if (!this.paused.tweens) this.tweens.update(dt);
-//         if (!this.paused.update) {
-//             this.children.forEach((c) => c.update(dt));
-//             this.events.trigger('update', dt);
-//         }
-//     }
-//     draw(buffer: CANVAS.Buffer) {
-//         if (this.stopped) return;
-//         if (!this.paused.draw) {
-//             this.events.trigger('draw', this.buffer);
-//             this.children.forEach((c) => c.draw(this.buffer));
-//         }
-//         if (this.buffer.changed) {
-//             buffer.apply(this.buffer);
-//             this.buffer.changed = false;
-//         }
-//     }
-//     frameDebug(buffer: CANVAS.Buffer) {
-//         this.events.trigger('frameDebug', buffer);
-//     }
-//     frameEnd(buffer: CANVAS.Buffer) {
-//         this.events.trigger('frameEnd', buffer);
-//         // if (this.buffer.changed) {
-//         //     buffer.apply(this.buffer);
-//         //     this.buffer.changed = false;
-//         // }
-//     }
-//     // UI
-//     alert(text: string): Promise<boolean> {
-//         return this.app.scenes.run('alert', { text });
-//     }
-//     async fadeTo(
-//         color: COLOR.ColorBase = 'black',
-//         duration = 1000
-//     ): Promise<void> {
-//         return new Promise<void>((resolve) => {
-//             color = COLOR.from(color);
-//             this.pause();
-//             const buffer = this.buffer.clone();
-//             let pct = 0;
-//             let elapsed = 0;
-//             this.app.repeat(32, () => {
-//                 elapsed += 32;
-//                 pct = Math.floor((100 * elapsed) / duration);
-//                 this.buffer.copy(buffer);
-//                 this.buffer.mix(color, pct);
-//                 if (elapsed >= duration) {
-//                     this.resume();
-//                     resolve();
-//                     return false; // end timer
-//                 }
-//             });
-//         });
-//     }
-// }
+var index$1 = /*#__PURE__*/Object.freeze({
+	__proto__: null,
+	Widget: Widget,
+	alignChildren: alignChildren,
+	spaceChildren: spaceChildren,
+	wrapChildren: wrapChildren,
+	Text: Text,
+	Border: Border,
+	drawBorder: drawBorder,
+	Button: Button,
+	toPadArray: toPadArray,
+	Dialog: Dialog,
+	dialog: dialog,
+	Fieldset: Fieldset,
+	Field: Field,
+	OrderedList: OrderedList,
+	UnorderedList: UnorderedList,
+	Input: Input,
+	Column: Column,
+	DataTable: DataTable,
+	DataList: DataList,
+	Menu: Menu,
+	MenuButton: MenuButton,
+	Menubar: Menubar,
+	Select: Select,
+	Prompt: Prompt,
+	Choice: Choice,
+	Inquiry: Inquiry,
+	Builder: Builder
+});
 
-// import * as Color from '../color';
-const MenuScene = {
-    create() {
-        this.on('click', () => {
-            this.stop();
-        });
-        this.on('Escape', () => {
-            this.stop();
-        });
-    },
-    start(data) {
-        if (!data.menu)
-            throw new Error('Must supply a menu to show!');
-        this.addChild(data.menu);
-        this.events.onUnhandled = (ev, ...args) => {
-            data.origin.trigger(ev, ...args);
-        };
-    },
+class Loop {
+    constructor() {
+        this._timer = 0;
+    }
+    get isRunning() {
+        return this._timer != 0;
+    }
+    start(cb, dt = 16) {
+        let busy = false;
+        if (this._timer)
+            throw new Error('Cannot start loop twice.');
+        this._timer = setInterval(() => {
+            if (!busy) {
+                busy = true;
+                cb();
+                busy = false;
+            }
+        }, dt);
+    }
     stop() {
-        this.children = [];
-    },
-};
-
-class Scenes {
-    constructor(gw) {
-        this._scenes = {};
-        this._active = [];
-        this._app = gw;
-        this.install('alert', AlertScene);
-        this.install('confirm', ConfirmScene);
-        this.install('prompt', PromptScene);
-        this.install('menu', MenuScene);
-    }
-    install(id, opts) {
-        let scene;
-        if (opts instanceof Scene) {
-            scene = opts;
-        }
-        else {
-            if (typeof opts === 'function') {
-                opts = { create: opts };
-            }
-            scene = new Scene(id, opts);
-        }
-        this._scenes[id] = scene;
-        scene.create(this._app);
-        scene.on('start', () => this._start(scene));
-        scene.on('stop', () => this._stop(scene));
-    }
-    load(scenes) {
-        Object.entries(scenes).forEach(([id, fns]) => this.install(id, fns));
-    }
-    get(id) {
-        if (id === undefined) {
-            return this._active[this._active.length - 1];
-        }
-        return this._scenes[id] || null;
-    }
-    trigger(ev, ...args) {
-        this._active.forEach((a) => a.trigger(ev, ...args));
-    }
-    start(id, data) {
-        const scene = id instanceof Scene ? id : this._scenes[id];
-        if (!scene)
-            throw new Error('Unknown scene:' + id);
-        scene.start(data);
-        return scene;
-    }
-    run(id, data) {
-        const scene = id instanceof Scene ? id : this._scenes[id];
-        if (!scene)
-            throw new Error('Unknown scene:' + id);
-        return scene.run(data);
-    }
-    _start(scene) {
-        this._active.push(scene);
-    }
-    stop(id, data) {
-        if (typeof id === 'string') {
-            const scene = this._scenes[id];
-            if (!scene)
-                throw new Error('Unknown scene:' + id);
-            scene.stop(data);
-        }
-        else if (id instanceof Scene) {
-            id.stop(data);
-        }
-        else {
-            this._active.forEach((s) => s.stop(id));
-        }
-    }
-    _stop(_scene) {
-        this._active = this._active.filter((s) => s.isActive());
-    }
-    pause(id, opts) {
-        if (typeof id === 'string') {
-            const scene = this._scenes[id];
-            if (!scene)
-                throw new Error('Unknown scene:' + id);
-            scene.pause(opts);
-        }
-        else {
-            this._active.forEach((s) => s.pause(id));
-        }
-    }
-    resume(id, opts) {
-        if (typeof id === 'string') {
-            const scene = this._scenes[id];
-            if (!scene)
-                throw new Error('Unknown scene:' + id);
-            scene.resume(opts);
-        }
-        else {
-            this._active.forEach((s) => s.resume(id));
-        }
-    }
-    // FRAME
-    frameStart() {
-        this._active.forEach((s) => s.frameStart());
-    }
-    input(ev) {
-        arrayRevEach(this._active, (s) => {
-            if (!ev.propagationStopped)
-                s.input(ev);
-        });
-    }
-    update(dt) {
-        this._active.forEach((s) => s.update(dt));
-    }
-    draw(buffer) {
-        this._active.forEach((s) => {
-            // if (i > 0) {
-            //     s.buffer.copy(this._active[i - 1].buffer);
-            // }
-            s.draw(buffer);
-        });
-    }
-    frameEnd(buffer) {
-        if (this._active.length) {
-            this._active.forEach((s) => s.frameEnd(buffer));
-        }
-    }
-    frameDebug(buffer) {
-        if (this._active.length) {
-            this._active.forEach((s) => s.frameDebug(buffer));
+        if (this._timer) {
+            clearInterval(this._timer);
+            this._timer = 0;
         }
     }
 }
@@ -14983,19 +14800,25 @@ class App {
         this.canvas.onmousemove = this.io.enqueue.bind(this.io);
         this.canvas.onclick = this.io.enqueue.bind(this.io);
         this.canvas.onkeydown = this.io.enqueue.bind(this.io);
+        this.buffer = new Buffer$1(this.canvas.width, this.canvas.height);
         if (opts.scenes) {
             this.scenes.load(opts.scenes);
+            if (typeof opts.start === 'string') {
+                this.scenes.start(opts.start);
+            }
+            else {
+                this.scenes.start(Object.keys(opts.scenes)[0]);
+            }
         }
         else if (opts.scene) {
             if (opts.scene === true)
                 opts.scene = {};
-            this.scenes.install('default', opts.scene);
+            this.scenes.add('default', opts.scene);
             this.scenes.start('default');
             // } else {
             //     this.scenes.install('default', { bg: COLOR.colors.NONE }); // NONE just in case you draw directly on app.buffer
             //     this.scenes.start('default');
         }
-        this.buffer = new Buffer$1(this.canvas.width, this.canvas.height);
         if (opts.start !== false) {
             this.start();
         }
@@ -15159,31 +14982,45 @@ function make(opts) {
 }
 
 var index = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    Event: Event,
-    KEYPRESS: KEYPRESS,
-    MOUSEMOVE: MOUSEMOVE,
-    CLICK: CLICK,
-    TICK: TICK,
-    MOUSEUP: MOUSEUP,
-    STOP: STOP,
-    isControlCode: isControlCode,
-    recycleEvent: recycleEvent,
-    makeStopEvent: makeStopEvent,
-    makeCustomEvent: makeCustomEvent,
-    makeTickEvent: makeTickEvent,
-    makeKeyEvent: makeKeyEvent,
-    keyCodeDirection: keyCodeDirection,
-    ignoreKeyEvent: ignoreKeyEvent,
-    makeMouseEvent: makeMouseEvent,
-    Queue: Queue,
-    Events: Events,
-    Loop: Loop,
-    Timers: Timers,
-    Scene: Scene,
-    Scenes: Scenes,
-    App: App,
-    make: make
+	__proto__: null,
+	Event: Event,
+	KEYPRESS: KEYPRESS,
+	MOUSEMOVE: MOUSEMOVE,
+	CLICK: CLICK,
+	TICK: TICK,
+	MOUSEUP: MOUSEUP,
+	STOP: STOP,
+	isControlCode: isControlCode,
+	recycleEvent: recycleEvent,
+	makeStopEvent: makeStopEvent,
+	makeCustomEvent: makeCustomEvent,
+	makeTickEvent: makeTickEvent,
+	makeKeyEvent: makeKeyEvent,
+	keyCodeDirection: keyCodeDirection,
+	ignoreKeyEvent: ignoreKeyEvent,
+	makeMouseEvent: makeMouseEvent,
+	Queue: Queue,
+	Events: Events,
+	Loop: Loop,
+	Timers: Timers,
+	Tweens: Tweens,
+	Selector: Selector,
+	compile: compile,
+	Style: Style,
+	makeStyle: makeStyle,
+	ComputedStyle: ComputedStyle,
+	Sheet: Sheet,
+	defaultStyle: defaultStyle,
+	Widget: Widget,
+	alignChildren: alignChildren,
+	spaceChildren: spaceChildren,
+	wrapChildren: wrapChildren,
+	Scene: Scene,
+	Scenes: Scenes,
+	scenes: scenes,
+	installScene: installScene,
+	App: App,
+	make: make
 });
 
 export { ERROR, FALSE, IDENTITY, IS_NONZERO, IS_ZERO, NOOP, ONE, TRUE, WARN, ZERO, index as app, arrayDelete, arrayFindRight, arrayIncludesAll, arrayInsert, arrayNext, arrayNullify, arrayPrev, arrayRevEach, arraysIntersect, blob, buffer, index$5 as canvas, clamp, index$8 as color, colors, config$1 as config, cosmetic, data, events, first, flag, index$6 as fov, frequency, grid, lerp, index$3 as light, list, message, nextIndex, object, path, prevIndex, queue, random, range, rng, scheduler, index$4 as sprite, sprites, sum, index$7 as text, tween, types, index$2 as ui, index$1 as widget, xy };
