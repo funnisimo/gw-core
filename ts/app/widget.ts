@@ -758,7 +758,7 @@ export class Widget {
         if (this.hidden || this.disabled) return;
         let current: Widget | null = this;
         while (current && !e.propagationStopped) {
-            current.events.dispatch(e);
+            e.dispatch(current.events);
             current = current.parent;
         }
     }

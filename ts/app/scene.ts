@@ -241,7 +241,7 @@ export class Scene {
             }
         }
         if (!e.propagationStopped) {
-            this.events.dispatch(e);
+            e.dispatch(this.events);
         }
     }
 

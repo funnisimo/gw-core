@@ -173,7 +173,7 @@ export class Input extends Text.Text {
 
         if (!this.bounds.contains(e)) return;
         if (e.propagationStopped) return;
-        this.events.dispatch(e);
+        e.dispatch(this.events);
     }
 
     text(): string;

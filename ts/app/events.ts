@@ -1,9 +1,12 @@
-import * as IO from './io';
+// import * as IO from './io';
 import * as UTILS from '../utils';
 
 export type CancelFn = () => void;
 
 export type CallbackFn = (...args: any[]) => void;
+export interface CallbackObj {
+    [event: string]: CallbackFn;
+}
 
 interface CallbackInfo {
     fn: CallbackFn;
@@ -23,6 +26,12 @@ export class Events {
         this._ctx = ctx;
     }
 
+    has(name: string): boolean {
+        const events = this._events[name];
+        if (!events) return false;
+        return events.some((e) => e && e.fn);
+    }
+
     on(ev: string | string[], fn: CallbackFn): CancelFn {
         if (Array.isArray(ev)) {
             const cleanup = ev.map((e) => this.on(e, fn));
@@ -35,7 +44,7 @@ export class Events {
             this._events[ev] = [];
         }
         const info = { fn };
-        this._events[ev].push(info);
+        this._events[ev].unshift(info); // add to front
         return () => {
             UTILS.arrayNullify(this._events[ev], info);
         };
@@ -53,13 +62,13 @@ export class Events {
             this._events[ev] = [];
         }
         const info = { fn, once: true };
-        this._events[ev].push(info);
+        this._events[ev].unshift(info); // add to front
         return () => {
             UTILS.arrayNullify(this._events[ev], info);
         };
     }
 
-    off(ev: string | string[], cb: CallbackFn): void {
+    off(ev: string | string[], cb?: CallbackFn): void {
         if (Array.isArray(ev)) {
             ev.forEach((e) => this.off(e, cb));
             return;
@@ -67,6 +76,13 @@ export class Events {
 
         const events = this._events[ev];
         if (!events) return;
+
+        if (!cb) {
+            for (let i = 0; i < events.length; ++i) {
+                events[i] = null;
+            }
+            return;
+        }
 
         const current = events.findIndex((i) => i && i.fn === cb);
         if (current > -1) {
@@ -88,7 +104,7 @@ export class Events {
             return this._unhandled(ev, args);
         }
         // newer events first (especially for input)
-        UTILS.arrayRevEach(events, (info) => {
+        events.forEach((info) => {
             info && info.fn.call(this._ctx, ...args);
         });
 
@@ -102,19 +118,8 @@ export class Events {
         return true;
     }
 
-    dispatch(e: IO.Event) {
-        if (e.type === IO.KEYPRESS) {
-            const evs = [e.code, 'keypress'];
-            if (e.key !== e.code) {
-                evs.unshift(e.key);
-            }
-            if (e.dir) {
-                evs.unshift('dir');
-            }
-            this.trigger(evs, e);
-        } else {
-            this.trigger(e.type, e);
-        }
+    load(cfg: CallbackObj): void {
+        Object.entries(cfg).forEach(([ev, cb]) => this.on(ev, cb));
     }
 
     clear() {
@@ -129,24 +134,3 @@ export class Events {
         this.onUnhandled = null;
     }
 }
-
-/*
-        let fired = false;
-        next = next || UTILS.NOOP;
-        const events = this._events[ev];
-        if (!events) {
-            next();
-            return fired;
-        }
-        let index = -1;
-
-        const ctx = this._ctx;
-        function _next() {
-            ++index;
-            if (index >= events.length) return next!();
-            events[index].call(ctx, args, _next);
-            fired = true;
-        }
-        _next();
-        return fired;
-*/

@@ -260,7 +260,8 @@ export class App {
     _input(ev: IO.Event) {
         this.scenes.input(ev);
         if (ev.propagationStopped) return;
-        this.events.dispatch(ev);
+
+        ev.dispatch(this.events);
     }
 
     _update(dt = 0) {

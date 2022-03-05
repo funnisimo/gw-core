@@ -1535,6 +1535,9 @@ declare function initGlyphs(glyphs: {
 
 declare type CancelFn = () => void;
 declare type CallbackFn = (...args: any[]) => void;
+interface CallbackObj {
+    [event: string]: CallbackFn;
+}
 interface CallbackInfo {
     fn: CallbackFn;
     ctx?: any;
@@ -1546,12 +1549,13 @@ declare class Events {
     _ctx: any;
     onUnhandled: UnhandledFn | null;
     constructor(ctx?: any);
+    has(name: string): boolean;
     on(ev: string | string[], fn: CallbackFn): CancelFn;
     once(ev: string | string[], fn: CallbackFn): CancelFn;
-    off(ev: string | string[], cb: CallbackFn): void;
+    off(ev: string | string[], cb?: CallbackFn): void;
     trigger(ev: string | string[], ...args: any[]): boolean;
     _unhandled(ev: string, args: any[]): boolean;
-    dispatch(e: Event): void;
+    load(cfg: CallbackObj): void;
     clear(): void;
     restart(): void;
 }
@@ -1823,6 +1827,7 @@ type index_d$5_Queue = Queue;
 declare const index_d$5_Queue: typeof Queue;
 type index_d$5_CancelFn = CancelFn;
 type index_d$5_CallbackFn = CallbackFn;
+type index_d$5_CallbackObj = CallbackObj;
 type index_d$5_UnhandledFn = UnhandledFn;
 type index_d$5_Events = Events;
 declare const index_d$5_Events: typeof Events;
@@ -1907,6 +1912,7 @@ declare namespace index_d$5 {
     index_d$5_Queue as Queue,
     index_d$5_CancelFn as CancelFn,
     index_d$5_CallbackFn as CallbackFn,
+    index_d$5_CallbackObj as CallbackObj,
     index_d$5_UnhandledFn as UnhandledFn,
     index_d$5_Events as Events,
     index_d$5_Callback as Callback,
@@ -2544,6 +2550,9 @@ declare class Event implements EventType {
     stopPropagation(): void;
     stopImmediatePropagation(): void;
     reset(type: string, opts?: Partial<Event>): void;
+    dispatch(handler: {
+        trigger(name: string | string[], e: Event): void;
+    }): void;
 }
 declare type ControlFn = () => void | Promise<void>;
 declare type EventFn = (event: Event) => boolean | void | Promise<boolean | void>;
@@ -2643,7 +2652,7 @@ declare class Canvas {
     _createGeometry(): void;
     _createData(): void;
     _uploadGlyphs(): void;
-    draw(x: number, y: number, glyph: number, fg: number, bg: number): void;
+    draw(x: number, y: number, glyph: string | number, fg: ColorBase, bg: ColorBase): void;
     render(buffer?: Buffer$1): void;
     _render(): void;
 }
@@ -2688,7 +2697,7 @@ declare class Layer extends BufferBase implements BufferTarget {
     clear(): void;
     get(x: number, y: number): DrawInfo;
     set(x: number, y: number, glyph?: string | null, fg?: number | ColorData, bg?: number | ColorData): this;
-    draw(x: number, y: number, glyph?: string | number | null, fg?: number | ColorData, bg?: number | ColorData): this;
+    draw(x: number, y: number, glyph?: string | number | null, fg?: ColorBase, bg?: ColorBase): this;
     _set(index: number, glyph: number, fg: number, bg: number): void;
     nullify(x: number, y: number): void;
     nullify(): void;

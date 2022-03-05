@@ -363,7 +363,13 @@ export class Canvas {
         this._glyphs.needsUpdate = false;
     }
 
-    draw(x: number, y: number, glyph: number, fg: number, bg: number): void {
+    draw(
+        x: number,
+        y: number,
+        glyph: string | number,
+        fg: Color.ColorBase,
+        bg: Color.ColorBase
+    ): void {
         this.layer(0).draw(x, y, glyph, fg, bg);
     }
 

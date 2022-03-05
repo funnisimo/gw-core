@@ -79,8 +79,8 @@ export class Layer extends BufferBase implements BufferTarget {
         x: number,
         y: number,
         glyph: string | number | null = null,
-        fg: number | Color.ColorData = 0xfff,
-        bg: number | Color.ColorData = -1
+        fg: Color.ColorBase = 0xfff,
+        bg: Color.ColorBase = -1
     ): this {
         const index = x + y * this.canvas.width;
         if (typeof glyph === 'string') {

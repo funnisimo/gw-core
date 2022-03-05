@@ -7332,6 +7332,21 @@ void main() {
 	            Object.assign(this, opts);
 	        }
 	    }
+	    dispatch(handler) {
+	        if (this.type === KEYPRESS) {
+	            const evs = [this.code, 'keypress'];
+	            if (this.key !== this.code) {
+	                evs.unshift(this.key);
+	            }
+	            if (this.dir) {
+	                evs.unshift('dir');
+	            }
+	            handler.trigger(evs, this);
+	        }
+	        else {
+	            handler.trigger(this.type, this);
+	        }
+	    }
 	}
 	// let IOMAP: IOMap = {};
 	const DEAD_EVENTS = [];
@@ -9057,11 +9072,18 @@ void main() {
 		LightSystem: LightSystem
 	});
 
+	// import * as IO from './io';
 	class Events {
 	    constructor(ctx) {
 	        this._events = {};
 	        this.onUnhandled = null;
 	        this._ctx = ctx;
+	    }
+	    has(name) {
+	        const events = this._events[name];
+	        if (!events)
+	            return false;
+	        return events.some((e) => e && e.fn);
 	    }
 	    on(ev, fn) {
 	        if (Array.isArray(ev)) {
@@ -9074,7 +9096,7 @@ void main() {
 	            this._events[ev] = [];
 	        }
 	        const info = { fn };
-	        this._events[ev].push(info);
+	        this._events[ev].unshift(info); // add to front
 	        return () => {
 	            arrayNullify(this._events[ev], info);
 	        };
@@ -9090,7 +9112,7 @@ void main() {
 	            this._events[ev] = [];
 	        }
 	        const info = { fn, once: true };
-	        this._events[ev].push(info);
+	        this._events[ev].unshift(info); // add to front
 	        return () => {
 	            arrayNullify(this._events[ev], info);
 	        };
@@ -9103,6 +9125,12 @@ void main() {
 	        const events = this._events[ev];
 	        if (!events)
 	            return;
+	        if (!cb) {
+	            for (let i = 0; i < events.length; ++i) {
+	                events[i] = null;
+	            }
+	            return;
+	        }
 	        const current = events.findIndex((i) => i && i.fn === cb);
 	        if (current > -1) {
 	            events[current] = null;
@@ -9121,7 +9149,7 @@ void main() {
 	            return this._unhandled(ev, args);
 	        }
 	        // newer events first (especially for input)
-	        arrayRevEach(events, (info) => {
+	        events.forEach((info) => {
 	            info && info.fn.call(this._ctx, ...args);
 	        });
 	        this._events[ev] = events.filter((i) => i && !i.once);
@@ -9133,20 +9161,8 @@ void main() {
 	        this.onUnhandled(ev, ...args);
 	        return true;
 	    }
-	    dispatch(e) {
-	        if (e.type === KEYPRESS) {
-	            const evs = [e.code, 'keypress'];
-	            if (e.key !== e.code) {
-	                evs.unshift(e.key);
-	            }
-	            if (e.dir) {
-	                evs.unshift('dir');
-	            }
-	            this.trigger(evs, e);
-	        }
-	        else {
-	            this.trigger(e.type, e);
-	        }
+	    load(cfg) {
+	        Object.entries(cfg).forEach(([ev, cb]) => this.on(ev, cb));
 	    }
 	    clear() {
 	        this._events = {};
@@ -9159,26 +9175,6 @@ void main() {
 	        this.onUnhandled = null;
 	    }
 	}
-	/*
-	        let fired = false;
-	        next = next || UTILS.NOOP;
-	        const events = this._events[ev];
-	        if (!events) {
-	            next();
-	            return fired;
-	        }
-	        let index = -1;
-
-	        const ctx = this._ctx;
-	        function _next() {
-	            ++index;
-	            if (index >= events.length) return next!();
-	            events[index].call(ctx, args, _next);
-	            fired = true;
-	        }
-	        _next();
-	        return fired;
-	*/
 
 	// Tweeing API based on - http://tweenjs.github.io/tween.js/
 	class BaseObj {
@@ -10123,7 +10119,7 @@ void main() {
 	            }
 	        }
 	        if (!e.propagationStopped) {
-	            this.events.dispatch(e);
+	            e.dispatch(this.events);
 	        }
 	    }
 	    update(dt) {
@@ -11404,7 +11400,7 @@ void main() {
 	            return;
 	        let current = this;
 	        while (current && !e.propagationStopped) {
-	            current.events.dispatch(e);
+	            e.dispatch(current.events);
 	            current = current.parent;
 	        }
 	    }
@@ -12624,7 +12620,7 @@ void main() {
 	            return;
 	        if (e.propagationStopped)
 	            return;
-	        this.events.dispatch(e);
+	        e.dispatch(this.events);
 	    }
 	    text(v) {
 	        if (v === undefined)
@@ -14943,7 +14939,7 @@ void main() {
 	        this.scenes.input(ev);
 	        if (ev.propagationStopped)
 	            return;
-	        this.events.dispatch(ev);
+	        ev.dispatch(this.events);
 	    }
 	    _update(dt = 0) {
 	        dt = dt || this.dt;

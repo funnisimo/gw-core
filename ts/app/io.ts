@@ -87,6 +87,21 @@ export class Event implements EventType {
             Object.assign(this, opts);
         }
     }
+
+    dispatch(handler: { trigger(name: string | string[], e: Event): void }) {
+        if (this.type === KEYPRESS) {
+            const evs = [this.code, 'keypress'];
+            if (this.key !== this.code) {
+                evs.unshift(this.key);
+            }
+            if (this.dir) {
+                evs.unshift('dir');
+            }
+            handler.trigger(evs, this);
+        } else {
+            handler.trigger(this.type, this);
+        }
+    }
 }
 
 // export type CommandFn = (
