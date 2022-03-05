@@ -170,7 +170,11 @@ export function getBufferText(
     width = Math.min(width, buffer.width - x);
     for (let i = 0; i < width; ++i) {
         const data = buffer.get(x + i, y);
-        text += data.ch || ' ';
+        if (data.fg.equals(data.bg)) {
+            text += ' ';
+        } else {
+            text += data.ch || ' ';
+        }
     }
     if (!trim) return text;
     return text.trim();

@@ -91,7 +91,7 @@ export abstract class BufferBase {
     ): this {
         if (arguments.length == 1) {
             bg = Color.from(glyph);
-            glyph = ' ';
+            glyph = null;
             fg = bg;
         }
         return this.fillRect(

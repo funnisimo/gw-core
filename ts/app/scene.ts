@@ -152,18 +152,23 @@ export class Scene {
     }
 
     start(opts: StartOpts = {}) {
+        this.app.scenes.stop(); // stop all running scenes
+        this._start(opts);
+    }
+
+    _start(opts: StartOpts = {}) {
         this.stopped = false;
         this.timers.restart();
         this.events.restart();
         this.tweens.clear();
         this.buffer.nullify();
         this.needsDraw = true;
-        this.events.trigger('start', opts);
+        this.events.trigger('start', opts); // this will start this one in the app.scenes obj
     }
 
     run(data: StartOpts = {}) {
         this.app.scenes.pause();
-        this.start(data);
+        this._start(data);
         this.once('stop', () => this.app.scenes.resume());
     }
 

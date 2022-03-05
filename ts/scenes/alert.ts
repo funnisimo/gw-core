@@ -18,10 +18,15 @@ export interface AlertOptions extends Partial<DialogOptions> {
 
 export const AlertScene = {
     create(this: Scene) {
-        this.on('click', () => {
+        this.on('mousemove', (e) => {
+            e.stopPropagation();
+        });
+        this.on('click', (e) => {
+            e.stopPropagation();
             this.stop({ click: true });
         });
-        this.on('keypress', () => {
+        this.on('keypress', (e) => {
+            e.stopPropagation();
             this.stop({ keypress: true });
         });
     },

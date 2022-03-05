@@ -69,6 +69,7 @@ export class Scenes {
         scene.on('start', () => this._start(scene));
         scene.on('stop', () => this._stop(scene));
         scene.create(used);
+        this._scenes[scene.id] = scene;
 
         return scene;
     }

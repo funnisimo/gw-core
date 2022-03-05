@@ -33,7 +33,7 @@ describe('Scene', () => {
 
         app.buffer.fill(COLOR.BLACK);
         expect(app.buffer.info(0, 0)).toEqual({
-            ch: ' ',
+            ch: null,
             fg: 0x000f,
             bg: 0x000f,
         });
@@ -41,7 +41,7 @@ describe('Scene', () => {
         app._draw();
 
         expect(app.buffer.info(0, 0)).toEqual({
-            ch: ' ',
+            ch: null,
             fg: 0xffff,
             bg: 0xffff,
         });

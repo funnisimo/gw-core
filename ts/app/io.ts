@@ -90,17 +90,18 @@ export class Event implements EventType {
 
     dispatch(handler: { trigger(name: string | string[], e: Event): void }) {
         if (this.type === KEYPRESS) {
-            const evs = [this.code, 'keypress'];
-            if (this.key !== this.code) {
-                evs.unshift(this.key);
-            }
             if (this.dir) {
-                evs.unshift('dir');
+                handler.trigger('dir', this);
+                if (this.propagationStopped) return;
             }
-            handler.trigger(evs, this);
-        } else {
-            handler.trigger(this.type, this);
+            handler.trigger(this.key, this);
+            if (this.propagationStopped) return;
+            if (this.code !== this.key) {
+                handler.trigger(this.code, this);
+                if (this.propagationStopped) return;
+            }
         }
+        handler.trigger(this.type, this);
     }
 }
 

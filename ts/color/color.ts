@@ -287,6 +287,52 @@ export class Color {
         return newColor;
     }
 
+    apply(other: ColorBase): Color {
+        const O = from(other);
+        if (O.isNull()) return this;
+
+        if (O.a >= 100) return O;
+        if (O.a <= 0) return this;
+
+        const pct = clamp(O.a, 0, 100) / 100;
+        const keepPct = ((1 - pct) * this.a) / 100;
+
+        const newColor = make(
+            Math.round(this._data[0] * keepPct + O._data[0] * pct),
+            Math.round(this._data[1] * keepPct + O._data[1] * pct),
+            Math.round(this._data[2] * keepPct + O._data[2] * pct),
+            Math.round(this._data[3] * keepPct + O._data[3] * pct)
+        );
+        if (this._rand) {
+            newColor._rand = this._rand.slice() as [
+                number,
+                number,
+                number,
+                number
+            ];
+            newColor.dances = this.dances;
+        }
+
+        if (O._rand) {
+            if (!newColor._rand) {
+                newColor._rand = O._rand.map((v) => Math.round(v * pct)) as [
+                    number,
+                    number,
+                    number,
+                    number
+                ];
+            } else {
+                for (let i = 0; i < 4; ++i) {
+                    newColor._rand[i] = Math.round(
+                        newColor._rand[i] * keepPct + O._rand[i] * pct
+                    );
+                }
+            }
+            newColor.dances = newColor.dances || O.dances;
+        }
+        return newColor;
+    }
+
     // Only adjusts r,g,b
     lighten(percent: number): Color {
         if (this.isNull()) return this;
@@ -452,16 +498,27 @@ export function fromCss(css: string) {
     }
     const c = Number.parseInt(css.substring(1), 16);
     let r, g, b;
+    let a = 100;
     if (css.length == 4) {
         r = Math.round(((c >> 8) / 15) * 100);
         g = Math.round((((c & 0xf0) >> 4) / 15) * 100);
         b = Math.round(((c & 0xf) / 15) * 100);
-    } else {
+    } else if (css.length == 5) {
+        r = Math.round(((c >> 12) / 15) * 100);
+        g = Math.round((((c & 0xf00) >> 8) / 15) * 100);
+        b = Math.round((((c & 0xf0) >> 4) / 15) * 100);
+        a = Math.round(((c & 0xf) / 15) * 100);
+    } else if (css.length === 7) {
         r = Math.round(((c >> 16) / 255) * 100);
         g = Math.round((((c & 0xff00) >> 8) / 255) * 100);
         b = Math.round(((c & 0xff) / 255) * 100);
+    } else if (css.length === 9) {
+        r = Math.round(((c >> 24) / 255) * 100);
+        g = Math.round((((c & 0xff0000) >> 16) / 255) * 100);
+        b = Math.round((((c & 0xff00) >> 8) / 255) * 100);
+        a = Math.round(((c & 0xff) / 255) * 100);
     }
-    return new Color(r, g, b);
+    return new Color(r, g, b, a);
 }
 
 export function fromName(name: string) {

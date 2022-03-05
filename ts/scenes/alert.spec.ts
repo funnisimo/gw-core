@@ -37,11 +37,14 @@ describe('Body', () => {
 
         expect(app.scene).toBe(scene);
 
-        app.alert('This is an alert.', { bg: 'green', border: 'ascii' });
+        const alert = app.alert('This is an alert.', {
+            bg: 'green',
+            border: 'ascii',
+        });
 
         expect(pauseFn).toHaveBeenCalled();
         expect(resumeFn).not.toHaveBeenCalled();
-        expect(app.scene).not.toBe(scene);
+        expect(app.scene).toBe(alert);
 
         expect(scene.paused).toEqual({
             draw: true,
@@ -58,6 +61,7 @@ describe('Body', () => {
         );
 
         app._input(TEST.keypress('Enter'));
+        app._frameEnd();
 
         expect(resumeFn).toHaveBeenCalled();
         expect(app.scene).toBe(scene);
@@ -99,6 +103,7 @@ describe('Body', () => {
         // buffer.dump();
         app._input(TEST.keypress('Enter'));
         app._draw();
+        app._frameEnd();
 
         expect(app.scene).toBe(scene);
 

@@ -88,19 +88,24 @@ export class Mixer implements DrawInfo {
         return this._changed();
     }
 
-    drawSprite(src: SpriteData | Mixer, opacity?: number) {
+    drawSprite(src: SpriteData | Mixer) {
         if (src === this) return this;
 
         // @ts-ignore
-        if (opacity === undefined) opacity = src.opacity;
-        if (opacity === undefined) opacity = 100;
-        if (opacity <= 0) return;
+        // if (opacity === undefined) opacity = src.opacity;
+        // if (opacity === undefined) opacity = 100;
+        // if (opacity <= 0) return;
 
-        if (src.ch) this.ch = src.ch;
-        if ((src.fg && src.fg !== -1) || src.fg === 0)
-            this.fg = this.fg.mix(src.fg, opacity);
-        if ((src.bg && src.bg !== -1) || src.bg === 0)
-            this.bg = this.bg.mix(src.bg, opacity);
+        if (src.fg && src.fg !== -1) {
+            const fg = Color.from(src.fg);
+            if (src.ch && fg.a) {
+                this.ch = src.ch;
+            }
+            this.fg = this.fg.apply(fg);
+        }
+        if (src.bg && src.bg !== -1) {
+            this.bg = this.bg.apply(src.bg);
+        }
         return this._changed();
     }
 

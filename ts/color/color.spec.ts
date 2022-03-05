@@ -77,10 +77,16 @@ describe('Color', () => {
 
     test('fromCss', () => {
         const c = Color.fromCss('#07F');
-        expect(c.equals([0, 47, 100])).toBeTruthy();
+        expect(c.equals([0, 47, 100, 100])).toBeTruthy();
+
+        const ca = Color.fromCss('#07F8');
+        expect(ca.equals([0, 47, 100, 53])).toBeTruthy();
 
         const d = Color.fromCss('#0080FF');
-        expect(d.equals([0, 50, 100])).toBeTruthy();
+        expect(d.equals([0, 50, 100, 100])).toBeTruthy();
+
+        const da = Color.fromCss('#0080FF80');
+        expect(da.equals([0, 50, 100, 50])).toBeTruthy();
 
         expect(() => Color.fromCss('black')).toThrow();
     });
@@ -210,6 +216,20 @@ describe('Color', () => {
 
         const crkb = crk.mix(blue, 50);
         expect(crkb.toString()).toEqual('#319');
+    });
+
+    test('apply', () => {
+        expect(Color.WHITE.apply(Color.NONE)).toBe(Color.WHITE);
+        expect(Color.WHITE.apply(Color.BLACK)).toBe(Color.BLACK);
+        expect(Color.WHITE.apply(Color.colors.blue)).toBe(Color.colors.blue);
+
+        expect(Color.WHITE.apply([50, 50, 50, 50])).toEqual(
+            Color.from([75, 75, 75, 75])
+        );
+
+        expect(Color.WHITE.apply([0, 0, 0, 50])).toEqual(
+            Color.from([50, 50, 50, 75])
+        );
     });
 
     test('lighten', () => {

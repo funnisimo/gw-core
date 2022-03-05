@@ -46,7 +46,7 @@ describe('Confirm', () => {
             '| Do you want to   |'
         );
         expect(TEST.getBufferText(buffer, 13, 15, 40)).toEqual(
-            '| eat the food?    |'
+            'tes| eat the food?    |'
         );
 
         app._input(TEST.keypress('Enter'));
@@ -85,7 +85,7 @@ describe('Confirm', () => {
             '| Do you want to   |'
         );
         expect(TEST.getBufferText(buffer, 13, 15, 40)).toEqual(
-            '| eat the food?    |'
+            'tes| eat the food?    |'
         );
 
         app._input(TEST.keypress('Escape'));
@@ -124,7 +124,7 @@ describe('Confirm', () => {
             '| Do you want to   |'
         );
         expect(TEST.getBufferText(buffer, 13, 15, 40)).toEqual(
-            '| eat the food?    |'
+            'tes| eat the food?    |'
         );
 
         app._input(TEST.keypress('Enter'));
@@ -163,7 +163,7 @@ describe('Confirm', () => {
             '| Do you want to   |'
         );
         expect(TEST.getBufferText(buffer, 13, 15, 40)).toEqual(
-            '| eat the food?    |'
+            'tes| eat the food?    |'
         );
 
         app._input(TEST.keypress('Escape'));

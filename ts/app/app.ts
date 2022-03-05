@@ -8,7 +8,7 @@ import { Scenes } from './scenes';
 import * as SCENE from './scene';
 import { AlertOptions } from '../scenes/alert';
 import { ConfirmOptions } from '../scenes/confirm';
-import { PromptOptions } from '../scenes/prompt';
+import { PromptOptions, PromptScene } from '../scenes/prompt';
 import * as STYLE from './style';
 import { Buffer } from '../buffer';
 // import * as COLOR from '../color';
@@ -307,8 +307,11 @@ export class App {
         text: string,
         opts: Omit<PromptOptions, 'prompt'> = {}
     ): SCENE.Scene {
+        // NEED TO CREATE A NEW SCENE EVERY TIME SO WE DON"T HAVE HOLDOVER EVENTS, etc...
         (<PromptOptions>opts).prompt = text;
-        return this.scenes.run('prompt', opts);
+        const prompt = this.scenes._create('prompt', PromptScene);
+        prompt.run(opts);
+        return prompt;
     }
 }
 

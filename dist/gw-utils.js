@@ -3901,6 +3901,34 @@
 	        }
 	        return newColor;
 	    }
+	    apply(other) {
+	        const O = from$2(other);
+	        if (O.isNull())
+	            return this;
+	        if (O.a >= 100)
+	            return O;
+	        if (O.a <= 0)
+	            return this;
+	        const pct = clamp(O.a, 0, 100) / 100;
+	        const keepPct = ((1 - pct) * this.a) / 100;
+	        const newColor = make$8(Math.round(this._data[0] * keepPct + O._data[0] * pct), Math.round(this._data[1] * keepPct + O._data[1] * pct), Math.round(this._data[2] * keepPct + O._data[2] * pct), Math.round(this._data[3] * keepPct + O._data[3] * pct));
+	        if (this._rand) {
+	            newColor._rand = this._rand.slice();
+	            newColor.dances = this.dances;
+	        }
+	        if (O._rand) {
+	            if (!newColor._rand) {
+	                newColor._rand = O._rand.map((v) => Math.round(v * pct));
+	            }
+	            else {
+	                for (let i = 0; i < 4; ++i) {
+	                    newColor._rand[i] = Math.round(newColor._rand[i] * keepPct + O._rand[i] * pct);
+	                }
+	            }
+	            newColor.dances = newColor.dances || O.dances;
+	        }
+	        return newColor;
+	    }
 	    // Only adjusts r,g,b
 	    lighten(percent) {
 	        if (this.isNull())
@@ -4018,17 +4046,30 @@
 	    }
 	    const c = Number.parseInt(css.substring(1), 16);
 	    let r, g, b;
+	    let a = 100;
 	    if (css.length == 4) {
 	        r = Math.round(((c >> 8) / 15) * 100);
 	        g = Math.round((((c & 0xf0) >> 4) / 15) * 100);
 	        b = Math.round(((c & 0xf) / 15) * 100);
 	    }
-	    else {
+	    else if (css.length == 5) {
+	        r = Math.round(((c >> 12) / 15) * 100);
+	        g = Math.round((((c & 0xf00) >> 8) / 15) * 100);
+	        b = Math.round((((c & 0xf0) >> 4) / 15) * 100);
+	        a = Math.round(((c & 0xf) / 15) * 100);
+	    }
+	    else if (css.length === 7) {
 	        r = Math.round(((c >> 16) / 255) * 100);
 	        g = Math.round((((c & 0xff00) >> 8) / 255) * 100);
 	        b = Math.round(((c & 0xff) / 255) * 100);
 	    }
-	    return new Color(r, g, b);
+	    else if (css.length === 9) {
+	        r = Math.round(((c >> 24) / 255) * 100);
+	        g = Math.round((((c & 0xff0000) >> 16) / 255) * 100);
+	        b = Math.round((((c & 0xff00) >> 8) / 255) * 100);
+	        a = Math.round(((c & 0xff) / 255) * 100);
+	    }
+	    return new Color(r, g, b, a);
 	}
 	function fromName(name) {
 	    const c = colors[name];
@@ -4287,22 +4328,23 @@
 	        }
 	        return this._changed();
 	    }
-	    drawSprite(src, opacity) {
+	    drawSprite(src) {
 	        if (src === this)
 	            return this;
 	        // @ts-ignore
-	        if (opacity === undefined)
-	            opacity = src.opacity;
-	        if (opacity === undefined)
-	            opacity = 100;
-	        if (opacity <= 0)
-	            return;
-	        if (src.ch)
-	            this.ch = src.ch;
-	        if ((src.fg && src.fg !== -1) || src.fg === 0)
-	            this.fg = this.fg.mix(src.fg, opacity);
-	        if ((src.bg && src.bg !== -1) || src.bg === 0)
-	            this.bg = this.bg.mix(src.bg, opacity);
+	        // if (opacity === undefined) opacity = src.opacity;
+	        // if (opacity === undefined) opacity = 100;
+	        // if (opacity <= 0) return;
+	        if (src.fg && src.fg !== -1) {
+	            const fg = from$2(src.fg);
+	            if (src.ch && fg.a) {
+	                this.ch = src.ch;
+	            }
+	            this.fg = this.fg.apply(fg);
+	        }
+	        if (src.bg && src.bg !== -1) {
+	            this.bg = this.bg.apply(src.bg);
+	        }
 	        return this._changed();
 	    }
 	    invert() {
@@ -5468,7 +5510,7 @@
 	    fill(glyph = ' ', fg = 0xfff, bg = 0) {
 	        if (arguments.length == 1) {
 	            bg = from$2(glyph);
-	            glyph = ' ';
+	            glyph = null;
 	            fg = bg;
 	        }
 	        return this.fillRect(0, 0, this.width, this.height, glyph, fg, bg);
@@ -7334,18 +7376,21 @@ void main() {
 	    }
 	    dispatch(handler) {
 	        if (this.type === KEYPRESS) {
-	            const evs = [this.code, 'keypress'];
-	            if (this.key !== this.code) {
-	                evs.unshift(this.key);
-	            }
 	            if (this.dir) {
-	                evs.unshift('dir');
+	                handler.trigger('dir', this);
+	                if (this.propagationStopped)
+	                    return;
 	            }
-	            handler.trigger(evs, this);
+	            handler.trigger(this.key, this);
+	            if (this.propagationStopped)
+	                return;
+	            if (this.code !== this.key) {
+	                handler.trigger(this.code, this);
+	                if (this.propagationStopped)
+	                    return;
+	            }
 	        }
-	        else {
-	            handler.trigger(this.type, this);
-	        }
+	        handler.trigger(this.type, this);
 	    }
 	}
 	// let IOMAP: IOMap = {};
@@ -10035,17 +10080,21 @@ void main() {
 	        this.tweens.clear();
 	    }
 	    start(opts = {}) {
+	        this.app.scenes.stop(); // stop all running scenes
+	        this._start(opts);
+	    }
+	    _start(opts = {}) {
 	        this.stopped = false;
 	        this.timers.restart();
 	        this.events.restart();
 	        this.tweens.clear();
 	        this.buffer.nullify();
 	        this.needsDraw = true;
-	        this.events.trigger('start', opts);
+	        this.events.trigger('start', opts); // this will start this one in the app.scenes obj
 	    }
 	    run(data = {}) {
 	        this.app.scenes.pause();
-	        this.start(data);
+	        this._start(data);
 	        this.once('stop', () => this.app.scenes.resume());
 	    }
 	    stop(data) {
@@ -10654,6 +10703,7 @@ void main() {
 	        scene.on('start', () => this._start(scene));
 	        scene.on('stop', () => this._stop(scene));
 	        scene.create(used);
+	        this._scenes[scene.id] = scene;
 	        return scene;
 	    }
 	    create(id, data = {}) {
@@ -12319,10 +12369,15 @@ void main() {
 	// import * as Color from '../color';
 	const AlertScene = {
 	    create() {
-	        this.on('click', () => {
+	        this.on('mousemove', (e) => {
+	            e.stopPropagation();
+	        });
+	        this.on('click', (e) => {
+	            e.stopPropagation();
 	            this.stop({ click: true });
 	        });
-	        this.on('keypress', () => {
+	        this.on('keypress', (e) => {
+	            e.stopPropagation();
 	            this.stop({ keypress: true });
 	        });
 	    },
@@ -12682,6 +12737,15 @@ void main() {
 	// import * as GWU from 'gw-utils';
 	const PromptScene = {
 	    create() {
+	        this.on('mousemove', (e) => {
+	            e.stopPropagation();
+	        });
+	        this.on('click', (e) => {
+	            e.stopPropagation();
+	        });
+	        this.on('keypress', (e) => {
+	            e.stopPropagation();
+	        });
 	        this.on('INPUT', () => {
 	            const input = this.get('INPUT');
 	            this.stop(input ? input.text() : null);
@@ -14974,8 +15038,11 @@ void main() {
 	        return this.scenes.run('confirm', opts);
 	    }
 	    prompt(text, opts = {}) {
+	        // NEED TO CREATE A NEW SCENE EVERY TIME SO WE DON"T HAVE HOLDOVER EVENTS, etc...
 	        opts.prompt = text;
-	        return this.scenes.run('prompt', opts);
+	        const prompt = this.scenes._create('prompt', PromptScene);
+	        prompt.run(opts);
+	        return prompt;
 	    }
 	}
 	function make(opts) {

@@ -39,6 +39,15 @@ export interface PromptOptions
 
 export const PromptScene = {
     create(this: Scene) {
+        this.on('mousemove', (e) => {
+            e.stopPropagation();
+        });
+        this.on('click', (e) => {
+            e.stopPropagation();
+        });
+        this.on('keypress', (e) => {
+            e.stopPropagation();
+        });
         this.on('INPUT', () => {
             const input = this.get('INPUT');
             this.stop(input ? input.text() : null);

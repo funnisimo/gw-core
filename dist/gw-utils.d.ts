@@ -76,6 +76,7 @@ declare class Color {
     clamp(): Color;
     blend(other: ColorBase): Color;
     mix(other: ColorBase, percent: number): Color;
+    apply(other: ColorBase): Color;
     lighten(percent: number): Color;
     darken(percent: number): Color;
     bake(clearDancing?: boolean): Color;
@@ -864,7 +865,7 @@ declare class Mixer implements DrawInfo {
     nullify(): this;
     blackOut(): this;
     draw(ch?: string | null, fg?: ColorBase, bg?: ColorBase): this;
-    drawSprite(src: SpriteData$1 | Mixer, opacity?: number): this | undefined;
+    drawSprite(src: SpriteData$1 | Mixer): this;
     invert(): this;
     swap(): this;
     multiply(color: ColorBase, fg?: boolean, bg?: boolean): this;
@@ -2333,6 +2334,7 @@ declare class Scene {
     create(opts?: CreateOpts): void;
     destroy(data?: any): void;
     start(opts?: StartOpts): void;
+    _start(opts?: StartOpts): void;
     run(data?: StartOpts): void;
     stop(data?: any): void;
     pause(opts?: PauseOpts): void;
