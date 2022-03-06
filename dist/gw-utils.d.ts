@@ -1483,6 +1483,7 @@ declare class Scheduler {
     clear(): void;
     push(item: any, delay?: number): Event$1;
     pop(): any;
+    peek(): any;
     remove(item: any): void;
 }
 
@@ -2552,6 +2553,7 @@ declare class Event implements EventType {
     stopPropagation(): void;
     stopImmediatePropagation(): void;
     reset(type: string, opts?: Partial<Event>): void;
+    clone(): Event;
     dispatch(handler: {
         trigger(name: string | string[], e: Event): void;
     }): void;

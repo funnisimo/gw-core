@@ -6928,6 +6928,12 @@ class Scheduler {
         this.time = Math.max(n.time, this.time); // so you can schedule -1 as a time uint
         return n.item;
     }
+    peek() {
+        const n = this.next;
+        if (!n)
+            return null;
+        return n.item;
+    }
     remove(item) {
         if (!item || !this.next)
             return;
@@ -7367,6 +7373,10 @@ class Event {
         if (opts) {
             Object.assign(this, opts);
         }
+    }
+    clone() {
+        const other = new Event(this.type, this);
+        return other;
     }
     dispatch(handler) {
         if (this.type === KEYPRESS) {
@@ -10130,7 +10140,7 @@ class Scene {
         if (this.paused.input || this.stopped)
             return;
         this.trigger('input', e);
-        if (e.defaultPrevented)
+        if (e.defaultPrevented || e.propagationStopped)
             return;
         if (e.type === KEYPRESS) {
             let w = this.focused;
@@ -10161,9 +10171,9 @@ class Scene {
                 }
             }
         }
-        if (!e.propagationStopped) {
-            e.dispatch(this.events);
-        }
+        if (e.propagationStopped || e.defaultPrevented)
+            return;
+        e.dispatch(this.events);
     }
     update(dt) {
         if (this.stopped)
@@ -14995,7 +15005,7 @@ class App {
     }
     _input(ev) {
         this.scenes.input(ev);
-        if (ev.propagationStopped)
+        if (ev.propagationStopped || ev.defaultPrevented)
             return;
         ev.dispatch(this.events);
     }

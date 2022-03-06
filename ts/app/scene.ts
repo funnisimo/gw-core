@@ -216,7 +216,7 @@ export class Scene {
         if (this.paused.input || this.stopped) return;
 
         this.trigger('input', e);
-        if (e.defaultPrevented) return;
+        if (e.defaultPrevented || e.propagationStopped) return;
 
         if (e.type === IO.KEYPRESS) {
             let w = this.focused;
@@ -245,9 +245,8 @@ export class Scene {
                 }
             }
         }
-        if (!e.propagationStopped) {
-            e.dispatch(this.events);
-        }
+        if (e.propagationStopped || e.defaultPrevented) return;
+        e.dispatch(this.events);
     }
 
     update(dt: number) {

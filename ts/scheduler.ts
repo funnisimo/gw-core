@@ -62,6 +62,12 @@ export class Scheduler {
         return n.item;
     }
 
+    peek(): any {
+        const n = this.next;
+        if (!n) return null;
+        return n.item;
+    }
+
     remove(item: any) {
         if (!item || !this.next) return;
         if (this.next.item === item) {

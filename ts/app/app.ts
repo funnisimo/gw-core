@@ -259,7 +259,7 @@ export class App {
 
     _input(ev: IO.Event) {
         this.scenes.input(ev);
-        if (ev.propagationStopped) return;
+        if (ev.propagationStopped || ev.defaultPrevented) return;
 
         ev.dispatch(this.events);
     }

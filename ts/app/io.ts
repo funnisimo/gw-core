@@ -88,6 +88,11 @@ export class Event implements EventType {
         }
     }
 
+    clone(): Event {
+        const other = new Event(this.type, this);
+        return other;
+    }
+
     dispatch(handler: { trigger(name: string | string[], e: Event): void }) {
         if (this.type === KEYPRESS) {
             if (this.dir) {
