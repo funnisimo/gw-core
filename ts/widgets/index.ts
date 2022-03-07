@@ -15,3 +15,4 @@ export * from './menubar';
 export * from './select';
 export * from './choice';
 export * from './builder';
+export * from './make';

@@ -95,11 +95,11 @@ declare function fromArray(vals: ColorData, base256?: boolean): Color;
 declare function fromCss(css: string): Color;
 declare function fromName(name: string): Color;
 declare function fromNumber(val: number, base256?: boolean): Color;
-declare function make$c(): Color;
-declare function make$c(rgb: number, base256?: boolean): Color;
-declare function make$c(color?: ColorBase | null): Color;
-declare function make$c(arrayLike: ColorData, base256?: boolean): Color;
-declare function make$c(...rgb: number[]): Color;
+declare function make$d(): Color;
+declare function make$d(rgb: number, base256?: boolean): Color;
+declare function make$d(color?: ColorBase | null): Color;
+declare function make$d(arrayLike: ColorData, base256?: boolean): Color;
+declare function make$d(...rgb: number[]): Color;
 declare function from$4(): Color;
 declare function from$4(rgb: number, base256?: boolean): Color;
 declare function from$4(color?: ColorBase | null): Color;
@@ -109,8 +109,8 @@ declare function separate(a: Color, b: Color): [Color, Color];
 declare function relativeLuminance(a: Color, b: Color): number;
 declare function distance(a: Color, b: Color): number;
 declare function smoothScalar(rgb: number, maxRgb?: number): number;
-declare function install$3(name: string, info: ColorBase): Color;
-declare function install$3(name: string, ...rgb: ColorData): Color;
+declare function install$2(name: string, info: ColorBase): Color;
+declare function install$2(name: string, ...rgb: ColorData): Color;
 declare function installSpread(name: string, info: ColorBase): Color;
 declare function installSpread(name: string, ...rgb: ColorData): Color;
 declare const NONE: Color;
@@ -146,13 +146,13 @@ declare namespace index_d$8 {
     index_d$8_fromCss as fromCss,
     index_d$8_fromName as fromName,
     index_d$8_fromNumber as fromNumber,
-    make$c as make,
+    make$d as make,
     from$4 as from,
     index_d$8_separate as separate,
     index_d$8_relativeLuminance as relativeLuminance,
     index_d$8_distance as distance,
     index_d$8_smoothScalar as smoothScalar,
-    install$3 as install,
+    install$2 as install,
     index_d$8_installSpread as installSpread,
     index_d$8_NONE as NONE,
     index_d$8_BLACK as BLACK,
@@ -260,9 +260,10 @@ declare class Bounds {
 }
 declare function copy(dest: XY, src: XY | Loc$1): void;
 declare function addTo(dest: XY, src: XY | Loc$1): void;
-declare function add$1(a: XY, b: XY | Loc$1): XY;
-declare function add$1(a: Loc$1, b: XY | Loc$1): Loc$1;
+declare function add(a: XY, b: XY | Loc$1): XY;
+declare function add(a: Loc$1, b: XY | Loc$1): Loc$1;
 declare function equalsXY(dest: XY | Loc$1 | null | undefined, src: XY | Loc$1 | null | undefined): boolean;
+declare function isDiagonal(xy: XY | Loc$1): boolean;
 declare function lerpXY(a: XY | Loc$1, b: XY | Loc$1, pct: number): any[];
 declare type XYFunc = (x: number, y: number) => any;
 declare function eachNeighbor(x: number, y: number, fn: XYFunc, only4dirs?: boolean): void;
@@ -317,7 +318,9 @@ type xy_d_Bounds = Bounds;
 declare const xy_d_Bounds: typeof Bounds;
 declare const xy_d_copy: typeof copy;
 declare const xy_d_addTo: typeof addTo;
+declare const xy_d_add: typeof add;
 declare const xy_d_equalsXY: typeof equalsXY;
+declare const xy_d_isDiagonal: typeof isDiagonal;
 declare const xy_d_lerpXY: typeof lerpXY;
 type xy_d_XYFunc = XYFunc;
 declare const xy_d_eachNeighbor: typeof eachNeighbor;
@@ -371,8 +374,9 @@ declare namespace xy_d {
     xy_d_Bounds as Bounds,
     xy_d_copy as copy,
     xy_d_addTo as addTo,
-    add$1 as add,
+    xy_d_add as add,
     xy_d_equalsXY as equalsXY,
+    xy_d_isDiagonal as isDiagonal,
     xy_d_lerpXY as lerpXY,
     xy_d_XYFunc as XYFunc,
     xy_d_eachNeighbor as eachNeighbor,
@@ -572,7 +576,7 @@ declare class Random {
 }
 declare const random: Random;
 declare const cosmetic: Random;
-declare function make$b(seed?: number): Random;
+declare function make$c(seed?: number): Random;
 
 type rng_d_WeightedArray = WeightedArray;
 type rng_d_WeightedObject = WeightedObject;
@@ -594,7 +598,7 @@ declare namespace rng_d {
     rng_d_Random as Random,
     rng_d_random as random,
     rng_d_cosmetic as cosmetic,
-    make$b as make,
+    make$c as make,
   };
 }
 
@@ -610,8 +614,8 @@ declare class Range {
     copy(other: Range): this;
     toString(): string;
 }
-declare function make$a(config: RangeBase | null): Range;
-declare const from$3: typeof make$a;
+declare function make$b(config: RangeBase | null): Range;
+declare const from$3: typeof make$b;
 declare function asFn(config: RangeBase | null): () => number;
 declare function value(base: RangeBase): number;
 
@@ -624,7 +628,7 @@ declare namespace range_d {
   export {
     range_d_RangeBase as RangeBase,
     range_d_Range as Range,
-    make$a as make,
+    make$b as make,
     from$3 as from,
     range_d_asFn as asFn,
     range_d_value as value,
@@ -636,7 +640,7 @@ declare type FlagBase = FlagSource | FlagSource[] | null;
 declare function fl(N: number): number;
 declare function toString<T>(flagObj: T, value: number): string;
 declare function from$2<T>(obj: T, ...args: (FlagBase | undefined)[]): number;
-declare function make$9(obj: Record<string, FlagBase>): Record<string, number>;
+declare function make$a(obj: Record<string, FlagBase>): Record<string, number>;
 
 type flag_d_FlagBase = FlagBase;
 declare const flag_d_fl: typeof fl;
@@ -647,7 +651,7 @@ declare namespace flag_d {
     flag_d_fl as fl,
     flag_d_toString as toString,
     from$2 as from,
-    make$9 as make,
+    make$a as make,
   };
 }
 
@@ -775,8 +779,8 @@ declare class NumGrid extends Grid<number> {
 }
 declare const alloc: typeof NumGrid.alloc;
 declare const free: typeof NumGrid.free;
-declare function make$8<T>(w: number, h: number, v?: number | GridInit<number>): NumGrid;
-declare function make$8<T>(w: number, h: number, v?: T | GridInit<T>): Grid<T>;
+declare function make$9<T>(w: number, h: number, v?: number | GridInit<number>): NumGrid;
+declare function make$9<T>(w: number, h: number, v?: T | GridInit<T>): Grid<T>;
 declare type GridZip<T, U> = (destVal: T, sourceVal: U, destX: number, destY: number, sourceX: number, sourceY: number, destGrid: Grid<T>, sourceGrid: Grid<U>) => void;
 declare function offsetZip<T, U>(destGrid: Grid<T>, srcGrid: Grid<U>, srcToDestX: number, srcToDestY: number, value: T | GridZip<T, U>): void;
 declare function intersection(onto: NumGrid, a: NumGrid, b?: NumGrid): void;
@@ -816,7 +820,7 @@ declare namespace grid_d {
     grid_d_NumGrid as NumGrid,
     grid_d_alloc as alloc,
     grid_d_free as free,
-    make$8 as make,
+    make$9 as make,
     grid_d_GridZip as GridZip,
     grid_d_offsetZip as offsetZip,
     grid_d_intersection as intersection,
@@ -1097,11 +1101,11 @@ declare class Buffer$1 extends BufferBase {
     nullify(): void;
     dump(): void;
 }
-declare function make$7(opts: {
+declare function make$8(opts: {
     width: number;
     height: number;
 }): Buffer$1;
-declare function make$7(width: number, height: number): Buffer$1;
+declare function make$8(width: number, height: number): Buffer$1;
 
 type buffer_d_DrawData = DrawData;
 type buffer_d_BufferBase = BufferBase;
@@ -1111,7 +1115,7 @@ declare namespace buffer_d {
     buffer_d_DrawData as DrawData,
     buffer_d_BufferBase as BufferBase,
     Buffer$1 as Buffer,
-    make$7 as make,
+    make$8 as make,
   };
 }
 
@@ -1458,7 +1462,7 @@ declare namespace events_d {
 
 declare type FrequencyFn = (danger: number) => number;
 declare type FrequencyConfig = FrequencyFn | number | string | Record<string, number> | null;
-declare function make$6(v?: FrequencyConfig): FrequencyFn;
+declare function make$7(v?: FrequencyConfig): FrequencyFn;
 
 type frequency_d_FrequencyFn = FrequencyFn;
 type frequency_d_FrequencyConfig = FrequencyConfig;
@@ -1466,7 +1470,7 @@ declare namespace frequency_d {
   export {
     frequency_d_FrequencyFn as FrequencyFn,
     frequency_d_FrequencyConfig as FrequencyConfig,
-    make$6 as make,
+    make$7 as make,
   };
 }
 
@@ -1557,7 +1561,7 @@ declare class Events {
     off(ev: string | string[], cb?: CallbackFn): void;
     trigger(ev: string | string[], ...args: any[]): boolean;
     _unhandled(ev: string, args: any[]): boolean;
-    load(cfg: CallbackObj): void;
+    load(cfg: CallbackObj): CancelFn;
     clear(): void;
     restart(): void;
 }
@@ -1687,6 +1691,7 @@ declare class Timers {
     _timers: TimerInfo[];
     _ctx: any;
     constructor(ctx?: any);
+    get length(): number;
     clear(): void;
     restart(): void;
     setTimeout(fn: TimerFn, delay: number): CancelFn;
@@ -1761,7 +1766,7 @@ declare class Tween extends BaseObj<Tween> {
     stop(success?: boolean): void;
     _updateProperties(obj: AnyObj, start: AnyObj, goal: AnyObj, pct: number): boolean;
 }
-declare function make$5(src: AnyObj, duration?: number): Tween;
+declare function make$6(src: AnyObj, duration?: number): Tween;
 declare function linear(pct: number): number;
 declare function interpolate(start: any, goal: any, pct: number): any;
 
@@ -1787,7 +1792,7 @@ declare namespace tween_d {
     tween_d_InterpolateFn as InterpolateFn,
     tween_d_BaseObj as BaseObj,
     tween_d_Tween as Tween,
-    make$5 as make,
+    make$6 as make,
     tween_d_linear as linear,
     tween_d_interpolate as interpolate,
   };
@@ -1961,7 +1966,7 @@ declare namespace index_d$5 {
     index_d$5_installScene as installScene,
     index_d$5_AppOpts as AppOpts,
     index_d$5_App as App,
-    make$4 as make,
+    make$5 as make,
   };
 }
 
@@ -2263,7 +2268,7 @@ declare class App {
     confirm(text: string, opts?: Omit<ConfirmOptions, 'text'>): Scene;
     prompt(text: string, opts?: Omit<PromptOptions$1, 'prompt'>): Scene;
 }
-declare function make$4(opts: Partial<AppOpts>): App;
+declare function make$5(opts: Partial<AppOpts>): App;
 
 declare type SceneCallback = (this: Scene, ...args: any[]) => void;
 declare type SceneMakeFn = (id: string, app: App) => Scene;
@@ -2369,6 +2374,7 @@ declare class Scene {
     on(ev: string, cb: CallbackFn): CancelFn;
     once(ev: string, cb: CallbackFn): CancelFn;
     trigger(ev: string | string[], ...args: any[]): boolean;
+    load(cfg: CallbackObj): CancelFn;
     wait(delay: number, fn: TimerFn): CancelFn;
     wait(delay: number, fn: string, ctx?: Record<string, any>): CancelFn;
     repeat(delay: number, fn: TimerFn): CancelFn;
@@ -2722,8 +2728,8 @@ interface BaseOptions {
     image?: HTMLImageElement | string;
 }
 declare type CanvasOptions = BaseOptions & GlyphOptions;
-declare function make$3(opts: Partial<CanvasOptions>): Canvas;
-declare function make$3(width: number, height: number, opts?: Partial<CanvasOptions>): Canvas;
+declare function make$4(opts: Partial<CanvasOptions>): Canvas;
+declare function make$4(width: number, height: number, opts?: Partial<CanvasOptions>): Canvas;
 
 type index_d$4_GlyphInitFn = GlyphInitFn;
 type index_d$4_GlyphOptions = GlyphOptions;
@@ -2770,7 +2776,7 @@ declare namespace index_d$4 {
     index_d$4_createProgram as createProgram,
     index_d$4_QUAD as QUAD,
     index_d$4_CanvasOptions as CanvasOptions,
-    make$3 as make,
+    make$4 as make,
   };
 }
 
@@ -2791,17 +2797,17 @@ declare class Sprite implements SpriteData$1 {
     toString(): string;
 }
 declare const sprites: Record<string, Sprite>;
-declare function make$2(): Sprite;
-declare function make$2(bg: ColorBase, opacity?: number): Sprite;
-declare function make$2(ch?: string | null, fg?: ColorBase | null, bg?: ColorBase | null, opacity?: number): Sprite;
-declare function make$2(args: any[]): Sprite;
-declare function make$2(info: SpriteConfig): Sprite;
+declare function make$3(): Sprite;
+declare function make$3(bg: ColorBase, opacity?: number): Sprite;
+declare function make$3(ch?: string | null, fg?: ColorBase | null, bg?: ColorBase | null, opacity?: number): Sprite;
+declare function make$3(args: any[]): Sprite;
+declare function make$3(info: SpriteConfig): Sprite;
 declare function from$1(name: string): Sprite;
 declare function from$1(config: SpriteConfig): Sprite;
-declare function install$2(name: string, bg: ColorBase, opacity?: number): Sprite;
-declare function install$2(name: string, ch: string | null, fg: Color | number | string | number[] | null, bg: Color | number | string | number[] | null, opacity?: number): Sprite;
-declare function install$2(name: string, args: any[]): Sprite;
-declare function install$2(name: string, info: SpriteConfig): Sprite;
+declare function install$1(name: string, bg: ColorBase, opacity?: number): Sprite;
+declare function install$1(name: string, ch: string | null, fg: Color | number | string | number[] | null, bg: Color | number | string | number[] | null, opacity?: number): Sprite;
+declare function install$1(name: string, args: any[]): Sprite;
+declare function install$1(name: string, info: SpriteConfig): Sprite;
 
 interface SpriteData {
     readonly ch: string | null;
@@ -2824,9 +2830,9 @@ declare namespace index_d$3 {
     index_d$3_SpriteConfig as SpriteConfig,
     index_d$3_Sprite as Sprite,
     index_d$3_sprites as sprites,
-    make$2 as make,
+    make$3 as make,
     from$1 as from,
-    install$2 as install,
+    install$1 as install,
     index_d$3_DrawInfo as DrawInfo,
     index_d$3_Mixer as Mixer,
     index_d$3_makeMixer as makeMixer,
@@ -2834,41 +2840,26 @@ declare namespace index_d$3 {
   };
 }
 
-declare const templates: Record<string, Template>;
-declare function install$1(id: string, msg: string): Template;
-declare function installAll$1(config: Record<string, string>): void;
-declare function get(msgOrId: string): Template | null;
-interface MessageHandler {
-    addMessage(x: number, y: number, msg: string): void;
-    addCombatMessage(x: number, y: number, msg: string): void;
-}
-declare const handlers: MessageHandler[];
-declare function add(msg: string, args?: any): void;
-declare function addAt(x: number, y: number, msg: string, args?: any): void;
-declare function addCombat(x: number, y: number, msg: string, args?: any): void;
 interface CacheOptions {
     length: number;
     width: number;
-    match?: (x: number, y: number) => false | any;
+    reverseMultiLine: boolean;
 }
 declare type EachMsgFn = (msg: string, confirmed: boolean, i: number) => any;
-declare class MessageCache implements MessageHandler {
-    ARCHIVE: (string | null)[];
-    CONFIRMED: boolean[];
-    ARCHIVE_LINES: number;
-    MSG_WIDTH: number;
-    NEXT_WRITE_INDEX: number;
-    NEEDS_UPDATE: boolean;
-    COMBAT_MESSAGE: string | null;
-    matchFn: (x: number, y: number) => false | any;
+declare class Cache {
+    _archive: (string | null)[];
+    _confirmed: boolean[];
+    archiveLen: number;
+    msgWidth: number;
+    _nextWriteIndex: number;
+    _combatMsg: string | null;
+    _reverse: boolean;
     constructor(opts?: Partial<CacheOptions>);
     clear(): void;
-    get needsUpdate(): boolean;
-    set needsUpdate(needs: boolean);
-    protected _addMessageLine(msg: string): void;
-    addMessage(x: number, y: number, msg: string): void;
-    protected _addMessage(msg: string): void;
-    addCombatMessage(x: number, y: number, msg: string): void;
+    _addMessageLine(msg: string): void;
+    add(msg: string): void;
+    _addMessage(msg: string): void;
+    addCombat(msg: string): void;
     protected _addCombatMessage(msg: string): void;
     commitCombatMessage(): boolean;
     confirmAll(): void;
@@ -2876,31 +2867,15 @@ declare class MessageCache implements MessageHandler {
     get length(): number;
 }
 
-declare const message_d_templates: typeof templates;
-declare const message_d_get: typeof get;
-type message_d_MessageHandler = MessageHandler;
-declare const message_d_handlers: typeof handlers;
-declare const message_d_add: typeof add;
-declare const message_d_addAt: typeof addAt;
-declare const message_d_addCombat: typeof addCombat;
 type message_d_CacheOptions = CacheOptions;
 type message_d_EachMsgFn = EachMsgFn;
-type message_d_MessageCache = MessageCache;
-declare const message_d_MessageCache: typeof MessageCache;
+type message_d_Cache = Cache;
+declare const message_d_Cache: typeof Cache;
 declare namespace message_d {
   export {
-    message_d_templates as templates,
-    install$1 as install,
-    installAll$1 as installAll,
-    message_d_get as get,
-    message_d_MessageHandler as MessageHandler,
-    message_d_handlers as handlers,
-    message_d_add as add,
-    message_d_addAt as addAt,
-    message_d_addCombat as addCombat,
     message_d_CacheOptions as CacheOptions,
     message_d_EachMsgFn as EachMsgFn,
-    message_d_MessageCache as MessageCache,
+    message_d_Cache as Cache,
   };
 }
 
@@ -2925,7 +2900,7 @@ declare class Blob {
     _cellularAutomataRound(grid: NumGrid): boolean;
 }
 declare function fillBlob(grid: NumGrid, opts?: Partial<BlobConfig>): Bounds;
-declare function make$1(opts?: Partial<BlobConfig>): Blob;
+declare function make$2(opts?: Partial<BlobConfig>): Blob;
 
 type blob_d_BlobConfig = BlobConfig;
 type blob_d_Blob = Blob;
@@ -2936,7 +2911,7 @@ declare namespace blob_d {
     blob_d_BlobConfig as BlobConfig,
     blob_d_Blob as Blob,
     blob_d_fillBlob as fillBlob,
-    make$1 as make,
+    make$2 as make,
   };
 }
 
@@ -3008,8 +2983,8 @@ declare class Light implements LightType {
 declare function intensity(light: Color | LightValue): number;
 declare function isDarkLight(light: Color | LightValue, threshold?: number): boolean;
 declare function isShadowLight(light: Color | LightValue, threshold?: number): boolean;
-declare function make(color: ColorBase, radius?: RangeBase, fadeTo?: number, pass?: boolean): Light;
-declare function make(light: LightBase): Light;
+declare function make$1(color: ColorBase, radius?: RangeBase, fadeTo?: number, pass?: boolean): Light;
+declare function make$1(light: LightBase): Light;
 declare const lights: Record<string, Light>;
 declare function from(light: LightBase | LightType): Light;
 declare function install(id: string, color: ColorBase, radius: RangeBase, fadeTo?: number, pass?: boolean): Light;
@@ -3076,7 +3051,6 @@ declare const index_d$2_Light: typeof Light;
 declare const index_d$2_intensity: typeof intensity;
 declare const index_d$2_isDarkLight: typeof isDarkLight;
 declare const index_d$2_isShadowLight: typeof isShadowLight;
-declare const index_d$2_make: typeof make;
 declare const index_d$2_lights: typeof lights;
 declare const index_d$2_from: typeof from;
 declare const index_d$2_install: typeof install;
@@ -3099,7 +3073,7 @@ declare namespace index_d$2 {
     index_d$2_intensity as intensity,
     index_d$2_isDarkLight as isDarkLight,
     index_d$2_isShadowLight as isShadowLight,
-    index_d$2_make as make,
+    make$1 as make,
     index_d$2_lights as lights,
     index_d$2_from as from,
     index_d$2_install as install,
@@ -3508,6 +3482,8 @@ declare class Builder {
     menubar(opts: MenubarOptions): Menubar;
 }
 
+declare function make(opts: WidgetOpts): Widget;
+
 type index_d_DataValue = DataValue;
 type index_d_DataObject = DataObject;
 type index_d_DataItem = DataItem;
@@ -3595,6 +3571,7 @@ type index_d_Inquiry = Inquiry;
 declare const index_d_Inquiry: typeof Inquiry;
 type index_d_Builder = Builder;
 declare const index_d_Builder: typeof Builder;
+declare const index_d_make: typeof make;
 declare namespace index_d {
   export {
     index_d_DataValue as DataValue,
@@ -3664,6 +3641,7 @@ declare namespace index_d {
     index_d_Choice as Choice,
     index_d_Inquiry as Inquiry,
     index_d_Builder as Builder,
+    index_d_make as make,
   };
 }
 

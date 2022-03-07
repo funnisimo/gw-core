@@ -118,8 +118,9 @@ export class Events {
         return true;
     }
 
-    load(cfg: CallbackObj): void {
-        Object.entries(cfg).forEach(([ev, cb]) => this.on(ev, cb));
+    load(cfg: CallbackObj): CancelFn {
+        const cancel = Object.entries(cfg).map(([ev, cb]) => this.on(ev, cb));
+        return () => cancel.forEach((c) => c());
     }
 
     clear() {

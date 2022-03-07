@@ -17,6 +17,10 @@ export class Timers {
         this._ctx = ctx;
     }
 
+    get length() {
+        return this._timers.length;
+    }
+
     clear() {
         this._timers = [];
     }

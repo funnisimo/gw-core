@@ -697,7 +697,7 @@
 	    dest.x += x(src);
 	    dest.y += y(src);
 	}
-	function add$1(a, b) {
+	function add(a, b) {
 	    if (Array.isArray(a)) {
 	        return [a[0] + x(b), a[1] + y(b)];
 	    }
@@ -709,6 +709,9 @@
 	    if (!dest || !src)
 	        return false;
 	    return x(dest) == x(src) && y(dest) == y(src);
+	}
+	function isDiagonal(xy) {
+	    return x(xy) != 0 && y(xy) != 0;
 	}
 	function lerpXY(a, b, pct) {
 	    if (pct > 1) {
@@ -1032,8 +1035,9 @@
 		Bounds: Bounds,
 		copy: copy,
 		addTo: addTo,
-		add: add$1,
+		add: add,
 		equalsXY: equalsXY,
+		isDiagonal: isDiagonal,
 		lerpXY: lerpXY,
 		eachNeighbor: eachNeighbor,
 		eachNeighborAsync: eachNeighborAsync,
@@ -2281,12 +2285,12 @@
 	 * _.get(object, 'a.b.c', 'default');
 	 * // => 'default'
 	 */
-	function get$1(object, path, defaultValue) {
+	function get(object, path, defaultValue) {
 	  var result = object == null ? undefined : baseGet(object, path);
 	  return result === undefined ? defaultValue : result;
 	}
 
-	var get_1 = get$1;
+	var get_1 = get;
 
 	const getValue = get_1;
 	// export function extend(obj, name, fn) {
@@ -3052,7 +3056,7 @@
 	// Grid.fillBlob = fillBlob;
 	const alloc = NumGrid.alloc.bind(NumGrid);
 	const free = NumGrid.free.bind(NumGrid);
-	function make$c(w, h, v) {
+	function make$d(w, h, v) {
 	    if (v === undefined)
 	        return new NumGrid(w, h, 0);
 	    if (typeof v === 'number')
@@ -3094,7 +3098,7 @@
 		NumGrid: NumGrid,
 		alloc: alloc,
 		free: free,
-		make: make$c,
+		make: make$d,
 		offsetZip: offsetZip,
 		intersection: intersection,
 		unite: unite
@@ -3397,7 +3401,7 @@
 	}
 	const random = new Random();
 	const cosmetic = new Random();
-	function make$b(seed) {
+	function make$c(seed) {
 	    return new Random(seed);
 	}
 
@@ -3408,7 +3412,7 @@
 		Random: Random,
 		random: random,
 		cosmetic: cosmetic,
-		make: make$b
+		make: make$c
 	});
 
 	class Range {
@@ -3448,7 +3452,7 @@
 	        return `${this.lo}-${this.hi}`;
 	    }
 	}
-	function make$a(config) {
+	function make$b(config) {
 	    if (!config)
 	        return new Range(0, 0, 0);
 	    if (config instanceof Range)
@@ -3504,20 +3508,20 @@
 	    }
 	    throw new Error('Not a valid range - ' + config);
 	}
-	const from$4 = make$a;
+	const from$4 = make$b;
 	function asFn(config) {
-	    const range = make$a(config);
+	    const range = make$b(config);
 	    return () => range.value();
 	}
 	function value(base) {
-	    const r = make$a(base);
+	    const r = make$b(base);
 	    return r.value();
 	}
 
 	var range = /*#__PURE__*/Object.freeze({
 		__proto__: null,
 		Range: Range,
-		make: make$a,
+		make: make$b,
 		from: from$4,
 		asFn: asFn,
 		value: value
@@ -3609,7 +3613,7 @@
 	    }
 	    return result;
 	}
-	function make$9(obj) {
+	function make$a(obj) {
 	    const out = {};
 	    Object.entries(obj).forEach(([key, value]) => {
 	        out[key] = from$3(out, value);
@@ -3622,7 +3626,7 @@
 		fl: fl,
 		toString: toString,
 		from: from$3,
-		make: make$9
+		make: make$a
 	});
 
 	class AsyncQueue {
@@ -3849,7 +3853,7 @@
 	    clamp() {
 	        if (this.isNull())
 	            return this;
-	        return make$8(this._data.map((v) => clamp(v, 0, 100)));
+	        return make$9(this._data.map((v) => clamp(v, 0, 100)));
 	    }
 	    blend(other) {
 	        const O = from$2(other);
@@ -3859,7 +3863,7 @@
 	            return O;
 	        const pct = O.a / 100;
 	        const keepPct = 1 - pct;
-	        const newColor = make$8(Math.round(this._data[0] * keepPct + O._data[0] * pct), Math.round(this._data[1] * keepPct + O._data[1] * pct), Math.round(this._data[2] * keepPct + O._data[2] * pct), Math.round(O.a + this._data[3] * keepPct));
+	        const newColor = make$9(Math.round(this._data[0] * keepPct + O._data[0] * pct), Math.round(this._data[1] * keepPct + O._data[1] * pct), Math.round(this._data[2] * keepPct + O._data[2] * pct), Math.round(O.a + this._data[3] * keepPct));
 	        if (this._rand) {
 	            newColor._rand = this._rand.map((v) => Math.round(v * keepPct));
 	            newColor.dances = this.dances;
@@ -3883,7 +3887,7 @@
 	            return O;
 	        const pct = clamp(percent, 0, 100) / 100;
 	        const keepPct = 1 - pct;
-	        const newColor = make$8(Math.round(this._data[0] * keepPct + O._data[0] * pct), Math.round(this._data[1] * keepPct + O._data[1] * pct), Math.round(this._data[2] * keepPct + O._data[2] * pct), (this.isNull() ? 100 : this._data[3]) * keepPct + O._data[3] * pct);
+	        const newColor = make$9(Math.round(this._data[0] * keepPct + O._data[0] * pct), Math.round(this._data[1] * keepPct + O._data[1] * pct), Math.round(this._data[2] * keepPct + O._data[2] * pct), (this.isNull() ? 100 : this._data[3]) * keepPct + O._data[3] * pct);
 	        if (this._rand) {
 	            newColor._rand = this._rand.slice();
 	            newColor.dances = this.dances;
@@ -3911,7 +3915,7 @@
 	            return this;
 	        const pct = clamp(O.a, 0, 100) / 100;
 	        const keepPct = ((1 - pct) * this.a) / 100;
-	        const newColor = make$8(Math.round(this._data[0] * keepPct + O._data[0] * pct), Math.round(this._data[1] * keepPct + O._data[1] * pct), Math.round(this._data[2] * keepPct + O._data[2] * pct), Math.round(this._data[3] * keepPct + O._data[3] * pct));
+	        const newColor = make$9(Math.round(this._data[0] * keepPct + O._data[0] * pct), Math.round(this._data[1] * keepPct + O._data[1] * pct), Math.round(this._data[2] * keepPct + O._data[2] * pct), Math.round(this._data[3] * keepPct + O._data[3] * pct));
 	        if (this._rand) {
 	            newColor._rand = this._rand.slice();
 	            newColor.dances = this.dances;
@@ -3937,7 +3941,7 @@
 	            return this;
 	        const pct = clamp(percent, 0, 100) / 100;
 	        const keepPct = 1 - pct;
-	        return make$8(Math.round(this._data[0] * keepPct + 100 * pct), Math.round(this._data[1] * keepPct + 100 * pct), Math.round(this._data[2] * keepPct + 100 * pct), this._a);
+	        return make$9(Math.round(this._data[0] * keepPct + 100 * pct), Math.round(this._data[1] * keepPct + 100 * pct), Math.round(this._data[2] * keepPct + 100 * pct), this._a);
 	    }
 	    // Only adjusts r,g,b
 	    darken(percent) {
@@ -3945,7 +3949,7 @@
 	            return this;
 	        const pct = clamp(percent, 0, 100) / 100;
 	        const keepPct = 1 - pct;
-	        return make$8(Math.round(this._data[0] * keepPct + 0 * pct), Math.round(this._data[1] * keepPct + 0 * pct), Math.round(this._data[2] * keepPct + 0 * pct), this._a);
+	        return make$9(Math.round(this._data[0] * keepPct + 0 * pct), Math.round(this._data[1] * keepPct + 0 * pct), Math.round(this._data[2] * keepPct + 0 * pct), this._a);
 	    }
 	    bake(clearDancing = false) {
 	        if (this.isNull())
@@ -3959,7 +3963,7 @@
 	        const redRand = cosmetic.number(d[1]);
 	        const greenRand = cosmetic.number(d[2]);
 	        const blueRand = cosmetic.number(d[3]);
-	        return make$8(this._r + rand + redRand, this._g + rand + greenRand, this._b + rand + blueRand, this._a);
+	        return make$9(this._r + rand + redRand, this._g + rand + greenRand, this._b + rand + blueRand, this._a);
 	    }
 	    // Adds a color to this one
 	    add(other, percent = 100) {
@@ -3967,13 +3971,13 @@
 	        if (O.isNull())
 	            return this;
 	        const alpha = (O.a / 100) * (percent / 100);
-	        return make$8(Math.round(this._data[0] + O._data[0] * alpha), Math.round(this._data[1] + O._data[1] * alpha), Math.round(this._data[2] + O._data[2] * alpha), clamp(Math.round(this._a + alpha * 100), 0, 100));
+	        return make$9(Math.round(this._data[0] + O._data[0] * alpha), Math.round(this._data[1] + O._data[1] * alpha), Math.round(this._data[2] + O._data[2] * alpha), clamp(Math.round(this._a + alpha * 100), 0, 100));
 	    }
 	    scale(percent) {
 	        if (this.isNull() || percent == 100)
 	            return this;
 	        const pct = Math.max(0, percent) / 100;
-	        return make$8(Math.round(this._data[0] * pct), Math.round(this._data[1] * pct), Math.round(this._data[2] * pct), this._a);
+	        return make$9(Math.round(this._data[0] * pct), Math.round(this._data[1] * pct), Math.round(this._data[2] * pct), this._a);
 	    }
 	    multiply(other) {
 	        if (this.isNull())
@@ -3990,7 +3994,7 @@
 	            data = other._data;
 	        }
 	        const pct = (data[3] || 100) / 100;
-	        return make$8(Math.round(this._ra * (data[0] / 100) * pct), Math.round(this._ga * (data[1] / 100) * pct), Math.round(this._ba * (data[2] / 100) * pct), 100);
+	        return make$9(Math.round(this._ra * (data[0] / 100) * pct), Math.round(this._ga * (data[1] / 100) * pct), Math.round(this._ba * (data[2] / 100) * pct), 100);
 	    }
 	    // scales rgb down to a max of 100
 	    normalize() {
@@ -3999,7 +4003,7 @@
 	        const max = Math.max(this._ra, this._ga, this._ba);
 	        if (max <= 100)
 	            return this;
-	        return make$8(Math.round((100 * this._ra) / max), Math.round((100 * this._ga) / max), Math.round((100 * this._ba) / max), 100);
+	        return make$9(Math.round((100 * this._ra) / max), Math.round((100 * this._ga) / max), Math.round((100 * this._ba) / max), 100);
 	    }
 	    inverse() {
 	        const other = new Color(100 - this.r, 100 - this.g, 100 - this.b, this.a);
@@ -4089,7 +4093,7 @@
 	        return new Color(Math.round((((val & 0xf00) >> 8) * 100) / 15), Math.round((((val & 0xf0) >> 4) * 100) / 15), Math.round(((val & 0xf) * 100) / 15), 100);
 	    }
 	}
-	function make$8(...args) {
+	function make$9(...args) {
 	    let arg = args[0];
 	    let base256 = args[1];
 	    if (args.length == 0)
@@ -4133,7 +4137,7 @@
 	    else if (arg === -1) {
 	        return NONE;
 	    }
-	    return make$8(arg, args[1]);
+	    return make$9(arg, args[1]);
 	}
 	// adjusts the luminosity of 2 colors to ensure there is enough separation between them
 	function separate(a, b) {
@@ -4184,12 +4188,12 @@
 	function smoothScalar(rgb, maxRgb = 255) {
 	    return Math.floor(100 * Math.sin((Math.PI * rgb) / maxRgb));
 	}
-	function install$3(name, ...args) {
+	function install$2(name, ...args) {
 	    let info = args;
 	    if (args.length == 1) {
 	        info = args[0];
 	    }
-	    const c = info instanceof Color ? info : make$8(info);
+	    const c = info instanceof Color ? info : make$9(info);
 	    // @ts-ignore
 	    c._const = true;
 	    colors[name] = c;
@@ -4199,22 +4203,22 @@
 	function installSpread(name, ...args) {
 	    let c;
 	    if (args.length == 1) {
-	        c = install$3(name, args[0]);
+	        c = install$2(name, args[0]);
 	    }
 	    else {
-	        c = install$3(name, ...args);
+	        c = install$2(name, ...args);
 	    }
-	    install$3('light_' + name, c.lighten(25));
-	    install$3('lighter_' + name, c.lighten(50));
-	    install$3('lightest_' + name, c.lighten(75));
-	    install$3('dark_' + name, c.darken(25));
-	    install$3('darker_' + name, c.darken(50));
-	    install$3('darkest_' + name, c.darken(75));
+	    install$2('light_' + name, c.lighten(25));
+	    install$2('lighter_' + name, c.lighten(50));
+	    install$2('lightest_' + name, c.lighten(75));
+	    install$2('dark_' + name, c.darken(25));
+	    install$2('darker_' + name, c.darken(50));
+	    install$2('darkest_' + name, c.darken(75));
 	    return c;
 	}
-	const NONE = install$3('NONE', -1);
-	const BLACK = install$3('black', 0x000);
-	const WHITE = install$3('white', 0xfff);
+	const NONE = install$2('NONE', -1);
+	const BLACK = install$2('black', 0x000);
+	const WHITE = install$2('white', 0xfff);
 	installSpread('teal', [30, 100, 100]);
 	installSpread('brown', [60, 40, 0]);
 	installSpread('tan', [80, 70, 55]); // 80, 67,		15);
@@ -4252,13 +4256,13 @@
 		fromCss: fromCss,
 		fromName: fromName,
 		fromNumber: fromNumber,
-		make: make$8,
+		make: make$9,
 		from: from$2,
 		separate: separate,
 		relativeLuminance: relativeLuminance,
 		distance: distance,
 		smoothScalar: smoothScalar,
-		install: install$3,
+		install: install$2,
 		installSpread: installSpread,
 		NONE: NONE,
 		BLACK: BLACK,
@@ -4268,8 +4272,8 @@
 	class Mixer {
 	    constructor(base = {}) {
 	        this.ch = first(base.ch, null);
-	        this.fg = make$8(base.fg);
-	        this.bg = make$8(base.bg);
+	        this.fg = make$9(base.fg);
+	        this.bg = make$9(base.bg);
 	    }
 	    _changed() {
 	        return this;
@@ -5753,7 +5757,7 @@
 	        console.log(data.join('\n'));
 	    }
 	}
-	function make$7(...args) {
+	function make$8(...args) {
 	    return new Buffer$1(args[0], args[1]);
 	}
 
@@ -5761,7 +5765,7 @@
 		__proto__: null,
 		BufferBase: BufferBase,
 		Buffer: Buffer$1,
-		make: make$7
+		make: make$8
 	});
 
 	var FovFlags;
@@ -5915,7 +5919,7 @@
 	            flag |= FovFlags.REVEALED;
 	        if (visible)
 	            flag |= FovFlags.VISIBLE;
-	        this.flags = make$c(site.width, site.height, flag);
+	        this.flags = make$d(site.width, site.height, flag);
 	        // this.needsUpdate = true;
 	        if (opts.callback) {
 	            this.callback = opts.callback;
@@ -6827,7 +6831,7 @@
 		EventEmitter: EventEmitter
 	});
 
-	function make$6(v) {
+	function make$7(v) {
 	    if (v === undefined)
 	        return () => 100;
 	    if (v === null)
@@ -6880,7 +6884,7 @@
 
 	var frequency = /*#__PURE__*/Object.freeze({
 		__proto__: null,
-		make: make$6
+		make: make$7
 	});
 
 	class Scheduler {
@@ -8203,7 +8207,7 @@ void main() {
 	    }
 	}
 
-	function make$5(...args) {
+	function make$6(...args) {
 	    let width = args[0];
 	    let height = args[1];
 	    let opts = args[2];
@@ -8252,7 +8256,7 @@ void main() {
 		withFont: withFont,
 		createProgram: createProgram,
 		QUAD: QUAD,
-		make: make$5
+		make: make$6
 	});
 
 	class Sprite {
@@ -8281,7 +8285,7 @@ void main() {
 	    }
 	}
 	const sprites = {};
-	function make$4(...args) {
+	function make$5(...args) {
 	    let ch = null, fg = -1, bg = -1, opacity;
 	    if (args.length == 0) {
 	        return new Sprite(null, -1, -1);
@@ -8326,13 +8330,13 @@ void main() {
 	    if (typeof fg === 'string')
 	        fg = from$2(fg);
 	    else if (Array.isArray(fg))
-	        fg = make$8(fg);
+	        fg = make$9(fg);
 	    else if (fg === undefined || fg === null)
 	        fg = -1;
 	    if (typeof bg === 'string')
 	        bg = from$2(bg);
 	    else if (Array.isArray(bg))
-	        bg = make$8(bg);
+	        bg = make$9(bg);
 	    else if (bg === undefined || bg === null)
 	        bg = -1;
 	    return new Sprite(ch, fg, bg, opacity);
@@ -8344,12 +8348,12 @@ void main() {
 	            throw new Error('Failed to find sprite: ' + config);
 	        return sprite;
 	    }
-	    return make$4(config);
+	    return make$5(config);
 	}
-	function install$2(name, ...args) {
+	function install$1(name, ...args) {
 	    let sprite;
 	    // @ts-ignore
-	    sprite = make$4(...args);
+	    sprite = make$5(...args);
 	    sprite.name = name;
 	    sprites[name] = sprite;
 	    return sprite;
@@ -8359,9 +8363,9 @@ void main() {
 		__proto__: null,
 		Sprite: Sprite,
 		sprites: sprites,
-		make: make$4,
+		make: make$5,
 		from: from$1,
-		install: install$2,
+		install: install$1,
 		Mixer: Mixer,
 		makeMixer: makeMixer
 	});
@@ -8370,97 +8374,50 @@ void main() {
 		__proto__: null
 	});
 
-	const data = {};
-	const config$1 = {};
-	// export const make: any = {};
-	// export const flags: any = {};
-
-	const templates = {};
-	config$1.message = config$1.message || {};
-	function install$1(id, msg) {
-	    const template = compile$1(msg);
-	    templates[id] = template;
-	    return template;
-	}
-	function installAll$1(config) {
-	    Object.entries(config).forEach(([id, msg]) => install$1(id, msg));
-	}
-	function get(msgOrId) {
-	    return templates[msgOrId] || null;
-	}
-	const handlers = [];
-	function add(msg, args) {
-	    return addAt(-1, -1, msg, args);
-	}
-	function addAt(x, y, msg, args) {
-	    const template = templates[msg];
-	    if (template) {
-	        msg = template(args);
-	    }
-	    else if (args) {
-	        msg = apply(msg, args);
-	    }
-	    handlers.forEach((h) => h.addMessage.call(h, x, y, msg));
-	}
-	function addCombat(x, y, msg, args) {
-	    const template = templates[msg];
-	    if (template) {
-	        msg = template(args);
-	    }
-	    else if (args) {
-	        msg = apply(msg, args);
-	    }
-	    handlers.forEach((h) => h.addCombatMessage.call(h, x, y, msg));
-	}
-	class MessageCache {
+	class Cache {
 	    constructor(opts = {}) {
-	        this.ARCHIVE = [];
-	        this.CONFIRMED = [];
-	        this.ARCHIVE_LINES = 30;
-	        this.MSG_WIDTH = 80;
-	        this.NEXT_WRITE_INDEX = 0;
-	        this.NEEDS_UPDATE = true;
-	        this.COMBAT_MESSAGE = null;
-	        this.matchFn = opts.match || TRUE;
-	        this.ARCHIVE_LINES = opts.length || 30;
-	        this.MSG_WIDTH = opts.width || 80;
+	        this._archive = [];
+	        this._confirmed = [];
+	        this.archiveLen = 30;
+	        this.msgWidth = 80;
+	        this._nextWriteIndex = 0;
+	        // _needsUpdate = true;
+	        this._combatMsg = null;
+	        this.archiveLen = opts.length || 30;
+	        this.msgWidth = opts.width || 80;
+	        this._reverse = opts.reverseMultiLine || false;
 	        this.clear();
-	        handlers.push(this);
 	    }
 	    clear() {
-	        for (let i = 0; i < this.ARCHIVE_LINES; ++i) {
-	            this.ARCHIVE[i] = null;
-	            this.CONFIRMED[i] = false;
+	        for (let i = 0; i < this.archiveLen; ++i) {
+	            this._archive[i] = null;
+	            this._confirmed[i] = false;
 	        }
-	        this.NEXT_WRITE_INDEX = 0;
-	        this.NEEDS_UPDATE = true;
-	        this.COMBAT_MESSAGE = null;
+	        this._nextWriteIndex = 0;
+	        // this._needsUpdate = true;
+	        this._combatMsg = null;
 	    }
-	    get needsUpdate() {
-	        return this.NEEDS_UPDATE;
-	    }
-	    set needsUpdate(needs) {
-	        this.NEEDS_UPDATE = needs;
-	    }
+	    // get needsUpdate(): boolean {
+	    //     return this._needsUpdate;
+	    // }
+	    // set needsUpdate(needs: boolean) {
+	    //     this._needsUpdate = needs;
+	    // }
 	    // function messageWithoutCaps(msg, requireAcknowledgment) {
 	    _addMessageLine(msg) {
 	        if (!length(msg)) {
 	            return;
 	        }
 	        // Add the message to the archive.
-	        this.ARCHIVE[this.NEXT_WRITE_INDEX] = msg;
-	        this.CONFIRMED[this.NEXT_WRITE_INDEX] = false;
-	        this.NEXT_WRITE_INDEX =
-	            (this.NEXT_WRITE_INDEX + 1) % this.ARCHIVE_LINES;
+	        this._archive[this._nextWriteIndex] = msg;
+	        this._confirmed[this._nextWriteIndex] = false;
+	        this._nextWriteIndex = (this._nextWriteIndex + 1) % this.archiveLen;
 	    }
-	    addMessage(x, y, msg) {
-	        if (this.matchFn(x, y) === false)
-	            return;
+	    add(msg) {
 	        this.commitCombatMessage();
 	        this._addMessage(msg);
 	    }
 	    _addMessage(msg) {
-	        var _a;
 	        msg = capitalize(msg);
 	        // // Implement the American quotation mark/period/comma ordering rule.
 	        // for (i=0; text.text[i] && text.text[i+1]; i++) {
@@ -8473,53 +8430,48 @@ void main() {
 	        // 			text.spliceRaw(i, 2, replace);
 	        //     }
 	        // }
-	        const lines = splitIntoLines(msg, this.MSG_WIDTH);
-	        if ((_a = config$1.message) === null || _a === void 0 ? void 0 : _a.reverseMultiLine) {
+	        const lines = splitIntoLines(msg, this.msgWidth);
+	        if (this._reverse) {
 	            lines.reverse();
 	        }
 	        lines.forEach((l) => this._addMessageLine(l));
 	        // display the message:
-	        this.NEEDS_UPDATE = true;
 	        // if (GAME.playbackMode) {
 	        // 	GAME.playbackDelayThisTurn += GAME.playbackDelayPerTurn * 5;
 	        // }
 	    }
-	    addCombatMessage(x, y, msg) {
-	        if (!this.matchFn(x, y))
-	            return;
+	    addCombat(msg) {
 	        this._addCombatMessage(msg);
 	    }
 	    _addCombatMessage(msg) {
-	        if (!this.COMBAT_MESSAGE) {
-	            this.COMBAT_MESSAGE = msg;
+	        if (!this._combatMsg) {
+	            this._combatMsg = msg;
 	        }
 	        else {
-	            this.COMBAT_MESSAGE += ', ' + capitalize(msg);
+	            this._combatMsg += ', ' + capitalize(msg);
 	        }
-	        this.NEEDS_UPDATE = true;
 	    }
 	    commitCombatMessage() {
-	        if (!this.COMBAT_MESSAGE)
+	        if (!this._combatMsg)
 	            return false;
-	        this._addMessage(this.COMBAT_MESSAGE + '.');
-	        this.COMBAT_MESSAGE = null;
+	        this._addMessage(this._combatMsg + '.');
+	        this._combatMsg = null;
 	        return true;
 	    }
 	    confirmAll() {
-	        for (let i = 0; i < this.CONFIRMED.length; i++) {
-	            this.CONFIRMED[i] = true;
+	        for (let i = 0; i < this._confirmed.length; i++) {
+	            this._confirmed[i] = true;
 	        }
-	        this.NEEDS_UPDATE = true;
 	    }
 	    forEach(fn) {
 	        this.commitCombatMessage();
-	        for (let i = 0; i < this.ARCHIVE_LINES; ++i) {
-	            const n = (this.ARCHIVE_LINES - i + this.NEXT_WRITE_INDEX - 1) %
-	                this.ARCHIVE_LINES;
-	            const msg = this.ARCHIVE[n];
+	        for (let i = 0; i < this.archiveLen; ++i) {
+	            const n = (this.archiveLen - i + this._nextWriteIndex - 1) %
+	                this.archiveLen;
+	            const msg = this._archive[n];
 	            if (!msg)
 	                return;
-	            if (fn(msg, this.CONFIRMED[n], i) === false)
+	            if (fn(msg, this._confirmed[n], i) === false)
 	                return;
 	        }
 	    }
@@ -8532,16 +8484,13 @@ void main() {
 
 	var message = /*#__PURE__*/Object.freeze({
 		__proto__: null,
-		templates: templates,
-		install: install$1,
-		installAll: installAll$1,
-		get: get,
-		handlers: handlers,
-		add: add,
-		addAt: addAt,
-		addCombat: addCombat,
-		MessageCache: MessageCache
+		Cache: Cache
 	});
+
+	const data = {};
+	const config$1 = {};
+	// export const make: any = {};
+	// export const flags: any = {};
 
 	class Blob {
 	    constructor(opts = {}) {
@@ -8670,7 +8619,7 @@ void main() {
 	    const blob = new Blob(opts);
 	    return blob.carve(grid.width, grid.height, (x, y) => (grid[x][y] = 1));
 	}
-	function make$3(opts = {}) {
+	function make$4(opts = {}) {
 	    return new Blob(opts);
 	}
 
@@ -8678,7 +8627,7 @@ void main() {
 		__proto__: null,
 		Blob: Blob,
 		fillBlob: fillBlob,
-		make: make$3
+		make: make$4
 	});
 
 	// const LIGHT_SMOOTHING_THRESHOLD = 150;       // light components higher than this magnitude will be toned down a little
@@ -8686,14 +8635,14 @@ void main() {
 	    INTENSITY_DARK: 20,
 	    INTENSITY_SHADOW: 50,
 	}); // less than 20% for highest color in rgb
-	let LIGHT_COMPONENTS = make$8();
+	let LIGHT_COMPONENTS = make$9();
 	class Light {
 	    constructor(color, radius = 1, fadeTo = 0, pass = false) {
 	        this.fadeTo = 0;
 	        this.passThroughActors = false;
 	        this.id = null;
 	        this.color = from$2(color); /* color */
-	        this.radius = make$a(radius);
+	        this.radius = make$b(radius);
 	        this.fadeTo = fadeTo;
 	        this.passThroughActors = pass; // generally no, but miner light does (TODO - string parameter?  'false' or 'true')
 	    }
@@ -8772,7 +8721,7 @@ void main() {
 	function isShadowLight(light, threshold = 40) {
 	    return intensity(light) <= threshold;
 	}
-	function make$2(...args) {
+	function make$3(...args) {
 	    if (args.length == 1) {
 	        const config = args[0];
 	        if (typeof config === 'string') {
@@ -8812,15 +8761,15 @@ void main() {
 	    }
 	    if (arg && arg.paint)
 	        return arg;
-	    return make$2(arg);
+	    return make$3(arg);
 	}
 	function install(id, ...args) {
 	    let source;
 	    if (args.length == 1) {
-	        source = make$2(args[0]);
+	        source = make$3(args[0]);
 	    }
 	    else {
-	        source = make$2(args[0], args[1], args[2], args[3]);
+	        source = make$3(args[0], args[1], args[2], args[3]);
 	    }
 	    lights[id] = source;
 	    source.id = id;
@@ -8863,10 +8812,10 @@ void main() {
 	        this.changed = false;
 	        this.glowLightChanged = false;
 	        this.dynamicLightChanged = false;
-	        this.light = make$c(map.width, map.height, () => this.ambient.slice());
-	        this.glowLight = make$c(map.width, map.height, () => this.ambient.slice());
-	        this.oldLight = make$c(map.width, map.height, () => this.ambient.slice());
-	        this.flags = make$c(map.width, map.height);
+	        this.light = make$d(map.width, map.height, () => this.ambient.slice());
+	        this.glowLight = make$d(map.width, map.height, () => this.ambient.slice());
+	        this.oldLight = make$d(map.width, map.height, () => this.ambient.slice());
+	        this.flags = make$d(map.width, map.height);
 	        this.finishLightUpdate();
 	    }
 	    copy(other) {
@@ -9119,7 +9068,7 @@ void main() {
 		intensity: intensity,
 		isDarkLight: isDarkLight,
 		isShadowLight: isShadowLight,
-		make: make$2,
+		make: make$3,
 		lights: lights,
 		from: from,
 		install: install,
@@ -9217,7 +9166,8 @@ void main() {
 	        return true;
 	    }
 	    load(cfg) {
-	        Object.entries(cfg).forEach(([ev, cb]) => this.on(ev, cb));
+	        const cancel = Object.entries(cfg).map(([ev, cb]) => this.on(ev, cb));
+	        return () => cancel.forEach((c) => c());
 	    }
 	    clear() {
 	        this._events = {};
@@ -9447,7 +9397,7 @@ void main() {
 	        return madeChange;
 	    }
 	}
-	function make$1(src, duration = 1000) {
+	function make$2(src, duration = 1000) {
 	    return new Tween(src).duration(duration);
 	}
 	function linear(pct) {
@@ -9465,7 +9415,7 @@ void main() {
 		__proto__: null,
 		BaseObj: BaseObj,
 		Tween: Tween,
-		make: make$1,
+		make: make$2,
 		linear: linear,
 		interpolate: interpolate
 	});
@@ -9474,6 +9424,9 @@ void main() {
 	    constructor(ctx) {
 	        this._timers = [];
 	        this._ctx = ctx;
+	    }
+	    get length() {
+	        return this._timers.length;
 	    }
 	    clear() {
 	        this._timers = [];
@@ -10224,7 +10177,7 @@ void main() {
 	        return this.fadeTo(widget, 0, ms);
 	    }
 	    fadeTo(widget, opacity, ms) {
-	        const tween$1 = make$1({ pct: widget.style('opacity') })
+	        const tween$1 = make$2({ pct: widget.style('opacity') })
 	            .to({ pct: opacity })
 	            .duration(ms)
 	            .onUpdate((info) => {
@@ -10269,7 +10222,7 @@ void main() {
 	        return this.slide(widget, widget.bounds, dest, ms);
 	    }
 	    slide(widget, from, to, ms) {
-	        const tween$1 = make$1({ x: x(from), y: y(from) })
+	        const tween$1 = make$2({ x: x(from), y: y(from) })
 	            .to({ x: x(to), y: y(to) })
 	            .duration(ms)
 	            .onUpdate((info) => {
@@ -10422,6 +10375,9 @@ void main() {
 	    }
 	    trigger(ev, ...args) {
 	        return this.events.trigger(ev, ...args);
+	    }
+	    load(cfg) {
+	        return this.events.load(cfg);
 	    }
 	    wait(delay, fn, ctx) {
 	        if (typeof fn === 'string') {
@@ -11540,568 +11496,6 @@ void main() {
 	    });
 	    widget.bounds.pad(pad);
 	}
-	// export interface WidgetOptions extends StyleOptions, SetParentOptions {
-	//     id?: string;
-	//     disabled?: boolean;
-	//     hidden?: boolean;
-	//     opacity?: number;
-	//     x?: number;
-	//     y?: number;
-	//     width?: number;
-	//     height?: number;
-	//     class?: string;
-	//     tag?: string;
-	//     tabStop?: boolean;
-	//     action?: string | boolean;
-	//     // depth?: number;
-	// }
-	// Style.defaultStyle.add('*', {
-	//     fg: 'white',
-	//     bg: -1,
-	//     align: 'left',
-	//     valign: 'top',
-	// });
-	// export class Widget implements UIStylable {
-	//     tag: string = 'text';
-	//     body!: Body; // So that Body can => this.body = this;
-	//     bounds: XY.Bounds = new XY.Bounds(0, 0, 0, 1);
-	//     // _depth = 0;
-	//     events: EVENTS.Events;
-	//     // action: string = '';
-	//     children: Widget[] = [];
-	//     _style = new Style.Style();
-	//     _used!: Style.ComputedStyle;
-	//     _parent: Widget | null = null;
-	//     classes: string[] = [];
-	//     _props: Record<string, PropType> = {
-	//         needsDraw: true,
-	//         needsStyle: true,
-	//         hover: false,
-	//     };
-	//     _attrs: Record<string, PropType> = {};
-	//     constructor(parent: Body | Widget, opts?: WidgetOptions);
-	//     constructor(opts?: WidgetOptions);
-	//     constructor(parent?: Body | Widget | WidgetOptions, opts?: WidgetOptions) {
-	//         opts = opts || {};
-	//         if (!parent) {
-	//         } else if (parent instanceof Body) {
-	//             this.body = parent;
-	//         } else if (parent instanceof Widget) {
-	//             this.body = parent.body;
-	//         } else {
-	//             opts = parent;
-	//             parent = undefined;
-	//         }
-	//         // this.bounds.x = term.x;
-	//         // this.bounds.y = term.y;
-	//         this.events = new EVENTS.Events(this);
-	//         this.bounds.x = opts.x || 0;
-	//         this.bounds.y = opts.y || 0;
-	//         this.bounds.width = opts.width || 0;
-	//         this.bounds.height = opts.height || 1;
-	//         if (opts.tag) {
-	//             this.tag = opts.tag;
-	//         }
-	//         if (opts.id) {
-	//             this.attr('id', opts.id);
-	//             this.attr('action', opts.id);
-	//         }
-	//         // if (opts.depth !== undefined) {
-	//         //     this._depth = opts.depth;
-	//         // }
-	//         this._style.set(opts);
-	//         if (opts.class) {
-	//             this.classes = opts.class.split(/ +/g).map((c) => c.trim());
-	//         }
-	//         if (opts.tabStop) {
-	//             this.prop('tabStop', true);
-	//         }
-	//         if (opts.disabled) {
-	//             this.prop('disabled', true);
-	//         }
-	//         if (opts.hidden) {
-	//             this.prop('hidden', true);
-	//         }
-	//         opts.action = opts.action || opts.id;
-	//         if (opts.action) {
-	//             if (opts.action === true) {
-	//                 if (!opts.id) throw new Error('boolean action requires id.');
-	//                 opts.action = opts.id;
-	//             }
-	//             this.attr('action', opts.action);
-	//         }
-	//         this.updateStyle();
-	//         if (opts.opacity !== undefined) {
-	//             this._used.opacity = opts.opacity;
-	//         }
-	//         if (parent) {
-	//             parent.addChild(this, opts);
-	//         }
-	//     }
-	//     // get depth(): number {
-	//     //     return this._depth;
-	//     // }
-	//     // set depth(v: number) {
-	//     //     this._depth = v;
-	//     //     this.scene.sortWidgets();
-	//     // }
-	//     get parent(): Widget | null {
-	//         return this._parent;
-	//     }
-	//     set parent(v: Widget | null) {
-	//         this.setParent(v);
-	//     }
-	//     setParent(v: Widget | null, opts: SetParentOptions = {}) {
-	//         if (this._parent) {
-	//             this._parent.removeChild(this);
-	//         }
-	//         this._parent = v;
-	//         if (this._parent) {
-	//             // this.depth = this._depth || this._parent.depth + 1;
-	//             this._parent.addChild(this, opts);
-	//         }
-	//     }
-	//     get needsDraw() {
-	//         return this.body.needsDraw;
-	//     }
-	//     set needsDraw(v: boolean) {
-	//         if (v) this.body.needsDraw = true;
-	//     }
-	//     get id(): string {
-	//         return this._attrStr('id');
-	//     }
-	//     //////////////////////////////////////////
-	//     pos(): XY.XY;
-	//     pos(xy: XY.XY): this;
-	//     pos(x: number, y: number): this;
-	//     pos(x?: number | XY.XY, y?: number): this | XY.XY {
-	//         if (x === undefined) return this.bounds;
-	//         if (typeof x === 'number') {
-	//             this.bounds.x = x;
-	//             this.bounds.y = y || 0;
-	//         } else {
-	//             this.bounds.x = x.x;
-	//             this.bounds.y = x.y;
-	//         }
-	//         this.needsDraw = true;
-	//         return this;
-	//     }
-	//     center(bounds?: XY.Bounds): this {
-	//         return this.centerX(bounds).centerY(bounds);
-	//     }
-	//     centerX(bounds?: XY.Bounds): this {
-	//         if (bounds) {
-	//             const w = this.bounds.width;
-	//             const mid = Math.round((bounds.width - w) / 2);
-	//             this.bounds.x = bounds.x + mid;
-	//         } else {
-	//             this.bounds.x = Math.round(
-	//                 (this.body.width - this.bounds.width) / 2
-	//             );
-	//         }
-	//         return this;
-	//     }
-	//     centerY(bounds?: XY.Bounds): this {
-	//         if (bounds) {
-	//             const h = this.bounds.height;
-	//             const mid = Math.round((bounds.height - h) / 2);
-	//             this.bounds.y = bounds.y + mid;
-	//         } else {
-	//             this.bounds.y = Math.round(
-	//                 (this.body.height - this.bounds.height) / 2
-	//             );
-	//         }
-	//         return this;
-	//     }
-	//     //////////////////////////////////////////
-	//     text(): string;
-	//     text(v: string): this;
-	//     text(v?: string): this | string {
-	//         if (v === undefined) return this._attrStr('text');
-	//         this.attr('text', v);
-	//         return this;
-	//     }
-	//     attr(name: string): PropType;
-	//     attr(name: string, v: PropType): this;
-	//     attr(name: string, v?: PropType): PropType | this {
-	//         if (v === undefined) return this._attrs[name];
-	//         this._attrs[name] = v;
-	//         return this;
-	//     }
-	//     _attrInt(name: string): number {
-	//         const n = this._attrs[name] || 0;
-	//         if (typeof n === 'number') return n;
-	//         if (typeof n === 'string') return Number.parseInt(n);
-	//         return n ? 1 : 0;
-	//     }
-	//     _attrStr(name: string): string {
-	//         const n = this._attrs[name] || '';
-	//         if (typeof n === 'string') return n;
-	//         if (typeof n === 'number') return '' + n;
-	//         return n ? 'true' : 'false';
-	//     }
-	//     _attrBool(name: string): boolean {
-	//         return !!this._attrs[name];
-	//     }
-	//     prop(name: string): PropType | undefined;
-	//     prop(name: string, v: PropType): this;
-	//     prop(name: string, v?: PropType): this | PropType | undefined {
-	//         if (v === undefined) return this._props[name];
-	//         const current = this._props[name];
-	//         if (current !== v) {
-	//             this._setProp(name, v);
-	//         }
-	//         return this;
-	//     }
-	//     _setProp(name: string, v: PropType): void {
-	//         // console.log(`${this.tag}.${name}=${v} (was:${this._props[name]})`);
-	//         this._props[name] = v;
-	//         this.updateStyle();
-	//     }
-	//     _propInt(name: string): number {
-	//         const n = this._props[name] || 0;
-	//         if (typeof n === 'number') return n;
-	//         if (typeof n === 'string') return Number.parseInt(n);
-	//         return n ? 1 : 0;
-	//     }
-	//     _propStr(name: string): string {
-	//         const n = this._props[name] || '';
-	//         if (typeof n === 'string') return n;
-	//         if (typeof n === 'number') return '' + n;
-	//         return n ? 'true' : 'false';
-	//     }
-	//     _propBool(name: string): boolean {
-	//         return !!this._props[name];
-	//     }
-	//     toggleProp(name: string): this {
-	//         const current = !!this._props[name];
-	//         this.prop(name, !current);
-	//         return this;
-	//     }
-	//     incProp(name: string, n = 1): this {
-	//         let current = this.prop(name) || 0;
-	//         if (typeof current === 'boolean') {
-	//             current = current ? 1 : 0;
-	//         } else if (typeof current === 'string') {
-	//             current = Number.parseInt(current) || 0;
-	//         }
-	//         current += n;
-	//         this.prop(name, current);
-	//         return this;
-	//     }
-	//     contains(e: XY.XY): boolean;
-	//     contains(x: number, y: number): boolean;
-	//     contains(...args: any[]): boolean {
-	//         return this.bounds.contains(args[0], args[1]);
-	//     }
-	//     style(): Style.Style;
-	//     style(opts: StyleOptions): this;
-	//     style(opts?: StyleOptions): this | Style.Style {
-	//         if (opts === undefined) return this._style;
-	//         this._style.set(opts);
-	//         this.updateStyle();
-	//         return this;
-	//     }
-	//     addClass(c: string): this {
-	//         const all = c.split(/ +/g);
-	//         all.forEach((a) => {
-	//             if (this.classes.includes(a)) return;
-	//             this.classes.push(a);
-	//         });
-	//         return this;
-	//     }
-	//     removeClass(c: string): this {
-	//         const all = c.split(/ +/g);
-	//         all.forEach((a) => {
-	//             Utils.arrayDelete(this.classes, a);
-	//         });
-	//         return this;
-	//     }
-	//     hasClass(c: string): boolean {
-	//         const all = c.split(/ +/g);
-	//         return Utils.arrayIncludesAll(this.classes, all);
-	//     }
-	//     toggleClass(c: string): this {
-	//         const all = c.split(/ +/g);
-	//         all.forEach((a) => {
-	//             if (this.classes.includes(a)) {
-	//                 Utils.arrayDelete(this.classes, a);
-	//             } else {
-	//                 this.classes.push(a);
-	//             }
-	//         });
-	//         return this;
-	//     }
-	//     get focused(): boolean {
-	//         return !!this.prop('focus');
-	//     }
-	//     focus(reverse = false): boolean {
-	//         if (this.prop('focus')) return true;
-	//         this.prop('focus', true);
-	//         return this.trigger('focus', { reverse });
-	//     }
-	//     blur(reverse = false): boolean {
-	//         if (!this.prop('focus')) return false;
-	//         this.prop('focus', false);
-	//         return this.trigger('blur', { reverse });
-	//     }
-	//     get hovered(): boolean {
-	//         return !!this.prop('hover');
-	//     }
-	//     set hovered(v: boolean) {
-	//         this.prop('hover', v);
-	//     }
-	//     get disabled(): boolean {
-	//         let current: Widget | null = this;
-	//         while (current) {
-	//             if (current.prop('disabled')) return true;
-	//             current = current.parent;
-	//         }
-	//         return false;
-	//     }
-	//     set disabled(v: boolean) {
-	//         this.prop('disabled', v);
-	//     }
-	//     get hidden(): boolean {
-	//         let current: Widget | null = this;
-	//         while (current) {
-	//             if (current.prop('hidden')) return true;
-	//             current = current.parent;
-	//         }
-	//         return false;
-	//     }
-	//     set hidden(v: boolean) {
-	//         this.prop('hidden', v);
-	//         if (!v && this._used.opacity == 0) {
-	//             this._used.opacity = 100;
-	//         }
-	//     }
-	//     get opacity(): number {
-	//         let opacity = 100;
-	//         let current: Widget | null = this;
-	//         while (current) {
-	//             if (current._used) {
-	//                 opacity = Math.min(opacity, current._used.opacity); // TODO - opacity = Math.floor(opacity * current._used.opacity / 100);
-	//             }
-	//             current = current.parent;
-	//         }
-	//         return opacity;
-	//     }
-	//     set opacity(v: number) {
-	//         if (v !== this._used.opacity) {
-	//             this._used.opacity = v;
-	//             this.hidden = this._used.opacity == 0;
-	//             this.needsDraw = true;
-	//         }
-	//     }
-	//     updateStyle() {
-	//         // this._used = this.scene.styles.computeFor(this);
-	//         this._props.needsStyle = true;
-	//         this.needsDraw = true; // changed style or state
-	//     }
-	//     draw(buffer: Buffer.Buffer, styles: Style.Sheet): boolean {
-	//         if (this.hidden) return false;
-	//         let needsStyle = this._props.needsStyle;
-	//         let needsDraw = needsStyle || this.needsDraw;
-	//         if (!needsDraw) return false;
-	//         if (needsStyle) {
-	//             this._used = styles.computeFor(this);
-	//             this._props.needsStyle = false;
-	//         }
-	//         this._draw(buffer);
-	//         for (let child of this.children) {
-	//             child.draw(buffer, styles);
-	//         }
-	//         this.needsDraw = false;
-	//         return true;
-	//     }
-	//     // Draw
-	//     protected _draw(buffer: Buffer.Buffer): boolean {
-	//         this._drawFill(buffer);
-	//         return true;
-	//     }
-	//     protected _drawFill(buffer: Buffer.Buffer): void {
-	//         if (!this._used) return;
-	//         buffer.fillRect(
-	//             this.bounds.x,
-	//             this.bounds.y,
-	//             this.bounds.width,
-	//             this.bounds.height,
-	//             ' ',
-	//             this._used.bg,
-	//             this._used.bg
-	//         );
-	//     }
-	//     // Children
-	//     childAt(xy: XY.XY): Widget | null;
-	//     childAt(x: number, y: number): Widget | null;
-	//     childAt(...args: any[]): Widget | null {
-	//         return this.children.find((c) => c.contains(args[0], args[1])) || null;
-	//     }
-	//     _attach(w: Widget) {
-	//         w._parent = this;
-	//         this.body.attach(w);
-	//     }
-	//     addChild(w: Widget, opts: SetParentOptions = {}): void {
-	//         if (w === this) return;
-	//         let beforeIndex = -1;
-	//         if (opts.beforeIndex !== undefined) {
-	//             beforeIndex = opts.beforeIndex;
-	//         }
-	//         if (w._parent && w._parent !== this)
-	//             throw new Error('Trying to add child that already has a parent.');
-	//         if (!this.children.includes(w)) {
-	//             if (beforeIndex < 0 || beforeIndex >= this.children.length) {
-	//                 this.children.push(w);
-	//             } else {
-	//                 this.children.splice(beforeIndex, 0, w);
-	//             }
-	//         }
-	//         this._attach(w);
-	//         if (opts.center) {
-	//             opts.centerX = opts.centerY = true;
-	//         }
-	//         if (opts.centerX) {
-	//             opts.left = Math.floor((this.bounds.width - w.bounds.width) / 2);
-	//         }
-	//         if (opts.centerY) {
-	//             opts.top = Math.floor((this.bounds.height - w.bounds.height) / 2);
-	//         }
-	//         if (opts.left !== undefined) {
-	//             w.bounds.left = this.bounds.left + opts.left;
-	//         } else if (opts.right !== undefined) {
-	//             w.bounds.right = this.bounds.right - opts.right;
-	//         }
-	//         if (opts.top !== undefined) {
-	//             w.bounds.top = this.bounds.top + opts.top;
-	//         } else if (opts.bottom !== undefined) {
-	//             w.bounds.bottom = this.bounds.bottom - opts.bottom;
-	//         }
-	//     }
-	//     _detach(w: Widget) {
-	//         this.body.detach(w);
-	//         w._parent = null;
-	//     }
-	//     removeChild(w: Widget): void {
-	//         if (!w._parent || w._parent !== this)
-	//             throw new Error(
-	//                 'Removing child that does not have this widget as parent.'
-	//             );
-	//         Utils.arrayDelete(this.children, w);
-	//         this._detach(w);
-	//     }
-	//     resize(w: number, h: number): this {
-	//         this.bounds.width = w || this.bounds.width;
-	//         this.bounds.height = h || this.bounds.height;
-	//         this.needsDraw = true;
-	//         return this;
-	//     }
-	//     // Events
-	//     input(e: IO.Event) {
-	//         if (e.type === IO.KEYPRESS) {
-	//             this.keypress(e);
-	//         } else if (e.type === IO.MOUSEMOVE) {
-	//             this.mousemove(e);
-	//         } else if (e.type === IO.CLICK) {
-	//             this.click(e);
-	//         }
-	//     }
-	//     _mouseenter(e: IO.Event): void {
-	//         if (!this.contains(e)) return;
-	//         if (this.hovered) return;
-	//         this.hovered = true;
-	//         this.trigger('mouseenter', e);
-	//         // if (this._parent) {
-	//         //     this._parent._mouseenter(e);
-	//         // }
-	//     }
-	//     mousemove(e: IO.Event): boolean {
-	//         for (let child of this.children) {
-	//             child.mousemove(e);
-	//         }
-	//         if (this.contains(e) && !e.defaultPrevented && !this.hidden) {
-	//             this._mouseenter(e);
-	//             this.trigger('mousemove', e);
-	//             // e.preventDefault();
-	//         } else {
-	//             this._mouseleave(e);
-	//         }
-	//         return false;
-	//     }
-	//     _mouseleave(e: IO.Event): void {
-	//         if (!this.hovered) return;
-	//         if (this.contains(e)) return;
-	//         this.hovered = false;
-	//         this.trigger('mouseleave', e);
-	//         // if (this._parent) {
-	//         //     this._parent.mouseleave(e);
-	//         // }
-	//     }
-	//     click(e: IO.Event): boolean {
-	//         if (this.hidden || !this.contains(e) || this.disabled) return false;
-	//         for (let child of this.children) {
-	//             if (child.click(e)) return true;
-	//         }
-	//         let current: Widget | null = this;
-	//         while (current && !e.propagationStopped) {
-	//             current.trigger('click', e);
-	//             current = current.parent;
-	//         }
-	//         return true;
-	//     }
-	//     keypress(e: IO.Event): void {
-	//         if (this.hidden || this.disabled) return;
-	//         let current: Widget | null = this;
-	//         let evs = [e.key, e.code, 'keypress'];
-	//         if (e.dir) {
-	//             evs.unshift('dir');
-	//         }
-	//         while (current && !e.propagationStopped) {
-	//             current.trigger(evs, e);
-	//             current = current.parent;
-	//         }
-	//     }
-	//     update(dt: number): void {
-	//         this.trigger('update', dt);
-	//         this.children.forEach((c) => c.update(dt));
-	//     }
-	//     destroy() {
-	//         this.trigger('destroy');
-	//         this.events.clear();
-	//         this.children.forEach((c) => c.destroy());
-	//         this.children = [];
-	//         if (this.parent) {
-	//             this.parent.removeChild(this);
-	//         }
-	//     }
-	//     // events
-	//     on(event: string, cb: EVENTS.CallbackFn): EVENTS.CancelFn {
-	//         return this.events.on(event, cb);
-	//     }
-	//     off(event: string, cb: EventCb): void {
-	//         this.events.off(event, cb);
-	//     }
-	//     trigger(name: string | string[], ...args: any[]): boolean {
-	//         return this.events.trigger(name, ...args);
-	//     }
-	//     _bubble(name: string, ...args: any[]): boolean {
-	//         let current: Widget | null = this;
-	//         let fired = false;
-	//         while (current) {
-	//             fired = current.trigger(name, ...args) || fired;
-	//             current = current.parent;
-	//         }
-	//         fired = this.body.trigger(name, ...args) || fired;
-	//         return fired;
-	//     }
-	//     _triggerAction(ev: IO.Event) {
-	//         if (ev && (ev.propagationStopped || ev.defaultPrevented)) return;
-	//         const action = this._attrStr('action');
-	//         if (action && action.length) {
-	//             this._bubble(action);
-	//         }
-	//     }
-	// }
 
 	// import * as GWU from 'gw-utils';
 	class Text extends Widget {
@@ -14787,6 +14181,10 @@ void main() {
 	// //     return layer;
 	// // };
 
+	function make$1(opts) {
+	    return new Widget(opts);
+	}
+
 	var index$1 = /*#__PURE__*/Object.freeze({
 		__proto__: null,
 		Widget: Widget,
@@ -14815,7 +14213,8 @@ void main() {
 		Prompt: Prompt,
 		Choice: Choice,
 		Inquiry: Inquiry,
-		Builder: Builder
+		Builder: Builder,
+		make: make$1
 	});
 
 	class Loop {
@@ -14867,7 +14266,7 @@ void main() {
 	            this.loop = new Loop();
 	        }
 	        this.styles = defaultStyle;
-	        this.canvas = opts.canvas || make$5(opts);
+	        this.canvas = opts.canvas || make$6(opts);
 	        this.io = new Queue();
 	        this.events = new Events(this);
 	        this.timers = new Timers(this);

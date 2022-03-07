@@ -1,122 +1,68 @@
 import * as Text from './text/index';
-import * as GW from './data';
-import { TRUE } from './utils';
-
-export const templates: Record<string, Text.Template> = {};
-
-GW.config.message = GW.config.message || {};
-
-export function install(id: string, msg: string) {
-    const template = Text.compile(msg);
-    templates[id] = template;
-    return template;
-}
-
-export function installAll(config: Record<string, string>) {
-    Object.entries(config).forEach(([id, msg]) => install(id, msg));
-}
-
-export function get(msgOrId: string): Text.Template | null {
-    return templates[msgOrId] || null;
-}
 
 ////////////////////////////////////
 // Messages
 
-export interface MessageHandler {
-    addMessage(x: number, y: number, msg: string): void;
-    addCombatMessage(x: number, y: number, msg: string): void;
-}
-
-export const handlers: MessageHandler[] = [];
-
-export function add(msg: string, args?: any) {
-    return addAt(-1, -1, msg, args);
-}
-
-export function addAt(x: number, y: number, msg: string, args?: any) {
-    const template = templates[msg];
-    if (template) {
-        msg = template(args);
-    } else if (args) {
-        msg = Text.apply(msg, args);
-    }
-    handlers.forEach((h) => h.addMessage.call(h, x, y, msg));
-}
-
-export function addCombat(x: number, y: number, msg: string, args?: any) {
-    const template = templates[msg];
-    if (template) {
-        msg = template(args);
-    } else if (args) {
-        msg = Text.apply(msg, args);
-    }
-    handlers.forEach((h) => h.addCombatMessage.call(h, x, y, msg));
-}
-
 export interface CacheOptions {
     length: number;
     width: number;
-    match?: (x: number, y: number) => false | any;
+    reverseMultiLine: boolean;
 }
 
 export type EachMsgFn = (msg: string, confirmed: boolean, i: number) => any;
 
-export class MessageCache implements MessageHandler {
-    ARCHIVE: (string | null)[] = [];
-    CONFIRMED: boolean[] = [];
-    ARCHIVE_LINES = 30;
-    MSG_WIDTH = 80;
-    NEXT_WRITE_INDEX = 0;
-    NEEDS_UPDATE = true;
-    COMBAT_MESSAGE: string | null = null;
-    matchFn: (x: number, y: number) => false | any;
+export class Cache {
+    _archive: (string | null)[] = [];
+    _confirmed: boolean[] = [];
+    archiveLen = 30;
+    msgWidth = 80;
+    _nextWriteIndex = 0;
+    // _needsUpdate = true;
+    _combatMsg: string | null = null;
+    _reverse: boolean;
 
     constructor(opts: Partial<CacheOptions> = {}) {
-        this.matchFn = opts.match || TRUE;
-        this.ARCHIVE_LINES = opts.length || 30;
-        this.MSG_WIDTH = opts.width || 80;
+        this.archiveLen = opts.length || 30;
+        this.msgWidth = opts.width || 80;
+        this._reverse = opts.reverseMultiLine || false;
         this.clear();
-        handlers.push(this);
     }
 
     clear() {
-        for (let i = 0; i < this.ARCHIVE_LINES; ++i) {
-            this.ARCHIVE[i] = null;
-            this.CONFIRMED[i] = false;
+        for (let i = 0; i < this.archiveLen; ++i) {
+            this._archive[i] = null;
+            this._confirmed[i] = false;
         }
-        this.NEXT_WRITE_INDEX = 0;
-        this.NEEDS_UPDATE = true;
-        this.COMBAT_MESSAGE = null;
+        this._nextWriteIndex = 0;
+        // this._needsUpdate = true;
+        this._combatMsg = null;
     }
 
-    get needsUpdate(): boolean {
-        return this.NEEDS_UPDATE;
-    }
-    set needsUpdate(needs: boolean) {
-        this.NEEDS_UPDATE = needs;
-    }
+    // get needsUpdate(): boolean {
+    //     return this._needsUpdate;
+    // }
+    // set needsUpdate(needs: boolean) {
+    //     this._needsUpdate = needs;
+    // }
 
     // function messageWithoutCaps(msg, requireAcknowledgment) {
-    protected _addMessageLine(msg: string) {
+    _addMessageLine(msg: string) {
         if (!Text.length(msg)) {
             return;
         }
 
         // Add the message to the archive.
-        this.ARCHIVE[this.NEXT_WRITE_INDEX] = msg;
-        this.CONFIRMED[this.NEXT_WRITE_INDEX] = false;
-        this.NEXT_WRITE_INDEX =
-            (this.NEXT_WRITE_INDEX + 1) % this.ARCHIVE_LINES;
+        this._archive[this._nextWriteIndex] = msg;
+        this._confirmed[this._nextWriteIndex] = false;
+        this._nextWriteIndex = (this._nextWriteIndex + 1) % this.archiveLen;
     }
 
-    addMessage(x: number, y: number, msg: string) {
-        if (this.matchFn(x, y) === false) return;
+    add(msg: string) {
         this.commitCombatMessage();
         this._addMessage(msg);
     }
 
-    protected _addMessage(msg: string) {
+    _addMessage(msg: string) {
         msg = Text.capitalize(msg);
 
         // // Implement the American quotation mark/period/comma ordering rule.
@@ -131,58 +77,54 @@ export class MessageCache implements MessageHandler {
         //     }
         // }
 
-        const lines = Text.splitIntoLines(msg, this.MSG_WIDTH);
-        if (GW.config.message?.reverseMultiLine) {
+        const lines = Text.splitIntoLines(msg, this.msgWidth);
+        if (this._reverse) {
             lines.reverse();
         }
         lines.forEach((l) => this._addMessageLine(l));
 
         // display the message:
-        this.NEEDS_UPDATE = true;
 
         // if (GAME.playbackMode) {
         // 	GAME.playbackDelayThisTurn += GAME.playbackDelayPerTurn * 5;
         // }
     }
 
-    addCombatMessage(x: number, y: number, msg: string) {
-        if (!this.matchFn(x, y)) return;
+    addCombat(msg: string) {
         this._addCombatMessage(msg);
     }
 
     protected _addCombatMessage(msg: string) {
-        if (!this.COMBAT_MESSAGE) {
-            this.COMBAT_MESSAGE = msg;
+        if (!this._combatMsg) {
+            this._combatMsg = msg;
         } else {
-            this.COMBAT_MESSAGE += ', ' + Text.capitalize(msg);
+            this._combatMsg += ', ' + Text.capitalize(msg);
         }
-        this.NEEDS_UPDATE = true;
     }
 
     commitCombatMessage() {
-        if (!this.COMBAT_MESSAGE) return false;
-        this._addMessage(this.COMBAT_MESSAGE + '.');
-        this.COMBAT_MESSAGE = null;
+        if (!this._combatMsg) return false;
+        this._addMessage(this._combatMsg + '.');
+        this._combatMsg = null;
         return true;
     }
 
     confirmAll() {
-        for (let i = 0; i < this.CONFIRMED.length; i++) {
-            this.CONFIRMED[i] = true;
+        for (let i = 0; i < this._confirmed.length; i++) {
+            this._confirmed[i] = true;
         }
-        this.NEEDS_UPDATE = true;
     }
 
     forEach(fn: EachMsgFn) {
         this.commitCombatMessage();
 
-        for (let i = 0; i < this.ARCHIVE_LINES; ++i) {
+        for (let i = 0; i < this.archiveLen; ++i) {
             const n =
-                (this.ARCHIVE_LINES - i + this.NEXT_WRITE_INDEX - 1) %
-                this.ARCHIVE_LINES;
-            const msg = this.ARCHIVE[n];
+                (this.archiveLen - i + this._nextWriteIndex - 1) %
+                this.archiveLen;
+            const msg = this._archive[n];
             if (!msg) return;
-            if (fn(msg, this.CONFIRMED[n], i) === false) return;
+            if (fn(msg, this._confirmed[n], i) === false) return;
         }
     }
 

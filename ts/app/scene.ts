@@ -554,6 +554,9 @@ export class Scene {
     trigger(ev: string | string[], ...args: any[]) {
         return this.events.trigger(ev, ...args);
     }
+    load(cfg: EVENTS.CallbackObj): EVENTS.CancelFn {
+        return this.events.load(cfg);
+    }
 
     // TIMERS
 
