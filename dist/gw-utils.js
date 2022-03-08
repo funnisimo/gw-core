@@ -685,6 +685,9 @@
 	        this.width += n * 2;
 	        this.height += n * 2;
 	    }
+	    forEach(cb) {
+	        forRect(this.x, this.y, this.width, this.height, cb);
+	    }
 	    toString() {
 	        return `[${this.x},${this.y} -> ${this.right},${this.bottom}]`;
 	    }
@@ -5482,6 +5485,7 @@
 
 	class BufferBase {
 	    constructor(width, height) {
+	        this._clip = null;
 	        if (typeof width !== 'number') {
 	            height = width.height;
 	            width = width.width;
@@ -5644,6 +5648,18 @@
 	        }
 	        return this;
 	    }
+	    setClip(...args) {
+	        if (args.length == 1) {
+	            this._clip = args[0].clone();
+	            return this;
+	        }
+	        this._clip = new Bounds(args[0], args[1], args[2], args[3]);
+	        return this;
+	    }
+	    clearClip() {
+	        this._clip = null;
+	        return this;
+	    }
 	}
 	class Buffer$1 extends BufferBase {
 	    constructor(...args) {
@@ -5679,6 +5695,8 @@
 	        return this._data[index];
 	    }
 	    set(x, y, ch = null, fg = null, bg = null) {
+	        if (this._clip && !this._clip.contains(x, y))
+	            return this;
 	        const m = this.get(x, y);
 	        m.fill(ch, fg, bg);
 	        return this;
@@ -5700,9 +5718,18 @@
 	            m.copy(other._data[i]);
 	        });
 	        this.changed = true;
+	        this._clip = other._clip ? other._clip.clone() : null;
 	        return this;
 	    }
 	    apply(other) {
+	        if (this._clip) {
+	            this._clip.forEach((x, y) => {
+	                const me = this.get(x, y);
+	                const you = other.get(x, y);
+	                me.drawSprite(you);
+	            });
+	            return this;
+	        }
 	        this._data.forEach((m, i) => {
 	            m.drawSprite(other._data[i]);
 	        });
@@ -5717,6 +5744,8 @@
 	    draw(x, y, glyph = null, fg = null, // TODO - White?
 	    bg = null // TODO - Black?
 	    ) {
+	        if (this._clip && !this._clip.contains(x, y))
+	            return this;
 	        let index = y * this.width + x;
 	        const current = this._data[index];
 	        current.draw(glyph, fg, bg);
@@ -5725,9 +5754,18 @@
 	    }
 	    nullify(...args) {
 	        if (args.length == 0) {
-	            this._data.forEach((d) => d.nullify());
+	            if (this._clip) {
+	                this._clip.forEach((x, y) => {
+	                    this.nullify(x, y);
+	                });
+	            }
+	            else {
+	                this._data.forEach((d) => d.nullify());
+	            }
 	        }
 	        else {
+	            if (this._clip && !this._clip.contains(args[0], args[1]))
+	                return this;
 	            this.get(args[0], args[1]).nullify();
 	        }
 	    }
@@ -6948,7 +6986,7 @@
 	        if (!item || !this.next)
 	            return;
 	        if (this.next.item === item) {
-	            this.next = item.next;
+	            this.next = this.next.next;
 	            return;
 	        }
 	        let prev = this.next;

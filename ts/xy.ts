@@ -194,6 +194,10 @@ export class Bounds {
         this.height += n * 2;
     }
 
+    forEach(cb: XYFunc) {
+        forRect(this.x, this.y, this.width, this.height, cb);
+    }
+
     toString() {
         return `[${this.x},${this.y} -> ${this.right},${this.bottom}]`;
     }

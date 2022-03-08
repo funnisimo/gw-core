@@ -256,6 +256,7 @@ declare class Bounds {
     contains(loc: Loc$1 | XY): boolean;
     include(xy: Loc$1 | XY | Bounds): void;
     pad(n?: number): void;
+    forEach(cb: XYFunc): void;
     toString(): string;
 }
 declare function copy(dest: XY, src: XY | Loc$1): void;
@@ -1040,6 +1041,7 @@ interface DrawData {
 declare abstract class BufferBase {
     _width: number;
     _height: number;
+    _clip: Bounds | null;
     constructor(opts: {
         width: number;
         height: number;
@@ -1074,6 +1076,9 @@ declare abstract class BufferBase {
     blend(color: ColorBase): this;
     blend(color: ColorBase, x: number, y: number): this;
     blend(color: ColorBase, x: number, y: number, width: number, height: number): this;
+    setClip(bounds: Bounds): this;
+    setClip(x: number, y: number, width: number, height: number): this;
+    clearClip(): this;
 }
 declare class Buffer$1 extends BufferBase {
     _data: Mixer[];

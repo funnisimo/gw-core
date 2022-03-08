@@ -12,6 +12,7 @@ export interface DrawData {
 export abstract class BufferBase {
     _width!: number;
     _height!: number;
+    _clip: Bounds | null = null;
 
     constructor(opts: { width: number; height: number });
     constructor(width: number, height: number);
@@ -330,6 +331,23 @@ export abstract class BufferBase {
         }
         return this;
     }
+
+    setClip(bounds: Bounds): this;
+    setClip(x: number, y: number, width: number, height: number): this;
+    setClip(...args: any[]): this {
+        if (args.length == 1) {
+            this._clip = args[0].clone();
+            return this;
+        }
+
+        this._clip = new Bounds(args[0], args[1], args[2], args[3]);
+        return this;
+    }
+
+    clearClip(): this {
+        this._clip = null;
+        return this;
+    }
 }
 
 export class Buffer extends BufferBase {
@@ -383,7 +401,8 @@ export class Buffer extends BufferBase {
         ch: string | null = null,
         fg: Color.ColorBase | null = null,
         bg: Color.ColorBase | null = null
-    ) {
+    ): this {
+        if (this._clip && !this._clip.contains(x, y)) return this;
         const m = this.get(x, y);
         m.fill(ch, fg, bg);
         return this;
@@ -408,10 +427,20 @@ export class Buffer extends BufferBase {
             m.copy(other._data[i]);
         });
         this.changed = true;
+        this._clip = other._clip ? other._clip.clone() : null;
         return this;
     }
 
     apply(other: Buffer): this {
+        if (this._clip) {
+            this._clip.forEach((x, y) => {
+                const me = this.get(x, y);
+                const you = other.get(x, y);
+                me.drawSprite(you);
+            });
+            return this;
+        }
+
         this._data.forEach((m, i) => {
             m.drawSprite(other._data[i]);
         });
@@ -432,6 +461,7 @@ export class Buffer extends BufferBase {
         fg: Color.ColorBase = null, // TODO - White?
         bg: Color.ColorBase = null // TODO - Black?
     ): this {
+        if (this._clip && !this._clip.contains(x, y)) return this;
         let index = y * this.width + x;
         const current = this._data[index];
         current.draw(glyph, fg, bg);
@@ -443,8 +473,17 @@ export class Buffer extends BufferBase {
     nullify(): void;
     nullify(...args: number[]) {
         if (args.length == 0) {
-            this._data.forEach((d) => d.nullify());
+            if (this._clip) {
+                this._clip.forEach((x, y) => {
+                    this.nullify(x, y);
+                });
+            } else {
+                this._data.forEach((d) => d.nullify());
+            }
         } else {
+            if (this._clip && !this._clip.contains(args[0], args[1]))
+                return this;
+
             this.get(args[0], args[1]).nullify();
         }
     }

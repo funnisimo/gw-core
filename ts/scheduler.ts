@@ -71,7 +71,7 @@ export class Scheduler {
     remove(item: any) {
         if (!item || !this.next) return;
         if (this.next.item === item) {
-            this.next = item.next;
+            this.next = this.next.next;
             return;
         }
         let prev = this.next;
