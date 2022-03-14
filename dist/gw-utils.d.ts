@@ -95,11 +95,11 @@ declare function fromArray(vals: ColorData, base256?: boolean): Color;
 declare function fromCss(css: string): Color;
 declare function fromName(name: string): Color;
 declare function fromNumber(val: number, base256?: boolean): Color;
-declare function make$d(): Color;
-declare function make$d(rgb: number, base256?: boolean): Color;
-declare function make$d(color?: ColorBase | null): Color;
-declare function make$d(arrayLike: ColorData, base256?: boolean): Color;
-declare function make$d(...rgb: number[]): Color;
+declare function make$e(): Color;
+declare function make$e(rgb: number, base256?: boolean): Color;
+declare function make$e(color?: ColorBase | null): Color;
+declare function make$e(arrayLike: ColorData, base256?: boolean): Color;
+declare function make$e(...rgb: number[]): Color;
 declare function from$4(): Color;
 declare function from$4(rgb: number, base256?: boolean): Color;
 declare function from$4(color?: ColorBase | null): Color;
@@ -146,7 +146,7 @@ declare namespace index_d$8 {
     index_d$8_fromCss as fromCss,
     index_d$8_fromName as fromName,
     index_d$8_fromNumber as fromNumber,
-    make$d as make,
+    make$e as make,
     from$4 as from,
     index_d$8_separate as separate,
     index_d$8_relativeLuminance as relativeLuminance,
@@ -490,17 +490,18 @@ declare const getValue: {
     (object: null | undefined, path: lodash.PropertyPath): undefined;
     (object: any, path: lodash.PropertyPath, defaultValue?: any): any;
 };
-declare function copyObject(dest: any, src: any): void;
-declare function assignObject(dest: any, src: any): void;
-declare function assignOmitting(omit: string | string[], dest: any, src: any): void;
-declare function setDefault(obj: any, field: string, val: any): void;
-declare type AssignCallback = (dest: any, key: string, current: any, def: any) => boolean;
-declare function setDefaults(obj: any, def: any, custom?: AssignCallback | null): void;
-declare function setOptions(obj: any, opts: any): void;
-declare function kindDefaults(obj: any, def: any): void;
-declare function pick(obj: any, ...fields: string[]): any;
-declare function clearObject(obj: any): void;
-declare function getOpt(obj: any, member: string, _default: any): any;
+declare type AnyObj$1 = Record<string, any>;
+declare function copyObject(dest: AnyObj$1, src: AnyObj$1): AnyObj$1;
+declare function assignObject(dest: AnyObj$1, src: AnyObj$1): AnyObj$1;
+declare function assignOmitting(omit: string | string[], dest: AnyObj$1, src: AnyObj$1): AnyObj$1;
+declare function setDefault(obj: AnyObj$1, field: string, val: any): void;
+declare type AssignCallback = (dest: AnyObj$1, key: string, current: any, def: any) => boolean;
+declare function setDefaults(obj: AnyObj$1, def: AnyObj$1 | null | undefined, custom?: AssignCallback | null): void;
+declare function setOptions(obj: AnyObj$1, opts: AnyObj$1 | null | undefined): void;
+declare function kindDefaults(obj: AnyObj$1, def: AnyObj$1 | null | undefined): void;
+declare function pick(obj: AnyObj$1, ...fields: string[]): any;
+declare function clearObject(obj: AnyObj$1): void;
+declare function getOpt(obj: AnyObj$1, member: string, _default: any): any;
 declare function firstOpt(field: string, ...args: any[]): any;
 
 declare const object_d_getValue: typeof getValue;
@@ -519,6 +520,7 @@ declare const object_d_firstOpt: typeof firstOpt;
 declare namespace object_d {
   export {
     object_d_getValue as getValue,
+    AnyObj$1 as AnyObj,
     object_d_copyObject as copyObject,
     object_d_assignObject as assignObject,
     object_d_assignOmitting as assignOmitting,
@@ -577,7 +579,7 @@ declare class Random {
 }
 declare const random: Random;
 declare const cosmetic: Random;
-declare function make$c(seed?: number): Random;
+declare function make$d(seed?: number): Random;
 
 type rng_d_WeightedArray = WeightedArray;
 type rng_d_WeightedObject = WeightedObject;
@@ -599,7 +601,7 @@ declare namespace rng_d {
     rng_d_Random as Random,
     rng_d_random as random,
     rng_d_cosmetic as cosmetic,
-    make$c as make,
+    make$d as make,
   };
 }
 
@@ -615,8 +617,8 @@ declare class Range {
     copy(other: Range): this;
     toString(): string;
 }
-declare function make$b(config: RangeBase | null): Range;
-declare const from$3: typeof make$b;
+declare function make$c(config: RangeBase | null): Range;
+declare const from$3: typeof make$c;
 declare function asFn(config: RangeBase | null): () => number;
 declare function value(base: RangeBase): number;
 
@@ -629,10 +631,39 @@ declare namespace range_d {
   export {
     range_d_RangeBase as RangeBase,
     range_d_Range as Range,
-    make$b as make,
+    make$c as make,
     from$3 as from,
     range_d_asFn as asFn,
     range_d_value as value,
+  };
+}
+
+declare type TagBase = string | string[];
+declare type Tags = string[];
+declare type TagMatchFn = (tags: Tags) => boolean;
+interface TagMatchOptions {
+    tags: string | string[];
+    forbidTags?: string | string[];
+}
+declare function make$b(base: TagBase): Tags;
+declare function makeMatch(rules: string | TagMatchOptions): TagMatchFn;
+declare function match(tags: Tags, matchRules: string): boolean;
+
+type tags_d_TagBase = TagBase;
+type tags_d_Tags = Tags;
+type tags_d_TagMatchFn = TagMatchFn;
+type tags_d_TagMatchOptions = TagMatchOptions;
+declare const tags_d_makeMatch: typeof makeMatch;
+declare const tags_d_match: typeof match;
+declare namespace tags_d {
+  export {
+    tags_d_TagBase as TagBase,
+    tags_d_Tags as Tags,
+    tags_d_TagMatchFn as TagMatchFn,
+    tags_d_TagMatchOptions as TagMatchOptions,
+    make$b as make,
+    tags_d_makeMatch as makeMatch,
+    tags_d_match as match,
   };
 }
 
@@ -1311,6 +1342,7 @@ declare function rescan(distanceMap: NumGrid, costMap: NumGrid, eightWays?: bool
 declare function nextStep(distanceMap: NumGrid, x: number, y: number, isBlocked: BlockedFn, useDiagonals?: boolean): Loc$1;
 declare function getClosestValidLocation(distanceMap: NumGrid, x: number, y: number, blocked?: BlockedFn): number[] | null;
 declare function getPath(distanceMap: NumGrid, originX: number, originY: number, isBlocked: BlockedFn, eightWays?: boolean): Loc$1[] | null;
+declare function getPathBetween(width: number, height: number, fromX: number, fromY: number, toX: number, toY: number, costFn: (x: number, y: number) => number, eightWays?: boolean): Loc$1[] | null;
 
 declare const path_d_FORBIDDEN: typeof FORBIDDEN;
 declare const path_d_OBSTRUCTION: typeof OBSTRUCTION;
@@ -1323,6 +1355,7 @@ declare const path_d_rescan: typeof rescan;
 declare const path_d_nextStep: typeof nextStep;
 declare const path_d_getClosestValidLocation: typeof getClosestValidLocation;
 declare const path_d_getPath: typeof getPath;
+declare const path_d_getPathBetween: typeof getPathBetween;
 declare namespace path_d {
   export {
     path_d_FORBIDDEN as FORBIDDEN,
@@ -1336,6 +1369,7 @@ declare namespace path_d {
     path_d_nextStep as nextStep,
     path_d_getClosestValidLocation as getClosestValidLocation,
     path_d_getPath as getPath,
+    path_d_getPathBetween as getPathBetween,
   };
 }
 
@@ -3650,4 +3684,4 @@ declare namespace index_d {
   };
 }
 
-export { ERROR, FALSE, IDENTITY, IS_NONZERO, IS_ZERO, NOOP, ONE, TRUE, WARN, ZERO, index_d$5 as app, arrayDelete, arrayFindRight, arrayIncludesAll, arrayInsert, arrayNext, arrayNullify, arrayPrev, arrayRevEach, arraysIntersect, blob_d as blob, buffer_d as buffer, index_d$4 as canvas, clamp, index_d$8 as color, colors, config$1 as config, cosmetic, data, events_d as events, first, flag_d as flag, index_d$6 as fov, frequency_d as frequency, grid_d as grid, lerp, index_d$2 as light, list_d as list, message_d as message, nextIndex, object_d as object, path_d as path, prevIndex, queue_d as queue, random, range_d as range, rng_d as rng, scheduler_d as scheduler, index_d$3 as sprite, sprites, sum, index_d$7 as text, tween_d as tween, types_d as types, index_d$1 as ui, index_d as widget, xy_d as xy };
+export { ERROR, FALSE, IDENTITY, IS_NONZERO, IS_ZERO, NOOP, ONE, TRUE, WARN, ZERO, index_d$5 as app, arrayDelete, arrayFindRight, arrayIncludesAll, arrayInsert, arrayNext, arrayNullify, arrayPrev, arrayRevEach, arraysIntersect, blob_d as blob, buffer_d as buffer, index_d$4 as canvas, clamp, index_d$8 as color, colors, config$1 as config, cosmetic, data, events_d as events, first, flag_d as flag, index_d$6 as fov, frequency_d as frequency, grid_d as grid, lerp, index_d$2 as light, list_d as list, message_d as message, nextIndex, object_d as object, path_d as path, prevIndex, queue_d as queue, random, range_d as range, rng_d as rng, scheduler_d as scheduler, index_d$3 as sprite, sprites, sum, tags_d as tags, index_d$7 as text, tween_d as tween, types_d as types, index_d$1 as ui, index_d as widget, xy_d as xy };

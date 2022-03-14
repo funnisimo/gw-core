@@ -1,6 +1,7 @@
 import * as Grid from './grid';
 import * as XY from './xy';
 import { FALSE } from './utils';
+import { grid } from '.';
 
 export const FORBIDDEN = -1;
 export const OBSTRUCTION = -2;
@@ -447,4 +448,35 @@ export function getPath(
     } while (dir);
 
     return path.length ? path : null;
+}
+
+export function getPathBetween(
+    width: number,
+    height: number,
+    fromX: number,
+    fromY: number,
+    toX: number,
+    toY: number,
+    costFn: (x: number, y: number) => number,
+    eightWays = true
+): XY.Loc[] | null {
+    const costMap = Grid.alloc(width, height);
+    const distanceMap = Grid.alloc(width, height);
+
+    for (let x = 0; x < width; ++x) {
+        for (let y = 0; y < height; ++y) {
+            costMap[x][y] = costFn(x, y);
+        }
+    }
+
+    calculateDistances(distanceMap, toX, toY, costMap, eightWays);
+
+    const isBlocked = (x: number, y: number) => costFn(x, y) < 0;
+
+    const path = getPath(distanceMap, fromX, fromY, isBlocked, eightWays);
+
+    Grid.free(distanceMap);
+    grid.free(costMap);
+
+    return path;
 }

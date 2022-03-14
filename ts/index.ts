@@ -3,6 +3,7 @@ export * as xy from './xy';
 export * as list from './list';
 export * as object from './object';
 export * as range from './range';
+export * as tags from './tags';
 export * as flag from './flag';
 export * as grid from './grid';
 export * as queue from './queue';

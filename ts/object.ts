@@ -3,6 +3,7 @@ import { ERROR } from './utils';
 import get from 'lodash/get';
 
 export const getValue = get;
+export type AnyObj = Record<string, any>;
 
 // export function extend(obj, name, fn) {
 //   const base = obj[name] || NOOP;
@@ -35,7 +36,7 @@ export const getValue = get;
 //   return other;
 // }
 
-function assignField(dest: any, src: any, key: string) {
+function assignField(dest: AnyObj, src: AnyObj, key: string) {
     const current = dest[key];
     const updated = src[key];
     if (current && current.copy && updated) {
@@ -55,19 +56,25 @@ function assignField(dest: any, src: any, key: string) {
     }
 }
 
-export function copyObject(dest: any, src: any) {
+export function copyObject(dest: AnyObj, src: AnyObj) {
     Object.keys(dest).forEach((key) => {
         assignField(dest, src, key);
     });
+    return dest;
 }
 
-export function assignObject(dest: any, src: any) {
+export function assignObject(dest: AnyObj, src: AnyObj) {
     Object.keys(src).forEach((key) => {
         assignField(dest, src, key);
     });
+    return dest;
 }
 
-export function assignOmitting(omit: string | string[], dest: any, src: any) {
+export function assignOmitting(
+    omit: string | string[],
+    dest: AnyObj,
+    src: AnyObj
+) {
     if (typeof omit === 'string') {
         omit = omit.split(/[,|]/g).map((t) => t.trim());
     }
@@ -75,24 +82,25 @@ export function assignOmitting(omit: string | string[], dest: any, src: any) {
         if (omit.includes(key)) return;
         assignField(dest, src, key);
     });
+    return dest;
 }
 
-export function setDefault(obj: any, field: string, val: any) {
+export function setDefault(obj: AnyObj, field: string, val: any) {
     if (obj[field] === undefined) {
         obj[field] = val;
     }
 }
 
 export type AssignCallback = (
-    dest: any,
+    dest: AnyObj,
     key: string,
     current: any,
     def: any
 ) => boolean;
 
 export function setDefaults(
-    obj: any,
-    def: any,
+    obj: AnyObj,
+    def: AnyObj | null | undefined,
     custom: AssignCallback | null = null
 ) {
     let dest;
@@ -139,7 +147,7 @@ export function setDefaults(
     });
 }
 
-export function setOptions(obj: any, opts: any) {
+export function setOptions(obj: AnyObj, opts: AnyObj | null | undefined) {
     setDefaults(obj, opts, (dest, key, _current, opt) => {
         if (opt === null) {
             dest[key] = null;
@@ -154,7 +162,7 @@ export function setOptions(obj: any, opts: any) {
     });
 }
 
-export function kindDefaults(obj: any, def: any) {
+export function kindDefaults(obj: AnyObj, def: AnyObj | null | undefined) {
     function custom(dest: any, key: string, current: any, defValue: any) {
         if (key.search(/[fF]lags$/) < 0) return false;
 
@@ -181,7 +189,7 @@ export function kindDefaults(obj: any, def: any) {
     return setDefaults(obj, def, custom);
 }
 
-export function pick(obj: any, ...fields: string[]) {
+export function pick(obj: AnyObj, ...fields: string[]) {
     const data: any = {};
     fields.forEach((f) => {
         const v = obj[f];
@@ -192,11 +200,11 @@ export function pick(obj: any, ...fields: string[]) {
     return data;
 }
 
-export function clearObject(obj: any) {
+export function clearObject(obj: AnyObj) {
     Object.keys(obj).forEach((key) => (obj[key] = undefined));
 }
 
-export function getOpt(obj: any, member: string, _default: any) {
+export function getOpt(obj: AnyObj, member: string, _default: any) {
     const v = obj[member];
     if (v === undefined) return _default;
     return v;
