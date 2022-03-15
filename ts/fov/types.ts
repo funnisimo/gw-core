@@ -1,4 +1,4 @@
-import { FovFlags } from './flags';
+// import { FovFlags } from './flags';
 
 export interface FovStrategy {
     isBlocked(x: number, y: number): boolean;
@@ -56,7 +56,7 @@ export interface FovTracker {
     isMagicMapped(x: number, y: number): boolean;
     isRevealed(x: number, y: number): boolean;
 
-    getFlag(x: number, y: number): FovFlags;
+    getFlag(x: number, y: number): number;
 
     makeAlwaysVisible(): void;
     makeCellAlwaysVisible(x: number, y: number): void;

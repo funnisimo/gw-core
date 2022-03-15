@@ -86,7 +86,7 @@ export class FovSystem implements TYPES.FovTracker {
         }
     }
 
-    getFlag(x: number, y: number): FovFlags {
+    getFlag(x: number, y: number): number {
         return this.flags[x][y];
     }
 

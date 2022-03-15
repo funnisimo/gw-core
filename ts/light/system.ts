@@ -12,7 +12,7 @@ import * as Light from './light';
 import { data as DATA } from '../data';
 import * as XY from '../xy';
 import * as Color from '../color';
-import { fl as Fl } from '../flag';
+import * as FLAG from '../flag';
 import * as List from '../list';
 
 export interface StaticLightInfo {
@@ -22,13 +22,13 @@ export interface StaticLightInfo {
     next: StaticLightInfo | null;
 }
 
-enum LightFlags {
-    LIT = Fl(0),
-    IN_SHADOW = Fl(1),
-    DARK = Fl(2),
-    // MAGIC_DARK = Fl(3),
-    CHANGED = Fl(4),
-}
+const LightFlags = FLAG.make([
+    'LIT',
+    'IN_SHADOW',
+    'DARK',
+    // 'MAGIC_DARK',
+    'CHANGED',
+]);
 
 export interface LightSystemOptions {
     ambient?: Color.ColorBase | Color.LightValue;

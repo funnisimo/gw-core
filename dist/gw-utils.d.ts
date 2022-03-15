@@ -1155,34 +1155,7 @@ declare namespace buffer_d {
   };
 }
 
-declare enum FovFlags {
-    VISIBLE,
-    WAS_VISIBLE,
-    CLAIRVOYANT_VISIBLE,
-    WAS_CLAIRVOYANT_VISIBLE,
-    TELEPATHIC_VISIBLE,
-    WAS_TELEPATHIC_VISIBLE,
-    ITEM_DETECTED,
-    WAS_ITEM_DETECTED,
-    ACTOR_DETECTED,
-    WAS_ACTOR_DETECTED,
-    REVEALED,
-    MAGIC_MAPPED,
-    IN_FOV,
-    WAS_IN_FOV,
-    ALWAYS_VISIBLE,
-    IS_CURSOR,
-    IS_HIGHLIGHTED,
-    ANY_KIND_OF_VISIBLE,
-    IS_WAS_ANY_KIND_OF_VISIBLE,
-    WAS_ANY_KIND_OF_VISIBLE,
-    WAS_DETECTED,
-    IS_DETECTED,
-    PLAYER,
-    CLAIRVOYANT,
-    TELEPATHIC,
-    VIEWPORT_TYPES
-}
+declare const FovFlags: Record<string, number>;
 
 interface FovStrategy {
     isBlocked(x: number, y: number): boolean;
@@ -1212,7 +1185,7 @@ interface FovTracker {
     isDirectlyVisible(x: number, y: number): boolean;
     isMagicMapped(x: number, y: number): boolean;
     isRevealed(x: number, y: number): boolean;
-    getFlag(x: number, y: number): FovFlags;
+    getFlag(x: number, y: number): number;
     makeAlwaysVisible(): void;
     makeCellAlwaysVisible(x: number, y: number): void;
     setCursor(x: number, y: number, keep?: boolean): void;
@@ -1264,7 +1237,7 @@ declare class FovSystem implements FovTracker {
     constructor(site: FovSite, opts?: FovSystemOptions);
     get callback(): FovChangeFn;
     set callback(v: FovChangeFn | FovNoticer | null);
-    getFlag(x: number, y: number): FovFlags;
+    getFlag(x: number, y: number): number;
     isVisible(x: number, y: number): boolean;
     isAnyKindOfVisible(x: number, y: number): boolean;
     isClairvoyantVisible(x: number, y: number): boolean;
@@ -1299,7 +1272,6 @@ declare class FovSystem implements FovTracker {
     update(cx: number, cy: number, cr?: number): boolean;
 }
 
-type index_d$6_FovFlags = FovFlags;
 declare const index_d$6_FovFlags: typeof FovFlags;
 type index_d$6_FovStrategy = FovStrategy;
 type index_d$6_SetVisibleFn = SetVisibleFn;

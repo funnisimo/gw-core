@@ -6,7 +6,7 @@ interface ViewportInfo {
     x: number;
     y: number;
     radius: number;
-    type: FOV.FovFlags;
+    type: number;
 }
 
 interface TestFovSite extends FOV.FovSite {
