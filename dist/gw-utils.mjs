@@ -3716,6 +3716,9 @@ function make$a(obj) {
                 while (used[nextIndex]) {
                     ++nextIndex;
                 }
+                if (nextIndex > 31) {
+                    throw new Error('Flag uses too many bits! [Max=32]');
+                }
                 flags[v] = fl(nextIndex);
                 used[nextIndex] = 1;
             }
