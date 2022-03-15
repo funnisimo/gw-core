@@ -672,7 +672,7 @@ declare type FlagBase = FlagSource | FlagSource[] | null;
 declare function fl(N: number): number;
 declare function toString<T>(flagObj: T, value: number): string;
 declare function from$2<T>(obj: T, ...args: (FlagBase | undefined)[]): number;
-declare function make$a(obj: Record<string, FlagBase>): Record<string, number>;
+declare function make$a(obj: Record<string, FlagBase> | string[]): Record<string, number>;
 
 type flag_d_FlagBase = FlagBase;
 declare const flag_d_fl: typeof fl;

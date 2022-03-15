@@ -89,8 +89,52 @@ export function from<T>(obj: T, ...args: (FlagBase | undefined)[]): number {
     return result;
 }
 
-export function make(obj: Record<string, FlagBase>): Record<string, number> {
+export function make(
+    obj: Record<string, FlagBase> | string[]
+): Record<string, number> {
     const out: Record<string, number> = {};
+
+    if (Array.isArray(obj)) {
+        const arr = obj;
+        const flags: Record<string, number> = {};
+        let nextIndex = 0;
+        let used: number[] = [];
+        arr.forEach((v) => {
+            if (v.includes('=')) {
+                const [name, value] = v.split('=').map((t) => t.trim());
+                const values = value.split('|').map((t) => t.trim());
+                // console.log(`flag: ${v} >> ${name} = ${value} >> ${values}`);
+
+                let i = 0;
+                for (let n = 0; n < values.length; ++n) {
+                    const p = values[n];
+                    if (flags[p]) {
+                        i |= flags[p];
+                    } else {
+                        const num = Number.parseInt(p);
+                        if (num) {
+                            i |= num;
+                            for (let x = 0; x < 32; ++x) {
+                                if (i & (1 << x)) {
+                                    used[x] = 1;
+                                }
+                            }
+                        } else {
+                            throw new Error(`Failed to parse flag = ${v}`);
+                        }
+                    }
+                }
+                flags[name] = i;
+            } else {
+                while (used[nextIndex]) {
+                    ++nextIndex;
+                }
+                flags[v] = fl(nextIndex);
+                used[nextIndex] = 1;
+            }
+        });
+        return flags;
+    }
 
     Object.entries(obj).forEach(([key, value]) => {
         out[key] = from(out, value);

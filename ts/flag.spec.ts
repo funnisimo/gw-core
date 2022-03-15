@@ -46,8 +46,7 @@ describe('flag', () => {
         ).toEqual('A | B | C | D | E');
     });
 
-    // Is this really necessary?  Should we have make at all?
-    test('make', () => {
+    test('make - obj', () => {
         const source = {
             A: 1,
             B: '2',
@@ -66,6 +65,21 @@ describe('flag', () => {
             D: 7,
             E: 3,
             F: 3,
+            G: 7,
+        });
+    });
+
+    test('make - array', () => {
+        const source = ['A', 'B', 'C=A|B', 'D=4', 'E=1|2', 'F', 'G=A|B|4'];
+
+        const flag = GW.flag.make(source);
+        expect(flag).toEqual({
+            A: 1,
+            B: 2,
+            C: 3,
+            D: 4,
+            E: 3,
+            F: 8,
             G: 7,
         });
     });
