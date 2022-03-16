@@ -2433,6 +2433,11 @@ interface WidgetOpts extends StyleOptions, SetParentOptions {
     update?: CallbackFn;
     draw?: CallbackFn;
     destroy?: CallbackFn;
+    keypress?: CallbackFn;
+    mouseenter?: CallbackFn;
+    mousemove?: CallbackFn;
+    mouseleave?: CallbackFn;
+    click?: CallbackFn;
     on?: Record<string, CallbackFn>;
 }
 declare type PropType = string | number | boolean;
@@ -3493,7 +3498,10 @@ declare class Builder {
     menubar(opts: MenubarOptions): Menubar;
 }
 
-declare function make(opts: WidgetOpts): Widget;
+interface WidgetMake<T> extends WidgetOpts {
+    with?: T;
+}
+declare function make<T>(opts: WidgetMake<T>): Widget & T;
 
 type index_d_DataValue = DataValue;
 type index_d_DataObject = DataObject;
@@ -3582,6 +3590,7 @@ type index_d_Inquiry = Inquiry;
 declare const index_d_Inquiry: typeof Inquiry;
 type index_d_Builder = Builder;
 declare const index_d_Builder: typeof Builder;
+type index_d_WidgetMake<T> = WidgetMake<T>;
 declare const index_d_make: typeof make;
 declare namespace index_d {
   export {
@@ -3652,6 +3661,7 @@ declare namespace index_d {
     index_d_Choice as Choice,
     index_d_Inquiry as Inquiry,
     index_d_Builder as Builder,
+    index_d_WidgetMake as WidgetMake,
     index_d_make as make,
   };
 }

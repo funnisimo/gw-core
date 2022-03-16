@@ -66,6 +66,12 @@ export interface WidgetOpts extends STYLE.StyleOptions, SetParentOptions {
     draw?: EVENTS.CallbackFn;
     destroy?: EVENTS.CallbackFn;
 
+    keypress?: EVENTS.CallbackFn;
+    mouseenter?: EVENTS.CallbackFn;
+    mousemove?: EVENTS.CallbackFn;
+    mouseleave?: EVENTS.CallbackFn;
+    click?: EVENTS.CallbackFn;
+
     on?: Record<string, EVENTS.CallbackFn>;
 }
 
@@ -127,12 +133,20 @@ export class Widget {
             this.attr('action', opts.action);
         }
 
-        ['create', 'input', 'update', 'draw', 'destroy'].forEach((n) => {
+        [
+            'create',
+            'input',
+            'update',
+            'draw',
+            'destroy',
+            'keypress',
+            'mouseenter',
+            'mousemove',
+            'mouseleave',
+            'click',
+        ].forEach((n) => {
             if (n in opts) {
-                this.events.on(
-                    n,
-                    opts[n as keyof WidgetOpts] as EVENTS.CallbackFn
-                );
+                this.on(n, opts[n as keyof WidgetOpts] as EVENTS.CallbackFn);
             }
         });
         if (opts.on) {
@@ -656,13 +670,21 @@ export class Widget {
     // EVENTS
 
     on(ev: string | string[], cb: EVENTS.CallbackFn): EVENTS.CancelFn {
+        if (ev === 'keypress') {
+            this.prop('tabStop', true);
+        }
         return this.events.on(ev, cb);
     }
     once(ev: string | string[], cb: EVENTS.CallbackFn): EVENTS.CancelFn {
+        if (ev === 'keypress') {
+            this.prop('tabStop', true);
+        }
         return this.events.once(ev, cb);
     }
     off(ev: string | string[], cb: EVENTS.CallbackFn): void {
         this.events.off(ev, cb);
+        // cannot turn off keypress automatically because
+        // we could be waiting for dispatched events - e.g. 'Enter', or 'dir', ...
     }
     trigger(ev: string | string[], ...args: any[]) {
         return this.events.trigger(ev, ...args);

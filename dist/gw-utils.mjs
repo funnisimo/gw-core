@@ -10999,9 +10999,20 @@ class Widget {
             }
             this.attr('action', opts.action);
         }
-        ['create', 'input', 'update', 'draw', 'destroy'].forEach((n) => {
+        [
+            'create',
+            'input',
+            'update',
+            'draw',
+            'destroy',
+            'keypress',
+            'mouseenter',
+            'mousemove',
+            'mouseleave',
+            'click',
+        ].forEach((n) => {
             if (n in opts) {
-                this.events.on(n, opts[n]);
+                this.on(n, opts[n]);
             }
         });
         if (opts.on) {
@@ -11464,13 +11475,21 @@ class Widget {
     }
     // EVENTS
     on(ev, cb) {
+        if (ev === 'keypress') {
+            this.prop('tabStop', true);
+        }
         return this.events.on(ev, cb);
     }
     once(ev, cb) {
+        if (ev === 'keypress') {
+            this.prop('tabStop', true);
+        }
         return this.events.once(ev, cb);
     }
     off(ev, cb) {
         this.events.off(ev, cb);
+        // cannot turn off keypress automatically because
+        // we could be waiting for dispatched events - e.g. 'Enter', or 'dir', ...
     }
     trigger(ev, ...args) {
         return this.events.trigger(ev, ...args);
@@ -14330,7 +14349,14 @@ class Builder {
 // // };
 
 function make$1(opts) {
-    return new Widget(opts);
+    const w = new Widget(opts);
+    if (opts.with) {
+        Object.entries(opts.with).forEach(([name, fn]) => {
+            // @ts-ignore
+            w[name] = fn;
+        });
+    }
+    return w;
 }
 
 var index$1 = /*#__PURE__*/Object.freeze({
