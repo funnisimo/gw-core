@@ -432,7 +432,7 @@
 	//     if (v > max) return max;
 	//     return v;
 	// }
-	function lerp(from, to, pct) {
+	function lerp$1(from, to, pct) {
 	    if (pct > 1)
 	        pct = 1;
 	    if (pct < 0)
@@ -706,7 +706,7 @@
 	    }
 	    return { x: a.x + x(b), y: a.y + y(b) };
 	}
-	function equalsXY(dest, src) {
+	function equals(dest, src) {
 	    if (!dest && !src)
 	        return true;
 	    if (!dest || !src)
@@ -716,7 +716,7 @@
 	function isDiagonal(xy) {
 	    return x(xy) != 0 && y(xy) != 0;
 	}
-	function lerpXY(a, b, pct) {
+	function lerp(a, b, pct) {
 	    if (pct > 1) {
 	        pct = pct / 100;
 	    }
@@ -1039,9 +1039,9 @@
 		copy: copy,
 		addTo: addTo,
 		add: add,
-		equalsXY: equalsXY,
+		equals: equals,
 		isDiagonal: isDiagonal,
-		lerpXY: lerpXY,
+		lerp: lerp,
 		eachNeighbor: eachNeighbor,
 		eachNeighborAsync: eachNeighborAsync,
 		matchingNeighbor: matchingNeighbor,
@@ -14716,7 +14716,7 @@ void main() {
 	exports.fov = index$6;
 	exports.frequency = frequency;
 	exports.grid = grid;
-	exports.lerp = lerp;
+	exports.lerp = lerp$1;
 	exports.light = index$3;
 	exports.list = list;
 	exports.message = message;

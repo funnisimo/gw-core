@@ -23,7 +23,7 @@ declare const clamp: {
     (number: number, lower: number, upper: number): number;
     (number: number, upper: number): number;
 };
-declare function lerp(from: number, to: number, pct: number): number;
+declare function lerp$1(from: number, to: number, pct: number): number;
 declare function ERROR(message: string): void;
 declare function WARN(...args: string[]): void;
 declare function first(...args: any[]): any;
@@ -263,9 +263,9 @@ declare function copy(dest: XY, src: XY | Loc$1): void;
 declare function addTo(dest: XY, src: XY | Loc$1): void;
 declare function add(a: XY, b: XY | Loc$1): XY;
 declare function add(a: Loc$1, b: XY | Loc$1): Loc$1;
-declare function equalsXY(dest: XY | Loc$1 | null | undefined, src: XY | Loc$1 | null | undefined): boolean;
+declare function equals(dest: XY | Loc$1 | null | undefined, src: XY | Loc$1 | null | undefined): boolean;
 declare function isDiagonal(xy: XY | Loc$1): boolean;
-declare function lerpXY(a: XY | Loc$1, b: XY | Loc$1, pct: number): any[];
+declare function lerp(a: XY | Loc$1, b: XY | Loc$1, pct: number): any[];
 declare type XYFunc = (x: number, y: number) => any;
 declare function eachNeighbor(x: number, y: number, fn: XYFunc, only4dirs?: boolean): void;
 declare function eachNeighborAsync(x: number, y: number, fn: XYFunc, only4dirs?: boolean): Promise<void>;
@@ -320,9 +320,9 @@ declare const xy_d_Bounds: typeof Bounds;
 declare const xy_d_copy: typeof copy;
 declare const xy_d_addTo: typeof addTo;
 declare const xy_d_add: typeof add;
-declare const xy_d_equalsXY: typeof equalsXY;
+declare const xy_d_equals: typeof equals;
 declare const xy_d_isDiagonal: typeof isDiagonal;
-declare const xy_d_lerpXY: typeof lerpXY;
+declare const xy_d_lerp: typeof lerp;
 type xy_d_XYFunc = XYFunc;
 declare const xy_d_eachNeighbor: typeof eachNeighbor;
 declare const xy_d_eachNeighborAsync: typeof eachNeighborAsync;
@@ -376,9 +376,9 @@ declare namespace xy_d {
     xy_d_copy as copy,
     xy_d_addTo as addTo,
     xy_d_add as add,
-    xy_d_equalsXY as equalsXY,
+    xy_d_equals as equals,
     xy_d_isDiagonal as isDiagonal,
-    xy_d_lerpXY as lerpXY,
+    xy_d_lerp as lerp,
     xy_d_XYFunc as XYFunc,
     xy_d_eachNeighbor as eachNeighbor,
     xy_d_eachNeighborAsync as eachNeighborAsync,
@@ -3666,4 +3666,4 @@ declare namespace index_d {
   };
 }
 
-export { ERROR, FALSE, IDENTITY, IS_NONZERO, IS_ZERO, NOOP, ONE, TRUE, WARN, ZERO, index_d$5 as app, arrayDelete, arrayFindRight, arrayIncludesAll, arrayInsert, arrayNext, arrayNullify, arrayPrev, arrayRevEach, arraysIntersect, blob_d as blob, buffer_d as buffer, index_d$4 as canvas, clamp, index_d$8 as color, colors, config$1 as config, cosmetic, data, events_d as events, first, flag_d as flag, index_d$6 as fov, frequency_d as frequency, grid_d as grid, lerp, index_d$2 as light, list_d as list, message_d as message, nextIndex, object_d as object, path_d as path, prevIndex, queue_d as queue, random, range_d as range, rng_d as rng, scheduler_d as scheduler, index_d$3 as sprite, sprites, sum, tags_d as tags, index_d$7 as text, tween_d as tween, types_d as types, index_d$1 as ui, index_d as widget, xy_d as xy };
+export { ERROR, FALSE, IDENTITY, IS_NONZERO, IS_ZERO, NOOP, ONE, TRUE, WARN, ZERO, index_d$5 as app, arrayDelete, arrayFindRight, arrayIncludesAll, arrayInsert, arrayNext, arrayNullify, arrayPrev, arrayRevEach, arraysIntersect, blob_d as blob, buffer_d as buffer, index_d$4 as canvas, clamp, index_d$8 as color, colors, config$1 as config, cosmetic, data, events_d as events, first, flag_d as flag, index_d$6 as fov, frequency_d as frequency, grid_d as grid, lerp$1 as lerp, index_d$2 as light, list_d as list, message_d as message, nextIndex, object_d as object, path_d as path, prevIndex, queue_d as queue, random, range_d as range, rng_d as rng, scheduler_d as scheduler, index_d$3 as sprite, sprites, sum, tags_d as tags, index_d$7 as text, tween_d as tween, types_d as types, index_d$1 as ui, index_d as widget, xy_d as xy };

@@ -127,27 +127,27 @@ describe('XY', () => {
         expect(dest).toEqual({ x: 6, y: 8 });
     });
 
-    test('equalsXY', () => {
+    test('equals', () => {
         const dest = { x: 2, y: 3 };
 
-        expect(XY.equalsXY(dest, { x: 4, y: 5 })).toBeFalsy();
-        expect(XY.equalsXY(dest, { x: 4, y: 3 })).toBeFalsy();
-        expect(XY.equalsXY(dest, { x: 2, y: 5 })).toBeFalsy();
-        expect(XY.equalsXY(dest, { x: 2, y: 3 })).toBeTruthy();
+        expect(XY.equals(dest, { x: 4, y: 5 })).toBeFalsy();
+        expect(XY.equals(dest, { x: 4, y: 3 })).toBeFalsy();
+        expect(XY.equals(dest, { x: 2, y: 5 })).toBeFalsy();
+        expect(XY.equals(dest, { x: 2, y: 3 })).toBeTruthy();
 
-        expect(XY.equalsXY(dest, [4, 5])).toBeFalsy();
-        expect(XY.equalsXY(dest, [4, 3])).toBeFalsy();
-        expect(XY.equalsXY(dest, [2, 5])).toBeFalsy();
-        expect(XY.equalsXY(dest, [2, 3])).toBeTruthy();
+        expect(XY.equals(dest, [4, 5])).toBeFalsy();
+        expect(XY.equals(dest, [4, 3])).toBeFalsy();
+        expect(XY.equals(dest, [2, 5])).toBeFalsy();
+        expect(XY.equals(dest, [2, 3])).toBeTruthy();
     });
 
-    test('lerpXY', () => {
+    test('lerp', () => {
         const a: XY.Loc = [5, 5];
         const b: XY.Loc = [10, 10];
 
-        expect(XY.lerpXY(a, b, 0)).toEqual(a);
-        expect(XY.lerpXY(a, b, 100)).toEqual(b);
-        expect(XY.lerpXY(a, b, 50)).toEqual([7, 7]);
+        expect(XY.lerp(a, b, 0)).toEqual(a);
+        expect(XY.lerp(a, b, 100)).toEqual(b);
+        expect(XY.lerp(a, b, 50)).toEqual([7, 7]);
     });
 
     test('eachNeighbor', () => {

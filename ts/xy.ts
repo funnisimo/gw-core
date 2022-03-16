@@ -222,7 +222,7 @@ export function add(a: XY | Loc, b: XY | Loc): XY | Loc {
     return { x: a.x + x(b), y: a.y + y(b) } as XY;
 }
 
-export function equalsXY(
+export function equals(
     dest: XY | Loc | null | undefined,
     src: XY | Loc | null | undefined
 ) {
@@ -235,7 +235,7 @@ export function isDiagonal(xy: XY | Loc): boolean {
     return x(xy) != 0 && y(xy) != 0;
 }
 
-export function lerpXY(a: XY | Loc, b: XY | Loc, pct: number) {
+export function lerp(a: XY | Loc, b: XY | Loc, pct: number) {
     if (pct > 1) {
         pct = pct / 100;
     }

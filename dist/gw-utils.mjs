@@ -426,7 +426,7 @@ const clamp = clamp_1;
 //     if (v > max) return max;
 //     return v;
 // }
-function lerp(from, to, pct) {
+function lerp$1(from, to, pct) {
     if (pct > 1)
         pct = 1;
     if (pct < 0)
@@ -700,7 +700,7 @@ function add(a, b) {
     }
     return { x: a.x + x(b), y: a.y + y(b) };
 }
-function equalsXY(dest, src) {
+function equals(dest, src) {
     if (!dest && !src)
         return true;
     if (!dest || !src)
@@ -710,7 +710,7 @@ function equalsXY(dest, src) {
 function isDiagonal(xy) {
     return x(xy) != 0 && y(xy) != 0;
 }
-function lerpXY(a, b, pct) {
+function lerp(a, b, pct) {
     if (pct > 1) {
         pct = pct / 100;
     }
@@ -1033,9 +1033,9 @@ var xy = /*#__PURE__*/Object.freeze({
 	copy: copy,
 	addTo: addTo,
 	add: add,
-	equalsXY: equalsXY,
+	equals: equals,
 	isDiagonal: isDiagonal,
-	lerpXY: lerpXY,
+	lerp: lerp,
 	eachNeighbor: eachNeighbor,
 	eachNeighborAsync: eachNeighborAsync,
 	matchingNeighbor: matchingNeighbor,
@@ -14675,4 +14675,4 @@ var index = /*#__PURE__*/Object.freeze({
 	make: make
 });
 
-export { ERROR, FALSE, IDENTITY, IS_NONZERO, IS_ZERO, NOOP, ONE, TRUE, WARN, ZERO, index as app, arrayDelete, arrayFindRight, arrayIncludesAll, arrayInsert, arrayNext, arrayNullify, arrayPrev, arrayRevEach, arraysIntersect, blob, buffer, index$5 as canvas, clamp, index$8 as color, colors, config$1 as config, cosmetic, data, events, first, flag, index$6 as fov, frequency, grid, lerp, index$3 as light, list, message, nextIndex, object, path, prevIndex, queue, random, range, rng, scheduler, index$4 as sprite, sprites, sum, tags, index$7 as text, tween, types, index$2 as ui, index$1 as widget, xy };
+export { ERROR, FALSE, IDENTITY, IS_NONZERO, IS_ZERO, NOOP, ONE, TRUE, WARN, ZERO, index as app, arrayDelete, arrayFindRight, arrayIncludesAll, arrayInsert, arrayNext, arrayNullify, arrayPrev, arrayRevEach, arraysIntersect, blob, buffer, index$5 as canvas, clamp, index$8 as color, colors, config$1 as config, cosmetic, data, events, first, flag, index$6 as fov, frequency, grid, lerp$1 as lerp, index$3 as light, list, message, nextIndex, object, path, prevIndex, queue, random, range, rng, scheduler, index$4 as sprite, sprites, sum, tags, index$7 as text, tween, types, index$2 as ui, index$1 as widget, xy };
