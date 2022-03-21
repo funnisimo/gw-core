@@ -1,4 +1,3 @@
-import * as xy from './xy';
 import { random } from './rng';
 import * as Utils from './utils';
 import * as XY from './xy';
@@ -327,7 +326,7 @@ export class Grid<T> extends Array<Array<T>> {
      * TSIGNORE
      */
     // @ts-ignore
-    find(match: GridMatch<T> | T): xy.Loc | null {
+    find(match: GridMatch<T> | T): XY.Loc | null {
         const fn: GridMatch<T> =
             typeof match === 'function'
                 ? (match as GridMatch<T>)
@@ -335,7 +334,7 @@ export class Grid<T> extends Array<Array<T>> {
         for (let x = 0; x < this.width; ++x) {
             for (let y = 0; y < this.height; ++y) {
                 const v = this[x][y];
-                if (fn(v, x, y, this)) return [x, y] as xy.Loc;
+                if (fn(v, x, y, this)) return [x, y] as XY.Loc;
             }
         }
         return null;

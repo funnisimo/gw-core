@@ -1,7 +1,8 @@
-import * as Grid from './grid';
-import * as XY from './xy';
-import { FALSE } from './utils';
-import { grid } from '.';
+import * as Grid from '../grid';
+import * as XY from '../xy';
+import { FALSE } from '../utils';
+import { CostFn } from './astar';
+// import { grid } from '.';
 
 export const FORBIDDEN = -1;
 export const OBSTRUCTION = -2;
@@ -285,7 +286,7 @@ export function calculateDistances(
     distanceMap: Grid.NumGrid,
     destinationX: number,
     destinationY: number,
-    costMap: Grid.NumGrid,
+    costMap: Grid.NumGrid | CostFn,
     eightWays = false,
     maxDistance = NO_PATH
 ) {
@@ -307,11 +308,16 @@ export function calculateDistances(
 
     let i, j;
 
+    const costFn: CostFn =
+        typeof costMap === 'function'
+            ? costMap
+            : (x, y) => costMap.get(x, y) || 0;
+
     for (i = 0; i < width; i++) {
         for (j = 0; j < height; j++) {
-            getLink(DIJKSTRA_MAP, i, j).cost = isBoundaryXY(costMap, i, j)
+            getLink(DIJKSTRA_MAP, i, j).cost = isBoundaryXY(distanceMap, i, j)
                 ? OBSTRUCTION
-                : costMap[i][j];
+                : costFn(i, j);
         }
     }
 
@@ -341,8 +347,8 @@ export function rescan(
 // a cell that the monster avoids.
 export function nextStep(
     distanceMap: Grid.NumGrid,
-    x: number,
-    y: number,
+    fromX: number,
+    fromY: number,
     isBlocked: BlockedFn,
     useDiagonals = false
 ) {
@@ -354,14 +360,18 @@ export function nextStep(
     bestScore = 0;
     let bestDir = XY.NO_DIRECTION;
 
-    const dist = distanceMap[x][y];
+    const dist = distanceMap[fromX][fromY];
     for (dir = 0; dir < (useDiagonals ? 8 : 4); ++dir) {
-        newX = x + XY.DIRS[dir][0];
-        newY = y + XY.DIRS[dir][1];
+        newX = fromX + XY.DIRS[dir][0];
+        newY = fromY + XY.DIRS[dir][1];
         const newDist = distanceMap[newX][newY];
         if (newDist < dist) {
             const diff = dist - newDist;
-            if (diff > bestScore && !isBlocked(newX, newY, x, y, distanceMap)) {
+            if (
+                diff > bestScore &&
+                (newDist === 0 ||
+                    !isBlocked(newX, newY, fromX, fromY, distanceMap))
+            ) {
                 bestDir = dir;
                 bestScore = diff;
             }
@@ -410,35 +420,69 @@ export function getClosestValidLocation(
     return null;
 }
 
-// Populates path[][] with a list of coordinates starting at origin and traversing down the map. Returns the number of steps in the path.
+// Populates path[][] with a list of coordinates starting at origin and traversing down the map. Returns the path.
 export function getPath(
     distanceMap: Grid.NumGrid,
-    originX: number,
-    originY: number,
+    fromX: number,
+    fromY: number,
     isBlocked: BlockedFn,
     eightWays = false
 ): XY.Loc[] | null {
-    // actor = actor || GW.PLAYER;
-    let x = originX;
-    let y = originY;
+    const path: XY.Loc[] = [];
 
-    if (
-        distanceMap[x][y] < 0 ||
-        distanceMap[x][y] >= NO_PATH ||
-        isBlocked(x, y, x, y, distanceMap)
-    ) {
-        const loc = getClosestValidLocation(distanceMap, x, y, isBlocked);
-        if (!loc) return null;
-        x = loc[0];
-        y = loc[1];
+    forPath(
+        distanceMap,
+        fromX,
+        fromY,
+        isBlocked,
+        (x, y) => {
+            path.push([x, y]);
+        },
+        eightWays
+    );
+
+    return path.length ? path : null;
+}
+
+// Populates path[][] with a list of coordinates starting at origin and traversing down the map. Returns the path.
+export function forPath(
+    distanceMap: Grid.NumGrid,
+    fromX: number,
+    fromY: number,
+    isBlocked: BlockedFn,
+    pathFn: XY.XYFunc,
+    eightWays = false
+): number {
+    // actor = actor || GW.PLAYER;
+    let x = fromX;
+    let y = fromY;
+
+    let dist = distanceMap[x][y];
+    let count = 0;
+
+    if (dist === 0) {
+        pathFn(x, y);
+        return count;
     }
 
-    const path: XY.Loc[] = [];
+    if (
+        dist < 0 ||
+        dist >= NO_PATH /* || isBlocked(x, y, x, y, distanceMap) */
+    ) {
+        const loc = getClosestValidLocation(distanceMap, x, y, isBlocked);
+        if (!loc) return 0;
+        x = loc[0];
+        y = loc[1];
+        pathFn(x, y);
+        ++count;
+    }
+
     let dir;
     do {
         dir = nextStep(distanceMap, x, y, isBlocked, eightWays);
         if (dir) {
-            path.push([x, y]);
+            pathFn(x, y);
+            ++count;
             x += dir[0];
             y += dir[1];
             // path[steps][0] = x;
@@ -447,36 +491,37 @@ export function getPath(
         }
     } while (dir);
 
-    return path.length ? path : null;
+    pathFn(x, y);
+    return count;
 }
 
-export function getPathBetween(
-    width: number,
-    height: number,
-    fromX: number,
-    fromY: number,
-    toX: number,
-    toY: number,
-    costFn: (x: number, y: number) => number,
-    eightWays = true
-): XY.Loc[] | null {
-    const costMap = Grid.alloc(width, height);
-    const distanceMap = Grid.alloc(width, height);
+// export function getPathBetween(
+//     width: number,
+//     height: number,
+//     fromX: number,
+//     fromY: number,
+//     toX: number,
+//     toY: number,
+//     costFn: (x: number, y: number) => number,
+//     eightWays = true
+// ): XY.Loc[] | null {
+//     const costMap = Grid.alloc(width, height);
+//     const distanceMap = Grid.alloc(width, height);
 
-    for (let x = 0; x < width; ++x) {
-        for (let y = 0; y < height; ++y) {
-            costMap[x][y] = costFn(x, y);
-        }
-    }
+//     for (let x = 0; x < width; ++x) {
+//         for (let y = 0; y < height; ++y) {
+//             costMap[x][y] = costFn(x, y);
+//         }
+//     }
 
-    calculateDistances(distanceMap, toX, toY, costMap, eightWays);
+//     calculateDistances(distanceMap, toX, toY, costMap, eightWays);
 
-    const isBlocked = (x: number, y: number) => costFn(x, y) < 0;
+//     const isBlocked = (x: number, y: number) => costFn(x, y) < 0;
 
-    const path = getPath(distanceMap, fromX, fromY, isBlocked, eightWays);
+//     const path = getPath(distanceMap, fromX, fromY, isBlocked, eightWays);
 
-    Grid.free(distanceMap);
-    grid.free(costMap);
+//     Grid.free(distanceMap);
+//     Grid.free(costMap);
 
-    return path;
-}
+//     return path;
+// }

@@ -248,11 +248,12 @@ export function lerp(a: XY | Loc, b: XY | Loc, pct: number) {
 }
 
 export type XYFunc = (x: number, y: number) => any;
+export type NeighborFunc = (x: number, y: number, dir: Loc) => any;
 
 export function eachNeighbor(
     x: number,
     y: number,
-    fn: XYFunc,
+    fn: NeighborFunc,
     only4dirs = false
 ) {
     const max = only4dirs ? 4 : 8;
@@ -260,14 +261,14 @@ export function eachNeighbor(
         const dir = DIRS[i];
         const x1 = x + dir[0];
         const y1 = y + dir[1];
-        fn(x1, y1);
+        fn(x1, y1, dir);
     }
 }
 
 export async function eachNeighborAsync(
     x: number,
     y: number,
-    fn: XYFunc,
+    fn: NeighborFunc,
     only4dirs = false
 ) {
     const max = only4dirs ? 4 : 8;
@@ -275,16 +276,17 @@ export async function eachNeighborAsync(
         const dir = DIRS[i];
         const x1 = x + dir[0];
         const y1 = y + dir[1];
-        await fn(x1, y1);
+        await fn(x1, y1, dir);
     }
 }
 
 export type XYMatchFunc = (x: number, y: number) => boolean;
+export type NeighborMatchFunc = (x: number, y: number, dir: Loc) => boolean;
 
 export function matchingNeighbor(
     x: number,
     y: number,
-    matchFn: XYMatchFunc,
+    matchFn: NeighborMatchFunc,
     only4dirs = false
 ): Loc {
     const maxIndex = only4dirs ? 4 : 8;
@@ -292,7 +294,7 @@ export function matchingNeighbor(
         const dir = DIRS[d];
         const i = x + dir[0];
         const j = y + dir[1];
-        if (matchFn(i, j)) return [i, j];
+        if (matchFn(i, j, dir)) return [i, j];
     }
     return [-1, -1];
 }

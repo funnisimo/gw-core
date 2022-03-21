@@ -1,7 +1,7 @@
-import '../test/matchers';
+import '../../test/matchers';
 
 import * as Path from './path';
-import * as Grid from './grid';
+import * as Grid from '../grid';
 
 describe('Path', () => {
     let distGrid: Grid.NumGrid;

@@ -117,50 +117,50 @@ declare const NONE: Color;
 declare const BLACK: Color;
 declare const WHITE: Color;
 
-type index_d$8_ColorData = ColorData;
-type index_d$8_ColorBase = ColorBase;
-type index_d$8_LightValue = LightValue;
-declare const index_d$8_colors: typeof colors;
-type index_d$8_Color = Color;
-declare const index_d$8_Color: typeof Color;
-declare const index_d$8_fromArray: typeof fromArray;
-declare const index_d$8_fromCss: typeof fromCss;
-declare const index_d$8_fromName: typeof fromName;
-declare const index_d$8_fromNumber: typeof fromNumber;
-declare const index_d$8_separate: typeof separate;
-declare const index_d$8_relativeLuminance: typeof relativeLuminance;
-declare const index_d$8_distance: typeof distance;
-declare const index_d$8_smoothScalar: typeof smoothScalar;
-declare const index_d$8_installSpread: typeof installSpread;
-declare const index_d$8_NONE: typeof NONE;
-declare const index_d$8_BLACK: typeof BLACK;
-declare const index_d$8_WHITE: typeof WHITE;
-declare namespace index_d$8 {
+type index_d$9_ColorData = ColorData;
+type index_d$9_ColorBase = ColorBase;
+type index_d$9_LightValue = LightValue;
+declare const index_d$9_colors: typeof colors;
+type index_d$9_Color = Color;
+declare const index_d$9_Color: typeof Color;
+declare const index_d$9_fromArray: typeof fromArray;
+declare const index_d$9_fromCss: typeof fromCss;
+declare const index_d$9_fromName: typeof fromName;
+declare const index_d$9_fromNumber: typeof fromNumber;
+declare const index_d$9_separate: typeof separate;
+declare const index_d$9_relativeLuminance: typeof relativeLuminance;
+declare const index_d$9_distance: typeof distance;
+declare const index_d$9_smoothScalar: typeof smoothScalar;
+declare const index_d$9_installSpread: typeof installSpread;
+declare const index_d$9_NONE: typeof NONE;
+declare const index_d$9_BLACK: typeof BLACK;
+declare const index_d$9_WHITE: typeof WHITE;
+declare namespace index_d$9 {
   export {
-    index_d$8_ColorData as ColorData,
-    index_d$8_ColorBase as ColorBase,
-    index_d$8_LightValue as LightValue,
-    index_d$8_colors as colors,
-    index_d$8_Color as Color,
-    index_d$8_fromArray as fromArray,
-    index_d$8_fromCss as fromCss,
-    index_d$8_fromName as fromName,
-    index_d$8_fromNumber as fromNumber,
+    index_d$9_ColorData as ColorData,
+    index_d$9_ColorBase as ColorBase,
+    index_d$9_LightValue as LightValue,
+    index_d$9_colors as colors,
+    index_d$9_Color as Color,
+    index_d$9_fromArray as fromArray,
+    index_d$9_fromCss as fromCss,
+    index_d$9_fromName as fromName,
+    index_d$9_fromNumber as fromNumber,
     make$e as make,
     from$4 as from,
-    index_d$8_separate as separate,
-    index_d$8_relativeLuminance as relativeLuminance,
-    index_d$8_distance as distance,
-    index_d$8_smoothScalar as smoothScalar,
+    index_d$9_separate as separate,
+    index_d$9_relativeLuminance as relativeLuminance,
+    index_d$9_distance as distance,
+    index_d$9_smoothScalar as smoothScalar,
     install$2 as install,
-    index_d$8_installSpread as installSpread,
-    index_d$8_NONE as NONE,
-    index_d$8_BLACK as BLACK,
-    index_d$8_WHITE as WHITE,
+    index_d$9_installSpread as installSpread,
+    index_d$9_NONE as NONE,
+    index_d$9_BLACK as BLACK,
+    index_d$9_WHITE as WHITE,
   };
 }
 
-declare type Loc$1 = [number, number];
+declare type Loc$2 = [number, number];
 interface XY {
     x: number;
     y: number;
@@ -196,7 +196,7 @@ type types_d_WeightedArray = WeightedArray;
 type types_d_WeightedObject = WeightedObject;
 declare namespace types_d {
   export {
-    Loc$1 as Loc,
+    Loc$2 as Loc,
     types_d_XY as XY,
     types_d_Size as Size,
     SpriteData$1 as SpriteData,
@@ -209,7 +209,7 @@ declare namespace types_d {
   };
 }
 
-declare const DIRS: Loc$1[];
+declare const DIRS: Loc$2[];
 declare const NO_DIRECTION = -1;
 declare const UP = 0;
 declare const RIGHT = 1;
@@ -219,11 +219,11 @@ declare const RIGHT_UP = 4;
 declare const RIGHT_DOWN = 5;
 declare const LEFT_DOWN = 6;
 declare const LEFT_UP = 7;
-declare const CLOCK_DIRS: Loc$1[];
-declare function isLoc(a: any): a is Loc$1;
+declare const CLOCK_DIRS: Loc$2[];
+declare function isLoc(a: any): a is Loc$2;
 declare function isXY(a: any): a is XY;
-declare function x(src: XY | Loc$1): any;
-declare function y(src: XY | Loc$1): any;
+declare function x(src: XY | Loc$2): any;
+declare function y(src: XY | Loc$2): any;
 declare function contains(size: Size, x: number, y: number): boolean;
 interface BoundsOpts {
     x?: number;
@@ -253,42 +253,44 @@ declare class Bounds {
     clone(): Bounds;
     copy(other: Bounds): void;
     contains(x: number, y: number): boolean;
-    contains(loc: Loc$1 | XY): boolean;
-    include(xy: Loc$1 | XY | Bounds): void;
+    contains(loc: Loc$2 | XY): boolean;
+    include(xy: Loc$2 | XY | Bounds): void;
     pad(n?: number): void;
     forEach(cb: XYFunc): void;
     toString(): string;
 }
-declare function copy(dest: XY, src: XY | Loc$1): void;
-declare function addTo(dest: XY, src: XY | Loc$1): void;
-declare function add(a: XY, b: XY | Loc$1): XY;
-declare function add(a: Loc$1, b: XY | Loc$1): Loc$1;
-declare function equals(dest: XY | Loc$1 | null | undefined, src: XY | Loc$1 | null | undefined): boolean;
-declare function isDiagonal(xy: XY | Loc$1): boolean;
-declare function lerp(a: XY | Loc$1, b: XY | Loc$1, pct: number): any[];
+declare function copy(dest: XY, src: XY | Loc$2): void;
+declare function addTo(dest: XY, src: XY | Loc$2): void;
+declare function add(a: XY, b: XY | Loc$2): XY;
+declare function add(a: Loc$2, b: XY | Loc$2): Loc$2;
+declare function equals(dest: XY | Loc$2 | null | undefined, src: XY | Loc$2 | null | undefined): boolean;
+declare function isDiagonal(xy: XY | Loc$2): boolean;
+declare function lerp(a: XY | Loc$2, b: XY | Loc$2, pct: number): any[];
 declare type XYFunc = (x: number, y: number) => any;
-declare function eachNeighbor(x: number, y: number, fn: XYFunc, only4dirs?: boolean): void;
-declare function eachNeighborAsync(x: number, y: number, fn: XYFunc, only4dirs?: boolean): Promise<void>;
+declare type NeighborFunc = (x: number, y: number, dir: Loc$2) => any;
+declare function eachNeighbor(x: number, y: number, fn: NeighborFunc, only4dirs?: boolean): void;
+declare function eachNeighborAsync(x: number, y: number, fn: NeighborFunc, only4dirs?: boolean): Promise<void>;
 declare type XYMatchFunc = (x: number, y: number) => boolean;
-declare function matchingNeighbor(x: number, y: number, matchFn: XYMatchFunc, only4dirs?: boolean): Loc$1;
+declare type NeighborMatchFunc = (x: number, y: number, dir: Loc$2) => boolean;
+declare function matchingNeighbor(x: number, y: number, matchFn: NeighborMatchFunc, only4dirs?: boolean): Loc$2;
 declare function straightDistanceBetween(x1: number, y1: number, x2: number, y2: number): number;
-declare function maxAxisFromTo(a: XY | Loc$1, b: XY | Loc$1): number;
+declare function maxAxisFromTo(a: XY | Loc$2, b: XY | Loc$2): number;
 declare function maxAxisBetween(x1: number, y1: number, x2: number, y2: number): number;
 declare function distanceBetween(x1: number, y1: number, x2: number, y2: number): number;
-declare function distanceFromTo(a: XY | Loc$1, b: XY | Loc$1): number;
+declare function distanceFromTo(a: XY | Loc$2, b: XY | Loc$2): number;
 declare function calcRadius(x: number, y: number): number;
 declare function dirBetween(x: number, y: number, toX: number, toY: number): number[];
-declare function dirFromTo(a: XY | Loc$1, b: XY | Loc$1): number[];
-declare function dirIndex(dir: XY | Loc$1): number;
-declare function isOppositeDir(a: Loc$1, b: Loc$1): boolean;
-declare function isSameDir(a: Loc$1, b: Loc$1): boolean;
-declare function dirSpread(dir: Loc$1): Loc$1[];
-declare function stepFromTo(a: XY | Loc$1, b: XY | Loc$1, fn: (x: number, y: number) => any): void;
-declare function forLine(x: number, y: number, dir: Loc$1, length: number, fn: (x: number, y: number) => any): void;
+declare function dirFromTo(a: XY | Loc$2, b: XY | Loc$2): number[];
+declare function dirIndex(dir: XY | Loc$2): number;
+declare function isOppositeDir(a: Loc$2, b: Loc$2): boolean;
+declare function isSameDir(a: Loc$2, b: Loc$2): boolean;
+declare function dirSpread(dir: Loc$2): Loc$2[];
+declare function stepFromTo(a: XY | Loc$2, b: XY | Loc$2, fn: (x: number, y: number) => any): void;
+declare function forLine(x: number, y: number, dir: Loc$2, length: number, fn: (x: number, y: number) => any): void;
 declare function forLineBetween(fromX: number, fromY: number, toX: number, toY: number, stepFn: (x: number, y: number) => boolean | void): boolean;
-declare function forLineFromTo(a: XY | Loc$1, b: XY | Loc$1, stepFn: (x: number, y: number) => boolean | void): boolean;
-declare function getLine(fromX: number, fromY: number, toX: number, toY: number): Loc$1[];
-declare function getLineThru(fromX: number, fromY: number, toX: number, toY: number, width: number, height: number): Loc$1[];
+declare function forLineFromTo(a: XY | Loc$2, b: XY | Loc$2, stepFn: (x: number, y: number) => boolean | void): boolean;
+declare function getLine(fromX: number, fromY: number, toX: number, toY: number): Loc$2[];
+declare function getLineThru(fromX: number, fromY: number, toX: number, toY: number, width: number, height: number): Loc$2[];
 declare function forCircle(x: number, y: number, radius: number, fn: XYFunc): void;
 declare function forRect(width: number, height: number, fn: XYFunc): void;
 declare function forRect(x: number, y: number, width: number, height: number, fn: XYFunc): void;
@@ -324,9 +326,11 @@ declare const xy_d_equals: typeof equals;
 declare const xy_d_isDiagonal: typeof isDiagonal;
 declare const xy_d_lerp: typeof lerp;
 type xy_d_XYFunc = XYFunc;
+type xy_d_NeighborFunc = NeighborFunc;
 declare const xy_d_eachNeighbor: typeof eachNeighbor;
 declare const xy_d_eachNeighborAsync: typeof eachNeighborAsync;
 type xy_d_XYMatchFunc = XYMatchFunc;
+type xy_d_NeighborMatchFunc = NeighborMatchFunc;
 declare const xy_d_matchingNeighbor: typeof matchingNeighbor;
 declare const xy_d_straightDistanceBetween: typeof straightDistanceBetween;
 declare const xy_d_maxAxisFromTo: typeof maxAxisFromTo;
@@ -352,7 +356,7 @@ declare const xy_d_forBorder: typeof forBorder;
 declare const xy_d_arcCount: typeof arcCount;
 declare namespace xy_d {
   export {
-    Loc$1 as Loc,
+    Loc$2 as Loc,
     xy_d_XY as XY,
     xy_d_Size as Size,
     xy_d_DIRS as DIRS,
@@ -380,9 +384,11 @@ declare namespace xy_d {
     xy_d_isDiagonal as isDiagonal,
     xy_d_lerp as lerp,
     xy_d_XYFunc as XYFunc,
+    xy_d_NeighborFunc as NeighborFunc,
     xy_d_eachNeighbor as eachNeighbor,
     xy_d_eachNeighborAsync as eachNeighborAsync,
     xy_d_XYMatchFunc as XYMatchFunc,
+    xy_d_NeighborMatchFunc as NeighborMatchFunc,
     xy_d_matchingNeighbor as matchingNeighbor,
     xy_d_straightDistanceBetween as straightDistanceBetween,
     xy_d_maxAxisFromTo as maxAxisFromTo,
@@ -574,8 +580,8 @@ declare class Random {
     sequence(n: number): any[];
     chance(percent: number, outOf?: number): boolean;
     clumped(lo: number, hi: number, clumps: number): number;
-    matchingLoc(width: number, height: number, matchFn: XYMatchFunc): Loc$1;
-    matchingLocNear(x: number, y: number, matchFn: XYMatchFunc): Loc$1;
+    matchingLoc(width: number, height: number, matchFn: XYMatchFunc): Loc$2;
+    matchingLocNear(x: number, y: number, matchFn: XYMatchFunc): Loc$2;
 }
 declare const random: Random;
 declare const cosmetic: Random;
@@ -687,7 +693,7 @@ declare namespace flag_d {
   };
 }
 
-declare type Loc = Loc$1;
+declare type Loc$1 = Loc$2;
 declare type ArrayInit<T> = (i: number) => T;
 declare function makeArray<T>(l: number, fn?: T | ArrayInit<T>): Array<T>;
 declare type GridInit<T> = (x: number, y: number, grid: Grid<T>) => T;
@@ -767,7 +773,7 @@ declare class Grid<T> extends Array<Array<T>> {
      */
      // @ts-ignore
 
-    find(match: GridMatch<T> | T): Loc$1 | null;
+    find(match: GridMatch<T> | T): Loc$2 | null;
     dump(fmtFn?: GridFormat<T>, log?: {
         (...data: any[]): void;
         (message?: any, ...optionalParams: any[]): void;
@@ -780,10 +786,10 @@ declare class Grid<T> extends Array<Array<T>> {
         (...data: any[]): void;
         (message?: any, ...optionalParams: any[]): void;
     }): void;
-    closestMatchingLoc(x: number, y: number, v: T | GridMatch<T>): Loc;
-    firstMatchingLoc(v: T | GridMatch<T>): Loc;
-    randomMatchingLoc(v: T | GridMatch<T>): Loc;
-    matchingLocNear(x: number, y: number, v: T | GridMatch<T>): Loc;
+    closestMatchingLoc(x: number, y: number, v: T | GridMatch<T>): Loc$1;
+    firstMatchingLoc(v: T | GridMatch<T>): Loc$1;
+    randomMatchingLoc(v: T | GridMatch<T>): Loc$1;
+    matchingLocNear(x: number, y: number, v: T | GridMatch<T>): Loc$1;
     arcCount(x: number, y: number, testFn: GridMatch<T>): number;
 }
 declare const stats: {
@@ -805,7 +811,7 @@ declare class NumGrid extends Grid<number> {
     floodFillRange(x: number, y: number, eligibleValueMin: number, eligibleValueMax: number, fillValue: number): number;
     invert(): void;
     leastPositiveValue(): number;
-    randomLeastPositiveLoc(): Loc;
+    randomLeastPositiveLoc(): Loc$1;
     valueBounds(value: number, bounds?: Bounds): Bounds;
     floodFill(x: number, y: number, matchValue: number | GridMatch<number>, fillValue: number | GridUpdate<number>): number;
 }
@@ -990,77 +996,77 @@ interface Options$1 {
 }
 declare function configure(opts?: Options$1): void;
 
-declare const index_d$7_configure: typeof configure;
-declare const index_d$7_apply: typeof apply;
-type index_d$7_Template = Template;
-type index_d$7_CompileOptions = CompileOptions;
-declare const index_d$7_eachChar: typeof eachChar;
-type index_d$7_EachOptions = EachOptions;
-declare const index_d$7_wordWrap: typeof wordWrap;
-declare const index_d$7_splitIntoLines: typeof splitIntoLines;
-declare const index_d$7_addHelper: typeof addHelper;
-declare const index_d$7_options: typeof options;
-type index_d$7_Align = Align;
-type index_d$7_VAlign = VAlign;
-type index_d$7_View = View;
-type index_d$7_HelperFn = HelperFn;
-type index_d$7_HelperObj = HelperObj;
-declare const index_d$7_length: typeof length;
-declare const index_d$7_advanceChars: typeof advanceChars;
-declare const index_d$7_findChar: typeof findChar;
-declare const index_d$7_firstChar: typeof firstChar;
-declare const index_d$7_startsWith: typeof startsWith;
-declare const index_d$7_padStart: typeof padStart;
-declare const index_d$7_padEnd: typeof padEnd;
-declare const index_d$7_center: typeof center;
-declare const index_d$7_truncate: typeof truncate;
-declare const index_d$7_capitalize: typeof capitalize;
-declare const index_d$7_removeColors: typeof removeColors;
-declare const index_d$7_spliceRaw: typeof spliceRaw;
-declare const index_d$7_hash: typeof hash;
-declare const index_d$7_splitArgs: typeof splitArgs;
-declare const index_d$7_toSingularVerb: typeof toSingularVerb;
-declare const index_d$7_toPluralVerb: typeof toPluralVerb;
-declare const index_d$7_toSingularNoun: typeof toSingularNoun;
-declare const index_d$7_toPluralNoun: typeof toPluralNoun;
-declare const index_d$7_toQuantity: typeof toQuantity;
-declare namespace index_d$7 {
+declare const index_d$8_configure: typeof configure;
+declare const index_d$8_apply: typeof apply;
+type index_d$8_Template = Template;
+type index_d$8_CompileOptions = CompileOptions;
+declare const index_d$8_eachChar: typeof eachChar;
+type index_d$8_EachOptions = EachOptions;
+declare const index_d$8_wordWrap: typeof wordWrap;
+declare const index_d$8_splitIntoLines: typeof splitIntoLines;
+declare const index_d$8_addHelper: typeof addHelper;
+declare const index_d$8_options: typeof options;
+type index_d$8_Align = Align;
+type index_d$8_VAlign = VAlign;
+type index_d$8_View = View;
+type index_d$8_HelperFn = HelperFn;
+type index_d$8_HelperObj = HelperObj;
+declare const index_d$8_length: typeof length;
+declare const index_d$8_advanceChars: typeof advanceChars;
+declare const index_d$8_findChar: typeof findChar;
+declare const index_d$8_firstChar: typeof firstChar;
+declare const index_d$8_startsWith: typeof startsWith;
+declare const index_d$8_padStart: typeof padStart;
+declare const index_d$8_padEnd: typeof padEnd;
+declare const index_d$8_center: typeof center;
+declare const index_d$8_truncate: typeof truncate;
+declare const index_d$8_capitalize: typeof capitalize;
+declare const index_d$8_removeColors: typeof removeColors;
+declare const index_d$8_spliceRaw: typeof spliceRaw;
+declare const index_d$8_hash: typeof hash;
+declare const index_d$8_splitArgs: typeof splitArgs;
+declare const index_d$8_toSingularVerb: typeof toSingularVerb;
+declare const index_d$8_toPluralVerb: typeof toPluralVerb;
+declare const index_d$8_toSingularNoun: typeof toSingularNoun;
+declare const index_d$8_toPluralNoun: typeof toPluralNoun;
+declare const index_d$8_toQuantity: typeof toQuantity;
+declare namespace index_d$8 {
   export {
-    index_d$7_configure as configure,
+    index_d$8_configure as configure,
     compile$1 as compile,
-    index_d$7_apply as apply,
-    index_d$7_Template as Template,
-    index_d$7_CompileOptions as CompileOptions,
-    index_d$7_eachChar as eachChar,
-    index_d$7_EachOptions as EachOptions,
-    index_d$7_wordWrap as wordWrap,
-    index_d$7_splitIntoLines as splitIntoLines,
-    index_d$7_addHelper as addHelper,
-    index_d$7_options as options,
-    index_d$7_Align as Align,
-    index_d$7_VAlign as VAlign,
-    index_d$7_View as View,
-    index_d$7_HelperFn as HelperFn,
-    index_d$7_HelperObj as HelperObj,
-    index_d$7_length as length,
-    index_d$7_advanceChars as advanceChars,
-    index_d$7_findChar as findChar,
-    index_d$7_firstChar as firstChar,
-    index_d$7_startsWith as startsWith,
-    index_d$7_padStart as padStart,
-    index_d$7_padEnd as padEnd,
-    index_d$7_center as center,
-    index_d$7_truncate as truncate,
-    index_d$7_capitalize as capitalize,
-    index_d$7_removeColors as removeColors,
-    index_d$7_spliceRaw as spliceRaw,
-    index_d$7_hash as hash,
-    index_d$7_splitArgs as splitArgs,
-    index_d$7_toSingularVerb as toSingularVerb,
-    index_d$7_toPluralVerb as toPluralVerb,
-    index_d$7_toSingularNoun as toSingularNoun,
-    index_d$7_toPluralNoun as toPluralNoun,
-    index_d$7_toQuantity as toQuantity,
+    index_d$8_apply as apply,
+    index_d$8_Template as Template,
+    index_d$8_CompileOptions as CompileOptions,
+    index_d$8_eachChar as eachChar,
+    index_d$8_EachOptions as EachOptions,
+    index_d$8_wordWrap as wordWrap,
+    index_d$8_splitIntoLines as splitIntoLines,
+    index_d$8_addHelper as addHelper,
+    index_d$8_options as options,
+    index_d$8_Align as Align,
+    index_d$8_VAlign as VAlign,
+    index_d$8_View as View,
+    index_d$8_HelperFn as HelperFn,
+    index_d$8_HelperObj as HelperObj,
+    index_d$8_length as length,
+    index_d$8_advanceChars as advanceChars,
+    index_d$8_findChar as findChar,
+    index_d$8_firstChar as firstChar,
+    index_d$8_startsWith as startsWith,
+    index_d$8_padStart as padStart,
+    index_d$8_padEnd as padEnd,
+    index_d$8_center as center,
+    index_d$8_truncate as truncate,
+    index_d$8_capitalize as capitalize,
+    index_d$8_removeColors as removeColors,
+    index_d$8_spliceRaw as spliceRaw,
+    index_d$8_hash as hash,
+    index_d$8_splitArgs as splitArgs,
+    index_d$8_toSingularVerb as toSingularVerb,
+    index_d$8_toPluralVerb as toPluralVerb,
+    index_d$8_toSingularNoun as toSingularNoun,
+    index_d$8_toPluralNoun as toPluralNoun,
+    index_d$8_toQuantity as toQuantity,
   };
 }
 
@@ -1272,36 +1278,40 @@ declare class FovSystem implements FovTracker {
     update(cx: number, cy: number, cr?: number): boolean;
 }
 
-declare const index_d$6_FovFlags: typeof FovFlags;
-type index_d$6_FovStrategy = FovStrategy;
-type index_d$6_SetVisibleFn = SetVisibleFn;
-type index_d$6_ViewportCb = ViewportCb;
-type index_d$6_FovSite = FovSite;
-type index_d$6_FovSubject = FovSubject;
-type index_d$6_FovTracker = FovTracker;
-type index_d$6_FOV = FOV;
-declare const index_d$6_FOV: typeof FOV;
-type index_d$6_FovChangeFn = FovChangeFn;
-type index_d$6_FovNoticer = FovNoticer;
-type index_d$6_FovSystemOptions = FovSystemOptions;
-type index_d$6_FovSystem = FovSystem;
-declare const index_d$6_FovSystem: typeof FovSystem;
-declare namespace index_d$6 {
+declare const index_d$7_FovFlags: typeof FovFlags;
+type index_d$7_FovStrategy = FovStrategy;
+type index_d$7_SetVisibleFn = SetVisibleFn;
+type index_d$7_ViewportCb = ViewportCb;
+type index_d$7_FovSite = FovSite;
+type index_d$7_FovSubject = FovSubject;
+type index_d$7_FovTracker = FovTracker;
+type index_d$7_FOV = FOV;
+declare const index_d$7_FOV: typeof FOV;
+type index_d$7_FovChangeFn = FovChangeFn;
+type index_d$7_FovNoticer = FovNoticer;
+type index_d$7_FovSystemOptions = FovSystemOptions;
+type index_d$7_FovSystem = FovSystem;
+declare const index_d$7_FovSystem: typeof FovSystem;
+declare namespace index_d$7 {
   export {
-    index_d$6_FovFlags as FovFlags,
-    index_d$6_FovStrategy as FovStrategy,
-    index_d$6_SetVisibleFn as SetVisibleFn,
-    index_d$6_ViewportCb as ViewportCb,
-    index_d$6_FovSite as FovSite,
-    index_d$6_FovSubject as FovSubject,
-    index_d$6_FovTracker as FovTracker,
-    index_d$6_FOV as FOV,
-    index_d$6_FovChangeFn as FovChangeFn,
-    index_d$6_FovNoticer as FovNoticer,
-    index_d$6_FovSystemOptions as FovSystemOptions,
-    index_d$6_FovSystem as FovSystem,
+    index_d$7_FovFlags as FovFlags,
+    index_d$7_FovStrategy as FovStrategy,
+    index_d$7_SetVisibleFn as SetVisibleFn,
+    index_d$7_ViewportCb as ViewportCb,
+    index_d$7_FovSite as FovSite,
+    index_d$7_FovSubject as FovSubject,
+    index_d$7_FovTracker as FovTracker,
+    index_d$7_FOV as FOV,
+    index_d$7_FovChangeFn as FovChangeFn,
+    index_d$7_FovNoticer as FovNoticer,
+    index_d$7_FovSystemOptions as FovSystemOptions,
+    index_d$7_FovSystem as FovSystem,
   };
 }
+
+declare type Loc = XY | Loc$2;
+declare type CostFn = (x: number, y: number) => number;
+declare function fromTo(from: Loc, to: Loc, costFn?: CostFn): Loc$2[];
 
 declare const FORBIDDEN = -1;
 declare const OBSTRUCTION = -2;
@@ -1309,39 +1319,45 @@ declare const AVOIDED = 10;
 declare const OK = 1;
 declare const NO_PATH = 30000;
 declare type BlockedFn = (toX: number, toY: number, fromX: number, fromY: number, distanceMap: NumGrid) => boolean;
-declare function calculateDistances(distanceMap: NumGrid, destinationX: number, destinationY: number, costMap: NumGrid, eightWays?: boolean, maxDistance?: number): void;
+declare function calculateDistances(distanceMap: NumGrid, destinationX: number, destinationY: number, costMap: NumGrid | CostFn, eightWays?: boolean, maxDistance?: number): void;
 declare function rescan(distanceMap: NumGrid, costMap: NumGrid, eightWays?: boolean, maxDistance?: number): void;
-declare function nextStep(distanceMap: NumGrid, x: number, y: number, isBlocked: BlockedFn, useDiagonals?: boolean): Loc$1;
+declare function nextStep(distanceMap: NumGrid, fromX: number, fromY: number, isBlocked: BlockedFn, useDiagonals?: boolean): Loc$2;
 declare function getClosestValidLocation(distanceMap: NumGrid, x: number, y: number, blocked?: BlockedFn): number[] | null;
-declare function getPath(distanceMap: NumGrid, originX: number, originY: number, isBlocked: BlockedFn, eightWays?: boolean): Loc$1[] | null;
-declare function getPathBetween(width: number, height: number, fromX: number, fromY: number, toX: number, toY: number, costFn: (x: number, y: number) => number, eightWays?: boolean): Loc$1[] | null;
+declare function getPath(distanceMap: NumGrid, fromX: number, fromY: number, isBlocked: BlockedFn, eightWays?: boolean): Loc$2[] | null;
+declare function forPath(distanceMap: NumGrid, fromX: number, fromY: number, isBlocked: BlockedFn, pathFn: XYFunc, eightWays?: boolean): number;
 
-declare const path_d_FORBIDDEN: typeof FORBIDDEN;
-declare const path_d_OBSTRUCTION: typeof OBSTRUCTION;
-declare const path_d_AVOIDED: typeof AVOIDED;
-declare const path_d_OK: typeof OK;
-declare const path_d_NO_PATH: typeof NO_PATH;
-type path_d_BlockedFn = BlockedFn;
-declare const path_d_calculateDistances: typeof calculateDistances;
-declare const path_d_rescan: typeof rescan;
-declare const path_d_nextStep: typeof nextStep;
-declare const path_d_getClosestValidLocation: typeof getClosestValidLocation;
-declare const path_d_getPath: typeof getPath;
-declare const path_d_getPathBetween: typeof getPathBetween;
-declare namespace path_d {
+declare const index_d$6_FORBIDDEN: typeof FORBIDDEN;
+declare const index_d$6_OBSTRUCTION: typeof OBSTRUCTION;
+declare const index_d$6_AVOIDED: typeof AVOIDED;
+declare const index_d$6_OK: typeof OK;
+declare const index_d$6_NO_PATH: typeof NO_PATH;
+type index_d$6_BlockedFn = BlockedFn;
+declare const index_d$6_calculateDistances: typeof calculateDistances;
+declare const index_d$6_rescan: typeof rescan;
+declare const index_d$6_nextStep: typeof nextStep;
+declare const index_d$6_getClosestValidLocation: typeof getClosestValidLocation;
+declare const index_d$6_getPath: typeof getPath;
+declare const index_d$6_forPath: typeof forPath;
+type index_d$6_Loc = Loc;
+type index_d$6_CostFn = CostFn;
+declare const index_d$6_fromTo: typeof fromTo;
+declare namespace index_d$6 {
   export {
-    path_d_FORBIDDEN as FORBIDDEN,
-    path_d_OBSTRUCTION as OBSTRUCTION,
-    path_d_AVOIDED as AVOIDED,
-    path_d_OK as OK,
-    path_d_NO_PATH as NO_PATH,
-    path_d_BlockedFn as BlockedFn,
-    path_d_calculateDistances as calculateDistances,
-    path_d_rescan as rescan,
-    path_d_nextStep as nextStep,
-    path_d_getClosestValidLocation as getClosestValidLocation,
-    path_d_getPath as getPath,
-    path_d_getPathBetween as getPathBetween,
+    index_d$6_FORBIDDEN as FORBIDDEN,
+    index_d$6_OBSTRUCTION as OBSTRUCTION,
+    index_d$6_AVOIDED as AVOIDED,
+    index_d$6_OK as OK,
+    index_d$6_NO_PATH as NO_PATH,
+    index_d$6_BlockedFn as BlockedFn,
+    index_d$6_calculateDistances as calculateDistances,
+    index_d$6_rescan as rescan,
+    index_d$6_nextStep as nextStep,
+    index_d$6_getClosestValidLocation as getClosestValidLocation,
+    index_d$6_getPath as getPath,
+    index_d$6_forPath as forPath,
+    index_d$6_Loc as Loc,
+    index_d$6_CostFn as CostFn,
+    index_d$6_fromTo as fromTo,
   };
 }
 
@@ -2369,7 +2385,7 @@ declare class Scene {
     fadeToggle(widget: Widget, ms: number): this;
     slideIn(widget: Widget, x: number, y: number, from: 'left' | 'top' | 'right' | 'bottom', ms: number): this;
     slideOut(widget: Widget, dir: 'left' | 'top' | 'right' | 'bottom', ms: number): this;
-    slide(widget: Widget, from: XY | Loc$1, to: XY | Loc$1, ms: number): this;
+    slide(widget: Widget, from: XY | Loc$2, to: XY | Loc$2, ms: number): this;
     get(id: string): Widget | null;
     _attach(widget: Widget): void;
     _detach(widget: Widget): void;
@@ -2564,7 +2580,7 @@ declare class Event implements EventType {
     ctrlKey: boolean;
     altKey: boolean;
     metaKey: boolean;
-    dir: Loc$1 | null;
+    dir: Loc$2 | null;
     x: number;
     y: number;
     clientX: number;
@@ -2596,7 +2612,7 @@ declare function makeStopEvent(): Event;
 declare function makeCustomEvent(type: string, opts?: Partial<Event>): Event;
 declare function makeTickEvent(dt: number): Event;
 declare function makeKeyEvent(e: KeyboardEvent): Event;
-declare function keyCodeDirection(key: string): Loc$1 | null;
+declare function keyCodeDirection(key: string): Loc$2 | null;
 declare function ignoreKeyEvent(e: KeyboardEvent): boolean;
 declare function makeMouseEvent(e: MouseEvent, x: number, y: number): Event;
 declare class Queue {
@@ -3666,4 +3682,4 @@ declare namespace index_d {
   };
 }
 
-export { ERROR, FALSE, IDENTITY, IS_NONZERO, IS_ZERO, NOOP, ONE, TRUE, WARN, ZERO, index_d$5 as app, arrayDelete, arrayFindRight, arrayIncludesAll, arrayInsert, arrayNext, arrayNullify, arrayPrev, arrayRevEach, arraysIntersect, blob_d as blob, buffer_d as buffer, index_d$4 as canvas, clamp, index_d$8 as color, colors, config$1 as config, cosmetic, data, events_d as events, first, flag_d as flag, index_d$6 as fov, frequency_d as frequency, grid_d as grid, lerp$1 as lerp, index_d$2 as light, list_d as list, message_d as message, nextIndex, object_d as object, path_d as path, prevIndex, queue_d as queue, random, range_d as range, rng_d as rng, scheduler_d as scheduler, index_d$3 as sprite, sprites, sum, tags_d as tags, index_d$7 as text, tween_d as tween, types_d as types, index_d$1 as ui, index_d as widget, xy_d as xy };
+export { ERROR, FALSE, IDENTITY, IS_NONZERO, IS_ZERO, NOOP, ONE, TRUE, WARN, ZERO, index_d$5 as app, arrayDelete, arrayFindRight, arrayIncludesAll, arrayInsert, arrayNext, arrayNullify, arrayPrev, arrayRevEach, arraysIntersect, blob_d as blob, buffer_d as buffer, index_d$4 as canvas, clamp, index_d$9 as color, colors, config$1 as config, cosmetic, data, events_d as events, first, flag_d as flag, index_d$7 as fov, frequency_d as frequency, grid_d as grid, lerp$1 as lerp, index_d$2 as light, list_d as list, message_d as message, nextIndex, object_d as object, index_d$6 as path, prevIndex, queue_d as queue, random, range_d as range, rng_d as rng, scheduler_d as scheduler, index_d$3 as sprite, sum, tags_d as tags, index_d$8 as text, tween_d as tween, types_d as types, index_d$1 as ui, index_d as widget, xy_d as xy };

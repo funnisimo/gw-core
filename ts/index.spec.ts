@@ -24,6 +24,6 @@ describe('GW', () => {
         expect(GW.data).toBeObject();
         expect(GW.config).toBeObject();
         expect(GW.colors).toBeObject();
-        expect(GW.sprites).toBeObject();
+        // expect(GW.sprites).toBeObject();
     });
 });
