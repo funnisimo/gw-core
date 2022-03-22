@@ -49,8 +49,14 @@ export class Blob {
         let bounds = new XY.Bounds(0, 0, 0, 0);
         const dest = GRID.alloc(width, height);
 
-        const left = Math.floor((dest.width - this.options.maxWidth) / 2);
-        const top = Math.floor((dest.height - this.options.maxHeight) / 2);
+        const maxWidth = Math.min(width, this.options.maxWidth);
+        const maxHeight = Math.min(height, this.options.maxHeight);
+
+        const minWidth = Math.min(width, this.options.minWidth);
+        const minHeight = Math.min(height, this.options.minHeight);
+
+        const left = Math.floor((dest.width - maxWidth) / 2);
+        const top = Math.floor((dest.height - maxHeight) / 2);
 
         let tries = 10;
 
@@ -60,8 +66,8 @@ export class Blob {
             dest.fill(0);
 
             // Fill relevant portion with noise based on the percentSeeded argument.
-            for (i = 0; i < this.options.maxWidth; i++) {
-                for (j = 0; j < this.options.maxHeight; j++) {
+            for (i = 0; i < maxWidth; i++) {
+                for (j = 0; j < maxHeight; j++) {
                     dest[i + left][j + top] = this.options.rng.chance(
                         this.options.percentSeeded
                     )
@@ -103,8 +109,8 @@ export class Blob {
             // Figure out the top blob's height and width:
             dest.valueBounds(topBlobNumber, bounds);
         } while (
-            (bounds.width < this.options.minWidth ||
-                bounds.height < this.options.minHeight ||
+            (bounds.width < minWidth ||
+                bounds.height < minHeight ||
                 topBlobNumber == 0) &&
             --tries
         );
