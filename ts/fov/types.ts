@@ -1,9 +1,10 @@
 // import { FovFlags } from './flags';
+import * as XY from '../xy';
 
 export interface FovStrategy {
-    isBlocked(x: number, y: number): boolean;
+    isBlocked: XY.XYMatchFunc;
     calcRadius?(x: number, y: number): number;
-    hasXY?(x: number, y: number): boolean;
+    hasXY?: XY.XYMatchFunc;
     debug?(...args: any[]): void;
 }
 
@@ -32,9 +33,9 @@ export interface FovSite {
     eachViewport(cb: ViewportCb): void;
 
     lightingChanged(): boolean;
-    hasVisibleLight(x: number, y: number): boolean;
+    hasVisibleLight: XY.XYMatchFunc;
 
-    blocksVision(x: number, y: number): boolean;
+    blocksVision: XY.XYMatchFunc;
 
     // onCellRevealed(x: number, y: number): void;
     // redrawCell(x: number, y: number, clearMemory?: boolean): void;
@@ -50,24 +51,24 @@ export interface FovSubject {
 export interface FovTracker {
     follow: FovSubject | null;
 
-    isAnyKindOfVisible(x: number, y: number): boolean;
-    isInFov(x: number, y: number): boolean;
-    isDirectlyVisible(x: number, y: number): boolean;
-    isMagicMapped(x: number, y: number): boolean;
-    isRevealed(x: number, y: number): boolean;
+    isAnyKindOfVisible: XY.XYMatchFunc;
+    isInFov: XY.XYMatchFunc;
+    isDirectlyVisible: XY.XYMatchFunc;
+    isMagicMapped: XY.XYMatchFunc;
+    isRevealed: XY.XYMatchFunc;
 
     getFlag(x: number, y: number): number;
 
     makeAlwaysVisible(): void;
-    makeCellAlwaysVisible(x: number, y: number): void;
+    makeCellAlwaysVisible: XY.XYFunc;
 
     setCursor(x: number, y: number, keep?: boolean): void;
     clearCursor(x?: number, y?: number): void;
-    isCursor(x: number, y: number): boolean;
+    isCursor: XY.XYMatchFunc;
 
     setHighlight(x: number, y: number, keep?: boolean): void;
     clearHighlight(x?: number, y?: number): void;
-    isHighlight(x: number, y: number): boolean;
+    isHighlight: XY.XYMatchFunc;
 
     revealAll(): void;
     revealCell(

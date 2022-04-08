@@ -1,5 +1,6 @@
 // CREDIT - This is adapted from: http://roguebasin.roguelikedevelopment.org/index.php?title=Improved_Shadowcasting_in_Java
 
+import * as Grid from '../grid';
 import * as Utils from '../utils';
 import * as XY from '../xy';
 
@@ -178,4 +179,23 @@ export class FOV {
             this.castLight(row + 1, nextStart, endSlope, xx, xy, yx, yy);
         }
     }
+}
+
+export function calculate(
+    dest: Grid.NumGrid,
+    isBlocked: XY.XYMatchFunc,
+    x: number,
+    y: number,
+    radius: number
+) {
+    dest.fill(0);
+
+    const fov = new FOV({
+        isBlocked,
+        hasXY: dest.hasXY.bind(dest),
+    });
+
+    fov.calculate(x, y, radius, (i, j, v) => {
+        dest.set(i, j, v);
+    });
 }

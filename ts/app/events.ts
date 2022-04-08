@@ -118,6 +118,7 @@ export class Events {
         return true;
     }
 
+    // TODO - Move this to overload of 'on'
     load(cfg: CallbackObj): CancelFn {
         const cancel = Object.entries(cfg).map(([ev, cb]) => this.on(ev, cb));
         return () => cancel.forEach((c) => c());

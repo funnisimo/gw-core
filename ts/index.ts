@@ -24,7 +24,7 @@ export { cosmetic, random } from './rng';
 export * as rng from './rng';
 export { colors } from './color';
 // export { sprites } from './sprite';
-export * from './data';
+export * as data from './data';
 // export { loop } from './io';
 export * as blob from './blob';
 export * as light from './light';

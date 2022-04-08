@@ -77,7 +77,7 @@ describe('frequency', () => {
 
     test('object - { 1: "100" }', () => {
         // @ts-ignore
-        const f = Frequency.make({ 1: "100" });
+        const f = Frequency.make({ 1: '100' });
         for (let i = 0; i < 20; ++i) {
             expect(f(i)).toEqual(i == 1 ? 100 : 0);
         }
@@ -102,5 +102,13 @@ describe('frequency', () => {
 
         const f = Frequency.make(fn);
         expect(f).toBe(fn);
+    });
+
+    test('obj - function', () => {
+        const fn = jest.fn().mockReturnValue(23);
+        const f = Frequency.make({ 1: fn });
+        for (let i = 0; i < 20; ++i) {
+            expect(f(i)).toEqual(i === 1 ? 23 : 0);
+        }
     });
 });

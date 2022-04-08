@@ -23,6 +23,7 @@ export default [
                 file: 'dist/gw-utils.mjs',
                 format: 'es',
                 // freeze: false,
+                sourcemap: true,
             },
             {
                 file: 'dist/gw-utils.js',

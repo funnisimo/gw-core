@@ -89,6 +89,7 @@ export interface LightSystemSite {
 
     eachGlowLight(cb: LightCb): void;
     eachDynamicLight(cb: LightCb): void;
+    eachMinersLight(cb: LightCb): void;
 
     // setCellFlag(x: number, y: number, flag: number): void;
     // clearCellFlag(x: number, y: number, flag: number): void;

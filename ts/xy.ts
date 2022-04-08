@@ -247,8 +247,8 @@ export function lerp(a: XY | Loc, b: XY | Loc, pct: number) {
     return [x2, y2];
 }
 
-export type XYFunc = (x: number, y: number) => any;
-export type NeighborFunc = (x: number, y: number, dir: Loc) => any;
+export type XYFunc = (x: number, y: number) => void;
+export type NeighborFunc = (x: number, y: number, dir: Loc) => void;
 
 export function eachNeighbor(
     x: number,
@@ -339,15 +339,20 @@ export function distanceBetween(
     return x + y - 0.6 * min;
 }
 
-export function distanceFromTo(a: XY | Loc, b: XY | Loc) {
+export function distanceFromTo(a: XY | Loc, b: XY | Loc): number {
     return distanceBetween(x(a), y(a), x(b), y(b));
 }
 
-export function calcRadius(x: number, y: number) {
+export function calcRadius(x: number, y: number): number {
     return distanceBetween(0, 0, x, y);
 }
 
-export function dirBetween(x: number, y: number, toX: number, toY: number) {
+export function dirBetween(
+    x: number,
+    y: number,
+    toX: number,
+    toY: number
+): Loc {
     let diffX = toX - x;
     let diffY = toY - y;
     if (diffX && diffY) {
@@ -362,29 +367,29 @@ export function dirBetween(x: number, y: number, toX: number, toY: number) {
     return [Math.sign(diffX), Math.sign(diffY)];
 }
 
-export function dirFromTo(a: XY | Loc, b: XY | Loc) {
+export function dirFromTo(a: XY | Loc, b: XY | Loc): Loc {
     return dirBetween(x(a), y(a), x(b), y(b));
 }
 
-export function dirIndex(dir: XY | Loc) {
+export function dirIndex(dir: XY | Loc): number {
     const x0 = x(dir);
     const y0 = y(dir);
     return DIRS.findIndex((a) => a[0] == x0 && a[1] == y0);
 }
 
-export function isOppositeDir(a: Loc, b: Loc) {
+export function isOppositeDir(a: Loc, b: Loc): boolean {
     if (Math.sign(a[0]) + Math.sign(b[0]) != 0) return false;
     if (Math.sign(a[1]) + Math.sign(b[1]) != 0) return false;
     return true;
 }
 
-export function isSameDir(a: Loc, b: Loc) {
+export function isSameDir(a: Loc, b: Loc): boolean {
     return (
         Math.sign(a[0]) == Math.sign(b[0]) && Math.sign(a[1]) == Math.sign(b[1])
     );
 }
 
-export function dirSpread(dir: Loc) {
+export function dirSpread(dir: Loc): [Loc, Loc, Loc] {
     const result = [dir];
     if (dir[0] == 0) {
         result.push([1, dir[1]]);
@@ -396,14 +401,14 @@ export function dirSpread(dir: Loc) {
         result.push([dir[0], 0]);
         result.push([0, dir[1]]);
     }
-    return result;
+    return result as [Loc, Loc, Loc];
 }
 
 export function stepFromTo(
     a: XY | Loc,
     b: XY | Loc,
     fn: (x: number, y: number) => any
-) {
+): void {
     const x0 = x(a);
     const y0 = y(a);
     const diff = [x(b) - x0, y(b) - y0];

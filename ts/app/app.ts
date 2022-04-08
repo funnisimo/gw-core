@@ -1,6 +1,7 @@
 import * as CANVAS from '../canvas';
 import * as EVENTS from './events';
 import * as IO from './io';
+import * as DATA from '../data';
 
 import { Loop } from './loop';
 import * as TIMERS from './timers';
@@ -40,6 +41,7 @@ export interface AppOpts /* extends CANVAS.CanvasOptions */ {
     canvas?: CANVAS.Canvas;
 
     start?: boolean | string;
+    data?: Record<string, any>;
 }
 
 export class App {
@@ -67,6 +69,7 @@ export class App {
     debug = false;
 
     buffer: Buffer;
+    data: DATA.Data;
 
     constructor(opts: Partial<AppOpts> = {}) {
         if ('loop' in opts) {
@@ -82,6 +85,8 @@ export class App {
         this.events = new EVENTS.Events(this);
         this.timers = new TIMERS.Timers(this);
         this.scenes = new Scenes(this);
+
+        this.data = new DATA.Data(opts.data);
 
         this.canvas.onclick = this.io.enqueue.bind(this.io);
         this.canvas.onmousemove = this.io.enqueue.bind(this.io);

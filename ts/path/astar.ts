@@ -10,11 +10,21 @@ interface Item {
 }
 
 export type Loc = XY.XY | XY.Loc;
-export type CostFn = (x: number, y: number) => number;
+export type CostFn = (
+    x: number,
+    y: number,
+    fromX: number,
+    fromY: number
+) => number;
 
-export function fromTo(from: Loc, to: Loc, costFn: CostFn = ONE): XY.Loc[] {
+export function fromTo(
+    from: Loc,
+    to: Loc,
+    costFn: CostFn = ONE,
+    only4dirs = false
+): XY.Loc[] {
     const search = new AStar(to, costFn);
-    return search.from(from);
+    return search.from(from, only4dirs);
 }
 
 class AStar {
@@ -62,7 +72,7 @@ class AStar {
         this._todo.push(newItem);
     }
 
-    from(from: Loc): XY.Loc[] {
+    from(from: Loc, only4dirs = false): XY.Loc[] {
         this._add(from);
 
         let item: Item | null = null;
@@ -87,13 +97,14 @@ class AStar {
                     ) {
                         return;
                     }
+                    // TODO - Handle OBSTRUCTION and diagonals
                     const mult = XY.isDiagonal(dir) ? 1.4 : 1;
-                    const cost = this.costFn(x, y) * mult;
-                    if (cost < 0 || cost > 10000) return;
+                    const cost = this.costFn(x, y, item!.x, item!.y) * mult;
+                    if (cost < 0 || cost >= 10000) return;
 
                     this._add([x, y], cost, item);
                 },
-                false
+                only4dirs
             );
         }
 

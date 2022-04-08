@@ -49,6 +49,10 @@ export function lerp(from: number, to: number, pct: number) {
     return Math.floor(from + (to - from) * pct);
 }
 
+export function xave(rate: number, value: number, newValue: number) {
+    return value * rate + newValue * (1 - rate);
+}
+
 export function ERROR(message: string) {
     throw new Error(message);
 }

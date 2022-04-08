@@ -3,7 +3,7 @@ export type FrequencyConfig =
     | FrequencyFn
     | number
     | string
-    | Record<string, number>
+    | Record<string, number | FrequencyFn>
     | null;
 
 export function make(v?: FrequencyConfig) {
@@ -12,7 +12,7 @@ export function make(v?: FrequencyConfig) {
     if (typeof v === 'number') return () => v;
     if (typeof v === 'function') return v;
 
-    let base: Record<string, string | number> = {};
+    let base: Record<string, string | number | FrequencyFn> = {};
     if (typeof v === 'string') {
         const parts = v.split(/[,|]/).map((t) => t.trim());
         base = {};
@@ -24,14 +24,19 @@ export function make(v?: FrequencyConfig) {
         base = v;
     }
 
-    const parts: [string, string | number][] = Object.entries(base);
+    const parts: [string, string | number | FrequencyFn][] = Object.entries(
+        base
+    );
 
     const funcs: FrequencyFn[] = parts.map(([levels, frequency]) => {
-        let value = 0;
+        let valueFn: FrequencyFn;
         if (typeof frequency === 'string') {
-            value = Number.parseInt(frequency);
+            const value = Number.parseInt(frequency);
+            valueFn = () => value;
+        } else if (typeof frequency === 'number') {
+            valueFn = () => frequency;
         } else {
-            value = frequency;
+            valueFn = frequency;
         }
 
         if (levels.includes('-')) {
@@ -40,13 +45,13 @@ export function make(v?: FrequencyConfig) {
                 .map((t) => t.trim())
                 .map((v) => Number.parseInt(v));
             return (level: number) =>
-                level >= start && level <= end ? value : 0;
+                level >= start && level <= end ? valueFn(level) : 0;
         } else if (levels.endsWith('+')) {
             const found = Number.parseInt(levels);
-            return (level: number) => (level >= found ? value : 0);
+            return (level: number) => (level >= found ? valueFn(level) : 0);
         } else {
             const found = Number.parseInt(levels);
-            return (level: number) => (level === found ? value : 0);
+            return (level: number) => (level === found ? valueFn(level) : 0);
         }
     });
 

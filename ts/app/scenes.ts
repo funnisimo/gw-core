@@ -84,6 +84,7 @@ export class Scenes {
 
     start(id: string, data?: StartOpts): Scene {
         let scene: Scene = this._scenes[id] || this._create(id, data);
+        this._app.io.clear();
         if (this.isBusy) {
             this._pending.push({ action: 'start', scene, data });
         } else {
@@ -94,6 +95,7 @@ export class Scenes {
 
     run(id: string, data?: StartOpts): Scene {
         let scene: Scene = this._scenes[id] || this._create(id, data);
+        this._app.io.clear();
         if (this.isBusy) {
             this._pending.push({ action: 'run', scene, data });
         } else {

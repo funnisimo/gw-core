@@ -9,7 +9,7 @@ import {
 } from './types';
 import * as Grid from '../grid';
 import * as Light from './light';
-import { data as DATA } from '../data';
+// import { data as DATA } from '../data';
 import * as XY from '../xy';
 import * as Color from '../color';
 import * as FLAG from '../flag';
@@ -243,13 +243,16 @@ export class LightSystem implements LightSystemType, PaintSite {
         this.finishLightUpdate();
 
         // Miner's light:
-        const PLAYER = DATA.player;
-        if (PLAYER) {
-            const PLAYERS_LIGHT = Light.lights.PLAYERS_LIGHT;
-            if (PLAYERS_LIGHT) {
-                PLAYERS_LIGHT.paint(this, PLAYER.x, PLAYER.y, true, true);
-            }
-        }
+        this.site.eachMinersLight((x, y, light) => {
+            light.paint(this, x, y, true, true);
+        });
+        // const PLAYER = DATA.player;
+        // if (PLAYER) {
+        //     const PLAYERS_LIGHT = Light.lights.PLAYERS_LIGHT;
+        //     if (PLAYERS_LIGHT) {
+        //         PLAYERS_LIGHT.paint(this, PLAYER.x, PLAYER.y, true, true);
+        //     }
+        // }
 
         this.dynamicLightChanged = false;
         this.changed = true;

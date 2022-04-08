@@ -5,7 +5,6 @@ import * as Light from '.';
 import * as Color from '../color';
 import * as Grid from '../grid';
 import * as XY from '../xy';
-import { data as DATA } from '../data';
 
 interface TestLightSite extends Light.LightSystemSite {
     grid: Grid.NumGrid;
@@ -14,6 +13,7 @@ interface TestLightSite extends Light.LightSystemSite {
 
     glowLights: Light.StaticLightInfo[];
     dynamicLights: Light.StaticLightInfo[];
+    minersLights: Light.StaticLightInfo[];
 }
 
 describe('light system', () => {
@@ -28,6 +28,7 @@ describe('light system', () => {
 
         const glowLights: Light.StaticLightInfo[] = [];
         const dynamicLights: Light.StaticLightInfo[] = [];
+        const minersLights: Light.StaticLightInfo[] = [];
 
         return {
             width: w,
@@ -39,6 +40,7 @@ describe('light system', () => {
 
             glowLights,
             dynamicLights,
+            minersLights,
 
             hasXY(x: number, y: number): boolean {
                 return grid.hasXY(x, y);
@@ -60,6 +62,14 @@ describe('light system', () => {
                 .mockImplementation((cb: Light.LightCb) => {
                     for (let i = 0; i < dynamicLights.length; ++i) {
                         const gl = dynamicLights[i];
+                        cb(gl.x, gl.y, gl.light);
+                    }
+                }),
+            eachMinersLight: jest
+                .fn()
+                .mockImplementation((cb: Light.LightCb) => {
+                    for (let i = 0; i < minersLights.length; ++i) {
+                        const gl = minersLights[i];
                         cb(gl.x, gl.y, gl.light);
                     }
                 }),
@@ -295,7 +305,12 @@ describe('light system', () => {
         system.update();
 
         expect(system.getLight(3, 3)).toEqual([0, 0, 0]);
-        DATA.player = { x: 3, y: 3 };
+        site.minersLights.push({
+            x: 3,
+            y: 3,
+            light: Light.make('white, 3, 100'),
+            next: null,
+        });
 
         system.glowLightChanged = true;
         system.update();
@@ -310,7 +325,12 @@ describe('light system', () => {
         system.update();
 
         expect(system.getLight(3, 3)).toEqual([0, 0, 0]);
-        DATA.player = { x: 3, y: 3 };
+        // site.minersLights.push({
+        //     x: 3,
+        //     y: 3,
+        //     light: null,
+        //     next: null,
+        // });
 
         system.glowLightChanged = true;
         system.update();

@@ -1,5 +1,6 @@
 # ignore <root>/js
 /js/
+.DS_Store
 
 # Logs
 logs

@@ -97,12 +97,12 @@
 	 * // => false
 	 */
 
-	function isObject$3(value) {
+	function isObject$4(value) {
 	  var type = typeof value;
 	  return value != null && (type == 'object' || type == 'function');
 	}
 
-	var isObject_1 = isObject$3;
+	var isObject_1 = isObject$4;
 
 	/** Detect free variable `global` from Node.js. */
 
@@ -130,17 +130,17 @@
 	var Symbol$2 = _Symbol;
 
 	/** Used for built-in method references. */
-	var objectProto$4 = Object.prototype;
+	var objectProto$5 = Object.prototype;
 
 	/** Used to check objects for own properties. */
-	var hasOwnProperty$3 = objectProto$4.hasOwnProperty;
+	var hasOwnProperty$4 = objectProto$5.hasOwnProperty;
 
 	/**
 	 * Used to resolve the
 	 * [`toStringTag`](http://ecma-international.org/ecma-262/7.0/#sec-object.prototype.tostring)
 	 * of values.
 	 */
-	var nativeObjectToString$1 = objectProto$4.toString;
+	var nativeObjectToString$1 = objectProto$5.toString;
 
 	/** Built-in value references. */
 	var symToStringTag$1 = Symbol$2 ? Symbol$2.toStringTag : undefined;
@@ -153,7 +153,7 @@
 	 * @returns {string} Returns the raw `toStringTag`.
 	 */
 	function getRawTag$1(value) {
-	  var isOwn = hasOwnProperty$3.call(value, symToStringTag$1),
+	  var isOwn = hasOwnProperty$4.call(value, symToStringTag$1),
 	      tag = value[symToStringTag$1];
 
 	  try {
@@ -176,14 +176,14 @@
 
 	/** Used for built-in method references. */
 
-	var objectProto$3 = Object.prototype;
+	var objectProto$4 = Object.prototype;
 
 	/**
 	 * Used to resolve the
 	 * [`toStringTag`](http://ecma-international.org/ecma-262/7.0/#sec-object.prototype.tostring)
 	 * of values.
 	 */
-	var nativeObjectToString = objectProto$3.toString;
+	var nativeObjectToString = objectProto$4.toString;
 
 	/**
 	 * Converts `value` to a string using `Object.prototype.toString`.
@@ -289,7 +289,7 @@
 	var isSymbol_1 = isSymbol$4;
 
 	var baseTrim = _baseTrim,
-	    isObject$2 = isObject_1,
+	    isObject$3 = isObject_1,
 	    isSymbol$3 = isSymbol_1;
 
 	/** Used as references for various `Number` constants. */
@@ -337,9 +337,9 @@
 	  if (isSymbol$3(value)) {
 	    return NAN;
 	  }
-	  if (isObject$2(value)) {
+	  if (isObject$3(value)) {
 	    var other = typeof value.valueOf == 'function' ? value.valueOf() : value;
-	    value = isObject$2(other) ? (other + '') : other;
+	    value = isObject$3(other) ? (other + '') : other;
 	  }
 	  if (typeof value != 'string') {
 	    return value === 0 ? value : +value;
@@ -438,6 +438,9 @@
 	    if (pct < 0)
 	        pct = 0;
 	    return Math.floor(from + (to - from) * pct);
+	}
+	function xave(rate, value, newValue) {
+	    return value * rate + newValue * (1 - rate);
 	}
 	function ERROR(message) {
 	    throw new Error(message);
@@ -1261,7 +1264,7 @@
 	var _isKey = isKey$1;
 
 	var baseGetTag = _baseGetTag,
-	    isObject$1 = isObject_1;
+	    isObject$2 = isObject_1;
 
 	/** `Object#toString` result references. */
 	var asyncTag = '[object AsyncFunction]',
@@ -1287,7 +1290,7 @@
 	 * // => false
 	 */
 	function isFunction$1(value) {
-	  if (!isObject$1(value)) {
+	  if (!isObject$2(value)) {
 	    return false;
 	  }
 	  // The use of `Object#toString` avoids issues with the `typeof` operator
@@ -1356,7 +1359,7 @@
 
 	var isFunction = isFunction_1,
 	    isMasked = _isMasked,
-	    isObject = isObject_1,
+	    isObject$1 = isObject_1,
 	    toSource = _toSource;
 
 	/**
@@ -1370,17 +1373,17 @@
 
 	/** Used for built-in method references. */
 	var funcProto = Function.prototype,
-	    objectProto$2 = Object.prototype;
+	    objectProto$3 = Object.prototype;
 
 	/** Used to resolve the decompiled source of functions. */
 	var funcToString = funcProto.toString;
 
 	/** Used to check objects for own properties. */
-	var hasOwnProperty$2 = objectProto$2.hasOwnProperty;
+	var hasOwnProperty$3 = objectProto$3.hasOwnProperty;
 
 	/** Used to detect if a method is native. */
 	var reIsNative = RegExp('^' +
-	  funcToString.call(hasOwnProperty$2).replace(reRegExpChar, '\\$&')
+	  funcToString.call(hasOwnProperty$3).replace(reRegExpChar, '\\$&')
 	  .replace(/hasOwnProperty|(function).*?(?=\\\()| for .+?(?=\\\])/g, '$1.*?') + '$'
 	);
 
@@ -1393,7 +1396,7 @@
 	 *  else `false`.
 	 */
 	function baseIsNative$1(value) {
-	  if (!isObject(value) || isMasked(value)) {
+	  if (!isObject$1(value) || isMasked(value)) {
 	    return false;
 	  }
 	  var pattern = isFunction(value) ? reIsNative : reIsHostCtor;
@@ -1428,17 +1431,17 @@
 	 * @param {string} key The key of the method to get.
 	 * @returns {*} Returns the function if it's native, else `undefined`.
 	 */
-	function getNative$2(object, key) {
+	function getNative$3(object, key) {
 	  var value = getValue$1(object, key);
 	  return baseIsNative(value) ? value : undefined;
 	}
 
-	var _getNative = getNative$2;
+	var _getNative = getNative$3;
 
-	var getNative$1 = _getNative;
+	var getNative$2 = _getNative;
 
 	/* Built-in method references that are verified to be native. */
-	var nativeCreate$4 = getNative$1(Object, 'create');
+	var nativeCreate$4 = getNative$2(Object, 'create');
 
 	var _nativeCreate = nativeCreate$4;
 
@@ -1483,10 +1486,10 @@
 	var HASH_UNDEFINED$1 = '__lodash_hash_undefined__';
 
 	/** Used for built-in method references. */
-	var objectProto$1 = Object.prototype;
+	var objectProto$2 = Object.prototype;
 
 	/** Used to check objects for own properties. */
-	var hasOwnProperty$1 = objectProto$1.hasOwnProperty;
+	var hasOwnProperty$2 = objectProto$2.hasOwnProperty;
 
 	/**
 	 * Gets the hash value for `key`.
@@ -1503,7 +1506,7 @@
 	    var result = data[key];
 	    return result === HASH_UNDEFINED$1 ? undefined : result;
 	  }
-	  return hasOwnProperty$1.call(data, key) ? data[key] : undefined;
+	  return hasOwnProperty$2.call(data, key) ? data[key] : undefined;
 	}
 
 	var _hashGet = hashGet$1;
@@ -1511,10 +1514,10 @@
 	var nativeCreate$1 = _nativeCreate;
 
 	/** Used for built-in method references. */
-	var objectProto = Object.prototype;
+	var objectProto$1 = Object.prototype;
 
 	/** Used to check objects for own properties. */
-	var hasOwnProperty = objectProto.hasOwnProperty;
+	var hasOwnProperty$1 = objectProto$1.hasOwnProperty;
 
 	/**
 	 * Checks if a hash value for `key` exists.
@@ -1527,7 +1530,7 @@
 	 */
 	function hashHas$1(key) {
 	  var data = this.__data__;
-	  return nativeCreate$1 ? (data[key] !== undefined) : hasOwnProperty.call(data, key);
+	  return nativeCreate$1 ? (data[key] !== undefined) : hasOwnProperty$1.call(data, key);
 	}
 
 	var _hashHas = hashHas$1;
@@ -1637,13 +1640,13 @@
 	 * // => true
 	 */
 
-	function eq$1(value, other) {
+	function eq$2(value, other) {
 	  return value === other || (value !== value && other !== other);
 	}
 
-	var eq_1 = eq$1;
+	var eq_1 = eq$2;
 
-	var eq = eq_1;
+	var eq$1 = eq_1;
 
 	/**
 	 * Gets the index at which the `key` is found in `array` of key-value pairs.
@@ -1656,7 +1659,7 @@
 	function assocIndexOf$4(array, key) {
 	  var length = array.length;
 	  while (length--) {
-	    if (eq(array[length][0], key)) {
+	    if (eq$1(array[length][0], key)) {
 	      return length;
 	    }
 	  }
@@ -1798,11 +1801,11 @@
 
 	var _ListCache = ListCache$1;
 
-	var getNative = _getNative,
+	var getNative$1 = _getNative,
 	    root = _root;
 
 	/* Built-in method references that are verified to be native. */
-	var Map$1 = getNative(root, 'Map');
+	var Map$1 = getNative$1(root, 'Map');
 
 	var _Map = Map$1;
 
@@ -2205,14 +2208,14 @@
 	 * @param {Object} [object] The object to query keys on.
 	 * @returns {Array} Returns the cast property path array.
 	 */
-	function castPath$1(value, object) {
+	function castPath$2(value, object) {
 	  if (isArray(value)) {
 	    return value;
 	  }
 	  return isKey(value, object) ? [value] : stringToPath(toString$1(value));
 	}
 
-	var _castPath = castPath$1;
+	var _castPath = castPath$2;
 
 	var isSymbol = isSymbol_1;
 
@@ -2226,7 +2229,7 @@
 	 * @param {*} value The value to inspect.
 	 * @returns {string|symbol} Returns the key.
 	 */
-	function toKey$1(value) {
+	function toKey$2(value) {
 	  if (typeof value == 'string' || isSymbol(value)) {
 	    return value;
 	  }
@@ -2234,10 +2237,10 @@
 	  return (result == '0' && (1 / value) == -INFINITY) ? '-0' : result;
 	}
 
-	var _toKey = toKey$1;
+	var _toKey = toKey$2;
 
-	var castPath = _castPath,
-	    toKey = _toKey;
+	var castPath$1 = _castPath,
+	    toKey$1 = _toKey;
 
 	/**
 	 * The base implementation of `_.get` without support for default values.
@@ -2248,13 +2251,13 @@
 	 * @returns {*} Returns the resolved value.
 	 */
 	function baseGet$1(object, path) {
-	  path = castPath(path, object);
+	  path = castPath$1(path, object);
 
 	  var index = 0,
 	      length = path.length;
 
 	  while (object != null && index < length) {
-	    object = object[toKey(path[index++])];
+	    object = object[toKey$1(path[index++])];
 	  }
 	  return (index && index == length) ? object : undefined;
 	}
@@ -6043,6 +6046,16 @@
 	        }
 	    }
 	}
+	function calculate(dest, isBlocked, x, y, radius) {
+	    dest.fill(0);
+	    const fov = new FOV({
+	        isBlocked,
+	        hasXY: dest.hasXY.bind(dest),
+	    });
+	    fov.calculate(x, y, radius, (i, j, v) => {
+	        dest.set(i, j, v);
+	    });
+	}
 
 	// import * as GWU from 'gw-utils';
 	class FovSystem {
@@ -6457,389 +6470,208 @@
 		__proto__: null,
 		FovFlags: FovFlags,
 		FOV: FOV,
+		calculate: calculate,
 		FovSystem: FovSystem
 	});
 
-	// import { grid } from '.';
-	const FORBIDDEN = -1;
-	const OBSTRUCTION = -2;
-	const AVOIDED = 10;
-	const OK = 1;
-	const NO_PATH = 30000;
-	function makeCostLink(i) {
-	    return {
-	        distance: 0,
-	        cost: 0,
-	        index: i,
-	        left: null,
-	        right: null,
-	    };
-	}
-	function makeDijkstraMap(w, h) {
-	    return {
-	        eightWays: false,
-	        front: makeCostLink(-1),
-	        links: makeArray(w * h, (i) => makeCostLink(i)),
-	        width: w,
-	        height: h,
-	    };
-	}
-	function getLink(map, x, y) {
-	    return map.links[x + map.width * y];
-	}
 	const DIRS = DIRS$2;
-	function update(map) {
-	    let dir, dirs;
-	    let linkIndex;
-	    let left = null, right = null, link = null;
-	    dirs = map.eightWays ? 8 : 4;
-	    let head = map.front.right;
-	    map.front.right = null;
-	    while (head != null) {
-	        for (dir = 0; dir < dirs; dir++) {
-	            linkIndex = head.index + (DIRS[dir][0] + map.width * DIRS[dir][1]);
-	            if (linkIndex < 0 || linkIndex >= map.width * map.height)
-	                continue;
-	            link = map.links[linkIndex];
-	            // verify passability
-	            if (link.cost < 0)
-	                continue;
-	            let diagCost = 0;
-	            if (dir >= 4) {
-	                diagCost = 0.4142;
-	                let way1, way1index, way2, way2index;
-	                way1index = head.index + DIRS[dir][0];
-	                if (way1index < 0 || way1index >= map.width * map.height)
-	                    continue;
-	                way2index = head.index + map.width * DIRS[dir][1];
-	                if (way2index < 0 || way2index >= map.width * map.height)
-	                    continue;
-	                way1 = map.links[way1index];
-	                way2 = map.links[way2index];
-	                if (way1.cost == OBSTRUCTION || way2.cost == OBSTRUCTION)
-	                    continue;
-	            }
-	            if (head.distance + link.cost + diagCost < link.distance) {
-	                link.distance = head.distance + link.cost + diagCost;
-	                // reinsert the touched cell; it'll be close to the beginning of the list now, so
-	                // this will be very fast.  start by removing it.
-	                if (link.right != null)
-	                    link.right.left = link.left;
-	                if (link.left != null)
-	                    link.left.right = link.right;
-	                left = head;
-	                right = head.right;
-	                while (right != null && right.distance < link.distance) {
-	                    left = right;
-	                    right = right.right;
-	                }
-	                if (left != null)
-	                    left.right = link;
-	                link.right = right;
-	                link.left = left;
-	                if (right != null)
-	                    right.left = link;
-	            }
+	const OK = 1;
+	const AVOIDED = 10;
+	const BLOCKED = 10000;
+	const OBSTRUCTION = 20000; // Blocks Diagonal
+	const NOT_DONE = 30000;
+	class DijkstraMap {
+	    constructor(...args) {
+	        this._todo = [];
+	        this._maxDistance = 999;
+	        if (args.length === 1) {
+	            this._data = args[0];
+	            this.clear();
 	        }
-	        right = head.right;
-	        head.left = null;
-	        head.right = null;
-	        head = right;
-	    }
-	}
-	function clear(map, maxDistance, eightWays) {
-	    let i;
-	    map.eightWays = eightWays;
-	    map.front.right = null;
-	    for (i = 0; i < map.width * map.height; i++) {
-	        map.links[i].distance = maxDistance;
-	        map.links[i].left = map.links[i].right = null;
-	    }
-	}
-	function setDistance(map, x, y, distance) {
-	    let left, right, link;
-	    if (x > 0 && y > 0 && x < map.width - 1 && y < map.height - 1) {
-	        link = getLink(map, x, y);
-	        if (link.distance > distance) {
-	            link.distance = distance;
-	            if (link.right != null)
-	                link.right.left = link.left;
-	            if (link.left != null)
-	                link.left.right = link.right;
-	            left = map.front;
-	            right = map.front.right;
-	            while (right != null && right.distance < link.distance) {
-	                left = right;
-	                right = right.right;
-	            }
-	            link.right = right;
-	            link.left = left;
-	            left.right = link;
-	            if (right != null)
-	                right.left = link;
+	        else {
+	            this._data = alloc(args[0], args[1], NOT_DONE);
 	        }
 	    }
-	}
-	function isBoundaryXY(data, x, y) {
-	    if (x <= 0 || y <= 0)
-	        return true;
-	    if (x >= data.length - 1 || y >= data[0].length - 1)
-	        return true;
-	    return false;
-	}
-	function batchInput(map, distanceMap, costMap, eightWays = false, maxDistance = NO_PATH) {
-	    let i, j;
-	    map.eightWays = eightWays;
-	    let left = null;
-	    let right = null;
-	    map.front.right = null;
-	    for (i = 0; i < distanceMap.width; i++) {
-	        for (j = 0; j < distanceMap.height; j++) {
-	            let link = getLink(map, i, j);
-	            if (distanceMap) {
-	                link.distance = distanceMap[i][j];
+	    free() {
+	        free(this._data);
+	        // @ts-ignore
+	        this._data = null;
+	    }
+	    get width() {
+	        return this._data.width;
+	    }
+	    get height() {
+	        return this._data.height;
+	    }
+	    hasXY(x, y) {
+	        return this._data.hasXY(x, y);
+	    }
+	    clear(maxDistance = 999) {
+	        this._data.fill(NOT_DONE);
+	        this._maxDistance = maxDistance;
+	    }
+	    setGoal(...args) {
+	        if (typeof args[0] === 'number') {
+	            this._add(args[0], args[1], args[2] || 0);
+	        }
+	        else {
+	            this._add(x(args[0]), y(args[0]), args[1] || 0);
+	        }
+	    }
+	    _add(x, y, cost) {
+	        if (!this._data.hasXY(x, y))
+	            return;
+	        const current = this._data[x][y];
+	        if (current < cost)
+	            return;
+	        if (cost >= OBSTRUCTION) {
+	            this._data[x][y] = OBSTRUCTION;
+	            return;
+	        }
+	        else if (cost >= BLOCKED) {
+	            this._data[x][y] = BLOCKED;
+	            return;
+	        }
+	        else if (cost > this._maxDistance)
+	            return;
+	        this._data[x][y] = cost;
+	        let newItem = {
+	            x,
+	            y,
+	            cost,
+	        };
+	        const existing = this._todo.findIndex((i) => equals(i, newItem));
+	        if (existing > -1) {
+	            const oldItem = this._todo[existing];
+	            if (oldItem.cost <= cost) {
+	                return;
 	            }
-	            else {
-	                if (costMap) {
-	                    // totally hackish; refactor
-	                    link.distance = maxDistance;
-	                }
-	            }
-	            let cost;
-	            if (i == 0 ||
-	                j == 0 ||
-	                i == distanceMap.width - 1 ||
-	                j == distanceMap.height - 1) {
-	                cost = OBSTRUCTION;
-	                // }
-	                // else if (costMap === null) {
-	                //     if (
-	                //         cellHasEntityFlag(i, j, L_BLOCKS_MOVE) &&
-	                //         cellHasEntityFlag(i, j, L_BLOCKS_DIAGONAL)
-	                //     ) {
-	                //         cost = OBSTRUCTION;
-	                //     } else {
-	                //         cost = FORBIDDEN;
-	                //     }
-	            }
-	            else {
-	                cost = costMap[i][j];
-	            }
-	            link.cost = cost;
-	            if (cost > 0) {
-	                if (link.distance < maxDistance) {
-	                    // @ts-ignore
-	                    if (right === null || right.distance > link.distance) {
-	                        // left and right are used to traverse the list; if many cells have similar values,
-	                        // some time can be saved by not clearing them with each insertion.  this time,
-	                        // sadly, we have to start from the front.
-	                        left = map.front;
-	                        right = map.front.right;
+	            this._todo.splice(existing, 1); // this one is better
+	        }
+	        /* insert by distance */
+	        const higher = this._todo.findIndex((i) => i.cost > cost);
+	        if (higher > -1) {
+	            this._todo.splice(higher, 0, newItem);
+	        }
+	        else {
+	            this._todo.push(newItem);
+	        }
+	    }
+	    calculate(costFn, only4dirs = false) {
+	        let item = null;
+	        while (this._todo.length) {
+	            item = this._todo.shift() || null;
+	            if (!item)
+	                break;
+	            eachNeighbor(item.x, item.y, (x, y, dir) => {
+	                let mult = 1;
+	                if (isDiagonal(dir)) {
+	                    mult = 1.4;
+	                    // check to see if obstruction blocks this move
+	                    if (costFn(x, item.y) >= OBSTRUCTION ||
+	                        costFn(item.x, y) >= OBSTRUCTION) {
+	                        return;
 	                    }
-	                    // @ts-ignore
-	                    while (right !== null && right.distance < link.distance) {
-	                        left = right;
-	                        // @ts-ignore
-	                        right = right.right;
-	                    }
-	                    link.right = right;
-	                    link.left = left;
-	                    // @ts-ignore
-	                    left.right = link;
-	                    // @ts-ignore
-	                    if (right !== null)
-	                        right.left = link;
-	                    left = link;
 	                }
-	                else {
-	                    link.right = null;
-	                    link.left = null;
+	                const cost = costFn(x, y) * mult;
+	                this._add(x, y, item.cost + cost);
+	            }, only4dirs);
+	        }
+	    }
+	    getDistance(x, y) {
+	        return this._data[x][y];
+	    }
+	    nextStep(fromX, fromY, isBlocked, only4dirs = false) {
+	        let newX, newY, bestScore;
+	        let index;
+	        // brogueAssert(coordinatesAreInMap(x, y));
+	        bestScore = 0;
+	        let bestDir = NO_DIRECTION;
+	        const dist = this._data[fromX][fromY];
+	        for (index = 0; index < (only4dirs ? 4 : 8); ++index) {
+	            const dir = DIRS[index];
+	            newX = fromX + dir[0];
+	            newY = fromY + dir[1];
+	            if (!this._data.hasXY(newX, newY))
+	                continue;
+	            if (isDiagonal(dir)) {
+	                if (this._data[newX][fromY] >= OBSTRUCTION ||
+	                    this._data[fromX][newY] >= OBSTRUCTION) {
+	                    continue; // diagonal blocked
 	                }
 	            }
-	            else {
-	                link.right = null;
-	                link.left = null;
-	            }
-	        }
-	    }
-	}
-	function batchOutput(map, distanceMap) {
-	    let i, j;
-	    update(map);
-	    // transfer results to the distanceMap
-	    for (i = 0; i < map.width; i++) {
-	        for (j = 0; j < map.height; j++) {
-	            distanceMap[i][j] = getLink(map, i, j).distance;
-	        }
-	    }
-	}
-	var DIJKSTRA_MAP;
-	function calculateDistances(distanceMap, destinationX, destinationY, costMap, eightWays = false, maxDistance = NO_PATH) {
-	    const width = distanceMap.length;
-	    const height = distanceMap[0].length;
-	    if (maxDistance <= 0)
-	        maxDistance = NO_PATH;
-	    if (!DIJKSTRA_MAP ||
-	        DIJKSTRA_MAP.width < width ||
-	        DIJKSTRA_MAP.height < height) {
-	        DIJKSTRA_MAP = makeDijkstraMap(width, height);
-	    }
-	    DIJKSTRA_MAP.width = width;
-	    DIJKSTRA_MAP.height = height;
-	    let i, j;
-	    const costFn = typeof costMap === 'function'
-	        ? costMap
-	        : (x, y) => costMap.get(x, y) || 0;
-	    for (i = 0; i < width; i++) {
-	        for (j = 0; j < height; j++) {
-	            getLink(DIJKSTRA_MAP, i, j).cost = isBoundaryXY(distanceMap, i, j)
-	                ? OBSTRUCTION
-	                : costFn(i, j);
-	        }
-	    }
-	    clear(DIJKSTRA_MAP, maxDistance, eightWays);
-	    setDistance(DIJKSTRA_MAP, destinationX, destinationY, 0);
-	    batchOutput(DIJKSTRA_MAP, distanceMap);
-	    // TODO - Add this where called!
-	    distanceMap.x = destinationX;
-	    distanceMap.y = destinationY;
-	}
-	function rescan(distanceMap, costMap, eightWays = false, maxDistance = NO_PATH) {
-	    if (!DIJKSTRA_MAP)
-	        throw new Error('You must scan the map first.');
-	    batchInput(DIJKSTRA_MAP, distanceMap, costMap, eightWays, maxDistance);
-	    batchOutput(DIJKSTRA_MAP, distanceMap);
-	}
-	// Returns null if there are no beneficial moves.
-	// If preferDiagonals is true, we will prefer diagonal moves.
-	// Always rolls downhill on the distance map.
-	// If monst is provided, do not return a direction pointing to
-	// a cell that the monster avoids.
-	function nextStep(distanceMap, fromX, fromY, isBlocked, useDiagonals = false) {
-	    let newX, newY, bestScore;
-	    let dir;
-	    // brogueAssert(coordinatesAreInMap(x, y));
-	    bestScore = 0;
-	    let bestDir = NO_DIRECTION;
-	    const dist = distanceMap[fromX][fromY];
-	    for (dir = 0; dir < (useDiagonals ? 8 : 4); ++dir) {
-	        newX = fromX + DIRS$2[dir][0];
-	        newY = fromY + DIRS$2[dir][1];
-	        const newDist = distanceMap[newX][newY];
-	        if (newDist < dist) {
-	            const diff = dist - newDist;
-	            if (diff > bestScore &&
-	                (newDist === 0 ||
-	                    !isBlocked(newX, newY, fromX, fromY, distanceMap))) {
-	                bestDir = dir;
-	                bestScore = diff;
-	            }
-	        }
-	    }
-	    return DIRS$2[bestDir] || null;
-	}
-	function getClosestValidLocation(distanceMap, x, y, blocked = FALSE) {
-	    let i, j, dist, closestDistance, lowestMapScore;
-	    let locX = -1;
-	    let locY = -1;
-	    const width = distanceMap.length;
-	    const height = distanceMap[0].length;
-	    closestDistance = 10000;
-	    lowestMapScore = 10000;
-	    for (i = 1; i < width - 1; i++) {
-	        for (j = 1; j < height - 1; j++) {
-	            if (distanceMap[i][j] >= 0 &&
-	                distanceMap[i][j] < NO_PATH &&
-	                !blocked(i, j, i, j, distanceMap)) {
-	                dist = (i - x) * (i - x) + (j - y) * (j - y);
-	                if (dist < closestDistance ||
-	                    (dist == closestDistance &&
-	                        distanceMap[i][j] < lowestMapScore)) {
-	                    locX = i;
-	                    locY = j;
-	                    closestDistance = dist;
-	                    lowestMapScore = distanceMap[i][j];
+	            const newDist = this._data[newX][newY];
+	            if (newDist < dist) {
+	                const diff = dist - newDist;
+	                if (diff > bestScore &&
+	                    (newDist === 0 || !isBlocked(newX, newY))) {
+	                    bestDir = index;
+	                    bestScore = diff;
 	                }
 	            }
 	        }
+	        return DIRS[bestDir] || null;
 	    }
-	    if (locX >= 0)
-	        return [locX, locY];
-	    return null;
-	}
-	// Populates path[][] with a list of coordinates starting at origin and traversing down the map. Returns the path.
-	function getPath(distanceMap, fromX, fromY, isBlocked, eightWays = false) {
-	    const path = [];
-	    forPath(distanceMap, fromX, fromY, isBlocked, (x, y) => {
-	        path.push([x, y]);
-	    }, eightWays);
-	    return path.length ? path : null;
-	}
-	// Populates path[][] with a list of coordinates starting at origin and traversing down the map. Returns the path.
-	function forPath(distanceMap, fromX, fromY, isBlocked, pathFn, eightWays = false) {
-	    // actor = actor || GW.PLAYER;
-	    let x = fromX;
-	    let y = fromY;
-	    let dist = distanceMap[x][y];
-	    let count = 0;
-	    if (dist === 0) {
+	    getPath(fromX, fromY, isBlocked, only4dirs = false) {
+	        const path = [];
+	        this.forPath(fromX, fromY, isBlocked, (x, y) => {
+	            path.push([x, y]);
+	        }, only4dirs);
+	        return path.length ? path : null;
+	    }
+	    // Populates path[][] with a list of coordinates starting at origin and traversing down the map. Returns the path.
+	    forPath(fromX, fromY, isBlocked, pathFn, only4dirs = false) {
+	        // actor = actor || GW.PLAYER;
+	        let x = fromX;
+	        let y = fromY;
+	        let dist = this._data.get(x, y) || 0;
+	        let count = 0;
+	        if (dist === 0) {
+	            pathFn(x, y);
+	            return count;
+	        }
+	        if (dist >= BLOCKED) {
+	            const loc = this._data.closestMatchingLoc(x, y, (v) => {
+	                return v < BLOCKED;
+	            });
+	            if (!loc || loc[0] < 0)
+	                return 0;
+	            x = loc[0];
+	            y = loc[1];
+	            pathFn(x, y);
+	            ++count;
+	        }
+	        let dir;
+	        do {
+	            dir = this.nextStep(x, y, isBlocked, only4dirs);
+	            if (dir) {
+	                pathFn(x, y);
+	                ++count;
+	                x += dir[0];
+	                y += dir[1];
+	                // path[steps][0] = x;
+	                // path[steps][1] = y;
+	                // brogueAssert(coordinatesAreInMap(x, y));
+	            }
+	        } while (dir);
 	        pathFn(x, y);
 	        return count;
 	    }
-	    if (dist < 0 ||
-	        dist >= NO_PATH /* || isBlocked(x, y, x, y, distanceMap) */) {
-	        const loc = getClosestValidLocation(distanceMap, x, y, isBlocked);
-	        if (!loc)
-	            return 0;
-	        x = loc[0];
-	        y = loc[1];
-	        pathFn(x, y);
-	        ++count;
+	    // allows you to transform the data - for flee calcs, etc...
+	    update(fn) {
+	        this._data.update(fn);
 	    }
-	    let dir;
-	    do {
-	        dir = nextStep(distanceMap, x, y, isBlocked, eightWays);
-	        if (dir) {
-	            pathFn(x, y);
-	            ++count;
-	            x += dir[0];
-	            y += dir[1];
-	            // path[steps][0] = x;
-	            // path[steps][1] = y;
-	            // brogueAssert(coordinatesAreInMap(x, y));
-	        }
-	    } while (dir);
-	    pathFn(x, y);
-	    return count;
 	}
-	// export function getPathBetween(
-	//     width: number,
-	//     height: number,
-	//     fromX: number,
-	//     fromY: number,
-	//     toX: number,
-	//     toY: number,
-	//     costFn: (x: number, y: number) => number,
-	//     eightWays = true
-	// ): XY.Loc[] | null {
-	//     const costMap = Grid.alloc(width, height);
-	//     const distanceMap = Grid.alloc(width, height);
-	//     for (let x = 0; x < width; ++x) {
-	//         for (let y = 0; y < height; ++y) {
-	//             costMap[x][y] = costFn(x, y);
-	//         }
-	//     }
-	//     calculateDistances(distanceMap, toX, toY, costMap, eightWays);
-	//     const isBlocked = (x: number, y: number) => costFn(x, y) < 0;
-	//     const path = getPath(distanceMap, fromX, fromY, isBlocked, eightWays);
-	//     Grid.free(distanceMap);
-	//     Grid.free(costMap);
-	//     return path;
-	// }
+	function computeDistances(grid, from, costFn = ONE, only4dirs = false) {
+	    const dm = new DijkstraMap(grid);
+	    dm.clear();
+	    dm.setGoal(from);
+	    dm.calculate(costFn, only4dirs);
+	}
 
-	function fromTo(from, to, costFn = ONE) {
+	function fromTo(from, to, costFn = ONE, only4dirs = false) {
 	    const search = new AStar(to, costFn);
-	    return search.from(from);
+	    return search.from(from, only4dirs);
 	}
 	class AStar {
 	    constructor(goal, costFn = ONE) {
@@ -6877,7 +6709,7 @@
 	        }
 	        this._todo.push(newItem);
 	    }
-	    from(from) {
+	    from(from, only4dirs = false) {
 	        this._add(from);
 	        let item = null;
 	        while (this._todo.length) {
@@ -6895,12 +6727,13 @@
 	                if (this._done.findIndex((i) => i.x === x && i.y === y) > -1) {
 	                    return;
 	                }
+	                // TODO - Handle OBSTRUCTION and diagonals
 	                const mult = isDiagonal(dir) ? 1.4 : 1;
-	                const cost = this.costFn(x, y) * mult;
-	                if (cost < 0 || cost > 10000)
+	                const cost = this.costFn(x, y, item.x, item.y) * mult;
+	                if (cost < 0 || cost >= 10000)
 	                    return;
 	                this._add([x, y], cost, item);
-	            }, false);
+	            }, only4dirs);
 	        }
 	        if (item && !equals(item, this.goal))
 	            return [];
@@ -6916,17 +6749,13 @@
 
 	var index$6 = /*#__PURE__*/Object.freeze({
 		__proto__: null,
-		FORBIDDEN: FORBIDDEN,
-		OBSTRUCTION: OBSTRUCTION,
-		AVOIDED: AVOIDED,
 		OK: OK,
-		NO_PATH: NO_PATH,
-		calculateDistances: calculateDistances,
-		rescan: rescan,
-		nextStep: nextStep,
-		getClosestValidLocation: getClosestValidLocation,
-		getPath: getPath,
-		forPath: forPath,
+		AVOIDED: AVOIDED,
+		BLOCKED: BLOCKED,
+		OBSTRUCTION: OBSTRUCTION,
+		NOT_DONE: NOT_DONE,
+		DijkstraMap: DijkstraMap,
+		computeDistances: computeDistances,
 		fromTo: fromTo
 	});
 
@@ -7118,27 +6947,31 @@
 	    }
 	    const parts = Object.entries(base);
 	    const funcs = parts.map(([levels, frequency]) => {
-	        let value = 0;
+	        let valueFn;
 	        if (typeof frequency === 'string') {
-	            value = Number.parseInt(frequency);
+	            const value = Number.parseInt(frequency);
+	            valueFn = () => value;
+	        }
+	        else if (typeof frequency === 'number') {
+	            valueFn = () => frequency;
 	        }
 	        else {
-	            value = frequency;
+	            valueFn = frequency;
 	        }
 	        if (levels.includes('-')) {
 	            let [start, end] = levels
 	                .split('-')
 	                .map((t) => t.trim())
 	                .map((v) => Number.parseInt(v));
-	            return (level) => level >= start && level <= end ? value : 0;
+	            return (level) => level >= start && level <= end ? valueFn(level) : 0;
 	        }
 	        else if (levels.endsWith('+')) {
 	            const found = Number.parseInt(levels);
-	            return (level) => (level >= found ? value : 0);
+	            return (level) => (level >= found ? valueFn(level) : 0);
 	        }
 	        else {
 	            const found = Number.parseInt(levels);
-	            return (level) => (level === found ? value : 0);
+	            return (level) => (level === found ? valueFn(level) : 0);
 	        }
 	    });
 	    if (funcs.length == 1)
@@ -8751,10 +8584,204 @@ void main() {
 		Cache: Cache
 	});
 
-	const data = {};
-	const config$1 = {};
-	// export const make: any = {};
-	// export const flags: any = {};
+	var getNative = _getNative;
+
+	var defineProperty$1 = (function() {
+	  try {
+	    var func = getNative(Object, 'defineProperty');
+	    func({}, '', {});
+	    return func;
+	  } catch (e) {}
+	}());
+
+	var _defineProperty = defineProperty$1;
+
+	var defineProperty = _defineProperty;
+
+	/**
+	 * The base implementation of `assignValue` and `assignMergeValue` without
+	 * value checks.
+	 *
+	 * @private
+	 * @param {Object} object The object to modify.
+	 * @param {string} key The key of the property to assign.
+	 * @param {*} value The value to assign.
+	 */
+	function baseAssignValue$1(object, key, value) {
+	  if (key == '__proto__' && defineProperty) {
+	    defineProperty(object, key, {
+	      'configurable': true,
+	      'enumerable': true,
+	      'value': value,
+	      'writable': true
+	    });
+	  } else {
+	    object[key] = value;
+	  }
+	}
+
+	var _baseAssignValue = baseAssignValue$1;
+
+	var baseAssignValue = _baseAssignValue,
+	    eq = eq_1;
+
+	/** Used for built-in method references. */
+	var objectProto = Object.prototype;
+
+	/** Used to check objects for own properties. */
+	var hasOwnProperty = objectProto.hasOwnProperty;
+
+	/**
+	 * Assigns `value` to `key` of `object` if the existing value is not equivalent
+	 * using [`SameValueZero`](http://ecma-international.org/ecma-262/7.0/#sec-samevaluezero)
+	 * for equality comparisons.
+	 *
+	 * @private
+	 * @param {Object} object The object to modify.
+	 * @param {string} key The key of the property to assign.
+	 * @param {*} value The value to assign.
+	 */
+	function assignValue$1(object, key, value) {
+	  var objValue = object[key];
+	  if (!(hasOwnProperty.call(object, key) && eq(objValue, value)) ||
+	      (value === undefined && !(key in object))) {
+	    baseAssignValue(object, key, value);
+	  }
+	}
+
+	var _assignValue = assignValue$1;
+
+	/** Used as references for various `Number` constants. */
+
+	var MAX_SAFE_INTEGER = 9007199254740991;
+
+	/** Used to detect unsigned integer values. */
+	var reIsUint = /^(?:0|[1-9]\d*)$/;
+
+	/**
+	 * Checks if `value` is a valid array-like index.
+	 *
+	 * @private
+	 * @param {*} value The value to check.
+	 * @param {number} [length=MAX_SAFE_INTEGER] The upper bounds of a valid index.
+	 * @returns {boolean} Returns `true` if `value` is a valid index, else `false`.
+	 */
+	function isIndex$1(value, length) {
+	  var type = typeof value;
+	  length = length == null ? MAX_SAFE_INTEGER : length;
+
+	  return !!length &&
+	    (type == 'number' ||
+	      (type != 'symbol' && reIsUint.test(value))) &&
+	        (value > -1 && value % 1 == 0 && value < length);
+	}
+
+	var _isIndex = isIndex$1;
+
+	var assignValue = _assignValue,
+	    castPath = _castPath,
+	    isIndex = _isIndex,
+	    isObject = isObject_1,
+	    toKey = _toKey;
+
+	/**
+	 * The base implementation of `_.set`.
+	 *
+	 * @private
+	 * @param {Object} object The object to modify.
+	 * @param {Array|string} path The path of the property to set.
+	 * @param {*} value The value to set.
+	 * @param {Function} [customizer] The function to customize path creation.
+	 * @returns {Object} Returns `object`.
+	 */
+	function baseSet$1(object, path, value, customizer) {
+	  if (!isObject(object)) {
+	    return object;
+	  }
+	  path = castPath(path, object);
+
+	  var index = -1,
+	      length = path.length,
+	      lastIndex = length - 1,
+	      nested = object;
+
+	  while (nested != null && ++index < length) {
+	    var key = toKey(path[index]),
+	        newValue = value;
+
+	    if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
+	      return object;
+	    }
+
+	    if (index != lastIndex) {
+	      var objValue = nested[key];
+	      newValue = customizer ? customizer(objValue, key, nested) : undefined;
+	      if (newValue === undefined) {
+	        newValue = isObject(objValue)
+	          ? objValue
+	          : (isIndex(path[index + 1]) ? [] : {});
+	      }
+	    }
+	    assignValue(nested, key, newValue);
+	    nested = nested[key];
+	  }
+	  return object;
+	}
+
+	var _baseSet = baseSet$1;
+
+	var baseSet = _baseSet;
+
+	/**
+	 * Sets the value at `path` of `object`. If a portion of `path` doesn't exist,
+	 * it's created. Arrays are created for missing index properties while objects
+	 * are created for all other missing properties. Use `_.setWith` to customize
+	 * `path` creation.
+	 *
+	 * **Note:** This method mutates `object`.
+	 *
+	 * @static
+	 * @memberOf _
+	 * @since 3.7.0
+	 * @category Object
+	 * @param {Object} object The object to modify.
+	 * @param {Array|string} path The path of the property to set.
+	 * @param {*} value The value to set.
+	 * @returns {Object} Returns `object`.
+	 * @example
+	 *
+	 * var object = { 'a': [{ 'b': { 'c': 3 } }] };
+	 *
+	 * _.set(object, 'a[0].b.c', 4);
+	 * console.log(object.a[0].b.c);
+	 * // => 4
+	 *
+	 * _.set(object, ['x', '0', 'y', 'z'], 5);
+	 * console.log(object.x[0].y.z);
+	 * // => 5
+	 */
+	function set(object, path, value) {
+	  return object == null ? object : baseSet(object, path, value);
+	}
+
+	var set_1 = set;
+
+	class Data {
+	    constructor(config = {}) {
+	        Object.assign(this, config);
+	    }
+	    get(path) {
+	        return get_1(this, path);
+	    }
+	    set(path, value) {
+	        return set_1(this, path, value);
+	    }
+	}
+
+	var data = /*#__PURE__*/Object.freeze({
+		__proto__: null,
+		Data: Data
+	});
 
 	class Blob {
 	    constructor(opts = {}) {
@@ -8899,10 +8926,10 @@ void main() {
 	});
 
 	// const LIGHT_SMOOTHING_THRESHOLD = 150;       // light components higher than this magnitude will be toned down a little
-	const config = (config$1.light = {
-	    INTENSITY_DARK: 20,
-	    INTENSITY_SHADOW: 50,
-	}); // less than 20% for highest color in rgb
+	// export const config = (CONFIG.light = {
+	//     INTENSITY_DARK: 20,
+	//     INTENSITY_SHADOW: 50,
+	// }); // less than 20% for highest color in rgb
 	let LIGHT_COMPONENTS = make$9();
 	class Light {
 	    constructor(color, radius = 1, fadeTo = 0, pass = false) {
@@ -9232,13 +9259,16 @@ void main() {
 	        // }
 	        this.finishLightUpdate();
 	        // Miner's light:
-	        const PLAYER = data.player;
-	        if (PLAYER) {
-	            const PLAYERS_LIGHT = lights.PLAYERS_LIGHT;
-	            if (PLAYERS_LIGHT) {
-	                PLAYERS_LIGHT.paint(this, PLAYER.x, PLAYER.y, true, true);
-	            }
-	        }
+	        this.site.eachMinersLight((x, y, light) => {
+	            light.paint(this, x, y, true, true);
+	        });
+	        // const PLAYER = DATA.player;
+	        // if (PLAYER) {
+	        //     const PLAYERS_LIGHT = Light.lights.PLAYERS_LIGHT;
+	        //     if (PLAYERS_LIGHT) {
+	        //         PLAYERS_LIGHT.paint(this, PLAYER.x, PLAYER.y, true, true);
+	        //     }
+	        // }
 	        this.dynamicLightChanged = false;
 	        this.changed = true;
 	        // if (PLAYER.status.invisible) {
@@ -9330,7 +9360,6 @@ void main() {
 
 	var index$3 = /*#__PURE__*/Object.freeze({
 		__proto__: null,
-		config: config,
 		Light: Light,
 		intensity: intensity,
 		isDarkLight: isDarkLight,
@@ -9432,6 +9461,7 @@ void main() {
 	        this.onUnhandled(ev, ...args);
 	        return true;
 	    }
+	    // TODO - Move this to overload of 'on'
 	    load(cfg) {
 	        const cancel = Object.entries(cfg).map(([ev, cb]) => this.on(ev, cb));
 	        return () => cancel.forEach((c) => c());
@@ -10948,6 +10978,7 @@ void main() {
 	    }
 	    start(id, data) {
 	        let scene = this._scenes[id] || this._create(id, data);
+	        this._app.io.clear();
 	        if (this.isBusy) {
 	            this._pending.push({ action: 'start', scene, data });
 	        }
@@ -10958,6 +10989,7 @@ void main() {
 	    }
 	    run(id, data) {
 	        let scene = this._scenes[id] || this._create(id, data);
+	        this._app.io.clear();
 	        if (this.isBusy) {
 	            this._pending.push({ action: 'run', scene, data });
 	        }
@@ -14564,6 +14596,7 @@ void main() {
 	        this.events = new Events(this);
 	        this.timers = new Timers(this);
 	        this.scenes = new Scenes(this);
+	        this.data = new Data(opts.data);
 	        this.canvas.onclick = this.io.enqueue.bind(this.io);
 	        this.canvas.onmousemove = this.io.enqueue.bind(this.io);
 	        this.canvas.onclick = this.io.enqueue.bind(this.io);
@@ -14820,7 +14853,6 @@ void main() {
 	exports.clamp = clamp;
 	exports.color = index$9;
 	exports.colors = colors;
-	exports.config = config$1;
 	exports.cosmetic = cosmetic;
 	exports.data = data;
 	exports.events = events;
@@ -14850,6 +14882,7 @@ void main() {
 	exports.types = types;
 	exports.ui = index$2;
 	exports.widget = index$1;
+	exports.xave = xave;
 	exports.xy = xy;
 
 	Object.defineProperty(exports, '__esModule', { value: true });

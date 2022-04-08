@@ -3,15 +3,15 @@ import * as Utils from '../utils';
 import * as Range from '../range';
 import * as Grid from '../grid';
 import * as Color from '../color';
-import { config as CONFIG } from '../data';
+// import { config as CONFIG } from '../data';
 import * as Types from './types';
 
 // const LIGHT_SMOOTHING_THRESHOLD = 150;       // light components higher than this magnitude will be toned down a little
 
-export const config = (CONFIG.light = {
-    INTENSITY_DARK: 20,
-    INTENSITY_SHADOW: 50,
-}); // less than 20% for highest color in rgb
+// export const config = (CONFIG.light = {
+//     INTENSITY_DARK: 20,
+//     INTENSITY_SHADOW: 50,
+// }); // less than 20% for highest color in rgb
 
 let LIGHT_COMPONENTS = Color.make();
 

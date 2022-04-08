@@ -24,6 +24,7 @@ declare const clamp: {
     (number: number, upper: number): number;
 };
 declare function lerp$1(from: number, to: number, pct: number): number;
+declare function xave(rate: number, value: number, newValue: number): number;
 declare function ERROR(message: string): void;
 declare function WARN(...args: string[]): void;
 declare function first(...args: any[]): any;
@@ -266,8 +267,8 @@ declare function add(a: Loc$2, b: XY | Loc$2): Loc$2;
 declare function equals(dest: XY | Loc$2 | null | undefined, src: XY | Loc$2 | null | undefined): boolean;
 declare function isDiagonal(xy: XY | Loc$2): boolean;
 declare function lerp(a: XY | Loc$2, b: XY | Loc$2, pct: number): any[];
-declare type XYFunc = (x: number, y: number) => any;
-declare type NeighborFunc = (x: number, y: number, dir: Loc$2) => any;
+declare type XYFunc = (x: number, y: number) => void;
+declare type NeighborFunc = (x: number, y: number, dir: Loc$2) => void;
 declare function eachNeighbor(x: number, y: number, fn: NeighborFunc, only4dirs?: boolean): void;
 declare function eachNeighborAsync(x: number, y: number, fn: NeighborFunc, only4dirs?: boolean): Promise<void>;
 declare type XYMatchFunc = (x: number, y: number) => boolean;
@@ -279,12 +280,12 @@ declare function maxAxisBetween(x1: number, y1: number, x2: number, y2: number):
 declare function distanceBetween(x1: number, y1: number, x2: number, y2: number): number;
 declare function distanceFromTo(a: XY | Loc$2, b: XY | Loc$2): number;
 declare function calcRadius(x: number, y: number): number;
-declare function dirBetween(x: number, y: number, toX: number, toY: number): number[];
-declare function dirFromTo(a: XY | Loc$2, b: XY | Loc$2): number[];
+declare function dirBetween(x: number, y: number, toX: number, toY: number): Loc$2;
+declare function dirFromTo(a: XY | Loc$2, b: XY | Loc$2): Loc$2;
 declare function dirIndex(dir: XY | Loc$2): number;
 declare function isOppositeDir(a: Loc$2, b: Loc$2): boolean;
 declare function isSameDir(a: Loc$2, b: Loc$2): boolean;
-declare function dirSpread(dir: Loc$2): Loc$2[];
+declare function dirSpread(dir: Loc$2): [Loc$2, Loc$2, Loc$2];
 declare function stepFromTo(a: XY | Loc$2, b: XY | Loc$2, fn: (x: number, y: number) => any): void;
 declare function forLine(x: number, y: number, dir: Loc$2, length: number, fn: (x: number, y: number) => any): void;
 declare function forLineBetween(fromX: number, fromY: number, toX: number, toY: number, stepFn: (x: number, y: number) => boolean | void): boolean;
@@ -1164,9 +1165,9 @@ declare namespace buffer_d {
 declare const FovFlags: Record<string, number>;
 
 interface FovStrategy {
-    isBlocked(x: number, y: number): boolean;
+    isBlocked: XYMatchFunc;
     calcRadius?(x: number, y: number): number;
-    hasXY?(x: number, y: number): boolean;
+    hasXY?: XYMatchFunc;
     debug?(...args: any[]): void;
 }
 declare type SetVisibleFn = (x: number, y: number, v: number) => void;
@@ -1176,8 +1177,8 @@ interface FovSite {
     readonly height: number;
     eachViewport(cb: ViewportCb): void;
     lightingChanged(): boolean;
-    hasVisibleLight(x: number, y: number): boolean;
-    blocksVision(x: number, y: number): boolean;
+    hasVisibleLight: XYMatchFunc;
+    blocksVision: XYMatchFunc;
 }
 interface FovSubject {
     readonly x: number;
@@ -1186,20 +1187,20 @@ interface FovSubject {
 }
 interface FovTracker {
     follow: FovSubject | null;
-    isAnyKindOfVisible(x: number, y: number): boolean;
-    isInFov(x: number, y: number): boolean;
-    isDirectlyVisible(x: number, y: number): boolean;
-    isMagicMapped(x: number, y: number): boolean;
-    isRevealed(x: number, y: number): boolean;
+    isAnyKindOfVisible: XYMatchFunc;
+    isInFov: XYMatchFunc;
+    isDirectlyVisible: XYMatchFunc;
+    isMagicMapped: XYMatchFunc;
+    isRevealed: XYMatchFunc;
     getFlag(x: number, y: number): number;
     makeAlwaysVisible(): void;
-    makeCellAlwaysVisible(x: number, y: number): void;
+    makeCellAlwaysVisible: XYFunc;
     setCursor(x: number, y: number, keep?: boolean): void;
     clearCursor(x?: number, y?: number): void;
-    isCursor(x: number, y: number): boolean;
+    isCursor: XYMatchFunc;
     setHighlight(x: number, y: number, keep?: boolean): void;
     clearHighlight(x?: number, y?: number): void;
-    isHighlight(x: number, y: number): boolean;
+    isHighlight: XYMatchFunc;
     revealAll(): void;
     revealCell(x: number, y: number, radius?: number, makeVisibleToo?: boolean): void;
     hideCell(x: number, y: number): void;
@@ -1222,6 +1223,7 @@ declare class FOV {
     calculate(x: number, y: number, maxRadius: number, setVisible: SetVisibleFn): void;
     castLight(row: number, startSlope: number, endSlope: number, xx: number, xy: number, yx: number, yy: number): void;
 }
+declare function calculate(dest: NumGrid, isBlocked: XYMatchFunc, x: number, y: number, radius: number): void;
 
 declare type FovChangeFn = (x: number, y: number, isVisible: boolean) => void;
 interface FovNoticer {
@@ -1287,6 +1289,7 @@ type index_d$7_FovSubject = FovSubject;
 type index_d$7_FovTracker = FovTracker;
 type index_d$7_FOV = FOV;
 declare const index_d$7_FOV: typeof FOV;
+declare const index_d$7_calculate: typeof calculate;
 type index_d$7_FovChangeFn = FovChangeFn;
 type index_d$7_FovNoticer = FovNoticer;
 type index_d$7_FovSystemOptions = FovSystemOptions;
@@ -1302,6 +1305,7 @@ declare namespace index_d$7 {
     index_d$7_FovSubject as FovSubject,
     index_d$7_FovTracker as FovTracker,
     index_d$7_FOV as FOV,
+    index_d$7_calculate as calculate,
     index_d$7_FovChangeFn as FovChangeFn,
     index_d$7_FovNoticer as FovNoticer,
     index_d$7_FovSystemOptions as FovSystemOptions,
@@ -1310,51 +1314,68 @@ declare namespace index_d$7 {
 }
 
 declare type Loc = XY | Loc$2;
-declare type CostFn = (x: number, y: number) => number;
-declare function fromTo(from: Loc, to: Loc, costFn?: CostFn): Loc$2[];
+declare type CostFn = (x: number, y: number, fromX: number, fromY: number) => number;
+declare function fromTo(from: Loc, to: Loc, costFn?: CostFn, only4dirs?: boolean): Loc$2[];
 
-declare const FORBIDDEN = -1;
-declare const OBSTRUCTION = -2;
-declare const AVOIDED = 10;
+declare type SimpleCostFn = (x: number, y: number) => number;
+declare type UpdateFn = GridUpdate<number>;
 declare const OK = 1;
-declare const NO_PATH = 30000;
-declare type BlockedFn = (toX: number, toY: number, fromX: number, fromY: number, distanceMap: NumGrid) => boolean;
-declare function calculateDistances(distanceMap: NumGrid, destinationX: number, destinationY: number, costMap: NumGrid | CostFn, eightWays?: boolean, maxDistance?: number): void;
-declare function rescan(distanceMap: NumGrid, costMap: NumGrid, eightWays?: boolean, maxDistance?: number): void;
-declare function nextStep(distanceMap: NumGrid, fromX: number, fromY: number, isBlocked: BlockedFn, useDiagonals?: boolean): Loc$2;
-declare function getClosestValidLocation(distanceMap: NumGrid, x: number, y: number, blocked?: BlockedFn): number[] | null;
-declare function getPath(distanceMap: NumGrid, fromX: number, fromY: number, isBlocked: BlockedFn, eightWays?: boolean): Loc$2[] | null;
-declare function forPath(distanceMap: NumGrid, fromX: number, fromY: number, isBlocked: BlockedFn, pathFn: XYFunc, eightWays?: boolean): number;
+declare const AVOIDED = 10;
+declare const BLOCKED = 10000;
+declare const OBSTRUCTION = 20000;
+declare const NOT_DONE = 30000;
+interface Item {
+    x: number;
+    y: number;
+    cost: number;
+}
+declare class DijkstraMap {
+    _data: NumGrid;
+    _todo: Item[];
+    _maxDistance: number;
+    constructor(grid: NumGrid);
+    constructor(width: number, height: number);
+    free(): void;
+    get width(): number;
+    get height(): number;
+    hasXY(x: number, y: number): boolean;
+    clear(maxDistance?: number): void;
+    setGoal(xy: Loc, cost?: number): void;
+    setGoal(x: number, y: number, cost?: number): void;
+    _add(x: number, y: number, cost: number): void;
+    calculate(costFn: SimpleCostFn, only4dirs?: boolean): void;
+    getDistance(x: number, y: number): number;
+    nextStep(fromX: number, fromY: number, isBlocked: XYMatchFunc, only4dirs?: boolean): Loc$2 | null;
+    getPath(fromX: number, fromY: number, isBlocked: XYMatchFunc, only4dirs?: boolean): Loc$2[] | null;
+    forPath(fromX: number, fromY: number, isBlocked: XYMatchFunc, pathFn: XYFunc, only4dirs?: boolean): number;
+    update(fn: UpdateFn): void;
+}
+declare function computeDistances(grid: NumGrid, from: Loc, costFn?: SimpleCostFn, only4dirs?: boolean): void;
 
-declare const index_d$6_FORBIDDEN: typeof FORBIDDEN;
-declare const index_d$6_OBSTRUCTION: typeof OBSTRUCTION;
-declare const index_d$6_AVOIDED: typeof AVOIDED;
+type index_d$6_SimpleCostFn = SimpleCostFn;
+type index_d$6_UpdateFn = UpdateFn;
 declare const index_d$6_OK: typeof OK;
-declare const index_d$6_NO_PATH: typeof NO_PATH;
-type index_d$6_BlockedFn = BlockedFn;
-declare const index_d$6_calculateDistances: typeof calculateDistances;
-declare const index_d$6_rescan: typeof rescan;
-declare const index_d$6_nextStep: typeof nextStep;
-declare const index_d$6_getClosestValidLocation: typeof getClosestValidLocation;
-declare const index_d$6_getPath: typeof getPath;
-declare const index_d$6_forPath: typeof forPath;
+declare const index_d$6_AVOIDED: typeof AVOIDED;
+declare const index_d$6_BLOCKED: typeof BLOCKED;
+declare const index_d$6_OBSTRUCTION: typeof OBSTRUCTION;
+declare const index_d$6_NOT_DONE: typeof NOT_DONE;
+type index_d$6_DijkstraMap = DijkstraMap;
+declare const index_d$6_DijkstraMap: typeof DijkstraMap;
+declare const index_d$6_computeDistances: typeof computeDistances;
 type index_d$6_Loc = Loc;
 type index_d$6_CostFn = CostFn;
 declare const index_d$6_fromTo: typeof fromTo;
 declare namespace index_d$6 {
   export {
-    index_d$6_FORBIDDEN as FORBIDDEN,
-    index_d$6_OBSTRUCTION as OBSTRUCTION,
-    index_d$6_AVOIDED as AVOIDED,
+    index_d$6_SimpleCostFn as SimpleCostFn,
+    index_d$6_UpdateFn as UpdateFn,
     index_d$6_OK as OK,
-    index_d$6_NO_PATH as NO_PATH,
-    index_d$6_BlockedFn as BlockedFn,
-    index_d$6_calculateDistances as calculateDistances,
-    index_d$6_rescan as rescan,
-    index_d$6_nextStep as nextStep,
-    index_d$6_getClosestValidLocation as getClosestValidLocation,
-    index_d$6_getPath as getPath,
-    index_d$6_forPath as forPath,
+    index_d$6_AVOIDED as AVOIDED,
+    index_d$6_BLOCKED as BLOCKED,
+    index_d$6_OBSTRUCTION as OBSTRUCTION,
+    index_d$6_NOT_DONE as NOT_DONE,
+    index_d$6_DijkstraMap as DijkstraMap,
+    index_d$6_computeDistances as computeDistances,
     index_d$6_Loc as Loc,
     index_d$6_CostFn as CostFn,
     index_d$6_fromTo as fromTo,
@@ -1488,7 +1509,7 @@ declare namespace events_d {
 }
 
 declare type FrequencyFn = (danger: number) => number;
-declare type FrequencyConfig = FrequencyFn | number | string | Record<string, number> | null;
+declare type FrequencyConfig = FrequencyFn | number | string | Record<string, number | FrequencyFn> | null;
 declare function make$7(v?: FrequencyConfig): FrequencyFn;
 
 type frequency_d_FrequencyFn = FrequencyFn;
@@ -1724,6 +1745,20 @@ declare class Timers {
     setTimeout(fn: TimerFn, delay: number): CancelFn;
     setInterval(fn: TimerFn, delay: number): CancelFn;
     update(dt: number): void;
+}
+
+declare class Data implements Record<string, any> {
+    constructor(config?: Record<string, any>);
+    get(path: string): any;
+    set(path: string, value: any): this;
+}
+
+type data_d_Data = Data;
+declare const data_d_Data: typeof Data;
+declare namespace data_d {
+  export {
+    data_d_Data as Data,
+  };
 }
 
 declare type Callback = () => void;
@@ -2248,6 +2283,7 @@ interface AppOpts {
     loop?: Loop;
     canvas?: Canvas;
     start?: boolean | string;
+    data?: Record<string, any>;
 }
 declare class App {
     canvas: Canvas;
@@ -2270,6 +2306,7 @@ declare class App {
     paused: boolean;
     debug: boolean;
     buffer: Buffer$1;
+    data: Data;
     constructor(opts?: Partial<AppOpts>);
     get width(): number;
     get height(): number;
@@ -2911,9 +2948,6 @@ declare namespace message_d {
   };
 }
 
-declare const data: any;
-declare const config$1: any;
-
 interface BlobConfig {
     rng: Random;
     rounds: number;
@@ -2977,6 +3011,7 @@ interface LightSystemSite {
     blocksVision(x: number, y: number): boolean;
     eachGlowLight(cb: LightCb): void;
     eachDynamicLight(cb: LightCb): void;
+    eachMinersLight(cb: LightCb): void;
 }
 interface LightSystemType {
     update(force?: boolean): boolean;
@@ -2997,10 +3032,6 @@ interface LightSystemType {
     isInShadow(x: number, y: number): boolean;
 }
 
-declare const config: {
-    INTENSITY_DARK: number;
-    INTENSITY_SHADOW: number;
-};
 declare class Light implements LightType {
     color: Color;
     radius: Range;
@@ -3077,7 +3108,6 @@ type index_d$2_LightCb = LightCb;
 type index_d$2_PaintSite = PaintSite;
 type index_d$2_LightSystemSite = LightSystemSite;
 type index_d$2_LightSystemType = LightSystemType;
-declare const index_d$2_config: typeof config;
 type index_d$2_Light = Light;
 declare const index_d$2_Light: typeof Light;
 declare const index_d$2_intensity: typeof intensity;
@@ -3100,7 +3130,6 @@ declare namespace index_d$2 {
     index_d$2_PaintSite as PaintSite,
     index_d$2_LightSystemSite as LightSystemSite,
     index_d$2_LightSystemType as LightSystemType,
-    index_d$2_config as config,
     index_d$2_Light as Light,
     index_d$2_intensity as intensity,
     index_d$2_isDarkLight as isDarkLight,
@@ -3682,4 +3711,4 @@ declare namespace index_d {
   };
 }
 
-export { ERROR, FALSE, IDENTITY, IS_NONZERO, IS_ZERO, NOOP, ONE, TRUE, WARN, ZERO, index_d$5 as app, arrayDelete, arrayFindRight, arrayIncludesAll, arrayInsert, arrayNext, arrayNullify, arrayPrev, arrayRevEach, arraysIntersect, blob_d as blob, buffer_d as buffer, index_d$4 as canvas, clamp, index_d$9 as color, colors, config$1 as config, cosmetic, data, events_d as events, first, flag_d as flag, index_d$7 as fov, frequency_d as frequency, grid_d as grid, lerp$1 as lerp, index_d$2 as light, list_d as list, message_d as message, nextIndex, object_d as object, index_d$6 as path, prevIndex, queue_d as queue, random, range_d as range, rng_d as rng, scheduler_d as scheduler, index_d$3 as sprite, sum, tags_d as tags, index_d$8 as text, tween_d as tween, types_d as types, index_d$1 as ui, index_d as widget, xy_d as xy };
+export { ERROR, FALSE, IDENTITY, IS_NONZERO, IS_ZERO, NOOP, ONE, TRUE, WARN, ZERO, index_d$5 as app, arrayDelete, arrayFindRight, arrayIncludesAll, arrayInsert, arrayNext, arrayNullify, arrayPrev, arrayRevEach, arraysIntersect, blob_d as blob, buffer_d as buffer, index_d$4 as canvas, clamp, index_d$9 as color, colors, cosmetic, data_d as data, events_d as events, first, flag_d as flag, index_d$7 as fov, frequency_d as frequency, grid_d as grid, lerp$1 as lerp, index_d$2 as light, list_d as list, message_d as message, nextIndex, object_d as object, index_d$6 as path, prevIndex, queue_d as queue, random, range_d as range, rng_d as rng, scheduler_d as scheduler, index_d$3 as sprite, sum, tags_d as tags, index_d$8 as text, tween_d as tween, types_d as types, index_d$1 as ui, index_d as widget, xave, xy_d as xy };
