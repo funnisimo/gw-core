@@ -1,5 +1,6 @@
 import * as XY from '../xy';
 import { ONE } from '../utils';
+import { OBSTRUCTION } from './dijkstra';
 
 interface Item {
     x: number;
@@ -10,12 +11,7 @@ interface Item {
 }
 
 export type Loc = XY.XY | XY.Loc;
-export type CostFn = (
-    x: number,
-    y: number,
-    fromX: number,
-    fromY: number
-) => number;
+export type CostFn = (x: number, y: number) => number;
 
 export function fromTo(
     from: Loc,
@@ -98,8 +94,17 @@ class AStar {
                         return;
                     }
                     // TODO - Handle OBSTRUCTION and diagonals
-                    const mult = XY.isDiagonal(dir) ? 1.4 : 1;
-                    const cost = this.costFn(x, y, item!.x, item!.y) * mult;
+                    let mult = 1;
+                    if (XY.isDiagonal(dir)) {
+                        mult = 1.4;
+                        if (
+                            this.costFn(item!.x, y) === OBSTRUCTION ||
+                            this.costFn(x, item!.y) === OBSTRUCTION
+                        ) {
+                            return;
+                        }
+                    }
+                    const cost = this.costFn(x, y) * mult;
                     if (cost < 0 || cost >= 10000) return;
 
                     this._add([x, y], cost, item);

@@ -677,3 +677,28 @@ export function arcCount(x: number, y: number, testFn: XYMatchFunc) {
     if (arcCount == 0 && matchCount) return 1;
     return Math.floor(arcCount / 2); // Since we added one when we entered a wall and another when we left.
 }
+
+export function closestMatchingLocs(
+    x: number,
+    y: number,
+    matchFn: XYMatchFunc
+): Loc[] | null {
+    const locs: Loc[] = [];
+    let i, j, k;
+
+    // count up the number of candidate locations
+    for (k = 0; k < 100 && !locs.length; k++) {
+        for (i = x - k; i <= x + k; i++) {
+            for (j = y - k; j <= y + k; j++) {
+                if (
+                    Math.ceil(distanceBetween(x, y, i, j)) == k &&
+                    matchFn(i, j)
+                ) {
+                    locs.push([i, j]);
+                }
+            }
+        }
+    }
+
+    return locs.length ? locs : null;
+}

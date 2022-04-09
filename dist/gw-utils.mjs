@@ -1013,6 +1013,22 @@ function arcCount(x, y, testFn) {
         return 1;
     return Math.floor(arcCount / 2); // Since we added one when we entered a wall and another when we left.
 }
+function closestMatchingLocs(x, y, matchFn) {
+    const locs = [];
+    let i, j, k;
+    // count up the number of candidate locations
+    for (k = 0; k < 100 && !locs.length; k++) {
+        for (i = x - k; i <= x + k; i++) {
+            for (j = y - k; j <= y + k; j++) {
+                if (Math.ceil(distanceBetween(x, y, i, j)) == k &&
+                    matchFn(i, j)) {
+                    locs.push([i, j]);
+                }
+            }
+        }
+    }
+    return locs.length ? locs : null;
+}
 
 var xy = /*#__PURE__*/Object.freeze({
 	__proto__: null,
@@ -1063,7 +1079,8 @@ var xy = /*#__PURE__*/Object.freeze({
 	forCircle: forCircle,
 	forRect: forRect,
 	forBorder: forBorder,
-	arcCount: arcCount
+	arcCount: arcCount,
+	closestMatchingLocs: closestMatchingLocs
 });
 
 // CHAIN
@@ -6474,35 +6491,69 @@ const AVOIDED = 10;
 const BLOCKED = 10000;
 const OBSTRUCTION = 20000; // Blocks Diagonal
 const NOT_DONE = 30000;
+function makeItem(x, y, distance = NOT_DONE) {
+    return {
+        x,
+        y,
+        distance,
+        next: null,
+        prev: null,
+    };
+}
 class DijkstraMap {
-    constructor(...args) {
-        this._todo = [];
+    constructor(width, height) {
+        this._data = [];
+        this._todo = makeItem(-1, -1);
         this._maxDistance = 999;
-        if (args.length === 1) {
-            this._data = args[0];
-            this.clear();
+        this._width = 0;
+        this._height = 0;
+        if (width !== undefined && height !== undefined) {
+            this.reset(width, height);
         }
-        else {
-            this._data = alloc(args[0], args[1], NOT_DONE);
-        }
-    }
-    free() {
-        free(this._data);
-        // @ts-ignore
-        this._data = null;
     }
     get width() {
-        return this._data.width;
+        return this._width;
     }
     get height() {
-        return this._data.height;
+        return this._height;
+    }
+    copy(other) {
+        this.reset(other.width, other.height);
+        const max = other.width * other.height;
+        for (let index = 0; index < max; ++index) {
+            this._data[index].distance = other._data[index].distance;
+        }
     }
     hasXY(x, y) {
-        return this._data.hasXY(x, y);
+        return x >= 0 && x < this._width && y >= 0 && y < this._height;
     }
-    clear(maxDistance = 999) {
-        this._data.fill(NOT_DONE);
-        this._maxDistance = maxDistance;
+    reset(width, height) {
+        this._width = width;
+        this._height = height;
+        while (this._data.length < width * height) {
+            this._data.push(makeItem(-1, -1));
+        }
+        for (let y = 0; y < this._height; ++y) {
+            for (let x = 0; x < this._width; ++x) {
+                const item = this._get(x, y);
+                item.x = x;
+                item.y = y;
+                item.distance = NOT_DONE;
+                item.next = item.prev = null;
+            }
+        }
+        this._maxDistance = 999;
+        this._todo.next = this._todo.prev = null;
+    }
+    _get(...args) {
+        if (args.length == 1) {
+            const x$1 = x(args[0]);
+            const y$1 = y(args[0]);
+            return this._data[x$1 + y$1 * this._width];
+        }
+        else {
+            return this._data[args[0] + args[1] * this._width];
+        }
     }
     setGoal(...args) {
         if (typeof args[0] === 'number') {
@@ -6512,89 +6563,104 @@ class DijkstraMap {
             this._add(x(args[0]), y(args[0]), args[1] || 0);
         }
     }
-    _add(x, y, cost) {
-        if (!this._data.hasXY(x, y))
-            return;
-        const current = this._data[x][y];
-        if (current < cost)
-            return;
-        if (cost >= OBSTRUCTION) {
-            this._data[x][y] = OBSTRUCTION;
-            return;
+    _add(x, y, distance) {
+        if (!this.hasXY(x, y))
+            return false;
+        const item = this._get(x, y);
+        if (Math.floor(item.distance * 100) <= Math.floor(distance * 100))
+            return false;
+        if (item.prev) {
+            item.prev.next = item.next;
+            item.next && (item.next.prev = item.prev);
         }
-        else if (cost >= BLOCKED) {
-            this._data[x][y] = BLOCKED;
-            return;
+        item.prev = item.next = null;
+        if (distance >= OBSTRUCTION) {
+            item.distance = OBSTRUCTION;
+            return false;
         }
-        else if (cost > this._maxDistance)
-            return;
-        this._data[x][y] = cost;
-        let newItem = {
-            x,
-            y,
-            cost,
-        };
-        const existing = this._todo.findIndex((i) => equals(i, newItem));
-        if (existing > -1) {
-            const oldItem = this._todo[existing];
-            if (oldItem.cost <= cost) {
-                return;
-            }
-            this._todo.splice(existing, 1); // this one is better
+        else if (distance >= BLOCKED) {
+            item.distance = BLOCKED;
+            return false;
         }
-        /* insert by distance */
-        const higher = this._todo.findIndex((i) => i.cost > cost);
-        if (higher > -1) {
-            this._todo.splice(higher, 0, newItem);
+        else if (distance > this._maxDistance) {
+            return false;
         }
-        else {
-            this._todo.push(newItem);
-        }
+        item.distance = distance;
+        return this._insert(item);
     }
-    calculate(costFn, only4dirs = false) {
-        let item = null;
-        while (this._todo.length) {
-            item = this._todo.shift() || null;
-            if (!item)
-                break;
-            eachNeighbor(item.x, item.y, (x, y, dir) => {
+    _insert(item) {
+        let prev = this._todo;
+        let current = prev.next;
+        while (current && current.distance < item.distance) {
+            prev = current;
+            current = prev.next;
+        }
+        prev.next = item;
+        item.prev = prev;
+        item.next = current;
+        current && (current.prev = item);
+        return true;
+    }
+    calculate(costFn, only4dirs = false, maxDistance = 999) {
+        let current = this._todo.next;
+        this._maxDistance = maxDistance;
+        while (current) {
+            let next = current.next;
+            current.prev = current.next = null;
+            this._todo.next = next;
+            // console.log('current', current.x, current.y, current.distance);
+            eachNeighbor(current.x, current.y, (x, y, dir) => {
                 let mult = 1;
                 if (isDiagonal(dir)) {
                     mult = 1.4;
                     // check to see if obstruction blocks this move
-                    if (costFn(x, item.y) >= OBSTRUCTION ||
-                        costFn(item.x, y) >= OBSTRUCTION) {
+                    if (costFn(x, current.y) >= OBSTRUCTION ||
+                        costFn(current.x, y) >= OBSTRUCTION) {
                         return;
                     }
                 }
                 const cost = costFn(x, y) * mult;
-                this._add(x, y, item.cost + cost);
+                if (this._add(x, y, current.distance + cost)) ;
             }, only4dirs);
+            current = this._todo.next;
         }
     }
-    getDistance(x, y) {
-        return this._data[x][y];
+    rescan(costFn, only4dirs = false, maxDistance = 999) {
+        this._data.forEach((item) => {
+            item.next = item.prev = null;
+            if (item.distance < BLOCKED) {
+                this._insert(item);
+            }
+        });
+        this.calculate(costFn, only4dirs, maxDistance);
     }
-    nextStep(fromX, fromY, isBlocked, only4dirs = false) {
+    getDistance(x, y) {
+        if (!this.hasXY(x, y))
+            throw new Error('Invalid index: ' + x + ',' + y);
+        return this._get(x, y).distance;
+    }
+    nextDir(fromX, fromY, isBlocked, only4dirs = false) {
         let newX, newY, bestScore;
         let index;
         // brogueAssert(coordinatesAreInMap(x, y));
         bestScore = 0;
         let bestDir = NO_DIRECTION;
-        const dist = this._data[fromX][fromY];
+        if (!this.hasXY(fromX, fromY))
+            throw new Error('Invalid index.');
+        const dist = this._get(fromX, fromY).distance;
         for (index = 0; index < (only4dirs ? 4 : 8); ++index) {
             const dir = DIRS[index];
             newX = fromX + dir[0];
             newY = fromY + dir[1];
-            if (!this._data.hasXY(newX, newY))
+            if (!this.hasXY(newX, newY))
                 continue;
             if (isDiagonal(dir)) {
-                if (this._data[newX][fromY] >= OBSTRUCTION ||
-                    this._data[fromX][newY] >= OBSTRUCTION) {
+                if (this._get(newX, fromY).distance >= OBSTRUCTION ||
+                    this._get(fromX, newY).distance >= OBSTRUCTION) {
                     continue; // diagonal blocked
                 }
             }
-            const newDist = this._data[newX][newY];
+            const newDist = this._get(newX, newY).distance;
             if (newDist < dist) {
                 const diff = dist - newDist;
                 if (diff > bestScore &&
@@ -6618,18 +6684,26 @@ class DijkstraMap {
         // actor = actor || GW.PLAYER;
         let x = fromX;
         let y = fromY;
-        let dist = this._data.get(x, y) || 0;
+        let dist = this._get(x, y).distance || 0;
         let count = 0;
         if (dist === 0) {
             pathFn(x, y);
             return count;
         }
         if (dist >= BLOCKED) {
-            const loc = this._data.closestMatchingLoc(x, y, (v) => {
+            const locs = closestMatchingLocs(x, y, (v) => {
                 return v < BLOCKED;
             });
-            if (!loc || loc[0] < 0)
+            if (!locs || locs.length === 0)
                 return 0;
+            // get the loc with the lowest distance
+            const loc = locs.reduce((best, current) => {
+                const bestItem = this._get(best);
+                const currentItem = this._get(current);
+                return bestItem.distance <= currentItem.distance
+                    ? best
+                    : current;
+            });
             x = loc[0];
             y = loc[1];
             pathFn(x, y);
@@ -6637,7 +6711,7 @@ class DijkstraMap {
         }
         let dir;
         do {
-            dir = this.nextStep(x, y, isBlocked, only4dirs);
+            dir = this.nextDir(x, y, isBlocked, only4dirs);
             if (dir) {
                 pathFn(x, y);
                 ++count;
@@ -6653,14 +6727,78 @@ class DijkstraMap {
     }
     // allows you to transform the data - for flee calcs, etc...
     update(fn) {
-        this._data.update(fn);
+        for (let y = 0; y < this._height; ++y) {
+            for (let x = 0; x < this._width; ++x) {
+                const item = this._get(x, y);
+                item.distance = fn(item.distance, item.x, item.y);
+            }
+        }
+    }
+    forEach(fn) {
+        for (let y = 0; y < this._height; ++y) {
+            for (let x = 0; x < this._width; ++x) {
+                const item = this._get(x, y);
+                fn(item.distance, item.x, item.y);
+            }
+        }
+    }
+    dump(log = console.log) {
+        let output = [];
+        let line = '    ';
+        for (let x = 0; x < this._width; ++x) {
+            if (x && x % 10 == 0) {
+                line += '   ';
+            }
+            line += ('' + x).padStart(4, ' ').substring(0, 4) + ' ';
+        }
+        output.push(line);
+        for (let y = 0; y < this._height; ++y) {
+            let line = ('' + y + ']').padStart(4, ' ') + ' ';
+            for (let x = 0; x < this._width; ++x) {
+                if (x && x % 10 == 0) {
+                    line += '   ';
+                }
+                const v = this.getDistance(x, y);
+                line += _format(v).padStart(4, ' ').substring(0, 4) + ' ';
+            }
+            output.push(line);
+        }
+        log(output.join('\n'));
+    }
+    _dumpTodo() {
+        let current = this._todo.next;
+        const out = [];
+        while (current) {
+            out.push(`${current.x},${current.y}=${current.distance.toFixed(2)}`);
+            current = current.next;
+        }
+        return out;
+    }
+}
+function _format(v) {
+    if (v < 100) {
+        return '' + v;
+        // } else if (v < 36) {
+        //     return String.fromCharCode('a'.charCodeAt(0) + v - 10);
+        // } else if (v < 62) {
+        //     return String.fromCharCode('A'.charCodeAt(0) + v - 10 - 26);
+    }
+    else if (v >= OBSTRUCTION) {
+        return '#';
+    }
+    else if (v >= BLOCKED) {
+        return 'X';
+    }
+    else {
+        return '>';
     }
 }
 function computeDistances(grid, from, costFn = ONE, only4dirs = false) {
-    const dm = new DijkstraMap(grid);
-    dm.clear();
+    const dm = new DijkstraMap();
+    dm.reset(grid.width, grid.height);
     dm.setGoal(from);
     dm.calculate(costFn, only4dirs);
+    dm.forEach((v, x, y) => (grid[x][y] = v));
 }
 
 function fromTo(from, to, costFn = ONE, only4dirs = false) {
@@ -6722,8 +6860,15 @@ class AStar {
                     return;
                 }
                 // TODO - Handle OBSTRUCTION and diagonals
-                const mult = isDiagonal(dir) ? 1.4 : 1;
-                const cost = this.costFn(x, y, item.x, item.y) * mult;
+                let mult = 1;
+                if (isDiagonal(dir)) {
+                    mult = 1.4;
+                    if (this.costFn(item.x, y) === OBSTRUCTION ||
+                        this.costFn(x, item.y) === OBSTRUCTION) {
+                        return;
+                    }
+                }
+                const cost = this.costFn(x, y) * mult;
                 if (cost < 0 || cost >= 10000)
                     return;
                 this._add([x, y], cost, item);

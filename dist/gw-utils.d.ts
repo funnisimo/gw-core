@@ -298,6 +298,7 @@ declare function forRect(x: number, y: number, width: number, height: number, fn
 declare function forBorder(width: number, height: number, fn: XYFunc): void;
 declare function forBorder(x: number, y: number, width: number, height: number, fn: XYFunc): void;
 declare function arcCount(x: number, y: number, testFn: XYMatchFunc): number;
+declare function closestMatchingLocs(x: number, y: number, matchFn: XYMatchFunc): Loc$2[] | null;
 
 type xy_d_XY = XY;
 type xy_d_Size = Size;
@@ -355,6 +356,7 @@ declare const xy_d_forCircle: typeof forCircle;
 declare const xy_d_forRect: typeof forRect;
 declare const xy_d_forBorder: typeof forBorder;
 declare const xy_d_arcCount: typeof arcCount;
+declare const xy_d_closestMatchingLocs: typeof closestMatchingLocs;
 declare namespace xy_d {
   export {
     Loc$2 as Loc,
@@ -413,6 +415,7 @@ declare namespace xy_d {
     xy_d_forRect as forRect,
     xy_d_forBorder as forBorder,
     xy_d_arcCount as arcCount,
+    xy_d_closestMatchingLocs as closestMatchingLocs,
   };
 }
 
@@ -952,13 +955,13 @@ interface Colors {
     bg: ColorBase | null;
 }
 declare type ColorFunction = (colors: Colors) => void;
-declare type EachFn = (ch: string, fg: any, bg: any, i: number, n: number) => void;
+declare type EachFn$1 = (ch: string, fg: any, bg: any, i: number, n: number) => void;
 interface EachOptions {
     fg?: ColorBase;
     bg?: ColorBase;
     eachColor?: ColorFunction;
 }
-declare function eachChar(text: string, fn: EachFn, opts?: EachOptions): void;
+declare function eachChar(text: string, fn: EachFn$1, opts?: EachOptions): void;
 
 declare function length(text: string): number;
 declare function advanceChars(text: string, start: number, count: number): number;
@@ -1314,11 +1317,12 @@ declare namespace index_d$7 {
 }
 
 declare type Loc = XY | Loc$2;
-declare type CostFn = (x: number, y: number, fromX: number, fromY: number) => number;
+declare type CostFn = (x: number, y: number) => number;
 declare function fromTo(from: Loc, to: Loc, costFn?: CostFn, only4dirs?: boolean): Loc$2[];
 
 declare type SimpleCostFn = (x: number, y: number) => number;
-declare type UpdateFn = GridUpdate<number>;
+declare type UpdateFn = (value: number, x: number, y: number) => number;
+declare type EachFn = (value: number, x: number, y: number) => void;
 declare const OK = 1;
 declare const AVOIDED = 10;
 declare const BLOCKED = 10000;
@@ -1327,33 +1331,48 @@ declare const NOT_DONE = 30000;
 interface Item {
     x: number;
     y: number;
-    cost: number;
+    distance: number;
+    next: Item | null;
+    prev: Item | null;
 }
 declare class DijkstraMap {
-    _data: NumGrid;
-    _todo: Item[];
+    _data: Item[];
+    _todo: Item;
     _maxDistance: number;
-    constructor(grid: NumGrid);
+    _width: number;
+    _height: number;
+    constructor();
     constructor(width: number, height: number);
-    free(): void;
     get width(): number;
     get height(): number;
+    copy(other: DijkstraMap): void;
     hasXY(x: number, y: number): boolean;
-    clear(maxDistance?: number): void;
+    reset(width: number, height: number): void;
+    _get(loc: Loc): Item;
+    _get(x: number, y: number): Item;
     setGoal(xy: Loc, cost?: number): void;
     setGoal(x: number, y: number, cost?: number): void;
-    _add(x: number, y: number, cost: number): void;
-    calculate(costFn: SimpleCostFn, only4dirs?: boolean): void;
+    _add(x: number, y: number, distance: number): boolean;
+    _insert(item: Item): boolean;
+    calculate(costFn: SimpleCostFn, only4dirs?: boolean, maxDistance?: number): void;
+    rescan(costFn: SimpleCostFn, only4dirs?: boolean, maxDistance?: number): void;
     getDistance(x: number, y: number): number;
-    nextStep(fromX: number, fromY: number, isBlocked: XYMatchFunc, only4dirs?: boolean): Loc$2 | null;
+    nextDir(fromX: number, fromY: number, isBlocked: XYMatchFunc, only4dirs?: boolean): Loc$2 | null;
     getPath(fromX: number, fromY: number, isBlocked: XYMatchFunc, only4dirs?: boolean): Loc$2[] | null;
     forPath(fromX: number, fromY: number, isBlocked: XYMatchFunc, pathFn: XYFunc, only4dirs?: boolean): number;
     update(fn: UpdateFn): void;
+    forEach(fn: EachFn): void;
+    dump(log?: {
+        (...data: any[]): void;
+        (message?: any, ...optionalParams: any[]): void;
+    }): void;
+    _dumpTodo(): string[];
 }
 declare function computeDistances(grid: NumGrid, from: Loc, costFn?: SimpleCostFn, only4dirs?: boolean): void;
 
 type index_d$6_SimpleCostFn = SimpleCostFn;
 type index_d$6_UpdateFn = UpdateFn;
+type index_d$6_EachFn = EachFn;
 declare const index_d$6_OK: typeof OK;
 declare const index_d$6_AVOIDED: typeof AVOIDED;
 declare const index_d$6_BLOCKED: typeof BLOCKED;
@@ -1369,6 +1388,7 @@ declare namespace index_d$6 {
   export {
     index_d$6_SimpleCostFn as SimpleCostFn,
     index_d$6_UpdateFn as UpdateFn,
+    index_d$6_EachFn as EachFn,
     index_d$6_OK as OK,
     index_d$6_AVOIDED as AVOIDED,
     index_d$6_BLOCKED as BLOCKED,
