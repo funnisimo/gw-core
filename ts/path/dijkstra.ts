@@ -67,7 +67,7 @@ export class DijkstraMap {
         return x >= 0 && x < this._width && y >= 0 && y < this._height;
     }
 
-    reset(width: number, height: number) {
+    reset(width: number, height: number, distance = NOT_DONE) {
         this._width = width;
         this._height = height;
         while (this._data.length < width * height) {
@@ -78,7 +78,7 @@ export class DijkstraMap {
                 const item = this._get(x, y);
                 item.x = x;
                 item.y = y;
-                item.distance = NOT_DONE;
+                item.distance = distance;
                 item.next = item.prev = null;
             }
         }
@@ -343,6 +343,15 @@ export class DijkstraMap {
         }
     }
 
+    add(other: DijkstraMap) {
+        if (this._width !== other._width || this._height !== other._height)
+            throw new Error('Not same size!');
+
+        for (let index = 0; index < this._width * this._height; ++index) {
+            this._data[index].distance += other._data[index].distance;
+        }
+    }
+
     forEach(fn: EachFn) {
         for (let y = 0; y < this._height; ++y) {
             for (let x = 0; x < this._width; ++x) {
@@ -420,4 +429,19 @@ export function computeDistances(
     dm.calculate(costFn, only4dirs);
 
     dm.forEach((v, x, y) => (grid[x][y] = v));
+}
+
+const maps: DijkstraMap[] = [];
+
+export function alloc(): DijkstraMap {
+    let map = maps.pop();
+    if (!map) {
+        map = new DijkstraMap();
+    }
+
+    return map;
+}
+
+export function free(map: DijkstraMap) {
+    maps.push(map);
 }

@@ -3080,8 +3080,8 @@
 	    }
 	}
 	// Grid.fillBlob = fillBlob;
-	const alloc = NumGrid.alloc.bind(NumGrid);
-	const free = NumGrid.free.bind(NumGrid);
+	const alloc$1 = NumGrid.alloc.bind(NumGrid);
+	const free$1 = NumGrid.free.bind(NumGrid);
 	function make$e(w, h, v) {
 	    if (v === undefined)
 	        return new NumGrid(w, h, 0);
@@ -3122,8 +3122,8 @@
 		Grid: Grid,
 		stats: stats,
 		NumGrid: NumGrid,
-		alloc: alloc,
-		free: free,
+		alloc: alloc$1,
+		free: free$1,
 		make: make$e,
 		offsetZip: offsetZip,
 		intersection: intersection,
@@ -3361,7 +3361,7 @@
 	    matchingLoc(width, height, matchFn) {
 	        let locationCount = 0;
 	        let i, j, index;
-	        const grid$1 = alloc(width, height);
+	        const grid$1 = alloc$1(width, height);
 	        locationCount = 0;
 	        grid$1.update((_v, x, y) => {
 	            if (matchFn(x, y)) {
@@ -3376,7 +3376,7 @@
 	                for (j = 0; j < height && index >= 0; j++) {
 	                    if (grid$1[i][j]) {
 	                        if (index == 0) {
-	                            free(grid$1);
+	                            free$1(grid$1);
 	                            return [i, j];
 	                        }
 	                        index--;
@@ -3384,7 +3384,7 @@
 	                }
 	            }
 	        }
-	        free(grid$1);
+	        free$1(grid$1);
 	        return [-1, -1];
 	    }
 	    matchingLocNear(x, y, matchFn) {
@@ -6533,7 +6533,7 @@
 	    hasXY(x, y) {
 	        return x >= 0 && x < this._width && y >= 0 && y < this._height;
 	    }
-	    reset(width, height) {
+	    reset(width, height, distance = NOT_DONE) {
 	        this._width = width;
 	        this._height = height;
 	        while (this._data.length < width * height) {
@@ -6544,7 +6544,7 @@
 	                const item = this._get(x, y);
 	                item.x = x;
 	                item.y = y;
-	                item.distance = NOT_DONE;
+	                item.distance = distance;
 	                item.next = item.prev = null;
 	            }
 	        }
@@ -6740,6 +6740,13 @@
 	            }
 	        }
 	    }
+	    add(other) {
+	        if (this._width !== other._width || this._height !== other._height)
+	            throw new Error('Not same size!');
+	        for (let index = 0; index < this._width * this._height; ++index) {
+	            this._data[index].distance += other._data[index].distance;
+	        }
+	    }
 	    forEach(fn) {
 	        for (let y = 0; y < this._height; ++y) {
 	            for (let x = 0; x < this._width; ++x) {
@@ -6805,6 +6812,17 @@
 	    dm.setGoal(from);
 	    dm.calculate(costFn, only4dirs);
 	    dm.forEach((v, x, y) => (grid[x][y] = v));
+	}
+	const maps = [];
+	function alloc() {
+	    let map = maps.pop();
+	    if (!map) {
+	        map = new DijkstraMap();
+	    }
+	    return map;
+	}
+	function free(map) {
+	    maps.push(map);
 	}
 
 	function fromTo(from, to, costFn = ONE, only4dirs = false) {
@@ -6901,6 +6919,8 @@
 		NOT_DONE: NOT_DONE,
 		DijkstraMap: DijkstraMap,
 		computeDistances: computeDistances,
+		alloc: alloc,
+		free: free,
 		fromTo: fromTo
 	});
 
@@ -8957,7 +8977,7 @@ void main() {
 	        let i, j, k;
 	        let blobNumber, blobSize, topBlobNumber, topBlobSize;
 	        let bounds = new Bounds(0, 0, 0, 0);
-	        const dest = alloc(width, height);
+	        const dest = alloc$1(width, height);
 	        const maxWidth = Math.min(width, this.options.maxWidth);
 	        const maxHeight = Math.min(height, this.options.maxHeight);
 	        const minWidth = Math.min(width, this.options.minWidth);
@@ -9017,7 +9037,7 @@ void main() {
 	                }
 	            }
 	        }
-	        free(dest);
+	        free$1(dest);
 	        // Populate the returned variables.
 	        return bounds;
 	    }
@@ -9025,7 +9045,7 @@ void main() {
 	        let i, j, nbCount, newX, newY;
 	        let dir;
 	        let buffer2;
-	        buffer2 = alloc(grid$1.width, grid$1.height);
+	        buffer2 = alloc$1(grid$1.width, grid$1.height);
 	        buffer2.copy(grid$1); // Make a backup of this in buffer2, so that each generation is isolated.
 	        let didSomething = false;
 	        for (i = 0; i < grid$1.width; i++) {
@@ -9051,7 +9071,7 @@ void main() {
 	                }
 	            }
 	        }
-	        free(buffer2);
+	        free$1(buffer2);
 	        return didSomething;
 	    }
 	}
@@ -9115,7 +9135,7 @@ void main() {
 	            !maintainShadows &&
 	            !isDarkLight(LIGHT_COMPONENTS);
 	        const fadeToPercent = this.fadeTo;
-	        const grid$1 = alloc(site.width, site.height, 0);
+	        const grid$1 = alloc$1(site.width, site.height, 0);
 	        site.calcFov(x, y, outerRadius, this.passThroughActors, (i, j) => {
 	            grid$1[i][j] = 1;
 	        });
@@ -9143,7 +9163,7 @@ void main() {
 	        // if (dispelShadows) {
 	        //     map.clearCellFlag(x, y, CellFlags.IS_IN_SHADOW);
 	        // }
-	        free(grid$1);
+	        free$1(grid$1);
 	        // return overlappedFieldOfView;
 	        return true;
 	    }

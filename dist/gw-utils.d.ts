@@ -819,8 +819,8 @@ declare class NumGrid extends Grid<number> {
     valueBounds(value: number, bounds?: Bounds): Bounds;
     floodFill(x: number, y: number, matchValue: number | GridMatch<number>, fillValue: number | GridUpdate<number>): number;
 }
-declare const alloc: typeof NumGrid.alloc;
-declare const free: typeof NumGrid.free;
+declare const alloc$1: typeof NumGrid.alloc;
+declare const free$1: typeof NumGrid.free;
 declare function make$9<T>(w: number, h: number, v?: number | GridInit<number>): NumGrid;
 declare function make$9<T>(w: number, h: number, v?: T | GridInit<T>): Grid<T>;
 declare type GridZip<T, U> = (destVal: T, sourceVal: U, destX: number, destY: number, sourceX: number, sourceY: number, destGrid: Grid<T>, sourceGrid: Grid<U>) => void;
@@ -841,8 +841,6 @@ declare const grid_d_Grid: typeof Grid;
 declare const grid_d_stats: typeof stats;
 type grid_d_NumGrid = NumGrid;
 declare const grid_d_NumGrid: typeof NumGrid;
-declare const grid_d_alloc: typeof alloc;
-declare const grid_d_free: typeof free;
 type grid_d_GridZip<T, U> = GridZip<T, U>;
 declare const grid_d_offsetZip: typeof offsetZip;
 declare const grid_d_intersection: typeof intersection;
@@ -860,8 +858,8 @@ declare namespace grid_d {
     grid_d_Grid as Grid,
     grid_d_stats as stats,
     grid_d_NumGrid as NumGrid,
-    grid_d_alloc as alloc,
-    grid_d_free as free,
+    alloc$1 as alloc,
+    free$1 as free,
     make$9 as make,
     grid_d_GridZip as GridZip,
     grid_d_offsetZip as offsetZip,
@@ -1347,7 +1345,7 @@ declare class DijkstraMap {
     get height(): number;
     copy(other: DijkstraMap): void;
     hasXY(x: number, y: number): boolean;
-    reset(width: number, height: number): void;
+    reset(width: number, height: number, distance?: number): void;
     _get(loc: Loc): Item;
     _get(x: number, y: number): Item;
     setGoal(xy: Loc, cost?: number): void;
@@ -1361,6 +1359,7 @@ declare class DijkstraMap {
     getPath(fromX: number, fromY: number, isBlocked: XYMatchFunc, only4dirs?: boolean): Loc$2[] | null;
     forPath(fromX: number, fromY: number, isBlocked: XYMatchFunc, pathFn: XYFunc, only4dirs?: boolean): number;
     update(fn: UpdateFn): void;
+    add(other: DijkstraMap): void;
     forEach(fn: EachFn): void;
     dump(log?: {
         (...data: any[]): void;
@@ -1369,6 +1368,8 @@ declare class DijkstraMap {
     _dumpTodo(): string[];
 }
 declare function computeDistances(grid: NumGrid, from: Loc, costFn?: SimpleCostFn, only4dirs?: boolean): void;
+declare function alloc(): DijkstraMap;
+declare function free(map: DijkstraMap): void;
 
 type index_d$6_SimpleCostFn = SimpleCostFn;
 type index_d$6_UpdateFn = UpdateFn;
@@ -1381,6 +1382,8 @@ declare const index_d$6_NOT_DONE: typeof NOT_DONE;
 type index_d$6_DijkstraMap = DijkstraMap;
 declare const index_d$6_DijkstraMap: typeof DijkstraMap;
 declare const index_d$6_computeDistances: typeof computeDistances;
+declare const index_d$6_alloc: typeof alloc;
+declare const index_d$6_free: typeof free;
 type index_d$6_Loc = Loc;
 type index_d$6_CostFn = CostFn;
 declare const index_d$6_fromTo: typeof fromTo;
@@ -1396,6 +1399,8 @@ declare namespace index_d$6 {
     index_d$6_NOT_DONE as NOT_DONE,
     index_d$6_DijkstraMap as DijkstraMap,
     index_d$6_computeDistances as computeDistances,
+    index_d$6_alloc as alloc,
+    index_d$6_free as free,
     index_d$6_Loc as Loc,
     index_d$6_CostFn as CostFn,
     index_d$6_fromTo as fromTo,
