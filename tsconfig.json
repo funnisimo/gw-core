@@ -3,15 +3,18 @@
     "exclude": ["ts/**/*.spec.ts"],
     "compilerOptions": {
         "strict": true,
-        "outDir": "js",
+        "module": "es6",
+        "outDir": "_temp",
         "target": "es2019",
         "noUnusedLocals": true,
         "noUnusedParameters": true,
         "noEmitOnError": true,
-        "incremental": true,
         "declaration": true,
         "moduleResolution": "node",
         "esModuleInterop": true,
-        "sourceMap": true
+        "sourceMap": true,
+
+        // see: https://github.com/Swatinem/rollup-plugin-dts/issues/156
+        "useDefineForClassFields": false
     }
 }

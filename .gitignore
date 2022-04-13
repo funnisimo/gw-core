@@ -1,6 +1,8 @@
 # ignore <root>/js
-/js/
 .DS_Store
+.rollup.cache/
+.vscode/
+.theia/
 
 # Logs
 logs

@@ -4,11 +4,12 @@ import { terser } from 'rollup-plugin-terser';
 import dts from 'rollup-plugin-dts';
 import { nodeResolve } from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
+import typescript from '@rollup/plugin-typescript';
 
 export default [
     {
-        input: 'js/index.js',
-        plugins: [nodeResolve(), commonjs()],
+        input: 'ts/index.ts',
+        plugins: [nodeResolve(), commonjs(), typescript()],
         output: [
             {
                 file: 'dist/gw-utils.min.js',
@@ -36,7 +37,7 @@ export default [
         ],
     },
     {
-        input: './js/index.d.ts',
+        input: 'ts/index.ts',
         output: [{ file: 'dist/gw-utils.d.ts', format: 'es' }],
         plugins: [dts()],
     },
