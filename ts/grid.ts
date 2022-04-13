@@ -1,5 +1,4 @@
 import { random } from './rng';
-import * as Utils from './utils';
 import * as XY from './xy';
 
 type Loc = XY.Loc;
@@ -352,30 +351,13 @@ export class Grid<T> extends Array<Array<T>> {
         fmtFn?: GridFormat<T>,
         log = console.log
     ) {
-        let i, j;
-
         fmtFn = fmtFn || _formatGridValue;
 
-        left = Utils.clamp(left, 0, this.width - 2);
-        top = Utils.clamp(top, 0, this.height - 2);
-        const right = Utils.clamp(left + width, 1, this.width - 1);
-        const bottom = Utils.clamp(top + height, 1, this.height - 1);
+        const format = (x: number, y: number) => {
+            return fmtFn!(this.get(x, y)!, x, y);
+        };
 
-        let output = [];
-
-        for (j = top; j <= bottom; j++) {
-            let line = ('' + j + ']').padStart(3, ' ');
-            for (i = left; i <= right; i++) {
-                if (i % 10 == 0) {
-                    line += ' ';
-                }
-
-                const v = this[i][j];
-                line += fmtFn(v, i, j)[0];
-            }
-            output.push(line);
-        }
-        log(output.join('\n'));
+        return XY.dumpRect(left, top, width, height, format, log);
     }
 
     dumpAround(

@@ -58,7 +58,7 @@ describe('Tween', () => {
         expect(tween.isRunning()).toBeTruthy();
 
         tween.update(50);
-        expect(obj.x).toEqual(0);
+        expect(obj.x).toEqual(1);
         tween.update(50);
         expect(obj.x).toEqual(1);
         tween.update(400);
@@ -252,7 +252,7 @@ describe('Tween', () => {
         expect(obj.x).toEqual(10);
 
         tween.update(50);
-        expect(obj.x).toEqual(9);
+        expect(obj.x).toEqual(10);
         tween.update(50);
         expect(obj.x).toEqual(9);
         tween.update(400);

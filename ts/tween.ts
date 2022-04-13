@@ -3,9 +3,9 @@
 import * as EVENTS from './app/events';
 import * as Utils from './utils';
 
-export type AnyObj = Record<string, any>;
-export type TweenCb = (obj: AnyObj, dt: number) => any;
-export type TweenFinishCb = (obj: AnyObj, success: boolean) => any;
+// export type AnyObj = Record<string, any>;
+export type TweenCb<T> = (obj: T, dt: number) => any;
+export type TweenFinishCb<T> = (obj: T, success: boolean) => any;
 
 export type EasingFn = (v: number) => number;
 export type InterpolateFn = (start: any, goal: any, pct: number) => any;
@@ -49,8 +49,13 @@ export class BaseObj<T extends { update(t: number): void }> {
     }
 }
 
-export class Tween extends BaseObj<Tween> {
-    _obj: AnyObj;
+export interface TweenUpdate {
+    isRunning(): boolean;
+    update(dt: number): void;
+}
+
+export class Tween<T> extends BaseObj<Tween<T>> implements TweenUpdate {
+    _obj: T;
 
     _repeat = 0;
     _count = 0;
@@ -64,8 +69,8 @@ export class Tween extends BaseObj<Tween> {
     _time = Number.MAX_SAFE_INTEGER;
     _startTime = 0;
 
-    _goal: AnyObj = {};
-    _start: AnyObj = {};
+    _goal: Partial<T> = {};
+    _start: Partial<T> = {};
 
     // _startCb: TweenCb | null = null;
     // _updateCb: TweenCb | null = null;
@@ -75,7 +80,7 @@ export class Tween extends BaseObj<Tween> {
     _easing: EasingFn = linear;
     _interpolate: InterpolateFn = interpolate;
 
-    constructor(src: AnyObj) {
+    constructor(src: T) {
         super();
         this._obj = src;
     }
@@ -88,34 +93,34 @@ export class Tween extends BaseObj<Tween> {
         );
     }
 
-    onStart(cb: TweenCb): this {
+    onStart(cb: TweenCb<T>): this {
         this.on('start', cb);
         return this;
     }
 
-    onUpdate(cb: TweenCb): this {
+    onUpdate(cb: TweenCb<T>): this {
         this.on('update', cb);
         return this;
     }
 
-    onRepeat(cb: TweenCb): this {
+    onRepeat(cb: TweenCb<T>): this {
         this.on('repeat', cb);
         return this;
     }
 
-    onFinish(cb: TweenFinishCb): this {
+    onFinish(cb: TweenFinishCb<T>): this {
         this.on('stop', cb);
         return this;
     }
 
-    to(goal: AnyObj, duration?: number): this {
+    to(goal: Partial<T>, duration?: number): this {
         this._goal = goal;
         this._from = false;
         if (duration !== undefined) this._duration = duration;
         return this;
     }
 
-    from(start: AnyObj, duration?: number): this {
+    from(start: Partial<T>, duration?: number): this {
         this._start = start;
         this._from = true;
         if (duration !== undefined) this._duration = duration;
@@ -162,7 +167,7 @@ export class Tween extends BaseObj<Tween> {
         return this;
     }
 
-    start(animator?: { add: (tween: Tween) => void }): this {
+    start(animator?: { add: (tween: Tween<T>) => void }): this {
         if (this._time > 0) {
             this._time = 0;
             this._startTime = this._delay;
@@ -170,13 +175,17 @@ export class Tween extends BaseObj<Tween> {
             if (this._from) {
                 this._goal = {};
                 Object.keys(this._start).forEach(
-                    (key) => (this._goal[key] = this._obj[key])
+                    (key) =>
+                        (this._goal[key as keyof T] = this._obj[key as keyof T])
                 );
                 this._updateProperties(this._obj, this._start, this._goal, 0);
             } else {
                 this._start = {};
                 Object.keys(this._goal).forEach(
-                    (key) => (this._start[key] = this._obj[key])
+                    (key) =>
+                        (this._start[key as keyof T] = this._obj[
+                            key as keyof T
+                        ])
                 );
             }
         }
@@ -241,6 +250,7 @@ export class Tween extends BaseObj<Tween> {
 
         // reset starting values
         Object.entries(this._start).forEach(([key, value]) => {
+            // @ts-ignore
             this._obj[key] = value;
         });
         if (this._count == 1) {
@@ -262,18 +272,18 @@ export class Tween extends BaseObj<Tween> {
     }
 
     _updateProperties(
-        obj: AnyObj,
-        start: AnyObj,
-        goal: AnyObj,
+        obj: T,
+        start: Partial<T>,
+        goal: Partial<T>,
         pct: number
     ): boolean {
         let madeChange = false;
         Object.entries(goal).forEach(([field, goalV]) => {
-            const currentV = obj[field];
-            const startV = start[field];
+            const currentV = obj[field as keyof T];
+            const startV = start[field as keyof T];
             const updatedV = this._interpolate(startV, goalV, pct);
             if (updatedV !== currentV) {
-                obj[field] = updatedV;
+                obj[field as keyof T] = updatedV;
                 madeChange = true;
             }
         });
@@ -281,7 +291,7 @@ export class Tween extends BaseObj<Tween> {
     }
 }
 
-export function make(src: AnyObj, duration = 1000): Tween {
+export function make<T>(src: T, duration = 1000): Tween<T> {
     return new Tween(src).duration(duration);
 }
 
@@ -294,5 +304,5 @@ export function interpolate(start: any, goal: any, pct: number): any {
     if (typeof start === 'boolean' || typeof goal === 'boolean') {
         return Math.floor(pct) == 0 ? start : goal;
     }
-    return Math.floor((goal - start) * pct) + start;
+    return Math.round((goal - start) * pct) + start;
 }

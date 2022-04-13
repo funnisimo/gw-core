@@ -1,7 +1,7 @@
 import { clamp } from './utils';
-import { Loc, XY, Size } from './types';
+import { Loc, XY, Size, Pos } from './types';
 
-export { Loc, XY, Size };
+export { Loc, XY, Size, Pos };
 
 // DIRS are organized clockwise
 // - first 4 are arrow directions
@@ -59,17 +59,25 @@ export function isXY(a: any): a is XY {
     return a && typeof a.x === 'number' && typeof a.y === 'number';
 }
 
-export function x(src: XY | Loc) {
+export function asLoc(v: Pos): Loc {
+    return [x(v), y(v)];
+}
+
+export function asXY(v: Pos): XY {
+    return { x: x(v), y: y(v) };
+}
+
+export function x(src: XY | Loc): number {
     // @ts-ignore
     return src.x || src[0] || 0;
 }
 
-export function y(src: XY | Loc) {
+export function y(src: XY | Loc): number {
     // @ts-ignore
     return src.y || src[1] || 0;
 }
 
-export function contains(size: Size, x: number, y: number) {
+export function contains(size: Size, x: number, y: number): boolean {
     return x >= 0 && y >= 0 && x < size.width && y < size.height;
 }
 
@@ -615,6 +623,45 @@ export function forRect(...args: any[]) {
             fn(i, j);
         }
     }
+}
+
+export function dumpRect(
+    left: number,
+    top: number,
+    width: number,
+    height: number,
+    fmtFn: (x: number, y: number) => string,
+    log = console.log
+) {
+    let i, j;
+
+    const bottom = top + height;
+    const right = left + width;
+
+    let output = [];
+
+    for (j = top; j <= bottom; j++) {
+        let line = ('' + j + ']').padStart(3, ' ');
+        for (i = left; i <= right; i++) {
+            if (i % 10 == 0) {
+                line += ' ';
+            }
+
+            line += fmtFn(i, j);
+        }
+        output.push(line);
+    }
+    log(output.join('\n'));
+}
+
+export function dumpAround(
+    x: number,
+    y: number,
+    radius: number,
+    fmtFn: (x: number, y: number) => string,
+    log = console.log
+) {
+    dumpRect(x - radius, y - radius, 2 * radius, 2 * radius, fmtFn, log);
 }
 
 export function forBorder(width: number, height: number, fn: XYFunc): void;

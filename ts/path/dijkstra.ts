@@ -1,6 +1,5 @@
 import * as DIJKSTRA from '../grid';
 import * as XY from '../xy';
-import { Loc } from './astar';
 import * as UTILS from '../utils';
 
 export type SimpleCostFn = (x: number, y: number) => number;
@@ -36,7 +35,6 @@ function makeItem(x: number, y: number, distance = NOT_DONE): Item {
 export class DijkstraMap {
     _data: Item[] = [];
     _todo: Item = makeItem(-1, -1);
-    _maxDistance = 999;
     _width = 0;
     _height = 0;
 
@@ -82,11 +80,10 @@ export class DijkstraMap {
                 item.next = item.prev = null;
             }
         }
-        this._maxDistance = 999;
         this._todo.next = this._todo.prev = null;
     }
 
-    _get(loc: Loc): Item;
+    _get(pos: XY.Pos): Item;
     _get(x: number, y: number): Item;
     _get(...args: any[]): Item {
         if (args.length == 1) {
@@ -98,22 +95,26 @@ export class DijkstraMap {
         }
     }
 
-    setGoal(xy: Loc, cost?: number): void;
+    setGoal(pos: XY.Pos, cost?: number): void;
     setGoal(x: number, y: number, cost?: number): void;
     setGoal(...args: any[]): void {
         if (typeof args[0] === 'number') {
-            this._add(args[0], args[1], args[2] || 0);
+            this._add(args[0], args[1], args[2] || 0, 0);
         } else {
-            this._add(XY.x(args[0]), XY.y(args[0]), args[1] || 0);
+            this._add(XY.x(args[0]), XY.y(args[0]), args[1] || 0, 0);
         }
     }
 
-    _add(x: number, y: number, distance: number) {
+    _add(x: number, y: number, distance: number, cost: number) {
         if (!this.hasXY(x, y)) return false;
 
         const item = this._get(x, y);
-        if (Math.floor(item.distance * 100) <= Math.floor(distance * 100))
+        if (
+            Math.floor(item.distance * 100) <=
+            Math.floor((cost + distance) * 100)
+        ) {
             return false;
+        }
 
         if (item.prev) {
             item.prev.next = item.next;
@@ -121,17 +122,15 @@ export class DijkstraMap {
         }
         item.prev = item.next = null;
 
-        if (distance >= OBSTRUCTION) {
+        if (cost >= OBSTRUCTION) {
             item.distance = OBSTRUCTION;
             return false;
-        } else if (distance >= BLOCKED) {
+        } else if (cost >= BLOCKED) {
             item.distance = BLOCKED;
-            return false;
-        } else if (distance > this._maxDistance) {
             return false;
         }
 
-        item.distance = distance;
+        item.distance = distance + cost;
 
         return this._insert(item);
     }
@@ -152,9 +151,8 @@ export class DijkstraMap {
         return true;
     }
 
-    calculate(costFn: SimpleCostFn, only4dirs = false, maxDistance = 999) {
+    calculate(costFn: SimpleCostFn, only4dirs = false) {
         let current: Item | null = this._todo.next;
-        this._maxDistance = maxDistance;
 
         while (current) {
             let next = current.next;
@@ -180,7 +178,7 @@ export class DijkstraMap {
                     }
                     const cost = costFn(x, y) * mult;
 
-                    if (this._add(x, y, current!.distance + cost)) {
+                    if (this._add(x, y, current!.distance, cost)) {
                         // console.log('- add', x, y, current!.distance + cost);
                     }
                 },
@@ -191,7 +189,7 @@ export class DijkstraMap {
         }
     }
 
-    rescan(costFn: SimpleCostFn, only4dirs = false, maxDistance = 999) {
+    rescan(costFn: SimpleCostFn, only4dirs = false) {
         this._data.forEach((item) => {
             item.next = item.prev = null;
             if (item.distance < BLOCKED) {
@@ -199,12 +197,54 @@ export class DijkstraMap {
             }
         });
 
-        this.calculate(costFn, only4dirs, maxDistance);
+        this.calculate(costFn, only4dirs);
     }
 
     getDistance(x: number, y: number): number {
-        if (!this.hasXY(x, y)) throw new Error('Invalid index: ' + x + ',' + y);
+        if (!this.hasXY(x, y)) return NOT_DONE;
         return this._get(x, y).distance;
+    }
+
+    setDistance(x: number, y: number, distance: number): void {
+        if (!this.hasXY(x, y)) return;
+        this._get(x, y).distance = distance;
+    }
+
+    addObstacle(
+        x: number,
+        y: number,
+        costFn: SimpleCostFn,
+        radius: number,
+        penalty = radius
+    ) {
+        const done: XY.Loc[] = [[x, y]];
+        const todo: XY.Loc[] = [[x, y]];
+
+        while (todo.length) {
+            const item = todo.shift()!;
+
+            const dist = XY.distanceBetween(x, y, item[0], item[1]);
+            if (dist > radius) {
+                continue;
+            }
+
+            const stepPenalty = penalty * ((radius - dist) / radius);
+            const data = this._get(item);
+            data.distance += stepPenalty;
+
+            XY.eachNeighbor(item[0], item[1], (i, j) => {
+                const stepCost = costFn(i, j);
+                if (done.findIndex((e) => e[0] === i && e[1] === j) >= 0) {
+                    return;
+                }
+                if (stepCost >= BLOCKED) {
+                    return;
+                }
+
+                done.push([i, j]);
+                todo.push([i, j]);
+            });
+        }
     }
 
     nextDir(
@@ -361,30 +401,42 @@ export class DijkstraMap {
         }
     }
 
-    dump(log = console.log) {
-        let output = [];
+    dump(fmtFn?: (v: number) => string, log = console.log) {
+        this.dumpRect(0, 0, this.width, this.height, fmtFn, log);
+    }
 
-        let line = '    ';
-        for (let x = 0; x < this._width; ++x) {
-            if (x && x % 10 == 0) {
-                line += '   ';
-            }
-            line += ('' + x).padStart(4, ' ').substring(0, 4) + ' ';
-        }
-        output.push(line);
-        for (let y = 0; y < this._height; ++y) {
-            let line = ('' + y + ']').padStart(4, ' ') + ' ';
-            for (let x = 0; x < this._width; ++x) {
-                if (x && x % 10 == 0) {
-                    line += '   ';
-                }
+    dumpRect(
+        left: number,
+        top: number,
+        width: number,
+        height: number,
+        fmtFn?: (v: number) => string,
+        log = console.log
+    ) {
+        fmtFn = fmtFn || _format;
 
-                const v = this.getDistance(x, y);
-                line += _format(v).padStart(4, ' ').substring(0, 4) + ' ';
-            }
-            output.push(line);
-        }
-        log(output.join('\n'));
+        const format = (x: number, y: number) => {
+            return fmtFn!(this.getDistance(x, y));
+        };
+
+        return XY.dumpRect(left, top, width, height, format, log);
+    }
+
+    dumpAround(
+        x: number,
+        y: number,
+        radius: number,
+        fmtFn?: (v: number) => string,
+        log = console.log
+    ) {
+        this.dumpRect(
+            x - radius,
+            y - radius,
+            2 * radius,
+            2 * radius,
+            fmtFn,
+            log
+        );
     }
 
     _dumpTodo() {
@@ -402,24 +454,24 @@ export class DijkstraMap {
 }
 
 function _format(v: number) {
-    if (v < 100) {
-        return '' + v;
+    if (v < BLOCKED) {
+        return v.toFixed(1).padStart(3, ' ') + ' ';
         // } else if (v < 36) {
         //     return String.fromCharCode('a'.charCodeAt(0) + v - 10);
         // } else if (v < 62) {
         //     return String.fromCharCode('A'.charCodeAt(0) + v - 10 - 26);
     } else if (v >= OBSTRUCTION) {
-        return '#';
+        return ' ## ';
     } else if (v >= BLOCKED) {
-        return 'X';
+        return ' XX ';
     } else {
-        return '>';
+        return ' >> ';
     }
 }
 
 export function computeDistances(
     grid: DIJKSTRA.NumGrid,
-    from: Loc,
+    from: XY.Pos,
     costFn: SimpleCostFn = UTILS.ONE,
     only4dirs = false
 ): void {

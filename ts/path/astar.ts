@@ -10,12 +10,11 @@ interface Item {
     prev: Item | null;
 }
 
-export type Loc = XY.XY | XY.Loc;
 export type CostFn = (x: number, y: number) => number;
 
 export function fromTo(
-    from: Loc,
-    to: Loc,
+    from: XY.Pos,
+    to: XY.Pos,
     costFn: CostFn = ONE,
     only4dirs = false
 ): XY.Loc[] {
@@ -26,15 +25,15 @@ export function fromTo(
 class AStar {
     _todo: Item[] = [];
     _done: Item[] = [];
-    goal: Loc;
+    goal: XY.Loc;
     costFn: CostFn;
 
-    constructor(goal: Loc, costFn: CostFn = ONE) {
-        this.goal = goal;
+    constructor(goal: XY.Pos, costFn: CostFn = ONE) {
+        this.goal = XY.asLoc(goal);
         this.costFn = costFn;
     }
 
-    _add(loc: Loc, cost = 1, prev: Item | null = null) {
+    _add(loc: XY.Pos, cost = 1, prev: Item | null = null) {
         const h = XY.distanceFromTo(loc, this.goal);
         let newItem = {
             x: XY.x(loc),
@@ -68,7 +67,7 @@ class AStar {
         this._todo.push(newItem);
     }
 
-    from(from: Loc, only4dirs = false): XY.Loc[] {
+    from(from: XY.Pos, only4dirs = false): XY.Loc[] {
         this._add(from);
 
         let item: Item | null = null;

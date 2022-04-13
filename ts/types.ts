@@ -10,6 +10,8 @@ export interface XY {
     x: number;
     y: number;
 }
+export type Pos = Loc | XY;
+
 export interface Size {
     width: number;
     height: number;

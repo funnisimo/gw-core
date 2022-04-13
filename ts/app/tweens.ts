@@ -1,8 +1,8 @@
 import * as UTILS from '../utils';
-import { Tween } from '../tween';
+import { TweenUpdate } from '../tween';
 
 export class Tweens {
-    _tweens: Tween[] = [];
+    _tweens: TweenUpdate[] = [];
 
     constructor() {}
 
@@ -14,11 +14,11 @@ export class Tweens {
         this._tweens = [];
     }
 
-    add(tween: Tween) {
+    add(tween: TweenUpdate) {
         this._tweens.push(tween);
     }
 
-    remove(tween: Tween) {
+    remove(tween: TweenUpdate) {
         UTILS.arrayDelete(this._tweens, tween);
     }
 

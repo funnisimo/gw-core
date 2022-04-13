@@ -2,6 +2,7 @@ import '../../test/matchers';
 
 import * as DIJKSTRA from './dijkstra';
 import * as XY from '../xy';
+import * as UTILS from '../utils';
 
 describe('Path', () => {
     test('scan with empty', () => {
@@ -206,9 +207,23 @@ describe('Path', () => {
 
         // dm.dump();
 
-        expect(dm.nextDir(2, 4, isBlocked)).toEqual([-1, 1]); // goto 1,5
+        expect(dm.nextDir(2, 4, isBlocked)).toEqual([-1, 0]); // goto 1,4
         expect(dm.nextDir(1, 4, isBlocked)).toEqual([0, 1]); // goto 1,5
         expect(dm.nextDir(6, 7, isBlocked)).toEqual([1, 1]); // goto 7,8
         expect(dm.nextDir(9, 9, isBlocked)).toBeNull();
+    });
+
+    test('obstacle', () => {
+        const dm = new DIJKSTRA.DijkstraMap();
+        dm.reset(10, 10);
+        dm.setGoal(4, 4);
+        dm.calculate(UTILS.ONE);
+        expect(dm.getDistance(7, 7)).toFloatEqual(4.2);
+        expect(dm.getDistance(8, 7)).toFloatEqual(5.2);
+
+        dm.addObstacle(7, 7, UTILS.ONE, 2);
+        // dm.dump();
+        expect(dm.getDistance(7, 7)).toFloatEqual(6.2); // +2
+        expect(dm.getDistance(8, 7)).toFloatEqual(6.2); // +1
     });
 });

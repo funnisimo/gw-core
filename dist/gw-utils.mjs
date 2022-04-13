@@ -584,6 +584,12 @@ function isLoc(a) {
 function isXY(a) {
     return a && typeof a.x === 'number' && typeof a.y === 'number';
 }
+function asLoc(v) {
+    return [x(v), y(v)];
+}
+function asXY(v) {
+    return { x: x(v), y: y(v) };
+}
 function x(src) {
     // @ts-ignore
     return src.x || src[0] || 0;
@@ -963,6 +969,26 @@ function forRect(...args) {
         }
     }
 }
+function dumpRect(left, top, width, height, fmtFn, log = console.log) {
+    let i, j;
+    const bottom = top + height;
+    const right = left + width;
+    let output = [];
+    for (j = top; j <= bottom; j++) {
+        let line = ('' + j + ']').padStart(3, ' ');
+        for (i = left; i <= right; i++) {
+            if (i % 10 == 0) {
+                line += ' ';
+            }
+            line += fmtFn(i, j);
+        }
+        output.push(line);
+    }
+    log(output.join('\n'));
+}
+function dumpAround(x, y, radius, fmtFn, log = console.log) {
+    dumpRect(x - radius, y - radius, 2 * radius, 2 * radius, fmtFn, log);
+}
 function forBorder(...args) {
     let left = 0;
     let top = 0;
@@ -1045,6 +1071,8 @@ var xy = /*#__PURE__*/Object.freeze({
 	CLOCK_DIRS: CLOCK_DIRS,
 	isLoc: isLoc,
 	isXY: isXY,
+	asLoc: asLoc,
+	asXY: asXY,
 	x: x,
 	y: y,
 	contains: contains,
@@ -1078,6 +1106,8 @@ var xy = /*#__PURE__*/Object.freeze({
 	getLineThru: getLineThru,
 	forCircle: forCircle,
 	forRect: forRect,
+	dumpRect: dumpRect,
+	dumpAround: dumpAround,
 	forBorder: forBorder,
 	arcCount: arcCount,
 	closestMatchingLocs: closestMatchingLocs
@@ -2792,25 +2822,11 @@ class Grid extends Array {
         this.dumpRect(0, 0, this.width, this.height, fmtFn, log);
     }
     dumpRect(left, top, width, height, fmtFn, log = console.log) {
-        let i, j;
         fmtFn = fmtFn || _formatGridValue;
-        left = clamp(left, 0, this.width - 2);
-        top = clamp(top, 0, this.height - 2);
-        const right = clamp(left + width, 1, this.width - 1);
-        const bottom = clamp(top + height, 1, this.height - 1);
-        let output = [];
-        for (j = top; j <= bottom; j++) {
-            let line = ('' + j + ']').padStart(3, ' ');
-            for (i = left; i <= right; i++) {
-                if (i % 10 == 0) {
-                    line += ' ';
-                }
-                const v = this[i][j];
-                line += fmtFn(v, i, j)[0];
-            }
-            output.push(line);
-        }
-        log(output.join('\n'));
+        const format = (x, y) => {
+            return fmtFn(this.get(x, y), x, y);
+        };
+        return dumpRect(left, top, width, height, format, log);
     }
     dumpAround(x, y, radius, fmtFn, log = console.log) {
         this.dumpRect(x - radius, y - radius, 2 * radius, 2 * radius, fmtFn, log);
@@ -6504,7 +6520,6 @@ class DijkstraMap {
     constructor(width, height) {
         this._data = [];
         this._todo = makeItem(-1, -1);
-        this._maxDistance = 999;
         this._width = 0;
         this._height = 0;
         if (width !== undefined && height !== undefined) {
@@ -6542,7 +6557,6 @@ class DijkstraMap {
                 item.next = item.prev = null;
             }
         }
-        this._maxDistance = 999;
         this._todo.next = this._todo.prev = null;
     }
     _get(...args) {
@@ -6557,35 +6571,34 @@ class DijkstraMap {
     }
     setGoal(...args) {
         if (typeof args[0] === 'number') {
-            this._add(args[0], args[1], args[2] || 0);
+            this._add(args[0], args[1], args[2] || 0, 0);
         }
         else {
-            this._add(x(args[0]), y(args[0]), args[1] || 0);
+            this._add(x(args[0]), y(args[0]), args[1] || 0, 0);
         }
     }
-    _add(x, y, distance) {
+    _add(x, y, distance, cost) {
         if (!this.hasXY(x, y))
             return false;
         const item = this._get(x, y);
-        if (Math.floor(item.distance * 100) <= Math.floor(distance * 100))
+        if (Math.floor(item.distance * 100) <=
+            Math.floor((cost + distance) * 100)) {
             return false;
+        }
         if (item.prev) {
             item.prev.next = item.next;
             item.next && (item.next.prev = item.prev);
         }
         item.prev = item.next = null;
-        if (distance >= OBSTRUCTION) {
+        if (cost >= OBSTRUCTION) {
             item.distance = OBSTRUCTION;
             return false;
         }
-        else if (distance >= BLOCKED) {
+        else if (cost >= BLOCKED) {
             item.distance = BLOCKED;
             return false;
         }
-        else if (distance > this._maxDistance) {
-            return false;
-        }
-        item.distance = distance;
+        item.distance = distance + cost;
         return this._insert(item);
     }
     _insert(item) {
@@ -6601,9 +6614,8 @@ class DijkstraMap {
         current && (current.prev = item);
         return true;
     }
-    calculate(costFn, only4dirs = false, maxDistance = 999) {
+    calculate(costFn, only4dirs = false) {
         let current = this._todo.next;
-        this._maxDistance = maxDistance;
         while (current) {
             let next = current.next;
             current.prev = current.next = null;
@@ -6620,24 +6632,54 @@ class DijkstraMap {
                     }
                 }
                 const cost = costFn(x, y) * mult;
-                if (this._add(x, y, current.distance + cost)) ;
+                if (this._add(x, y, current.distance, cost)) ;
             }, only4dirs);
             current = this._todo.next;
         }
     }
-    rescan(costFn, only4dirs = false, maxDistance = 999) {
+    rescan(costFn, only4dirs = false) {
         this._data.forEach((item) => {
             item.next = item.prev = null;
             if (item.distance < BLOCKED) {
                 this._insert(item);
             }
         });
-        this.calculate(costFn, only4dirs, maxDistance);
+        this.calculate(costFn, only4dirs);
     }
     getDistance(x, y) {
         if (!this.hasXY(x, y))
-            throw new Error('Invalid index: ' + x + ',' + y);
+            return NOT_DONE;
         return this._get(x, y).distance;
+    }
+    setDistance(x, y, distance) {
+        if (!this.hasXY(x, y))
+            return;
+        this._get(x, y).distance = distance;
+    }
+    addObstacle(x, y, costFn, radius, penalty = radius) {
+        const done = [[x, y]];
+        const todo = [[x, y]];
+        while (todo.length) {
+            const item = todo.shift();
+            const dist = distanceBetween(x, y, item[0], item[1]);
+            if (dist > radius) {
+                continue;
+            }
+            const stepPenalty = penalty * ((radius - dist) / radius);
+            const data = this._get(item);
+            data.distance += stepPenalty;
+            eachNeighbor(item[0], item[1], (i, j) => {
+                const stepCost = costFn(i, j);
+                if (done.findIndex((e) => e[0] === i && e[1] === j) >= 0) {
+                    return;
+                }
+                if (stepCost >= BLOCKED) {
+                    return;
+                }
+                done.push([i, j]);
+                todo.push([i, j]);
+            });
+        }
     }
     nextDir(fromX, fromY, isBlocked, only4dirs = false) {
         let newX, newY, bestScore;
@@ -6749,28 +6791,18 @@ class DijkstraMap {
             }
         }
     }
-    dump(log = console.log) {
-        let output = [];
-        let line = '    ';
-        for (let x = 0; x < this._width; ++x) {
-            if (x && x % 10 == 0) {
-                line += '   ';
-            }
-            line += ('' + x).padStart(4, ' ').substring(0, 4) + ' ';
-        }
-        output.push(line);
-        for (let y = 0; y < this._height; ++y) {
-            let line = ('' + y + ']').padStart(4, ' ') + ' ';
-            for (let x = 0; x < this._width; ++x) {
-                if (x && x % 10 == 0) {
-                    line += '   ';
-                }
-                const v = this.getDistance(x, y);
-                line += _format(v).padStart(4, ' ').substring(0, 4) + ' ';
-            }
-            output.push(line);
-        }
-        log(output.join('\n'));
+    dump(fmtFn, log = console.log) {
+        this.dumpRect(0, 0, this.width, this.height, fmtFn, log);
+    }
+    dumpRect(left, top, width, height, fmtFn, log = console.log) {
+        fmtFn = fmtFn || _format;
+        const format = (x, y) => {
+            return fmtFn(this.getDistance(x, y));
+        };
+        return dumpRect(left, top, width, height, format, log);
+    }
+    dumpAround(x, y, radius, fmtFn, log = console.log) {
+        this.dumpRect(x - radius, y - radius, 2 * radius, 2 * radius, fmtFn, log);
     }
     _dumpTodo() {
         let current = this._todo.next;
@@ -6783,21 +6815,21 @@ class DijkstraMap {
     }
 }
 function _format(v) {
-    if (v < 100) {
-        return '' + v;
+    if (v < BLOCKED) {
+        return v.toFixed(1).padStart(3, ' ') + ' ';
         // } else if (v < 36) {
         //     return String.fromCharCode('a'.charCodeAt(0) + v - 10);
         // } else if (v < 62) {
         //     return String.fromCharCode('A'.charCodeAt(0) + v - 10 - 26);
     }
     else if (v >= OBSTRUCTION) {
-        return '#';
+        return ' ## ';
     }
     else if (v >= BLOCKED) {
-        return 'X';
+        return ' XX ';
     }
     else {
-        return '>';
+        return ' >> ';
     }
 }
 function computeDistances(grid, from, costFn = ONE, only4dirs = false) {
@@ -6827,7 +6859,7 @@ class AStar {
     constructor(goal, costFn = ONE) {
         this._todo = [];
         this._done = [];
-        this.goal = goal;
+        this.goal = asLoc(goal);
         this.costFn = costFn;
     }
     _add(loc, cost = 1, prev = null) {
@@ -9821,6 +9853,7 @@ class Tween extends BaseObj {
         ++this._count;
         // reset starting values
         Object.entries(this._start).forEach(([key, value]) => {
+            // @ts-ignore
             this._obj[key] = value;
         });
         if (this._count == 1) {
@@ -9864,7 +9897,7 @@ function interpolate(start, goal, pct) {
     if (typeof start === 'boolean' || typeof goal === 'boolean') {
         return Math.floor(pct) == 0 ? start : goal;
     }
-    return Math.floor((goal - start) * pct) + start;
+    return Math.round((goal - start) * pct) + start;
 }
 
 var tween = /*#__PURE__*/Object.freeze({

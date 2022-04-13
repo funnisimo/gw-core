@@ -161,11 +161,12 @@ declare namespace index_d$9 {
   };
 }
 
-declare type Loc$2 = [number, number];
+declare type Loc$1 = [number, number];
 interface XY {
     x: number;
     y: number;
 }
+declare type Pos = Loc$1 | XY;
 interface Size {
     width: number;
     height: number;
@@ -188,6 +189,7 @@ interface WeightedObject {
 }
 
 type types_d_XY = XY;
+type types_d_Pos = Pos;
 type types_d_Size = Size;
 type types_d_EachCb<T> = EachCb<T>;
 type types_d_RandomFunction = RandomFunction;
@@ -197,8 +199,9 @@ type types_d_WeightedArray = WeightedArray;
 type types_d_WeightedObject = WeightedObject;
 declare namespace types_d {
   export {
-    Loc$2 as Loc,
+    Loc$1 as Loc,
     types_d_XY as XY,
+    types_d_Pos as Pos,
     types_d_Size as Size,
     SpriteData$1 as SpriteData,
     types_d_EachCb as EachCb,
@@ -210,7 +213,7 @@ declare namespace types_d {
   };
 }
 
-declare const DIRS: Loc$2[];
+declare const DIRS: Loc$1[];
 declare const NO_DIRECTION = -1;
 declare const UP = 0;
 declare const RIGHT = 1;
@@ -220,11 +223,13 @@ declare const RIGHT_UP = 4;
 declare const RIGHT_DOWN = 5;
 declare const LEFT_DOWN = 6;
 declare const LEFT_UP = 7;
-declare const CLOCK_DIRS: Loc$2[];
-declare function isLoc(a: any): a is Loc$2;
+declare const CLOCK_DIRS: Loc$1[];
+declare function isLoc(a: any): a is Loc$1;
 declare function isXY(a: any): a is XY;
-declare function x(src: XY | Loc$2): any;
-declare function y(src: XY | Loc$2): any;
+declare function asLoc(v: Pos): Loc$1;
+declare function asXY(v: Pos): XY;
+declare function x(src: XY | Loc$1): number;
+declare function y(src: XY | Loc$1): number;
 declare function contains(size: Size, x: number, y: number): boolean;
 interface BoundsOpts {
     x?: number;
@@ -254,54 +259,63 @@ declare class Bounds {
     clone(): Bounds;
     copy(other: Bounds): void;
     contains(x: number, y: number): boolean;
-    contains(loc: Loc$2 | XY): boolean;
-    include(xy: Loc$2 | XY | Bounds): void;
+    contains(loc: Loc$1 | XY): boolean;
+    include(xy: Loc$1 | XY | Bounds): void;
     pad(n?: number): void;
     forEach(cb: XYFunc): void;
     toString(): string;
 }
-declare function copy(dest: XY, src: XY | Loc$2): void;
-declare function addTo(dest: XY, src: XY | Loc$2): void;
-declare function add(a: XY, b: XY | Loc$2): XY;
-declare function add(a: Loc$2, b: XY | Loc$2): Loc$2;
-declare function equals(dest: XY | Loc$2 | null | undefined, src: XY | Loc$2 | null | undefined): boolean;
-declare function isDiagonal(xy: XY | Loc$2): boolean;
-declare function lerp(a: XY | Loc$2, b: XY | Loc$2, pct: number): any[];
+declare function copy(dest: XY, src: XY | Loc$1): void;
+declare function addTo(dest: XY, src: XY | Loc$1): void;
+declare function add(a: XY, b: XY | Loc$1): XY;
+declare function add(a: Loc$1, b: XY | Loc$1): Loc$1;
+declare function equals(dest: XY | Loc$1 | null | undefined, src: XY | Loc$1 | null | undefined): boolean;
+declare function isDiagonal(xy: XY | Loc$1): boolean;
+declare function lerp(a: XY | Loc$1, b: XY | Loc$1, pct: number): number[];
 declare type XYFunc = (x: number, y: number) => void;
-declare type NeighborFunc = (x: number, y: number, dir: Loc$2) => void;
+declare type NeighborFunc = (x: number, y: number, dir: Loc$1) => void;
 declare function eachNeighbor(x: number, y: number, fn: NeighborFunc, only4dirs?: boolean): void;
 declare function eachNeighborAsync(x: number, y: number, fn: NeighborFunc, only4dirs?: boolean): Promise<void>;
 declare type XYMatchFunc = (x: number, y: number) => boolean;
-declare type NeighborMatchFunc = (x: number, y: number, dir: Loc$2) => boolean;
-declare function matchingNeighbor(x: number, y: number, matchFn: NeighborMatchFunc, only4dirs?: boolean): Loc$2;
+declare type NeighborMatchFunc = (x: number, y: number, dir: Loc$1) => boolean;
+declare function matchingNeighbor(x: number, y: number, matchFn: NeighborMatchFunc, only4dirs?: boolean): Loc$1;
 declare function straightDistanceBetween(x1: number, y1: number, x2: number, y2: number): number;
-declare function maxAxisFromTo(a: XY | Loc$2, b: XY | Loc$2): number;
+declare function maxAxisFromTo(a: XY | Loc$1, b: XY | Loc$1): number;
 declare function maxAxisBetween(x1: number, y1: number, x2: number, y2: number): number;
 declare function distanceBetween(x1: number, y1: number, x2: number, y2: number): number;
-declare function distanceFromTo(a: XY | Loc$2, b: XY | Loc$2): number;
+declare function distanceFromTo(a: XY | Loc$1, b: XY | Loc$1): number;
 declare function calcRadius(x: number, y: number): number;
-declare function dirBetween(x: number, y: number, toX: number, toY: number): Loc$2;
-declare function dirFromTo(a: XY | Loc$2, b: XY | Loc$2): Loc$2;
-declare function dirIndex(dir: XY | Loc$2): number;
-declare function isOppositeDir(a: Loc$2, b: Loc$2): boolean;
-declare function isSameDir(a: Loc$2, b: Loc$2): boolean;
-declare function dirSpread(dir: Loc$2): [Loc$2, Loc$2, Loc$2];
-declare function stepFromTo(a: XY | Loc$2, b: XY | Loc$2, fn: (x: number, y: number) => any): void;
-declare function forLine(x: number, y: number, dir: Loc$2, length: number, fn: (x: number, y: number) => any): void;
+declare function dirBetween(x: number, y: number, toX: number, toY: number): Loc$1;
+declare function dirFromTo(a: XY | Loc$1, b: XY | Loc$1): Loc$1;
+declare function dirIndex(dir: XY | Loc$1): number;
+declare function isOppositeDir(a: Loc$1, b: Loc$1): boolean;
+declare function isSameDir(a: Loc$1, b: Loc$1): boolean;
+declare function dirSpread(dir: Loc$1): [Loc$1, Loc$1, Loc$1];
+declare function stepFromTo(a: XY | Loc$1, b: XY | Loc$1, fn: (x: number, y: number) => any): void;
+declare function forLine(x: number, y: number, dir: Loc$1, length: number, fn: (x: number, y: number) => any): void;
 declare function forLineBetween(fromX: number, fromY: number, toX: number, toY: number, stepFn: (x: number, y: number) => boolean | void): boolean;
-declare function forLineFromTo(a: XY | Loc$2, b: XY | Loc$2, stepFn: (x: number, y: number) => boolean | void): boolean;
-declare function getLine(fromX: number, fromY: number, toX: number, toY: number): Loc$2[];
-declare function getLineThru(fromX: number, fromY: number, toX: number, toY: number, width: number, height: number): Loc$2[];
+declare function forLineFromTo(a: XY | Loc$1, b: XY | Loc$1, stepFn: (x: number, y: number) => boolean | void): boolean;
+declare function getLine(fromX: number, fromY: number, toX: number, toY: number): Loc$1[];
+declare function getLineThru(fromX: number, fromY: number, toX: number, toY: number, width: number, height: number): Loc$1[];
 declare function forCircle(x: number, y: number, radius: number, fn: XYFunc): void;
 declare function forRect(width: number, height: number, fn: XYFunc): void;
 declare function forRect(x: number, y: number, width: number, height: number, fn: XYFunc): void;
+declare function dumpRect(left: number, top: number, width: number, height: number, fmtFn: (x: number, y: number) => string, log?: {
+    (...data: any[]): void;
+    (message?: any, ...optionalParams: any[]): void;
+}): void;
+declare function dumpAround(x: number, y: number, radius: number, fmtFn: (x: number, y: number) => string, log?: {
+    (...data: any[]): void;
+    (message?: any, ...optionalParams: any[]): void;
+}): void;
 declare function forBorder(width: number, height: number, fn: XYFunc): void;
 declare function forBorder(x: number, y: number, width: number, height: number, fn: XYFunc): void;
 declare function arcCount(x: number, y: number, testFn: XYMatchFunc): number;
-declare function closestMatchingLocs(x: number, y: number, matchFn: XYMatchFunc): Loc$2[] | null;
+declare function closestMatchingLocs(x: number, y: number, matchFn: XYMatchFunc): Loc$1[] | null;
 
 type xy_d_XY = XY;
 type xy_d_Size = Size;
+type xy_d_Pos = Pos;
 declare const xy_d_DIRS: typeof DIRS;
 declare const xy_d_NO_DIRECTION: typeof NO_DIRECTION;
 declare const xy_d_UP: typeof UP;
@@ -315,6 +329,8 @@ declare const xy_d_LEFT_UP: typeof LEFT_UP;
 declare const xy_d_CLOCK_DIRS: typeof CLOCK_DIRS;
 declare const xy_d_isLoc: typeof isLoc;
 declare const xy_d_isXY: typeof isXY;
+declare const xy_d_asLoc: typeof asLoc;
+declare const xy_d_asXY: typeof asXY;
 declare const xy_d_x: typeof x;
 declare const xy_d_y: typeof y;
 declare const xy_d_contains: typeof contains;
@@ -354,14 +370,17 @@ declare const xy_d_getLine: typeof getLine;
 declare const xy_d_getLineThru: typeof getLineThru;
 declare const xy_d_forCircle: typeof forCircle;
 declare const xy_d_forRect: typeof forRect;
+declare const xy_d_dumpRect: typeof dumpRect;
+declare const xy_d_dumpAround: typeof dumpAround;
 declare const xy_d_forBorder: typeof forBorder;
 declare const xy_d_arcCount: typeof arcCount;
 declare const xy_d_closestMatchingLocs: typeof closestMatchingLocs;
 declare namespace xy_d {
   export {
-    Loc$2 as Loc,
+    Loc$1 as Loc,
     xy_d_XY as XY,
     xy_d_Size as Size,
+    xy_d_Pos as Pos,
     xy_d_DIRS as DIRS,
     xy_d_NO_DIRECTION as NO_DIRECTION,
     xy_d_UP as UP,
@@ -375,6 +394,8 @@ declare namespace xy_d {
     xy_d_CLOCK_DIRS as CLOCK_DIRS,
     xy_d_isLoc as isLoc,
     xy_d_isXY as isXY,
+    xy_d_asLoc as asLoc,
+    xy_d_asXY as asXY,
     xy_d_x as x,
     xy_d_y as y,
     xy_d_contains as contains,
@@ -413,6 +434,8 @@ declare namespace xy_d {
     xy_d_getLineThru as getLineThru,
     xy_d_forCircle as forCircle,
     xy_d_forRect as forRect,
+    xy_d_dumpRect as dumpRect,
+    xy_d_dumpAround as dumpAround,
     xy_d_forBorder as forBorder,
     xy_d_arcCount as arcCount,
     xy_d_closestMatchingLocs as closestMatchingLocs,
@@ -500,21 +523,22 @@ declare const getValue: {
     (object: null | undefined, path: lodash.PropertyPath): undefined;
     (object: any, path: lodash.PropertyPath, defaultValue?: any): any;
 };
-declare type AnyObj$1 = Record<string, any>;
-declare function copyObject(dest: AnyObj$1, src: AnyObj$1): AnyObj$1;
-declare function assignObject(dest: AnyObj$1, src: AnyObj$1): AnyObj$1;
-declare function assignOmitting(omit: string | string[], dest: AnyObj$1, src: AnyObj$1): AnyObj$1;
-declare function setDefault(obj: AnyObj$1, field: string, val: any): void;
-declare type AssignCallback = (dest: AnyObj$1, key: string, current: any, def: any) => boolean;
-declare function setDefaults(obj: AnyObj$1, def: AnyObj$1 | null | undefined, custom?: AssignCallback | null): void;
-declare function setOptions(obj: AnyObj$1, opts: AnyObj$1 | null | undefined): void;
-declare function kindDefaults(obj: AnyObj$1, def: AnyObj$1 | null | undefined): void;
-declare function pick(obj: AnyObj$1, ...fields: string[]): any;
-declare function clearObject(obj: AnyObj$1): void;
-declare function getOpt(obj: AnyObj$1, member: string, _default: any): any;
+declare type AnyObj = Record<string, any>;
+declare function copyObject(dest: AnyObj, src: AnyObj): AnyObj;
+declare function assignObject(dest: AnyObj, src: AnyObj): AnyObj;
+declare function assignOmitting(omit: string | string[], dest: AnyObj, src: AnyObj): AnyObj;
+declare function setDefault(obj: AnyObj, field: string, val: any): void;
+declare type AssignCallback = (dest: AnyObj, key: string, current: any, def: any) => boolean;
+declare function setDefaults(obj: AnyObj, def: AnyObj | null | undefined, custom?: AssignCallback | null): void;
+declare function setOptions(obj: AnyObj, opts: AnyObj | null | undefined): void;
+declare function kindDefaults(obj: AnyObj, def: AnyObj | null | undefined): void;
+declare function pick(obj: AnyObj, ...fields: string[]): any;
+declare function clearObject(obj: AnyObj): void;
+declare function getOpt(obj: AnyObj, member: string, _default: any): any;
 declare function firstOpt(field: string, ...args: any[]): any;
 
 declare const object_d_getValue: typeof getValue;
+type object_d_AnyObj = AnyObj;
 declare const object_d_copyObject: typeof copyObject;
 declare const object_d_assignObject: typeof assignObject;
 declare const object_d_assignOmitting: typeof assignOmitting;
@@ -530,7 +554,7 @@ declare const object_d_firstOpt: typeof firstOpt;
 declare namespace object_d {
   export {
     object_d_getValue as getValue,
-    AnyObj$1 as AnyObj,
+    object_d_AnyObj as AnyObj,
     object_d_copyObject as copyObject,
     object_d_assignObject as assignObject,
     object_d_assignOmitting as assignOmitting,
@@ -584,8 +608,8 @@ declare class Random {
     sequence(n: number): any[];
     chance(percent: number, outOf?: number): boolean;
     clumped(lo: number, hi: number, clumps: number): number;
-    matchingLoc(width: number, height: number, matchFn: XYMatchFunc): Loc$2;
-    matchingLocNear(x: number, y: number, matchFn: XYMatchFunc): Loc$2;
+    matchingLoc(width: number, height: number, matchFn: XYMatchFunc): Loc$1;
+    matchingLocNear(x: number, y: number, matchFn: XYMatchFunc): Loc$1;
 }
 declare const random: Random;
 declare const cosmetic: Random;
@@ -697,7 +721,7 @@ declare namespace flag_d {
   };
 }
 
-declare type Loc$1 = Loc$2;
+declare type Loc = Loc$1;
 declare type ArrayInit<T> = (i: number) => T;
 declare function makeArray<T>(l: number, fn?: T | ArrayInit<T>): Array<T>;
 declare type GridInit<T> = (x: number, y: number, grid: Grid<T>) => T;
@@ -777,7 +801,7 @@ declare class Grid<T> extends Array<Array<T>> {
      */
      // @ts-ignore
 
-    find(match: GridMatch<T> | T): Loc$2 | null;
+    find(match: GridMatch<T> | T): Loc$1 | null;
     dump(fmtFn?: GridFormat<T>, log?: {
         (...data: any[]): void;
         (message?: any, ...optionalParams: any[]): void;
@@ -790,10 +814,10 @@ declare class Grid<T> extends Array<Array<T>> {
         (...data: any[]): void;
         (message?: any, ...optionalParams: any[]): void;
     }): void;
-    closestMatchingLoc(x: number, y: number, v: T | GridMatch<T>): Loc$1;
-    firstMatchingLoc(v: T | GridMatch<T>): Loc$1;
-    randomMatchingLoc(v: T | GridMatch<T>): Loc$1;
-    matchingLocNear(x: number, y: number, v: T | GridMatch<T>): Loc$1;
+    closestMatchingLoc(x: number, y: number, v: T | GridMatch<T>): Loc;
+    firstMatchingLoc(v: T | GridMatch<T>): Loc;
+    randomMatchingLoc(v: T | GridMatch<T>): Loc;
+    matchingLocNear(x: number, y: number, v: T | GridMatch<T>): Loc;
     arcCount(x: number, y: number, testFn: GridMatch<T>): number;
 }
 declare const stats: {
@@ -815,7 +839,7 @@ declare class NumGrid extends Grid<number> {
     floodFillRange(x: number, y: number, eligibleValueMin: number, eligibleValueMax: number, fillValue: number): number;
     invert(): void;
     leastPositiveValue(): number;
-    randomLeastPositiveLoc(): Loc$1;
+    randomLeastPositiveLoc(): Loc;
     valueBounds(value: number, bounds?: Bounds): Bounds;
     floodFill(x: number, y: number, matchValue: number | GridMatch<number>, fillValue: number | GridUpdate<number>): number;
 }
@@ -1314,10 +1338,6 @@ declare namespace index_d$7 {
   };
 }
 
-declare type Loc = XY | Loc$2;
-declare type CostFn = (x: number, y: number) => number;
-declare function fromTo(from: Loc, to: Loc, costFn?: CostFn, only4dirs?: boolean): Loc$2[];
-
 declare type SimpleCostFn = (x: number, y: number) => number;
 declare type UpdateFn = (value: number, x: number, y: number) => number;
 declare type EachFn = (value: number, x: number, y: number) => void;
@@ -1336,7 +1356,6 @@ interface Item {
 declare class DijkstraMap {
     _data: Item[];
     _todo: Item;
-    _maxDistance: number;
     _width: number;
     _height: number;
     constructor();
@@ -1346,30 +1365,43 @@ declare class DijkstraMap {
     copy(other: DijkstraMap): void;
     hasXY(x: number, y: number): boolean;
     reset(width: number, height: number, distance?: number): void;
-    _get(loc: Loc): Item;
+    _get(pos: Pos): Item;
     _get(x: number, y: number): Item;
-    setGoal(xy: Loc, cost?: number): void;
+    setGoal(pos: Pos, cost?: number): void;
     setGoal(x: number, y: number, cost?: number): void;
-    _add(x: number, y: number, distance: number): boolean;
+    _add(x: number, y: number, distance: number, cost: number): boolean;
     _insert(item: Item): boolean;
-    calculate(costFn: SimpleCostFn, only4dirs?: boolean, maxDistance?: number): void;
-    rescan(costFn: SimpleCostFn, only4dirs?: boolean, maxDistance?: number): void;
+    calculate(costFn: SimpleCostFn, only4dirs?: boolean): void;
+    rescan(costFn: SimpleCostFn, only4dirs?: boolean): void;
     getDistance(x: number, y: number): number;
-    nextDir(fromX: number, fromY: number, isBlocked: XYMatchFunc, only4dirs?: boolean): Loc$2 | null;
-    getPath(fromX: number, fromY: number, isBlocked: XYMatchFunc, only4dirs?: boolean): Loc$2[] | null;
+    setDistance(x: number, y: number, distance: number): void;
+    addObstacle(x: number, y: number, costFn: SimpleCostFn, radius: number, penalty?: number): void;
+    nextDir(fromX: number, fromY: number, isBlocked: XYMatchFunc, only4dirs?: boolean): Loc$1 | null;
+    getPath(fromX: number, fromY: number, isBlocked: XYMatchFunc, only4dirs?: boolean): Loc$1[] | null;
     forPath(fromX: number, fromY: number, isBlocked: XYMatchFunc, pathFn: XYFunc, only4dirs?: boolean): number;
     update(fn: UpdateFn): void;
     add(other: DijkstraMap): void;
     forEach(fn: EachFn): void;
-    dump(log?: {
+    dump(fmtFn?: (v: number) => string, log?: {
+        (...data: any[]): void;
+        (message?: any, ...optionalParams: any[]): void;
+    }): void;
+    dumpRect(left: number, top: number, width: number, height: number, fmtFn?: (v: number) => string, log?: {
+        (...data: any[]): void;
+        (message?: any, ...optionalParams: any[]): void;
+    }): void;
+    dumpAround(x: number, y: number, radius: number, fmtFn?: (v: number) => string, log?: {
         (...data: any[]): void;
         (message?: any, ...optionalParams: any[]): void;
     }): void;
     _dumpTodo(): string[];
 }
-declare function computeDistances(grid: NumGrid, from: Loc, costFn?: SimpleCostFn, only4dirs?: boolean): void;
+declare function computeDistances(grid: NumGrid, from: Pos, costFn?: SimpleCostFn, only4dirs?: boolean): void;
 declare function alloc(): DijkstraMap;
 declare function free(map: DijkstraMap): void;
+
+declare type CostFn = (x: number, y: number) => number;
+declare function fromTo(from: Pos, to: Pos, costFn?: CostFn, only4dirs?: boolean): Loc$1[];
 
 type index_d$6_SimpleCostFn = SimpleCostFn;
 type index_d$6_UpdateFn = UpdateFn;
@@ -1384,7 +1416,6 @@ declare const index_d$6_DijkstraMap: typeof DijkstraMap;
 declare const index_d$6_computeDistances: typeof computeDistances;
 declare const index_d$6_alloc: typeof alloc;
 declare const index_d$6_free: typeof free;
-type index_d$6_Loc = Loc;
 type index_d$6_CostFn = CostFn;
 declare const index_d$6_fromTo: typeof fromTo;
 declare namespace index_d$6 {
@@ -1401,7 +1432,6 @@ declare namespace index_d$6 {
     index_d$6_computeDistances as computeDistances,
     index_d$6_alloc as alloc,
     index_d$6_free as free,
-    index_d$6_Loc as Loc,
     index_d$6_CostFn as CostFn,
     index_d$6_fromTo as fromTo,
   };
@@ -1794,9 +1824,8 @@ declare class Loop {
     stop(): void;
 }
 
-declare type AnyObj = Record<string, any>;
-declare type TweenCb = (obj: AnyObj, dt: number) => any;
-declare type TweenFinishCb = (obj: AnyObj, success: boolean) => any;
+declare type TweenCb<T> = (obj: T, dt: number) => any;
+declare type TweenFinishCb<T> = (obj: T, success: boolean) => any;
 declare type EasingFn = (v: number) => number;
 declare type InterpolateFn = (start: any, goal: any, pct: number) => any;
 declare class BaseObj<T extends {
@@ -1812,8 +1841,12 @@ declare class BaseObj<T extends {
     removeChild(t: T): this;
     update(dt: number): void;
 }
-declare class Tween extends BaseObj<Tween> {
-    _obj: AnyObj;
+interface TweenUpdate {
+    isRunning(): boolean;
+    update(dt: number): void;
+}
+declare class Tween<T> extends BaseObj<Tween<T>> implements TweenUpdate {
+    _obj: T;
     _repeat: number;
     _count: number;
     _from: boolean;
@@ -1823,18 +1856,18 @@ declare class Tween extends BaseObj<Tween> {
     _yoyo: boolean;
     _time: number;
     _startTime: number;
-    _goal: AnyObj;
-    _start: AnyObj;
+    _goal: Partial<T>;
+    _start: Partial<T>;
     _easing: EasingFn;
     _interpolate: InterpolateFn;
-    constructor(src: AnyObj);
+    constructor(src: T);
     isRunning(): boolean;
-    onStart(cb: TweenCb): this;
-    onUpdate(cb: TweenCb): this;
-    onRepeat(cb: TweenCb): this;
-    onFinish(cb: TweenFinishCb): this;
-    to(goal: AnyObj, duration?: number): this;
-    from(start: AnyObj, duration?: number): this;
+    onStart(cb: TweenCb<T>): this;
+    onUpdate(cb: TweenCb<T>): this;
+    onRepeat(cb: TweenCb<T>): this;
+    onFinish(cb: TweenFinishCb<T>): this;
+    to(goal: Partial<T>, duration?: number): this;
+    from(start: Partial<T>, duration?: number): this;
     duration(): number;
     duration(v: number): this;
     repeat(): number;
@@ -1846,38 +1879,38 @@ declare class Tween extends BaseObj<Tween> {
     yoyo(): boolean;
     yoyo(v: boolean): this;
     start(animator?: {
-        add: (tween: Tween) => void;
+        add: (tween: Tween<T>) => void;
     }): this;
     update(dt: number): void;
     _restart(): void;
     stop(success?: boolean): void;
-    _updateProperties(obj: AnyObj, start: AnyObj, goal: AnyObj, pct: number): boolean;
+    _updateProperties(obj: T, start: Partial<T>, goal: Partial<T>, pct: number): boolean;
 }
-declare function make$6(src: AnyObj, duration?: number): Tween;
+declare function make$6<T>(src: T, duration?: number): Tween<T>;
 declare function linear(pct: number): number;
 declare function interpolate(start: any, goal: any, pct: number): any;
 
-type tween_d_AnyObj = AnyObj;
-type tween_d_TweenCb = TweenCb;
-type tween_d_TweenFinishCb = TweenFinishCb;
+type tween_d_TweenCb<T> = TweenCb<T>;
+type tween_d_TweenFinishCb<T> = TweenFinishCb<T>;
 type tween_d_EasingFn = EasingFn;
 type tween_d_InterpolateFn = InterpolateFn;
 type tween_d_BaseObj<T extends {
     update(t: number): void;
 }> = BaseObj<T>;
 declare const tween_d_BaseObj: typeof BaseObj;
-type tween_d_Tween = Tween;
+type tween_d_TweenUpdate = TweenUpdate;
+type tween_d_Tween<T> = Tween<T>;
 declare const tween_d_Tween: typeof Tween;
 declare const tween_d_linear: typeof linear;
 declare const tween_d_interpolate: typeof interpolate;
 declare namespace tween_d {
   export {
-    tween_d_AnyObj as AnyObj,
     tween_d_TweenCb as TweenCb,
     tween_d_TweenFinishCb as TweenFinishCb,
     tween_d_EasingFn as EasingFn,
     tween_d_InterpolateFn as InterpolateFn,
     tween_d_BaseObj as BaseObj,
+    tween_d_TweenUpdate as TweenUpdate,
     tween_d_Tween as Tween,
     make$6 as make,
     tween_d_linear as linear,
@@ -1886,12 +1919,12 @@ declare namespace tween_d {
 }
 
 declare class Tweens {
-    _tweens: Tween[];
+    _tweens: TweenUpdate[];
     constructor();
     get length(): number;
     clear(): void;
-    add(tween: Tween): void;
-    remove(tween: Tween): void;
+    add(tween: TweenUpdate): void;
+    remove(tween: TweenUpdate): void;
     update(dt: number): void;
 }
 
@@ -2447,7 +2480,7 @@ declare class Scene {
     fadeToggle(widget: Widget, ms: number): this;
     slideIn(widget: Widget, x: number, y: number, from: 'left' | 'top' | 'right' | 'bottom', ms: number): this;
     slideOut(widget: Widget, dir: 'left' | 'top' | 'right' | 'bottom', ms: number): this;
-    slide(widget: Widget, from: XY | Loc$2, to: XY | Loc$2, ms: number): this;
+    slide(widget: Widget, from: XY | Loc$1, to: XY | Loc$1, ms: number): this;
     get(id: string): Widget | null;
     _attach(widget: Widget): void;
     _detach(widget: Widget): void;
@@ -2642,7 +2675,7 @@ declare class Event implements EventType {
     ctrlKey: boolean;
     altKey: boolean;
     metaKey: boolean;
-    dir: Loc$2 | null;
+    dir: Loc$1 | null;
     x: number;
     y: number;
     clientX: number;
@@ -2674,7 +2707,7 @@ declare function makeStopEvent(): Event;
 declare function makeCustomEvent(type: string, opts?: Partial<Event>): Event;
 declare function makeTickEvent(dt: number): Event;
 declare function makeKeyEvent(e: KeyboardEvent): Event;
-declare function keyCodeDirection(key: string): Loc$2 | null;
+declare function keyCodeDirection(key: string): Loc$1 | null;
 declare function ignoreKeyEvent(e: KeyboardEvent): boolean;
 declare function makeMouseEvent(e: MouseEvent, x: number, y: number): Event;
 declare class Queue {
