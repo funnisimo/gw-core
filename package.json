@@ -28,7 +28,8 @@
     "scripts": {
         "copy": "cp dist/gw-utils.js* docs/js",
         "fixTypes": "replace '\\*\\W+TSIGNORE\\W*(\n)(\\W*)(\\*\\/)' '$3$1$2// @ts-ignore$1' dist/gw-utils.d.ts",
-        "build": "rollup -c && npm run fixTypes",
+        "compile": "rollup -c",
+        "build": "npm run compile && npm run fixTypes && npm run copy",
         "serve": "cd docs && http-server -p 8080",
         "test": "jest",
         "coverage": "jest --coverage",
