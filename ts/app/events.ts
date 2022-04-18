@@ -32,7 +32,20 @@ export class Events {
         return events.some((e) => e && e.fn);
     }
 
-    on(ev: string | string[], fn: CallbackFn): CancelFn {
+    // TODO - Move this to overload of 'on'
+    on(cfg: CallbackObj): CancelFn;
+    on(ev: string | string[], fn: CallbackFn): CancelFn;
+    on(...args: any[]) {
+        if (args.length === 1) {
+            const cancel = Object.entries(
+                args[0] as CallbackObj
+            ).map(([ev, cb]) => this.on(ev, cb));
+            return () => cancel.forEach((c) => c());
+        }
+
+        const ev = args[0];
+        const fn = args[1];
+
         if (Array.isArray(ev)) {
             const cleanup = ev.map((e) => this.on(e, fn));
             return () => {
@@ -116,12 +129,6 @@ export class Events {
         if (!this.onUnhandled) return false;
         this.onUnhandled(ev, ...args);
         return true;
-    }
-
-    // TODO - Move this to overload of 'on'
-    load(cfg: CallbackObj): CancelFn {
-        const cancel = Object.entries(cfg).map(([ev, cb]) => this.on(ev, cb));
-        return () => cancel.forEach((c) => c());
     }
 
     clear() {

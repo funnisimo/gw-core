@@ -544,18 +544,19 @@ export class Scene {
     }
 
     // EVENTS
-
-    on(ev: string, cb: EVENTS.CallbackFn): EVENTS.CancelFn {
-        return this.events.on(ev, cb);
+    on(cfg: EVENTS.CallbackObj): EVENTS.CancelFn;
+    on(ev: string | string[], cb: EVENTS.CallbackFn): EVENTS.CancelFn;
+    on(...args: any[]): EVENTS.CancelFn {
+        if (args.length === 1) {
+            return this.events.on(args[0]);
+        }
+        return this.events.on(args[0], args[1]);
     }
     once(ev: string, cb: EVENTS.CallbackFn): EVENTS.CancelFn {
         return this.events.once(ev, cb);
     }
     trigger(ev: string | string[], ...args: any[]) {
         return this.events.trigger(ev, ...args);
-    }
-    load(cfg: EVENTS.CallbackObj): EVENTS.CancelFn {
-        return this.events.load(cfg);
     }
 
     // TIMERS

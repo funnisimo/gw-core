@@ -1369,13 +1369,12 @@ declare class DijkstraMap {
     _get(x: number, y: number): Item;
     setGoal(pos: Pos, cost?: number): void;
     setGoal(x: number, y: number, cost?: number): void;
+    setDistance(x: number, y: number, distance: number): void;
     _add(x: number, y: number, distance: number, cost: number): boolean;
     _insert(item: Item): boolean;
     calculate(costFn: SimpleCostFn, only4dirs?: boolean): void;
     rescan(costFn: SimpleCostFn, only4dirs?: boolean): void;
     getDistance(x: number, y: number): number;
-    setDistance(x: number, y: number, distance: number): void;
-    addObstacle(x: number, y: number, costFn: SimpleCostFn, radius: number, penalty?: number): void;
     nextDir(fromX: number, fromY: number, isBlocked: XYMatchFunc, only4dirs?: boolean): Loc$1 | null;
     getPath(fromX: number, fromY: number, isBlocked: XYMatchFunc, only4dirs?: boolean): Loc$1[] | null;
     forPath(fromX: number, fromY: number, isBlocked: XYMatchFunc, pathFn: XYFunc, only4dirs?: boolean): number;
@@ -1659,12 +1658,12 @@ declare class Events {
     onUnhandled: UnhandledFn | null;
     constructor(ctx?: any);
     has(name: string): boolean;
+    on(cfg: CallbackObj): CancelFn;
     on(ev: string | string[], fn: CallbackFn): CancelFn;
     once(ev: string | string[], fn: CallbackFn): CancelFn;
     off(ev: string | string[], cb?: CallbackFn): void;
     trigger(ev: string | string[], ...args: any[]): boolean;
     _unhandled(ev: string, args: any[]): boolean;
-    load(cfg: CallbackObj): CancelFn;
     clear(): void;
     restart(): void;
 }
@@ -2493,10 +2492,10 @@ declare class Scene {
     setFocusWidget(w: Widget | null, reverse?: boolean): void;
     nextTabStop(): boolean;
     prevTabStop(): boolean;
-    on(ev: string, cb: CallbackFn): CancelFn;
+    on(cfg: CallbackObj): CancelFn;
+    on(ev: string | string[], cb: CallbackFn): CancelFn;
     once(ev: string, cb: CallbackFn): CancelFn;
     trigger(ev: string | string[], ...args: any[]): boolean;
-    load(cfg: CallbackObj): CancelFn;
     wait(delay: number, fn: TimerFn): CancelFn;
     wait(delay: number, fn: string, ctx?: Record<string, any>): CancelFn;
     repeat(delay: number, fn: TimerFn): CancelFn;

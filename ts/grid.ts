@@ -370,8 +370,8 @@ export class Grid<T> extends Array<Array<T>> {
         this.dumpRect(
             x - radius,
             y - radius,
-            2 * radius,
-            2 * radius,
+            2 * radius + 1,
+            2 * radius + 1,
             fmtFn,
             log
         );

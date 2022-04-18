@@ -640,9 +640,9 @@ export function dumpRect(
 
     let output = [];
 
-    for (j = top; j <= bottom; j++) {
+    for (j = top; j < bottom; j++) {
         let line = ('' + j + ']').padStart(3, ' ');
-        for (i = left; i <= right; i++) {
+        for (i = left; i < right; i++) {
             if (i % 10 == 0) {
                 line += ' ';
             }
@@ -661,7 +661,14 @@ export function dumpAround(
     fmtFn: (x: number, y: number) => string,
     log = console.log
 ) {
-    dumpRect(x - radius, y - radius, 2 * radius, 2 * radius, fmtFn, log);
+    dumpRect(
+        x - radius,
+        y - radius,
+        2 * radius + 1,
+        2 * radius + 1,
+        fmtFn,
+        log
+    );
 }
 
 export function forBorder(width: number, height: number, fn: XYFunc): void;
