@@ -1375,6 +1375,7 @@ declare class DijkstraMap {
     calculate(costFn: SimpleCostFn, only4dirs?: boolean): void;
     rescan(costFn: SimpleCostFn, only4dirs?: boolean): void;
     getDistance(x: number, y: number): number;
+    addObstacle(x: number, y: number, costFn: SimpleCostFn, radius: number, penalty?: number): void;
     nextDir(fromX: number, fromY: number, isBlocked: XYMatchFunc, only4dirs?: boolean): Loc$1 | null;
     getPath(fromX: number, fromY: number, isBlocked: XYMatchFunc, only4dirs?: boolean): Loc$1[] | null;
     forPath(fromX: number, fromY: number, isBlocked: XYMatchFunc, pathFn: XYFunc, only4dirs?: boolean): number;
