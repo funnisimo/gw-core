@@ -96,7 +96,7 @@ export class App {
         this.buffer = new Buffer(this.canvas.width, this.canvas.height);
 
         if (opts.scenes) {
-            this.scenes.load(opts.scenes);
+            this.scenes.config(opts.scenes);
             if (typeof opts.start === 'string') {
                 this.scenes.start(opts.start);
             } else {
@@ -104,7 +104,7 @@ export class App {
             }
         } else if (opts.scene) {
             if (opts.scene === true) opts.scene = {};
-            this.scenes.add('default', opts.scene);
+            this.scenes.config('default', opts.scene);
             this.scenes.start('default');
             // } else {
             //     this.scenes.install('default', { bg: COLOR.colors.NONE }); // NONE just in case you draw directly on app.buffer

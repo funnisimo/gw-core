@@ -158,9 +158,9 @@ export class Scene {
 
     _start(opts: StartOpts = {}) {
         this.stopped = false;
-        this.timers.restart();
-        this.events.restart();
-        this.tweens.clear();
+        // this.timers.restart();
+        // this.events.restart();
+        // this.tweens.clear();
         this.buffer.nullify();
         this.needsDraw = true;
         this.events.trigger('start', opts); // this will start this one in the app.scenes obj

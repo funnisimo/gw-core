@@ -2098,19 +2098,17 @@ interface PendingInfo {
 declare class Scenes {
     _app: App;
     _config: Record<string, CreateOpts>;
-    _scenes: Record<string, Scene>;
     _active: Scene[];
     _busy: boolean;
     _pending: PendingInfo[];
     constructor(gw: App);
     get isBusy(): boolean;
-    add(id: string, opts: CreateOpts | SceneMakeFn): void;
-    load(scenes: Record<string, CreateOpts | SceneMakeFn>): void;
+    config(scenes: Record<string, CreateOpts | SceneMakeFn>): void;
+    config(id: string, opts: CreateOpts | SceneMakeFn): void;
     get(): Scene;
     get(id?: string): Scene | null;
     trigger(ev: string, ...args: any[]): void;
     _create(id: string, opts?: CreateOpts): Scene;
-    create(id: string, data?: CreateOpts): Scene;
     start(id: string, data?: StartOpts): Scene;
     run(id: string, data?: StartOpts): Scene;
     _start(scene: Scene): void;
