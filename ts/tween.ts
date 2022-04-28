@@ -71,6 +71,7 @@ export class Tween<T> extends BaseObj<Tween<T>> implements TweenUpdate {
 
     _goal: Partial<T> = {};
     _start: Partial<T> = {};
+    _success = true;
 
     // _startCb: TweenCb | null = null;
     // _updateCb: TweenCb | null = null;
@@ -168,6 +169,7 @@ export class Tween<T> extends BaseObj<Tween<T>> implements TweenUpdate {
     }
 
     start(animator?: { add: (tween: Tween<T>) => void }): this {
+        this._success = true;
         if (this._time > 0) {
             this._time = 0;
             this._startTime = this._delay;
@@ -240,7 +242,7 @@ export class Tween<T> extends BaseObj<Tween<T>> implements TweenUpdate {
                     this._restart();
                 }
             } else if (!this.isRunning()) {
-                this.stop(true);
+                this.trigger('stop', this._obj, this._success);
             }
         }
     }
@@ -266,9 +268,9 @@ export class Tween<T> extends BaseObj<Tween<T>> implements TweenUpdate {
     // }
 
     stop(success = false): void {
+        this._success = success;
         this._time = Number.MAX_SAFE_INTEGER;
-        // if (this._finishCb) this._finishCb.call(this, this._obj, 1);
-        this.trigger('stop', this._obj, success);
+        this.children.forEach((c) => c.stop(success));
     }
 
     _updateProperties(

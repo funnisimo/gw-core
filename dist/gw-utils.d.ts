@@ -1657,7 +1657,7 @@ declare class Events {
     _events: Record<string, (CallbackInfo | null)[]>;
     _ctx: any;
     onUnhandled: UnhandledFn | null;
-    constructor(ctx?: any);
+    constructor(ctx?: any, events?: CallbackObj);
     has(name: string): boolean;
     on(cfg: CallbackObj): CancelFn;
     on(ev: string | string[], fn: CallbackFn): CancelFn;
@@ -1858,6 +1858,7 @@ declare class Tween<T> extends BaseObj<Tween<T>> implements TweenUpdate {
     _startTime: number;
     _goal: Partial<T>;
     _start: Partial<T>;
+    _success: boolean;
     _easing: EasingFn;
     _interpolate: InterpolateFn;
     constructor(src: T);

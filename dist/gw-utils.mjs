@@ -9564,10 +9564,13 @@ var index$3 = /*#__PURE__*/Object.freeze({
 
 // import * as IO from './io';
 class Events {
-    constructor(ctx) {
+    constructor(ctx, events) {
         this._events = {};
         this.onUnhandled = null;
         this._ctx = ctx;
+        if (events) {
+            this.on(events);
+        }
     }
     has(name) {
         const events = this._events[name];
@@ -9654,7 +9657,7 @@ class Events {
     _unhandled(ev, args) {
         if (!this.onUnhandled)
             return false;
-        this.onUnhandled(ev, ...args);
+        this.onUnhandled.call(this._ctx, ev, ...args);
         return true;
     }
     clear() {
@@ -9717,6 +9720,7 @@ class Tween extends BaseObj {
         this._startTime = 0;
         this._goal = {};
         this._start = {};
+        this._success = true;
         // _startCb: TweenCb | null = null;
         // _updateCb: TweenCb | null = null;
         // _repeatCb: TweenCb | null = null;
@@ -9791,6 +9795,7 @@ class Tween extends BaseObj {
         return this;
     }
     start(animator) {
+        this._success = true;
         if (this._time > 0) {
             this._time = 0;
             this._startTime = this._delay;
@@ -9845,7 +9850,7 @@ class Tween extends BaseObj {
                 }
             }
             else if (!this.isRunning()) {
-                this.stop(true);
+                this.trigger('stop', this._obj, this._success);
             }
         }
     }
@@ -9868,9 +9873,9 @@ class Tween extends BaseObj {
     //     return false;
     // }
     stop(success = false) {
+        this._success = success;
         this._time = Number.MAX_SAFE_INTEGER;
-        // if (this._finishCb) this._finishCb.call(this, this._obj, 1);
-        this.trigger('stop', this._obj, success);
+        this.children.forEach((c) => c.stop(success));
     }
     _updateProperties(obj, start, goal, pct) {
         let madeChange = false;

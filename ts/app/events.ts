@@ -22,8 +22,11 @@ export class Events {
 
     onUnhandled: UnhandledFn | null = null;
 
-    constructor(ctx?: any) {
+    constructor(ctx?: any, events?: CallbackObj) {
         this._ctx = ctx;
+        if (events) {
+            this.on(events);
+        }
     }
 
     has(name: string): boolean {
@@ -127,7 +130,7 @@ export class Events {
 
     _unhandled(ev: string, args: any[]): boolean {
         if (!this.onUnhandled) return false;
-        this.onUnhandled(ev, ...args);
+        this.onUnhandled.call(this._ctx, ev, ...args);
         return true;
     }
 
