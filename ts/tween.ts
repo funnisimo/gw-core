@@ -69,8 +69,8 @@ export class Tween<T> extends BaseObj<Tween<T>> implements TweenUpdate {
     _time = Number.MAX_SAFE_INTEGER;
     _startTime = 0;
 
-    _goal: Partial<T> = {};
-    _start: Partial<T> = {};
+    _goal: Partial<Record<keyof T, any>> = {};
+    _start: Partial<Record<keyof T, any>> = {};
     _success = true;
 
     // _startCb: TweenCb | null = null;
@@ -114,17 +114,54 @@ export class Tween<T> extends BaseObj<Tween<T>> implements TweenUpdate {
         return this;
     }
 
-    to(goal: Partial<T>, duration?: number): this {
-        this._goal = goal;
-        this._from = false;
-        if (duration !== undefined) this._duration = duration;
+    to(
+        goal: Partial<Record<keyof T, any>>,
+        dynamic?: boolean | Array<keyof T>
+    ): this {
+        if (dynamic) {
+            if (typeof dynamic === 'boolean') {
+                dynamic = Object.keys(goal) as Array<keyof T>;
+            }
+            this._goal = {};
+            dynamic.forEach((key) => {
+                this._goal[key] = () => goal[key];
+            });
+        } else {
+            this._goal = goal;
+        }
+        // this._from = false;
+
+        if (Object.keys(this._start).length == 0) {
+            Object.keys(this._goal).forEach((k) => {
+                this._start[k as keyof T] = this._obj[k as keyof T];
+            });
+        }
+
         return this;
     }
 
-    from(start: Partial<T>, duration?: number): this {
-        this._start = start;
-        this._from = true;
-        if (duration !== undefined) this._duration = duration;
+    from(
+        start: Partial<Record<keyof T, any>>,
+        dynamic?: boolean | Array<keyof T>
+    ): this {
+        if (dynamic) {
+            if (typeof dynamic === 'boolean') {
+                dynamic = Object.keys(start) as Array<keyof T>;
+            }
+            this._start = {};
+            dynamic.forEach((key) => {
+                this._start[key] = () => start[key];
+            });
+        } else {
+            this._start = start;
+        }
+
+        if (Object.keys(this._goal).length == 0) {
+            Object.keys(this._start).forEach((k) => {
+                this._goal[k as keyof T] = this._obj[k as keyof T];
+            });
+        }
+
         return this;
     }
 
@@ -174,22 +211,25 @@ export class Tween<T> extends BaseObj<Tween<T>> implements TweenUpdate {
             this._time = 0;
             this._startTime = this._delay;
             this._count = 0;
-            if (this._from) {
-                this._goal = {};
-                Object.keys(this._start).forEach(
-                    (key) =>
-                        (this._goal[key as keyof T] = this._obj[key as keyof T])
-                );
-                this._updateProperties(this._obj, this._start, this._goal, 0);
-            } else {
-                this._start = {};
-                Object.keys(this._goal).forEach(
-                    (key) =>
-                        (this._start[key as keyof T] = this._obj[
-                            key as keyof T
-                        ])
-                );
-            }
+
+            // if (this._from) {
+            // this._goal = {};
+            // Object.keys(this._start).forEach(
+            //     (key) =>
+            //         (this._goal[key as keyof T] = this._obj[key as keyof T])
+            // );
+            // } else {
+            // this._start = {};
+            // Object.keys(this._goal).forEach(
+            //     (key) =>
+            //         (this._start[key as keyof T] = this._obj[
+            //             key as keyof T
+            //         ])
+            // );
+            //     this._updateProperties(this._obj, this._start, this._goal, 0);
+            // }
+
+            this._updateProperties(this._obj, this._start, this._goal, 0);
         }
 
         if (animator) {
@@ -251,10 +291,12 @@ export class Tween<T> extends BaseObj<Tween<T>> implements TweenUpdate {
         ++this._count;
 
         // reset starting values
-        Object.entries(this._start).forEach(([key, value]) => {
-            // @ts-ignore
-            this._obj[key] = value;
-        });
+        // Object.entries(this._start).forEach(([key, value]) => {
+        //     // @ts-ignore
+        //     this._obj[key] = value;
+        // });
+        this._updateProperties(this._obj, this._start, this._goal, 0);
+
         if (this._count == 1) {
             this.trigger('start', this._obj, 0);
         } else {
@@ -281,8 +323,16 @@ export class Tween<T> extends BaseObj<Tween<T>> implements TweenUpdate {
     ): boolean {
         let madeChange = false;
         Object.entries(goal).forEach(([field, goalV]) => {
-            const currentV = obj[field as keyof T];
-            const startV = start[field as keyof T];
+            let currentV = obj[field as keyof T];
+            let startV = start[field as keyof T];
+
+            if (typeof startV === 'function') {
+                startV = startV.call(start);
+            }
+            if (typeof goalV === 'function') {
+                goalV = goalV.call(obj);
+            }
+
             const updatedV = this._interpolate(startV, goalV, pct);
             if (updatedV !== currentV) {
                 obj[field as keyof T] = updatedV;
@@ -297,14 +347,19 @@ export function make<T>(src: T, duration = 1000): Tween<T> {
     return new Tween(src).duration(duration);
 }
 
+export const move = make;
+
 export function linear(pct: number): number {
     return Utils.clamp(pct, 0, 1);
 }
 
 // TODO - string, bool, Color
 export function interpolate(start: any, goal: any, pct: number): any {
-    if (typeof start === 'boolean' || typeof goal === 'boolean') {
+    const startIsBinary = typeof start !== 'number';
+    const goalIsBinary = typeof goal !== 'number';
+    if (startIsBinary || goalIsBinary) {
         return Math.floor(pct) == 0 ? start : goal;
     }
+
     return Math.round((goal - start) * pct) + start;
 }

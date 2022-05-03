@@ -1856,8 +1856,8 @@ declare class Tween<T> extends BaseObj<Tween<T>> implements TweenUpdate {
     _yoyo: boolean;
     _time: number;
     _startTime: number;
-    _goal: Partial<T>;
-    _start: Partial<T>;
+    _goal: Partial<Record<keyof T, any>>;
+    _start: Partial<Record<keyof T, any>>;
     _success: boolean;
     _easing: EasingFn;
     _interpolate: InterpolateFn;
@@ -1867,8 +1867,8 @@ declare class Tween<T> extends BaseObj<Tween<T>> implements TweenUpdate {
     onUpdate(cb: TweenCb<T>): this;
     onRepeat(cb: TweenCb<T>): this;
     onFinish(cb: TweenFinishCb<T>): this;
-    to(goal: Partial<T>, duration?: number): this;
-    from(start: Partial<T>, duration?: number): this;
+    to(goal: Partial<Record<keyof T, any>>, dynamic?: boolean | Array<keyof T>): this;
+    from(start: Partial<Record<keyof T, any>>, dynamic?: boolean | Array<keyof T>): this;
     duration(): number;
     duration(v: number): this;
     repeat(): number;
@@ -1888,6 +1888,7 @@ declare class Tween<T> extends BaseObj<Tween<T>> implements TweenUpdate {
     _updateProperties(obj: T, start: Partial<T>, goal: Partial<T>, pct: number): boolean;
 }
 declare function make$6<T>(src: T, duration?: number): Tween<T>;
+declare const move: typeof make$6;
 declare function linear(pct: number): number;
 declare function interpolate(start: any, goal: any, pct: number): any;
 
@@ -1902,6 +1903,7 @@ declare const tween_BaseObj: typeof BaseObj;
 type tween_TweenUpdate = TweenUpdate;
 type tween_Tween<T> = Tween<T>;
 declare const tween_Tween: typeof Tween;
+declare const tween_move: typeof move;
 declare const tween_linear: typeof linear;
 declare const tween_interpolate: typeof interpolate;
 declare namespace tween {
@@ -1914,6 +1916,7 @@ declare namespace tween {
     tween_TweenUpdate as TweenUpdate,
     tween_Tween as Tween,
     make$6 as make,
+    tween_move as move,
     tween_linear as linear,
     tween_interpolate as interpolate,
   };

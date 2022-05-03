@@ -6,12 +6,10 @@ describe('Tween', () => {
         const obj = { x: 0, y: 0 };
         const startCb = jest.fn();
         const tween = Tween.make(obj)
-            .to(
-                {
-                    x: 10,
-                },
-                1000
-            )
+            .duration(1000)
+            .to({
+                x: 10,
+            })
             .onStart(startCb);
 
         expect(tween.isRunning()).toBeFalsy();
@@ -20,7 +18,37 @@ describe('Tween', () => {
         expect(startCb).not.toHaveBeenCalled();
     });
 
-    test(' finish', () => {
+    test('function for goal value', () => {
+        const fn = jest.fn().mockReturnValue(10);
+        const obj = { x: 0, y: 0 };
+        const tween = Tween.make(obj)
+            .duration(1000)
+            .to({
+                x: fn,
+            })
+            .start();
+
+        expect(tween.isRunning()).toBeTruthy();
+        while (tween.isRunning()) {
+            tween.update(100);
+        }
+        expect(obj.x).toEqual(10);
+    });
+
+    test('dynamic goal value', () => {
+        const goal = { x: 8 };
+        const obj = { x: 0, y: 0 };
+        const tween = Tween.make(obj).duration(1000).to(goal, true).start();
+
+        expect(tween.isRunning()).toBeTruthy();
+        while (tween.isRunning()) {
+            tween.update(100);
+            goal.x = 10;
+        }
+        expect(obj.x).toEqual(10);
+    });
+
+    test('finish', () => {
         const obj = { x: 0, y: 0 };
         const finishCb = jest.fn().mockResolvedValue(123);
         const tween = Tween.make(obj)
@@ -43,14 +71,14 @@ describe('Tween', () => {
         const tween = Tween.make(obj);
         expect(tween).toBeInstanceOf(Tween.Tween);
 
-        tween.to(
-            {
+        tween
+            .to({
                 x: 10,
-            },
-            1000
-        );
+            })
+            .duration(1000);
 
         expect(tween._goal.x).toEqual(10);
+        expect(tween._start.x).toEqual(0);
         expect(tween.duration()).toEqual(1000);
 
         expect(tween.isRunning()).toBeFalsy();
@@ -90,7 +118,7 @@ describe('Tween', () => {
 
     test('start twice', () => {
         const obj = { x: 0, y: 0 };
-        const tw = Tween.make(obj).to({ x: 10 }, 100);
+        const tw = Tween.make(obj).to({ x: 10 }).duration(100);
         tw.start();
 
         while (tw.isRunning()) {
@@ -115,12 +143,10 @@ describe('Tween', () => {
         expect(tween).toBeInstanceOf(Tween.Tween);
 
         tween
-            .to(
-                {
-                    x: 10,
-                },
-                1000
-            )
+            .to({
+                x: 10,
+            })
+            .duration(1000)
             .repeat(3);
 
         expect(tween.repeat()).toEqual(3);
@@ -153,12 +179,10 @@ describe('Tween', () => {
     test('delay', () => {
         const obj = { x: 0, y: 0 };
         const tween = Tween.make(obj)
-            .to(
-                {
-                    x: 10,
-                },
-                1000
-            )
+            .to({
+                x: 10,
+            })
+            .duration(1000)
             .delay(500);
 
         expect(tween.delay()).toEqual(500);
@@ -240,12 +264,11 @@ describe('Tween', () => {
 
     test('from', () => {
         const obj = { x: 0, y: 0 };
-        const tween = Tween.make(obj).from(
-            {
+        const tween = Tween.make(obj)
+            .from({
                 x: 10,
-            },
-            1000
-        );
+            })
+            .duration(1000);
         tween.start();
 
         expect(tween.isRunning()).toBeTruthy();

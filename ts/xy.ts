@@ -60,10 +60,12 @@ export function isXY(a: any): a is XY {
 }
 
 export function asLoc(v: Pos): Loc {
+    if (Array.isArray(v)) return v;
     return [x(v), y(v)];
 }
 
 export function asXY(v: Pos): XY {
+    if (!Array.isArray(v)) return v;
     return { x: x(v), y: y(v) };
 }
 
