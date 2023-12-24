@@ -121,6 +121,7 @@ export class Events {
         }
         // newer events first (especially for input)
         events.forEach((info) => {
+            // TODO - stopImmediatePropagation - how to check?
             info && info.fn.call(this._ctx, ...args);
         });
 

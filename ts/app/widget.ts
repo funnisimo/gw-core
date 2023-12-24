@@ -820,6 +820,10 @@ export class Widget {
         this.trigger('update', dt);
     }
 
+    fixed_update(dt: number) {
+        this.trigger('fixed_update', dt);
+    }
+
     destroy() {
         if (this.parent) {
             this.setParent(null);

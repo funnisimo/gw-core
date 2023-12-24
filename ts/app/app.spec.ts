@@ -47,4 +47,38 @@ describe('App', () => {
         app._draw();
         expect(TEST.getBufferText(app.buffer, 1, 1, 10, true)).toEqual('Test');
     });
+
+    test('basic Shift+Key', () => {
+        const e_fn = jest.fn();
+        const E_fn = jest.fn();
+        const keypress_fn = jest.fn();
+
+        app = APP.make({
+            canvas,
+            start: false,
+            scene: {
+                bg: 'blue',
+                on: {
+                    e: e_fn,
+                    E: E_fn,
+                    keypress: keypress_fn,
+                },
+            },
+        });
+
+        scene = app.scene;
+
+        app._input(TEST.keypress('E'));
+        expect(e_fn).not.toHaveBeenCalled();
+        expect(E_fn).toHaveBeenCalled();
+        expect(keypress_fn).toHaveBeenCalled(); // Always called unless you preventDefault()
+
+        E_fn.mockReset();
+        keypress_fn.mockReset();
+
+        app._input(TEST.keypress('e'));
+        expect(e_fn).toHaveBeenCalled();
+        expect(E_fn).not.toHaveBeenCalled();
+        expect(keypress_fn).toHaveBeenCalled(); // Always called unless you preventDefault()
+    });
 });

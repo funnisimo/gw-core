@@ -2127,6 +2127,7 @@ declare class Scenes {
     frameStart(): void;
     input(ev: Event): void;
     update(dt: number): void;
+    fixed_update(dt: number): void;
     draw(buffer: Buffer$1): void;
     frameDebug(buffer: Buffer$1): void;
     frameEnd(buffer: Buffer$1): void;
@@ -2341,6 +2342,7 @@ interface AppOpts {
     scene?: CreateOpts | boolean;
     scenes?: Record<string, CreateOpts>;
     loop?: Loop;
+    dt?: number;
     canvas?: Canvas;
     start?: boolean | string;
     data?: Record<string, any>;
@@ -2384,6 +2386,7 @@ declare class App {
     _frame(t?: number): void;
     _input(ev: Event): void;
     _update(dt?: number): void;
+    _fixed_update(dt?: number): void;
     _frameStart(): void;
     _draw(): void;
     _frameDebug(): void;
@@ -2472,6 +2475,7 @@ declare class Scene {
     frameStart(): void;
     input(e: Event): void;
     update(dt: number): void;
+    fixed_update(dt: number): void;
     draw(buffer: Buffer$1): void;
     _draw(buffer: Buffer$1): void;
     frameDebug(buffer: Buffer$1): void;
@@ -2648,6 +2652,7 @@ declare class Widget {
     _draw(buffer: Buffer$1): void;
     _drawFill(buffer: Buffer$1): void;
     update(dt: number): void;
+    fixed_update(dt: number): void;
     destroy(): void;
 }
 declare function alignChildren(widget: Widget, align?: Align): void;
@@ -2658,10 +2663,10 @@ interface EventType {
     type: string;
     defaultPrevented: boolean;
     propagationStopped: boolean;
-    immediatePropagationStopped: boolean;
+    doDefault(): void;
     preventDefault(): void;
+    propagate(): void;
     stopPropagation(): void;
-    stopImmediatePropagation(): void;
     reset(type: string, opts?: Record<string, any>): void;
     [key: string]: any;
 }
@@ -2670,7 +2675,6 @@ declare class Event implements EventType {
     target: Widget | null;
     defaultPrevented: boolean;
     propagationStopped: boolean;
-    immediatePropagationStopped: boolean;
     key: string;
     code: string;
     shiftKey: boolean;
@@ -2684,9 +2688,10 @@ declare class Event implements EventType {
     clientY: number;
     dt: number;
     constructor(type: string, opts?: Partial<Event>);
+    doDefault(): void;
     preventDefault(): void;
+    propagate(): void;
     stopPropagation(): void;
-    stopImmediatePropagation(): void;
     reset(type: string, opts?: Partial<Event>): void;
     clone(): Event;
     dispatch(handler: {

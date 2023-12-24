@@ -260,6 +260,15 @@ export class Scene {
         }
     }
 
+    fixed_update(dt: number) {
+        if (this.stopped) return;
+
+        if (!this.paused.update) {
+            this.events.trigger('fixed_update', dt);
+            this.all.forEach((c) => c.fixed_update(dt));
+        }
+    }
+
     draw(buffer: BUFFER.Buffer) {
         if (this.stopped) return;
         if (!this.paused.draw && this.needsDraw) {

@@ -10,11 +10,14 @@ export interface EventType {
 
     defaultPrevented: boolean;
     propagationStopped: boolean;
-    immediatePropagationStopped: boolean;
+    // immediatePropagationStopped: boolean;
 
+    doDefault(): void;
     preventDefault(): void;
+
+    propagate(): void;
     stopPropagation(): void;
-    stopImmediatePropagation(): void;
+    // stopImmediatePropagation(): void;
 
     reset(type: string, opts?: Record<string, any>): void;
 
@@ -28,7 +31,7 @@ export class Event implements EventType {
     // Used in UI
     defaultPrevented = false;
     propagationStopped = false;
-    immediatePropagationStopped = false;
+    // immediatePropagationStopped = false;
 
     // Key Event
     key = '';
@@ -54,22 +57,31 @@ export class Event implements EventType {
         this.reset(type, opts);
     }
 
+    doDefault() {
+        this.defaultPrevented = false;
+    }
+
     preventDefault() {
         this.defaultPrevented = true;
+    }
+
+    propagate() {
+        this.propagationStopped = false;
     }
 
     stopPropagation() {
         this.propagationStopped = true;
     }
 
-    stopImmediatePropagation() {
-        this.immediatePropagationStopped = true;
-    }
+    // stopImmediatePropagation() {
+    //     this.immediatePropagationStopped = true;
+    // }
 
     reset(type: string, opts?: Partial<Event>) {
         this.type = type;
         this.target = null;
         this.defaultPrevented = false;
+        this.propagationStopped = false;
 
         this.shiftKey = false;
         this.ctrlKey = false;
@@ -95,16 +107,19 @@ export class Event implements EventType {
 
     dispatch(handler: { trigger(name: string | string[], e: Event): void }) {
         if (this.type === KEYPRESS) {
+            // this.propagationStopped = true;
             if (this.dir) {
                 handler.trigger('dir', this);
-                if (this.propagationStopped) return;
             }
-            handler.trigger(this.key, this);
-            if (this.propagationStopped) return;
+            if (!this.propagationStopped) {
+                handler.trigger(this.key, this);
+            }
             if (this.code !== this.key) {
-                handler.trigger(this.code, this);
-                if (this.propagationStopped) return;
+                if (!this.propagationStopped) {
+                    handler.trigger(this.code, this);
+                }
             }
+            if (this.defaultPrevented || this.propagationStopped) return;
         }
         handler.trigger(this.type, this);
     }

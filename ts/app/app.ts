@@ -38,6 +38,7 @@ export interface AppOpts /* extends CANVAS.CanvasOptions */ {
     scenes?: Record<string, SCENE.CreateOpts>;
 
     loop?: Loop;
+    dt?: number; // fixed_update ms
     canvas?: CANVAS.Canvas;
 
     start?: boolean | string;
@@ -53,7 +54,7 @@ export class App {
     loop: Loop;
     styles: STYLE.Sheet;
 
-    dt = 0;
+    dt = 16; // 16 ms per frame
     time = 0;
     realTime = 0;
     skipTime = false;
@@ -85,6 +86,9 @@ export class App {
         this.events = new EVENTS.Events(this);
         this.timers = new TIMERS.Timers(this);
         this.scenes = new Scenes(this);
+        if (opts.dt !== undefined) {
+            this.dt = opts.dt || 16; // Can't have 0
+        }
 
         this.data = new DATA.Data(opts.data);
 
@@ -214,7 +218,7 @@ export class App {
 
         if (this.realTime == 0) {
             this.realTime = t;
-            return;
+            this.time = t;
         }
 
         const realTime = t;
@@ -222,21 +226,19 @@ export class App {
         this.realTime = realTime;
 
         if (!this.skipTime) {
-            this.dt = realDt;
-            this.time += this.dt;
-            this.fpsBuf.push(1000 / this.dt);
-            this.fpsTimer += this.dt;
-            if (this.fpsTimer >= 1) {
-                this.fpsTimer = 0;
-                this.fps = Math.round(
-                    this.fpsBuf.reduce((a, b) => a + b) / this.fpsBuf.length
-                );
-                this.fpsBuf = [];
+            if (!this.skipTime) {
+                this.fpsBuf.push(1000 / realDt);
+                this.fpsTimer += realDt;
+                if (this.fpsTimer >= 1) {
+                    this.fpsTimer = 0;
+                    this.fps = Math.round(
+                        this.fpsBuf.reduce((a, b) => a + b) / this.fpsBuf.length
+                    );
+                    this.fpsBuf = [];
+                }
             }
         }
-
         this.skipTime = false;
-
         this.numFrames++;
 
         this._frameStart();
@@ -248,7 +250,14 @@ export class App {
         }
 
         if (!this.paused && this.debug !== true) {
-            this._update(this.dt);
+            // call fixed_update
+            while (this.time + this.dt <= realTime) {
+                this.time += this.dt;
+                this._fixed_update(this.dt);
+            }
+
+            // call update
+            this._update(realDt);
         }
 
         this._draw();
@@ -274,6 +283,12 @@ export class App {
         this.scenes.update(dt);
         this.timers.update(dt);
         this.events.trigger('update', dt);
+    }
+
+    _fixed_update(dt = 0) {
+        dt = dt || this.dt;
+        this.scenes.fixed_update(dt);
+        this.events.trigger('fixed_update', dt);
     }
 
     _frameStart() {

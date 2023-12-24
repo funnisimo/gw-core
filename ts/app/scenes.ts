@@ -185,6 +185,9 @@ export class Scenes {
     update(dt: number) {
         this._active.forEach((s) => s.update(dt));
     }
+    fixed_update(dt: number) {
+        this._active.forEach((s) => s.fixed_update(dt));
+    }
     draw(buffer: BUFFER.Buffer) {
         this._active.forEach((s) => {
             // if (i > 0) {

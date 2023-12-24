@@ -48,4 +48,14 @@ app.on('keypress', (ev) => {
         y = (y + 1) % buffer.height;
     }
 });
+
+app.on('E', (ev) => {
+    buffer.draw(x, y, ev.key[0], 'teal');
+    x += 1;
+    if (x >= buffer.width) {
+        x = 0;
+        y = (y + 1) % buffer.height;
+    }
+    ev.stopPropagation();
+});
 ```

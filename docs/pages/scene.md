@@ -16,7 +16,7 @@ const app = GWU.app.make({
 });
 SHOW(app);
 
-const scene = app.scenes.add('main', {
+const scene = app.scenes.config('main', {
     start() {
         this.repeat(500, draw);
     },

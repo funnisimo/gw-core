@@ -105,7 +105,7 @@ describe('Body', () => {
         app._draw();
         app._frameEnd();
 
-        expect(app.scene).toBe(scene);
+        expect(app.scene.id).toBe(scene.id);
 
         app._draw();
         expect(TEST.getBufferText(buffer, 13, 15, 25)).toEqual(
