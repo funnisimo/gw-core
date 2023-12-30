@@ -39,13 +39,13 @@ export class FOV {
         // uses the diagonals
         for (let i = 4; i < 8; ++i) {
             const d = XY.DIRS[i];
-            this.castLight(1, 1.0, 0.0, 0, d[0], d[1], 0);
-            this.castLight(1, 1.0, 0.0, d[0], 0, 0, d[1]);
+            this._castLight(1, 1.0, 0.0, 0, d[0], d[1], 0);
+            this._castLight(1, 1.0, 0.0, d[0], 0, 0, d[1]);
         }
     }
 
     // NOTE: slope starts a 1 and ends at 0.
-    castLight(
+    _castLight(
         row: number,
         startSlope: number,
         endSlope: number,
@@ -161,7 +161,7 @@ export class FOV {
                         innerSlope.toFixed(2)
                     );
                     blocked = true;
-                    this.castLight(
+                    this._castLight(
                         row + 1,
                         nextStart,
                         outerSlope,
@@ -176,7 +176,7 @@ export class FOV {
         }
 
         if (!blocked) {
-            this.castLight(row + 1, nextStart, endSlope, xx, xy, yx, yy);
+            this._castLight(row + 1, nextStart, endSlope, xx, xy, yx, yy);
         }
     }
 }

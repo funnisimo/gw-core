@@ -125,7 +125,7 @@ describe('FOV', () => {
         }
 
         function toText(): string[] {
-            const pattern = [];
+            const pattern: string[] = [];
             for (let y = 0; y < tiles.height; ++y) {
                 let row = '';
                 for (let x = 0; x < tiles.width; ++x) {
