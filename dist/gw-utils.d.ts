@@ -1246,7 +1246,7 @@ declare class FOV {
     protected _maxRadius: number;
     constructor(strategy: FovStrategy);
     calculate(x: number, y: number, maxRadius: number, setVisible: SetVisibleFn): void;
-    castLight(row: number, startSlope: number, endSlope: number, xx: number, xy: number, yx: number, yy: number): void;
+    _castLight(row: number, startSlope: number, endSlope: number, xx: number, xy: number, yx: number, yy: number): void;
 }
 declare function calculate(dest: NumGrid, isBlocked: XYMatchFunc, x: number, y: number, radius: number): void;
 

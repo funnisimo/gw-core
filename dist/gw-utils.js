@@ -6009,12 +6009,12 @@
 	        // uses the diagonals
 	        for (let i = 4; i < 8; ++i) {
 	            const d = DIRS$2[i];
-	            this.castLight(1, 1.0, 0.0, 0, d[0], d[1], 0);
-	            this.castLight(1, 1.0, 0.0, d[0], 0, 0, d[1]);
+	            this._castLight(1, 1.0, 0.0, 0, d[0], d[1], 0);
+	            this._castLight(1, 1.0, 0.0, d[0], 0, 0, d[1]);
 	        }
 	    }
 	    // NOTE: slope starts a 1 and ends at 0.
-	    castLight(row, startSlope, endSlope, xx, xy, yx, yy) {
+	    _castLight(row, startSlope, endSlope, xx, xy, yx, yy) {
 	        if (row >= this._maxRadius) {
 	            this._debug('CAST: row=%d, start=%d, end=%d, row >= maxRadius => cancel', row, startSlope.toFixed(2), endSlope.toFixed(2));
 	            return;
@@ -6073,13 +6073,13 @@
 	                    //hit a wall within sight line
 	                    this._debug('       - blocked ... start:%d, end:%d, nextStart: %d', nextStart.toFixed(2), outerSlope.toFixed(2), innerSlope.toFixed(2));
 	                    blocked = true;
-	                    this.castLight(row + 1, nextStart, outerSlope, xx, xy, yx, yy);
+	                    this._castLight(row + 1, nextStart, outerSlope, xx, xy, yx, yy);
 	                    nextStart = innerSlope;
 	                }
 	            }
 	        }
 	        if (!blocked) {
-	            this.castLight(row + 1, nextStart, endSlope, xx, xy, yx, yy);
+	            this._castLight(row + 1, nextStart, endSlope, xx, xy, yx, yy);
 	        }
 	    }
 	}
