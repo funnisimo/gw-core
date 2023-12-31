@@ -704,7 +704,7 @@ declare namespace tags {
 declare type FlagSource = number | string;
 declare type FlagBase = FlagSource | FlagSource[] | null;
 declare function fl(N: number): number;
-declare function toString<T>(flagObj: T, value: number): string;
+declare function toString<T extends {}>(flagObj: T, value: number): string;
 declare function from$2<T>(obj: T, ...args: (FlagBase | undefined)[]): number;
 declare function make$a(obj: Record<string, FlagBase> | string[]): Record<string, number>;
 

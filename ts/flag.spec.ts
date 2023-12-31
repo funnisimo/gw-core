@@ -83,4 +83,36 @@ describe('flag', () => {
             G: 7,
         });
     });
+
+    test('make - simple', () => {
+        const flag = GW.flag.make('A,B,C,D,E,F,G,H,I');
+        expect(flag).toEqual({
+            A: 1,
+            B: 2,
+            C: 4,
+            D: 8,
+            E: 16,
+            F: 32,
+            G: 64,
+            H: 128,
+            I: 256,
+        });
+
+        expect(256 & flag.I).toBeTruthy();
+        expect(256 & flag.H).toBeFalsy();
+    });
+
+    test('make - too big', () => {
+        const flag = GW.flag.make(
+            'A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,AA,BB,CC,DD,EE,FF'
+        );
+        expect(flag.A).toEqual(1);
+        expect(flag.A).toEqual(2 ** 0);
+        expect(flag.FF).toEqual(2 ** 31);
+        expect(() => {
+            GW.flag.make(
+                'A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,AA,BB,CC,DD,EE,FF,GG'
+            );
+        }).toThrow();
+    });
 });

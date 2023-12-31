@@ -5,10 +5,10 @@ type FlagSource = number | string;
 export type FlagBase = FlagSource | FlagSource[] | null;
 
 export function fl(N: number) {
-    return 1 << N;
+    return 2 ** N;
 }
 
-export function toString<T>(flagObj: T, value: number): string {
+export function toString<T extends {}>(flagObj: T, value: number): string {
     const inverse = Object.entries(flagObj).reduce(
         (out: string[], entry: [string, unknown]) => {
             const [key, value] = entry as [string, number];
@@ -90,10 +90,13 @@ export function from<T>(obj: T, ...args: (FlagBase | undefined)[]): number {
 }
 
 export function make(
-    obj: Record<string, FlagBase> | string[]
+    obj: Record<string, FlagBase> | string[] | string
 ): Record<string, number> {
     const out: Record<string, number> = {};
 
+    if (typeof obj === 'string') {
+        obj = obj.split(/[|,]/).map((v) => v.trim());
+    }
     if (Array.isArray(obj)) {
         const arr = obj;
         const flags: Record<string, number> = {};
