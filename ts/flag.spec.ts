@@ -25,7 +25,8 @@ describe('flag', () => {
 
         expect(GW.flag.toString(Flag, 11)).toEqual('A | B | D | E');
         expect(GW.flag.from(Flag, 'A')).toEqual(Flag.A);
-        expect(GW.flag.from(Flag, 'UNKNOWN')).toEqual(0);
+        expect(() => GW.flag.from(Flag, 'UNKNOWN')).toThrow();
+        expect(GW.flag.from_safe(Flag, 'UNKNOWN')).toEqual(0);
         expect(GW.flag.from(Flag, 'A | B')).toEqual(Flag.AB);
 
         expect(GW.flag.from(Flag, '2 | A')).toEqual(Flag.AB);
@@ -100,6 +101,8 @@ describe('flag', () => {
 
         expect(256 & flag.I).toBeTruthy();
         expect(256 & flag.H).toBeFalsy();
+        expect(() => GW.flag.from(flag, 'UNKNOWN')).toThrow();
+        expect(() => GW.flag.from_safe(flag, 'UNKNOWN')).not.toThrow();
     });
 
     test('make - too big', () => {

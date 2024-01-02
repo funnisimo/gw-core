@@ -34,7 +34,11 @@ export function toString<T extends {}>(flagObj: T, value: number): string {
     return out.join(' | ');
 }
 
-export function from<T>(obj: T, ...args: (FlagBase | undefined)[]): number {
+function from_base<T>(
+    obj: T,
+    throws: boolean,
+    ...args: (FlagBase | undefined)[]
+): number {
     let result = 0;
     for (let index = 0; index < args.length; ++index) {
         let value = args[index];
@@ -59,7 +63,7 @@ export function from<T>(obj: T, ...args: (FlagBase | undefined)[]): number {
                     v = v.trim();
                     const parts = v.split(/[,|]/);
                     if (parts.length > 1) {
-                        result = from(obj, result, parts);
+                        result = from_base(obj, throws, result, parts);
                     } else if (v.startsWith('!')) {
                         // @ts-ignore
                         const f = obj[v.substring(1)];
@@ -75,6 +79,10 @@ export function from<T>(obj: T, ...args: (FlagBase | undefined)[]): number {
                         const f = obj[v];
                         if (f) {
                             result |= f;
+                        } else {
+                            if (throws) {
+                                throw new Error(`Unknown flag - ${v}`);
+                            }
                         }
                     }
                 } else if (v === 0) {
@@ -87,6 +95,32 @@ export function from<T>(obj: T, ...args: (FlagBase | undefined)[]): number {
         }
     }
     return result;
+}
+
+/**
+ * Converts from a flag base to a flag.
+ *
+ * @param {Object} flagObj - The flag we are getting values from
+ * @param {...FlagSource | FlagSource[]} args - The args to concatenate from flagObj
+ * @returns {number}
+ * @throws {Error} - If it encounters an unknown flag in args
+ */
+export function from<T>(obj: T, ...args: (FlagBase | undefined)[]): number {
+    return from_base(obj, true, ...args);
+}
+
+/**
+ * Converts from a flag base to a flag.  Will not throw if an unknown flag is encountered.
+ *
+ * @param {Object} flagObj - The flag we are getting values from
+ * @param {...FlagSource | FlagSource[]} args - The args to concatenate from flagObj
+ * @returns {number}
+ */
+export function from_safe<T>(
+    flagObj: T,
+    ...args: (FlagBase | undefined)[]
+): number {
+    return from_base(flagObj, false, ...args);
 }
 
 export function make(

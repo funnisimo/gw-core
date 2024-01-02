@@ -705,18 +705,36 @@ declare type FlagSource = number | string;
 declare type FlagBase = FlagSource | FlagSource[] | null;
 declare function fl(N: number): number;
 declare function toString<T extends {}>(flagObj: T, value: number): string;
+/**
+ * Converts from a flag base to a flag.
+ *
+ * @param {Object} flagObj - The flag we are getting values from
+ * @param {...FlagSource | FlagSource[]} args - The args to concatenate from flagObj
+ * @returns {number}
+ * @throws {Error} - If it encounters an unknown flag in args
+ */
 declare function from$2<T>(obj: T, ...args: (FlagBase | undefined)[]): number;
-declare function make$a(obj: Record<string, FlagBase> | string[]): Record<string, number>;
+/**
+ * Converts from a flag base to a flag.  Will not throw if an unknown flag is encountered.
+ *
+ * @param {Object} flagObj - The flag we are getting values from
+ * @param {...FlagSource | FlagSource[]} args - The args to concatenate from flagObj
+ * @returns {number}
+ */
+declare function from_safe<T>(flagObj: T, ...args: (FlagBase | undefined)[]): number;
+declare function make$a(obj: Record<string, FlagBase> | string[] | string): Record<string, number>;
 
 type flag_FlagBase = FlagBase;
 declare const flag_fl: typeof fl;
 declare const flag_toString: typeof toString;
+declare const flag_from_safe: typeof from_safe;
 declare namespace flag {
   export {
     flag_FlagBase as FlagBase,
     flag_fl as fl,
     flag_toString as toString,
     from$2 as from,
+    flag_from_safe as from_safe,
     make$a as make,
   };
 }
@@ -986,6 +1004,13 @@ interface EachOptions {
 declare function eachChar(text: string, fn: EachFn$1, opts?: EachOptions): void;
 
 declare function length(text: string): number;
+/**
+ * Advances the number of chars given by passing any color information in the text
+ * @param {string} text - The text to scan
+ * @param {number} start - The index to start from
+ * @param {number} count - The number of characters to skip
+ * @returns - The new index in the string
+ */
 declare function advanceChars(text: string, start: number, count: number): number;
 declare function findChar(text: string, matchFn: (ch: string, index: number) => boolean, start?: number): number;
 declare function firstChar(text: string): string;
@@ -994,7 +1019,20 @@ declare function padStart(text: string, width: number, pad?: string): string;
 declare function padEnd(text: string, width: number, pad?: string): string;
 declare function center(text: string, width: number, pad?: string): string;
 declare function truncate(text: string, width: number): string;
+/**
+ * Capitalizes the first letter in the given text.
+ *
+ * @param {string} text - The text to capitalize
+ * @returns {string} - The text with the first word capitalized
+ */
 declare function capitalize(text: string): string;
+/**
+ * Capitalizes the first letter all words of the given text.
+ *
+ * @param {string} text - The text to capitalize
+ * @returns {string} - The text with the words capitalized
+ */
+declare function title_case(text: string): string;
 declare function removeColors(text: string): string;
 declare function spliceRaw(msg: string, begin: number, deleteLength: number, add?: string): string;
 declare function hash(str: string): number;
@@ -1047,6 +1085,7 @@ declare const index$8_padEnd: typeof padEnd;
 declare const index$8_center: typeof center;
 declare const index$8_truncate: typeof truncate;
 declare const index$8_capitalize: typeof capitalize;
+declare const index$8_title_case: typeof title_case;
 declare const index$8_removeColors: typeof removeColors;
 declare const index$8_spliceRaw: typeof spliceRaw;
 declare const index$8_hash: typeof hash;
@@ -1084,6 +1123,7 @@ declare namespace index$8 {
     index$8_center as center,
     index$8_truncate as truncate,
     index$8_capitalize as capitalize,
+    index$8_title_case as title_case,
     index$8_removeColors as removeColors,
     index$8_spliceRaw as spliceRaw,
     index$8_hash as hash,

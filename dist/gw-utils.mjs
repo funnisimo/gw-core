@@ -3634,7 +3634,7 @@ var tags = /*#__PURE__*/Object.freeze({
 ///////////////////////////////////
 // FLAG
 function fl(N) {
-    return 1 << N;
+    return 2 ** N;
 }
 function toString(flagObj, value) {
     const inverse = Object.entries(flagObj).reduce((out, entry) => {
@@ -3658,7 +3658,7 @@ function toString(flagObj, value) {
     }
     return out.join(' | ');
 }
-function from$3(obj, ...args) {
+function from_base(obj, throws, ...args) {
     let result = 0;
     for (let index = 0; index < args.length; ++index) {
         let value = args[index];
@@ -3685,7 +3685,7 @@ function from$3(obj, ...args) {
                     v = v.trim();
                     const parts = v.split(/[,|]/);
                     if (parts.length > 1) {
-                        result = from$3(obj, result, parts);
+                        result = from_base(obj, throws, result, parts);
                     }
                     else if (v.startsWith('!')) {
                         // @ts-ignore
@@ -3703,6 +3703,11 @@ function from$3(obj, ...args) {
                         if (f) {
                             result |= f;
                         }
+                        else {
+                            if (throws) {
+                                throw new Error(`Unknown flag - ${v}`);
+                            }
+                        }
                     }
                 }
                 else if (v === 0) {
@@ -3717,8 +3722,32 @@ function from$3(obj, ...args) {
     }
     return result;
 }
+/**
+ * Converts from a flag base to a flag.
+ *
+ * @param {Object} flagObj - The flag we are getting values from
+ * @param {...FlagSource | FlagSource[]} args - The args to concatenate from flagObj
+ * @returns {number}
+ * @throws {Error} - If it encounters an unknown flag in args
+ */
+function from$3(obj, ...args) {
+    return from_base(obj, true, ...args);
+}
+/**
+ * Converts from a flag base to a flag.  Will not throw if an unknown flag is encountered.
+ *
+ * @param {Object} flagObj - The flag we are getting values from
+ * @param {...FlagSource | FlagSource[]} args - The args to concatenate from flagObj
+ * @returns {number}
+ */
+function from_safe(flagObj, ...args) {
+    return from_base(flagObj, false, ...args);
+}
 function make$a(obj) {
     const out = {};
+    if (typeof obj === 'string') {
+        obj = obj.split(/[|,]/).map((v) => v.trim());
+    }
     if (Array.isArray(obj)) {
         const arr = obj;
         const flags = {};
@@ -3776,6 +3805,7 @@ var flag = /*#__PURE__*/Object.freeze({
 	fl: fl,
 	toString: toString,
 	from: from$3,
+	from_safe: from_safe,
 	make: make$a
 });
 
@@ -4639,7 +4669,13 @@ function length(text) {
     }
     return len;
 }
-// let inColor = false;
+/**
+ * Advances the number of chars given by passing any color information in the text
+ * @param {string} text - The text to scan
+ * @param {number} start - The index to start from
+ * @param {number} count - The number of characters to skip
+ * @returns - The new index in the string
+ */
 function advanceChars(text, start, count) {
     let len = 0;
     let inside = false;
@@ -4835,6 +4871,12 @@ function truncate(text, width) {
     }
     return text.substring(0, index) + (colorCount ? '#{}' : '');
 }
+/**
+ * Capitalizes the first letter in the given text.
+ *
+ * @param {string} text - The text to capitalize
+ * @returns {string} - The text with the first word capitalized
+ */
 function capitalize(text) {
     // TODO - better test for first letter
     const i = findChar(text, (ch) => ch !== ' ');
@@ -4842,6 +4884,23 @@ function capitalize(text) {
         return text;
     const ch = text.charAt(i);
     return text.substring(0, i) + ch.toUpperCase() + text.substring(i + 1);
+}
+/**
+ * Capitalizes the first letter all words of the given text.
+ *
+ * @param {string} text - The text to capitalize
+ * @returns {string} - The text with the words capitalized
+ */
+function title_case(text) {
+    // TODO - better test for first letter
+    let i = findChar(text, (ch) => ch !== ' ');
+    while (i >= 0) {
+        const ch = text.charAt(i);
+        text = text.substring(0, i) + ch.toUpperCase() + text.substring(i + 1);
+        let next_space = findChar(text, (ch) => ch === ' ', i + 1);
+        i = findChar(text, (ch) => ch !== ' ', next_space);
+    }
+    return text;
 }
 function removeColors(text) {
     let out = '';
@@ -5619,6 +5678,7 @@ var index$8 = /*#__PURE__*/Object.freeze({
 	center: center,
 	truncate: truncate,
 	capitalize: capitalize,
+	title_case: title_case,
 	removeColors: removeColors,
 	spliceRaw: spliceRaw,
 	hash: hash,

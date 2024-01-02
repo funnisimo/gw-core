@@ -104,6 +104,20 @@ test('capitalize', () => {
     expect(Utils.capitalize('#{red test}')).toEqual('#{red Test}');
 });
 
+test('title_case', () => {
+    expect(Utils.title_case('test')).toEqual('Test');
+    expect(Utils.title_case(' test case')).toEqual(' Test Case');
+    expect(Utils.title_case('#{red}test case#{}')).toEqual(
+        '#{red}Test Case#{}'
+    );
+    expect(Utils.title_case('#{red} test case')).toEqual('#{red} Test Case');
+    expect(Utils.title_case('#{} test #{red}case')).toEqual(
+        '#{} Test #{red}Case'
+    );
+    expect(Utils.title_case('   ')).toEqual('   ');
+    expect(Utils.title_case('#{red test case}')).toEqual('#{red Test Case}');
+});
+
 test('removeColors', () => {
     expect(Utils.removeColors('test')).toEqual('test');
     expect(Utils.removeColors('#{red}test#{}')).toEqual('test');
