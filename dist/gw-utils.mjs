@@ -7013,171 +7013,6 @@ var index$6 = /*#__PURE__*/Object.freeze({
 	fromTo: fromTo
 });
 
-/**
- * Data for an event listener.
- */
-class EventListener {
-    /**
-     * Creates a Listener.
-     * @param {EventFn} fn The listener function.
-     * @param {any} [context=null] The context to invoke the listener with.
-     * @param {boolean} [once=false] Specify if the listener is a one-time listener.
-     */
-    constructor(fn, context, once = false) {
-        this.fn = fn;
-        this.context = context || null;
-        this.once = once || false;
-        this.next = null;
-    }
-    /**
-     * Compares this Listener to the parameters.
-     * @param {EventFn} fn - The function
-     * @param {any} [context] - The context Object.
-     * @param {boolean} [once] - Whether or not it is a one time handler.
-     * @returns Whether or not this Listener matches the parameters.
-     */
-    matches(fn, context, once) {
-        return (this.fn === fn &&
-            (once === undefined || once == this.once) &&
-            (!context || this.context === context));
-    }
-}
-class EventEmitter {
-    constructor() {
-        this._events = {};
-    }
-    /**
-     * Add a listener for a given event.
-     *
-     * @param {String} event The event name.
-     * @param {EventFn} fn The listener function.
-     * @param {*} context The context to invoke the listener with.
-     * @param {boolean} once Specify if the listener is a one-time listener.
-     * @returns {Listener}
-     */
-    addListener(event, fn, context, once = false) {
-        if (typeof fn !== 'function') {
-            throw new TypeError('The listener must be a function');
-        }
-        const listener = new EventListener(fn, context || null, once);
-        push(this._events, event, listener);
-        return this;
-    }
-    /**
-     * Add a listener for a given event.
-     *
-     * @param {String} event The event name.
-     * @param {EventFn} fn The listener function.
-     * @param {*} context The context to invoke the listener with.
-     * @param {boolean} once Specify if the listener is a one-time listener.
-     * @returns {Listener}
-     */
-    on(event, fn, context, once = false) {
-        return this.addListener(event, fn, context, once);
-    }
-    /**
-     * Add a one-time listener for a given event.
-     *
-     * @param {(String|Symbol)} event The event name.
-     * @param {EventFn} fn The listener function.
-     * @param {*} [context=this] The context to invoke the listener with.
-     * @returns {EventEmitter} `this`.
-     * @public
-     */
-    once(event, fn, context) {
-        return this.addListener(event, fn, context, true);
-    }
-    /**
-     * Remove the listeners of a given event.
-     *
-     * @param {String} event The event name.
-     * @param {EventFn} fn Only remove the listeners that match this function.
-     * @param {*} context Only remove the listeners that have this context.
-     * @param {boolean} once Only remove one-time listeners.
-     * @returns {EventEmitter} `this`.
-     * @public
-     */
-    removeListener(event, fn, context, once = false) {
-        if (!this._events[event])
-            return this;
-        if (!fn)
-            return this;
-        forEach(this._events[event], (obj) => {
-            if (obj.matches(fn, context, once)) {
-                remove(this._events, event, obj);
-            }
-        });
-        return this;
-    }
-    /**
-     * Remove the listeners of a given event.
-     *
-     * @param {String} event The event name.
-     * @param {EventFn} fn Only remove the listeners that match this function.
-     * @param {*} context Only remove the listeners that have this context.
-     * @param {boolean} once Only remove one-time listeners.
-     * @returns {EventEmitter} `this`.
-     * @public
-     */
-    off(event, fn, context, once = false) {
-        return this.removeListener(event, fn, context, once);
-    }
-    /**
-     * Clear event by name.
-     *
-     * @param {String} evt The Event name.
-     */
-    clearEvent(event) {
-        if (this._events[event]) {
-            this._events[event] = null;
-        }
-        return this;
-    }
-    /**
-     * Remove all listeners, or those of the specified event.
-     *
-     * @param {(String|Symbol)} [event] The event name.
-     * @returns {EventEmitter} `this`.
-     * @public
-     */
-    removeAllListeners(event) {
-        if (event) {
-            this.clearEvent(event);
-        }
-        else {
-            this._events = {};
-        }
-        return this;
-    }
-    /**
-     * Calls each of the listeners registered for a given event.
-     *
-     * @param {String} event The event name.
-     * @param {...*} args The additional arguments to the event handlers.
-     * @returns {boolean} `true` if the event had listeners, else `false`.
-     * @public
-     */
-    emit(event, ...args) {
-        if (!this._events[event])
-            return false; // no events to send
-        let listener = this._events[event];
-        while (listener) {
-            let next = listener.next;
-            if (listener.once)
-                remove(this._events, event, listener);
-            listener.fn.apply(listener.context, args);
-            listener = next;
-        }
-        return true;
-    }
-}
-
-var events = /*#__PURE__*/Object.freeze({
-	__proto__: null,
-	EventListener: EventListener,
-	EventEmitter: EventEmitter
-});
-
 function make$7(v) {
     if (v === undefined)
         return () => 100;
@@ -9736,6 +9571,11 @@ class Events {
     clear() {
         this._events = {};
         this.onUnhandled = null;
+    }
+    clear_event(name) {
+        if (name in this._events) {
+            this._events[name] = this._events[name].map(() => null);
+        }
     }
     restart() {
         Object.keys(this._events).forEach((ev) => {
@@ -15173,5 +15013,5 @@ var index = /*#__PURE__*/Object.freeze({
 	make: make
 });
 
-export { ERROR, FALSE, IDENTITY, IS_NONZERO, IS_ZERO, NOOP, ONE, TRUE, WARN, ZERO, index as app, arrayDelete, arrayFindRight, arrayIncludesAll, arrayInsert, arrayNext, arrayNullify, arrayPrev, arrayRevEach, arraysIntersect, blob, buffer, index$5 as canvas, clamp, index$9 as color, colors, cosmetic, data, events, first, flag, index$7 as fov, frequency, grid, lerp$1 as lerp, index$3 as light, list, message, nextIndex, object, index$6 as path, prevIndex, queue, random, range, rng, scheduler, index$4 as sprite, sum, tags, index$8 as text, tween, types, index$2 as ui, index$1 as widget, xave, xy };
+export { ERROR, FALSE, IDENTITY, IS_NONZERO, IS_ZERO, NOOP, ONE, TRUE, WARN, ZERO, index as app, arrayDelete, arrayFindRight, arrayIncludesAll, arrayInsert, arrayNext, arrayNullify, arrayPrev, arrayRevEach, arraysIntersect, blob, buffer, index$5 as canvas, clamp, index$9 as color, colors, cosmetic, data, first, flag, index$7 as fov, frequency, grid, lerp$1 as lerp, index$3 as light, list, message, nextIndex, object, index$6 as path, prevIndex, queue, random, range, rng, scheduler, index$4 as sprite, sum, tags, index$8 as text, tween, types, index$2 as ui, index$1 as widget, xave, xy };
 //# sourceMappingURL=gw-utils.mjs.map

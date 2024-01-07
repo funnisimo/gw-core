@@ -11,7 +11,7 @@ export * as buffer from './buffer';
 // export * as io from './io';
 export * as fov from './fov';
 export * as path from './path';
-export * as events from './events';
+// export * as events from './events';
 export * as frequency from './frequency';
 export * as scheduler from './scheduler';
 export * as canvas from './canvas';

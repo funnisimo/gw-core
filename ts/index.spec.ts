@@ -10,7 +10,7 @@ describe('GW', () => {
         // expect(GW.io).toBeDefined();
         expect(GW.fov).toBeDefined();
         expect(GW.path).toBeDefined();
-        expect(GW.events).toBeDefined();
+        // expect(GW.events).toBeDefined();
         expect(GW.frequency).toBeDefined();
         expect(GW.scheduler).toBeDefined();
         expect(GW.canvas).toBeDefined();

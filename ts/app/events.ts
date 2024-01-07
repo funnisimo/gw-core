@@ -140,6 +140,12 @@ export class Events {
         this.onUnhandled = null;
     }
 
+    clear_event(name: string) {
+        if (name in this._events) {
+            this._events[name] = this._events[name].map(() => null);
+        }
+    }
+
     restart() {
         Object.keys(this._events).forEach((ev) => {
             this._events[ev] = this._events[ev].filter((i) => i && !i.once);

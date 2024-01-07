@@ -1477,132 +1477,6 @@ declare namespace index$6 {
   };
 }
 
-declare type EventFn$1 = (...args: any[]) => void;
-declare type Listener<L> = {
-    [event in keyof L]: EventFn$1;
-};
-declare type Events$1 = {
-    [k: string]: (...args: any[]) => any;
-};
-/**
- * Data for an event listener.
- */
-declare class EventListener implements ListItem<EventListener> {
-    fn: EventFn$1;
-    context: any;
-    once: boolean;
-    next: EventListener | null;
-    /**
-     * Creates a Listener.
-     * @param {EventFn} fn The listener function.
-     * @param {any} [context=null] The context to invoke the listener with.
-     * @param {boolean} [once=false] Specify if the listener is a one-time listener.
-     */
-    constructor(fn: EventFn$1, context?: any, once?: boolean);
-    /**
-     * Compares this Listener to the parameters.
-     * @param {EventFn} fn - The function
-     * @param {any} [context] - The context Object.
-     * @param {boolean} [once] - Whether or not it is a one time handler.
-     * @returns Whether or not this Listener matches the parameters.
-     */
-    matches(fn: EventFn$1, context?: any, once?: boolean): boolean;
-}
-declare class EventEmitter<L extends Listener<L> = Events$1> {
-    _events: Record<string, EventListener | null>;
-    constructor();
-    /**
-     * Add a listener for a given event.
-     *
-     * @param {String} event The event name.
-     * @param {EventFn} fn The listener function.
-     * @param {*} context The context to invoke the listener with.
-     * @param {boolean} once Specify if the listener is a one-time listener.
-     * @returns {Listener}
-     */
-    addListener<U extends keyof L>(event: U, fn: L[U], context?: any, once?: boolean): this;
-    /**
-     * Add a listener for a given event.
-     *
-     * @param {String} event The event name.
-     * @param {EventFn} fn The listener function.
-     * @param {*} context The context to invoke the listener with.
-     * @param {boolean} once Specify if the listener is a one-time listener.
-     * @returns {Listener}
-     */
-    on<U extends keyof L>(event: U, fn: L[U], context?: any, once?: boolean): this;
-    /**
-     * Add a one-time listener for a given event.
-     *
-     * @param {(String|Symbol)} event The event name.
-     * @param {EventFn} fn The listener function.
-     * @param {*} [context=this] The context to invoke the listener with.
-     * @returns {EventEmitter} `this`.
-     * @public
-     */
-    once<U extends keyof L>(event: U, fn: L[U], context?: any): this;
-    /**
-     * Remove the listeners of a given event.
-     *
-     * @param {String} event The event name.
-     * @param {EventFn} fn Only remove the listeners that match this function.
-     * @param {*} context Only remove the listeners that have this context.
-     * @param {boolean} once Only remove one-time listeners.
-     * @returns {EventEmitter} `this`.
-     * @public
-     */
-    removeListener<U extends keyof L>(event: U, fn: L[U], context?: any, once?: boolean): this;
-    /**
-     * Remove the listeners of a given event.
-     *
-     * @param {String} event The event name.
-     * @param {EventFn} fn Only remove the listeners that match this function.
-     * @param {*} context Only remove the listeners that have this context.
-     * @param {boolean} once Only remove one-time listeners.
-     * @returns {EventEmitter} `this`.
-     * @public
-     */
-    off<U extends keyof L>(event: U, fn: L[U], context?: any, once?: boolean): this;
-    /**
-     * Clear event by name.
-     *
-     * @param {String} evt The Event name.
-     */
-    clearEvent(event?: keyof L): this;
-    /**
-     * Remove all listeners, or those of the specified event.
-     *
-     * @param {(String|Symbol)} [event] The event name.
-     * @returns {EventEmitter} `this`.
-     * @public
-     */
-    removeAllListeners(event?: keyof L): this;
-    /**
-     * Calls each of the listeners registered for a given event.
-     *
-     * @param {String} event The event name.
-     * @param {...*} args The additional arguments to the event handlers.
-     * @returns {boolean} `true` if the event had listeners, else `false`.
-     * @public
-     */
-    emit<U extends keyof L>(event: U, ...args: Parameters<L[U]>): boolean;
-}
-
-type events_Listener<L> = Listener<L>;
-type events_EventListener = EventListener;
-declare const events_EventListener: typeof EventListener;
-type events_EventEmitter<L extends Listener<L> = Events$1> = EventEmitter<L>;
-declare const events_EventEmitter: typeof EventEmitter;
-declare namespace events {
-  export {
-    EventFn$1 as EventFn,
-    events_Listener as Listener,
-    Events$1 as Events,
-    events_EventListener as EventListener,
-    events_EventEmitter as EventEmitter,
-  };
-}
-
 declare type FrequencyFn = (danger: number) => number;
 declare type FrequencyConfig = FrequencyFn | number | string | Record<string, number | FrequencyFn> | null;
 declare function make$7(v?: FrequencyConfig): FrequencyFn;
@@ -1706,6 +1580,7 @@ declare class Events {
     trigger(ev: string | string[], ...args: any[]): boolean;
     _unhandled(ev: string, args: any[]): boolean;
     clear(): void;
+    clear_event(name: string): void;
     restart(): void;
 }
 
@@ -3816,4 +3691,4 @@ declare namespace index {
   };
 }
 
-export { ERROR, FALSE, IDENTITY, IS_NONZERO, IS_ZERO, NOOP, ONE, TRUE, WARN, ZERO, index$5 as app, arrayDelete, arrayFindRight, arrayIncludesAll, arrayInsert, arrayNext, arrayNullify, arrayPrev, arrayRevEach, arraysIntersect, blob, buffer, index$4 as canvas, clamp, index$9 as color, colors, cosmetic, data, events, first, flag, index$7 as fov, frequency, grid, lerp$1 as lerp, index$2 as light, list, message, nextIndex, object, index$6 as path, prevIndex, queue, random, range, rng, scheduler, index$3 as sprite, sum, tags, index$8 as text, tween, types, index$1 as ui, index as widget, xave, xy };
+export { ERROR, FALSE, IDENTITY, IS_NONZERO, IS_ZERO, NOOP, ONE, TRUE, WARN, ZERO, index$5 as app, arrayDelete, arrayFindRight, arrayIncludesAll, arrayInsert, arrayNext, arrayNullify, arrayPrev, arrayRevEach, arraysIntersect, blob, buffer, index$4 as canvas, clamp, index$9 as color, colors, cosmetic, data, first, flag, index$7 as fov, frequency, grid, lerp$1 as lerp, index$2 as light, list, message, nextIndex, object, index$6 as path, prevIndex, queue, random, range, rng, scheduler, index$3 as sprite, sum, tags, index$8 as text, tween, types, index$1 as ui, index as widget, xave, xy };
