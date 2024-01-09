@@ -118,7 +118,7 @@ export class Glyphs {
         const size =
             opts.fontSize ||
             opts.size ||
-            Math.max(this.tileWidth, this.tileHeight);
+            Math.min(this.tileWidth, this.tileHeight);
         this._ctx.font = '' + size + 'px ' + opts.font;
         this._ctx.textAlign = 'center';
         this._ctx.textBaseline = 'middle';

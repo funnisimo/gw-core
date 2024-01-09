@@ -534,6 +534,56 @@ function prevIndex(index, length, wrap = true) {
     }
     return index;
 }
+function valueType(a) {
+    const ta = typeof a;
+    if (ta == 'object') {
+        if (Array.isArray(a)) {
+            return 'array';
+        }
+    }
+    return ta;
+}
+function combineValues(a, b) {
+    if (a == undefined) {
+        return b;
+    }
+    if (b == undefined) {
+        return a;
+    }
+    const ta = valueType(a);
+    const tb = valueType(b);
+    if (ta == 'array' && tb == 'array') {
+        if (a.length >= b.length) {
+            // @ts-ignore
+            return a.map((v, i) => combineValues(v, b[i]));
+        }
+        else {
+            // @ts-ignore
+            return b.map((v, i) => combineValues(a[i], v));
+        }
+    }
+    if (ta != 'array' && tb != 'array') {
+        if (ta != tb) {
+            return b; // second one
+        }
+        if (ta == 'number') {
+            return Math.max(a, b);
+        }
+        else {
+            return b;
+        }
+    }
+    if (ta == 'array') {
+        let out = a.slice();
+        out[0] = combineValues(a[0], b);
+        return out;
+    }
+    else {
+        let out = b.slice();
+        out[0] = combineValues(a, b[0]);
+        return out;
+    }
+}
 
 // DIRS are organized clockwise
 // - first 4 are arrow directions
@@ -7227,7 +7277,7 @@ class Glyphs {
         this._ctx.fillRect(0, 0, this.pxWidth, this.pxHeight);
         const size = opts.fontSize ||
             opts.size ||
-            Math.max(this.tileWidth, this.tileHeight);
+            Math.min(this.tileWidth, this.tileHeight);
         this._ctx.font = '' + size + 'px ' + opts.font;
         this._ctx.textAlign = 'center';
         this._ctx.textBaseline = 'middle';
@@ -15013,5 +15063,5 @@ var index = /*#__PURE__*/Object.freeze({
 	make: make
 });
 
-export { ERROR, FALSE, IDENTITY, IS_NONZERO, IS_ZERO, NOOP, ONE, TRUE, WARN, ZERO, index as app, arrayDelete, arrayFindRight, arrayIncludesAll, arrayInsert, arrayNext, arrayNullify, arrayPrev, arrayRevEach, arraysIntersect, blob, buffer, index$5 as canvas, clamp, index$9 as color, colors, cosmetic, data, first, flag, index$7 as fov, frequency, grid, lerp$1 as lerp, index$3 as light, list, message, nextIndex, object, index$6 as path, prevIndex, queue, random, range, rng, scheduler, index$4 as sprite, sum, tags, index$8 as text, tween, types, index$2 as ui, index$1 as widget, xave, xy };
+export { ERROR, FALSE, IDENTITY, IS_NONZERO, IS_ZERO, NOOP, ONE, TRUE, WARN, ZERO, index as app, arrayDelete, arrayFindRight, arrayIncludesAll, arrayInsert, arrayNext, arrayNullify, arrayPrev, arrayRevEach, arraysIntersect, blob, buffer, index$5 as canvas, clamp, index$9 as color, colors, combineValues, cosmetic, data, first, flag, index$7 as fov, frequency, grid, lerp$1 as lerp, index$3 as light, list, message, nextIndex, object, index$6 as path, prevIndex, queue, random, range, rng, scheduler, index$4 as sprite, sum, tags, index$8 as text, tween, types, index$2 as ui, valueType, index$1 as widget, xave, xy };
 //# sourceMappingURL=gw-utils.mjs.map

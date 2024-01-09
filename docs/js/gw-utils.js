@@ -540,6 +540,56 @@
 	    }
 	    return index;
 	}
+	function valueType(a) {
+	    const ta = typeof a;
+	    if (ta == 'object') {
+	        if (Array.isArray(a)) {
+	            return 'array';
+	        }
+	    }
+	    return ta;
+	}
+	function combineValues(a, b) {
+	    if (a == undefined) {
+	        return b;
+	    }
+	    if (b == undefined) {
+	        return a;
+	    }
+	    const ta = valueType(a);
+	    const tb = valueType(b);
+	    if (ta == 'array' && tb == 'array') {
+	        if (a.length >= b.length) {
+	            // @ts-ignore
+	            return a.map((v, i) => combineValues(v, b[i]));
+	        }
+	        else {
+	            // @ts-ignore
+	            return b.map((v, i) => combineValues(a[i], v));
+	        }
+	    }
+	    if (ta != 'array' && tb != 'array') {
+	        if (ta != tb) {
+	            return b; // second one
+	        }
+	        if (ta == 'number') {
+	            return Math.max(a, b);
+	        }
+	        else {
+	            return b;
+	        }
+	    }
+	    if (ta == 'array') {
+	        let out = a.slice();
+	        out[0] = combineValues(a[0], b);
+	        return out;
+	    }
+	    else {
+	        let out = b.slice();
+	        out[0] = combineValues(a, b[0]);
+	        return out;
+	    }
+	}
 
 	// DIRS are organized clockwise
 	// - first 4 are arrow directions
@@ -7233,7 +7283,7 @@
 	        this._ctx.fillRect(0, 0, this.pxWidth, this.pxHeight);
 	        const size = opts.fontSize ||
 	            opts.size ||
-	            Math.max(this.tileWidth, this.tileHeight);
+	            Math.min(this.tileWidth, this.tileHeight);
 	        this._ctx.font = '' + size + 'px ' + opts.font;
 	        this._ctx.textAlign = 'center';
 	        this._ctx.textBaseline = 'middle';
@@ -15045,6 +15095,7 @@ void main() {
 	exports.clamp = clamp;
 	exports.color = index$9;
 	exports.colors = colors;
+	exports.combineValues = combineValues;
 	exports.cosmetic = cosmetic;
 	exports.data = data;
 	exports.first = first;
@@ -15072,6 +15123,7 @@ void main() {
 	exports.tween = tween;
 	exports.types = types;
 	exports.ui = index$2;
+	exports.valueType = valueType;
 	exports.widget = index$1;
 	exports.xave = xave;
 	exports.xy = xy;

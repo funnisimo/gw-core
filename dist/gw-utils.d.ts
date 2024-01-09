@@ -40,6 +40,8 @@ declare function arrayNext<T>(a: T[], current: T, fn: (t: T) => boolean, wrap?: 
 declare function arrayPrev<T>(a: T[], current: T, fn: (t: T) => boolean, wrap?: boolean): T | undefined;
 declare function nextIndex(index: number, length: number, wrap?: boolean): number;
 declare function prevIndex(index: number, length: number, wrap?: boolean): number;
+declare function valueType(a: any): string;
+declare function combineValues(a: any, b: any): any;
 
 declare type ColorData = [number, number, number] | [number, number, number, number];
 declare type ColorBase = string | number | ColorData | Color | null;
@@ -3691,4 +3693,4 @@ declare namespace index {
   };
 }
 
-export { ERROR, FALSE, IDENTITY, IS_NONZERO, IS_ZERO, NOOP, ONE, TRUE, WARN, ZERO, index$5 as app, arrayDelete, arrayFindRight, arrayIncludesAll, arrayInsert, arrayNext, arrayNullify, arrayPrev, arrayRevEach, arraysIntersect, blob, buffer, index$4 as canvas, clamp, index$9 as color, colors, cosmetic, data, first, flag, index$7 as fov, frequency, grid, lerp$1 as lerp, index$2 as light, list, message, nextIndex, object, index$6 as path, prevIndex, queue, random, range, rng, scheduler, index$3 as sprite, sum, tags, index$8 as text, tween, types, index$1 as ui, index as widget, xave, xy };
+export { ERROR, FALSE, IDENTITY, IS_NONZERO, IS_ZERO, NOOP, ONE, TRUE, WARN, ZERO, index$5 as app, arrayDelete, arrayFindRight, arrayIncludesAll, arrayInsert, arrayNext, arrayNullify, arrayPrev, arrayRevEach, arraysIntersect, blob, buffer, index$4 as canvas, clamp, index$9 as color, colors, combineValues, cosmetic, data, first, flag, index$7 as fov, frequency, grid, lerp$1 as lerp, index$2 as light, list, message, nextIndex, object, index$6 as path, prevIndex, queue, random, range, rng, scheduler, index$3 as sprite, sum, tags, index$8 as text, tween, types, index$1 as ui, valueType, index as widget, xave, xy };

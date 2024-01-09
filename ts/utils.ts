@@ -177,3 +177,13 @@ export function prevIndex(index: number, length: number, wrap = true): number {
     }
     return index;
 }
+
+export function valueType(a: any): string {
+    const ta = typeof a;
+    if (ta == 'object') {
+        if (Array.isArray(a)) {
+            return 'array';
+        }
+    }
+    return ta;
+}

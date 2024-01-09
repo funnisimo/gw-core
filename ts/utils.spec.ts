@@ -60,4 +60,35 @@ describe('Utils', () => {
         Utils.arrayInsert(arr, 4, (o) => o > 4);
         expect(arr).toEqual([3, 4, 4, 5, 6]);
     });
+
+    test('valueType', () => {
+        expect(Utils.valueType(4)).toEqual('number');
+        expect(Utils.valueType('test')).toEqual('string');
+        expect(Utils.valueType({ obj: true })).toEqual('object');
+        expect(Utils.valueType([])).toEqual('array');
+        expect(Utils.valueType(['a'])).toEqual('array');
+        expect(Utils.valueType([4])).toEqual('array');
+        expect(Utils.valueType({})).toEqual('object');
+    });
+
+    // test('combineValues', () => {
+    //     expect(Utils.combineValues(undefined, 4)).toEqual(4);
+    //     expect(Utils.combineValues(4, undefined)).toEqual(4);
+    //     expect(Utils.combineValues(3, 4)).toEqual(4);
+    //     expect(Utils.combineValues(4, 3)).toEqual(4);
+
+    //     expect(Utils.combineValues([4], 3)).toEqual([4]);
+    //     expect(Utils.combineValues([3], 4)).toEqual([4]);
+    //     expect(Utils.combineValues([], 3)).toEqual([3]);
+    //     expect(Utils.combineValues([4], [3])).toEqual([4]);
+
+    //     expect(Utils.combineValues(4, [3])).toEqual([4]);
+    //     expect(Utils.combineValues(3, [4])).toEqual([4]);
+    //     expect(Utils.combineValues(3, [])).toEqual([3]);
+
+    //     expect(Utils.combineValues('a', 'b')).toEqual('b');
+    //     expect(Utils.combineValues(4, 'b')).toEqual('b');
+    //     expect(Utils.combineValues('a', 4)).toEqual(4);
+    //     expect(Utils.combineValues(['a'], 'b')).toEqual(['b']);
+    // });
 });
