@@ -91,7 +91,7 @@ export class Input extends Text.Text {
         }
 
         this.prop('valid', this.isValid()); // redo b/c rules are now set
-        this.on('blur', this.action.bind(this));
+        this.on('blur', () => this.action());
         // this.on('click', this.action.bind(this));
         this.reset();
     }

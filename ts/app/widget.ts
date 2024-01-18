@@ -691,11 +691,15 @@ export class Widget {
     }
     action(ev?: IO.Event) {
         if (ev && ev.defaultPrevented) return;
-        this.trigger('action');
+        if (this.trigger('action')) {
+            ev?.stopPropagation();
+        }
 
         const action = this._attrStr('action');
         if (!action || !action.length) return;
-        this.scene && this.scene.trigger(action, this);
+        if (this.scene && this.scene.trigger(action, this)) {
+            ev?.stopPropagation();
+        }
     }
 
     // FRAME
@@ -767,7 +771,7 @@ export class Widget {
         this._click(e);
 
         if (!e.defaultPrevented) {
-            this.action();
+            this.action(e);
         }
     }
 

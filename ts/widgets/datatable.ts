@@ -26,8 +26,8 @@ export type HoverType = 'none' | 'column' | 'row' | 'cell' | 'select';
 export type BorderType = 'ascii' | 'fill' | 'none';
 
 export interface ColumnOptions {
-    width?: number; // must have
-    format?: string | FormatFn; // must have
+    width?: number; // must have?
+    format?: string | FormatFn; // must have?
 
     header?: string;
     headerTag?: string;
@@ -373,7 +373,7 @@ export class DataTable extends WIDGET.Widget {
         this._drawFill(buffer);
 
         this.children.forEach((w) => {
-            if (w.prop('row')! >= this.size) return;
+            if (w._propInt('row')! >= this.size) return;
             if (this.attr('border') !== 'none') {
                 drawBorder(
                     buffer,
@@ -464,7 +464,7 @@ export class DataTable extends WIDGET.Widget {
         }
 
         if (e.key === 'Enter') {
-            this.action();
+            this.action(e);
             // this.trigger('change', {
             //     row: this.selectedRow,
             //     col: this.selectedColumn,

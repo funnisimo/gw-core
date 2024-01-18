@@ -549,47 +549,6 @@
 	    }
 	    return ta;
 	}
-	function combineValues(a, b) {
-	    if (a == undefined) {
-	        return b;
-	    }
-	    if (b == undefined) {
-	        return a;
-	    }
-	    const ta = valueType(a);
-	    const tb = valueType(b);
-	    if (ta == 'array' && tb == 'array') {
-	        if (a.length >= b.length) {
-	            // @ts-ignore
-	            return a.map((v, i) => combineValues(v, b[i]));
-	        }
-	        else {
-	            // @ts-ignore
-	            return b.map((v, i) => combineValues(a[i], v));
-	        }
-	    }
-	    if (ta != 'array' && tb != 'array') {
-	        if (ta != tb) {
-	            return b; // second one
-	        }
-	        if (ta == 'number') {
-	            return Math.max(a, b);
-	        }
-	        else {
-	            return b;
-	        }
-	    }
-	    if (ta == 'array') {
-	        let out = a.slice();
-	        out[0] = combineValues(a[0], b);
-	        return out;
-	    }
-	    else {
-	        let out = b.slice();
-	        out[0] = combineValues(a, b[0]);
-	        return out;
-	    }
-	}
 
 	// DIRS are organized clockwise
 	// - first 4 are arrow directions
@@ -11873,11 +11832,15 @@ void main() {
 	    action(ev) {
 	        if (ev && ev.defaultPrevented)
 	            return;
-	        this.trigger('action');
+	        if (this.trigger('action')) {
+	            ev === null || ev === void 0 ? void 0 : ev.stopPropagation();
+	        }
 	        const action = this._attrStr('action');
 	        if (!action || !action.length)
 	            return;
-	        this.scene && this.scene.trigger(action, this);
+	        if (this.scene && this.scene.trigger(action, this)) {
+	            ev === null || ev === void 0 ? void 0 : ev.stopPropagation();
+	        }
 	    }
 	    // FRAME
 	    input(e) {
@@ -11947,7 +11910,7 @@ void main() {
 	            return;
 	        this._click(e);
 	        if (!e.defaultPrevented) {
-	            this.action();
+	            this.action(e);
 	        }
 	    }
 	    _click(e) {
@@ -12554,7 +12517,7 @@ void main() {
 	            this.prop('disabled', true);
 	        }
 	        this.prop('valid', this.isValid()); // redo b/c rules are now set
-	        this.on('blur', this.action.bind(this));
+	        this.on('blur', () => this.action());
 	        // this.on('click', this.action.bind(this));
 	        this.reset();
 	    }
@@ -13266,7 +13229,7 @@ void main() {
 	    _draw(buffer) {
 	        this._drawFill(buffer);
 	        this.children.forEach((w) => {
-	            if (w.prop('row') >= this.size)
+	            if (w._propInt('row') >= this.size)
 	                return;
 	            if (this.attr('border') !== 'none') {
 	                drawBorder(buffer, w.bounds.x - 1, w.bounds.y - 1, w.bounds.width + 2, w.bounds.height + 2, this._used, this.attr('border') == 'ascii');
@@ -13341,7 +13304,7 @@ void main() {
 	            return this.dir(e);
 	        }
 	        if (e.key === 'Enter') {
-	            this.action();
+	            this.action(e);
 	            // this.trigger('change', {
 	            //     row: this.selectedRow,
 	            //     col: this.selectedColumn,
@@ -15095,7 +15058,6 @@ void main() {
 	exports.clamp = clamp;
 	exports.color = index$9;
 	exports.colors = colors;
-	exports.combineValues = combineValues;
 	exports.cosmetic = cosmetic;
 	exports.data = data;
 	exports.first = first;

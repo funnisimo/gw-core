@@ -129,6 +129,7 @@ describe('Input Widget', () => {
         el.trigger.mockClear();
         el.blur();
         expect(el.trigger).not.toHaveBeenCalledWith('change');
+        expect(el.trigger).toHaveBeenCalledWith('blur', { reverse: false });
         expect(el.trigger).toHaveBeenCalledWith('action');
     });
 
