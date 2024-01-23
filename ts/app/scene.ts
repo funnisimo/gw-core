@@ -16,7 +16,7 @@ import { Widget, UpdatePosOpts } from './widget';
 export type SceneCallback = (this: Scene, ...args: any[]) => void;
 export type SceneMakeFn = (id: string, app: App) => Scene;
 
-export interface CreateOpts {
+export interface SceneOpts {
     bg?: COLOR.ColorBase;
 
     data?: Record<string, string>;
@@ -126,7 +126,7 @@ export class Scene {
     }
 
     // GENERAL
-    create(opts: CreateOpts = {}) {
+    create(opts: SceneOpts = {}) {
         opts.bg && (this.bg = COLOR.from(opts.bg));
 
         if (opts.on) {

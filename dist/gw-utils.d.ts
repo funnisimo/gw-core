@@ -1919,7 +1919,7 @@ declare const index$5_spaceChildren: typeof spaceChildren;
 declare const index$5_wrapChildren: typeof wrapChildren;
 type index$5_SceneCallback = SceneCallback;
 type index$5_SceneMakeFn = SceneMakeFn;
-type index$5_CreateOpts = CreateOpts;
+type index$5_SceneOpts = SceneOpts;
 type index$5_StartOpts = StartOpts;
 type index$5_ResumeOpts = ResumeOpts;
 type index$5_PauseOpts = PauseOpts;
@@ -1995,7 +1995,7 @@ declare namespace index$5 {
     index$5_wrapChildren as wrapChildren,
     index$5_SceneCallback as SceneCallback,
     index$5_SceneMakeFn as SceneMakeFn,
-    index$5_CreateOpts as CreateOpts,
+    index$5_SceneOpts as SceneOpts,
     index$5_StartOpts as StartOpts,
     index$5_ResumeOpts as ResumeOpts,
     index$5_PauseOpts as PauseOpts,
@@ -2017,18 +2017,18 @@ interface PendingInfo {
 }
 declare class Scenes {
     _app: App;
-    _config: Record<string, CreateOpts>;
+    _config: Record<string, SceneOpts>;
     _active: Scene[];
     _busy: boolean;
     _pending: PendingInfo[];
     constructor(gw: App);
     get isBusy(): boolean;
-    config(scenes: Record<string, CreateOpts | SceneMakeFn>): void;
-    config(id: string, opts: CreateOpts | SceneMakeFn): void;
+    config(scenes: Record<string, SceneOpts | SceneMakeFn>): void;
+    config(id: string, opts: SceneOpts | SceneMakeFn): void;
     get(): Scene;
     get(id?: string): Scene | null;
     trigger(ev: string, ...args: any[]): void;
-    _create(id: string, opts?: CreateOpts): Scene;
+    _create(id: string, opts?: SceneOpts): Scene;
     start(id: string, data?: StartOpts): Scene;
     run(id: string, data?: StartOpts): Scene;
     _start(scene: Scene): void;
@@ -2048,8 +2048,8 @@ declare class Scenes {
     frameDebug(buffer: Buffer$1): void;
     frameEnd(buffer: Buffer$1): void;
 }
-declare const scenes: Record<string, CreateOpts>;
-declare function installScene(id: string, scene: CreateOpts | SceneMakeFn): void;
+declare const scenes: Record<string, SceneOpts>;
+declare function installScene(id: string, scene: SceneOpts | SceneMakeFn): void;
 
 interface TextOptions extends WidgetOpts {
     text?: string;
@@ -2255,8 +2255,9 @@ interface AppOpts {
     tileHeight?: number;
     basicOnly?: boolean;
     basic?: boolean;
-    scene?: CreateOpts | boolean;
-    scenes?: Record<string, CreateOpts>;
+    scene?: SceneOpts | boolean;
+    scenes?: Record<string, SceneOpts>;
+    name?: string;
     loop?: Loop;
     dt?: number;
     canvas?: Canvas;
@@ -2264,6 +2265,7 @@ interface AppOpts {
     data?: Record<string, any>;
 }
 declare class App {
+    name: string;
     canvas: Canvas;
     events: Events;
     timers: Timers;
@@ -2315,7 +2317,7 @@ declare function make$5(opts: Partial<AppOpts>): App;
 
 declare type SceneCallback = (this: Scene, ...args: any[]) => void;
 declare type SceneMakeFn = (id: string, app: App) => Scene;
-interface CreateOpts {
+interface SceneOpts {
     bg?: ColorBase;
     data?: Record<string, string>;
     styles?: Sheet;
@@ -2380,7 +2382,7 @@ declare class Scene {
     isActive(): boolean;
     isPaused(): () => any;
     isSleeping(): () => any;
-    create(opts?: CreateOpts): void;
+    create(opts?: SceneOpts): void;
     destroy(data?: any): void;
     start(opts?: StartOpts): void;
     _start(opts?: StartOpts): void;

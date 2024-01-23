@@ -1,6 +1,6 @@
 import * as UTILS from '../utils';
 import * as BUFFER from '../buffer';
-import { Scene, CreateOpts, StartOpts, SceneMakeFn } from './scene';
+import { Scene, SceneOpts, StartOpts, SceneMakeFn } from './scene';
 import { App } from './app';
 import * as IO from '../app/io';
 import { PauseOpts } from '.';
@@ -13,7 +13,7 @@ interface PendingInfo {
 
 export class Scenes {
     _app: App;
-    _config: Record<string, CreateOpts>;
+    _config: Record<string, SceneOpts>;
     // _scenes: Record<string, Scene> = {};
     _active: Scene[] = [];
     _busy = false;
@@ -28,11 +28,11 @@ export class Scenes {
         return this._busy;
     }
 
-    config(scenes: Record<string, CreateOpts | SceneMakeFn>): void;
-    config(id: string, opts: CreateOpts | SceneMakeFn): void;
+    config(scenes: Record<string, SceneOpts | SceneMakeFn>): void;
+    config(id: string, opts: SceneOpts | SceneMakeFn): void;
     config(...args: any[]): void {
         if (args.length === 1) {
-            const scenes = args[0] as Record<string, CreateOpts | SceneMakeFn>;
+            const scenes = args[0] as Record<string, SceneOpts | SceneMakeFn>;
             Object.entries(scenes).forEach(([id, fns]) => this.config(id, fns));
             return;
         }
@@ -59,7 +59,7 @@ export class Scenes {
         this._active.forEach((a) => a.trigger(ev, ...args));
     }
 
-    _create(id: string, opts: CreateOpts = {}): Scene {
+    _create(id: string, opts: SceneOpts = {}): Scene {
         let cfg = this._config[id] || {};
         const used = Object.assign({}, cfg, opts);
 
@@ -215,9 +215,9 @@ export class Scenes {
     }
 }
 
-export const scenes: Record<string, CreateOpts> = {};
+export const scenes: Record<string, SceneOpts> = {};
 
-export function installScene(id: string, scene: CreateOpts | SceneMakeFn) {
+export function installScene(id: string, scene: SceneOpts | SceneMakeFn) {
     if (typeof scene === 'function') {
         scene = { make: scene };
     }

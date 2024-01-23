@@ -34,9 +34,10 @@ export interface AppOpts /* extends CANVAS.CanvasOptions */ {
     basic?: boolean; // alias for basicOnly
 
     // on?: SCENE.SceneOpts;
-    scene?: SCENE.CreateOpts | boolean;
-    scenes?: Record<string, SCENE.CreateOpts>;
+    scene?: SCENE.SceneOpts | boolean;
+    scenes?: Record<string, SCENE.SceneOpts>;
 
+    name?: string;
     loop?: Loop;
     dt?: number; // fixed_update ms
     canvas?: CANVAS.Canvas;
@@ -46,6 +47,7 @@ export interface AppOpts /* extends CANVAS.CanvasOptions */ {
 }
 
 export class App {
+    name: string;
     canvas: CANVAS.Canvas;
     events: EVENTS.Events;
     timers: TIMERS.Timers;
@@ -80,6 +82,7 @@ export class App {
             this.loop = new Loop();
         }
 
+        this.name = opts.name || 'Goblinwerks';
         this.styles = STYLE.defaultStyle;
         this.canvas = opts.canvas || CANVAS.make(opts);
         this.io = new IO.Queue();
@@ -226,16 +229,14 @@ export class App {
         this.realTime = realTime;
 
         if (!this.skipTime) {
-            if (!this.skipTime) {
-                this.fpsBuf.push(1000 / realDt);
-                this.fpsTimer += realDt;
-                if (this.fpsTimer >= 1) {
-                    this.fpsTimer = 0;
-                    this.fps = Math.round(
-                        this.fpsBuf.reduce((a, b) => a + b) / this.fpsBuf.length
-                    );
-                    this.fpsBuf = [];
-                }
+            this.fpsBuf.push(1000 / realDt);
+            this.fpsTimer += realDt;
+            if (this.fpsTimer >= 1) {
+                this.fpsTimer = 0;
+                this.fps = Math.round(
+                    this.fpsBuf.reduce((a, b) => a + b) / this.fpsBuf.length
+                );
+                this.fpsBuf = [];
             }
         }
         this.skipTime = false;
@@ -327,6 +328,7 @@ export class App {
         text: string,
         opts: Omit<PromptOptions, 'prompt'> = {}
     ): SCENE.Scene {
+        // TODO - Do we really have to do this?  Can't we reset the scene instead?
         // NEED TO CREATE A NEW SCENE EVERY TIME SO WE DON"T HAVE HOLDOVER EVENTS, etc...
         (<PromptOptions>opts).prompt = text;
         const prompt = this.scenes._create('prompt', PromptScene);

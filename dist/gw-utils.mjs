@@ -14775,6 +14775,7 @@ class App {
         else {
             this.loop = new Loop();
         }
+        this.name = opts.name || 'Goblinwerks';
         this.styles = defaultStyle;
         this.canvas = opts.canvas || make$6(opts);
         this.io = new Queue();
@@ -14894,14 +14895,12 @@ class App {
         const realDt = realTime - this.realTime;
         this.realTime = realTime;
         if (!this.skipTime) {
-            if (!this.skipTime) {
-                this.fpsBuf.push(1000 / realDt);
-                this.fpsTimer += realDt;
-                if (this.fpsTimer >= 1) {
-                    this.fpsTimer = 0;
-                    this.fps = Math.round(this.fpsBuf.reduce((a, b) => a + b) / this.fpsBuf.length);
-                    this.fpsBuf = [];
-                }
+            this.fpsBuf.push(1000 / realDt);
+            this.fpsTimer += realDt;
+            if (this.fpsTimer >= 1) {
+                this.fpsTimer = 0;
+                this.fps = Math.round(this.fpsBuf.reduce((a, b) => a + b) / this.fpsBuf.length);
+                this.fpsBuf = [];
             }
         }
         this.skipTime = false;
@@ -14972,6 +14971,7 @@ class App {
         return this.scenes.run('confirm', opts);
     }
     prompt(text, opts = {}) {
+        // TODO - Do we really have to do this?  Can't we reset the scene instead?
         // NEED TO CREATE A NEW SCENE EVERY TIME SO WE DON"T HAVE HOLDOVER EVENTS, etc...
         opts.prompt = text;
         const prompt = this.scenes._create('prompt', PromptScene);
