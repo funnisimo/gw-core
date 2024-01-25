@@ -104,33 +104,33 @@ describe('Input Widget', () => {
     test('typing', async () => {
         const el = build.input({ width: 10, id: 'ID' });
 
-        jest.spyOn(el, 'trigger');
+        jest.spyOn(el, 'emit');
         el.focus();
         // @ts-ignore
-        el.trigger.mockClear();
+        el.emit.mockClear();
 
         app._input(TEST.keypress('t'));
-        expect(el.trigger).toHaveBeenCalledWith('change');
+        expect(el.emit).toHaveBeenCalledWith('change');
 
         app._input(TEST.keypress('e'));
         app._input(TEST.keypress('s'));
         app._input(TEST.keypress('t'));
-        expect(el.trigger).toHaveBeenCalledTimes(4);
+        expect(el.emit).toHaveBeenCalledTimes(4);
 
         expect(el.text()).toEqual('test');
 
         // @ts-ignore
-        el.trigger.mockClear();
+        el.emit.mockClear();
         app._input(TEST.keypress('Backspace'));
         expect(el.text()).toEqual('tes');
-        expect(el.trigger).toHaveBeenCalledWith('change');
+        expect(el.emit).toHaveBeenCalledWith('change');
 
         // @ts-ignore
-        el.trigger.mockClear();
+        el.emit.mockClear();
         el.blur();
-        expect(el.trigger).not.toHaveBeenCalledWith('change');
-        expect(el.trigger).toHaveBeenCalledWith('blur', { reverse: false });
-        expect(el.trigger).toHaveBeenCalledWith('action');
+        expect(el.emit).not.toHaveBeenCalledWith('change');
+        expect(el.emit).toHaveBeenCalledWith('blur', { reverse: false });
+        expect(el.emit).toHaveBeenCalledWith('action');
     });
 
     test('backspace + delete', () => {

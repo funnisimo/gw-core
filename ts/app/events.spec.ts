@@ -37,7 +37,7 @@ describe('GW.events', () => {
     test('basic event', () => {
         const listener = jest.fn();
         events.on('test', listener);
-        events.trigger('test', 1, 2, 3);
+        events.emit('test', 1, 2, 3);
         expect(listener).toHaveBeenCalledWith(1, 2, 3);
     });
 
@@ -50,25 +50,25 @@ describe('GW.events', () => {
         const listener = jest.fn();
         events.on('test', listener);
         events.off('test', listener);
-        events.trigger('test', 1, 2, 3);
+        events.emit('test', 1, 2, 3);
         expect(listener).not.toHaveBeenCalled();
     });
 
     test('multiple calls', () => {
         const listener = jest.fn();
         events.on('test', listener);
-        events.trigger('test', 1, 2, 3);
-        events.trigger('test', 1, 2, 3);
+        events.emit('test', 1, 2, 3);
+        events.emit('test', 1, 2, 3);
         expect(listener).toHaveBeenCalledTimes(2);
 
-        expect(events.trigger('other')).toBeFalsy();
+        expect(events.emit('other')).toBeFalsy();
     });
 
     test('once', () => {
         const listener = jest.fn();
         events.once('test', listener);
-        events.trigger('test', 1, 2, 3);
-        events.trigger('test', 1, 2, 3);
+        events.emit('test', 1, 2, 3);
+        events.emit('test', 1, 2, 3);
         expect(listener).toHaveBeenCalledTimes(1);
     });
 
@@ -82,8 +82,8 @@ describe('GW.events', () => {
         const c = jest.fn();
         const cancel_c = events.on('test', c);
 
-        events.trigger('test', 1, 2, 3);
-        events.trigger('test', 1, 2, 3);
+        events.emit('test', 1, 2, 3);
+        events.emit('test', 1, 2, 3);
         expect(a).toHaveBeenCalledTimes(2);
         expect(b).toHaveBeenCalledTimes(2);
         expect(c).toHaveBeenCalledTimes(2);
@@ -94,14 +94,14 @@ describe('GW.events', () => {
 
         cancel_a();
         cancel_a();
-        events.trigger('test', 1, 2, 3);
+        events.emit('test', 1, 2, 3);
         expect(a).toHaveBeenCalledTimes(0);
         expect(b).toHaveBeenCalledTimes(1);
         expect(c).toHaveBeenCalledTimes(1);
 
         cancel_c();
 
-        events.trigger('test', 1, 2, 3);
+        events.emit('test', 1, 2, 3);
         expect(a).toHaveBeenCalledTimes(0);
         expect(b).toHaveBeenCalledTimes(2);
         expect(c).toHaveBeenCalledTimes(1);
@@ -109,7 +109,7 @@ describe('GW.events', () => {
         events.clear_event('test');
         events.clear_event('other');
 
-        events.trigger('test', 1, 2, 3);
+        events.emit('test', 1, 2, 3);
         expect(a).toHaveBeenCalledTimes(0);
         expect(b).toHaveBeenCalledTimes(2);
         expect(c).toHaveBeenCalledTimes(1);
@@ -125,26 +125,26 @@ describe('GW.events', () => {
         const c = jest.fn();
         events.on('test', c);
 
-        events.trigger('test', 1, 2, 3);
-        events.trigger('test', 1, 2, 3);
+        events.emit('test', 1, 2, 3);
+        events.emit('test', 1, 2, 3);
         expect(a).toHaveBeenCalledTimes(2);
         expect(b).toHaveBeenCalledTimes(1);
         expect(c).toHaveBeenCalledTimes(2);
 
         events.off('test', b); // Does nothing - already removed
-        events.trigger('test', 1, 2, 3);
+        events.emit('test', 1, 2, 3);
         expect(a).toHaveBeenCalledTimes(3);
         expect(b).toHaveBeenCalledTimes(1);
         expect(c).toHaveBeenCalledTimes(3);
 
         events.off('test', c);
-        events.trigger('test', 1, 2, 3);
+        events.emit('test', 1, 2, 3);
         expect(a).toHaveBeenCalledTimes(4);
         expect(b).toHaveBeenCalledTimes(1);
         expect(c).toHaveBeenCalledTimes(3);
 
         events.clear_event('test');
-        events.trigger('test', 1, 2, 3);
+        events.emit('test', 1, 2, 3);
         expect(a).toHaveBeenCalledTimes(4);
         expect(b).toHaveBeenCalledTimes(1);
         expect(c).toHaveBeenCalledTimes(3);
@@ -160,8 +160,8 @@ describe('GW.events', () => {
         const c = jest.fn();
         events.once('test', c);
 
-        events.trigger('test', 1, 2, 3);
-        events.trigger('test', 1, 2, 3);
+        events.emit('test', 1, 2, 3);
+        events.emit('test', 1, 2, 3);
         expect(a).toHaveBeenCalledTimes(1);
         expect(b).toHaveBeenCalledTimes(2);
         expect(c).toHaveBeenCalledTimes(1);
@@ -182,8 +182,8 @@ describe('GW.events', () => {
         const c = jest.fn().mockResolvedValue(true);
         events.on('test', c);
 
-        events.trigger('test', 1, 2, 3);
-        events.trigger('test', 1, 2, 3);
+        events.emit('test', 1, 2, 3);
+        events.emit('test', 1, 2, 3);
         expect(a).toHaveBeenCalledTimes(2);
         expect(b).toHaveBeenCalledTimes(2);
         expect(c).toHaveBeenCalledTimes(2);

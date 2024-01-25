@@ -139,7 +139,7 @@ export class Input extends Text.Text {
                 this.text(
                     TextUtils.spliceRaw(this._text, this._text.length - 1, 1)
                 );
-                this.trigger('change');
+                this.emit('change');
                 this._used && this._draw(this.scene!.buffer); // save some work?
             }
             ev.stopPropagation();
@@ -154,7 +154,7 @@ export class Input extends Text.Text {
             // allow only permitted input
             if (!this.maxLength || this._text.length < this.maxLength) {
                 this.text(this._text + ev.key);
-                this.trigger('change');
+                this.emit('change');
                 this._used && this._draw(this.scene!.buffer); // save some work?
             }
         }

@@ -134,7 +134,7 @@ export class Menu extends Widget.Widget {
             }
             const menuItem = new MenuButton(opts);
             menuItem.on('mouseenter', () => {
-                this.trigger('change');
+                this.emit('change');
             });
             menuItem.on('click', () => {
                 this.hide();
@@ -153,12 +153,12 @@ export class Menu extends Widget.Widget {
         this._selectedIndex = 0;
         this.scene!.setFocusWidget(this);
 
-        this.trigger('show');
+        this.emit('show');
     }
 
     hide(): void {
         this.hidden = true;
-        this.trigger('hide');
+        this.emit('hide');
     }
 
     nextItem() {
@@ -216,7 +216,7 @@ export class MenuButton extends Text.Text {
 
             this.on('mouseenter', () => {
                 this.menu!.hidden = false;
-                this.menu!.trigger('change');
+                this.menu!.emit('change');
             });
             this.on('mouseleave', (_n, _w, e) => {
                 if (this.parent?.bounds.contains(e)) {

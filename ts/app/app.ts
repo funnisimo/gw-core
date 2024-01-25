@@ -151,9 +151,9 @@ export class App {
         return this.events.on(ev, fn);
     }
 
-    trigger(ev: string, ...args: any[]) {
-        this.scenes.trigger(ev, ...args);
-        this.events.trigger(ev, ...args);
+    emit(ev: string, ...args: any[]) {
+        this.scenes.emit(ev, ...args);
+        this.events.emit(ev, ...args);
     }
 
     wait(delay: number, fn: TIMERS.TimerFn): EVENTS.CancelFn;
@@ -164,7 +164,7 @@ export class App {
         if (typeof args[1] === 'string') {
             const ev = args[1];
             args[2] = args[2] || {};
-            args[1] = () => this.trigger(ev, args[2]!);
+            args[1] = () => this.emit(ev, args[2]!);
         }
         return this.timers.setTimeout(args[1], args[0]);
     }
@@ -181,13 +181,13 @@ export class App {
         if (typeof fn === 'string') {
             const ev = args[1];
             args[2] = args[2] || {};
-            args[1] = () => this.trigger(ev, args[2]!);
+            args[1] = () => this.emit(ev, args[2]!);
         }
         return this.timers.setInterval(args[1], args[0]);
     }
 
     // run() {
-    //     this.trigger('run', this);
+    //     this.emit('run', this);
     //     let running = false;
     //     this.loopID = (setInterval(() => {
     //         if (!running) {
@@ -205,7 +205,7 @@ export class App {
     }
 
     stop() {
-        this.trigger('stop', this);
+        this.emit('stop', this);
         this.loop.stop();
         this.stopped = true;
     }
@@ -283,31 +283,31 @@ export class App {
         dt = dt || this.dt;
         this.scenes.update(dt);
         this.timers.update(dt);
-        this.events.trigger('update', dt);
+        this.events.emit('update', dt);
     }
 
     _fixed_update(dt = 0) {
         dt = dt || this.dt;
         this.scenes.fixed_update(dt);
-        this.events.trigger('fixed_update', dt);
+        this.events.emit('fixed_update', dt);
     }
 
     _frameStart() {
         // this.buffer.nullify();
         this.scenes.frameStart();
-        this.events.trigger('frameStart');
+        this.events.emit('frameStart');
     }
     _draw() {
         this.scenes.draw(this.buffer);
-        this.events.trigger('draw', this.buffer);
+        this.events.emit('draw', this.buffer);
     }
     _frameDebug() {
         this.scenes.frameDebug(this.buffer);
-        this.events.trigger('frameDebug', this.buffer);
+        this.events.emit('frameDebug', this.buffer);
     }
     _frameEnd() {
         this.scenes.frameEnd(this.buffer);
-        this.events.trigger('frameEnd', this.buffer);
+        this.events.emit('frameEnd', this.buffer);
         this.canvas.render(this.buffer);
     }
 

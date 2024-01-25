@@ -239,7 +239,7 @@ export class Choice extends Widget.Widget {
         this._list.data(prompt.choices());
         this._info.text(prompt.info(arg));
 
-        this.trigger('prompt', this._prompt);
+        this.emit('prompt', this._prompt);
         return new Promise((resolve) => (this._done = resolve));
     }
 
@@ -263,7 +263,7 @@ export class Choice extends Widget.Widget {
             const row = this._list.selectedRow;
             p.choose(row);
             this._info.text(p.info());
-            this.trigger('change', p);
+            this.emit('change', p);
             // e.stopPropagation(); // I want to eat this event
         });
         this._list.on('action', () => {
@@ -488,7 +488,7 @@ export class Inquiry {
         }
 
         if (!handled) {
-            handled = this.widget.trigger(name, args);
+            handled = this.widget.emit(name, args);
         }
         return handled;
     }

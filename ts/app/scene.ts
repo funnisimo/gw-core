@@ -67,7 +67,7 @@ export interface SceneObj {
     draw(buffer: BUFFER.Buffer): void;
     destroy(): void;
 
-    trigger(ev: string, ...args: any[]): void;
+    emit(ev: string, ...args: any[]): void;
 }
 
 // Scene
@@ -139,11 +139,11 @@ export class Scene {
             this.on(ev, fn);
         });
 
-        this.trigger('create', opts);
+        this.emit('create', opts);
     }
 
     destroy(data?: any) {
-        this.trigger('destroy', data);
+        this.emit('destroy', data);
         this.all.forEach((c) => c.destroy());
         this.children = [];
         this.all = [];
@@ -163,7 +163,7 @@ export class Scene {
         // this.tweens.clear();
         this.buffer.nullify();
         this.needsDraw = true;
-        this.events.trigger('start', opts); // this will start this one in the app.scenes obj
+        this.events.emit('start', opts); // this will start this one in the app.scenes obj
     }
 
     run(data: StartOpts = {}) {
@@ -174,7 +174,7 @@ export class Scene {
 
     stop(data?: any) {
         this.stopped = true;
-        this.events.trigger('stop', data);
+        this.events.emit('stop', data);
     }
 
     pause(opts?: PauseOpts): void {
@@ -186,7 +186,7 @@ export class Scene {
             draw: true,
         };
         Object.assign(this.paused, opts);
-        this.events.trigger('pause');
+        this.events.emit('pause');
     }
 
     resume(opts?: ResumeOpts) {
@@ -203,19 +203,19 @@ export class Scene {
             }
         });
         this.needsDraw = true;
-        this.events.trigger('resume');
+        this.events.emit('resume');
     }
 
     // FRAME STEPS
 
     frameStart() {
-        this.events.trigger('frameStart');
+        this.events.emit('frameStart');
     }
 
     input(e: IO.Event) {
         if (this.paused.input || this.stopped) return;
 
-        this.trigger('input', e);
+        this.emit('input', e);
         if (e.defaultPrevented || e.propagationStopped) return;
 
         if (e.type === IO.KEYPRESS) {
@@ -255,7 +255,7 @@ export class Scene {
         if (!this.paused.timers) this.timers.update(dt);
         if (!this.paused.tweens) this.tweens.update(dt);
         if (!this.paused.update) {
-            this.events.trigger('update', dt);
+            this.events.emit('update', dt);
             this.all.forEach((c) => c.update(dt));
         }
     }
@@ -264,7 +264,7 @@ export class Scene {
         if (this.stopped) return;
 
         if (!this.paused.update) {
-            this.events.trigger('fixed_update', dt);
+            this.events.emit('fixed_update', dt);
             this.all.forEach((c) => c.fixed_update(dt));
         }
     }
@@ -273,7 +273,7 @@ export class Scene {
         if (this.stopped) return;
         if (!this.paused.draw && this.needsDraw) {
             this._draw(this.buffer);
-            this.trigger('draw', this.buffer);
+            this.emit('draw', this.buffer);
             this.children.forEach((c) => c.draw(this.buffer));
             this.needsDraw = false;
         }
@@ -288,10 +288,10 @@ export class Scene {
     }
 
     frameDebug(buffer: BUFFER.Buffer) {
-        this.events.trigger('frameDebug', buffer);
+        this.events.emit('frameDebug', buffer);
     }
     frameEnd(buffer: BUFFER.Buffer) {
-        this.events.trigger('frameEnd', buffer);
+        this.events.emit('frameEnd', buffer);
     }
 
     // ANIMATION
@@ -564,8 +564,8 @@ export class Scene {
     once(ev: string, cb: EVENTS.CallbackFn): EVENTS.CancelFn {
         return this.events.once(ev, cb);
     }
-    trigger(ev: string | string[], ...args: any[]) {
-        return this.events.trigger(ev, ...args);
+    emit(ev: string | string[], ...args: any[]) {
+        return this.events.emit(ev, ...args);
     }
 
     // TIMERS
@@ -580,7 +580,7 @@ export class Scene {
         if (typeof fn === 'string') {
             const ev = fn;
             ctx = ctx || {};
-            fn = () => this.trigger(ev, ctx!);
+            fn = () => this.emit(ev, ctx!);
         }
         return this.timers.setTimeout(fn, delay);
     }
@@ -599,7 +599,7 @@ export class Scene {
         if (typeof fn === 'string') {
             const ev = fn;
             ctx = ctx || {};
-            fn = () => this.trigger(ev, ctx!);
+            fn = () => this.emit(ev, ctx!);
         }
         return this.timers.setInterval(fn, delay);
     }
@@ -664,8 +664,8 @@ export class Scene {
 //         return this.events.on(ev, fn);
 //     }
 
-//     trigger(ev: string, ...args: any[]) {
-//         return this.events.trigger(ev, ...args);
+//     emit(ev: string, ...args: any[]) {
+//         return this.events.emit(ev, ...args);
 //     }
 
 //     wait(delay: number, fn: TIMERS.TimerFn): EVENTS.CancelFn;
@@ -678,7 +678,7 @@ export class Scene {
 //         if (typeof fn === 'string') {
 //             const ev = fn;
 //             ctx = ctx || {};
-//             fn = () => this.trigger(ev, ctx!);
+//             fn = () => this.emit(ev, ctx!);
 //         }
 //         return this.timers.setTimeout(fn, delay);
 //     }
@@ -697,13 +697,13 @@ export class Scene {
 //         if (typeof fn === 'string') {
 //             const ev = fn;
 //             ctx = ctx || {};
-//             fn = () => this.trigger(ev, ctx!);
+//             fn = () => this.emit(ev, ctx!);
 //         }
 //         return this.timers.setInterval(fn, delay);
 //     }
 
 //     // run() {
-//     //     this.trigger('run', this);
+//     //     this.emit('run', this);
 //     //     let running = false;
 //     //     this.loopID = (setInterval(() => {
 //     //         if (!running) {
@@ -718,17 +718,17 @@ export class Scene {
 //     create(app: App) {
 //         this.app = app;
 //         this.buffer = app.buffer.clone();
-//         this.trigger('create');
+//         this.emit('create');
 //     }
 //     destroy() {
-//         this.trigger('destroy');
+//         this.emit('destroy');
 //     }
 
 //     start(data?: Record<string, any>) {
 //         this.stopped = false;
 //         this.timers.clear();
 //         this.tweens.clear();
-//         this.events.trigger('start', data || {});
+//         this.events.emit('start', data || {});
 //     }
 
 //     run(data?: Record<string, any>): Promise<any> {
@@ -745,7 +745,7 @@ export class Scene {
 
 //     stop(data?: Record<string, any>) {
 //         this.stopped = true;
-//         this.events.trigger('stop', data || {});
+//         this.events.emit('stop', data || {});
 //     }
 
 //     pause(opts?: PauseOpts): void {
@@ -757,7 +757,7 @@ export class Scene {
 //             draw: true,
 //         };
 //         Object.assign(this.paused, opts);
-//         this.events.trigger('pause');
+//         this.events.emit('pause');
 //     }
 
 //     resume(opts?: ResumeOpts) {
@@ -773,25 +773,25 @@ export class Scene {
 //                 this.paused[key as keyof ResumeOpts] = false;
 //             }
 //         });
-//         this.events.trigger('resume');
+//         this.events.emit('resume');
 //     }
 
 //     // CHILDREN
 
 //     add(obj: SceneObj) {
 //         this.children.push(obj);
-//         obj.trigger('add', this);
+//         obj.emit('add', this);
 //     }
 
 //     remove(obj: SceneObj) {
 //         UTILS.arrayDelete(this.children, obj);
-//         obj.trigger('remove', this);
+//         obj.emit('remove', this);
 //     }
 
 //     // FRAME STEPS
 
 //     frameStart() {
-//         this.events.trigger('frameStart');
+//         this.events.emit('frameStart');
 //     }
 
 //     input(ev: IO.Event) {
@@ -806,14 +806,14 @@ export class Scene {
 //         if (!this.paused.tweens) this.tweens.update(dt);
 //         if (!this.paused.update) {
 //             this.children.forEach((c) => c.update(dt));
-//             this.events.trigger('update', dt);
+//             this.events.emit('update', dt);
 //         }
 //     }
 
 //     draw(buffer: CANVAS.Buffer) {
 //         if (this.stopped) return;
 //         if (!this.paused.draw) {
-//             this.events.trigger('draw', this.buffer);
+//             this.events.emit('draw', this.buffer);
 //             this.children.forEach((c) => c.draw(this.buffer));
 //         }
 //         if (this.buffer.changed) {
@@ -822,10 +822,10 @@ export class Scene {
 //         }
 //     }
 //     frameDebug(buffer: CANVAS.Buffer) {
-//         this.events.trigger('frameDebug', buffer);
+//         this.events.emit('frameDebug', buffer);
 //     }
 //     frameEnd(buffer: CANVAS.Buffer) {
-//         this.events.trigger('frameEnd', buffer);
+//         this.events.emit('frameEnd', buffer);
 //         // if (this.buffer.changed) {
 //         //     buffer.apply(this.buffer);
 //         //     this.buffer.changed = false;

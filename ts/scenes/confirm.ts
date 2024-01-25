@@ -28,9 +28,9 @@ export const ConfirmScene = {
     create(this: Scene) {
         this.on('keypress', (e) => {
             if (e.key === 'Escape') {
-                this.trigger('CANCEL');
+                this.emit('CANCEL');
             } else if (e.key === 'Enter') {
-                this.trigger('OK');
+                this.emit('OK');
             }
         });
 

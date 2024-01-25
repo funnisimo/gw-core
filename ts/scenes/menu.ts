@@ -23,7 +23,7 @@ export const MenuScene = {
         if (!data.menu) throw new Error('Must supply a menu to show!');
         this.addChild(data.menu);
         this.events.onUnhandled = (ev: string, ...args: any[]) => {
-            data.origin.trigger(ev, ...args);
+            data.origin.emit(ev, ...args);
         };
     },
 

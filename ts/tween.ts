@@ -29,8 +29,8 @@ export class BaseObj<T extends { update(t: number): void }> {
         return this;
     }
 
-    trigger(ev: string | string[], ...args: any[]): boolean {
-        return this.events.trigger(ev, ...args);
+    emit(ev: string | string[], ...args: any[]): boolean {
+        return this.events.emit(ev, ...args);
     }
 
     addChild(t: T): this {
@@ -45,7 +45,7 @@ export class BaseObj<T extends { update(t: number): void }> {
 
     update(dt: number) {
         this.children.forEach((c) => c.update(dt));
-        this.trigger('update', dt);
+        this.emit('update', dt);
     }
 }
 
@@ -267,7 +267,7 @@ export class Tween<T> extends BaseObj<Tween<T>> implements TweenUpdate {
         );
 
         if (madeChange) {
-            this.trigger('update', this._obj, pct);
+            this.emit('update', this._obj, pct);
         }
 
         if (this._time >= this._duration) {
@@ -282,7 +282,7 @@ export class Tween<T> extends BaseObj<Tween<T>> implements TweenUpdate {
                     this._restart();
                 }
             } else if (!this.isRunning()) {
-                this.trigger('stop', this._obj, this._success);
+                this.emit('stop', this._obj, this._success);
             }
         }
     }
@@ -298,10 +298,10 @@ export class Tween<T> extends BaseObj<Tween<T>> implements TweenUpdate {
         this._updateProperties(this._obj, this._start, this._goal, 0);
 
         if (this._count == 1) {
-            this.trigger('start', this._obj, 0);
+            this.emit('start', this._obj, 0);
         } else {
-            this.trigger('repeat', this._obj, this._count) ||
-                this.trigger('update', this._obj, 0);
+            this.emit('repeat', this._obj, this._count) ||
+                this.emit('update', this._obj, 0);
         }
     }
 

@@ -106,11 +106,11 @@ export class Events {
         }
     }
 
-    trigger(ev: string | string[], ...args: any[]): boolean {
+    emit(ev: string | string[], ...args: any[]): boolean {
         if (Array.isArray(ev)) {
             let success = false;
             for (let name of ev) {
-                success = this.trigger(name, ...args) || success;
+                success = this.emit(name, ...args) || success;
             }
             return success;
         }

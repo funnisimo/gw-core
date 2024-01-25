@@ -285,7 +285,7 @@ export class DataTable extends WIDGET.Widget {
             });
         }
 
-        this.trigger('change', {
+        this.emit('change', {
             row,
             col,
             data: this.selectedData,
@@ -311,7 +311,7 @@ export class DataTable extends WIDGET.Widget {
     }
 
     blur(reverse?: boolean): void {
-        this.trigger('change', {
+        this.emit('change', {
             col: this.selectedColumn,
             row: this.selectedRow,
             data: this.selectedData,
@@ -434,7 +434,7 @@ export class DataTable extends WIDGET.Widget {
     //                     if (select) c.prop('selected', active);
     //                 });
     //             }
-    //             this.trigger('change', {
+    //             this.emit('change', {
     //                 row,
     //                 col,
     //                 data: this.selectedData,
@@ -447,7 +447,7 @@ export class DataTable extends WIDGET.Widget {
     //     if (!this.contains(e) || this.disabled || this.hidden) return false;
 
     //     this.action();
-    //     // this.trigger('change', {
+    //     // this.emit('change', {
     //     //     row: this.selectedRow,
     //     //     col: this.selectedColumn,
     //     //     data: this.selectedData,
@@ -465,7 +465,7 @@ export class DataTable extends WIDGET.Widget {
 
         if (e.key === 'Enter') {
             this.action(e);
-            // this.trigger('change', {
+            // this.emit('change', {
             //     row: this.selectedRow,
             //     col: this.selectedColumn,
             //     data: this.selectedData,

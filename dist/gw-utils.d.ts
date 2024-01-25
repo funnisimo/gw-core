@@ -1578,7 +1578,7 @@ declare class Events {
     on(ev: string | string[], fn: CallbackFn): CancelFn;
     once(ev: string | string[], fn: CallbackFn): CancelFn;
     off(ev: string | string[], cb?: CallbackFn): void;
-    trigger(ev: string | string[], ...args: any[]): boolean;
+    emit(ev: string | string[], ...args: any[]): boolean;
     _unhandled(ev: string, args: any[]): boolean;
     clear(): void;
     clear_event(name: string): void;
@@ -1752,7 +1752,7 @@ declare class BaseObj<T extends {
     on(ev: string | string[], fn: CallbackFn): this;
     once(ev: string | string[], fn: CallbackFn): this;
     off(ev: string | string[], fn: CallbackFn): this;
-    trigger(ev: string | string[], ...args: any[]): boolean;
+    emit(ev: string | string[], ...args: any[]): boolean;
     addChild(t: T): this;
     removeChild(t: T): this;
     update(dt: number): void;
@@ -2027,7 +2027,7 @@ declare class Scenes {
     config(id: string, opts: SceneOpts | SceneMakeFn): void;
     get(): Scene;
     get(id?: string): Scene | null;
-    trigger(ev: string, ...args: any[]): void;
+    emit(ev: string, ...args: any[]): void;
     _create(id: string, opts?: SceneOpts): Scene;
     start(id: string, data?: StartOpts): Scene;
     run(id: string, data?: StartOpts): Scene;
@@ -2294,7 +2294,7 @@ declare class App {
     get mouseXY(): XY;
     get scene(): Scene;
     on(ev: string, fn: CallbackFn): CancelFn;
-    trigger(ev: string, ...args: any[]): void;
+    emit(ev: string, ...args: any[]): void;
     wait(delay: number, fn: TimerFn): CancelFn;
     wait(delay: number, fn: string, ctx?: Record<string, any>): CancelFn;
     repeat(delay: number, fn: TimerFn): CancelFn;
@@ -2353,7 +2353,7 @@ interface SceneObj {
     update(dt: number): void;
     draw(buffer: Buffer$1): void;
     destroy(): void;
-    trigger(ev: string, ...args: any[]): void;
+    emit(ev: string, ...args: any[]): void;
 }
 declare class Scene {
     id: string;
@@ -2420,7 +2420,7 @@ declare class Scene {
     on(cfg: CallbackObj): CancelFn;
     on(ev: string | string[], cb: CallbackFn): CancelFn;
     once(ev: string, cb: CallbackFn): CancelFn;
-    trigger(ev: string | string[], ...args: any[]): boolean;
+    emit(ev: string | string[], ...args: any[]): boolean;
     wait(delay: number, fn: TimerFn): CancelFn;
     wait(delay: number, fn: string, ctx?: Record<string, any>): CancelFn;
     repeat(delay: number, fn: TimerFn): CancelFn;
@@ -2556,7 +2556,7 @@ declare class Widget {
     on(ev: string | string[], cb: CallbackFn): CancelFn;
     once(ev: string | string[], cb: CallbackFn): CancelFn;
     off(ev: string | string[], cb: CallbackFn): void;
-    trigger(ev: string | string[], ...args: any[]): boolean;
+    emit(ev: string | string[], ...args: any[]): boolean;
     action(ev?: Event): void;
     input(e: Event): void;
     _mouseenter(e: Event): void;
@@ -2613,7 +2613,7 @@ declare class Event implements EventType {
     reset(type: string, opts?: Partial<Event>): void;
     clone(): Event;
     dispatch(handler: {
-        trigger(name: string | string[], e: Event): void;
+        emit(name: string, e: Event): void;
     }): void;
 }
 declare type ControlFn = () => void | Promise<void>;

@@ -538,7 +538,7 @@ export class Widget {
             this.scene.setFocusWidget(this);
         }
 
-        this.trigger(v ? 'hide' : 'show');
+        this.emit(v ? 'hide' : 'show');
     }
 
     get needsStyle(): boolean {
@@ -559,13 +559,13 @@ export class Widget {
         if (this.prop('focus')) return;
 
         this.prop('focus', true);
-        this.trigger('focus', { reverse });
+        this.emit('focus', { reverse });
     }
 
     blur(reverse = false): void {
         if (!this.prop('focus')) return;
         this.prop('focus', false);
-        this.trigger('blur', { reverse });
+        this.emit('blur', { reverse });
     }
 
     // CHILDREN
@@ -686,18 +686,18 @@ export class Widget {
         // cannot turn off keypress automatically because
         // we could be waiting for dispatched events - e.g. 'Enter', or 'dir', ...
     }
-    trigger(ev: string | string[], ...args: any[]) {
-        return this.events.trigger(ev, ...args);
+    emit(ev: string | string[], ...args: any[]) {
+        return this.events.emit(ev, ...args);
     }
     action(ev?: IO.Event) {
         if (ev && ev.defaultPrevented) return;
-        if (this.trigger('action')) {
+        if (this.emit('action')) {
             ev?.stopPropagation();
         }
 
         const action = this._attrStr('action');
         if (!action || !action.length) return;
-        if (this.scene && this.scene.trigger(action, this)) {
+        if (this.scene && this.scene.emit(action, this)) {
             ev?.stopPropagation();
         }
     }
@@ -705,7 +705,7 @@ export class Widget {
     // FRAME
 
     input(e: IO.Event) {
-        this.trigger('input', e);
+        this.emit('input', e);
         if (e.defaultPrevented || e.propagationStopped) return;
 
         if (e.type === IO.KEYPRESS) {
@@ -721,7 +721,7 @@ export class Widget {
         if (!this.bounds.contains(e)) return;
         if (this.hovered) return;
         this.hovered = true;
-        this.trigger('mouseenter', e);
+        this.emit('mouseenter', e);
         // if (this._parent) {
         //     this._parent._mouseenter(e);
         // }
@@ -743,14 +743,14 @@ export class Widget {
     }
 
     _mousemove(e: IO.Event): void {
-        this.trigger('mousemove', e);
+        this.emit('mousemove', e);
     }
 
     _mouseleave(e: IO.Event): void {
         if (!this.hovered) return;
         if (this.bounds.contains(e)) return;
         this.hovered = false;
-        this.trigger('mouseleave', e);
+        this.emit('mouseleave', e);
         // if (this._parent) {
         //     this._parent.mouseleave(e);
         // }
@@ -776,7 +776,7 @@ export class Widget {
     }
 
     _click(e: IO.Event) {
-        this.events.trigger('click', e);
+        this.events.emit('click', e);
     }
 
     // keypress bubbles
@@ -798,7 +798,7 @@ export class Widget {
         if (this.hidden) return;
 
         this._draw(buffer);
-        this.trigger('draw', buffer);
+        this.emit('draw', buffer);
 
         this.children.forEach((c) => c.draw(buffer));
     }
@@ -821,11 +821,11 @@ export class Widget {
     }
 
     update(dt: number) {
-        this.trigger('update', dt);
+        this.emit('update', dt);
     }
 
     fixed_update(dt: number) {
-        this.trigger('fixed_update', dt);
+        this.emit('fixed_update', dt);
     }
 
     destroy() {

@@ -55,8 +55,8 @@ export class Scenes {
         return this._active.find((s) => s.id === id) || null;
     }
 
-    trigger(ev: string, ...args: any[]): void {
-        this._active.forEach((a) => a.trigger(ev, ...args));
+    emit(ev: string, ...args: any[]): void {
+        this._active.forEach((a) => a.emit(ev, ...args));
     }
 
     _create(id: string, opts: SceneOpts = {}): Scene {

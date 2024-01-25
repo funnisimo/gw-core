@@ -7594,20 +7594,20 @@ class Event {
         if (this.type === KEYPRESS) {
             // this.propagationStopped = true;
             if (this.dir) {
-                handler.trigger('dir', this);
+                handler.emit('dir', this);
             }
             if (!this.propagationStopped) {
-                handler.trigger(this.key, this);
+                handler.emit(this.key, this);
             }
             if (this.code !== this.key) {
                 if (!this.propagationStopped) {
-                    handler.trigger(this.code, this);
+                    handler.emit(this.code, this);
                 }
             }
             if (this.defaultPrevented || this.propagationStopped)
                 return;
         }
-        handler.trigger(this.type, this);
+        handler.emit(this.type, this);
     }
 }
 // let IOMAP: IOMap = {};
@@ -9551,11 +9551,11 @@ class Events {
             events[current] = null;
         }
     }
-    trigger(ev, ...args) {
+    emit(ev, ...args) {
         if (Array.isArray(ev)) {
             let success = false;
             for (let name of ev) {
-                success = this.trigger(name, ...args) || success;
+                success = this.emit(name, ...args) || success;
             }
             return success;
         }
@@ -9612,8 +9612,8 @@ class BaseObj {
         this.events.off(ev, fn);
         return this;
     }
-    trigger(ev, ...args) {
-        return this.events.trigger(ev, ...args);
+    emit(ev, ...args) {
+        return this.events.emit(ev, ...args);
     }
     addChild(t) {
         this.children.push(t);
@@ -9625,7 +9625,7 @@ class BaseObj {
     }
     update(dt) {
         this.children.forEach((c) => c.update(dt));
-        this.trigger('update', dt);
+        this.emit('update', dt);
     }
 }
 class Tween extends BaseObj {
@@ -9792,7 +9792,7 @@ class Tween extends BaseObj {
         const pct = this._easing(this._time / this._duration);
         let madeChange = this._updateProperties(this._obj, this._start, this._goal, pct);
         if (madeChange) {
-            this.trigger('update', this._obj, pct);
+            this.emit('update', this._obj, pct);
         }
         if (this._time >= this._duration) {
             if (this._repeat > this._count || this._repeat < 0) {
@@ -9807,7 +9807,7 @@ class Tween extends BaseObj {
                 }
             }
             else if (!this.isRunning()) {
-                this.trigger('stop', this._obj, this._success);
+                this.emit('stop', this._obj, this._success);
             }
         }
     }
@@ -9820,11 +9820,11 @@ class Tween extends BaseObj {
         // });
         this._updateProperties(this._obj, this._start, this._goal, 0);
         if (this._count == 1) {
-            this.trigger('start', this._obj, 0);
+            this.emit('start', this._obj, 0);
         }
         else {
-            this.trigger('repeat', this._obj, this._count) ||
-                this.trigger('update', this._obj, 0);
+            this.emit('repeat', this._obj, this._count) ||
+                this.emit('update', this._obj, 0);
         }
     }
     // gameTick(_dt: number): boolean {
@@ -10494,10 +10494,10 @@ class Scene {
                 return;
             this.on(ev, fn);
         });
-        this.trigger('create', opts);
+        this.emit('create', opts);
     }
     destroy(data) {
-        this.trigger('destroy', data);
+        this.emit('destroy', data);
         this.all.forEach((c) => c.destroy());
         this.children = [];
         this.all = [];
@@ -10515,7 +10515,7 @@ class Scene {
         // this.tweens.clear();
         this.buffer.nullify();
         this.needsDraw = true;
-        this.events.trigger('start', opts); // this will start this one in the app.scenes obj
+        this.events.emit('start', opts); // this will start this one in the app.scenes obj
     }
     run(data = {}) {
         this.app.scenes.pause();
@@ -10524,7 +10524,7 @@ class Scene {
     }
     stop(data) {
         this.stopped = true;
-        this.events.trigger('stop', data);
+        this.events.emit('stop', data);
     }
     pause(opts) {
         opts = opts || {
@@ -10535,7 +10535,7 @@ class Scene {
             draw: true,
         };
         Object.assign(this.paused, opts);
-        this.events.trigger('pause');
+        this.events.emit('pause');
     }
     resume(opts) {
         opts = opts || {
@@ -10551,16 +10551,16 @@ class Scene {
             }
         });
         this.needsDraw = true;
-        this.events.trigger('resume');
+        this.events.emit('resume');
     }
     // FRAME STEPS
     frameStart() {
-        this.events.trigger('frameStart');
+        this.events.emit('frameStart');
     }
     input(e) {
         if (this.paused.input || this.stopped)
             return;
-        this.trigger('input', e);
+        this.emit('input', e);
         if (e.defaultPrevented || e.propagationStopped)
             return;
         if (e.type === KEYPRESS) {
@@ -10604,7 +10604,7 @@ class Scene {
         if (!this.paused.tweens)
             this.tweens.update(dt);
         if (!this.paused.update) {
-            this.events.trigger('update', dt);
+            this.events.emit('update', dt);
             this.all.forEach((c) => c.update(dt));
         }
     }
@@ -10612,7 +10612,7 @@ class Scene {
         if (this.stopped)
             return;
         if (!this.paused.update) {
-            this.events.trigger('fixed_update', dt);
+            this.events.emit('fixed_update', dt);
             this.all.forEach((c) => c.fixed_update(dt));
         }
     }
@@ -10621,7 +10621,7 @@ class Scene {
             return;
         if (!this.paused.draw && this.needsDraw) {
             this._draw(this.buffer);
-            this.trigger('draw', this.buffer);
+            this.emit('draw', this.buffer);
             this.children.forEach((c) => c.draw(this.buffer));
             this.needsDraw = false;
         }
@@ -10634,10 +10634,10 @@ class Scene {
         buffer.fill(this.bg);
     }
     frameDebug(buffer) {
-        this.events.trigger('frameDebug', buffer);
+        this.events.emit('frameDebug', buffer);
     }
     frameEnd(buffer) {
-        this.events.trigger('frameEnd', buffer);
+        this.events.emit('frameEnd', buffer);
     }
     // ANIMATION
     fadeIn(widget, ms) {
@@ -10845,14 +10845,14 @@ class Scene {
     once(ev, cb) {
         return this.events.once(ev, cb);
     }
-    trigger(ev, ...args) {
-        return this.events.trigger(ev, ...args);
+    emit(ev, ...args) {
+        return this.events.emit(ev, ...args);
     }
     wait(delay, fn, ctx) {
         if (typeof fn === 'string') {
             const ev = fn;
             ctx = ctx || {};
-            fn = () => this.trigger(ev, ctx);
+            fn = () => this.emit(ev, ctx);
         }
         return this.timers.setTimeout(fn, delay);
     }
@@ -10860,7 +10860,7 @@ class Scene {
         if (typeof fn === 'string') {
             const ev = fn;
             ctx = ctx || {};
-            fn = () => this.trigger(ev, ctx);
+            fn = () => this.emit(ev, ctx);
         }
         return this.timers.setInterval(fn, delay);
     }
@@ -10915,8 +10915,8 @@ class Scene {
 //     on(ev: string, fn: EVENTS.CallbackFn): EVENTS.CancelFn {
 //         return this.events.on(ev, fn);
 //     }
-//     trigger(ev: string, ...args: any[]) {
-//         return this.events.trigger(ev, ...args);
+//     emit(ev: string, ...args: any[]) {
+//         return this.events.emit(ev, ...args);
 //     }
 //     wait(delay: number, fn: TIMERS.TimerFn): EVENTS.CancelFn;
 //     wait(delay: number, fn: string, ctx?: Record<string, any>): EVENTS.CancelFn;
@@ -10928,7 +10928,7 @@ class Scene {
 //         if (typeof fn === 'string') {
 //             const ev = fn;
 //             ctx = ctx || {};
-//             fn = () => this.trigger(ev, ctx!);
+//             fn = () => this.emit(ev, ctx!);
 //         }
 //         return this.timers.setTimeout(fn, delay);
 //     }
@@ -10946,12 +10946,12 @@ class Scene {
 //         if (typeof fn === 'string') {
 //             const ev = fn;
 //             ctx = ctx || {};
-//             fn = () => this.trigger(ev, ctx!);
+//             fn = () => this.emit(ev, ctx!);
 //         }
 //         return this.timers.setInterval(fn, delay);
 //     }
 //     // run() {
-//     //     this.trigger('run', this);
+//     //     this.emit('run', this);
 //     //     let running = false;
 //     //     this.loopID = (setInterval(() => {
 //     //         if (!running) {
@@ -10965,16 +10965,16 @@ class Scene {
 //     create(app: App) {
 //         this.app = app;
 //         this.buffer = app.buffer.clone();
-//         this.trigger('create');
+//         this.emit('create');
 //     }
 //     destroy() {
-//         this.trigger('destroy');
+//         this.emit('destroy');
 //     }
 //     start(data?: Record<string, any>) {
 //         this.stopped = false;
 //         this.timers.clear();
 //         this.tweens.clear();
-//         this.events.trigger('start', data || {});
+//         this.events.emit('start', data || {});
 //     }
 //     run(data?: Record<string, any>): Promise<any> {
 //         return new Promise((resolve) => {
@@ -10989,7 +10989,7 @@ class Scene {
 //     }
 //     stop(data?: Record<string, any>) {
 //         this.stopped = true;
-//         this.events.trigger('stop', data || {});
+//         this.events.emit('stop', data || {});
 //     }
 //     pause(opts?: PauseOpts): void {
 //         opts = opts || {
@@ -11000,7 +11000,7 @@ class Scene {
 //             draw: true,
 //         };
 //         Object.assign(this.paused, opts);
-//         this.events.trigger('pause');
+//         this.events.emit('pause');
 //     }
 //     resume(opts?: ResumeOpts) {
 //         opts = opts || {
@@ -11015,20 +11015,20 @@ class Scene {
 //                 this.paused[key as keyof ResumeOpts] = false;
 //             }
 //         });
-//         this.events.trigger('resume');
+//         this.events.emit('resume');
 //     }
 //     // CHILDREN
 //     add(obj: SceneObj) {
 //         this.children.push(obj);
-//         obj.trigger('add', this);
+//         obj.emit('add', this);
 //     }
 //     remove(obj: SceneObj) {
 //         UTILS.arrayDelete(this.children, obj);
-//         obj.trigger('remove', this);
+//         obj.emit('remove', this);
 //     }
 //     // FRAME STEPS
 //     frameStart() {
-//         this.events.trigger('frameStart');
+//         this.events.emit('frameStart');
 //     }
 //     input(ev: IO.Event) {
 //         if (this.stopped || this.paused.input) return;
@@ -11040,13 +11040,13 @@ class Scene {
 //         if (!this.paused.tweens) this.tweens.update(dt);
 //         if (!this.paused.update) {
 //             this.children.forEach((c) => c.update(dt));
-//             this.events.trigger('update', dt);
+//             this.events.emit('update', dt);
 //         }
 //     }
 //     draw(buffer: CANVAS.Buffer) {
 //         if (this.stopped) return;
 //         if (!this.paused.draw) {
-//             this.events.trigger('draw', this.buffer);
+//             this.events.emit('draw', this.buffer);
 //             this.children.forEach((c) => c.draw(this.buffer));
 //         }
 //         if (this.buffer.changed) {
@@ -11055,10 +11055,10 @@ class Scene {
 //         }
 //     }
 //     frameDebug(buffer: CANVAS.Buffer) {
-//         this.events.trigger('frameDebug', buffer);
+//         this.events.emit('frameDebug', buffer);
 //     }
 //     frameEnd(buffer: CANVAS.Buffer) {
-//         this.events.trigger('frameEnd', buffer);
+//         this.events.emit('frameEnd', buffer);
 //         // if (this.buffer.changed) {
 //         //     buffer.apply(this.buffer);
 //         //     this.buffer.changed = false;
@@ -11125,8 +11125,8 @@ class Scenes {
         }
         return this._active.find((s) => s.id === id) || null;
     }
-    trigger(ev, ...args) {
-        this._active.forEach((a) => a.trigger(ev, ...args));
+    emit(ev, ...args) {
+        this._active.forEach((a) => a.emit(ev, ...args));
     }
     _create(id, opts = {}) {
         let cfg = this._config[id] || {};
@@ -11683,7 +11683,7 @@ class Widget {
         else if (!v && this.scene && this.scene.focused === null) {
             this.scene.setFocusWidget(this);
         }
-        this.trigger(v ? 'hide' : 'show');
+        this.emit(v ? 'hide' : 'show');
     }
     get needsStyle() {
         return this._propBool('needsStyle');
@@ -11701,13 +11701,13 @@ class Widget {
         if (this.prop('focus'))
             return;
         this.prop('focus', true);
-        this.trigger('focus', { reverse });
+        this.emit('focus', { reverse });
     }
     blur(reverse = false) {
         if (!this.prop('focus'))
             return;
         this.prop('focus', false);
-        this.trigger('blur', { reverse });
+        this.emit('blur', { reverse });
     }
     // CHILDREN
     setParent(parent, opts) {
@@ -11820,25 +11820,25 @@ class Widget {
         // cannot turn off keypress automatically because
         // we could be waiting for dispatched events - e.g. 'Enter', or 'dir', ...
     }
-    trigger(ev, ...args) {
-        return this.events.trigger(ev, ...args);
+    emit(ev, ...args) {
+        return this.events.emit(ev, ...args);
     }
     action(ev) {
         if (ev && ev.defaultPrevented)
             return;
-        if (this.trigger('action')) {
+        if (this.emit('action')) {
             ev === null || ev === void 0 ? void 0 : ev.stopPropagation();
         }
         const action = this._attrStr('action');
         if (!action || !action.length)
             return;
-        if (this.scene && this.scene.trigger(action, this)) {
+        if (this.scene && this.scene.emit(action, this)) {
             ev === null || ev === void 0 ? void 0 : ev.stopPropagation();
         }
     }
     // FRAME
     input(e) {
-        this.trigger('input', e);
+        this.emit('input', e);
         if (e.defaultPrevented || e.propagationStopped)
             return;
         if (e.type === KEYPRESS) {
@@ -11857,7 +11857,7 @@ class Widget {
         if (this.hovered)
             return;
         this.hovered = true;
-        this.trigger('mouseenter', e);
+        this.emit('mouseenter', e);
         // if (this._parent) {
         //     this._parent._mouseenter(e);
         // }
@@ -11877,7 +11877,7 @@ class Widget {
         }
     }
     _mousemove(e) {
-        this.trigger('mousemove', e);
+        this.emit('mousemove', e);
     }
     _mouseleave(e) {
         if (!this.hovered)
@@ -11885,7 +11885,7 @@ class Widget {
         if (this.bounds.contains(e))
             return;
         this.hovered = false;
-        this.trigger('mouseleave', e);
+        this.emit('mouseleave', e);
         // if (this._parent) {
         //     this._parent.mouseleave(e);
         // }
@@ -11908,7 +11908,7 @@ class Widget {
         }
     }
     _click(e) {
-        this.events.trigger('click', e);
+        this.events.emit('click', e);
     }
     // keypress bubbles
     keypress(e) {
@@ -11928,7 +11928,7 @@ class Widget {
         if (this.hidden)
             return;
         this._draw(buffer);
-        this.trigger('draw', buffer);
+        this.emit('draw', buffer);
         this.children.forEach((c) => c.draw(buffer));
     }
     _draw(buffer) {
@@ -11939,10 +11939,10 @@ class Widget {
         buffer.fillRect(b.x, b.y, b.width, b.height, ' ', this._used.bg, this._used.bg);
     }
     update(dt) {
-        this.trigger('update', dt);
+        this.emit('update', dt);
     }
     fixed_update(dt) {
-        this.trigger('fixed_update', dt);
+        this.emit('fixed_update', dt);
     }
     destroy() {
         if (this.parent) {
@@ -12368,10 +12368,10 @@ const ConfirmScene = {
     create() {
         this.on('keypress', (e) => {
             if (e.key === 'Escape') {
-                this.trigger('CANCEL');
+                this.emit('CANCEL');
             }
             else if (e.key === 'Enter') {
-                this.trigger('OK');
+                this.emit('OK');
             }
         });
         this.on('OK', () => {
@@ -12549,7 +12549,7 @@ class Input extends Text {
         if (ev.key == 'Delete' || ev.key == 'Backspace') {
             if (this._text.length) {
                 this.text(spliceRaw(this._text, this._text.length - 1, 1));
-                this.trigger('change');
+                this.emit('change');
                 this._used && this._draw(this.scene.buffer); // save some work?
             }
             ev.stopPropagation();
@@ -12564,7 +12564,7 @@ class Input extends Text {
             // allow only permitted input
             if (!this.maxLength || this._text.length < this.maxLength) {
                 this.text(this._text + ev.key);
-                this.trigger('change');
+                this.emit('change');
                 this._used && this._draw(this.scene.buffer); // save some work?
             }
         }
@@ -12739,7 +12739,7 @@ const MenuScene = {
             throw new Error('Must supply a menu to show!');
         this.addChild(data.menu);
         this.events.onUnhandled = (ev, ...args) => {
-            data.origin.trigger(ev, ...args);
+            data.origin.emit(ev, ...args);
         };
     },
     stop() {
@@ -13148,7 +13148,7 @@ class DataTable extends Widget {
                 c.prop('selected', active);
             });
         }
-        this.trigger('change', {
+        this.emit('change', {
             row,
             col,
             data: this.selectedData,
@@ -13168,7 +13168,7 @@ class DataTable extends Widget {
         return this.select(this.selectedColumn - 1, this.selectedRow);
     }
     blur(reverse) {
-        this.trigger('change', {
+        this.emit('change', {
             col: this.selectedColumn,
             row: this.selectedRow,
             data: this.selectedData,
@@ -13272,7 +13272,7 @@ class DataTable extends Widget {
     //                     if (select) c.prop('selected', active);
     //                 });
     //             }
-    //             this.trigger('change', {
+    //             this.emit('change', {
     //                 row,
     //                 col,
     //                 data: this.selectedData,
@@ -13283,7 +13283,7 @@ class DataTable extends Widget {
     // click(e: IO.Event): boolean {
     //     if (!this.contains(e) || this.disabled || this.hidden) return false;
     //     this.action();
-    //     // this.trigger('change', {
+    //     // this.emit('change', {
     //     //     row: this.selectedRow,
     //     //     col: this.selectedColumn,
     //     //     data: this.selectedData,
@@ -13299,7 +13299,7 @@ class DataTable extends Widget {
         }
         if (e.key === 'Enter') {
             this.action(e);
-            // this.trigger('change', {
+            // this.emit('change', {
             //     row: this.selectedRow,
             //     col: this.selectedColumn,
             //     data: this.selectedData,
@@ -13484,7 +13484,7 @@ class Menu extends Widget {
             }
             const menuItem = new MenuButton(opts);
             menuItem.on('mouseenter', () => {
-                this.trigger('change');
+                this.emit('change');
             });
             menuItem.on('click', () => {
                 this.hide();
@@ -13500,11 +13500,11 @@ class Menu extends Widget {
         this.hidden = false;
         this._selectedIndex = 0;
         this.scene.setFocusWidget(this);
-        this.trigger('show');
+        this.emit('show');
     }
     hide() {
         this.hidden = true;
-        this.trigger('hide');
+        this.emit('hide');
     }
     nextItem() {
         ++this._selectedIndex;
@@ -13555,7 +13555,7 @@ class MenuButton extends Text {
             this.menu = this._initMenu(opts);
             this.on('mouseenter', () => {
                 this.menu.hidden = false;
-                this.menu.trigger('change');
+                this.menu.emit('change');
             });
             this.on('mouseleave', (_n, _w, e) => {
                 var _a;
@@ -13765,8 +13765,8 @@ class Menubar extends Widget {
             button.on(['click', 'Enter', ' '], () => {
                 if (typeof value === 'string') {
                     // simulate action
-                    this.trigger(value);
-                    this.scene.trigger(value);
+                    this.emit(value);
+                    this.scene.emit(value);
                 }
                 else {
                     this.scene.app.scenes.run('menu', {
@@ -13815,7 +13815,7 @@ export class MenubarButton extends Text.Text {
 
             this.on('mouseenter', () => {
                 menu.hidden = false;
-                menu.trigger('change');
+                menu.emit('change');
                 return true;
             });
             this.on('mouseleave', (e) => {
@@ -14184,7 +14184,7 @@ class Choice extends Widget {
         this._text.text(prompt.prompt(arg));
         this._list.data(prompt.choices());
         this._info.text(prompt.info(arg));
-        this.trigger('prompt', this._prompt);
+        this.emit('prompt', this._prompt);
         return new Promise((resolve) => (this._done = resolve));
     }
     _addList() {
@@ -14207,7 +14207,7 @@ class Choice extends Widget {
             const row = this._list.selectedRow;
             p.choose(row);
             this._info.text(p.info());
-            this.trigger('change', p);
+            this.emit('change', p);
             // e.stopPropagation(); // I want to eat this event
         });
         this._list.on('action', () => {
@@ -14415,7 +14415,7 @@ class Inquiry {
             handled = handler(name, source || this.widget, args) || handled;
         }
         if (!handled) {
-            handled = this.widget.trigger(name, args);
+            handled = this.widget.emit(name, args);
         }
         return handled;
     }
@@ -14471,11 +14471,11 @@ class Checkbox extends Text {
             return;
         if (ev.key === 'Enter' || ev.key === ' ') {
             this.toggleProp('checked');
-            this.trigger('change');
+            this.emit('change');
         }
         else if (ev.key === 'Backspace' || ev.key === 'Delete') {
             this.prop('checked', false);
-            this.trigger('change');
+            this.emit('change');
         }
     }
     _draw(buffer) {
@@ -14835,9 +14835,9 @@ class App {
         // return this.scene.on(ev, fn);
         return this.events.on(ev, fn);
     }
-    trigger(ev, ...args) {
-        this.scenes.trigger(ev, ...args);
-        this.events.trigger(ev, ...args);
+    emit(ev, ...args) {
+        this.scenes.emit(ev, ...args);
+        this.events.emit(ev, ...args);
     }
     wait(...args) {
         // @ts-ignore
@@ -14845,7 +14845,7 @@ class App {
         if (typeof args[1] === 'string') {
             const ev = args[1];
             args[2] = args[2] || {};
-            args[1] = () => this.trigger(ev, args[2]);
+            args[1] = () => this.emit(ev, args[2]);
         }
         return this.timers.setTimeout(args[1], args[0]);
     }
@@ -14855,12 +14855,12 @@ class App {
         if (typeof fn === 'string') {
             const ev = args[1];
             args[2] = args[2] || {};
-            args[1] = () => this.trigger(ev, args[2]);
+            args[1] = () => this.emit(ev, args[2]);
         }
         return this.timers.setInterval(args[1], args[0]);
     }
     // run() {
-    //     this.trigger('run', this);
+    //     this.emit('run', this);
     //     let running = false;
     //     this.loopID = (setInterval(() => {
     //         if (!running) {
@@ -14877,7 +14877,7 @@ class App {
         this.loop.start(this._frame.bind(this));
     }
     stop() {
-        this.trigger('stop', this);
+        this.emit('stop', this);
         this.loop.stop();
         this.stopped = true;
     }
@@ -14937,29 +14937,29 @@ class App {
         dt = dt || this.dt;
         this.scenes.update(dt);
         this.timers.update(dt);
-        this.events.trigger('update', dt);
+        this.events.emit('update', dt);
     }
     _fixed_update(dt = 0) {
         dt = dt || this.dt;
         this.scenes.fixed_update(dt);
-        this.events.trigger('fixed_update', dt);
+        this.events.emit('fixed_update', dt);
     }
     _frameStart() {
         // this.buffer.nullify();
         this.scenes.frameStart();
-        this.events.trigger('frameStart');
+        this.events.emit('frameStart');
     }
     _draw() {
         this.scenes.draw(this.buffer);
-        this.events.trigger('draw', this.buffer);
+        this.events.emit('draw', this.buffer);
     }
     _frameDebug() {
         this.scenes.frameDebug(this.buffer);
-        this.events.trigger('frameDebug', this.buffer);
+        this.events.emit('frameDebug', this.buffer);
     }
     _frameEnd() {
         this.scenes.frameEnd(this.buffer);
-        this.events.trigger('frameEnd', this.buffer);
+        this.events.emit('frameEnd', this.buffer);
         this.canvas.render(this.buffer);
     }
     alert(text, opts = {}) {

@@ -105,23 +105,23 @@ export class Event implements EventType {
         return other;
     }
 
-    dispatch(handler: { trigger(name: string | string[], e: Event): void }) {
+    dispatch(handler: { emit(name: string, e: Event): void }) {
         if (this.type === KEYPRESS) {
             // this.propagationStopped = true;
             if (this.dir) {
-                handler.trigger('dir', this);
+                handler.emit('dir', this);
             }
             if (!this.propagationStopped) {
-                handler.trigger(this.key, this);
+                handler.emit(this.key, this);
             }
             if (this.code !== this.key) {
                 if (!this.propagationStopped) {
-                    handler.trigger(this.code, this);
+                    handler.emit(this.code, this);
                 }
             }
             if (this.defaultPrevented || this.propagationStopped) return;
         }
-        handler.trigger(this.type, this);
+        handler.emit(this.type, this);
     }
 }
 

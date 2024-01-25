@@ -183,9 +183,9 @@ export interface GameObjRaw {
      */
     on(ev: string, action: () => void): EVENTS.CancelFn;
     /**
-     * Trigger an event.
+     * emit an event.
      */
-    trigger(ev: string, ...args: any[]): void;
+    emit(ev: string, ...args: any[]): void;
     /**
      * Remove the game obj from scene.
      */
@@ -269,8 +269,8 @@ export function make<T>(comps: CompList<T>): GameObj<T> {
         add<T2>(comps: CompList<T2>): GameObj<T2> {
             const obj = make(comps);
             obj.parent = this;
-            obj.trigger('add');
-            onLoad(() => obj.trigger('load'));
+            obj.emit('add');
+            onLoad(() => obj.emit('load'));
             this.children.push(obj);
             return obj;
         },
@@ -285,7 +285,7 @@ export function make<T>(comps: CompList<T>): GameObj<T> {
             const idx = this.children.indexOf(obj);
             if (idx !== -1) {
                 obj.parent = null;
-                obj.trigger('destroy');
+                obj.emit('destroy');
                 this.children.splice(idx, 1);
             }
         },
@@ -297,7 +297,7 @@ export function make<T>(comps: CompList<T>): GameObj<T> {
         update() {
             if (this.paused) return;
             this.revery((child) => child.update());
-            this.trigger('update');
+            this.emit('update');
         },
 
         draw() {
@@ -306,7 +306,7 @@ export function make<T>(comps: CompList<T>): GameObj<T> {
             // gfx.pushTranslate(this.pos);
             // gfx.pushScale(this.scale);
             // gfx.pushRotateZ(this.angle);
-            this.trigger('draw');
+            this.emit('draw');
             this.every((child) => child.draw());
             // gfx.popTransform();
         },
@@ -496,8 +496,8 @@ export function make<T>(comps: CompList<T>): GameObj<T> {
         // 	return this.onUpdate(...args);
         // },
 
-        trigger(ev: string, ...args: any[]): void {
-            this.events.trigger(ev, ...args);
+        emit(ev: string, ...args: any[]): void {
+            this.events.emit(ev, ...args);
 
             // const gEvents = game.objEvents[ev];
 

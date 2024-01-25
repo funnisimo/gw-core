@@ -78,10 +78,10 @@ export class Checkbox extends Text.Text {
 
         if (ev.key === 'Enter' || ev.key === ' ') {
             this.toggleProp('checked');
-            this.trigger('change');
+            this.emit('change');
         } else if (ev.key === 'Backspace' || ev.key === 'Delete') {
             this.prop('checked', false);
-            this.trigger('change');
+            this.emit('change');
         }
     }
 

@@ -184,8 +184,8 @@ export class Menubar extends Widget.Widget {
             button.on(['click', 'Enter', ' '], () => {
                 if (typeof value === 'string') {
                     // simulate action
-                    this.trigger(value);
-                    this.scene!.trigger(value);
+                    this.emit(value);
+                    this.scene!.emit(value);
                 } else {
                     this.scene!.app.scenes.run('menu', {
                         menu,
@@ -226,7 +226,7 @@ export class MenubarButton extends Text.Text {
 
             this.on('mouseenter', () => {
                 menu.hidden = false;
-                menu.trigger('change');
+                menu.emit('change');
                 return true;
             });
             this.on('mouseleave', (e) => {
