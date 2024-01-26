@@ -14,7 +14,7 @@ import * as STYLE from './style';
 import { Buffer } from '../buffer';
 // import * as COLOR from '../color';
 
-export interface AppOpts /* extends CANVAS.CanvasOptions */ {
+export interface AppOpts {
     // CanvasBase
     width?: number;
     height?: number;
@@ -337,7 +337,7 @@ export class App {
     }
 }
 
-export function make(opts: Partial<AppOpts>): App {
+export function make(opts: AppOpts): App {
     const app = new App(opts);
     return app;
 }

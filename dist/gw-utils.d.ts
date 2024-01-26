@@ -760,9 +760,10 @@ declare class Grid<T> extends Array<Array<T>> {
     /**
      * Calls the supplied function for each cell in the grid.
      * @param fn - The function to call on each item in the grid.
+     * 
      */
      // @ts-ignore
-
+     
     forEach(fn: GridEach<T>): void;
     forEachAsync(fn: AsyncGridEach<T>): Promise<void>;
     eachNeighbor(x: number, y: number, fn: GridEach<T>, only4dirs?: boolean): void;
@@ -775,9 +776,10 @@ declare class Grid<T> extends Array<Array<T>> {
      * TODO - Do we need this???
      * TODO - Should this only be in NumGrid?
      * TODO - Should it alloc instead of using constructor?
+     * 
      */
      // @ts-ignore
-
+     
     map(fn: GridEach<T>): any;
     /**
      * Returns whether or not an item in the grid matches the provided function.
@@ -785,9 +787,10 @@ declare class Grid<T> extends Array<Array<T>> {
      * TODO - Do we need this???
      * TODO - Should this only be in NumGrid?
      * TODO - Should it alloc instead of using constructor?
+     * 
      */
      // @ts-ignore
-
+     
     some(fn: GridMatch<T>): boolean;
     forCircle(x: number, y: number, radius: number, fn: GridEach<T>): void;
     hasXY(x: number, y: number): boolean;
@@ -804,9 +807,10 @@ declare class Grid<T> extends Array<Array<T>> {
     /**
      * Fills the entire grid with the supplied value
      * @param v - The fill value or a function that returns the fill value.
+     * 
      */
      // @ts-ignore
-
+     
     fill(v: T | GridUpdate<T>): void;
     fillRect(x: number, y: number, w: number, h: number, v: T | GridUpdate<T>): void;
     fillCircle(x: number, y: number, radius: number, v: T | GridUpdate<T>): void;
@@ -817,9 +821,10 @@ declare class Grid<T> extends Array<Array<T>> {
      * Finds the first matching value/result and returns that location as an xy.Loc
      * @param v - The fill value or a function that returns the fill value.
      * @returns xy.Loc | null - The location of the first cell matching the criteria or null if not found.
+     * 
      */
      // @ts-ignore
-
+     
     find(match: GridMatch<T> | T): Loc$1 | null;
     dump(fmtFn?: GridFormat<T>, log?: {
         (...data: any[]): void;
@@ -2004,7 +2009,7 @@ declare namespace index$5 {
     index$5_Scenes as Scenes,
     index$5_scenes as scenes,
     index$5_installScene as installScene,
-    index$5_AppOpts as AppOpts,
+    AppOpts,
     index$5_App as App,
     make$5 as make,
   };
@@ -2313,7 +2318,7 @@ declare class App {
     confirm(text: string, opts?: Omit<ConfirmOptions, 'text'>): Scene;
     prompt(text: string, opts?: Omit<PromptOptions$1, 'prompt'>): Scene;
 }
-declare function make$5(opts: Partial<AppOpts>): App;
+declare function make$5(opts: AppOpts): App;
 
 declare type SceneCallback = (this: Scene, ...args: any[]) => void;
 declare type SceneMakeFn = (id: string, app: App) => Scene;
