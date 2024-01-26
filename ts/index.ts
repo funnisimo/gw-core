@@ -32,3 +32,6 @@ export * as tween from './tween';
 export * as ui from './scenes';
 export * as widget from './widgets';
 export * as app from './app';
+
+import { Err, Ok, Result, Some, None, Option, UndefinedBehaviorError, match } from '@rslike/std';
+export { Err, Ok, Result, Some, None, Option, UndefinedBehaviorError, match };

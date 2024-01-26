@@ -3,6 +3,7 @@
 .rollup.cache/
 .vscode/
 .theia/
+dist/_temp/
 
 # Logs
 logs

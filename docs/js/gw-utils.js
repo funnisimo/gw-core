@@ -6,6 +6,10 @@
 
 	var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
 
+	function getDefaultExportFromCjs (x) {
+		return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, 'default') ? x['default'] : x;
+	}
+
 	/**
 	 * The base implementation of `_.clamp` which doesn't coerce arguments.
 	 *
@@ -123,11 +127,11 @@
 	var root$2 = _root;
 
 	/** Built-in value references. */
-	var Symbol$3 = root$2.Symbol;
+	var Symbol$4 = root$2.Symbol;
 
-	var _Symbol = Symbol$3;
+	var _Symbol = Symbol$4;
 
-	var Symbol$2 = _Symbol;
+	var Symbol$3 = _Symbol;
 
 	/** Used for built-in method references. */
 	var objectProto$5 = Object.prototype;
@@ -143,7 +147,7 @@
 	var nativeObjectToString$1 = objectProto$5.toString;
 
 	/** Built-in value references. */
-	var symToStringTag$1 = Symbol$2 ? Symbol$2.toStringTag : undefined;
+	var symToStringTag$1 = Symbol$3 ? Symbol$3.toStringTag : undefined;
 
 	/**
 	 * A specialized version of `baseGetTag` which ignores `Symbol.toStringTag` values.
@@ -198,7 +202,7 @@
 
 	var _objectToString = objectToString$1;
 
-	var Symbol$1 = _Symbol,
+	var Symbol$2 = _Symbol,
 	    getRawTag = _getRawTag,
 	    objectToString = _objectToString;
 
@@ -207,7 +211,7 @@
 	    undefinedTag = '[object Undefined]';
 
 	/** Built-in value references. */
-	var symToStringTag = Symbol$1 ? Symbol$1.toStringTag : undefined;
+	var symToStringTag = Symbol$2 ? Symbol$2.toStringTag : undefined;
 
 	/**
 	 * The base implementation of `getTag` without fallbacks for buggy environments.
@@ -393,6 +397,8 @@
 
 	var clamp_1 = clamp$1;
 
+	var _clamp = /*@__PURE__*/getDefaultExportFromCjs(clamp_1);
+
 	/**
 	 * GW.utils
 	 * @module utils
@@ -426,7 +432,7 @@
 	 * @param max {Number} the maximum value
 	 * @returns {Number} the clamped value
 	 */
-	const clamp = clamp_1;
+	const clamp = _clamp;
 	// export function clamp(v: number, min: number, max: number) {
 	//     if (v < min) return min;
 	//     if (v > max) return max;
@@ -880,9 +886,9 @@
 	const FP_BASE = 16;
 	const FP_FACTOR = 1 << 16;
 	function forLineBetween(fromX, fromY, toX, toY, stepFn) {
-	    let targetVector = [], error = [], currentVector = [], previousVector = [], quadrantTransform = [];
+	    let targetVector = [], error = [], currentVector = [], quadrantTransform = [];
 	    let largerTargetComponent, i;
-	    let currentLoc = [-1, -1], previousLoc = [-1, -1];
+	    let currentLoc = [-1, -1];
 	    if (fromX == toX && fromY == toY) {
 	        return true;
 	    }
@@ -898,7 +904,7 @@
 	        else {
 	            quadrantTransform[i] = 1;
 	        }
-	        currentVector[i] = previousVector[i] = error[i] = 0;
+	        currentVector[i] = error[i] = 0;
 	        currentLoc[i] = originLoc[i];
 	    }
 	    // normalize target vector such that one dimension equals 1 and the other is in [0, 1].
@@ -909,7 +915,6 @@
 	    targetVector[1] = Math.floor((targetVector[1] * FP_FACTOR) / largerTargetComponent);
 	    do {
 	        for (i = 0; i <= 1; i++) {
-	            previousLoc[i] = currentLoc[i];
 	            currentVector[i] += targetVector[i] >> FP_BASE;
 	            error[i] += targetVector[i] == FP_FACTOR ? 0 : targetVector[i];
 	            if (error[i] >= Math.floor(FP_FACTOR / 2)) {
@@ -1077,59 +1082,59 @@
 
 	var xy = /*#__PURE__*/Object.freeze({
 		__proto__: null,
+		Bounds: Bounds,
+		CLOCK_DIRS: CLOCK_DIRS,
 		DIRS: DIRS$2,
-		NO_DIRECTION: NO_DIRECTION,
-		UP: UP,
-		RIGHT: RIGHT,
 		DOWN: DOWN,
 		LEFT: LEFT,
-		RIGHT_UP: RIGHT_UP,
-		RIGHT_DOWN: RIGHT_DOWN,
 		LEFT_DOWN: LEFT_DOWN,
 		LEFT_UP: LEFT_UP,
-		CLOCK_DIRS: CLOCK_DIRS,
-		isLoc: isLoc,
-		isXY: isXY,
+		NO_DIRECTION: NO_DIRECTION,
+		RIGHT: RIGHT,
+		RIGHT_DOWN: RIGHT_DOWN,
+		RIGHT_UP: RIGHT_UP,
+		UP: UP,
+		add: add,
+		addTo: addTo,
+		arcCount: arcCount,
 		asLoc: asLoc,
 		asXY: asXY,
-		x: x,
-		y: y,
-		contains: contains,
-		Bounds: Bounds,
-		copy: copy,
-		addTo: addTo,
-		add: add,
-		equals: equals,
-		isDiagonal: isDiagonal,
-		lerp: lerp,
-		eachNeighbor: eachNeighbor,
-		eachNeighborAsync: eachNeighborAsync,
-		matchingNeighbor: matchingNeighbor,
-		straightDistanceBetween: straightDistanceBetween,
-		maxAxisFromTo: maxAxisFromTo,
-		maxAxisBetween: maxAxisBetween,
-		distanceBetween: distanceBetween,
-		distanceFromTo: distanceFromTo,
 		calcRadius: calcRadius,
+		closestMatchingLocs: closestMatchingLocs,
+		contains: contains,
+		copy: copy,
 		dirBetween: dirBetween,
 		dirFromTo: dirFromTo,
 		dirIndex: dirIndex,
-		isOppositeDir: isOppositeDir,
-		isSameDir: isSameDir,
 		dirSpread: dirSpread,
-		stepFromTo: stepFromTo,
+		distanceBetween: distanceBetween,
+		distanceFromTo: distanceFromTo,
+		dumpAround: dumpAround,
+		dumpRect: dumpRect,
+		eachNeighbor: eachNeighbor,
+		eachNeighborAsync: eachNeighborAsync,
+		equals: equals,
+		forBorder: forBorder,
+		forCircle: forCircle,
 		forLine: forLine,
 		forLineBetween: forLineBetween,
 		forLineFromTo: forLineFromTo,
+		forRect: forRect,
 		getLine: getLine,
 		getLineThru: getLineThru,
-		forCircle: forCircle,
-		forRect: forRect,
-		dumpRect: dumpRect,
-		dumpAround: dumpAround,
-		forBorder: forBorder,
-		arcCount: arcCount,
-		closestMatchingLocs: closestMatchingLocs
+		isDiagonal: isDiagonal,
+		isLoc: isLoc,
+		isOppositeDir: isOppositeDir,
+		isSameDir: isSameDir,
+		isXY: isXY,
+		lerp: lerp,
+		matchingNeighbor: matchingNeighbor,
+		maxAxisBetween: maxAxisBetween,
+		maxAxisFromTo: maxAxisFromTo,
+		stepFromTo: stepFromTo,
+		straightDistanceBetween: straightDistanceBetween,
+		x: x,
+		y: y
 	});
 
 	// CHAIN
@@ -1252,17 +1257,17 @@
 
 	var list = /*#__PURE__*/Object.freeze({
 		__proto__: null,
-		length: length$1,
 		at: at,
-		includes: includes,
-		forEach: forEach,
-		push: push,
-		remove: remove,
+		every: every,
 		find: find,
+		forEach: forEach,
+		includes: includes,
 		insert: insert,
+		length: length$1,
+		push: push,
 		reduce: reduce,
-		some: some,
-		every: every
+		remove: remove,
+		some: some
 	});
 
 	/**
@@ -2188,7 +2193,7 @@
 
 	var _arrayMap = arrayMap$1;
 
-	var Symbol = _Symbol,
+	var Symbol$1 = _Symbol,
 	    arrayMap = _arrayMap,
 	    isArray$1 = isArray_1,
 	    isSymbol$1 = isSymbol_1;
@@ -2197,7 +2202,7 @@
 	var INFINITY$1 = 1 / 0;
 
 	/** Used to convert symbols to primitives and strings. */
-	var symbolProto = Symbol ? Symbol.prototype : undefined,
+	var symbolProto = Symbol$1 ? Symbol$1.prototype : undefined,
 	    symbolToString = symbolProto ? symbolProto.toString : undefined;
 
 	/**
@@ -2358,7 +2363,9 @@
 
 	var get_1 = get;
 
-	const getValue = get_1;
+	var get$1 = /*@__PURE__*/getDefaultExportFromCjs(get_1);
+
+	const getValue = get$1;
 	// export function extend(obj, name, fn) {
 	//   const base = obj[name] || NOOP;
 	//   const newFn = fn.bind(obj, base.bind(obj));
@@ -2555,18 +2562,18 @@
 
 	var object = /*#__PURE__*/Object.freeze({
 		__proto__: null,
-		getValue: getValue,
-		copyObject: copyObject,
 		assignObject: assignObject,
 		assignOmitting: assignOmitting,
-		setDefault: setDefault,
-		setDefaults: setDefaults,
-		setOptions: setOptions,
+		clearObject: clearObject,
+		copyObject: copyObject,
+		firstOpt: firstOpt,
+		getOpt: getOpt,
+		getValue: getValue,
 		kindDefaults: kindDefaults,
 		pick: pick,
-		clearObject: clearObject,
-		getOpt: getOpt,
-		firstOpt: firstOpt
+		setDefault: setDefault,
+		setDefaults: setDefaults,
+		setOptions: setOptions
 	});
 
 	const DIRS$1 = DIRS$2;
@@ -2919,9 +2926,6 @@
 	    free: 0,
 	};
 	class NumGrid extends Grid {
-	    constructor(w, h, v = 0) {
-	        super(w, h, v);
-	    }
 	    static alloc(...args) {
 	        let w = args[0] || 0;
 	        let h = args[1] || 0;
@@ -2952,6 +2956,9 @@
 	            ++stats.free;
 	            --stats.active;
 	        }
+	    }
+	    constructor(w, h, v = 0) {
+	        super(w, h, v);
 	    }
 	    _resize(width, height, v) {
 	        const fn = typeof v === 'function' ? v : () => v;
@@ -3147,15 +3154,15 @@
 
 	var grid = /*#__PURE__*/Object.freeze({
 		__proto__: null,
-		makeArray: makeArray,
 		Grid: Grid,
-		stats: stats,
 		NumGrid: NumGrid,
 		alloc: alloc$1,
 		free: free$1,
-		make: make$e,
-		offsetZip: offsetZip,
 		intersection: intersection,
+		make: make$e,
+		makeArray: makeArray,
+		offsetZip: offsetZip,
+		stats: stats,
 		unite: unite
 	});
 
@@ -3463,11 +3470,11 @@
 	var rng = /*#__PURE__*/Object.freeze({
 		__proto__: null,
 		Alea: Alea,
-		configure: configure$1,
 		Random: Random,
-		random: random,
+		configure: configure$1,
 		cosmetic: cosmetic,
-		make: make$d
+		make: make$d,
+		random: random
 	});
 
 	class Range {
@@ -3576,9 +3583,9 @@
 	var range = /*#__PURE__*/Object.freeze({
 		__proto__: null,
 		Range: Range,
-		make: make$c,
-		from: from$4,
 		asFn: asFn,
+		from: from$4,
+		make: make$c,
 		value: value
 	});
 
@@ -3634,7 +3641,7 @@
 	        };
 	    }
 	}
-	function match(tags, matchRules) {
+	function match$1(tags, matchRules) {
 	    const matchFn = makeMatch(matchRules);
 	    return matchFn(tags);
 	}
@@ -3643,7 +3650,7 @@
 		__proto__: null,
 		make: make$b,
 		makeMatch: makeMatch,
-		match: match
+		match: match$1
 	});
 
 	///////////////////////////////////
@@ -3818,10 +3825,10 @@
 	var flag = /*#__PURE__*/Object.freeze({
 		__proto__: null,
 		fl: fl,
-		toString: toString,
 		from: from$3,
 		from_safe: from_safe,
-		make: make$a
+		make: make$a,
+		toString: toString
 	});
 
 	class AsyncQueue {
@@ -4445,23 +4452,23 @@
 
 	var index$9 = /*#__PURE__*/Object.freeze({
 		__proto__: null,
-		colors: colors,
+		BLACK: BLACK,
 		Color: Color,
+		NONE: NONE,
+		WHITE: WHITE,
+		colors: colors,
+		distance: distance,
+		from: from$2,
 		fromArray: fromArray,
 		fromCss: fromCss,
 		fromName: fromName,
 		fromNumber: fromNumber,
-		make: make$9,
-		from: from$2,
-		separate: separate,
-		relativeLuminance: relativeLuminance,
-		distance: distance,
-		smoothScalar: smoothScalar,
 		install: install$2,
 		installSpread: installSpread,
-		NONE: NONE,
-		BLACK: BLACK,
-		WHITE: WHITE
+		make: make$9,
+		relativeLuminance: relativeLuminance,
+		separate: separate,
+		smoothScalar: smoothScalar
 	});
 
 	class Mixer {
@@ -4611,9 +4618,9 @@
 	}
 
 	var options = {
-	    colorStart: '#{',
-	    colorEnd: '}',
-	    field: '{{',
+	    colorStart: '#{', // alt-z
+	    colorEnd: '}', // alt-j
+	    field: '{{', // alt-6
 	    fieldEnd: '}}',
 	    defaultFg: null,
 	    defaultBg: null,
@@ -5421,6 +5428,7 @@
 	}
 
 	// import { Color } from '../color';
+	// import * as Utils from './utils';
 	function wordWrap(text, lineWidth, opts = {}) {
 	    // let inside = false;
 	    // let inline = false;
@@ -5675,34 +5683,34 @@
 
 	var index$8 = /*#__PURE__*/Object.freeze({
 		__proto__: null,
-		configure: configure,
-		compile: compile$1,
-		apply: apply,
-		eachChar: eachChar,
-		wordWrap: wordWrap,
-		splitIntoLines: splitIntoLines,
 		addHelper: addHelper,
-		options: options,
-		length: length,
 		advanceChars: advanceChars,
+		apply: apply,
+		capitalize: capitalize,
+		center: center,
+		compile: compile$1,
+		configure: configure,
+		eachChar: eachChar,
 		findChar: findChar,
 		firstChar: firstChar,
-		startsWith: startsWith,
-		padStart: padStart,
+		hash: hash,
+		length: length,
+		options: options,
 		padEnd: padEnd,
-		center: center,
-		truncate: truncate,
-		capitalize: capitalize,
-		title_case: title_case,
+		padStart: padStart,
 		removeColors: removeColors,
 		spliceRaw: spliceRaw,
-		hash: hash,
 		splitArgs: splitArgs,
-		toSingularVerb: toSingularVerb,
-		toPluralVerb: toPluralVerb,
-		toSingularNoun: toSingularNoun,
+		splitIntoLines: splitIntoLines,
+		startsWith: startsWith,
+		title_case: title_case,
 		toPluralNoun: toPluralNoun,
-		toQuantity: toQuantity
+		toPluralVerb: toPluralVerb,
+		toQuantity: toQuantity,
+		toSingularNoun: toSingularNoun,
+		toSingularVerb: toSingularVerb,
+		truncate: truncate,
+		wordWrap: wordWrap
 	});
 
 	class BufferBase {
@@ -5883,7 +5891,7 @@
 	        return this;
 	    }
 	}
-	class Buffer$1 extends BufferBase {
+	let Buffer$1 = class Buffer extends BufferBase {
 	    constructor(...args) {
 	        super(args[0], args[1]);
 	        this.changed = false;
@@ -6016,32 +6024,32 @@
 	        }
 	        console.log(data.join('\n'));
 	    }
-	}
+	};
 	function make$8(...args) {
 	    return new Buffer$1(args[0], args[1]);
 	}
 
 	var buffer = /*#__PURE__*/Object.freeze({
 		__proto__: null,
-		BufferBase: BufferBase,
 		Buffer: Buffer$1,
+		BufferBase: BufferBase,
 		make: make$8
 	});
 
 	const FovFlags = make$a([
-	    'VISIBLE',
+	    'VISIBLE', // cell has sufficient light and is in field of view, ready to draw.
 	    'WAS_VISIBLE',
 	    'CLAIRVOYANT_VISIBLE',
 	    'WAS_CLAIRVOYANT_VISIBLE',
-	    'TELEPATHIC_VISIBLE',
-	    'WAS_TELEPATHIC_VISIBLE',
+	    'TELEPATHIC_VISIBLE', // potions of telepathy let you see through other creatures' eyes
+	    'WAS_TELEPATHIC_VISIBLE', // potions of telepathy let you see through other creatures' eyes
 	    'ITEM_DETECTED',
 	    'WAS_ITEM_DETECTED',
 	    'ACTOR_DETECTED',
 	    'WAS_ACTOR_DETECTED',
 	    'REVEALED',
-	    'MAGIC_MAPPED',
-	    'IN_FOV',
+	    'MAGIC_MAPPED', // TODO - REMOVE !?!?
+	    'IN_FOV', // player has unobstructed line of sight whether or not there is enough light
 	    'WAS_IN_FOV',
 	    'ALWAYS_VISIBLE',
 	    'IS_CURSOR',
@@ -6164,6 +6172,9 @@
 	}
 
 	// import * as GWU from 'gw-utils';
+	// import * as Flags from './mapFlags';
+	// import * as Cell from './cell';
+	// import * as Map from './map';
 	class FovSystem {
 	    constructor(site, opts = {}) {
 	        // needsUpdate: boolean;
@@ -6574,10 +6585,10 @@
 
 	var index$7 = /*#__PURE__*/Object.freeze({
 		__proto__: null,
-		FovFlags: FovFlags,
 		FOV: FOV,
-		calculate: calculate,
-		FovSystem: FovSystem
+		FovFlags: FovFlags,
+		FovSystem: FovSystem,
+		calculate: calculate
 	});
 
 	const DIRS = DIRS$2;
@@ -7016,14 +7027,14 @@
 
 	var index$6 = /*#__PURE__*/Object.freeze({
 		__proto__: null,
-		OK: OK,
 		AVOIDED: AVOIDED,
 		BLOCKED: BLOCKED,
-		OBSTRUCTION: OBSTRUCTION,
-		NOT_DONE: NOT_DONE,
 		DijkstraMap: DijkstraMap,
-		computeDistances: computeDistances,
+		NOT_DONE: NOT_DONE,
+		OBSTRUCTION: OBSTRUCTION,
+		OK: OK,
 		alloc: alloc,
+		computeDistances: computeDistances,
 		free: free,
 		fromTo: fromTo
 	});
@@ -7170,17 +7181,6 @@
 	});
 
 	class Glyphs {
-	    constructor(opts = {}) {
-	        this._tileWidth = 12;
-	        this._tileHeight = 16;
-	        this.needsUpdate = true;
-	        this._toGlyph = {};
-	        this._toChar = [];
-	        opts.font = opts.font || 'monospace';
-	        this._node = document.createElement('canvas');
-	        this._ctx = this.node.getContext('2d');
-	        this._configure(opts);
-	    }
 	    static fromImage(src) {
 	        if (typeof src === 'string') {
 	            if (src.startsWith('data:'))
@@ -7206,6 +7206,17 @@
 	        const initFn = src.init || initGlyphs;
 	        initFn(glyphs, basicOnly);
 	        return glyphs;
+	    }
+	    constructor(opts = {}) {
+	        this._tileWidth = 12;
+	        this._tileHeight = 16;
+	        this.needsUpdate = true;
+	        this._toGlyph = {};
+	        this._toChar = [];
+	        opts.font = opts.font || 'monospace';
+	        this._node = document.createElement('canvas');
+	        this._ctx = this.node.getContext('2d');
+	        this._configure(opts);
 	    }
 	    get node() {
 	        return this._node;
@@ -7280,37 +7291,37 @@
 	        glyphs.draw(i, String.fromCharCode(i));
 	    }
 	    [
-	        ' ',
-	        '\u263a',
-	        '\u263b',
-	        '\u2665',
-	        '\u2666',
-	        '\u2663',
-	        '\u2660',
-	        '\u263c',
-	        '\u2600',
-	        '\u2606',
-	        '\u2605',
-	        '\u2023',
-	        '\u2219',
-	        '\u2043',
-	        '\u2022',
-	        '\u2630',
-	        '\u2637',
-	        '\u2610',
-	        '\u2611',
-	        '\u2612',
-	        '\u26ac',
-	        '\u29bf',
-	        '\u2191',
-	        '\u2192',
-	        '\u2193',
-	        '\u2190',
-	        '\u2194',
-	        '\u2195',
-	        '\u25b2',
-	        '\u25b6',
-	        '\u25bc',
+	        ' ', // empty
+	        '\u263a', // smiley hollow
+	        '\u263b', // smiley filled
+	        '\u2665', // hearts
+	        '\u2666', // diamonds
+	        '\u2663', // clubs
+	        '\u2660', // spades
+	        '\u263c', // sun hollow
+	        '\u2600', // sun filled
+	        '\u2606', // star hollow
+	        '\u2605', // star filled
+	        '\u2023', // bullet triangle
+	        '\u2219', // bullet square
+	        '\u2043', // bullet hyphen
+	        '\u2022', // bullet circle
+	        '\u2630', // trigram - hamburger menu
+	        '\u2637', // trigram split
+	        '\u2610', // unchecked
+	        '\u2611', // checked
+	        '\u2612', // checked - with X
+	        '\u26ac', // radio - off
+	        '\u29bf', // radio - on
+	        '\u2191', // up arrow
+	        '\u2192', // right arrow
+	        '\u2193', // down arrow
+	        '\u2190', // left arrow
+	        '\u2194', // left+right arrow
+	        '\u2195', // up+down arrow
+	        '\u25b2', // big up arrow
+	        '\u25b6', // big right arrow
+	        '\u25bc', // big down arrow
 	        '\u25c0', // big left arrow
 	    ].forEach((ch, i) => {
 	        glyphs.draw(i, ch);
@@ -7450,7 +7461,7 @@
 	            '\u221E',
 	            '\u03C6',
 	            '\u03B5',
-	            '\u2229',
+	            '\u2229', // n
 	            '\u2261',
 	            '\u00B1',
 	            '\u2265',
@@ -8454,18 +8465,18 @@ void main() {
 
 	var index$5 = /*#__PURE__*/Object.freeze({
 		__proto__: null,
-		Glyphs: Glyphs,
-		initGlyphs: initGlyphs,
-		Layer: Layer,
 		Buffer: Buffer,
-		VERTICES_PER_TILE: VERTICES_PER_TILE,
-		NotSupportedError: NotSupportedError,
 		Canvas: Canvas,
-		withImage: withImage,
-		withFont: withFont,
-		createProgram: createProgram,
+		Glyphs: Glyphs,
+		Layer: Layer,
+		NotSupportedError: NotSupportedError,
 		QUAD: QUAD,
-		make: make$6
+		VERTICES_PER_TILE: VERTICES_PER_TILE,
+		createProgram: createProgram,
+		initGlyphs: initGlyphs,
+		make: make$6,
+		withFont: withFont,
+		withImage: withImage
 	});
 
 	class Sprite {
@@ -8570,13 +8581,13 @@ void main() {
 
 	var index$4 = /*#__PURE__*/Object.freeze({
 		__proto__: null,
+		Mixer: Mixer,
 		Sprite: Sprite,
-		sprites: sprites,
-		make: make$5,
 		from: from$1,
 		install: install$1,
-		Mixer: Mixer,
-		makeMixer: makeMixer
+		make: make$5,
+		makeMixer: makeMixer,
+		sprites: sprites
 	});
 
 	var types = /*#__PURE__*/Object.freeze({
@@ -8878,15 +8889,17 @@ void main() {
 
 	var set_1 = set;
 
+	var set$1 = /*@__PURE__*/getDefaultExportFromCjs(set_1);
+
 	class Data {
 	    constructor(config = {}) {
 	        Object.assign(this, config);
 	    }
 	    get(path) {
-	        return get_1(this, path);
+	        return get$1(this, path);
 	    }
 	    set(path, value) {
-	        return set_1(this, path, value);
+	        return set$1(this, path, value);
 	    }
 	}
 
@@ -9473,15 +9486,15 @@ void main() {
 	var index$3 = /*#__PURE__*/Object.freeze({
 		__proto__: null,
 		Light: Light,
-		intensity: intensity,
-		isDarkLight: isDarkLight,
-		isShadowLight: isShadowLight,
-		make: make$3,
-		lights: lights,
+		LightSystem: LightSystem,
 		from: from,
 		install: install,
 		installAll: installAll,
-		LightSystem: LightSystem
+		intensity: intensity,
+		isDarkLight: isDarkLight,
+		isShadowLight: isShadowLight,
+		lights: lights,
+		make: make$3
 	});
 
 	// import * as IO from './io';
@@ -9882,10 +9895,10 @@ void main() {
 		__proto__: null,
 		BaseObj: BaseObj,
 		Tween: Tween,
-		make: make$2,
-		move: move,
+		interpolate: interpolate,
 		linear: linear,
-		interpolate: interpolate
+		make: make$2,
+		move: move
 	});
 
 	class Timers {
@@ -10267,7 +10280,7 @@ void main() {
 	                }
 	            });
 	        }
-	        this.dirty || (this.dirty = setDirty);
+	        this.dirty ||= setDirty;
 	        return this;
 	    }
 	    unset(key) {
@@ -10332,8 +10345,7 @@ void main() {
 	        this._dirty = false; // As far as I know I reflect all of the current source values.
 	    }
 	    get opacity() {
-	        var _a;
-	        return (_a = this._opacity) !== null && _a !== void 0 ? _a : 100;
+	        return this._opacity ?? 100;
 	    }
 	    set opacity(v) {
 	        v = clamp(v, 0, 100);
@@ -11833,13 +11845,13 @@ void main() {
 	        if (ev && ev.defaultPrevented)
 	            return;
 	        if (this.emit('action')) {
-	            ev === null || ev === void 0 ? void 0 : ev.stopPropagation();
+	            ev?.stopPropagation();
 	        }
 	        const action = this._attrStr('action');
 	        if (!action || !action.length)
 	            return;
 	        if (this.scene && this.scene.emit(action, this)) {
-	            ev === null || ev === void 0 ? void 0 : ev.stopPropagation();
+	            ev?.stopPropagation();
 	        }
 	    }
 	    // FRAME
@@ -12170,6 +12182,14 @@ void main() {
 	    fg: 'light_gray',
 	});
 	class Dialog extends Widget {
+	    static { this.default = {
+	        tag: 'dialog',
+	        border: 'none',
+	        pad: false,
+	        legendTag: 'legend',
+	        legendClass: '',
+	        legendAlign: 'left',
+	    }; }
 	    constructor(opts) {
 	        super((() => {
 	            opts.tag = opts.tag || Dialog.default.tag;
@@ -12266,14 +12286,6 @@ void main() {
 	        return true;
 	    }
 	}
-	Dialog.default = {
-	    tag: 'dialog',
-	    border: 'none',
-	    pad: false,
-	    legendTag: 'legend',
-	    legendClass: '',
-	    legendAlign: 'left',
-	};
 	function dialog(opts) {
 	    const widget = new Dialog(opts);
 	    return widget;
@@ -12420,7 +12432,7 @@ void main() {
 	        Object.assign(opts, {
 	            scene: this,
 	            width: textWidget.bounds.width + 2,
-	            height: textWidget.bounds.height + 2,
+	            height: textWidget.bounds.height + 2, // for buttons
 	            x: textWidget.bounds.x,
 	            y: textWidget.bounds.y,
 	            tag: 'confirm',
@@ -12481,6 +12493,11 @@ void main() {
 	    bg: 'lighter_gray',
 	});
 	class Input extends Text {
+	    static { this.default = {
+	        tag: 'input',
+	        width: 10,
+	        placeholder: '',
+	    }; }
 	    constructor(opts) {
 	        super((() => {
 	            opts.text = opts.text || '';
@@ -12621,11 +12638,6 @@ void main() {
 	        return true;
 	    }
 	}
-	Input.default = {
-	    tag: 'input',
-	    width: 10,
-	    placeholder: '',
-	};
 	/*
 	// extend WidgetLayer
 
@@ -12683,7 +12695,7 @@ void main() {
 	        });
 	        Object.assign(opts, {
 	            width: textWidget.bounds.width + 2,
-	            height: textWidget.bounds.height + 1,
+	            height: textWidget.bounds.height + 1, // for input
 	            x: textWidget.bounds.x - 1,
 	            y: textWidget.bounds.y - 1,
 	            tag: 'inputbox',
@@ -12758,12 +12770,25 @@ void main() {
 		__proto__: null,
 		AlertScene: AlertScene,
 		ConfirmScene: ConfirmScene,
-		PromptScene: PromptScene,
-		MenuScene: MenuScene
+		MenuScene: MenuScene,
+		PromptScene: PromptScene
 	});
 
 	// import * as GWU from 'gw-utils';
 	class Fieldset extends Dialog {
+	    static { this.default = {
+	        tag: 'fieldset',
+	        border: 'none',
+	        separator: ' : ',
+	        pad: false,
+	        legendTag: 'legend',
+	        legendClass: 'legend',
+	        legendAlign: 'left',
+	        labelTag: 'label',
+	        labelClass: '',
+	        dataTag: 'field',
+	        dataClass: '',
+	    }; }
 	    constructor(opts) {
 	        super((() => {
 	            opts.tag = opts.tag || Fieldset.default.tag;
@@ -12840,19 +12865,6 @@ void main() {
 	        this.fields.forEach((f) => f.format(v));
 	    }
 	}
-	Fieldset.default = {
-	    tag: 'fieldset',
-	    border: 'none',
-	    separator: ' : ',
-	    pad: false,
-	    legendTag: 'legend',
-	    legendClass: 'legend',
-	    legendAlign: 'left',
-	    labelTag: 'label',
-	    labelClass: '',
-	    dataTag: 'field',
-	    dataClass: '',
-	};
 	class Field extends Text {
 	    constructor(opts) {
 	        super((() => {
@@ -12876,6 +12888,9 @@ void main() {
 	}
 
 	class OrderedList extends Widget {
+	    static { this.default = {
+	        pad: 1,
+	    }; }
 	    constructor(opts) {
 	        super((() => {
 	            opts.tag = opts.tag || 'ol';
@@ -12919,10 +12934,11 @@ void main() {
 	        buffer.drawText(x, y, bullet, widget._used.fg, widget._used.bg, size);
 	    }
 	}
-	OrderedList.default = {
-	    pad: 1,
-	};
 	class UnorderedList extends OrderedList {
+	    static { this.default = {
+	        bullet: '\u2022', // bullet
+	        pad: 1,
+	    }; }
 	    constructor(opts) {
 	        super((() => {
 	            opts.tag = opts.tag || 'ul';
@@ -12935,10 +12951,6 @@ void main() {
 	        return this._attrStr('bullet');
 	    }
 	}
-	UnorderedList.default = {
-	    bullet: '\u2022',
-	    pad: 1,
-	};
 	/*
 	// extend WidgetLayer
 
@@ -13056,6 +13068,19 @@ void main() {
 	    }
 	}
 	class DataTable extends Widget {
+	    static { this.default = {
+	        columnWidth: 10,
+	        header: true,
+	        empty: '',
+	        tag: 'datatable',
+	        headerTag: 'th',
+	        dataTag: 'td',
+	        select: 'cell',
+	        hover: 'select',
+	        prefix: 'none',
+	        border: 'ascii',
+	        wrap: true,
+	    }; }
 	    constructor(opts) {
 	        super((() => {
 	            opts.tag = opts.tag || DataTable.default.tag;
@@ -13332,19 +13357,6 @@ void main() {
 	        return true;
 	    }
 	}
-	DataTable.default = {
-	    columnWidth: 10,
-	    header: true,
-	    empty: '',
-	    tag: 'datatable',
-	    headerTag: 'th',
-	    dataTag: 'td',
-	    select: 'cell',
-	    hover: 'select',
-	    prefix: 'none',
-	    border: 'ascii',
-	    wrap: true,
-	};
 	/*
 	// extend WidgetLayer
 
@@ -13406,6 +13418,14 @@ void main() {
 	*/
 
 	class Menu extends Widget {
+	    static { this.default = {
+	        tag: 'menu',
+	        class: '',
+	        buttonClass: '',
+	        buttonTag: 'mi',
+	        marker: ' \u25b6',
+	        minWidth: 4,
+	    }; }
 	    constructor(opts) {
 	        super((() => {
 	            opts.tag = opts.tag || Menu.default.tag;
@@ -13540,14 +13560,6 @@ void main() {
 	        });
 	    }
 	}
-	Menu.default = {
-	    tag: 'menu',
-	    class: '',
-	    buttonClass: '',
-	    buttonTag: 'mi',
-	    marker: ' \u25b6',
-	    minWidth: 4,
-	};
 	class MenuButton extends Text {
 	    constructor(opts) {
 	        super((() => {
@@ -13564,8 +13576,7 @@ void main() {
 	                this.menu.emit('change');
 	            });
 	            this.on('mouseleave', (_n, _w, e) => {
-	                var _a;
-	                if ((_a = this.parent) === null || _a === void 0 ? void 0 : _a.bounds.contains(e)) {
+	                if (this.parent?.bounds.contains(e)) {
 	                    this.menu.hidden = true;
 	                }
 	            });
@@ -13635,6 +13646,14 @@ void main() {
 	*/
 
 	class Menubar extends Widget {
+	    static { this.default = {
+	        buttonClass: '',
+	        buttonTag: 'mi',
+	        menuClass: '',
+	        menuTag: 'mi',
+	        prefix: ' ',
+	        separator: ' | ',
+	    }; }
 	    // _config!: DropdownConfig;
 	    // _buttons: MenubarButton[] = [];
 	    // _selectedIndex: number;
@@ -13784,14 +13803,6 @@ void main() {
 	        });
 	    }
 	}
-	Menubar.default = {
-	    buttonClass: '',
-	    buttonTag: 'mi',
-	    menuClass: '',
-	    menuTag: 'mi',
-	    prefix: ' ',
-	    separator: ' | ',
-	};
 	/*
 	export interface MenubarButtonOptions extends Widget.WidgetOpts {
 	    text: string;
@@ -14159,6 +14170,16 @@ void main() {
 	    }
 	}
 	class Choice extends Widget {
+	    static { this.default = {
+	        tag: 'choice',
+	        border: 'ascii',
+	        promptTag: 'prompt',
+	        promptClass: '',
+	        choiceTag: 'ci',
+	        choiceClass: '',
+	        infoTag: 'info',
+	        infoClass: '',
+	    }; }
 	    constructor(opts) {
 	        super((() => {
 	            opts.tag = opts.tag || Choice.default.tag;
@@ -14265,16 +14286,6 @@ void main() {
 	        return true;
 	    }
 	}
-	Choice.default = {
-	    tag: 'choice',
-	    border: 'ascii',
-	    promptTag: 'prompt',
-	    promptClass: '',
-	    choiceTag: 'ci',
-	    choiceClass: '',
-	    infoTag: 'info',
-	    infoClass: '',
-	};
 	/*
 	// extend WidgetLayer
 
@@ -14428,8 +14439,13 @@ void main() {
 	}
 
 	class Checkbox extends Text {
+	    static { this.default = {
+	        uncheck: '\u2610', // unchecked
+	        check: '\u2612', // checked - with X
+	        pad: 1,
+	        value: 'on',
+	    }; }
 	    constructor(opts) {
-	        var _a;
 	        super((() => {
 	            // opts.action = opts.action || opts.id || 'input';
 	            opts.tag = opts.tag || 'checkbox';
@@ -14438,7 +14454,7 @@ void main() {
 	        })());
 	        this.attr('uncheck', opts.uncheck || Checkbox.default.uncheck);
 	        this.attr('check', opts.check || Checkbox.default.check);
-	        this.attr('pad', (_a = opts.pad) !== null && _a !== void 0 ? _a : Checkbox.default.pad);
+	        this.attr('pad', opts.pad ?? Checkbox.default.pad);
 	        this.attr('offValue', '');
 	        if (Array.isArray(opts.value)) {
 	            this.attr('offValue', opts.value[0] || '');
@@ -14506,12 +14522,6 @@ void main() {
 	        return true;
 	    }
 	}
-	Checkbox.default = {
-	    uncheck: '\u2610',
-	    check: '\u2612',
-	    pad: 1,
-	    value: 'on',
-	};
 
 	// export interface WidgetLayerOptions extends LayerOptions {}
 	class Builder {
@@ -14703,34 +14713,34 @@ void main() {
 
 	var index$1 = /*#__PURE__*/Object.freeze({
 		__proto__: null,
-		Widget: Widget,
-		alignChildren: alignChildren,
-		spaceChildren: spaceChildren,
-		wrapChildren: wrapChildren,
-		Text: Text,
 		Border: Border,
-		drawBorder: drawBorder,
+		Builder: Builder,
 		Button: Button,
-		toPadArray: toPadArray,
-		Dialog: Dialog,
-		dialog: dialog,
-		Fieldset: Fieldset,
-		Field: Field,
-		OrderedList: OrderedList,
-		UnorderedList: UnorderedList,
-		Input: Input,
+		Choice: Choice,
 		Column: Column,
-		DataTable: DataTable,
 		DataList: DataList,
+		DataTable: DataTable,
+		Dialog: Dialog,
+		Field: Field,
+		Fieldset: Fieldset,
+		Input: Input,
+		Inquiry: Inquiry,
 		Menu: Menu,
 		MenuButton: MenuButton,
 		Menubar: Menubar,
-		Select: Select,
+		OrderedList: OrderedList,
 		Prompt: Prompt,
-		Choice: Choice,
-		Inquiry: Inquiry,
-		Builder: Builder,
-		make: make$1
+		Select: Select,
+		Text: Text,
+		UnorderedList: UnorderedList,
+		Widget: Widget,
+		alignChildren: alignChildren,
+		dialog: dialog,
+		drawBorder: drawBorder,
+		make: make$1,
+		spaceChildren: spaceChildren,
+		toPadArray: toPadArray,
+		wrapChildren: wrapChildren
 	});
 
 	class Loop {
@@ -14992,54 +15002,1247 @@ void main() {
 
 	var index = /*#__PURE__*/Object.freeze({
 		__proto__: null,
-		Event: Event,
-		KEYPRESS: KEYPRESS,
-		MOUSEMOVE: MOUSEMOVE,
+		App: App,
 		CLICK: CLICK,
-		TICK: TICK,
-		MOUSEUP: MOUSEUP,
-		STOP: STOP,
-		isControlCode: isControlCode,
-		recycleEvent: recycleEvent,
-		makeStopEvent: makeStopEvent,
-		makeCustomEvent: makeCustomEvent,
-		makeTickEvent: makeTickEvent,
-		makeKeyEvent: makeKeyEvent,
-		keyCodeDirection: keyCodeDirection,
-		ignoreKeyEvent: ignoreKeyEvent,
-		makeMouseEvent: makeMouseEvent,
-		Queue: Queue,
-		Events: Events,
-		Loop: Loop,
-		Timers: Timers,
-		Tweens: Tweens,
-		Selector: Selector,
-		compile: compile,
-		Style: Style,
-		makeStyle: makeStyle,
 		ComputedStyle: ComputedStyle,
-		Sheet: Sheet,
-		defaultStyle: defaultStyle,
-		Widget: Widget,
-		alignChildren: alignChildren,
-		spaceChildren: spaceChildren,
-		wrapChildren: wrapChildren,
+		Event: Event,
+		Events: Events,
+		KEYPRESS: KEYPRESS,
+		Loop: Loop,
+		MOUSEMOVE: MOUSEMOVE,
+		MOUSEUP: MOUSEUP,
+		Queue: Queue,
+		STOP: STOP,
 		Scene: Scene,
 		Scenes: Scenes,
-		scenes: scenes,
+		Selector: Selector,
+		Sheet: Sheet,
+		Style: Style,
+		TICK: TICK,
+		Timers: Timers,
+		Tweens: Tweens,
+		Widget: Widget,
+		alignChildren: alignChildren,
+		compile: compile,
+		defaultStyle: defaultStyle,
+		ignoreKeyEvent: ignoreKeyEvent,
 		installScene: installScene,
-		App: App,
-		make: make
+		isControlCode: isControlCode,
+		keyCodeDirection: keyCodeDirection,
+		make: make,
+		makeCustomEvent: makeCustomEvent,
+		makeKeyEvent: makeKeyEvent,
+		makeMouseEvent: makeMouseEvent,
+		makeStopEvent: makeStopEvent,
+		makeStyle: makeStyle,
+		makeTickEvent: makeTickEvent,
+		recycleEvent: recycleEvent,
+		scenes: scenes,
+		spaceChildren: spaceChildren,
+		wrapChildren: wrapChildren
 	});
 
+	// src/errors.ts
+	var UndefinedBehaviorError = class extends Error {
+	  constructor(message, options) {
+	    super(message, options);
+	  }
+	};
+
+	// src/option.ts
+	var Option = class _Option {
+	  constructor(status, value) {
+	    this.status = status;
+	    this.value = value;
+	  }
+	  /**
+	   * Returns the contained `Some` value, consuming the self value.
+	   * @example
+	   * const x = Some("value");
+	   * x.expect("fruits are healthy") === "value"; // true
+	   * 
+	   * const y: Option<string> = None();
+	   * y.expect("fruits are healthy"); // throws with `fruits are healthy`
+	   * @param {string} message
+	   * @return {*}  {Value}
+	   */
+	  expect(reason) {
+	    assertArgument("expect", reason, "string");
+	    if (this.status === 0 /* None */) {
+	      throw new Error(reason, { cause: "Option have 'None' status" });
+	    }
+	    return this.value;
+	  }
+	  /**
+	   * Returns the contained `Some` value, consuming the self value.
+	   * 
+	   * Because this function may throws, its use is generally discouraged. Instead, prefer to use pattern matching and handle the None case explicitly, or call `unwrapOr`, `unwrapOrElse`, or `unwrapOrDefault`.
+	   *
+	   * Throws an error when value is `None`
+	   * 
+	   * @example
+	   * const x = Some("air");
+	   * x.unwrap() === "air";
+	   * 
+	   * const x: Option<string> = None();
+	   * x.unwrap() // fails
+	   * @return {*}  {Value}
+	  */
+	  unwrap() {
+	    if (this.status === 0 /* None */) {
+	      throw new Error("Unwrap error. Option have 'None' status", { cause: { status: this.status, value: this.value } });
+	    }
+	    return this.value;
+	  }
+	  /**
+	   * Returns the contained `Some` value or a provided default.
+	   * @example
+	   * const x = Some("air");
+	   * x.unwrapOr("another") === "air";
+	   * 
+	   * const x: Option<string> = None();
+	   * x.unwrapOr("another") === 'another'
+	   * @param {T} another
+	   * @return {*}  {Value}
+	   */
+	  unwrapOr(fallback) {
+	    if (this.status === 0 /* None */) {
+	      return fallback;
+	    }
+	    return this.value;
+	  }
+	  /**
+	   * Returns the contained `Some` value or computes it from a closure.
+	   * @example
+	   * const k = 10;
+	   * Some(4).unwrapOrElse(() => 2 * k) === 4
+	   * None().unwrap_or_else(() => 2 * k) === 20
+	   * @param {() => T} predicate
+	   * @return {*}  {Value}
+	   */
+	  unwrapOrElse(fn) {
+	    if (this.status === 0 /* None */) {
+	      assertArgument("unwrapOrElse", fn, "function");
+	      return fn();
+	    }
+	    return this.value;
+	  }
+	  /**
+	   * Maps an `Option<T>` to `Option<U>` by applying a function to a contained value (if `Some`) or returns `None` (if `None`).
+	   *
+	   * @example
+	   * const maybeSomeString = Some("Hello, World!");
+	   * const maybeSomeLen = maybeSomeString.map(s => s.length);
+	   * maybeSomeLen === Some(13));
+	   * 
+	   * const x: Option<string> = None();
+	   * x.map(s => s.length) === None();
+	   * @template U
+	   * @param {(value: T) => U} fn
+	   * @return {*}  {Option<U>}
+	   */
+	  map(fn) {
+	    if (this.status === 1 /* Some */) {
+	      assertArgument("map", fn, "function");
+	      return Some(fn(this.value));
+	    }
+	    return None();
+	  }
+	  /**
+	   * Returns the provided default result (if none), or applies a function to the contained value (if any).
+	   *
+	   * Arguments passed to `mapOr` are eagerly evaluated; if you are passing the result of a function call, it is recommended to use `mapOrElse`, which is lazily evaluated.
+	   *
+	   * @example
+	   * const x = Some("foo");
+	   * x.mapOr(42, v => v.length) === 3;
+	   * 
+	   * const x: Option<string> = None();
+	   * x.mapOr(42, v => v.len() === 42;
+	   * @template U
+	   * @param {U} value
+	   * @param {(value: T) => U} predicate
+	   * @return {*}  {U}
+	   */
+	  mapOr(value, predicate) {
+	    if (this.status === 0 /* None */) {
+	      return value;
+	    }
+	    assertArgument("mapOr", predicate, "function");
+	    return predicate(this.value);
+	  }
+	  /**
+	   * Computes a default function result (if none), or applies a different function to the contained value (if any).
+	   *
+	   * @example
+	   * const k = 21;
+	   * 
+	   * const x = Some("foo");
+	   * x.mapOrElse(() => 2 * k, v => v.length) === 3;
+	   * 
+	   * const x: Option<string> = None();
+	   * x.mapOrElse(() => 2 * k, v => v.length) === 42;
+	   * @template U
+	   * @return {*}  {U}
+	   */
+	  mapOrElse(noneFn, someFn) {
+	    assertArgument("mapOrElse", noneFn, "function");
+	    assertArgument("mapOrElse", someFn, "function");
+	    if (this.status === 0 /* None */) {
+	      return noneFn();
+	    }
+	    return someFn(this.value);
+	  }
+	  /**
+	   * Transforms the `Option<T>` into a `Result<T, E>`, mapping `Some(v)` to `Ok(v)` and None to `Err(err)`.
+	   * 
+	   * Arguments passed to `okOr` are eagerly evaluated; if you are passing the result of a function call, it is recommended to use `okOrElse`, which is lazily evaluated.
+	   * 
+	   * @example
+	   * const x = Some("foo");
+	   * String(x.okOr(0)) === String(Ok("foo"));
+	   * 
+	   * const y: Option<string> = None();
+	   * y.okOr(0) === Err(0);
+	   */
+	  okOr(err) {
+	    if (this.status === 0 /* None */) {
+	      return Err(err);
+	    }
+	    return Ok(this.value);
+	  }
+	  /**
+	   * Transforms the `Option<T>` into a `Result<T, E>`, mapping `Some(v)` to `Ok(v)` and None to `Err(err())`.
+	   *
+	   * @example
+	   * const x = Some("foo");
+	   * console.assert(x.okOrElse(() => 0) === Ok("foo"));
+	   * 
+	   * let y: Option<string> = None();
+	   * console.assert(y.okOrElse(() => 0) === Err(0));
+	   * @return {*}  {Value}
+	   */
+	  okOrElse(err) {
+	    if (this.status === 0 /* None */) {
+	      assertArgument("okOrElse", err, "function");
+	      return Err(err());
+	    }
+	    return Ok(this.value);
+	  }
+	  /**
+	   * Returns `None` if the option is `None`, otherwise returns `optb`.
+	   * 
+	   * Arguments passed to and are eagerly evaluated; if you are passing the result of a function call, it is recommended to use `andThen`, which is lazily evaluated.
+	   *
+	   * @example
+	   * const x = Some(2);
+	   * const y: Option<string> = None();
+	   * console.assert(x.and(y) === None());
+	   * // another example
+	   * let x: Option<number> = None();
+	   * let y = Some("foo");
+	   * console.assert(x.and(y) === None());
+	   * // another example
+	   * let x = Some(2);
+	   * let y = Some("foo");
+	   * console.assert(x.and(y) === Some("foo"));
+	   * // another example
+	   * let x: Option<number> = None();
+	   * let y: Option<string> = None();
+	   * console.assert(x.and(y) === None());
+	   */
+	  and(optb) {
+	    if (this.status === 0 /* None */) {
+	      return None();
+	    }
+	    if (!(optb instanceof _Option)) {
+	      throw new UndefinedBehaviorError(`Method "and" should accepts instance of Option`, { cause: { value: optb } });
+	    }
+	    return optb;
+	  }
+	  /**
+	   * Returns `None` if the option is `None`, otherwise calls `f` with the wrapped value and returns the result.
+	   * 
+	   * Some languages call this operation flatmap.
+	   *
+	   * @example
+	   * function toString(x: number): Option<string> {
+	   *  return Some(String(x));
+	   * }
+	   * console.assert(Some(2).andThen(toString) === Some(2.toString()));
+	   * console.assert(None().andThen(toString) === None());
+	   * @template U
+	   * @return {*}  {Option<U>}
+	   */
+	  andThen(f) {
+	    if (this.status === 0 /* None */) {
+	      return None();
+	    }
+	    assertArgument("andThen", f, "function");
+	    const res = f(this.value);
+	    if (!(res instanceof _Option)) {
+	      throw new UndefinedBehaviorError('callback for Method "andThen" expects to returns instance of Option. Use "None" or "Some" funtions', { cause: { value: res } });
+	    }
+	    return res;
+	  }
+	  /**
+	   * Returns `None` if the option is `None`, otherwise calls predicate with the wrapped value and returns:
+	   *
+	   * - `Some(t)` if predicate returns `true` (where t is the wrapped value), an
+	   * - `None` if predicate returns `false`
+	   *
+	   * @example
+	   * function isEven(n: number): boolean {
+	   *  return n % 2 == 0
+	   * }
+	   * console.assert(None().filter(isEven) === None());
+	   * console.assert(Some(3).filter(isEven) === None());
+	   * console.assert(Some(4).filter(isEven) === Some(4));
+	   * 
+	   * @param {(value: T) => boolean} predicate
+	   * @return {*}  {Option<Value>}
+	   */
+	  filter(predicate) {
+	    if (this.status === 0 /* None */) {
+	      return None();
+	    }
+	    assertArgument("filter", predicate, "function");
+	    const success = predicate(this.value);
+	    assertArgument("filter", success, "boolean");
+	    if (success) {
+	      return Some(this.value);
+	    }
+	    return None();
+	  }
+	  /**
+	   * Returns `Some` if exactly one of self, optb is `Some`, otherwise returns `None`.
+	   *
+	   * @param {Option<T>} optb
+	   * @return {*}  {Option<Value>}
+	   */
+	  xor(optb) {
+	    if (this.status === 1 /* Some */) {
+	      return this;
+	    }
+	    if (!(optb instanceof _Option)) {
+	      throw new UndefinedBehaviorError(`Method "xor" should accepts instance of Option`, { cause: { value: optb } });
+	    }
+	    return optb;
+	  }
+	  /**
+	   * Inserts value into the option, then returns a mutable reference to it.
+	   * 
+	   * If the option already contains a value, the old value is dropped.
+	   * 
+	   * See also `getOrInsert`, which doesn’t update the value if the option already contains `Some`.
+	   *
+	   * @example
+	   * const opt = None();
+	   * const val = opt.insert(1);
+	   * console.assert(val === 1);
+	   * console.assert(opt.unwrap() === 1);
+	   * // another example
+	   * const val = opt.insert(2);
+	   * console.assert(val === 2);
+	   * 
+	   * @param {T} value
+	   * @return {*}  {Option<Value>}
+	   */
+	  insert(value) {
+	    if (value === void 0) {
+	      this.status = 0 /* None */;
+	      this.value = void 0;
+	    } else {
+	      this.status = 1 /* Some */;
+	      this.value = value;
+	    }
+	    return this;
+	  }
+	  /**
+	   * Replaces the actual value in the option by the value given in parameter, returning the old value if present, leaving a `Some` in its place without deinitializing either one.
+	   *
+	   * @example
+	   * const x = Some(2);
+	   * const old = x.replace(5);
+	   * console.assert(x === Some(5));
+	   * console.assert(old === Some(2));
+	   * // another example
+	   * const x = None();
+	   * const old = x.replace(3);
+	   * console.assert(x === Some(3));
+	   * console.assert(old === None());
+	   * @param {T} value
+	   * @return {*}  {Option<Value>}
+	   */
+	  replace(value) {
+	    const newValue = Some(value);
+	    const oldValue = Some(this.value);
+	    this.value = newValue.value;
+	    this.status = newValue.status;
+	    return oldValue;
+	  }
+	  /**
+	   * Zips self with another Option.
+	   * 
+	   * If self is `Some(s)` and other is `Some(o)`, this method returns `Some((s, o))`. Otherwise, `None` is returned.
+	   *
+	   * @example
+	   * const x = Some(1);
+	   * const y = Some("hi");
+	   * const z = None<number>();
+	   * 
+	   * x.zip(y) === Some((1, "hi"));
+	   * x.zip(z) === None();
+	   * @template U
+	   * @param {Option<U>} other
+	   * @return {*}  {Option<[Value, U]>}
+	   */
+	  zip(other) {
+	    if (!(other instanceof _Option)) {
+	      throw new UndefinedBehaviorError(`Method "zip" should accepts instance of Option`, { cause: { value: other } });
+	    }
+	    if (this.status === 1 /* Some */ && other.status === 1 /* Some */) {
+	      return new _Option(1 /* Some */, [this.value, other.value]);
+	    }
+	    return None();
+	  }
+	  /**
+	   * Zips self and another Option with function `f`.
+	   * 
+	   * If self is `Some(s)` and other is `Some(o)`, this method returns `Some(f(s, o))`. Otherwise, `None` is returned.
+	   *
+	   * @example
+	   * class Point {
+	   *   constructor (readonly x: number, readonly y: number){}
+	   *   static create(x:number, y: number){
+	   *     return new Point(x,y);
+	   *   }
+	   * }
+	   * const x = Some(17.5);
+	   * const y = Some(42.7);
+	   * 
+	   * x.zipWith(y, Point.create) === Some({ x: 17.5, y: 42.7 })
+	   * 
+	   * @template U
+	   * @template R
+	   * @param {Option<U>} other
+	   * @param {(value: T, other: U) => R} fn
+	   * @return {*}  {Option<R>}
+	   */
+	  zipWith(other, fn) {
+	    if (!(other instanceof _Option)) {
+	      throw new UndefinedBehaviorError(`Method "zipWith" should accepts instance of Option`, { cause: { value: other } });
+	    }
+	    assertArgument("zipWith", fn, "function");
+	    if (this.status === 1 /* Some */ && other.status === 1 /* Some */) {
+	      return Some(fn(this.value, other.value));
+	    }
+	    return None();
+	  }
+	  /**
+	   * Unzips an option containing a tuple of two options.
+	   * 
+	   * If self is `Some((a, b))` this method returns `(Some(a), Some(b))`. Otherwise, `(None, None)` is returned.
+	   *
+	   * @example
+	   * const x = Some([1, "hi"]);
+	   * const y = None<[number, number]>();
+	   * console.assert(x.unzip() === [Some(1), Some("hi")]);
+	   * console.assert(y.unzip() === [None(), None()]);
+	   */
+	  unzip() {
+	    if (Array.isArray(this.value) && this.value.length === 2) {
+	      return [Some(this.value.at(0)), Some(this.value.at(1))];
+	    }
+	    return [None(), None()];
+	  }
+	  /**
+	   * Converts from `Option<Option<T>>` to `Option<T>`.
+	   * @example
+	   * const x: Option<Option<number>> = Some(Some(6));
+	   * Some(6) === x.flatten();
+	   * 
+	   * const x: Option<Option<number>> = Some(None());
+	   * None() === x.flatten();
+	   * 
+	   * const x: Option<Option<number>> = None();
+	   * None() === x.flatten()
+	   * @return {*}  {Value extends Option<infer Sub> ? Option<Sub> : Option<Value>}
+	   */
+	  flatten() {
+	    if (this.value instanceof _Option) {
+	      return Some(this.value.value);
+	    }
+	    return Some(this.value);
+	  }
+	  /**
+	   * Some value of type `T`.
+	   */
+	  static Some(value) {
+	    if (value === void 0) {
+	      return new _Option(0 /* None */, void 0);
+	    }
+	    return new _Option(1 /* Some */, value);
+	  }
+	  /**
+	   * No value.
+	   *
+	   * @static
+	   * @template T
+	   * @return {*}  {Option<Value>}
+	   * @memberof Option
+	   */
+	  static None() {
+	    return new _Option(0 /* None */, void 0);
+	  }
+	  equal(other) {
+	    if (other instanceof _Option) {
+	      return Object.is(other.value, this.value);
+	    }
+	    return false;
+	  }
+	  /**
+	   * Returns `true` if the option is a `Some` value.
+	   * 
+	   * @example
+	   * const x: Option<number> = Some(2);
+	   * x.isSome() === true // true
+	   * 
+	   * const x: Option<number> = None();
+	   * x.isSome() === false // true
+	   * @return {*}  {boolean}
+	   */
+	  isSome() {
+	    return this.status === 1 /* Some */;
+	  }
+	  /**
+	   * Returns true if the option is a `None` value.
+	   *
+	   * @return {*}  {boolean}
+	  */
+	  isNone() {
+	    return this.status === 0 /* None */;
+	  }
+	  /**
+	   * Returns `true` if the option is a `Some` and the value inside of it matches a predicate.
+	   * @example
+	   * const x: Option<number> = Some(2);
+	   * x.isSomeAnd(x => x > 1) === true // true
+	   * 
+	   * const x: Option<number> = Some(0);
+	   * x.isSomeAnd(x => x > 1 ) === false // true
+	   * 
+	   * const x: Option<number> = None();
+	   * x.isSomeAnd(x => x > 1 ) === false // true
+	  */
+	  isSomeAnd(predicate) {
+	    assertArgument("isSomeAnd", predicate, "function");
+	    if (this.status === 1 /* Some */) {
+	      const res = predicate(this.value);
+	      assertArgument("isSomeAnd", res, "boolean");
+	      return res;
+	    }
+	    return false;
+	  }
+	  /**
+	   * Inserts value into the option if it is `None`, then returns a mutable reference to the contained value. 
+	   * 
+	   * See also `insert`, which updates the value even if the option already contains `Some`.
+	   * @example
+	   * const x = None<number>();
+	   * const y = x.getOrInsert(7);
+	   * 
+	   * y === 7 // true
+	   * @param {T} value
+	   * @return {*}  {Value}
+	   */
+	  getOrInsert(value) {
+	    if (this.status === 0 /* None */) {
+	      if (value === void 0) {
+	        throw new UndefinedBehaviorError(`Method "getOrInsert" should provide non "undefined" value.`);
+	      }
+	      return this.insert(value).unwrap();
+	    }
+	    return this.value;
+	  }
+	  /**
+	   * Inserts a value computed from f into the option if it is `None`, then returns the contained value.
+	   * @example
+	   * const x = None<number>();
+	   * const y = x.getOrInsertWith(() => 5);
+	   * 
+	   * y === 5 // true
+	   * 
+	   * @param {() => T} predicate
+	   * @return {*}  {Value}
+	   */
+	  getOrInsertWith(callback) {
+	    if (this.status === 0 /* None */) {
+	      assertArgument("getOrInsertWith", callback, "function");
+	      const res = callback();
+	      if (res === void 0) {
+	        throw new UndefinedBehaviorError("Callback for method 'getOrInsertWith' should returns non 'undefined' value.");
+	      }
+	      return this.insert(res).unwrap();
+	    }
+	    return this.value;
+	  }
+	  /**
+	   * Returns the `Option` if it contains a value, otherwise returns `optb`.
+	   * Arguments passed to or are eagerly evaluated; if you are passing the result of a function call, it is recommended to use `orElse`, which is lazily evaluated.
+	   *
+	   * @example
+	   * const x = Some(2);
+	   * const y = None();
+	   * console.assert(x.or(y) === Some(2));
+	   * // another example
+	   * const x = None();
+	   * const y = Some(100);
+	   * console.assert(x.or(y) === Some(100));
+	   * // another example
+	   * let x = Some(2)
+	   * let y = Some(100)
+	   * console.assert(x.or(y) === Some(2));
+	   * // another example
+	   * const x: Option<number> = None();
+	   * const y = None();
+	   * console.assert(x.or(y) === None());
+	   * 
+	   * @param {Option<T>} optb
+	   * @return {*}  {Option<Value>}
+	   */
+	  or(optb) {
+	    if (this.status === 1 /* Some */) {
+	      return this;
+	    }
+	    if (!(optb instanceof _Option)) {
+	      throw new UndefinedBehaviorError(`Method "or" should accepts isntance of Option`, { cause: { value: optb } });
+	    }
+	    return optb;
+	  }
+	  /**
+	   * Returns the `Option` if it contains a value, otherwise calls `f` and returns the result.
+	   *
+	   * @example
+	   * function nobody(): Option<string> { return None() }
+	   * function vikings(): Option<string> { return Some("vikings") }
+	   * 
+	   * Some("barbarians").orElse(vikings) === Some("barbarians"); // true
+	   * None().orElse(vikings) === Some("vikings"); // true
+	   * None().orElse(nobody) === None(); // true
+	   * 
+	   * @param {() => Option<T>} predicate
+	   * @return {*}  {Option<Value>}
+	   */
+	  orElse(callback) {
+	    if (this.status === 1 /* Some */) {
+	      return this;
+	    }
+	    assertArgument("orElse", callback, "function");
+	    const result = callback();
+	    if (!(result instanceof _Option)) {
+	      throw new UndefinedBehaviorError(`Callback result for method "orElse" should returns instance of Option. Use Some or None.`, { cause: { value: result } });
+	    }
+	    return result;
+	  }
+	  toString() {
+	    const printFn = this.status === 0 /* None */ ? `None` : `Some`;
+	    return `${printFn}(${this.status === 0 /* None */ ? "" : this.value})`;
+	  }
+	  toJSON() {
+	    return {
+	      status: this.status,
+	      value: this.value
+	    };
+	  }
+	  /**
+	   * @protected
+	   */
+	  [Symbol.toPrimitive]() {
+	    return this.value;
+	  }
+	  /**
+	   * @protected
+	   */
+	  get [Symbol.toStringTag]() {
+	    return "Option";
+	  }
+	};
+	function Some(value) {
+	  return Option.Some(value);
+	}
+	function None() {
+	  return Option.None();
+	}
+	var assertArgument = (method, value, expectedType) => {
+	  if (typeof value !== expectedType) {
+	    throw new UndefinedBehaviorError(`Method "${String(method)}" should accepts ${expectedType}`, { cause: { value, type: typeof value } });
+	  }
+	};
+
+	// src/result.ts
+	var Result2 = class _Result {
+	  constructor(status, value, error) {
+	    this.status = status;
+	    this.value = value;
+	    this.error = error;
+	    if (error) {
+	      this.status = -1 /* Err */;
+	    }
+	  }
+	  /**
+	   * Returns the contained `Ok` value, consuming the self value.
+	   * 
+	   * Because this function may throws, its use is generally discouraged. Call `unwrapOr`, `unwrapOrElse`.
+	   *
+	   * Panics if the value is an `Err`, with a message including the passed message, and the content of the `Err`.
+	   * 
+	   * @example
+	   * const x: Result<number, string> = Err("emergency failure");
+	   * x.expect("Testing expect"); // `Testing expect`, cause: emergency failure
+	   * @param {string} reason
+	   * @return {*}  {T}
+	   */
+	  expect(reason) {
+	    if (this.status === -1 /* Err */) {
+	      throw new Error(reason, { cause: this.error });
+	    }
+	    return this.value;
+	  }
+	  /**
+	   * Returns the contained `Ok` value, consuming the self value.
+	   * 
+	   * Because this function may throws, its use is generally discouraged. Instead, call `unwrapOr`, `unwrapOrElse`.
+	   *
+	   * @example
+	   * const x: Result<number, string> = Ok(2);
+	   * x.unwrap() === 2;
+	   * @return {*}  {T}
+	   */
+	  unwrap() {
+	    if (this.status === 1 /* Ok */)
+	      return this.value;
+	    throw this.error;
+	  }
+	  /**
+	   * Returns the contained `Ok` value or a provided default.
+	   * 
+	   * Arguments passed to `unwrapOr` are eagerly evaluated; if you are passing the result of a function call, it is recommended to use `unwrapOrElse`, which is lazily evaluated.
+	   *
+	   * @example
+	   * const fallback = 2;
+	   * const x = Ok(9);
+	   * x.unwrapOr(fallback) === 9; // true
+	   *
+	   * cosnt x: Result<number, string> = Err("error");
+	   * x.unwrapOr(fallback) === fallback; // true
+	   * @param {T} fallback
+	   * @return {*}  {T}
+	   */
+	  unwrapOr(fallback) {
+	    if (this.status === 1 /* Ok */) {
+	      return this.value;
+	    }
+	    return fallback;
+	  }
+	  /**
+	   * Returns `true` if the result is `Ok`.
+	   *
+	   * @example
+	   * const x: Result<number, string> = Ok(-3);
+	   * x.isOk() // true
+	   * // another example
+	   * let x: Result<number, string> = Err("Some error message");
+	   * x.isOk() // false
+	   * @return {*}  {boolean}
+	   */
+	  isOk() {
+	    return this.status === 1 /* Ok */;
+	  }
+	  /**
+	   * Returns `true` if the result is `Ok` and the value inside of it matches a predicate.
+	   *
+	   * @example
+	   * const x: Result<number, string> = Ok(2);
+	   * console.assert(x.isOkAnd(x => x > 1) === true);
+	   * // another example
+	   * const x: Result<number, string> = Ok(0);
+	   * console.assert(x.isOkAnd(x => x > 1) === false);
+	   * // another example
+	   * const x: Result<number, string> = Err("hey");
+	   * console.assert(x.isOkAnd(x => x > 1) === false);
+	   * @return {*}  {boolean}
+	   */
+	  isOkAnd(predicate) {
+	    if (this.status === -1 /* Err */) {
+	      return false;
+	    }
+	    assertArgument2("isOkAnd", predicate, "function");
+	    const res = predicate(this.value);
+	    assertArgument2("isOkAnd", res, "boolean");
+	    return res;
+	  }
+	  /**
+	   * Returns `true` if the result is `Err`.
+	   * 
+	   * @example
+	   * const x: Result<number, string> = Ok(-3);
+	   * console.assert(x.isErr() === false);
+	   * // another example
+	   * const x: Result<number, string> = Err("Some error message");
+	   * console.assert(x.isErr() === true);
+	   *
+	   * @return {*}  {boolean}
+	   */
+	  isErr() {
+	    return this.status === -1 /* Err */;
+	  }
+	  /**
+	   * Returns `true` if the result is `Err` and the value inside of it matches a predicate.
+	   * @example
+	   * const x: Result<number, Error> = Err(new Error("not found"));
+	   * x.isErrAnd(e => e.message === 'not found') // true;
+	   * // another example
+	   * const x: Result<number, Error> = Err(new Error('permission denied'));
+	   * x.isErrAnd(x => x.name === 'TypeError') // false
+	   * // another example
+	   * const x: Result<number, Error> = Ok(123);
+	   * x.isErrAnd(e => e.name == 'Error'); // false
+	   *
+	   * @param {(err: E) => boolean} predicate
+	   * @return {*}  {boolean}
+	   */
+	  isErrAnd(predicate) {
+	    if (this.status === 1 /* Ok */) {
+	      return false;
+	    }
+	    assertArgument2("isErrAnd", predicate, "function");
+	    const res = predicate(this.err);
+	    assertArgument2("isErrAnd", res, "boolean");
+	    return res;
+	  }
+	  /**
+	   * Converts from `Result<T, E>` to `Option<T>`.
+	   * 
+	   * Converts self into an `Option<T>`, consuming self, and discarding the error, if any.
+	   *
+	   * @example
+	   * const x: Result<number, string> = Ok(2);
+	   * x.ok() === Some(2); // true
+	   * // another example
+	   * const x: Result<number, string> = Err("Nothing here");
+	   * x.ok() === None(); // true
+	   * @return {*}  {Option<T>}
+	   */
+	  ok() {
+	    if (this.status === 1 /* Ok */) {
+	      return Some(this.value);
+	    }
+	    return None();
+	  }
+	  /**
+	   * Converts from `Result<T, E>` to `Option<E>`.
+	   * 
+	   * Converts self into an `Option<E>`, consuming self, and discarding the success value, if any.
+	   *
+	   * @example
+	   * const x: Result<number, string> = Ok(2);
+	   * x.err() === None(); // true
+	   * 
+	   * const x: Result<number, string> = Err("Nothing here");
+	   * x.err() === Some("Nothing here"); // true
+	   * @return {*}  {Option<E>}
+	   */
+	  err() {
+	    if (this.status === -1 /* Err */) {
+	      return Some(this.error);
+	    }
+	    return None();
+	  }
+	  /**
+	   * Maps a `Result<T, E>` to `Result<U, E>` by applying a function to a contained Ok value, leaving an `Err` value untouched.
+	   * 
+	   * This function can be used to compose the results of two functions.
+	   * 
+	   * @example
+	   * const x = Ok(1);
+	   * x.map(v => v * 2) === Ok(2) // true
+	   *
+	   * @template U
+	   * @param {(value: T) => U} mapFn
+	   * @return {*}  {Result<U, E>}
+	   */
+	  map(mapFn) {
+	    assertArgument2("map", mapFn, "function");
+	    if (this.status === 1 /* Ok */) {
+	      return Ok(mapFn(this.value));
+	    } else {
+	      return Err(this.error);
+	    }
+	  }
+	  /**
+	   * Returns the provided default (if `Err`), or applies a function to the contained value (if `Ok`),
+	   * 
+	   * Arguments passed to `mapOr` are eagerly evaluated; if you are passing the result of a function call, it is recommended to use `mapOrElse`, which is lazily evaluated.
+	   *
+	   * @example
+	   * const x: Result<string, string> = Ok("foo");
+	   * x.mapOr(42, v => v.length) // result is 3
+	   * // another example
+	   * const x: Result<number, string> = Err("bar");
+	   * x.mapOr(42, v => v.length) // 42
+	   * 
+	   * @template U
+	   * @param {U} another
+	   * @param {(value: T) => U} fn
+	   * @return {*}  {U}
+	   */
+	  mapOr(another, fn) {
+	    assertArgument2("mapOr", fn, "function");
+	    if (this.status === 1 /* Ok */) {
+	      return fn(this.value);
+	    }
+	    return another;
+	  }
+	  /**
+	   * Maps a `Result<T, E>` to `U` by applying fallback function default to a contained `Err` value, or function `f` to a contained `Ok` value.
+	   * 
+	   * This function can be used to unpack a successful result while handling an error.
+	   *
+	   * @example
+	   * let k = 21;
+	   * 
+	   * const x: Result<string, string> = Ok("foo");
+	   * x.mapOrElse(err => k * 2, v => v.length); // 3
+	   *
+	   * const y : Result<string, string> = Err("bar");
+	   * y.mapOrElse(e => k * 2, v => v.length) // 42
+	   * @template U
+	   * @param {(err: E) => U} errFn
+	   * @param {(value: T) => U} okFn
+	   * @return {*}  {U}
+	   */
+	  mapOrElse(errFn, okFn) {
+	    assertArgument2("mapOrElse", errFn, "function");
+	    assertArgument2("mapOrElse", okFn, "function");
+	    if (this.status === -1 /* Err */) {
+	      return errFn(this.error);
+	    }
+	    return okFn(this.value);
+	  }
+	  /**
+	   * Maps a `Result<T, E>` to `Result<T, F>` by applying a function to a contained `Err` value, leaving an `Ok` value untouched.
+	   * 
+	   * This function can be used to pass through a successful result while handling an error.
+	   *
+	   * @example
+	   * const stringify = (x: number) => `error code: ${x}`
+	   * 
+	   * const x: Result<number, number> = Ok(2);
+	   * x.mapErr(stringify) === Ok(2) // true
+	   * 
+	   * const y: Result<number, number> = Err(13);
+	   * y.mapErr(stringify) === Err("error code: 13"));
+	   * @template F
+	   * @param {(err: E) => F} errFn
+	   * @return {*}  {Result<T, F>}
+	   */
+	  mapErr(errFn) {
+	    assertArgument2("mapErr", errFn, "function");
+	    if (this.status === -1 /* Err */) {
+	      return Err(errFn(this.error));
+	    }
+	    return Ok(this.value);
+	  }
+	  /**
+	   * Returns the contained `Err` value, consuming the self value.
+	   *
+	   * @example
+	   * const x: Result<number, string> = Ok(10);
+	   * x.expectErr("Testing expectErr"); // throws `Testing expectErr; cause: 10`
+	   * @param {string} reason
+	   * @return {*}  {E}
+	   */
+	  expectErr(reason) {
+	    assertArgument2("expectErr", reason, "string");
+	    if (this.status === 1 /* Ok */) {
+	      throw new Error(reason, { cause: this.error ?? this.value });
+	    }
+	    return this.error;
+	  }
+	  /**
+	   * Returns the contained `Err` value, consuming the self value.
+	   *
+	   * @example
+	   * const x: Result<number, string> = Err("emergency failure");
+	   * x.unwrapErr() === "emergency failure";
+	   * @return {*}  {E}
+	   */
+	  unwrapErr() {
+	    if (this.status === -1 /* Err */) {
+	      return this.error;
+	    }
+	    throw this.value;
+	  }
+	  /**
+	  * Returns the contained `Ok` value or computes it from a closure.
+	  *
+	  * @example
+	  * const count = (x: string) => x.length;
+	  * 
+	  * Ok(2).unwrapOrElse(count) === 2 // true
+	  * Err("foo").unwrapOrElse(count) === 3; // true
+	  *
+	  * @param {(err: E) => T} fn
+	  * @return {*}  {T}
+	  */
+	  unwrapOrElse(fn) {
+	    if (this.status === 1 /* Ok */) {
+	      return this.value;
+	    }
+	    assertArgument2("unwrapOrElse", fn, "function");
+	    return fn(this.error);
+	  }
+	  /**
+	   * Returns `res` if the result is `Ok`, otherwise returns the `Err` value of self.
+	   * 
+	   * Arguments passed to and are eagerly evaluated; if you are passing the result of a function call, it is recommended to use `andThen`, which is lazily evaluated.
+	   *
+	   * @example
+	   * const x: Result<number, string> = Ok(2);
+	   * const y: Result<string, string> = Err("late error");
+	   * x.and(y) === Err("late error"); // true
+	   * // another example
+	   * const x: Result<number, string> = Err("early error");
+	   * const y: Result<string, string> = Ok("foo");
+	   * x.and(y) === Err("early error"); // true
+	   * // another example
+	   * const x: Result<number, string> = Err("not a 2");
+	   * const y: Result<string, string> = Err("late error");
+	   * x.and(y) === Err("not a 2"); // true
+	   * // another example
+	   * const x: Result<number, string> = Ok(2);
+	   * const y: Result<string, string> = Ok("different result type");
+	   * x.and(y) === Ok("different result type"); // true
+	   * @template U
+	   * @param {Result<U, E>} res
+	   * @return {*}  {Result<U, E>}
+	   */
+	  and(res) {
+	    if (!(res instanceof _Result)) {
+	      throw new UndefinedBehaviorError(`Method "and" should accepts isntance of Result`, { cause: { value: res } });
+	    }
+	    if (this.status === -1 /* Err */) {
+	      return Err(this.error);
+	    }
+	    return res;
+	  }
+	  /**
+	   * Calls op if the result is `Ok`, otherwise returns the `Err` value of self.
+	   * 
+	   * This function can be used for control flow based on `Result` values.
+	   *
+	   * @example
+	   * const sqThenToString = (x: number) => {
+	   *     return Ok(x * x).map(sq => sq.toString())
+	   * }
+	   * 
+	   * Ok(2).andThen(sqThenToString) === Ok(4.toString())); // true
+	   * Err("not a number").andThen(sqThenToString) === Err("not a number"); // true
+	   * @template U
+	   * @param {(value: T) => Result<U, E>} fn
+	   * @return {*}  {Result<U, E>}
+	   */
+	  andThen(fn) {
+	    assertArgument2("andThen", fn, "function");
+	    if (this.status === 1 /* Ok */) {
+	      const res = fn(this.value);
+	      if (res instanceof _Result) {
+	        return res;
+	      }
+	      throw new UndefinedBehaviorError("Function result expected to be instance of Result.", { cause: res });
+	    }
+	    return Err(this.error);
+	  }
+	  /**
+	   * Returns `res` if the result is `Err`, otherwise returns the `Ok` value of self.
+	   * 
+	   * Arguments passed to or are eagerly evaluated; if you are passing the result of a function call, it is recommended to use `orElse`, which is lazily evaluated.
+	   *
+	   * @example
+	   * const x: Result<number, string> = Ok(2);
+	   * const y: Result<number, string> = Err("late error");
+	   * x.or(y) === Ok(2); // true
+	   * // another example
+	   * const x: Result<number, string> = Err("early error");
+	   * const y: Result<number, string> = Ok(2);
+	   * x.or(y) === Ok(2); // true
+	   * // another example
+	   * const x: Result<number, string> = Err("not a 2");
+	   * const y: Result<number, string> = Err("late error");
+	   * x.or(y) === Err("late error"); // true
+	   * // another example
+	   * const x: Result<number, string> = Ok(2);
+	   * const y: Result<number, string> = Ok(100);
+	   * x.or(y) === Ok(2); // true
+	   * @template F
+	   * @param {Result<T, F>} res
+	   * @return {*}  {Result<T, F>}
+	   */
+	  or(res) {
+	    if (!(res instanceof _Result)) {
+	      throw new UndefinedBehaviorError(`Operator "or" expect to pass instance of Result`, { cause: { value: res } });
+	    }
+	    if (this.status === -1 /* Err */) {
+	      return res;
+	    }
+	    return Ok(this.value);
+	  }
+	  /**
+	   * Calls `fn` if the result is `Err`, otherwise returns the `Ok` value of self.
+	   * 
+	   * This function can be used for control flow based on result values.
+	   *
+	   * @example
+	   * const sq = (x: number) =>  Ok(x * x);
+	   * const err = (x: number) => Err(x);
+	   * 
+	   * Ok(2).orElse(sq).orElse(sq) === Ok(2); // true
+	   * Ok(2).orElse(err).orElse(sq) === Ok(2); // true
+	   * Err(3).orElse(sq).orElse(err) === Ok(9); // true
+	   * Err(3).orElse(err).orElse(err) === Err(3); // true
+	   * @template F
+	   * @param {(err: E) => Result<T, F>} fn
+	   * @return {*}  {Result<T, F>}
+	   */
+	  orElse(fn) {
+	    if (this.status === -1 /* Err */) {
+	      assertArgument2("orElse", fn, "function");
+	      const res = fn(this.error);
+	      if (!(res instanceof _Result)) {
+	        throw new UndefinedBehaviorError('Operator "orElse" expected to return instance of Result. Use "Ok" or "Err" function to define them.', { cause: { value: res, type: typeof res } });
+	      }
+	      return res;
+	    }
+	    return new _Result(this.status, this.value, this.error);
+	  }
+	  /**
+	    * Converts from `Result<Result<T, E>, E>` to `Result<T, E>`
+	    *
+	    * @example
+	    * const x: Result<Result<string, number>, number> = Ok(Ok("hello"));
+	    * Ok("hello") === x.flatten() // true
+	    * 
+	    * const x: Result<Result<string, number>, number> = Ok(Err(6));
+	    * Err(6) === x.flatten(); // true
+	    * 
+	    * const x: Result<Result<string, number>, number> = Err(6);
+	    * Err(6) === x.flatten(); // true
+	    * @return {*}  {T extends Result<infer Ok, E> ? Result<Ok, E> : Result<T, E>}
+	    */
+	  flatten() {
+	    if (this.value instanceof _Result) {
+	      return this.value;
+	    }
+	    return this;
+	  }
+	  static Ok(value) {
+	    return new _Result(1 /* Ok */, value, null);
+	  }
+	  static Err(value) {
+	    return new _Result(-1 /* Err */, null, value);
+	  }
+	  equal(other) {
+	    if (other instanceof _Result) {
+	      if (this.status === 1 /* Ok */ && other.status === 1 /* Ok */) {
+	        return this.value === other.value;
+	      }
+	      if (this.status === -1 /* Err */ && other.status === -1 /* Err */) {
+	        return this.error === other.error;
+	      }
+	      return false;
+	    }
+	    return false;
+	  }
+	  toString() {
+	    const printFn = this.status === -1 /* Err */ ? `Err` : `Ok`;
+	    return `${printFn}(${this.status === -1 /* Err */ ? this.error : this.value})`;
+	  }
+	  toJSON() {
+	    return {
+	      status: this.status,
+	      value: this.value,
+	      error: this.error
+	    };
+	  }
+	  /**
+	   * @protected
+	   */
+	  [Symbol.toPrimitive]() {
+	    return this.value;
+	  }
+	  /**
+	   * @protected
+	   */
+	  get [Symbol.toStringTag]() {
+	    return "Result";
+	  }
+	};
+	function Ok(value) {
+	  return Result2.Ok(value);
+	}
+	function Err(err) {
+	  return Result2.Err(err);
+	}
+	function assertArgument2(method, value, expectedType) {
+	  const type = typeof value;
+	  if (type !== expectedType) {
+	    throw new UndefinedBehaviorError(`Method "${String(method)}" should accepts or returns ${expectedType}`, { cause: { value, type } });
+	  }
+	}
+
+	// src/match.ts
+	function match(value, okOrSomeCb, errOrNoneCb) {
+	  if (typeof okOrSomeCb !== "function") {
+	    throw new UndefinedBehaviorError(`match function expects to provide a function.`, { cause: { value: okOrSomeCb, type: typeof okOrSomeCb } });
+	  }
+	  if (typeof errOrNoneCb !== "function") {
+	    throw new UndefinedBehaviorError(`match function expects to provide a function.`, { cause: { value: okOrSomeCb, type: typeof okOrSomeCb } });
+	  }
+	  if (typeof value === "boolean") {
+	    if (value === true) {
+	      return okOrSomeCb(true);
+	    }
+	    return errOrNoneCb(false);
+	  } else if (value instanceof Option) {
+	    if (value.isSome()) {
+	      return okOrSomeCb(value.unwrap());
+	    }
+	    return errOrNoneCb(void 0);
+	  } else if (value instanceof Result2) {
+	    if (value.isOk()) {
+	      return okOrSomeCb(value.unwrap());
+	    }
+	    return errOrNoneCb(value.unwrapErr());
+	  }
+	  throw new UndefinedBehaviorError(`only boolean type, Option or Result instance are allowed`, { cause: { value, type: typeof value, ctor: value.constructor?.name } });
+	}
+
 	exports.ERROR = ERROR;
+	exports.Err = Err;
 	exports.FALSE = FALSE;
 	exports.IDENTITY = IDENTITY;
 	exports.IS_NONZERO = IS_NONZERO;
 	exports.IS_ZERO = IS_ZERO;
 	exports.NOOP = NOOP;
+	exports.None = None;
 	exports.ONE = ONE;
+	exports.Ok = Ok;
+	exports.Option = Option;
+	exports.Result = Result2;
+	exports.Some = Some;
 	exports.TRUE = TRUE;
+	exports.UndefinedBehaviorError = UndefinedBehaviorError;
 	exports.WARN = WARN;
 	exports.ZERO = ZERO;
 	exports.app = index;
@@ -15068,6 +16271,7 @@ void main() {
 	exports.lerp = lerp$1;
 	exports.light = index$3;
 	exports.list = list;
+	exports.match = match;
 	exports.message = message;
 	exports.nextIndex = nextIndex;
 	exports.object = object;
@@ -15089,8 +16293,6 @@ void main() {
 	exports.widget = index$1;
 	exports.xave = xave;
 	exports.xy = xy;
-
-	Object.defineProperty(exports, '__esModule', { value: true });
 
 }));
 //# sourceMappingURL=gw-utils.js.map

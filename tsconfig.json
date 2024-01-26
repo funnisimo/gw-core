@@ -5,7 +5,7 @@
         "strict": true,
         "module": "es6",
         "outDir": "_temp",
-        "target": "es2019",
+        "target": "esNext",
         "noUnusedLocals": true,
         "noUnusedParameters": true,
         "noEmitOnError": true,
