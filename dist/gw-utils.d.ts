@@ -13,6 +13,8 @@ declare function ZERO(): number;
 declare function IDENTITY(x: any): any;
 declare function IS_ZERO(x: number): boolean;
 declare function IS_NONZERO(x: number): boolean;
+declare function ERROR(message: string, options?: ErrorOptions): void;
+declare function WARN(...args: string[]): void;
 /**
  * clamps a value between min and max (inclusive)
  * @param v {Number} the value to clamp
@@ -24,11 +26,35 @@ declare const clamp: {
     (number: number, lower: number, upper: number): number;
     (number: number, upper: number): number;
 };
+declare const getPath: {
+    <TObject extends object, TKey extends keyof TObject>(object: TObject, path: TKey | [TKey]): TObject[TKey];
+    <TObject_1 extends object, TKey_1 extends keyof TObject_1>(object: TObject_1 | null | undefined, path: TKey_1 | [TKey_1]): TObject_1[TKey_1] | undefined;
+    <TObject_2 extends object, TKey_2 extends keyof TObject_2, TDefault>(object: TObject_2 | null | undefined, path: TKey_2 | [TKey_2], defaultValue: TDefault): TDefault | Exclude<TObject_2[TKey_2], undefined>;
+    <TObject_3 extends object, TKey1 extends keyof TObject_3, TKey2 extends keyof TObject_3[TKey1]>(object: TObject_3, path: [TKey1, TKey2]): TObject_3[TKey1][TKey2];
+    <TObject_4 extends object, TKey1_1 extends keyof TObject_4, TKey2_1 extends keyof TObject_4[TKey1_1]>(object: TObject_4 | null | undefined, path: [TKey1_1, TKey2_1]): TObject_4[TKey1_1][TKey2_1] | undefined;
+    <TObject_5 extends object, TKey1_2 extends keyof TObject_5, TKey2_2 extends keyof TObject_5[TKey1_2], TDefault_1>(object: TObject_5 | null | undefined, path: [TKey1_2, TKey2_2], defaultValue: TDefault_1): TDefault_1 | Exclude<TObject_5[TKey1_2][TKey2_2], undefined>;
+    <TObject_6 extends object, TKey1_3 extends keyof TObject_6, TKey2_3 extends keyof TObject_6[TKey1_3], TKey3 extends keyof TObject_6[TKey1_3][TKey2_3]>(object: TObject_6, path: [TKey1_3, TKey2_3, TKey3]): TObject_6[TKey1_3][TKey2_3][TKey3];
+    <TObject_7 extends object, TKey1_4 extends keyof TObject_7, TKey2_4 extends keyof TObject_7[TKey1_4], TKey3_1 extends keyof TObject_7[TKey1_4][TKey2_4]>(object: TObject_7 | null | undefined, path: [TKey1_4, TKey2_4, TKey3_1]): TObject_7[TKey1_4][TKey2_4][TKey3_1] | undefined;
+    <TObject_8 extends object, TKey1_5 extends keyof TObject_8, TKey2_5 extends keyof TObject_8[TKey1_5], TKey3_2 extends keyof TObject_8[TKey1_5][TKey2_5], TDefault_2>(object: TObject_8 | null | undefined, path: [TKey1_5, TKey2_5, TKey3_2], defaultValue: TDefault_2): TDefault_2 | Exclude<TObject_8[TKey1_5][TKey2_5][TKey3_2], undefined>;
+    <TObject_9 extends object, TKey1_6 extends keyof TObject_9, TKey2_6 extends keyof TObject_9[TKey1_6], TKey3_3 extends keyof TObject_9[TKey1_6][TKey2_6], TKey4 extends keyof TObject_9[TKey1_6][TKey2_6][TKey3_3]>(object: TObject_9, path: [TKey1_6, TKey2_6, TKey3_3, TKey4]): TObject_9[TKey1_6][TKey2_6][TKey3_3][TKey4];
+    <TObject_10 extends object, TKey1_7 extends keyof TObject_10, TKey2_7 extends keyof TObject_10[TKey1_7], TKey3_4 extends keyof TObject_10[TKey1_7][TKey2_7], TKey4_1 extends keyof TObject_10[TKey1_7][TKey2_7][TKey3_4]>(object: TObject_10 | null | undefined, path: [TKey1_7, TKey2_7, TKey3_4, TKey4_1]): TObject_10[TKey1_7][TKey2_7][TKey3_4][TKey4_1] | undefined;
+    <TObject_11 extends object, TKey1_8 extends keyof TObject_11, TKey2_8 extends keyof TObject_11[TKey1_8], TKey3_5 extends keyof TObject_11[TKey1_8][TKey2_8], TKey4_2 extends keyof TObject_11[TKey1_8][TKey2_8][TKey3_5], TDefault_3>(object: TObject_11 | null | undefined, path: [TKey1_8, TKey2_8, TKey3_5, TKey4_2], defaultValue: TDefault_3): TDefault_3 | Exclude<TObject_11[TKey1_8][TKey2_8][TKey3_5][TKey4_2], undefined>;
+    <T>(object: lodash.NumericDictionary<T>, path: number): T;
+    <T_1>(object: lodash.NumericDictionary<T_1> | null | undefined, path: number): T_1 | undefined;
+    <T_2, TDefault_4>(object: lodash.NumericDictionary<T_2> | null | undefined, path: number, defaultValue: TDefault_4): T_2 | TDefault_4;
+    <TDefault_5>(object: null | undefined, path: lodash.PropertyPath, defaultValue: TDefault_5): TDefault_5;
+    (object: null | undefined, path: lodash.PropertyPath): undefined;
+    <TObject_12, TPath extends string>(data: TObject_12, path: TPath): string extends TPath ? any : lodash.GetFieldType<TObject_12, TPath>;
+    <TObject_13, TPath_1 extends string, TDefault_6 = lodash.GetFieldType<TObject_13, TPath_1>>(data: TObject_13, path: TPath_1, defaultValue: TDefault_6): TDefault_6 | Exclude<lodash.GetFieldType<TObject_13, TPath_1>, null | undefined>;
+    (object: any, path: lodash.PropertyPath, defaultValue?: any): any;
+};
+declare const setPath: {
+    <T extends object>(object: T, path: lodash.PropertyPath, value: any): T;
+    <TResult>(object: object, path: lodash.PropertyPath, value: any): TResult;
+};
 declare function lerp$1(from: number, to: number, pct: number): number;
 declare function xave(rate: number, value: number, newValue: number): number;
-declare function ERROR(message: string): void;
-declare function WARN(...args: string[]): void;
-declare function first(...args: any[]): any;
+declare function firstDefined(...args: any[]): any;
 declare function arraysIntersect(a: any[], b: any[]): boolean;
 declare function arrayIncludesAll(a: any[], b: any[]): boolean;
 declare function arrayRevEach<T>(a: T[], fn: (v: T, i: number, a: T[]) => void): void;
@@ -42,6 +68,50 @@ declare function arrayPrev<T>(a: T[], current: T, fn: (t: T) => boolean, wrap?: 
 declare function nextIndex(index: number, length: number, wrap?: boolean): number;
 declare function prevIndex(index: number, length: number, wrap?: boolean): number;
 declare function valueType(a: any): string;
+declare function isPlainObject(val: any): boolean;
+declare function isObject(item: any): boolean;
+declare function mergeDeep(target: {
+    [id: string]: any;
+}, source: {
+    [id: string]: any;
+}): {
+    [id: string]: any;
+};
+
+declare const utils_ERROR: typeof ERROR;
+declare const utils_FALSE: typeof FALSE;
+declare const utils_IDENTITY: typeof IDENTITY;
+declare const utils_IS_NONZERO: typeof IS_NONZERO;
+declare const utils_IS_ZERO: typeof IS_ZERO;
+declare const utils_NOOP: typeof NOOP;
+declare const utils_ONE: typeof ONE;
+declare const utils_TRUE: typeof TRUE;
+declare const utils_WARN: typeof WARN;
+declare const utils_ZERO: typeof ZERO;
+declare const utils_arrayDelete: typeof arrayDelete;
+declare const utils_arrayFindRight: typeof arrayFindRight;
+declare const utils_arrayIncludesAll: typeof arrayIncludesAll;
+declare const utils_arrayInsert: typeof arrayInsert;
+declare const utils_arrayNext: typeof arrayNext;
+declare const utils_arrayNullify: typeof arrayNullify;
+declare const utils_arrayPrev: typeof arrayPrev;
+declare const utils_arrayRevEach: typeof arrayRevEach;
+declare const utils_arraysIntersect: typeof arraysIntersect;
+declare const utils_clamp: typeof clamp;
+declare const utils_firstDefined: typeof firstDefined;
+declare const utils_getPath: typeof getPath;
+declare const utils_isObject: typeof isObject;
+declare const utils_isPlainObject: typeof isPlainObject;
+declare const utils_mergeDeep: typeof mergeDeep;
+declare const utils_nextIndex: typeof nextIndex;
+declare const utils_prevIndex: typeof prevIndex;
+declare const utils_setPath: typeof setPath;
+declare const utils_sum: typeof sum;
+declare const utils_valueType: typeof valueType;
+declare const utils_xave: typeof xave;
+declare namespace utils {
+  export { utils_ERROR as ERROR, utils_FALSE as FALSE, utils_IDENTITY as IDENTITY, utils_IS_NONZERO as IS_NONZERO, utils_IS_ZERO as IS_ZERO, utils_NOOP as NOOP, utils_ONE as ONE, utils_TRUE as TRUE, utils_WARN as WARN, utils_ZERO as ZERO, utils_arrayDelete as arrayDelete, utils_arrayFindRight as arrayFindRight, utils_arrayIncludesAll as arrayIncludesAll, utils_arrayInsert as arrayInsert, utils_arrayNext as arrayNext, utils_arrayNullify as arrayNullify, utils_arrayPrev as arrayPrev, utils_arrayRevEach as arrayRevEach, utils_arraysIntersect as arraysIntersect, utils_clamp as clamp, utils_firstDefined as firstDefined, utils_getPath as getPath, utils_isObject as isObject, utils_isPlainObject as isPlainObject, lerp$1 as lerp, utils_mergeDeep as mergeDeep, utils_nextIndex as nextIndex, utils_prevIndex as prevIndex, utils_setPath as setPath, utils_sum as sum, utils_valueType as valueType, utils_xave as xave };
+}
 
 type ColorData = [number, number, number] | [number, number, number, number];
 type ColorBase = string | number | ColorData | Color | null;
@@ -1328,7 +1398,9 @@ declare class Events {
     emit(ev: string | string[], ...args: any[]): boolean;
     _unhandled(ev: string, args: any[]): boolean;
     clear(): void;
+    /** @deprecated */
     clear_event(name: string): void;
+    /** @deprecated */
     restart(): void;
 }
 
@@ -1465,18 +1537,6 @@ declare class Timers {
     update(dt: number): void;
 }
 
-declare class Data implements Record<string, any> {
-    constructor(config?: Record<string, any>);
-    get(path: string): any;
-    set(path: string, value: any): this;
-}
-
-type data_Data = Data;
-declare const data_Data: typeof Data;
-declare namespace data {
-  export { data_Data as Data };
-}
-
 type Callback = () => void;
 declare class Loop {
     _timer: number;
@@ -1611,18 +1671,19 @@ declare const index$5_Loop: typeof Loop;
 declare const index$5_MOUSEMOVE: typeof MOUSEMOVE;
 declare const index$5_MOUSEUP: typeof MOUSEUP;
 type index$5_MatchFn = MatchFn;
-type index$5_PauseOpts = PauseOpts;
 type index$5_PropType = PropType;
 type index$5_Queue = Queue;
 declare const index$5_Queue: typeof Queue;
-type index$5_ResumeOpts = ResumeOpts;
 declare const index$5_STOP: typeof STOP;
 type index$5_Scene = Scene;
 declare const index$5_Scene: typeof Scene;
 type index$5_SceneCallback = SceneCallback;
+type index$5_SceneCreateOpts = SceneCreateOpts;
 type index$5_SceneMakeFn = SceneMakeFn;
 type index$5_SceneObj = SceneObj;
-type index$5_SceneOpts = SceneOpts;
+type index$5_ScenePauseOpts = ScenePauseOpts;
+type index$5_SceneResumeOpts = SceneResumeOpts;
+type index$5_SceneStartOpts = SceneStartOpts;
 type index$5_Scenes = Scenes;
 declare const index$5_Scenes: typeof Scenes;
 type index$5_Selector = Selector;
@@ -1630,7 +1691,6 @@ declare const index$5_Selector: typeof Selector;
 type index$5_SetParentOptions = SetParentOptions;
 type index$5_Sheet = Sheet;
 declare const index$5_Sheet: typeof Sheet;
-type index$5_StartOpts = StartOpts;
 type index$5_Style = Style;
 declare const index$5_Style: typeof Style;
 type index$5_StyleOptions = StyleOptions;
@@ -1649,6 +1709,7 @@ type index$5_UpdatePosOpts = UpdatePosOpts;
 type index$5_Widget = Widget;
 declare const index$5_Widget: typeof Widget;
 type index$5_WidgetOpts = WidgetOpts;
+declare const index$5_active: typeof active;
 declare const index$5_alignChildren: typeof alignChildren;
 declare const index$5_compile: typeof compile;
 declare const index$5_defaultStyle: typeof defaultStyle;
@@ -1667,39 +1728,40 @@ declare const index$5_scenes: typeof scenes;
 declare const index$5_spaceChildren: typeof spaceChildren;
 declare const index$5_wrapChildren: typeof wrapChildren;
 declare namespace index$5 {
-  export { index$5_App as App, AppOpts, index$5_CLICK as CLICK, type index$5_Callback as Callback, type index$5_CallbackFn as CallbackFn, type index$5_CallbackObj as CallbackObj, type index$5_CancelFn as CancelFn, index$5_ComputedStyle as ComputedStyle, type index$5_ControlFn as ControlFn, type index$5_DataItem as DataItem, type index$5_DataObject as DataObject, type index$5_DataType as DataType, type index$5_DataValue as DataValue, index$5_Event as Event, type index$5_EventCb as EventCb, type index$5_EventFn as EventFn, type index$5_EventMatchFn as EventMatchFn, type index$5_EventType as EventType, index$5_Events as Events, type index$5_IOMap as IOMap, index$5_KEYPRESS as KEYPRESS, index$5_Loop as Loop, index$5_MOUSEMOVE as MOUSEMOVE, index$5_MOUSEUP as MOUSEUP, type index$5_MatchFn as MatchFn, type index$5_PauseOpts as PauseOpts, type index$5_PropType as PropType, index$5_Queue as Queue, type index$5_ResumeOpts as ResumeOpts, index$5_STOP as STOP, index$5_Scene as Scene, type index$5_SceneCallback as SceneCallback, type index$5_SceneMakeFn as SceneMakeFn, type index$5_SceneObj as SceneObj, type index$5_SceneOpts as SceneOpts, index$5_Scenes as Scenes, index$5_Selector as Selector, type index$5_SetParentOptions as SetParentOptions, index$5_Sheet as Sheet, type index$5_StartOpts as StartOpts, index$5_Style as Style, type index$5_StyleOptions as StyleOptions, type index$5_StyleType as StyleType, index$5_TICK as TICK, type index$5_TimerFn as TimerFn, index$5_Timers as Timers, index$5_Tweens as Tweens, type index$5_UISelectable as UISelectable, type index$5_UIStylable as UIStylable, type index$5_UIStyle as UIStyle, type index$5_UnhandledFn as UnhandledFn, type index$5_UpdatePosOpts as UpdatePosOpts, index$5_Widget as Widget, type index$5_WidgetOpts as WidgetOpts, index$5_alignChildren as alignChildren, index$5_compile as compile, index$5_defaultStyle as defaultStyle, index$5_ignoreKeyEvent as ignoreKeyEvent, index$5_installScene as installScene, index$5_isControlCode as isControlCode, index$5_keyCodeDirection as keyCodeDirection, make$5 as make, index$5_makeCustomEvent as makeCustomEvent, index$5_makeKeyEvent as makeKeyEvent, index$5_makeMouseEvent as makeMouseEvent, index$5_makeStopEvent as makeStopEvent, index$5_makeStyle as makeStyle, index$5_makeTickEvent as makeTickEvent, index$5_recycleEvent as recycleEvent, index$5_scenes as scenes, index$5_spaceChildren as spaceChildren, index$5_wrapChildren as wrapChildren };
+  export { index$5_App as App, AppOpts, index$5_CLICK as CLICK, type index$5_Callback as Callback, type index$5_CallbackFn as CallbackFn, type index$5_CallbackObj as CallbackObj, type index$5_CancelFn as CancelFn, index$5_ComputedStyle as ComputedStyle, type index$5_ControlFn as ControlFn, type index$5_DataItem as DataItem, type index$5_DataObject as DataObject, type index$5_DataType as DataType, type index$5_DataValue as DataValue, index$5_Event as Event, type index$5_EventCb as EventCb, type index$5_EventFn as EventFn, type index$5_EventMatchFn as EventMatchFn, type index$5_EventType as EventType, index$5_Events as Events, type index$5_IOMap as IOMap, index$5_KEYPRESS as KEYPRESS, index$5_Loop as Loop, index$5_MOUSEMOVE as MOUSEMOVE, index$5_MOUSEUP as MOUSEUP, type index$5_MatchFn as MatchFn, type index$5_PropType as PropType, index$5_Queue as Queue, index$5_STOP as STOP, index$5_Scene as Scene, type index$5_SceneCallback as SceneCallback, type index$5_SceneCreateOpts as SceneCreateOpts, type index$5_SceneMakeFn as SceneMakeFn, type index$5_SceneObj as SceneObj, type index$5_ScenePauseOpts as ScenePauseOpts, type index$5_SceneResumeOpts as SceneResumeOpts, type index$5_SceneStartOpts as SceneStartOpts, index$5_Scenes as Scenes, index$5_Selector as Selector, type index$5_SetParentOptions as SetParentOptions, index$5_Sheet as Sheet, index$5_Style as Style, type index$5_StyleOptions as StyleOptions, type index$5_StyleType as StyleType, index$5_TICK as TICK, type index$5_TimerFn as TimerFn, index$5_Timers as Timers, index$5_Tweens as Tweens, type index$5_UISelectable as UISelectable, type index$5_UIStylable as UIStylable, type index$5_UIStyle as UIStyle, type index$5_UnhandledFn as UnhandledFn, type index$5_UpdatePosOpts as UpdatePosOpts, index$5_Widget as Widget, type index$5_WidgetOpts as WidgetOpts, index$5_active as active, index$5_alignChildren as alignChildren, index$5_compile as compile, index$5_defaultStyle as defaultStyle, index$5_ignoreKeyEvent as ignoreKeyEvent, index$5_installScene as installScene, index$5_isControlCode as isControlCode, index$5_keyCodeDirection as keyCodeDirection, make$5 as make, index$5_makeCustomEvent as makeCustomEvent, index$5_makeKeyEvent as makeKeyEvent, index$5_makeMouseEvent as makeMouseEvent, index$5_makeStopEvent as makeStopEvent, index$5_makeStyle as makeStyle, index$5_makeTickEvent as makeTickEvent, index$5_recycleEvent as recycleEvent, index$5_scenes as scenes, index$5_spaceChildren as spaceChildren, index$5_wrapChildren as wrapChildren };
 }
 
 interface PendingInfo {
-    action: 'start' | 'stop' | 'run';
+    action: '_start' | 'stop' | 'run';
     scene: Scene;
     data: any;
 }
 declare class Scenes {
     _app: App;
-    _config: Record<string, SceneOpts>;
+    _config: Record<string, SceneCreateOpts>;
     _active: Scene[];
     _busy: boolean;
     _pending: PendingInfo[];
     constructor(gw: App);
     get isBusy(): boolean;
-    config(scenes: Record<string, SceneOpts | SceneMakeFn>): void;
-    config(id: string, opts: SceneOpts | SceneMakeFn): void;
+    config(scenes: Record<string, SceneCreateOpts | SceneMakeFn>): void;
+    config(id: string, opts: SceneCreateOpts | SceneMakeFn): void;
     get(): Scene;
     get(id?: string): Scene | null;
     emit(ev: string, ...args: any[]): void;
-    _create(id: string, opts?: SceneOpts): Scene;
-    start(id: string, data?: StartOpts): Scene;
-    run(id: string, data?: StartOpts): Scene;
-    _start(scene: Scene): void;
+    create(id: string, opts?: SceneCreateOpts): Scene;
+    start(id: string, opts?: SceneStartOpts): Scene;
+    _start(scene: Scene, opts?: SceneStartOpts): void;
+    run(id: string, data?: SceneStartOpts): Scene;
+    _started(scene: Scene): void;
     stop(data?: any): void;
     stop(id: string, data?: any): void;
-    _stop(_scene: Scene): void;
+    _stopped(_scene: Scene): void;
     destroy(id: string, data?: any): void;
-    pause(id: string, opts?: PauseOpts): void;
-    pause(opts?: PauseOpts): void;
-    resume(opts?: PauseOpts): void;
-    resume(id: string, opts?: PauseOpts): void;
+    pause(id: string, opts?: ScenePauseOpts): void;
+    pause(opts?: ScenePauseOpts): void;
+    resume(opts?: ScenePauseOpts): void;
+    resume(id: string, opts?: ScenePauseOpts): void;
     frameStart(): void;
     input(ev: Event): void;
     update(dt: number): void;
@@ -1708,8 +1770,8 @@ declare class Scenes {
     frameDebug(buffer: Buffer$1): void;
     frameEnd(buffer: Buffer$1): void;
 }
-declare const scenes: Record<string, SceneOpts>;
-declare function installScene(id: string, scene: SceneOpts | SceneMakeFn): void;
+declare const scenes: Record<string, SceneCreateOpts>;
+declare function installScene(id: string, scene: SceneCreateOpts | SceneMakeFn): void;
 
 interface TextOptions extends WidgetOpts {
     text?: string;
@@ -1902,12 +1964,17 @@ declare const PromptScene: {
     stop(this: Scene): void;
 };
 
+declare global {
+    var APP: App;
+}
 interface AppOpts {
     width?: number;
     height?: number;
     glyphs?: Glyphs;
     div?: HTMLElement | string;
+    seed?: number;
     image?: HTMLImageElement | string;
+    start?: boolean;
     font?: string;
     fontSize?: number;
     size?: number;
@@ -1915,14 +1982,16 @@ interface AppOpts {
     tileHeight?: number;
     basicOnly?: boolean;
     basic?: boolean;
-    scene?: SceneOpts | boolean;
-    scenes?: Record<string, SceneOpts>;
+    scene?: SceneCreateOpts | boolean | string;
+    scenes?: Record<string, SceneCreateOpts>;
+    sceneStartOpts?: SceneStartOpts;
     name?: string;
     loop?: Loop;
     dt?: number;
     canvas?: Canvas;
-    start?: boolean | string;
-    data?: Record<string, any>;
+    data?: {
+        [id: string]: any;
+    };
 }
 declare class App {
     name: string;
@@ -1941,12 +2010,14 @@ declare class App {
     fpsBuf: number[];
     fpsTimer: number;
     numFrames: number;
-    loopID: number;
+    loopId: number;
     stopped: boolean;
     paused: boolean;
     debug: boolean;
     buffer: Buffer$1;
-    data: Data;
+    data: {
+        [id: string]: any;
+    };
     constructor(opts?: Partial<AppOpts>);
     get width(): number;
     get height(): number;
@@ -1974,10 +2045,11 @@ declare class App {
     prompt(text: string, opts?: Omit<PromptOptions$1, 'prompt'>): Scene;
 }
 declare function make$5(opts: AppOpts): App;
+declare var active: App;
 
 type SceneCallback = (this: Scene, ...args: any[]) => void;
 type SceneMakeFn = (id: string, app: App) => Scene;
-interface SceneOpts {
+interface SceneCreateOpts {
     bg?: ColorBase;
     data?: Record<string, string>;
     styles?: Sheet;
@@ -1996,17 +2068,17 @@ interface SceneOpts {
     frameEnd?: SceneCallback;
     on?: Record<string, SceneCallback>;
 }
-interface StartOpts {
+interface SceneStartOpts {
     [key: string]: any;
 }
-interface ResumeOpts {
+interface SceneResumeOpts {
     timers?: boolean;
     tweens?: boolean;
     update?: boolean;
     draw?: boolean;
     input?: boolean;
 }
-interface PauseOpts extends ResumeOpts {
+interface ScenePauseOpts extends SceneResumeOpts {
     duration?: number;
 }
 interface SceneObj {
@@ -2030,7 +2102,7 @@ declare class Scene {
     realTime: number;
     skipTime: boolean;
     stopped: boolean;
-    paused: ResumeOpts;
+    paused: SceneResumeOpts;
     debug: boolean;
     needsDraw: boolean;
     styles: Sheet;
@@ -2042,14 +2114,14 @@ declare class Scene {
     isActive(): boolean;
     isPaused(): () => any;
     isSleeping(): () => any;
-    create(opts?: SceneOpts): void;
+    _create(opts?: SceneCreateOpts): void;
     destroy(data?: any): void;
-    start(opts?: StartOpts): void;
-    _start(opts?: StartOpts): void;
-    run(data?: StartOpts): void;
+    start(opts?: SceneStartOpts): this;
+    _start(opts?: SceneStartOpts): void;
+    run(data?: SceneStartOpts): this;
     stop(data?: any): void;
-    pause(opts?: PauseOpts): void;
-    resume(opts?: ResumeOpts): void;
+    pause(opts?: ScenePauseOpts): void;
+    resume(opts?: SceneResumeOpts): void;
     frameStart(): void;
     input(e: Event): void;
     update(dt: number): void;
@@ -3214,4 +3286,4 @@ declare namespace index {
   export { type index_ActionConfig as ActionConfig, type index_AddDialogOptions as AddDialogOptions, index_Border as Border, type index_BorderOptions as BorderOptions, type index_BorderType as BorderType, index_Builder as Builder, index_Button as Button, type index_ButtonConfig as ButtonConfig, type index_ButtonOptions as ButtonOptions, index_Choice as Choice, type index_ChoiceOptions as ChoiceOptions, index_Column as Column, type index_ColumnOptions as ColumnOptions, type index_DataItem as DataItem, index_DataList as DataList, type index_DataListOptions as DataListOptions, type index_DataObject as DataObject, index_DataTable as DataTable, type index_DataTableOptions as DataTableOptions, type index_DataType as DataType, type index_DataValue as DataValue, index_Dialog as Dialog, type index_DialogOptions as DialogOptions, type index_DropdownConfig as DropdownConfig, type index_EventCb as EventCb, index_Field as Field, type index_FieldOptions as FieldOptions, index_Fieldset as Fieldset, type index_FieldsetOptions as FieldsetOptions, type index_FormatFn as FormatFn, type index_HoverType as HoverType, index_Input as Input, type index_InputOptions as InputOptions, index_Inquiry as Inquiry, index_Menu as Menu, index_MenuButton as MenuButton, type index_MenuButtonOptions as MenuButtonOptions, type MenuOptions$1 as MenuOptions, index_Menubar as Menubar, type index_MenubarOptions as MenubarOptions, type index_NextType as NextType, index_OrderedList as OrderedList, type index_OrderedListOptions as OrderedListOptions, type index_PadInfo as PadInfo, type index_PrefixType as PrefixType, index_Prompt as Prompt, type index_PromptChoice as PromptChoice, type index_PromptOptions as PromptOptions, type index_PropType as PropType, type index_Rec as Rec, index_Select as Select, type index_SelectOptions as SelectOptions, type index_SelectType as SelectType, type index_SetParentOptions as SetParentOptions, index_Text as Text, type index_TextOptions as TextOptions, index_UnorderedList as UnorderedList, type index_UnorderedListOptions as UnorderedListOptions, type index_UpdatePosOpts as UpdatePosOpts, index_Widget as Widget, type index_WidgetMake as WidgetMake, type index_WidgetOpts as WidgetOpts, index_alignChildren as alignChildren, index_dialog as dialog, index_drawBorder as drawBorder, index_make as make, index_spaceChildren as spaceChildren, index_toPadArray as toPadArray, index_wrapChildren as wrapChildren };
 }
 
-export { ERROR, FALSE, IDENTITY, IS_NONZERO, IS_ZERO, NOOP, ONE, TRUE, WARN, ZERO, index$5 as app, arrayDelete, arrayFindRight, arrayIncludesAll, arrayInsert, arrayNext, arrayNullify, arrayPrev, arrayRevEach, arraysIntersect, blob, buffer, index$4 as canvas, clamp, index$9 as color, colors, cosmetic, data, first, flag, index$7 as fov, frequency, grid, lerp$1 as lerp, index$2 as light, list, message, nextIndex, object, index$6 as path, prevIndex, queue, random, range, rng, scheduler, index$3 as sprite, sum, tags, index$8 as text, tween, types, index$1 as ui, valueType, index as widget, xave, xy };
+export { ERROR, FALSE, IDENTITY, IS_NONZERO, IS_ZERO, NOOP, ONE, TRUE, WARN, type XY, ZERO, index$5 as app, blob, buffer, index$4 as canvas, index$9 as color, colors, cosmetic, flag, index$7 as fov, frequency, grid, index$2 as light, list, message, object, index$6 as path, queue, random, range, rng, scheduler, index$3 as sprite, tags, index$8 as text, tween, types, index$1 as ui, utils, index as widget, xy };

@@ -14,7 +14,7 @@ export class Mixer implements DrawInfo {
     public bg: Color.Color;
 
     constructor(base: DrawInfo = {}) {
-        this.ch = Utils.first(base.ch, null);
+        this.ch = Utils.firstDefined(base.ch, null);
         this.fg = Color.make(base.fg);
         this.bg = Color.make(base.bg);
     }

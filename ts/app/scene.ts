@@ -13,10 +13,13 @@ import * as BUFFER from '../buffer';
 import * as STYLE from './style';
 import { Widget, UpdatePosOpts } from './widget';
 
+// TODO - this: Event, scene: Scene, ...args: any[]) => void;
 export type SceneCallback = (this: Scene, ...args: any[]) => void;
+
+// TODO - add => (..., opts: SceneCreateOpts )?
 export type SceneMakeFn = (id: string, app: App) => Scene;
 
-export interface SceneOpts {
+export interface SceneCreateOpts {
     bg?: COLOR.ColorBase;
 
     data?: Record<string, string>;
@@ -47,18 +50,19 @@ export interface SceneOpts {
     on?: Record<string, SceneCallback>;
 }
 
-export interface StartOpts {
+// This data is specific to your scene - have fun with it
+export interface SceneStartOpts {
     [key: string]: any;
 }
 
-export interface ResumeOpts {
+export interface SceneResumeOpts {
     timers?: boolean;
     tweens?: boolean;
     update?: boolean;
     draw?: boolean;
     input?: boolean;
 }
-export interface PauseOpts extends ResumeOpts {
+export interface ScenePauseOpts extends SceneResumeOpts {
     duration?: number;
 }
 
@@ -73,12 +77,12 @@ export interface SceneObj {
 // Scene
 export class Scene {
     id: string;
-    app!: App;
+    app: App;
 
     events = new EVENTS.Events(this);
     tweens = new Tweens();
     timers = new TIMERS.Timers(this);
-    buffer!: BUFFER.Buffer;
+    buffer: BUFFER.Buffer;
 
     all: Widget[] = [];
     children: Widget[] = [];
@@ -90,7 +94,7 @@ export class Scene {
     skipTime = false;
 
     stopped = true;
-    paused: ResumeOpts = {};
+    paused: SceneResumeOpts = {};
     debug = false;
 
     needsDraw = true;
@@ -126,8 +130,18 @@ export class Scene {
     }
 
     // GENERAL
-    create(opts: SceneOpts = {}) {
+    _create(opts: SceneCreateOpts = {}) {
         opts.bg && (this.bg = COLOR.from(opts.bg));
+
+        if (opts.data) {
+            if (UTILS.isPlainObject(opts.data)) {
+                this.data = UTILS.mergeDeep(this.data, opts.data);
+            } else {
+                throw new Error(
+                    "SceneCreateOpts 'data' field must be plain object."
+                );
+            }
+        }
 
         if (opts.on) {
             Object.entries(opts.on).forEach(([ev, fn]) => {
@@ -142,6 +156,7 @@ export class Scene {
         this.emit('create', opts);
     }
 
+    // TODO - Who calls destroy
     destroy(data?: any) {
         this.emit('destroy', data);
         this.all.forEach((c) => c.destroy());
@@ -151,12 +166,13 @@ export class Scene {
         this.tweens.clear();
     }
 
-    start(opts: StartOpts = {}) {
+    start(opts: SceneStartOpts = {}): this {
         this.app.scenes.stop(); // stop all running scenes
-        this._start(opts);
+        this.app.scenes._start(this, opts); // start me
+        return this;
     }
 
-    _start(opts: StartOpts = {}) {
+    _start(opts: SceneStartOpts = {}) {
         this.stopped = false;
         // this.timers.restart();
         // this.events.restart();
@@ -166,10 +182,11 @@ export class Scene {
         this.events.emit('start', opts); // this will start this one in the app.scenes obj
     }
 
-    run(data: StartOpts = {}) {
+    run(data: SceneStartOpts = {}): this {
         this.app.scenes.pause();
         this._start(data);
         this.once('stop', () => this.app.scenes.resume());
+        return this;
     }
 
     stop(data?: any) {
@@ -177,7 +194,7 @@ export class Scene {
         this.events.emit('stop', data);
     }
 
-    pause(opts?: PauseOpts): void {
+    pause(opts?: ScenePauseOpts): void {
         opts = opts || {
             timers: true,
             tweens: true,
@@ -189,7 +206,7 @@ export class Scene {
         this.events.emit('pause');
     }
 
-    resume(opts?: ResumeOpts) {
+    resume(opts?: SceneResumeOpts) {
         opts = opts || {
             timers: true,
             tweens: true,
@@ -199,7 +216,7 @@ export class Scene {
         };
         Object.entries(opts).forEach(([key, value]) => {
             if (value === true) {
-                this.paused[key as keyof ResumeOpts] = false;
+                this.paused[key as keyof SceneResumeOpts] = false;
             }
         });
         this.needsDraw = true;
@@ -604,266 +621,3 @@ export class Scene {
         return this.timers.setInterval(fn, delay);
     }
 }
-
-// export class Scene {
-//     id: string;
-//     app!: App;
-//     events: EVENTS.Events;
-//     timers: TIMERS.Timers;
-//     buffer!: CANVAS.Buffer;
-//     tweens: Tweens;
-
-//     dt = 0;
-//     time = 0;
-//     realTime = 0;
-//     skipTime = false;
-
-//     stopped = true;
-//     paused: PauseOpts = {};
-//     debug = false;
-
-//     children: SceneObj[] = [];
-//     data: Record<string, any> = {};
-
-//     constructor(id: string, opts: SceneOpts = {}) {
-//         this.id = id;
-//         this.events = new EVENTS.Events(this);
-//         this.timers = new TIMERS.Timers(this);
-//         this.tweens = new Tweens();
-
-//         if (opts.on) {
-//             Object.entries(opts.on).forEach(([ev, fn]) => {
-//                 this.on(ev, fn);
-//             });
-//         }
-//         Object.entries(opts).forEach(([ev, fn]) => {
-//             if (typeof fn !== 'function') return;
-//             this.on(ev, fn);
-//         });
-//     }
-
-//     get width() {
-//         return this.buffer.width;
-//     }
-//     get height() {
-//         return this.buffer.height;
-//     }
-
-//     isActive() {
-//         return !this.stopped;
-//     }
-//     isPaused() {
-//         return this.isPaused;
-//     }
-//     isSleeping() {
-//         return this.isSleeping;
-//     }
-
-//     on(ev: string, fn: EVENTS.CallbackFn): EVENTS.CancelFn;
-//     on(ev: string, fn: EVENTS.CallbackFn): EVENTS.CancelFn {
-//         return this.events.on(ev, fn);
-//     }
-
-//     emit(ev: string, ...args: any[]) {
-//         return this.events.emit(ev, ...args);
-//     }
-
-//     wait(delay: number, fn: TIMERS.TimerFn): EVENTS.CancelFn;
-//     wait(delay: number, fn: string, ctx?: Record<string, any>): EVENTS.CancelFn;
-//     wait(
-//         delay: number,
-//         fn: TIMERS.TimerFn | string,
-//         ctx?: Record<string, any>
-//     ): EVENTS.CancelFn {
-//         if (typeof fn === 'string') {
-//             const ev = fn;
-//             ctx = ctx || {};
-//             fn = () => this.emit(ev, ctx!);
-//         }
-//         return this.timers.setTimeout(fn, delay);
-//     }
-
-//     repeat(delay: number, fn: TIMERS.TimerFn): EVENTS.CancelFn;
-//     repeat(
-//         delay: number,
-//         fn: string,
-//         ctx?: Record<string, any>
-//     ): EVENTS.CancelFn;
-//     repeat(
-//         delay: number,
-//         fn: TIMERS.TimerFn | string,
-//         ctx?: Record<string, any>
-//     ): EVENTS.CancelFn {
-//         if (typeof fn === 'string') {
-//             const ev = fn;
-//             ctx = ctx || {};
-//             fn = () => this.emit(ev, ctx!);
-//         }
-//         return this.timers.setInterval(fn, delay);
-//     }
-
-//     // run() {
-//     //     this.emit('run', this);
-//     //     let running = false;
-//     //     this.loopID = (setInterval(() => {
-//     //         if (!running) {
-//     //             running = true;
-//     //             this._frame();
-//     //             running = false;
-//     //         }
-//     //     }, 16) as unknown) as number;
-//     //     this.stopped = false;
-//     // }
-
-//     create(app: App) {
-//         this.app = app;
-//         this.buffer = app.buffer.clone();
-//         this.emit('create');
-//     }
-//     destroy() {
-//         this.emit('destroy');
-//     }
-
-//     start(data?: Record<string, any>) {
-//         this.stopped = false;
-//         this.timers.clear();
-//         this.tweens.clear();
-//         this.events.emit('start', data || {});
-//     }
-
-//     run(data?: Record<string, any>): Promise<any> {
-//         return new Promise((resolve) => {
-//             this.app.scenes.pause();
-//             const cleanup = this.once('stop', (d) => {
-//                 cleanup();
-//                 this.app.scenes.resume();
-//                 resolve(d);
-//             });
-//             this.start(data);
-//         });
-//     }
-
-//     stop(data?: Record<string, any>) {
-//         this.stopped = true;
-//         this.events.emit('stop', data || {});
-//     }
-
-//     pause(opts?: PauseOpts): void {
-//         opts = opts || {
-//             timers: true,
-//             tweens: true,
-//             update: true,
-//             input: true,
-//             draw: true,
-//         };
-//         Object.assign(this.paused, opts);
-//         this.events.emit('pause');
-//     }
-
-//     resume(opts?: ResumeOpts) {
-//         opts = opts || {
-//             timers: true,
-//             tweens: true,
-//             update: true,
-//             input: true,
-//             draw: true,
-//         };
-//         Object.entries(opts).forEach(([key, value]) => {
-//             if (value === true) {
-//                 this.paused[key as keyof ResumeOpts] = false;
-//             }
-//         });
-//         this.events.emit('resume');
-//     }
-
-//     // CHILDREN
-
-//     add(obj: SceneObj) {
-//         this.children.push(obj);
-//         obj.emit('add', this);
-//     }
-
-//     remove(obj: SceneObj) {
-//         UTILS.arrayDelete(this.children, obj);
-//         obj.emit('remove', this);
-//     }
-
-//     // FRAME STEPS
-
-//     frameStart() {
-//         this.events.emit('frameStart');
-//     }
-
-//     input(ev: IO.Event) {
-//         if (this.stopped || this.paused.input) return;
-//         this.events.dispatch(ev);
-//     }
-
-//     update(dt: number) {
-//         if (this.stopped) return;
-
-//         if (!this.paused.timers) this.timers.update(dt);
-//         if (!this.paused.tweens) this.tweens.update(dt);
-//         if (!this.paused.update) {
-//             this.children.forEach((c) => c.update(dt));
-//             this.events.emit('update', dt);
-//         }
-//     }
-
-//     draw(buffer: CANVAS.Buffer) {
-//         if (this.stopped) return;
-//         if (!this.paused.draw) {
-//             this.events.emit('draw', this.buffer);
-//             this.children.forEach((c) => c.draw(this.buffer));
-//         }
-//         if (this.buffer.changed) {
-//             buffer.apply(this.buffer);
-//             this.buffer.changed = false;
-//         }
-//     }
-//     frameDebug(buffer: CANVAS.Buffer) {
-//         this.events.emit('frameDebug', buffer);
-//     }
-//     frameEnd(buffer: CANVAS.Buffer) {
-//         this.events.emit('frameEnd', buffer);
-//         // if (this.buffer.changed) {
-//         //     buffer.apply(this.buffer);
-//         //     this.buffer.changed = false;
-//         // }
-//     }
-
-//     // UI
-
-//     alert(text: string): Promise<boolean> {
-//         return this.app.scenes.run('alert', { text });
-//     }
-
-//     async fadeTo(
-//         color: COLOR.ColorBase = 'black',
-//         duration = 1000
-//     ): Promise<void> {
-//         return new Promise<void>((resolve) => {
-//             color = COLOR.from(color);
-
-//             this.pause();
-//             const buffer = this.buffer.clone();
-
-//             let pct = 0;
-//             let elapsed = 0;
-
-//             this.app.repeat(32, () => {
-//                 elapsed += 32;
-//                 pct = Math.floor((100 * elapsed) / duration);
-
-//                 this.buffer.copy(buffer);
-//                 this.buffer.mix(color, pct);
-
-//                 if (elapsed >= duration) {
-//                     this.resume();
-//                     resolve();
-//                     return false; // end timer
-//                 }
-//             });
-//         });
-//     }
-// }

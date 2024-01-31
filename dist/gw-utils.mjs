@@ -95,12 +95,12 @@ var _baseTrim = baseTrim$1;
  * // => false
  */
 
-function isObject$4(value) {
+function isObject$5(value) {
   var type = typeof value;
   return value != null && (type == 'object' || type == 'function');
 }
 
-var isObject_1 = isObject$4;
+var isObject_1 = isObject$5;
 
 /** Detect free variable `global` from Node.js. */
 
@@ -287,7 +287,7 @@ function isSymbol$4(value) {
 var isSymbol_1 = isSymbol$4;
 
 var baseTrim = _baseTrim,
-    isObject$3 = isObject_1,
+    isObject$4 = isObject_1,
     isSymbol$3 = isSymbol_1;
 
 /** Used as references for various `Number` constants. */
@@ -335,9 +335,9 @@ function toNumber$1(value) {
   if (isSymbol$3(value)) {
     return NAN;
   }
-  if (isObject$3(value)) {
+  if (isObject$4(value)) {
     var other = typeof value.valueOf == 'function' ? value.valueOf() : value;
-    value = isObject$3(other) ? (other + '') : other;
+    value = isObject$4(other) ? (other + '') : other;
   }
   if (typeof value != 'string') {
     return value === 0 ? value : +value;
@@ -392,877 +392,6 @@ function clamp$1(number, lower, upper) {
 var clamp_1 = clamp$1;
 
 var _clamp = /*@__PURE__*/getDefaultExportFromCjs(clamp_1);
-
-/**
- * GW.utils
- * @module utils
- */
-function NOOP() { }
-function TRUE() {
-    return true;
-}
-function FALSE() {
-    return false;
-}
-function ONE() {
-    return 1;
-}
-function ZERO() {
-    return 0;
-}
-function IDENTITY(x) {
-    return x;
-}
-function IS_ZERO(x) {
-    return x == 0;
-}
-function IS_NONZERO(x) {
-    return x != 0;
-}
-/**
- * clamps a value between min and max (inclusive)
- * @param v {Number} the value to clamp
- * @param min {Number} the minimum value
- * @param max {Number} the maximum value
- * @returns {Number} the clamped value
- */
-const clamp = _clamp;
-// export function clamp(v: number, min: number, max: number) {
-//     if (v < min) return min;
-//     if (v > max) return max;
-//     return v;
-// }
-function lerp$1(from, to, pct) {
-    if (pct > 1)
-        pct = 1;
-    if (pct < 0)
-        pct = 0;
-    return Math.floor(from + (to - from) * pct);
-}
-function xave(rate, value, newValue) {
-    return value * rate + newValue * (1 - rate);
-}
-function ERROR(message) {
-    throw new Error(message);
-}
-function WARN(...args) {
-    console.warn(...args);
-}
-function first(...args) {
-    return args.find((v) => v !== undefined);
-}
-function arraysIntersect(a, b) {
-    return a.some((av) => b.includes(av));
-}
-function arrayIncludesAll(a, b) {
-    return b.every((av) => a.includes(av));
-}
-function arrayRevEach(a, fn) {
-    for (let i = a.length - 1; i > -1; --i) {
-        fn(a[i], i, a);
-    }
-}
-function arrayDelete(a, b) {
-    const index = a.indexOf(b);
-    if (index < 0)
-        return false;
-    a.splice(index, 1);
-    return true;
-}
-function arrayNullify(a, b) {
-    const index = a.indexOf(b);
-    if (index < 0)
-        return false;
-    a[index] = null;
-    return true;
-}
-function arrayInsert(a, b, beforeFn) {
-    if (!beforeFn) {
-        a.push(b);
-        return;
-    }
-    const index = a.findIndex(beforeFn);
-    if (index < 0) {
-        a.push(b);
-    }
-    else {
-        a.splice(index, 0, b);
-    }
-}
-function arrayFindRight(a, fn) {
-    for (let i = a.length - 1; i >= 0; --i) {
-        const e = a[i];
-        if (fn(e))
-            return e;
-    }
-    return undefined;
-}
-function sum(arr) {
-    return arr.reduce((a, b) => a + b);
-}
-function arrayNext(a, current, fn, wrap = true, forward = true) {
-    const len = a.length;
-    if (len <= 1)
-        return undefined;
-    const startIndex = a.indexOf(current);
-    if (startIndex < 0)
-        return undefined;
-    const dx = forward ? 1 : -1;
-    let startI = wrap ? (len + startIndex + dx) % len : startIndex + dx;
-    let endI = wrap ? startIndex : forward ? len : -1;
-    for (let index = startI; index !== endI; index = wrap ? (len + index + dx) % len : index + dx) {
-        const e = a[index];
-        if (fn(e))
-            return e;
-    }
-    return undefined;
-}
-function arrayPrev(a, current, fn, wrap = true) {
-    return arrayNext(a, current, fn, wrap, false);
-}
-function nextIndex(index, length, wrap = true) {
-    ++index;
-    if (index >= length) {
-        if (wrap)
-            return index % length;
-        return -1;
-    }
-    return index;
-}
-function prevIndex(index, length, wrap = true) {
-    if (index < 0)
-        return length - 1; // start in back
-    --index;
-    if (index < 0) {
-        if (wrap)
-            return length - 1;
-        return -1;
-    }
-    return index;
-}
-function valueType(a) {
-    const ta = typeof a;
-    if (ta == 'object') {
-        if (Array.isArray(a)) {
-            return 'array';
-        }
-    }
-    return ta;
-}
-
-// DIRS are organized clockwise
-// - first 4 are arrow directions
-//   >> rotate 90 degrees clockwise ==>> newIndex = (oldIndex + 1) % 4
-//   >> opposite direction ==>> oppIndex = (index + 2) % 4
-// - last 4 are diagonals
-//   >> rotate 90 degrees clockwise ==>> newIndex = 4 + (oldIndex + 1) % 4;
-//   >> opposite diagonal ==>> newIndex = 4 + (index + 2) % 4;
-const DIRS$2 = [
-    [0, -1],
-    [1, 0],
-    [0, 1],
-    [-1, 0],
-    [1, -1],
-    [1, 1],
-    [-1, 1],
-    [-1, -1],
-];
-const NO_DIRECTION = -1;
-const UP = 0;
-const RIGHT = 1;
-const DOWN = 2;
-const LEFT = 3;
-const RIGHT_UP = 4;
-const RIGHT_DOWN = 5;
-const LEFT_DOWN = 6;
-const LEFT_UP = 7;
-// CLOCK DIRS are organized clockwise, starting at UP
-// >> opposite = (index + 4) % 8
-// >> 90 degrees rotate right = (index + 2) % 8
-// >> 90 degrees rotate left = (8 + index - 2) % 8
-const CLOCK_DIRS = [
-    [0, 1],
-    [1, 1],
-    [1, 0],
-    [1, -1],
-    [0, -1],
-    [-1, -1],
-    [-1, 0],
-    [-1, 1],
-];
-function isLoc(a) {
-    return (Array.isArray(a) &&
-        a.length == 2 &&
-        typeof a[0] === 'number' &&
-        typeof a[1] === 'number');
-}
-function isXY(a) {
-    return a && typeof a.x === 'number' && typeof a.y === 'number';
-}
-function asLoc(v) {
-    if (Array.isArray(v))
-        return v;
-    return [x(v), y(v)];
-}
-function asXY(v) {
-    if (!Array.isArray(v))
-        return v;
-    return { x: x(v), y: y(v) };
-}
-function x(src) {
-    // @ts-ignore
-    return src.x || src[0] || 0;
-}
-function y(src) {
-    // @ts-ignore
-    return src.y || src[1] || 0;
-}
-function contains(size, x, y) {
-    return x >= 0 && y >= 0 && x < size.width && y < size.height;
-}
-class Bounds {
-    constructor(x = 0, y = 0, w = 0, h = 0) {
-        if (typeof x !== 'number') {
-            const opts = x;
-            h = opts.height || 0;
-            w = opts.width || 0;
-            y = opts.y || 0;
-            x = opts.x || 0;
-        }
-        this.x = x;
-        this.y = y;
-        this.width = w;
-        this.height = h;
-    }
-    get left() {
-        return this.x;
-    }
-    set left(v) {
-        this.x = v;
-    }
-    get right() {
-        return this.x + this.width;
-    }
-    set right(v) {
-        this.x = v - this.width;
-    }
-    get top() {
-        return this.y;
-    }
-    set top(v) {
-        this.y = v;
-    }
-    get bottom() {
-        return this.y + this.height;
-    }
-    set bottom(v) {
-        this.y = v - this.height;
-    }
-    get center() {
-        return this.x + Math.floor(this.width / 2);
-    }
-    set center(v) {
-        this.x += v - this.center;
-    }
-    get middle() {
-        return this.y + Math.floor(this.height / 2);
-    }
-    set middle(v) {
-        this.y += v - this.middle;
-    }
-    clone() {
-        return new Bounds(this.x, this.y, this.width, this.height);
-    }
-    copy(other) {
-        this.x = other.x;
-        this.y = other.y;
-        this.width = other.width;
-        this.height = other.height;
-    }
-    contains(...args) {
-        let i = args[0];
-        let j = args[1];
-        if (typeof i !== 'number') {
-            j = y(i);
-            i = x(i);
-        }
-        return (this.x <= i &&
-            this.y <= j &&
-            this.x + this.width > i &&
-            this.y + this.height > j);
-    }
-    include(xy) {
-        const left = Math.min(x(xy), this.x);
-        const top = Math.min(y(xy), this.y);
-        const right = Math.max(xy instanceof Bounds ? xy.right : left, this.right);
-        const bottom = Math.max(xy instanceof Bounds ? xy.bottom : top, this.bottom);
-        this.left = left;
-        this.top = top;
-        this.width = right - left;
-        this.height = bottom - top;
-    }
-    pad(n = 1) {
-        this.x -= n;
-        this.y -= n;
-        this.width += n * 2;
-        this.height += n * 2;
-    }
-    forEach(cb) {
-        forRect(this.x, this.y, this.width, this.height, cb);
-    }
-    toString() {
-        return `[${this.x},${this.y} -> ${this.right},${this.bottom}]`;
-    }
-}
-function copy(dest, src) {
-    dest.x = x(src);
-    dest.y = y(src);
-}
-function addTo(dest, src) {
-    dest.x += x(src);
-    dest.y += y(src);
-}
-function add(a, b) {
-    if (Array.isArray(a)) {
-        return [a[0] + x(b), a[1] + y(b)];
-    }
-    return { x: a.x + x(b), y: a.y + y(b) };
-}
-function equals(dest, src) {
-    if (!dest && !src)
-        return true;
-    if (!dest || !src)
-        return false;
-    return x(dest) == x(src) && y(dest) == y(src);
-}
-function isDiagonal(xy) {
-    return x(xy) != 0 && y(xy) != 0;
-}
-function lerp(a, b, pct) {
-    if (pct > 1) {
-        pct = pct / 100;
-    }
-    pct = clamp(pct, 0, 1);
-    const dx = x(b) - x(a);
-    const dy = y(b) - y(a);
-    const x2 = x(a) + Math.floor(dx * pct);
-    const y2 = y(a) + Math.floor(dy * pct);
-    return [x2, y2];
-}
-function eachNeighbor(x, y, fn, only4dirs = false) {
-    const max = only4dirs ? 4 : 8;
-    for (let i = 0; i < max; ++i) {
-        const dir = DIRS$2[i];
-        const x1 = x + dir[0];
-        const y1 = y + dir[1];
-        fn(x1, y1, dir);
-    }
-}
-async function eachNeighborAsync(x, y, fn, only4dirs = false) {
-    const max = only4dirs ? 4 : 8;
-    for (let i = 0; i < max; ++i) {
-        const dir = DIRS$2[i];
-        const x1 = x + dir[0];
-        const y1 = y + dir[1];
-        await fn(x1, y1, dir);
-    }
-}
-function matchingNeighbor(x, y, matchFn, only4dirs = false) {
-    const maxIndex = only4dirs ? 4 : 8;
-    for (let d = 0; d < maxIndex; ++d) {
-        const dir = DIRS$2[d];
-        const i = x + dir[0];
-        const j = y + dir[1];
-        if (matchFn(i, j, dir))
-            return [i, j];
-    }
-    return [-1, -1];
-}
-function straightDistanceBetween(x1, y1, x2, y2) {
-    const x = Math.abs(x1 - x2);
-    const y = Math.abs(y1 - y2);
-    return x + y;
-}
-function maxAxisFromTo(a, b) {
-    const xa = Math.abs(x(a) - x(b));
-    const ya = Math.abs(y(a) - y(b));
-    return Math.max(xa, ya);
-}
-function maxAxisBetween(x1, y1, x2, y2) {
-    const xa = Math.abs(x1 - x2);
-    const ya = Math.abs(y1 - y2);
-    return Math.max(xa, ya);
-}
-function distanceBetween(x1, y1, x2, y2) {
-    const x = Math.abs(x1 - x2);
-    const y = Math.abs(y1 - y2);
-    const min = Math.min(x, y);
-    return x + y - 0.6 * min;
-}
-function distanceFromTo(a, b) {
-    return distanceBetween(x(a), y(a), x(b), y(b));
-}
-function calcRadius(x, y) {
-    return distanceBetween(0, 0, x, y);
-}
-function dirBetween(x, y, toX, toY) {
-    let diffX = toX - x;
-    let diffY = toY - y;
-    if (diffX && diffY) {
-        const absX = Math.abs(diffX);
-        const absY = Math.abs(diffY);
-        if (absX >= 2 * absY) {
-            diffY = 0;
-        }
-        else if (absY >= 2 * absX) {
-            diffX = 0;
-        }
-    }
-    return [Math.sign(diffX), Math.sign(diffY)];
-}
-function dirFromTo(a, b) {
-    return dirBetween(x(a), y(a), x(b), y(b));
-}
-function dirIndex(dir) {
-    const x0 = x(dir);
-    const y0 = y(dir);
-    return DIRS$2.findIndex((a) => a[0] == x0 && a[1] == y0);
-}
-function isOppositeDir(a, b) {
-    if (Math.sign(a[0]) + Math.sign(b[0]) != 0)
-        return false;
-    if (Math.sign(a[1]) + Math.sign(b[1]) != 0)
-        return false;
-    return true;
-}
-function isSameDir(a, b) {
-    return (Math.sign(a[0]) == Math.sign(b[0]) && Math.sign(a[1]) == Math.sign(b[1]));
-}
-function dirSpread(dir) {
-    const result = [dir];
-    if (dir[0] == 0) {
-        result.push([1, dir[1]]);
-        result.push([-1, dir[1]]);
-    }
-    else if (dir[1] == 0) {
-        result.push([dir[0], 1]);
-        result.push([dir[0], -1]);
-    }
-    else {
-        result.push([dir[0], 0]);
-        result.push([0, dir[1]]);
-    }
-    return result;
-}
-function stepFromTo(a, b, fn) {
-    const x0 = x(a);
-    const y0 = y(a);
-    const diff = [x(b) - x0, y(b) - y0];
-    const steps = Math.abs(diff[0]) + Math.abs(diff[1]);
-    const c = [0, 0];
-    const last = [99999, 99999];
-    for (let step = 0; step <= steps; ++step) {
-        c[0] = x0 + Math.floor((diff[0] * step) / steps);
-        c[1] = y0 + Math.floor((diff[1] * step) / steps);
-        if (c[0] != last[0] || c[1] != last[1]) {
-            fn(c[0], c[1]);
-        }
-        last[0] = c[0];
-        last[1] = c[1];
-    }
-}
-// LINES
-function forLine(x, y, dir, length, fn) {
-    for (let l = 0; l < length; ++l) {
-        fn(x + l * dir[0], y + l * dir[1]);
-    }
-}
-const FP_BASE = 16;
-const FP_FACTOR = 1 << 16;
-function forLineBetween(fromX, fromY, toX, toY, stepFn) {
-    let targetVector = [], error = [], currentVector = [], quadrantTransform = [];
-    let largerTargetComponent, i;
-    let currentLoc = [-1, -1];
-    if (fromX == toX && fromY == toY) {
-        return true;
-    }
-    const originLoc = [fromX, fromY];
-    const targetLoc = [toX, toY];
-    // Neither vector is negative. We keep track of negatives with quadrantTransform.
-    for (i = 0; i <= 1; i++) {
-        targetVector[i] = (targetLoc[i] - originLoc[i]) << FP_BASE; // FIXME: should use parens?
-        if (targetVector[i] < 0) {
-            targetVector[i] *= -1;
-            quadrantTransform[i] = -1;
-        }
-        else {
-            quadrantTransform[i] = 1;
-        }
-        currentVector[i] = error[i] = 0;
-        currentLoc[i] = originLoc[i];
-    }
-    // normalize target vector such that one dimension equals 1 and the other is in [0, 1].
-    largerTargetComponent = Math.max(targetVector[0], targetVector[1]);
-    // targetVector[0] = Math.floor( (targetVector[0] << FP_BASE) / largerTargetComponent);
-    // targetVector[1] = Math.floor( (targetVector[1] << FP_BASE) / largerTargetComponent);
-    targetVector[0] = Math.floor((targetVector[0] * FP_FACTOR) / largerTargetComponent);
-    targetVector[1] = Math.floor((targetVector[1] * FP_FACTOR) / largerTargetComponent);
-    do {
-        for (i = 0; i <= 1; i++) {
-            currentVector[i] += targetVector[i] >> FP_BASE;
-            error[i] += targetVector[i] == FP_FACTOR ? 0 : targetVector[i];
-            if (error[i] >= Math.floor(FP_FACTOR / 2)) {
-                currentVector[i]++;
-                error[i] -= FP_FACTOR;
-            }
-            currentLoc[i] = Math.floor(quadrantTransform[i] * currentVector[i] + originLoc[i]);
-        }
-        const r = stepFn(...currentLoc);
-        if (r === false) {
-            return false;
-        }
-        else if (r !== true &&
-            currentLoc[0] === toX &&
-            currentLoc[1] === toY) {
-            return true;
-        }
-    } while (true);
-}
-function forLineFromTo(a, b, stepFn) {
-    return forLineBetween(x(a), y(a), x(b), y(b), stepFn);
-}
-// ADAPTED FROM BROGUE 1.7.5
-// Simple line algorithm (maybe this is Bresenham?) that returns a list of coordinates
-// that extends all the way to the edge of the map based on an originLoc (which is not included
-// in the list of coordinates) and a targetLoc.
-// Returns the number of entries in the list, and includes (-1, -1) as an additional
-// terminus indicator after the end of the list.
-function getLine(fromX, fromY, toX, toY) {
-    const line = [];
-    forLineBetween(fromX, fromY, toX, toY, (x, y) => {
-        line.push([x, y]);
-    });
-    return line;
-}
-// ADAPTED FROM BROGUE 1.7.5
-// Simple line algorithm (maybe this is Bresenham?) that returns a list of coordinates
-// that extends all the way to the edge of the map based on an originLoc (which is not included
-// in the list of coordinates) and a targetLoc.
-function getLineThru(fromX, fromY, toX, toY, width, height) {
-    const line = [];
-    forLineBetween(fromX, fromY, toX, toY, (x, y) => {
-        if (x < 0 || y < 0 || x >= width || y >= height)
-            return false;
-        line.push([x, y]);
-        return true;
-    });
-    return line;
-}
-// CIRCLE
-function forCircle(x, y, radius, fn) {
-    let i, j;
-    for (i = x - radius - 1; i < x + radius + 1; i++) {
-        for (j = y - radius - 1; j < y + radius + 1; j++) {
-            if ((i - x) * (i - x) + (j - y) * (j - y) <
-                radius * radius + radius) {
-                // + radius softens the circle
-                fn(i, j);
-            }
-        }
-    }
-}
-function forRect(...args) {
-    let left = 0;
-    let top = 0;
-    if (arguments.length > 3) {
-        left = args.shift();
-        top = args.shift();
-    }
-    const right = left + args[0];
-    const bottom = top + args[1];
-    const fn = args[2];
-    for (let i = left; i < right; ++i) {
-        for (let j = top; j < bottom; ++j) {
-            fn(i, j);
-        }
-    }
-}
-function dumpRect(left, top, width, height, fmtFn, log = console.log) {
-    let i, j;
-    const bottom = top + height;
-    const right = left + width;
-    let output = [];
-    for (j = top; j < bottom; j++) {
-        let line = ('' + j + ']').padStart(3, ' ');
-        for (i = left; i < right; i++) {
-            if (i % 10 == 0) {
-                line += ' ';
-            }
-            line += fmtFn(i, j);
-        }
-        output.push(line);
-    }
-    log(output.join('\n'));
-}
-function dumpAround(x, y, radius, fmtFn, log = console.log) {
-    dumpRect(x - radius, y - radius, 2 * radius + 1, 2 * radius + 1, fmtFn, log);
-}
-function forBorder(...args) {
-    let left = 0;
-    let top = 0;
-    if (arguments.length > 3) {
-        left = args.shift();
-        top = args.shift();
-    }
-    const right = left + args[0] - 1;
-    const bottom = top + args[1] - 1;
-    const fn = args[2];
-    for (let x = left; x <= right; ++x) {
-        fn(x, top);
-        fn(x, bottom);
-    }
-    for (let y = top; y <= bottom; ++y) {
-        fn(left, y);
-        fn(right, y);
-    }
-}
-// ARC COUNT
-// Rotates around the cell, counting up the number of distinct strings of neighbors with the same test result in a single revolution.
-//		Zero means there are no impassable tiles adjacent.
-//		One means it is adjacent to a wall.
-//		Two means it is in a hallway or something similar.
-//		Three means it is the center of a T-intersection or something similar.
-//		Four means it is in the intersection of two hallways.
-//		Five or more means there is a bug.
-function arcCount(x, y, testFn) {
-    let oldX, oldY, newX, newY;
-    // brogueAssert(grid.hasXY(x, y));
-    let arcCount = 0;
-    let matchCount = 0;
-    for (let dir = 0; dir < CLOCK_DIRS.length; dir++) {
-        oldX = x + CLOCK_DIRS[(dir + 7) % 8][0];
-        oldY = y + CLOCK_DIRS[(dir + 7) % 8][1];
-        newX = x + CLOCK_DIRS[dir][0];
-        newY = y + CLOCK_DIRS[dir][1];
-        // Counts every transition from passable to impassable or vice-versa on the way around the cell:
-        const newOk = testFn(newX, newY);
-        const oldOk = testFn(oldX, oldY);
-        if (newOk)
-            ++matchCount;
-        if (newOk != oldOk) {
-            arcCount++;
-        }
-    }
-    if (arcCount == 0 && matchCount)
-        return 1;
-    return Math.floor(arcCount / 2); // Since we added one when we entered a wall and another when we left.
-}
-function closestMatchingLocs(x, y, matchFn) {
-    const locs = [];
-    let i, j, k;
-    // count up the number of candidate locations
-    for (k = 0; k < 100 && !locs.length; k++) {
-        for (i = x - k; i <= x + k; i++) {
-            for (j = y - k; j <= y + k; j++) {
-                if (Math.ceil(distanceBetween(x, y, i, j)) == k &&
-                    matchFn(i, j)) {
-                    locs.push([i, j]);
-                }
-            }
-        }
-    }
-    return locs.length ? locs : null;
-}
-
-var xy = /*#__PURE__*/Object.freeze({
-	__proto__: null,
-	Bounds: Bounds,
-	CLOCK_DIRS: CLOCK_DIRS,
-	DIRS: DIRS$2,
-	DOWN: DOWN,
-	LEFT: LEFT,
-	LEFT_DOWN: LEFT_DOWN,
-	LEFT_UP: LEFT_UP,
-	NO_DIRECTION: NO_DIRECTION,
-	RIGHT: RIGHT,
-	RIGHT_DOWN: RIGHT_DOWN,
-	RIGHT_UP: RIGHT_UP,
-	UP: UP,
-	add: add,
-	addTo: addTo,
-	arcCount: arcCount,
-	asLoc: asLoc,
-	asXY: asXY,
-	calcRadius: calcRadius,
-	closestMatchingLocs: closestMatchingLocs,
-	contains: contains,
-	copy: copy,
-	dirBetween: dirBetween,
-	dirFromTo: dirFromTo,
-	dirIndex: dirIndex,
-	dirSpread: dirSpread,
-	distanceBetween: distanceBetween,
-	distanceFromTo: distanceFromTo,
-	dumpAround: dumpAround,
-	dumpRect: dumpRect,
-	eachNeighbor: eachNeighbor,
-	eachNeighborAsync: eachNeighborAsync,
-	equals: equals,
-	forBorder: forBorder,
-	forCircle: forCircle,
-	forLine: forLine,
-	forLineBetween: forLineBetween,
-	forLineFromTo: forLineFromTo,
-	forRect: forRect,
-	getLine: getLine,
-	getLineThru: getLineThru,
-	isDiagonal: isDiagonal,
-	isLoc: isLoc,
-	isOppositeDir: isOppositeDir,
-	isSameDir: isSameDir,
-	isXY: isXY,
-	lerp: lerp,
-	matchingNeighbor: matchingNeighbor,
-	maxAxisBetween: maxAxisBetween,
-	maxAxisFromTo: maxAxisFromTo,
-	stepFromTo: stepFromTo,
-	straightDistanceBetween: straightDistanceBetween,
-	x: x,
-	y: y
-});
-
-// CHAIN
-function length$1(root) {
-    let count = 0;
-    while (root) {
-        count += 1;
-        root = root.next;
-    }
-    return count;
-}
-function at(root, index) {
-    while (root && index) {
-        root = root.next;
-        --index;
-    }
-    return root;
-}
-function includes(root, entry) {
-    while (root && root !== entry) {
-        root = root.next;
-    }
-    return root === entry;
-}
-function forEach(root, fn) {
-    let index = 0;
-    while (root) {
-        const next = root.next;
-        fn(root, index++);
-        root = next;
-    }
-    return index; // really count
-}
-function push(obj, name, entry) {
-    entry.next = obj[name] || null;
-    obj[name] = entry;
-    return true;
-}
-function remove(obj, name, entry) {
-    const root = obj[name];
-    if (root === entry) {
-        obj[name] = entry.next || null;
-        entry.next = null;
-        return true;
-    }
-    else if (!root) {
-        return false;
-    }
-    else {
-        let prev = root;
-        let current = prev.next;
-        while (current && current !== entry) {
-            prev = current;
-            current = prev.next;
-        }
-        if (current === entry) {
-            prev.next = current.next;
-            entry.next = null;
-            return true;
-        }
-    }
-    return false;
-}
-function find(root, cb) {
-    while (root && !cb(root)) {
-        root = root.next;
-    }
-    return root;
-}
-function insert(obj, name, entry, sort) {
-    let root = obj[name];
-    sort = sort || (() => -1); // always insert first
-    if (!root || sort(root, entry) < 0) {
-        entry.next = root;
-        obj[name] = entry;
-        return true;
-    }
-    let prev = root;
-    let current = root.next;
-    while (current && sort(current, entry) > 0) {
-        prev = current;
-        current = current.next;
-    }
-    entry.next = current;
-    prev.next = entry;
-    return true;
-}
-function reduce(root, cb, out) {
-    let current = root;
-    if (out === undefined) {
-        if (!current)
-            throw new TypeError('Empty list reduce without initial value not allowed.');
-        out = current;
-        current = current.next;
-    }
-    while (current) {
-        out = cb(out, current);
-        current = current.next;
-    }
-    return out;
-}
-function some(root, cb) {
-    let current = root;
-    while (current) {
-        if (cb(current))
-            return true;
-        current = current.next;
-    }
-    return false;
-}
-function every(root, cb) {
-    let current = root;
-    while (current) {
-        if (!cb(current))
-            return false;
-        current = current.next;
-    }
-    return true;
-}
-
-var list = /*#__PURE__*/Object.freeze({
-	__proto__: null,
-	at: at,
-	every: every,
-	find: find,
-	forEach: forEach,
-	includes: includes,
-	insert: insert,
-	length: length$1,
-	push: push,
-	reduce: reduce,
-	remove: remove,
-	some: some
-});
 
 /**
  * Checks if `value` is classified as an `Array` object.
@@ -1323,7 +452,7 @@ function isKey$1(value, object) {
 var _isKey = isKey$1;
 
 var baseGetTag = _baseGetTag,
-    isObject$2 = isObject_1;
+    isObject$3 = isObject_1;
 
 /** `Object#toString` result references. */
 var asyncTag = '[object AsyncFunction]',
@@ -1349,7 +478,7 @@ var asyncTag = '[object AsyncFunction]',
  * // => false
  */
 function isFunction$1(value) {
-  if (!isObject$2(value)) {
+  if (!isObject$3(value)) {
     return false;
   }
   // The use of `Object#toString` avoids issues with the `typeof` operator
@@ -1418,7 +547,7 @@ var _toSource = toSource$1;
 
 var isFunction = isFunction_1,
     isMasked = _isMasked,
-    isObject$1 = isObject_1,
+    isObject$2 = isObject_1,
     toSource = _toSource;
 
 /**
@@ -1455,7 +584,7 @@ var reIsNative = RegExp('^' +
  *  else `false`.
  */
 function baseIsNative$1(value) {
-  if (!isObject$1(value) || isMasked(value)) {
+  if (!isObject$2(value) || isMasked(value)) {
     return false;
   }
   var pattern = isFunction(value) ? reIsNative : reIsHostCtor;
@@ -2358,6 +1487,1135 @@ function get(object, path, defaultValue) {
 var get_1 = get;
 
 var get$1 = /*@__PURE__*/getDefaultExportFromCjs(get_1);
+
+var getNative = _getNative;
+
+var defineProperty$1 = (function() {
+  try {
+    var func = getNative(Object, 'defineProperty');
+    func({}, '', {});
+    return func;
+  } catch (e) {}
+}());
+
+var _defineProperty = defineProperty$1;
+
+var defineProperty = _defineProperty;
+
+/**
+ * The base implementation of `assignValue` and `assignMergeValue` without
+ * value checks.
+ *
+ * @private
+ * @param {Object} object The object to modify.
+ * @param {string} key The key of the property to assign.
+ * @param {*} value The value to assign.
+ */
+function baseAssignValue$1(object, key, value) {
+  if (key == '__proto__' && defineProperty) {
+    defineProperty(object, key, {
+      'configurable': true,
+      'enumerable': true,
+      'value': value,
+      'writable': true
+    });
+  } else {
+    object[key] = value;
+  }
+}
+
+var _baseAssignValue = baseAssignValue$1;
+
+var baseAssignValue = _baseAssignValue,
+    eq = eq_1;
+
+/** Used for built-in method references. */
+var objectProto = Object.prototype;
+
+/** Used to check objects for own properties. */
+var hasOwnProperty = objectProto.hasOwnProperty;
+
+/**
+ * Assigns `value` to `key` of `object` if the existing value is not equivalent
+ * using [`SameValueZero`](http://ecma-international.org/ecma-262/7.0/#sec-samevaluezero)
+ * for equality comparisons.
+ *
+ * @private
+ * @param {Object} object The object to modify.
+ * @param {string} key The key of the property to assign.
+ * @param {*} value The value to assign.
+ */
+function assignValue$1(object, key, value) {
+  var objValue = object[key];
+  if (!(hasOwnProperty.call(object, key) && eq(objValue, value)) ||
+      (value === undefined && !(key in object))) {
+    baseAssignValue(object, key, value);
+  }
+}
+
+var _assignValue = assignValue$1;
+
+/** Used as references for various `Number` constants. */
+
+var MAX_SAFE_INTEGER = 9007199254740991;
+
+/** Used to detect unsigned integer values. */
+var reIsUint = /^(?:0|[1-9]\d*)$/;
+
+/**
+ * Checks if `value` is a valid array-like index.
+ *
+ * @private
+ * @param {*} value The value to check.
+ * @param {number} [length=MAX_SAFE_INTEGER] The upper bounds of a valid index.
+ * @returns {boolean} Returns `true` if `value` is a valid index, else `false`.
+ */
+function isIndex$1(value, length) {
+  var type = typeof value;
+  length = length == null ? MAX_SAFE_INTEGER : length;
+
+  return !!length &&
+    (type == 'number' ||
+      (type != 'symbol' && reIsUint.test(value))) &&
+        (value > -1 && value % 1 == 0 && value < length);
+}
+
+var _isIndex = isIndex$1;
+
+var assignValue = _assignValue,
+    castPath = _castPath,
+    isIndex = _isIndex,
+    isObject$1 = isObject_1,
+    toKey = _toKey;
+
+/**
+ * The base implementation of `_.set`.
+ *
+ * @private
+ * @param {Object} object The object to modify.
+ * @param {Array|string} path The path of the property to set.
+ * @param {*} value The value to set.
+ * @param {Function} [customizer] The function to customize path creation.
+ * @returns {Object} Returns `object`.
+ */
+function baseSet$1(object, path, value, customizer) {
+  if (!isObject$1(object)) {
+    return object;
+  }
+  path = castPath(path, object);
+
+  var index = -1,
+      length = path.length,
+      lastIndex = length - 1,
+      nested = object;
+
+  while (nested != null && ++index < length) {
+    var key = toKey(path[index]),
+        newValue = value;
+
+    if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
+      return object;
+    }
+
+    if (index != lastIndex) {
+      var objValue = nested[key];
+      newValue = customizer ? customizer(objValue, key, nested) : undefined;
+      if (newValue === undefined) {
+        newValue = isObject$1(objValue)
+          ? objValue
+          : (isIndex(path[index + 1]) ? [] : {});
+      }
+    }
+    assignValue(nested, key, newValue);
+    nested = nested[key];
+  }
+  return object;
+}
+
+var _baseSet = baseSet$1;
+
+var baseSet = _baseSet;
+
+/**
+ * Sets the value at `path` of `object`. If a portion of `path` doesn't exist,
+ * it's created. Arrays are created for missing index properties while objects
+ * are created for all other missing properties. Use `_.setWith` to customize
+ * `path` creation.
+ *
+ * **Note:** This method mutates `object`.
+ *
+ * @static
+ * @memberOf _
+ * @since 3.7.0
+ * @category Object
+ * @param {Object} object The object to modify.
+ * @param {Array|string} path The path of the property to set.
+ * @param {*} value The value to set.
+ * @returns {Object} Returns `object`.
+ * @example
+ *
+ * var object = { 'a': [{ 'b': { 'c': 3 } }] };
+ *
+ * _.set(object, 'a[0].b.c', 4);
+ * console.log(object.a[0].b.c);
+ * // => 4
+ *
+ * _.set(object, ['x', '0', 'y', 'z'], 5);
+ * console.log(object.x[0].y.z);
+ * // => 5
+ */
+function set(object, path, value) {
+  return object == null ? object : baseSet(object, path, value);
+}
+
+var set_1 = set;
+
+var _setPath = /*@__PURE__*/getDefaultExportFromCjs(set_1);
+
+/**
+ * GW.utils
+ * @module utils
+ */
+function NOOP() { }
+function TRUE() {
+    return true;
+}
+function FALSE() {
+    return false;
+}
+function ONE() {
+    return 1;
+}
+function ZERO() {
+    return 0;
+}
+function IDENTITY(x) {
+    return x;
+}
+function IS_ZERO(x) {
+    return x == 0;
+}
+function IS_NONZERO(x) {
+    return x != 0;
+}
+function ERROR(message, options) {
+    throw new Error(message, options);
+}
+function WARN(...args) {
+    console.warn(...args);
+}
+/**
+ * clamps a value between min and max (inclusive)
+ * @param v {Number} the value to clamp
+ * @param min {Number} the minimum value
+ * @param max {Number} the maximum value
+ * @returns {Number} the clamped value
+ */
+const clamp = _clamp;
+const getPath = get$1;
+const setPath = _setPath;
+// export function clamp(v: number, min: number, max: number) {
+//     if (v < min) return min;
+//     if (v > max) return max;
+//     return v;
+// }
+function lerp$1(from, to, pct) {
+    if (pct > 1)
+        pct = 1;
+    if (pct < 0)
+        pct = 0;
+    return Math.floor(from + (to - from) * pct);
+}
+function xave(rate, value, newValue) {
+    return value * rate + newValue * (1 - rate);
+}
+function firstDefined(...args) {
+    return args.find((v) => v !== undefined);
+}
+function arraysIntersect(a, b) {
+    return a.some((av) => b.includes(av));
+}
+function arrayIncludesAll(a, b) {
+    return b.every((av) => a.includes(av));
+}
+function arrayRevEach(a, fn) {
+    for (let i = a.length - 1; i > -1; --i) {
+        fn(a[i], i, a);
+    }
+}
+function arrayDelete(a, b) {
+    const index = a.indexOf(b);
+    if (index < 0)
+        return false;
+    a.splice(index, 1);
+    return true;
+}
+function arrayNullify(a, b) {
+    const index = a.indexOf(b);
+    if (index < 0)
+        return false;
+    a[index] = null;
+    return true;
+}
+function arrayInsert(a, b, beforeFn) {
+    if (!beforeFn) {
+        a.push(b);
+        return;
+    }
+    const index = a.findIndex(beforeFn);
+    if (index < 0) {
+        a.push(b);
+    }
+    else {
+        a.splice(index, 0, b);
+    }
+}
+function arrayFindRight(a, fn) {
+    for (let i = a.length - 1; i >= 0; --i) {
+        const e = a[i];
+        if (fn(e))
+            return e;
+    }
+    return undefined;
+}
+function sum(arr) {
+    return arr.reduce((a, b) => a + b);
+}
+function arrayNext(a, current, fn, wrap = true, forward = true) {
+    const len = a.length;
+    if (len <= 1)
+        return undefined;
+    const startIndex = a.indexOf(current);
+    if (startIndex < 0)
+        return undefined;
+    const dx = forward ? 1 : -1;
+    let startI = wrap ? (len + startIndex + dx) % len : startIndex + dx;
+    let endI = wrap ? startIndex : forward ? len : -1;
+    for (let index = startI; index !== endI; index = wrap ? (len + index + dx) % len : index + dx) {
+        const e = a[index];
+        if (fn(e))
+            return e;
+    }
+    return undefined;
+}
+function arrayPrev(a, current, fn, wrap = true) {
+    return arrayNext(a, current, fn, wrap, false);
+}
+function nextIndex(index, length, wrap = true) {
+    ++index;
+    if (index >= length) {
+        if (wrap)
+            return index % length;
+        return -1;
+    }
+    return index;
+}
+function prevIndex(index, length, wrap = true) {
+    if (index < 0)
+        return length - 1; // start in back
+    --index;
+    if (index < 0) {
+        if (wrap)
+            return length - 1;
+        return -1;
+    }
+    return index;
+}
+function valueType(a) {
+    const ta = typeof a;
+    if (a === undefined)
+        return 'undefined';
+    if (ta == 'object') {
+        if (Array.isArray(a)) {
+            return 'array';
+        }
+    }
+    return ta;
+}
+/// https://www.30secondsofcode.org/js/s/is-plain-object/
+function isPlainObject(val) {
+    return !!val && typeof val === 'object' && val.constructor === Object;
+}
+/// https://stackoverflow.com/questions/27936772/how-to-deep-merge-instead-of-shallow-merge
+///
+function isObject(item) {
+    return !!item && typeof item === 'object' && !Array.isArray(item);
+}
+// Modified to use: isPlainObject
+// Modified to mergeDeep recursively if key is not in target
+function mergeDeep(target, source) {
+    let output = Object.assign({}, target);
+    if (isPlainObject(target) && isPlainObject(source)) {
+        Object.keys(source).forEach((key) => {
+            if (isPlainObject(source[key])) {
+                if (!(key in target))
+                    Object.assign(output, {
+                        [key]: mergeDeep({}, source[key]),
+                    });
+                else
+                    output[key] = mergeDeep(target[key], source[key]);
+            }
+            else {
+                Object.assign(output, { [key]: source[key] });
+            }
+        });
+    }
+    else {
+        throw new Error('mergeDeep only works on plain objects, not classes.');
+    }
+    return output;
+}
+///
+
+var utils = /*#__PURE__*/Object.freeze({
+	__proto__: null,
+	ERROR: ERROR,
+	FALSE: FALSE,
+	IDENTITY: IDENTITY,
+	IS_NONZERO: IS_NONZERO,
+	IS_ZERO: IS_ZERO,
+	NOOP: NOOP,
+	ONE: ONE,
+	TRUE: TRUE,
+	WARN: WARN,
+	ZERO: ZERO,
+	arrayDelete: arrayDelete,
+	arrayFindRight: arrayFindRight,
+	arrayIncludesAll: arrayIncludesAll,
+	arrayInsert: arrayInsert,
+	arrayNext: arrayNext,
+	arrayNullify: arrayNullify,
+	arrayPrev: arrayPrev,
+	arrayRevEach: arrayRevEach,
+	arraysIntersect: arraysIntersect,
+	clamp: clamp,
+	firstDefined: firstDefined,
+	getPath: getPath,
+	isObject: isObject,
+	isPlainObject: isPlainObject,
+	lerp: lerp$1,
+	mergeDeep: mergeDeep,
+	nextIndex: nextIndex,
+	prevIndex: prevIndex,
+	setPath: setPath,
+	sum: sum,
+	valueType: valueType,
+	xave: xave
+});
+
+// DIRS are organized clockwise
+// - first 4 are arrow directions
+//   >> rotate 90 degrees clockwise ==>> newIndex = (oldIndex + 1) % 4
+//   >> opposite direction ==>> oppIndex = (index + 2) % 4
+// - last 4 are diagonals
+//   >> rotate 90 degrees clockwise ==>> newIndex = 4 + (oldIndex + 1) % 4;
+//   >> opposite diagonal ==>> newIndex = 4 + (index + 2) % 4;
+const DIRS$2 = [
+    [0, -1],
+    [1, 0],
+    [0, 1],
+    [-1, 0],
+    [1, -1],
+    [1, 1],
+    [-1, 1],
+    [-1, -1],
+];
+const NO_DIRECTION = -1;
+const UP = 0;
+const RIGHT = 1;
+const DOWN = 2;
+const LEFT = 3;
+const RIGHT_UP = 4;
+const RIGHT_DOWN = 5;
+const LEFT_DOWN = 6;
+const LEFT_UP = 7;
+// CLOCK DIRS are organized clockwise, starting at UP
+// >> opposite = (index + 4) % 8
+// >> 90 degrees rotate right = (index + 2) % 8
+// >> 90 degrees rotate left = (8 + index - 2) % 8
+const CLOCK_DIRS = [
+    [0, 1],
+    [1, 1],
+    [1, 0],
+    [1, -1],
+    [0, -1],
+    [-1, -1],
+    [-1, 0],
+    [-1, 1],
+];
+function isLoc(a) {
+    return (Array.isArray(a) &&
+        a.length == 2 &&
+        typeof a[0] === 'number' &&
+        typeof a[1] === 'number');
+}
+function isXY(a) {
+    return a && typeof a.x === 'number' && typeof a.y === 'number';
+}
+function asLoc(v) {
+    if (Array.isArray(v))
+        return v;
+    return [x(v), y(v)];
+}
+function asXY(v) {
+    if (!Array.isArray(v))
+        return v;
+    return { x: x(v), y: y(v) };
+}
+function x(src) {
+    // @ts-ignore
+    return src.x || src[0] || 0;
+}
+function y(src) {
+    // @ts-ignore
+    return src.y || src[1] || 0;
+}
+function contains(size, x, y) {
+    return x >= 0 && y >= 0 && x < size.width && y < size.height;
+}
+class Bounds {
+    constructor(x = 0, y = 0, w = 0, h = 0) {
+        if (typeof x !== 'number') {
+            const opts = x;
+            h = opts.height || 0;
+            w = opts.width || 0;
+            y = opts.y || 0;
+            x = opts.x || 0;
+        }
+        this.x = x;
+        this.y = y;
+        this.width = w;
+        this.height = h;
+    }
+    get left() {
+        return this.x;
+    }
+    set left(v) {
+        this.x = v;
+    }
+    get right() {
+        return this.x + this.width;
+    }
+    set right(v) {
+        this.x = v - this.width;
+    }
+    get top() {
+        return this.y;
+    }
+    set top(v) {
+        this.y = v;
+    }
+    get bottom() {
+        return this.y + this.height;
+    }
+    set bottom(v) {
+        this.y = v - this.height;
+    }
+    get center() {
+        return this.x + Math.floor(this.width / 2);
+    }
+    set center(v) {
+        this.x += v - this.center;
+    }
+    get middle() {
+        return this.y + Math.floor(this.height / 2);
+    }
+    set middle(v) {
+        this.y += v - this.middle;
+    }
+    clone() {
+        return new Bounds(this.x, this.y, this.width, this.height);
+    }
+    copy(other) {
+        this.x = other.x;
+        this.y = other.y;
+        this.width = other.width;
+        this.height = other.height;
+    }
+    contains(...args) {
+        let i = args[0];
+        let j = args[1];
+        if (typeof i !== 'number') {
+            j = y(i);
+            i = x(i);
+        }
+        return (this.x <= i &&
+            this.y <= j &&
+            this.x + this.width > i &&
+            this.y + this.height > j);
+    }
+    include(xy) {
+        const left = Math.min(x(xy), this.x);
+        const top = Math.min(y(xy), this.y);
+        const right = Math.max(xy instanceof Bounds ? xy.right : left, this.right);
+        const bottom = Math.max(xy instanceof Bounds ? xy.bottom : top, this.bottom);
+        this.left = left;
+        this.top = top;
+        this.width = right - left;
+        this.height = bottom - top;
+    }
+    pad(n = 1) {
+        this.x -= n;
+        this.y -= n;
+        this.width += n * 2;
+        this.height += n * 2;
+    }
+    forEach(cb) {
+        forRect(this.x, this.y, this.width, this.height, cb);
+    }
+    toString() {
+        return `[${this.x},${this.y} -> ${this.right},${this.bottom}]`;
+    }
+}
+function copy(dest, src) {
+    dest.x = x(src);
+    dest.y = y(src);
+}
+function addTo(dest, src) {
+    dest.x += x(src);
+    dest.y += y(src);
+}
+function add(a, b) {
+    if (Array.isArray(a)) {
+        return [a[0] + x(b), a[1] + y(b)];
+    }
+    return { x: a.x + x(b), y: a.y + y(b) };
+}
+function equals(dest, src) {
+    if (!dest && !src)
+        return true;
+    if (!dest || !src)
+        return false;
+    return x(dest) == x(src) && y(dest) == y(src);
+}
+function isDiagonal(xy) {
+    return x(xy) != 0 && y(xy) != 0;
+}
+function lerp(a, b, pct) {
+    if (pct > 1) {
+        pct = pct / 100;
+    }
+    pct = clamp(pct, 0, 1);
+    const dx = x(b) - x(a);
+    const dy = y(b) - y(a);
+    const x2 = x(a) + Math.floor(dx * pct);
+    const y2 = y(a) + Math.floor(dy * pct);
+    return [x2, y2];
+}
+function eachNeighbor(x, y, fn, only4dirs = false) {
+    const max = only4dirs ? 4 : 8;
+    for (let i = 0; i < max; ++i) {
+        const dir = DIRS$2[i];
+        const x1 = x + dir[0];
+        const y1 = y + dir[1];
+        fn(x1, y1, dir);
+    }
+}
+async function eachNeighborAsync(x, y, fn, only4dirs = false) {
+    const max = only4dirs ? 4 : 8;
+    for (let i = 0; i < max; ++i) {
+        const dir = DIRS$2[i];
+        const x1 = x + dir[0];
+        const y1 = y + dir[1];
+        await fn(x1, y1, dir);
+    }
+}
+function matchingNeighbor(x, y, matchFn, only4dirs = false) {
+    const maxIndex = only4dirs ? 4 : 8;
+    for (let d = 0; d < maxIndex; ++d) {
+        const dir = DIRS$2[d];
+        const i = x + dir[0];
+        const j = y + dir[1];
+        if (matchFn(i, j, dir))
+            return [i, j];
+    }
+    return [-1, -1];
+}
+function straightDistanceBetween(x1, y1, x2, y2) {
+    const x = Math.abs(x1 - x2);
+    const y = Math.abs(y1 - y2);
+    return x + y;
+}
+function maxAxisFromTo(a, b) {
+    const xa = Math.abs(x(a) - x(b));
+    const ya = Math.abs(y(a) - y(b));
+    return Math.max(xa, ya);
+}
+function maxAxisBetween(x1, y1, x2, y2) {
+    const xa = Math.abs(x1 - x2);
+    const ya = Math.abs(y1 - y2);
+    return Math.max(xa, ya);
+}
+function distanceBetween(x1, y1, x2, y2) {
+    const x = Math.abs(x1 - x2);
+    const y = Math.abs(y1 - y2);
+    const min = Math.min(x, y);
+    return x + y - 0.6 * min;
+}
+function distanceFromTo(a, b) {
+    return distanceBetween(x(a), y(a), x(b), y(b));
+}
+function calcRadius(x, y) {
+    return distanceBetween(0, 0, x, y);
+}
+function dirBetween(x, y, toX, toY) {
+    let diffX = toX - x;
+    let diffY = toY - y;
+    if (diffX && diffY) {
+        const absX = Math.abs(diffX);
+        const absY = Math.abs(diffY);
+        if (absX >= 2 * absY) {
+            diffY = 0;
+        }
+        else if (absY >= 2 * absX) {
+            diffX = 0;
+        }
+    }
+    return [Math.sign(diffX), Math.sign(diffY)];
+}
+function dirFromTo(a, b) {
+    return dirBetween(x(a), y(a), x(b), y(b));
+}
+function dirIndex(dir) {
+    const x0 = x(dir);
+    const y0 = y(dir);
+    return DIRS$2.findIndex((a) => a[0] == x0 && a[1] == y0);
+}
+function isOppositeDir(a, b) {
+    if (Math.sign(a[0]) + Math.sign(b[0]) != 0)
+        return false;
+    if (Math.sign(a[1]) + Math.sign(b[1]) != 0)
+        return false;
+    return true;
+}
+function isSameDir(a, b) {
+    return (Math.sign(a[0]) == Math.sign(b[0]) && Math.sign(a[1]) == Math.sign(b[1]));
+}
+function dirSpread(dir) {
+    const result = [dir];
+    if (dir[0] == 0) {
+        result.push([1, dir[1]]);
+        result.push([-1, dir[1]]);
+    }
+    else if (dir[1] == 0) {
+        result.push([dir[0], 1]);
+        result.push([dir[0], -1]);
+    }
+    else {
+        result.push([dir[0], 0]);
+        result.push([0, dir[1]]);
+    }
+    return result;
+}
+function stepFromTo(a, b, fn) {
+    const x0 = x(a);
+    const y0 = y(a);
+    const diff = [x(b) - x0, y(b) - y0];
+    const steps = Math.abs(diff[0]) + Math.abs(diff[1]);
+    const c = [0, 0];
+    const last = [99999, 99999];
+    for (let step = 0; step <= steps; ++step) {
+        c[0] = x0 + Math.floor((diff[0] * step) / steps);
+        c[1] = y0 + Math.floor((diff[1] * step) / steps);
+        if (c[0] != last[0] || c[1] != last[1]) {
+            fn(c[0], c[1]);
+        }
+        last[0] = c[0];
+        last[1] = c[1];
+    }
+}
+// LINES
+function forLine(x, y, dir, length, fn) {
+    for (let l = 0; l < length; ++l) {
+        fn(x + l * dir[0], y + l * dir[1]);
+    }
+}
+const FP_BASE = 16;
+const FP_FACTOR = 1 << 16;
+function forLineBetween(fromX, fromY, toX, toY, stepFn) {
+    let targetVector = [], error = [], currentVector = [], quadrantTransform = [];
+    let largerTargetComponent, i;
+    let currentLoc = [-1, -1];
+    if (fromX == toX && fromY == toY) {
+        return true;
+    }
+    const originLoc = [fromX, fromY];
+    const targetLoc = [toX, toY];
+    // Neither vector is negative. We keep track of negatives with quadrantTransform.
+    for (i = 0; i <= 1; i++) {
+        targetVector[i] = (targetLoc[i] - originLoc[i]) << FP_BASE; // FIXME: should use parens?
+        if (targetVector[i] < 0) {
+            targetVector[i] *= -1;
+            quadrantTransform[i] = -1;
+        }
+        else {
+            quadrantTransform[i] = 1;
+        }
+        currentVector[i] = error[i] = 0;
+        currentLoc[i] = originLoc[i];
+    }
+    // normalize target vector such that one dimension equals 1 and the other is in [0, 1].
+    largerTargetComponent = Math.max(targetVector[0], targetVector[1]);
+    // targetVector[0] = Math.floor( (targetVector[0] << FP_BASE) / largerTargetComponent);
+    // targetVector[1] = Math.floor( (targetVector[1] << FP_BASE) / largerTargetComponent);
+    targetVector[0] = Math.floor((targetVector[0] * FP_FACTOR) / largerTargetComponent);
+    targetVector[1] = Math.floor((targetVector[1] * FP_FACTOR) / largerTargetComponent);
+    do {
+        for (i = 0; i <= 1; i++) {
+            currentVector[i] += targetVector[i] >> FP_BASE;
+            error[i] += targetVector[i] == FP_FACTOR ? 0 : targetVector[i];
+            if (error[i] >= Math.floor(FP_FACTOR / 2)) {
+                currentVector[i]++;
+                error[i] -= FP_FACTOR;
+            }
+            currentLoc[i] = Math.floor(quadrantTransform[i] * currentVector[i] + originLoc[i]);
+        }
+        const r = stepFn(...currentLoc);
+        if (r === false) {
+            return false;
+        }
+        else if (r !== true &&
+            currentLoc[0] === toX &&
+            currentLoc[1] === toY) {
+            return true;
+        }
+    } while (true);
+}
+function forLineFromTo(a, b, stepFn) {
+    return forLineBetween(x(a), y(a), x(b), y(b), stepFn);
+}
+// ADAPTED FROM BROGUE 1.7.5
+// Simple line algorithm (maybe this is Bresenham?) that returns a list of coordinates
+// that extends all the way to the edge of the map based on an originLoc (which is not included
+// in the list of coordinates) and a targetLoc.
+// Returns the number of entries in the list, and includes (-1, -1) as an additional
+// terminus indicator after the end of the list.
+function getLine(fromX, fromY, toX, toY) {
+    const line = [];
+    forLineBetween(fromX, fromY, toX, toY, (x, y) => {
+        line.push([x, y]);
+    });
+    return line;
+}
+// ADAPTED FROM BROGUE 1.7.5
+// Simple line algorithm (maybe this is Bresenham?) that returns a list of coordinates
+// that extends all the way to the edge of the map based on an originLoc (which is not included
+// in the list of coordinates) and a targetLoc.
+function getLineThru(fromX, fromY, toX, toY, width, height) {
+    const line = [];
+    forLineBetween(fromX, fromY, toX, toY, (x, y) => {
+        if (x < 0 || y < 0 || x >= width || y >= height)
+            return false;
+        line.push([x, y]);
+        return true;
+    });
+    return line;
+}
+// CIRCLE
+function forCircle(x, y, radius, fn) {
+    let i, j;
+    for (i = x - radius - 1; i < x + radius + 1; i++) {
+        for (j = y - radius - 1; j < y + radius + 1; j++) {
+            if ((i - x) * (i - x) + (j - y) * (j - y) <
+                radius * radius + radius) {
+                // + radius softens the circle
+                fn(i, j);
+            }
+        }
+    }
+}
+function forRect(...args) {
+    let left = 0;
+    let top = 0;
+    if (arguments.length > 3) {
+        left = args.shift();
+        top = args.shift();
+    }
+    const right = left + args[0];
+    const bottom = top + args[1];
+    const fn = args[2];
+    for (let i = left; i < right; ++i) {
+        for (let j = top; j < bottom; ++j) {
+            fn(i, j);
+        }
+    }
+}
+function dumpRect(left, top, width, height, fmtFn, log = console.log) {
+    let i, j;
+    const bottom = top + height;
+    const right = left + width;
+    let output = [];
+    for (j = top; j < bottom; j++) {
+        let line = ('' + j + ']').padStart(3, ' ');
+        for (i = left; i < right; i++) {
+            if (i % 10 == 0) {
+                line += ' ';
+            }
+            line += fmtFn(i, j);
+        }
+        output.push(line);
+    }
+    log(output.join('\n'));
+}
+function dumpAround(x, y, radius, fmtFn, log = console.log) {
+    dumpRect(x - radius, y - radius, 2 * radius + 1, 2 * radius + 1, fmtFn, log);
+}
+function forBorder(...args) {
+    let left = 0;
+    let top = 0;
+    if (arguments.length > 3) {
+        left = args.shift();
+        top = args.shift();
+    }
+    const right = left + args[0] - 1;
+    const bottom = top + args[1] - 1;
+    const fn = args[2];
+    for (let x = left; x <= right; ++x) {
+        fn(x, top);
+        fn(x, bottom);
+    }
+    for (let y = top; y <= bottom; ++y) {
+        fn(left, y);
+        fn(right, y);
+    }
+}
+// ARC COUNT
+// Rotates around the cell, counting up the number of distinct strings of neighbors with the same test result in a single revolution.
+//		Zero means there are no impassable tiles adjacent.
+//		One means it is adjacent to a wall.
+//		Two means it is in a hallway or something similar.
+//		Three means it is the center of a T-intersection or something similar.
+//		Four means it is in the intersection of two hallways.
+//		Five or more means there is a bug.
+function arcCount(x, y, testFn) {
+    let oldX, oldY, newX, newY;
+    // brogueAssert(grid.hasXY(x, y));
+    let arcCount = 0;
+    let matchCount = 0;
+    for (let dir = 0; dir < CLOCK_DIRS.length; dir++) {
+        oldX = x + CLOCK_DIRS[(dir + 7) % 8][0];
+        oldY = y + CLOCK_DIRS[(dir + 7) % 8][1];
+        newX = x + CLOCK_DIRS[dir][0];
+        newY = y + CLOCK_DIRS[dir][1];
+        // Counts every transition from passable to impassable or vice-versa on the way around the cell:
+        const newOk = testFn(newX, newY);
+        const oldOk = testFn(oldX, oldY);
+        if (newOk)
+            ++matchCount;
+        if (newOk != oldOk) {
+            arcCount++;
+        }
+    }
+    if (arcCount == 0 && matchCount)
+        return 1;
+    return Math.floor(arcCount / 2); // Since we added one when we entered a wall and another when we left.
+}
+function closestMatchingLocs(x, y, matchFn) {
+    const locs = [];
+    let i, j, k;
+    // count up the number of candidate locations
+    for (k = 0; k < 100 && !locs.length; k++) {
+        for (i = x - k; i <= x + k; i++) {
+            for (j = y - k; j <= y + k; j++) {
+                if (Math.ceil(distanceBetween(x, y, i, j)) == k &&
+                    matchFn(i, j)) {
+                    locs.push([i, j]);
+                }
+            }
+        }
+    }
+    return locs.length ? locs : null;
+}
+
+var xy = /*#__PURE__*/Object.freeze({
+	__proto__: null,
+	Bounds: Bounds,
+	CLOCK_DIRS: CLOCK_DIRS,
+	DIRS: DIRS$2,
+	DOWN: DOWN,
+	LEFT: LEFT,
+	LEFT_DOWN: LEFT_DOWN,
+	LEFT_UP: LEFT_UP,
+	NO_DIRECTION: NO_DIRECTION,
+	RIGHT: RIGHT,
+	RIGHT_DOWN: RIGHT_DOWN,
+	RIGHT_UP: RIGHT_UP,
+	UP: UP,
+	add: add,
+	addTo: addTo,
+	arcCount: arcCount,
+	asLoc: asLoc,
+	asXY: asXY,
+	calcRadius: calcRadius,
+	closestMatchingLocs: closestMatchingLocs,
+	contains: contains,
+	copy: copy,
+	dirBetween: dirBetween,
+	dirFromTo: dirFromTo,
+	dirIndex: dirIndex,
+	dirSpread: dirSpread,
+	distanceBetween: distanceBetween,
+	distanceFromTo: distanceFromTo,
+	dumpAround: dumpAround,
+	dumpRect: dumpRect,
+	eachNeighbor: eachNeighbor,
+	eachNeighborAsync: eachNeighborAsync,
+	equals: equals,
+	forBorder: forBorder,
+	forCircle: forCircle,
+	forLine: forLine,
+	forLineBetween: forLineBetween,
+	forLineFromTo: forLineFromTo,
+	forRect: forRect,
+	getLine: getLine,
+	getLineThru: getLineThru,
+	isDiagonal: isDiagonal,
+	isLoc: isLoc,
+	isOppositeDir: isOppositeDir,
+	isSameDir: isSameDir,
+	isXY: isXY,
+	lerp: lerp,
+	matchingNeighbor: matchingNeighbor,
+	maxAxisBetween: maxAxisBetween,
+	maxAxisFromTo: maxAxisFromTo,
+	stepFromTo: stepFromTo,
+	straightDistanceBetween: straightDistanceBetween,
+	x: x,
+	y: y
+});
+
+// CHAIN
+function length$1(root) {
+    let count = 0;
+    while (root) {
+        count += 1;
+        root = root.next;
+    }
+    return count;
+}
+function at(root, index) {
+    while (root && index) {
+        root = root.next;
+        --index;
+    }
+    return root;
+}
+function includes(root, entry) {
+    while (root && root !== entry) {
+        root = root.next;
+    }
+    return root === entry;
+}
+function forEach(root, fn) {
+    let index = 0;
+    while (root) {
+        const next = root.next;
+        fn(root, index++);
+        root = next;
+    }
+    return index; // really count
+}
+function push(obj, name, entry) {
+    entry.next = obj[name] || null;
+    obj[name] = entry;
+    return true;
+}
+function remove(obj, name, entry) {
+    const root = obj[name];
+    if (root === entry) {
+        obj[name] = entry.next || null;
+        entry.next = null;
+        return true;
+    }
+    else if (!root) {
+        return false;
+    }
+    else {
+        let prev = root;
+        let current = prev.next;
+        while (current && current !== entry) {
+            prev = current;
+            current = prev.next;
+        }
+        if (current === entry) {
+            prev.next = current.next;
+            entry.next = null;
+            return true;
+        }
+    }
+    return false;
+}
+function find(root, cb) {
+    while (root && !cb(root)) {
+        root = root.next;
+    }
+    return root;
+}
+function insert(obj, name, entry, sort) {
+    let root = obj[name];
+    sort = sort || (() => -1); // always insert first
+    if (!root || sort(root, entry) < 0) {
+        entry.next = root;
+        obj[name] = entry;
+        return true;
+    }
+    let prev = root;
+    let current = root.next;
+    while (current && sort(current, entry) > 0) {
+        prev = current;
+        current = current.next;
+    }
+    entry.next = current;
+    prev.next = entry;
+    return true;
+}
+function reduce(root, cb, out) {
+    let current = root;
+    if (out === undefined) {
+        if (!current)
+            throw new TypeError('Empty list reduce without initial value not allowed.');
+        out = current;
+        current = current.next;
+    }
+    while (current) {
+        out = cb(out, current);
+        current = current.next;
+    }
+    return out;
+}
+function some(root, cb) {
+    let current = root;
+    while (current) {
+        if (cb(current))
+            return true;
+        current = current.next;
+    }
+    return false;
+}
+function every(root, cb) {
+    let current = root;
+    while (current) {
+        if (!cb(current))
+            return false;
+        current = current.next;
+    }
+    return true;
+}
+
+var list = /*#__PURE__*/Object.freeze({
+	__proto__: null,
+	at: at,
+	every: every,
+	find: find,
+	forEach: forEach,
+	includes: includes,
+	insert: insert,
+	length: length$1,
+	push: push,
+	reduce: reduce,
+	remove: remove,
+	some: some
+});
 
 const getValue = get$1;
 // export function extend(obj, name, fn) {
@@ -4467,7 +4725,7 @@ var index$9 = /*#__PURE__*/Object.freeze({
 
 class Mixer {
     constructor(base = {}) {
-        this.ch = first(base.ch, null);
+        this.ch = firstDefined(base.ch, null);
         this.fg = make$9(base.fg);
         this.bg = make$9(base.bg);
     }
@@ -8701,207 +8959,6 @@ var message = /*#__PURE__*/Object.freeze({
 	Cache: Cache
 });
 
-var getNative = _getNative;
-
-var defineProperty$1 = (function() {
-  try {
-    var func = getNative(Object, 'defineProperty');
-    func({}, '', {});
-    return func;
-  } catch (e) {}
-}());
-
-var _defineProperty = defineProperty$1;
-
-var defineProperty = _defineProperty;
-
-/**
- * The base implementation of `assignValue` and `assignMergeValue` without
- * value checks.
- *
- * @private
- * @param {Object} object The object to modify.
- * @param {string} key The key of the property to assign.
- * @param {*} value The value to assign.
- */
-function baseAssignValue$1(object, key, value) {
-  if (key == '__proto__' && defineProperty) {
-    defineProperty(object, key, {
-      'configurable': true,
-      'enumerable': true,
-      'value': value,
-      'writable': true
-    });
-  } else {
-    object[key] = value;
-  }
-}
-
-var _baseAssignValue = baseAssignValue$1;
-
-var baseAssignValue = _baseAssignValue,
-    eq = eq_1;
-
-/** Used for built-in method references. */
-var objectProto = Object.prototype;
-
-/** Used to check objects for own properties. */
-var hasOwnProperty = objectProto.hasOwnProperty;
-
-/**
- * Assigns `value` to `key` of `object` if the existing value is not equivalent
- * using [`SameValueZero`](http://ecma-international.org/ecma-262/7.0/#sec-samevaluezero)
- * for equality comparisons.
- *
- * @private
- * @param {Object} object The object to modify.
- * @param {string} key The key of the property to assign.
- * @param {*} value The value to assign.
- */
-function assignValue$1(object, key, value) {
-  var objValue = object[key];
-  if (!(hasOwnProperty.call(object, key) && eq(objValue, value)) ||
-      (value === undefined && !(key in object))) {
-    baseAssignValue(object, key, value);
-  }
-}
-
-var _assignValue = assignValue$1;
-
-/** Used as references for various `Number` constants. */
-
-var MAX_SAFE_INTEGER = 9007199254740991;
-
-/** Used to detect unsigned integer values. */
-var reIsUint = /^(?:0|[1-9]\d*)$/;
-
-/**
- * Checks if `value` is a valid array-like index.
- *
- * @private
- * @param {*} value The value to check.
- * @param {number} [length=MAX_SAFE_INTEGER] The upper bounds of a valid index.
- * @returns {boolean} Returns `true` if `value` is a valid index, else `false`.
- */
-function isIndex$1(value, length) {
-  var type = typeof value;
-  length = length == null ? MAX_SAFE_INTEGER : length;
-
-  return !!length &&
-    (type == 'number' ||
-      (type != 'symbol' && reIsUint.test(value))) &&
-        (value > -1 && value % 1 == 0 && value < length);
-}
-
-var _isIndex = isIndex$1;
-
-var assignValue = _assignValue,
-    castPath = _castPath,
-    isIndex = _isIndex,
-    isObject = isObject_1,
-    toKey = _toKey;
-
-/**
- * The base implementation of `_.set`.
- *
- * @private
- * @param {Object} object The object to modify.
- * @param {Array|string} path The path of the property to set.
- * @param {*} value The value to set.
- * @param {Function} [customizer] The function to customize path creation.
- * @returns {Object} Returns `object`.
- */
-function baseSet$1(object, path, value, customizer) {
-  if (!isObject(object)) {
-    return object;
-  }
-  path = castPath(path, object);
-
-  var index = -1,
-      length = path.length,
-      lastIndex = length - 1,
-      nested = object;
-
-  while (nested != null && ++index < length) {
-    var key = toKey(path[index]),
-        newValue = value;
-
-    if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
-      return object;
-    }
-
-    if (index != lastIndex) {
-      var objValue = nested[key];
-      newValue = customizer ? customizer(objValue, key, nested) : undefined;
-      if (newValue === undefined) {
-        newValue = isObject(objValue)
-          ? objValue
-          : (isIndex(path[index + 1]) ? [] : {});
-      }
-    }
-    assignValue(nested, key, newValue);
-    nested = nested[key];
-  }
-  return object;
-}
-
-var _baseSet = baseSet$1;
-
-var baseSet = _baseSet;
-
-/**
- * Sets the value at `path` of `object`. If a portion of `path` doesn't exist,
- * it's created. Arrays are created for missing index properties while objects
- * are created for all other missing properties. Use `_.setWith` to customize
- * `path` creation.
- *
- * **Note:** This method mutates `object`.
- *
- * @static
- * @memberOf _
- * @since 3.7.0
- * @category Object
- * @param {Object} object The object to modify.
- * @param {Array|string} path The path of the property to set.
- * @param {*} value The value to set.
- * @returns {Object} Returns `object`.
- * @example
- *
- * var object = { 'a': [{ 'b': { 'c': 3 } }] };
- *
- * _.set(object, 'a[0].b.c', 4);
- * console.log(object.a[0].b.c);
- * // => 4
- *
- * _.set(object, ['x', '0', 'y', 'z'], 5);
- * console.log(object.x[0].y.z);
- * // => 5
- */
-function set(object, path, value) {
-  return object == null ? object : baseSet(object, path, value);
-}
-
-var set_1 = set;
-
-var set$1 = /*@__PURE__*/getDefaultExportFromCjs(set_1);
-
-class Data {
-    constructor(config = {}) {
-        Object.assign(this, config);
-    }
-    get(path) {
-        return get$1(this, path);
-    }
-    set(path, value) {
-        return set$1(this, path, value);
-    }
-}
-
-var data = /*#__PURE__*/Object.freeze({
-	__proto__: null,
-	Data: Data
-});
-
 class Blob {
     constructor(opts = {}) {
         this.options = {
@@ -9594,11 +9651,16 @@ class Events {
         this._events = {};
         this.onUnhandled = null;
     }
+    // TODO - why is this here since we have: events.off(name)??
+    /** @deprecated */
     clear_event(name) {
         if (name in this._events) {
+            // Why the new array instead of making each null?  This will not change a currently running emit
             this._events[name] = this._events[name].map(() => null);
         }
     }
+    // TODO - What is this for?
+    /** @deprecated */
     restart() {
         Object.keys(this._events).forEach((ev) => {
             this._events[ev] = this._events[ev].filter((i) => i && !i.once);
@@ -10494,8 +10556,16 @@ class Scene {
         return this.isSleeping;
     }
     // GENERAL
-    create(opts = {}) {
+    _create(opts = {}) {
         opts.bg && (this.bg = from$2(opts.bg));
+        if (opts.data) {
+            if (isPlainObject(opts.data)) {
+                this.data = mergeDeep(this.data, opts.data);
+            }
+            else {
+                throw new Error("SceneCreateOpts 'data' field must be plain object.");
+            }
+        }
         if (opts.on) {
             Object.entries(opts.on).forEach(([ev, fn]) => {
                 this.on(ev, fn);
@@ -10508,6 +10578,7 @@ class Scene {
         });
         this.emit('create', opts);
     }
+    // TODO - Who calls destroy
     destroy(data) {
         this.emit('destroy', data);
         this.all.forEach((c) => c.destroy());
@@ -10518,7 +10589,8 @@ class Scene {
     }
     start(opts = {}) {
         this.app.scenes.stop(); // stop all running scenes
-        this._start(opts);
+        this.app.scenes._start(this, opts); // start me
+        return this;
     }
     _start(opts = {}) {
         this.stopped = false;
@@ -10533,6 +10605,7 @@ class Scene {
         this.app.scenes.pause();
         this._start(data);
         this.once('stop', () => this.app.scenes.resume());
+        return this;
     }
     stop(data) {
         this.stopped = true;
@@ -10877,233 +10950,6 @@ class Scene {
         return this.timers.setInterval(fn, delay);
     }
 }
-// export class Scene {
-//     id: string;
-//     app!: App;
-//     events: EVENTS.Events;
-//     timers: TIMERS.Timers;
-//     buffer!: CANVAS.Buffer;
-//     tweens: Tweens;
-//     dt = 0;
-//     time = 0;
-//     realTime = 0;
-//     skipTime = false;
-//     stopped = true;
-//     paused: PauseOpts = {};
-//     debug = false;
-//     children: SceneObj[] = [];
-//     data: Record<string, any> = {};
-//     constructor(id: string, opts: SceneOpts = {}) {
-//         this.id = id;
-//         this.events = new EVENTS.Events(this);
-//         this.timers = new TIMERS.Timers(this);
-//         this.tweens = new Tweens();
-//         if (opts.on) {
-//             Object.entries(opts.on).forEach(([ev, fn]) => {
-//                 this.on(ev, fn);
-//             });
-//         }
-//         Object.entries(opts).forEach(([ev, fn]) => {
-//             if (typeof fn !== 'function') return;
-//             this.on(ev, fn);
-//         });
-//     }
-//     get width() {
-//         return this.buffer.width;
-//     }
-//     get height() {
-//         return this.buffer.height;
-//     }
-//     isActive() {
-//         return !this.stopped;
-//     }
-//     isPaused() {
-//         return this.isPaused;
-//     }
-//     isSleeping() {
-//         return this.isSleeping;
-//     }
-//     on(ev: string, fn: EVENTS.CallbackFn): EVENTS.CancelFn;
-//     on(ev: string, fn: EVENTS.CallbackFn): EVENTS.CancelFn {
-//         return this.events.on(ev, fn);
-//     }
-//     emit(ev: string, ...args: any[]) {
-//         return this.events.emit(ev, ...args);
-//     }
-//     wait(delay: number, fn: TIMERS.TimerFn): EVENTS.CancelFn;
-//     wait(delay: number, fn: string, ctx?: Record<string, any>): EVENTS.CancelFn;
-//     wait(
-//         delay: number,
-//         fn: TIMERS.TimerFn | string,
-//         ctx?: Record<string, any>
-//     ): EVENTS.CancelFn {
-//         if (typeof fn === 'string') {
-//             const ev = fn;
-//             ctx = ctx || {};
-//             fn = () => this.emit(ev, ctx!);
-//         }
-//         return this.timers.setTimeout(fn, delay);
-//     }
-//     repeat(delay: number, fn: TIMERS.TimerFn): EVENTS.CancelFn;
-//     repeat(
-//         delay: number,
-//         fn: string,
-//         ctx?: Record<string, any>
-//     ): EVENTS.CancelFn;
-//     repeat(
-//         delay: number,
-//         fn: TIMERS.TimerFn | string,
-//         ctx?: Record<string, any>
-//     ): EVENTS.CancelFn {
-//         if (typeof fn === 'string') {
-//             const ev = fn;
-//             ctx = ctx || {};
-//             fn = () => this.emit(ev, ctx!);
-//         }
-//         return this.timers.setInterval(fn, delay);
-//     }
-//     // run() {
-//     //     this.emit('run', this);
-//     //     let running = false;
-//     //     this.loopID = (setInterval(() => {
-//     //         if (!running) {
-//     //             running = true;
-//     //             this._frame();
-//     //             running = false;
-//     //         }
-//     //     }, 16) as unknown) as number;
-//     //     this.stopped = false;
-//     // }
-//     create(app: App) {
-//         this.app = app;
-//         this.buffer = app.buffer.clone();
-//         this.emit('create');
-//     }
-//     destroy() {
-//         this.emit('destroy');
-//     }
-//     start(data?: Record<string, any>) {
-//         this.stopped = false;
-//         this.timers.clear();
-//         this.tweens.clear();
-//         this.events.emit('start', data || {});
-//     }
-//     run(data?: Record<string, any>): Promise<any> {
-//         return new Promise((resolve) => {
-//             this.app.scenes.pause();
-//             const cleanup = this.once('stop', (d) => {
-//                 cleanup();
-//                 this.app.scenes.resume();
-//                 resolve(d);
-//             });
-//             this.start(data);
-//         });
-//     }
-//     stop(data?: Record<string, any>) {
-//         this.stopped = true;
-//         this.events.emit('stop', data || {});
-//     }
-//     pause(opts?: PauseOpts): void {
-//         opts = opts || {
-//             timers: true,
-//             tweens: true,
-//             update: true,
-//             input: true,
-//             draw: true,
-//         };
-//         Object.assign(this.paused, opts);
-//         this.events.emit('pause');
-//     }
-//     resume(opts?: ResumeOpts) {
-//         opts = opts || {
-//             timers: true,
-//             tweens: true,
-//             update: true,
-//             input: true,
-//             draw: true,
-//         };
-//         Object.entries(opts).forEach(([key, value]) => {
-//             if (value === true) {
-//                 this.paused[key as keyof ResumeOpts] = false;
-//             }
-//         });
-//         this.events.emit('resume');
-//     }
-//     // CHILDREN
-//     add(obj: SceneObj) {
-//         this.children.push(obj);
-//         obj.emit('add', this);
-//     }
-//     remove(obj: SceneObj) {
-//         UTILS.arrayDelete(this.children, obj);
-//         obj.emit('remove', this);
-//     }
-//     // FRAME STEPS
-//     frameStart() {
-//         this.events.emit('frameStart');
-//     }
-//     input(ev: IO.Event) {
-//         if (this.stopped || this.paused.input) return;
-//         this.events.dispatch(ev);
-//     }
-//     update(dt: number) {
-//         if (this.stopped) return;
-//         if (!this.paused.timers) this.timers.update(dt);
-//         if (!this.paused.tweens) this.tweens.update(dt);
-//         if (!this.paused.update) {
-//             this.children.forEach((c) => c.update(dt));
-//             this.events.emit('update', dt);
-//         }
-//     }
-//     draw(buffer: CANVAS.Buffer) {
-//         if (this.stopped) return;
-//         if (!this.paused.draw) {
-//             this.events.emit('draw', this.buffer);
-//             this.children.forEach((c) => c.draw(this.buffer));
-//         }
-//         if (this.buffer.changed) {
-//             buffer.apply(this.buffer);
-//             this.buffer.changed = false;
-//         }
-//     }
-//     frameDebug(buffer: CANVAS.Buffer) {
-//         this.events.emit('frameDebug', buffer);
-//     }
-//     frameEnd(buffer: CANVAS.Buffer) {
-//         this.events.emit('frameEnd', buffer);
-//         // if (this.buffer.changed) {
-//         //     buffer.apply(this.buffer);
-//         //     this.buffer.changed = false;
-//         // }
-//     }
-//     // UI
-//     alert(text: string): Promise<boolean> {
-//         return this.app.scenes.run('alert', { text });
-//     }
-//     async fadeTo(
-//         color: COLOR.ColorBase = 'black',
-//         duration = 1000
-//     ): Promise<void> {
-//         return new Promise<void>((resolve) => {
-//             color = COLOR.from(color);
-//             this.pause();
-//             const buffer = this.buffer.clone();
-//             let pct = 0;
-//             let elapsed = 0;
-//             this.app.repeat(32, () => {
-//                 elapsed += 32;
-//                 pct = Math.floor((100 * elapsed) / duration);
-//                 this.buffer.copy(buffer);
-//                 this.buffer.mix(color, pct);
-//                 if (elapsed >= duration) {
-//                     this.resume();
-//                     resolve();
-//                     return false; // end timer
-//                 }
-//             });
-//         });
-//     }
-// }
 
 class Scenes {
     constructor(gw) {
@@ -11140,9 +10986,9 @@ class Scenes {
     emit(ev, ...args) {
         this._active.forEach((a) => a.emit(ev, ...args));
     }
-    _create(id, opts = {}) {
+    create(id, opts = {}) {
         let cfg = this._config[id] || {};
-        const used = Object.assign({}, cfg, opts);
+        const used = mergeDeep(cfg, opts);
         let scene;
         if (used.make) {
             scene = used.make(id, this._app);
@@ -11150,9 +10996,9 @@ class Scenes {
         else {
             scene = new Scene(id, this._app);
         }
-        scene.on('start', () => this._start(scene));
-        scene.on('stop', () => this._stop(scene));
-        scene.create(used);
+        scene.on('start', () => this._started(scene));
+        scene.on('stop', () => this._stopped(scene));
+        scene._create(used);
         // this._scenes[scene.id] = scene;
         return scene;
     }
@@ -11163,19 +11009,22 @@ class Scenes {
     //     }
     //     return this._create(id, data);
     // }
-    start(id, data) {
-        let scene = this.get(id) || this._create(id, data);
-        this._app.io.clear();
-        if (this.isBusy) {
-            this._pending.push({ action: 'start', scene, data });
-        }
-        else {
-            scene.start(data);
-        }
+    start(id, opts) {
+        let scene = this.get(id) || this.create(id, {});
+        scene.start(opts);
         return scene;
     }
+    _start(scene, opts = {}) {
+        this._app.io.clear();
+        if (this.isBusy) {
+            this._pending.push({ action: '_start', scene, data: opts });
+        }
+        else {
+            scene._start(opts);
+        }
+    }
     run(id, data) {
-        let scene = this.get(id) || this._create(id, data);
+        let scene = this.get(id) || this.create(id, data);
         this._app.io.clear();
         if (this.isBusy) {
             this._pending.push({ action: 'run', scene, data });
@@ -11185,7 +11034,7 @@ class Scenes {
         }
         return scene;
     }
-    _start(scene) {
+    _started(scene) {
         this._active.push(scene);
     }
     stop(id, data) {
@@ -11207,7 +11056,7 @@ class Scenes {
             this._active.forEach((s) => this.stop(s.id, id));
         }
     }
-    _stop(_scene) {
+    _stopped(_scene) {
         this._active = this._active.filter((s) => s.isActive());
     }
     destroy(id, data) {
@@ -14774,10 +14623,13 @@ class App {
         this.fpsBuf = [];
         this.fpsTimer = 0;
         this.numFrames = 0;
-        this.loopID = 0;
+        this.loopId = 0;
         this.stopped = true;
         this.paused = false;
         this.debug = false;
+        if (typeof opts.seed === 'number' && opts.seed > 0) {
+            random.seed(opts.seed);
+        }
         if ('loop' in opts) {
             this.loop = opts.loop;
             delete opts.loop;
@@ -14795,7 +14647,7 @@ class App {
         if (opts.dt !== undefined) {
             this.dt = opts.dt || 16; // Can't have 0
         }
-        this.data = new Data(opts.data);
+        this.data = mergeDeep({}, opts.data || {});
         this.canvas.onclick = this.io.enqueue.bind(this.io);
         this.canvas.onmousemove = this.io.enqueue.bind(this.io);
         this.canvas.onclick = this.io.enqueue.bind(this.io);
@@ -14803,25 +14655,27 @@ class App {
         this.buffer = new Buffer$1(this.canvas.width, this.canvas.height);
         if (opts.scenes) {
             this.scenes.config(opts.scenes);
-            if (typeof opts.start === 'string') {
-                this.scenes.start(opts.start);
+            if (typeof opts.scene === 'string') {
+                this.scenes.start(opts.scene, opts.sceneStartOpts);
             }
             else {
-                this.scenes.start(Object.keys(opts.scenes)[0]);
+                this.scenes.start(Object.keys(opts.scenes)[0], opts.sceneStartOpts);
             }
         }
         else if (opts.scene) {
+            if (typeof opts.scene === 'string') {
+                throw new Error("Cannot use string 'scene' option without including 'scenes'.");
+            }
             if (opts.scene === true)
                 opts.scene = {};
             this.scenes.config('default', opts.scene);
-            this.scenes.start('default');
-            // } else {
-            //     this.scenes.install('default', { bg: COLOR.colors.NONE }); // NONE just in case you draw directly on app.buffer
-            //     this.scenes.start('default');
+            this.scenes.start('default', opts.sceneStartOpts);
         }
         if (opts.start !== false) {
             this.start();
         }
+        globalThis.APP = this;
+        active = this;
     }
     // get buffer() {
     //     return this.scene.buffer;
@@ -14922,7 +14776,7 @@ class App {
             this._input(ev);
         }
         if (!this.paused && this.debug !== true) {
-            // call fixed_update
+            // TODO - Should update be called first to run timers, etc...?
             while (this.time + this.dt <= realTime) {
                 this.time += this.dt;
                 this._fixed_update(this.dt);
@@ -14984,7 +14838,7 @@ class App {
         // TODO - Do we really have to do this?  Can't we reset the scene instead?
         // NEED TO CREATE A NEW SCENE EVERY TIME SO WE DON"T HAVE HOLDOVER EVENTS, etc...
         opts.prompt = text;
-        const prompt = this.scenes._create('prompt', PromptScene);
+        const prompt = this.scenes.create('prompt', PromptScene);
         prompt.run(opts);
         return prompt;
     }
@@ -14993,6 +14847,7 @@ function make(opts) {
     const app = new App(opts);
     return app;
 }
+var active;
 
 var index = /*#__PURE__*/Object.freeze({
 	__proto__: null,
@@ -15016,6 +14871,7 @@ var index = /*#__PURE__*/Object.freeze({
 	Timers: Timers,
 	Tweens: Tweens,
 	Widget: Widget,
+	get active () { return active; },
 	alignChildren: alignChildren,
 	compile: compile,
 	defaultStyle: defaultStyle,
@@ -16222,5 +16078,5 @@ function match(value, okOrSomeCb, errOrNoneCb) {
   throw new UndefinedBehaviorError(`only boolean type, Option or Result instance are allowed`, { cause: { value, type: typeof value, ctor: value.constructor?.name } });
 }
 
-export { ERROR, Err, FALSE, IDENTITY, IS_NONZERO, IS_ZERO, NOOP, None, ONE, Ok, Option, Result2 as Result, Some, TRUE, UndefinedBehaviorError, WARN, ZERO, index as app, arrayDelete, arrayFindRight, arrayIncludesAll, arrayInsert, arrayNext, arrayNullify, arrayPrev, arrayRevEach, arraysIntersect, blob, buffer, index$5 as canvas, clamp, index$9 as color, colors, cosmetic, data, first, flag, index$7 as fov, frequency, grid, lerp$1 as lerp, index$3 as light, list, match, message, nextIndex, object, index$6 as path, prevIndex, queue, random, range, rng, scheduler, index$4 as sprite, sum, tags, index$8 as text, tween, types, index$2 as ui, valueType, index$1 as widget, xave, xy };
+export { ERROR, Err, FALSE, IDENTITY, IS_NONZERO, IS_ZERO, NOOP, None, ONE, Ok, Option, Result2 as Result, Some, TRUE, UndefinedBehaviorError, WARN, ZERO, index as app, blob, buffer, index$5 as canvas, index$9 as color, colors, cosmetic, flag, index$7 as fov, frequency, grid, index$3 as light, list, match, message, object, index$6 as path, queue, random, range, rng, scheduler, index$4 as sprite, tags, index$8 as text, tween, types, index$2 as ui, utils, index$1 as widget, xy };
 //# sourceMappingURL=gw-utils.mjs.map

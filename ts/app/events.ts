@@ -1,6 +1,20 @@
 // import * as IO from './io';
 import * as UTILS from '../utils';
 
+// TODO - Support event handler ordering
+//      - Use prefixes for event names for "easy" ordering
+//      - e.g. - "+tick", "<update"
+//      - { ^: FIRST(10),  <: VERY_EARLY(25), -: EARLY(40), @: NORMAL(50), +: LATE(60), >: VERY_LATE(75), $: LAST(90) }
+//      - CallbackInfo.order: number=NORMAL(50) << default
+//      - on(ev,fn,opts?: number | { order?: number, ctx?: any })
+//      - once(ev, fn, opts?: number | { order?: number, ctx?: any })
+//      - Each addition (on, once) is added in sorted order.
+// TODO - Support stopping event propagation
+//      - export function stopPropagation() { if (propStack.length > 0) {propStack[propStack.length - 1] = true; } }
+//      - during emit... propStack.push(false), {loop} if (propStack.at(-1) === true) { return; }, propStack.pop()
+//      - to use...  {in handler} GWU.app.stopPropagation();
+// TODO - move events to GWU.event.*
+
 export type CancelFn = () => void;
 
 export type CallbackFn = (...args: any[]) => void;
@@ -140,12 +154,17 @@ export class Events {
         this.onUnhandled = null;
     }
 
+    // TODO - why is this here since we have: events.off(name)??
+    /** @deprecated */
     clear_event(name: string) {
         if (name in this._events) {
+            // Why the new array instead of making each null?  This will not change a currently running emit
             this._events[name] = this._events[name].map(() => null);
         }
     }
 
+    // TODO - What is this for?
+    /** @deprecated */
     restart() {
         Object.keys(this._events).forEach((ev) => {
             this._events[ev] = this._events[ev].filter((i) => i && !i.once);

@@ -1,19 +1,19 @@
 import * as UTILS from '../utils';
 import * as BUFFER from '../buffer';
-import { Scene, SceneOpts, StartOpts, SceneMakeFn } from './scene';
+import { Scene, SceneCreateOpts, SceneStartOpts, SceneMakeFn } from './scene';
 import { App } from './app';
 import * as IO from '../app/io';
-import { PauseOpts } from '.';
+import { ScenePauseOpts } from '.';
 
 interface PendingInfo {
-    action: 'start' | 'stop' | 'run';
+    action: '_start' | 'stop' | 'run';
     scene: Scene;
     data: any;
 }
 
 export class Scenes {
     _app: App;
-    _config: Record<string, SceneOpts>;
+    _config: Record<string, SceneCreateOpts>;
     // _scenes: Record<string, Scene> = {};
     _active: Scene[] = [];
     _busy = false;
@@ -28,11 +28,14 @@ export class Scenes {
         return this._busy;
     }
 
-    config(scenes: Record<string, SceneOpts | SceneMakeFn>): void;
-    config(id: string, opts: SceneOpts | SceneMakeFn): void;
+    config(scenes: Record<string, SceneCreateOpts | SceneMakeFn>): void;
+    config(id: string, opts: SceneCreateOpts | SceneMakeFn): void;
     config(...args: any[]): void {
         if (args.length === 1) {
-            const scenes = args[0] as Record<string, SceneOpts | SceneMakeFn>;
+            const scenes = args[0] as Record<
+                string,
+                SceneCreateOpts | SceneMakeFn
+            >;
             Object.entries(scenes).forEach(([id, fns]) => this.config(id, fns));
             return;
         }
@@ -59,9 +62,9 @@ export class Scenes {
         this._active.forEach((a) => a.emit(ev, ...args));
     }
 
-    _create(id: string, opts: SceneOpts = {}): Scene {
+    create(id: string, opts: SceneCreateOpts = {}): Scene {
         let cfg = this._config[id] || {};
-        const used = Object.assign({}, cfg, opts);
+        const used = UTILS.mergeDeep(cfg, opts);
 
         let scene: Scene;
 
@@ -71,9 +74,9 @@ export class Scenes {
             scene = new Scene(id, this._app);
         }
 
-        scene.on('start', () => this._start(scene));
-        scene.on('stop', () => this._stop(scene));
-        scene.create(used);
+        scene.on('start', () => this._started(scene));
+        scene.on('stop', () => this._stopped(scene));
+        scene._create(used);
         // this._scenes[scene.id] = scene;
 
         return scene;
@@ -87,19 +90,23 @@ export class Scenes {
     //     return this._create(id, data);
     // }
 
-    start(id: string, data?: StartOpts): Scene {
-        let scene: Scene = this.get(id) || this._create(id, data);
-        this._app.io.clear();
-        if (this.isBusy) {
-            this._pending.push({ action: 'start', scene, data });
-        } else {
-            scene.start(data);
-        }
+    start(id: string, opts?: SceneStartOpts): Scene {
+        let scene: Scene = this.get(id) || this.create(id, {});
+        scene.start(opts);
         return scene;
     }
 
-    run(id: string, data?: StartOpts): Scene {
-        let scene: Scene = this.get(id) || this._create(id, data);
+    _start(scene: Scene, opts: SceneStartOpts = {}) {
+        this._app.io.clear();
+        if (this.isBusy) {
+            this._pending.push({ action: '_start', scene, data: opts });
+        } else {
+            scene._start(opts);
+        }
+    }
+
+    run(id: string, data?: SceneStartOpts): Scene {
+        let scene: Scene = this.get(id) || this.create(id, data);
         this._app.io.clear();
         if (this.isBusy) {
             this._pending.push({ action: 'run', scene, data });
@@ -110,7 +117,7 @@ export class Scenes {
         return scene;
     }
 
-    _start(scene: Scene) {
+    _started(scene: Scene) {
         this._active.push(scene);
     }
 
@@ -133,7 +140,7 @@ export class Scenes {
             this._active.forEach((s) => this.stop(s.id, id));
         }
     }
-    _stop(_scene: Scene) {
+    _stopped(_scene: Scene) {
         this._active = this._active.filter((s) => s.isActive());
     }
 
@@ -147,9 +154,9 @@ export class Scenes {
         // delete this._scenes[id];
     }
 
-    pause(id: string, opts?: PauseOpts): void;
-    pause(opts?: PauseOpts): void;
-    pause(id?: string | PauseOpts, opts?: PauseOpts): void {
+    pause(id: string, opts?: ScenePauseOpts): void;
+    pause(opts?: ScenePauseOpts): void;
+    pause(id?: string | ScenePauseOpts, opts?: ScenePauseOpts): void {
         if (typeof id === 'string') {
             const scene = this.get(id);
             if (!scene) throw new Error('Unknown scene:' + id);
@@ -159,9 +166,9 @@ export class Scenes {
         }
     }
 
-    resume(opts?: PauseOpts): void;
-    resume(id: string, opts?: PauseOpts): void;
-    resume(id?: string | PauseOpts, opts?: PauseOpts): void {
+    resume(opts?: ScenePauseOpts): void;
+    resume(id: string, opts?: ScenePauseOpts): void;
+    resume(id?: string | ScenePauseOpts, opts?: ScenePauseOpts): void {
         if (typeof id === 'string') {
             const scene = this.get(id);
             if (!scene) throw new Error('Unknown scene:' + id);
@@ -215,9 +222,9 @@ export class Scenes {
     }
 }
 
-export const scenes: Record<string, SceneOpts> = {};
+export const scenes: Record<string, SceneCreateOpts> = {};
 
-export function installScene(id: string, scene: SceneOpts | SceneMakeFn) {
+export function installScene(id: string, scene: SceneCreateOpts | SceneMakeFn) {
     if (typeof scene === 'function') {
         scene = { make: scene };
     }

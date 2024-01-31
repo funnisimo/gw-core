@@ -1,7 +1,6 @@
 import * as CANVAS from '../canvas';
 import * as EVENTS from './events';
 import * as IO from './io';
-import * as DATA from '../data';
 
 import { Loop } from './loop';
 import * as TIMERS from './timers';
@@ -12,7 +11,14 @@ import { ConfirmOptions } from '../scenes/confirm';
 import { PromptOptions, PromptScene } from '../scenes/prompt';
 import * as STYLE from './style';
 import { Buffer } from '../buffer';
+import * as rng from '../rng';
+import { SceneStartOpts } from './scene';
+import { mergeDeep } from '../utils';
 // import * as COLOR from '../color';
+
+declare global {
+    var APP: App;
+}
 
 export interface AppOpts {
     // CanvasBase
@@ -20,9 +26,11 @@ export interface AppOpts {
     height?: number;
     glyphs?: CANVAS.Glyphs;
     div?: HTMLElement | string;
+    seed?: number;
     // io?: true; // if true, hookup events to standard IO loop.
     // loop?: IO.Loop; // The loop to attach to
     image?: HTMLImageElement | string; // glyph image
+    start?: boolean;
 
     // GlyphOptions
     font?: string;
@@ -34,16 +42,16 @@ export interface AppOpts {
     basic?: boolean; // alias for basicOnly
 
     // on?: SCENE.SceneOpts;
-    scene?: SCENE.SceneOpts | boolean;
-    scenes?: Record<string, SCENE.SceneOpts>;
+    scene?: SCENE.SceneCreateOpts | boolean | string;
+    scenes?: Record<string, SCENE.SceneCreateOpts>;
+    sceneStartOpts?: SceneStartOpts;
 
     name?: string;
     loop?: Loop;
     dt?: number; // fixed_update ms
     canvas?: CANVAS.Canvas;
 
-    start?: boolean | string;
-    data?: Record<string, any>;
+    data?: { [id: string]: any };
 }
 
 export class App {
@@ -66,15 +74,19 @@ export class App {
     fpsTimer = 0;
     numFrames = 0;
 
-    loopID = 0;
+    loopId = 0;
     stopped = true;
     paused = false;
     debug = false;
 
     buffer: Buffer;
-    data: DATA.Data;
+    data: { [id: string]: any };
 
     constructor(opts: Partial<AppOpts> = {}) {
+        if (typeof opts.seed === 'number' && opts.seed > 0) {
+            rng.random.seed(opts.seed);
+        }
+
         if ('loop' in opts) {
             this.loop = opts.loop!;
             delete opts.loop;
@@ -93,7 +105,7 @@ export class App {
             this.dt = opts.dt || 16; // Can't have 0
         }
 
-        this.data = new DATA.Data(opts.data);
+        this.data = mergeDeep({}, opts.data || {});
 
         this.canvas.onclick = this.io.enqueue.bind(this.io);
         this.canvas.onmousemove = this.io.enqueue.bind(this.io);
@@ -104,23 +116,31 @@ export class App {
 
         if (opts.scenes) {
             this.scenes.config(opts.scenes);
-            if (typeof opts.start === 'string') {
-                this.scenes.start(opts.start);
+            if (typeof opts.scene === 'string') {
+                this.scenes.start(opts.scene, opts.sceneStartOpts);
             } else {
-                this.scenes.start(Object.keys(opts.scenes)[0]);
+                this.scenes.start(
+                    Object.keys(opts.scenes)[0],
+                    opts.sceneStartOpts
+                );
             }
         } else if (opts.scene) {
+            if (typeof opts.scene === 'string') {
+                throw new Error(
+                    "Cannot use string 'scene' option without including 'scenes'."
+                );
+            }
             if (opts.scene === true) opts.scene = {};
             this.scenes.config('default', opts.scene);
-            this.scenes.start('default');
-            // } else {
-            //     this.scenes.install('default', { bg: COLOR.colors.NONE }); // NONE just in case you draw directly on app.buffer
-            //     this.scenes.start('default');
+            this.scenes.start('default', opts.sceneStartOpts);
         }
 
         if (opts.start !== false) {
             this.start();
         }
+
+        globalThis.APP = this;
+        active = this;
     }
 
     // get buffer() {
@@ -251,7 +271,8 @@ export class App {
         }
 
         if (!this.paused && this.debug !== true) {
-            // call fixed_update
+            // TODO - Should update be called first to run timers, etc...?
+
             while (this.time + this.dt <= realTime) {
                 this.time += this.dt;
                 this._fixed_update(this.dt);
@@ -331,7 +352,7 @@ export class App {
         // TODO - Do we really have to do this?  Can't we reset the scene instead?
         // NEED TO CREATE A NEW SCENE EVERY TIME SO WE DON"T HAVE HOLDOVER EVENTS, etc...
         (<PromptOptions>opts).prompt = text;
-        const prompt = this.scenes._create('prompt', PromptScene);
+        const prompt = this.scenes.create('prompt', PromptScene);
         prompt.run(opts);
         return prompt;
     }
@@ -341,3 +362,5 @@ export function make(opts: AppOpts): App {
     const app = new App(opts);
     return app;
 }
+
+export var active: App;

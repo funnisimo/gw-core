@@ -1,5 +1,6 @@
-export * from './utils';
+export * as utils from './utils';
 export * as xy from './xy';
+export { XY } from './xy';
 export * as list from './list';
 export * as object from './object';
 export * as range from './range';
@@ -24,7 +25,6 @@ export { cosmetic, random } from './rng';
 export * as rng from './rng';
 export { colors } from './color';
 // export { sprites } from './sprite';
-export * as data from './data';
 // export { loop } from './io';
 export * as blob from './blob';
 export * as light from './light';
@@ -33,5 +33,39 @@ export * as ui from './scenes';
 export * as widget from './widgets';
 export * as app from './app';
 
-import { Err, Ok, Result, Some, None, Option, UndefinedBehaviorError, match } from '@rslike/std';
+import {
+    NOOP,
+    TRUE,
+    FALSE,
+    ONE,
+    ZERO,
+    IDENTITY,
+    IS_ZERO,
+    IS_NONZERO,
+    ERROR,
+    WARN,
+} from './utils';
+export {
+    NOOP,
+    TRUE,
+    FALSE,
+    ONE,
+    ZERO,
+    IDENTITY,
+    IS_ZERO,
+    IS_NONZERO,
+    ERROR,
+    WARN,
+};
+
+import {
+    Err,
+    Ok,
+    Result,
+    Some,
+    None,
+    Option,
+    UndefinedBehaviorError,
+    match,
+} from '@rslike/std';
 export { Err, Ok, Result, Some, None, Option, UndefinedBehaviorError, match };
