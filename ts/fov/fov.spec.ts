@@ -33,7 +33,7 @@ describe('FOV', () => {
 
         fov = new GW.fov.FOV({
             isBlocked(x: number, y: number) {
-                return tiles[x][y] > 0;
+                return tiles._data[x][y] > 0;
             },
             hasXY(x: number, y: number) {
                 return tiles.hasXY(x, y);
@@ -72,45 +72,45 @@ describe('FOV', () => {
 
         fov = new GW.fov.FOV({
             isBlocked(x: number, y: number) {
-                return !tiles.hasXY(x, y) || tiles[x][y] > 0;
+                return !tiles.hasXY(x, y) || tiles._data[x][y] > 0;
             },
             // debug,
         });
 
-        tiles[2][5] = 1;
-        tiles[5][2] = 1;
+        tiles._data[2][5] = 1;
+        tiles._data[5][2] = 1;
 
         fov.calculate(5, 5, 10, setVisible);
 
         // results.dump();
 
-        expect(results[5][5]).toEqual(1); // center is always visible
-        expect(results[2][5]).toEqual(1);
-        expect(results[1][5]).toEqual(0);
-        expect(results[5][2]).toEqual(1);
-        expect(results[5][1]).toEqual(0);
+        expect(results._data[5][5]).toEqual(1); // center is always visible
+        expect(results._data[2][5]).toEqual(1);
+        expect(results._data[1][5]).toEqual(0);
+        expect(results._data[5][2]).toEqual(1);
+        expect(results._data[5][1]).toEqual(0);
 
-        expect(results[5][10]).toEqual(1); // 10 away
+        expect(results._data[5][10]).toEqual(1); // 10 away
     });
 
     test('will calculate FOV', () => {
         setup(50, 50);
 
-        tiles[20][25] = 1;
-        tiles[25][20] = 1;
+        tiles._data[20][25] = 1;
+        tiles._data[25][20] = 1;
 
         fov.calculate(25, 25, 10, setVisible);
 
-        expect(results[25][25]).toEqual(1); // center is always visible
-        expect(results[20][25]).toEqual(1);
-        expect(results[19][25]).toEqual(0);
-        expect(results[25][20]).toEqual(1);
-        expect(results[25][19]).toEqual(0);
+        expect(results._data[25][25]).toEqual(1); // center is always visible
+        expect(results._data[20][25]).toEqual(1);
+        expect(results._data[19][25]).toEqual(0);
+        expect(results._data[25][20]).toEqual(1);
+        expect(results._data[25][19]).toEqual(0);
 
         // grid[25][25] = 2;
         // grid.dump();
 
-        expect(results[25][35]).toEqual(1); // 10 away
+        expect(results._data[25][35]).toEqual(1); // 10 away
     });
 
     describe('tests', () => {
@@ -119,7 +119,7 @@ describe('FOV', () => {
                 for (let i = 0; i < line.length; ++i) {
                     const ch = line[i];
                     const tile = ch == '#' || ch == '+' ? 1 : 0;
-                    tiles[i][j] = tile;
+                    tiles._data[i][j] = tile;
                 }
             });
         }
@@ -129,8 +129,8 @@ describe('FOV', () => {
             for (let y = 0; y < tiles.height; ++y) {
                 let row = '';
                 for (let x = 0; x < tiles.width; ++x) {
-                    const v = results[x][y];
-                    const tile = tiles[x][y];
+                    const v = results._data[x][y];
+                    const tile = tiles._data[x][y];
                     let ch = tile == 0 ? '.' : '#';
                     if (v <= 0) {
                         ch = ch == '#' ? '+' : 's';

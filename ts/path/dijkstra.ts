@@ -480,7 +480,7 @@ export function computeDistances(
     dm.setGoal(from);
     dm.calculate(costFn, only4dirs);
 
-    dm.forEach((v, x, y) => (grid[x][y] = v));
+    dm.forEach((v, x, y) => grid.set(x, y, v));
 }
 
 const maps: DijkstraMap[] = [];

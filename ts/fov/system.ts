@@ -87,39 +87,39 @@ export class FovSystem implements TYPES.FovTracker {
     }
 
     getFlag(x: number, y: number): number {
-        return this.flags[x][y];
+        return this.flags.get(x, y) || 0;
     }
 
     isVisible(x: number, y: number): boolean {
-        return !!((this.flags.get(x, y) || 0) & FovFlags.VISIBLE);
+        return !!(this.getFlag(x, y) & FovFlags.VISIBLE);
     }
     isAnyKindOfVisible(x: number, y: number): boolean {
-        return !!((this.flags.get(x, y) || 0) & FovFlags.ANY_KIND_OF_VISIBLE);
+        return !!(this.getFlag(x, y) & FovFlags.ANY_KIND_OF_VISIBLE);
     }
     isClairvoyantVisible(x: number, y: number): boolean {
-        return !!((this.flags.get(x, y) || 0) & FovFlags.CLAIRVOYANT_VISIBLE);
+        return !!(this.getFlag(x, y) & FovFlags.CLAIRVOYANT_VISIBLE);
     }
     isTelepathicVisible(x: number, y: number): boolean {
-        return !!((this.flags.get(x, y) || 0) & FovFlags.TELEPATHIC_VISIBLE);
+        return !!(this.getFlag(x, y) & FovFlags.TELEPATHIC_VISIBLE);
     }
     isInFov(x: number, y: number): boolean {
-        return !!((this.flags.get(x, y) || 0) & FovFlags.IN_FOV);
+        return !!(this.getFlag(x, y) & FovFlags.IN_FOV);
     }
     isDirectlyVisible(x: number, y: number): boolean {
         const flags = FovFlags.VISIBLE | FovFlags.IN_FOV;
-        return ((this.flags.get(x, y) || 0) & flags) === flags;
+        return (this.getFlag(x, y) & flags) === flags;
     }
     isActorDetected(x: number, y: number): boolean {
-        return !!((this.flags.get(x, y) || 0) & FovFlags.ACTOR_DETECTED);
+        return !!(this.getFlag(x, y) & FovFlags.ACTOR_DETECTED);
     }
     isItemDetected(x: number, y: number): boolean {
-        return !!((this.flags.get(x, y) || 0) & FovFlags.ITEM_DETECTED);
+        return !!(this.getFlag(x, y) & FovFlags.ITEM_DETECTED);
     }
     isMagicMapped(x: number, y: number): boolean {
-        return !!((this.flags.get(x, y) || 0) & FovFlags.MAGIC_MAPPED);
+        return !!(this.getFlag(x, y) & FovFlags.MAGIC_MAPPED);
     }
     isRevealed(x: number, y: number): boolean {
-        return !!((this.flags.get(x, y) || 0) & FovFlags.REVEALED);
+        return !!(this.getFlag(x, y) & FovFlags.REVEALED);
     }
     fovChanged(x: number, y: number): boolean {
         const flags = this.flags.get(x, y) || 0;
@@ -128,22 +128,20 @@ export class FovSystem implements TYPES.FovTracker {
         return isVisible !== wasVisible;
     }
     wasAnyKindOfVisible(x: number, y: number): boolean {
-        return !!(
-            (this.flags.get(x, y) || 0) & FovFlags.WAS_ANY_KIND_OF_VISIBLE
-        );
+        return !!(this.getFlag(x, y) & FovFlags.WAS_ANY_KIND_OF_VISIBLE);
     }
 
     makeAlwaysVisible() {
         this.changed = true;
         this.flags.forEach((_v, x, y) => {
-            this.flags[x][y] |=
+            this.flags._data[x][y] |=
                 FovFlags.ALWAYS_VISIBLE | FovFlags.REVEALED | FovFlags.VISIBLE;
             this.callback(x, y, true);
         });
     }
     makeCellAlwaysVisible(x: number, y: number) {
         this.changed = true;
-        this.flags[x][y] |=
+        this.flags._data[x][y] |=
             FovFlags.ALWAYS_VISIBLE | FovFlags.REVEALED | FovFlags.VISIBLE;
         this.callback(x, y, true);
     }
@@ -162,24 +160,26 @@ export class FovSystem implements TYPES.FovTracker {
             FovFlags.REVEALED | (makeVisibleToo ? FovFlags.VISIBLE : 0);
 
         this.fov.calculate(x, y, radius, (x0, y0) => {
-            this.flags[x0][y0] |= flag;
+            this.flags._data[x0][y0] |= flag;
             this.callback(x0, y0, !!(flag & FovFlags.VISIBLE));
         });
         this.changed = true;
     }
     hideCell(x: number, y: number): void {
-        this.flags[x][y] &= ~(
+        this.flags._data[x][y] &= ~(
             FovFlags.MAGIC_MAPPED |
             FovFlags.REVEALED |
             FovFlags.ALWAYS_VISIBLE
         );
-        this.flags[x][y] = this.demoteCellVisibility(this.flags[x][y]); // clears visible, etc...
+        this.flags._data[x][y] = this.demoteCellVisibility(
+            this.flags._data[x][y]
+        ); // clears visible, etc...
         this.callback(x, y, false);
 
         this.changed = true;
     }
     magicMapCell(x: number, y: number): void {
-        this.flags[x][y] |= FovFlags.MAGIC_MAPPED;
+        this.flags._data[x][y] |= FovFlags.MAGIC_MAPPED;
         this.changed = true;
         this.callback(x, y, true);
     }
@@ -205,19 +205,19 @@ export class FovSystem implements TYPES.FovTracker {
         if (!keep) {
             this.flags.update((f) => f & ~FovFlags.IS_CURSOR);
         }
-        this.flags[x][y] |= FovFlags.IS_CURSOR;
+        this.flags._data[x][y] |= FovFlags.IS_CURSOR;
         this.changed = true;
     }
     clearCursor(x?: number, y?: number) {
         if (x === undefined || y === undefined) {
             this.flags.update((f) => f & ~FovFlags.IS_CURSOR);
         } else {
-            this.flags[x][y] &= ~FovFlags.IS_CURSOR;
+            this.flags._data[x][y] &= ~FovFlags.IS_CURSOR;
         }
         this.changed = true;
     }
     isCursor(x: number, y: number): boolean {
-        return !!(this.flags[x][y] & FovFlags.IS_CURSOR);
+        return !!(this.flags._data[x][y] & FovFlags.IS_CURSOR);
     }
 
     // HIGHLIGHT
@@ -226,19 +226,19 @@ export class FovSystem implements TYPES.FovTracker {
         if (!keep) {
             this.flags.update((f) => f & ~FovFlags.IS_HIGHLIGHTED);
         }
-        this.flags[x][y] |= FovFlags.IS_HIGHLIGHTED;
+        this.flags._data[x][y] |= FovFlags.IS_HIGHLIGHTED;
         this.changed = true;
     }
     clearHighlight(x?: number, y?: number) {
         if (x === undefined || y === undefined) {
             this.flags.update((f) => f & ~FovFlags.IS_HIGHLIGHTED);
         } else {
-            this.flags[x][y] &= ~FovFlags.IS_HIGHLIGHTED;
+            this.flags._data[x][y] &= ~FovFlags.IS_HIGHLIGHTED;
         }
         this.changed = true;
     }
     isHighlight(x: number, y: number): boolean {
-        return !!(this.flags[x][y] & FovFlags.IS_HIGHLIGHTED);
+        return !!(this.flags._data[x][y] & FovFlags.IS_HIGHLIGHTED);
     }
 
     // COPY
@@ -308,7 +308,7 @@ export class FovSystem implements TYPES.FovTracker {
             // }
         } else if (isVisible && !wasVisible) {
             // if the cell became visible this move
-            this.flags[x][y] |= FovFlags.REVEALED;
+            this.flags._data[x][y] |= FovFlags.REVEALED;
             this._callback(x, y, isVisible);
             this.changed = true;
         } else if (!isVisible && wasVisible) {
@@ -404,7 +404,7 @@ export class FovSystem implements TYPES.FovTracker {
             this.site.hasVisibleLight(x, y) // &&
             // !(cell.flags.cellMech & FovFlagsMech.DARKENED)
         ) {
-            flag = this.flags[x][y] |= FovFlags.VISIBLE;
+            flag = this.flags._data[x][y] |= FovFlags.VISIBLE;
         }
 
         if (this.updateCellVisibility(flag, x, y)) return;
@@ -450,13 +450,13 @@ export class FovSystem implements TYPES.FovTracker {
             //     throw new Error('Received invalid viewport type: ' + Flag.toString(FovFlags, type));
 
             if (radius == 0) {
-                this.flags[x][y] |= flag;
+                this.flags._data[x][y] |= flag;
                 return;
             }
 
             this.fov.calculate(x, y, radius, (x, y, v) => {
                 if (v) {
-                    this.flags[x][y] |= flag;
+                    this.flags._data[x][y] |= flag;
                 }
             });
         });
@@ -464,7 +464,7 @@ export class FovSystem implements TYPES.FovTracker {
         if (cx !== undefined && cy !== undefined) {
             this.fov.calculate(cx, cy, cr, (x, y, v) => {
                 if (v) {
-                    this.flags[x][y] |= FovFlags.PLAYER;
+                    this.flags._data[x][y] |= FovFlags.PLAYER;
                 }
             });
         }

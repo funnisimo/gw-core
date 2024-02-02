@@ -659,9 +659,10 @@ type AsyncGridEach<T> = (value: T, x: number, y: number, grid: Grid<T>) => Promi
 type GridUpdate<T> = (value: T, x: number, y: number, grid: Grid<T>) => T;
 type GridMatch<T> = (value: T, x: number, y: number, grid: Grid<T>) => boolean;
 type GridFormat<T> = (value: T, x: number, y: number) => string;
-declare class Grid<T> extends Array<Array<T>> {
+declare class Grid<T> {
     protected _width: number;
     protected _height: number;
+    _data: T[][];
     constructor(w: number, h: number, v: GridInit<T> | T);
     get width(): number;
     get height(): number;
@@ -670,10 +671,7 @@ declare class Grid<T> extends Array<Array<T>> {
     /**
      * Calls the supplied function for each cell in the grid.
      * @param fn - The function to call on each item in the grid.
-     * 
      */
-     // @ts-ignore
-     
     forEach(fn: GridEach<T>): void;
     forEachAsync(fn: AsyncGridEach<T>): Promise<void>;
     eachNeighbor(x: number, y: number, fn: GridEach<T>, only4dirs?: boolean): void;
@@ -686,10 +684,7 @@ declare class Grid<T> extends Array<Array<T>> {
      * TODO - Do we need this???
      * TODO - Should this only be in NumGrid?
      * TODO - Should it alloc instead of using constructor?
-     * 
      */
-     // @ts-ignore
-     
     map(fn: GridEach<T>): any;
     /**
      * Returns whether or not an item in the grid matches the provided function.
@@ -697,10 +692,7 @@ declare class Grid<T> extends Array<Array<T>> {
      * TODO - Do we need this???
      * TODO - Should this only be in NumGrid?
      * TODO - Should it alloc instead of using constructor?
-     * 
      */
-     // @ts-ignore
-     
     some(fn: GridMatch<T>): boolean;
     forCircle(x: number, y: number, radius: number, fn: GridEach<T>): void;
     hasXY(x: number, y: number): boolean;
@@ -717,10 +709,7 @@ declare class Grid<T> extends Array<Array<T>> {
     /**
      * Fills the entire grid with the supplied value
      * @param v - The fill value or a function that returns the fill value.
-     * 
      */
-     // @ts-ignore
-     
     fill(v: T | GridUpdate<T>): void;
     fillRect(x: number, y: number, w: number, h: number, v: T | GridUpdate<T>): void;
     fillCircle(x: number, y: number, radius: number, v: T | GridUpdate<T>): void;
@@ -731,10 +720,7 @@ declare class Grid<T> extends Array<Array<T>> {
      * Finds the first matching value/result and returns that location as an xy.Loc
      * @param v - The fill value or a function that returns the fill value.
      * @returns xy.Loc | null - The location of the first cell matching the criteria or null if not found.
-     * 
      */
-     // @ts-ignore
-     
     find(match: GridMatch<T> | T): Loc$1 | null;
     dump(fmtFn?: GridFormat<T>, log?: {
         (...data: any[]): void;
@@ -769,6 +755,7 @@ declare class NumGrid extends Grid<number> {
     static free(grid: NumGrid): void;
     constructor(w: number, h: number, v?: GridInit<number> | number);
     protected _resize(width: number, height: number, v: GridInit<number> | number): void;
+    increment(x: number, y: number, inc?: number): number;
     findReplaceRange(findValueMin: number, findValueMax: number, fillValue: number): void;
     floodFillRange(x: number, y: number, eligibleValueMin: number, eligibleValueMax: number, fillValue: number): number;
     invert(): void;
@@ -2758,6 +2745,7 @@ declare class LightSystem implements LightSystemType, PaintSite {
     get needsUpdate(): boolean;
     getLight(x: number, y: number): LightValue;
     setLight(x: number, y: number, light: LightValue): void;
+    _getFlag(x: number, y: number): number;
     isLit(x: number, y: number): boolean;
     isDark(x: number, y: number): boolean;
     isInShadow(x: number, y: number): boolean;

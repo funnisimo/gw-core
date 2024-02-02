@@ -298,7 +298,7 @@ export class Random {
 
             for (i = 0; i < width && index >= 0; i++) {
                 for (j = 0; j < height && index >= 0; j++) {
-                    if (grid[i][j]) {
+                    if (grid.get(i, j)) {
                         if (index == 0) {
                             GRID.free(grid);
                             return [i, j];

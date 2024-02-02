@@ -107,36 +107,41 @@ export class LightSystem implements LightSystemType, PaintSite {
     }
 
     getLight(x: number, y: number): Color.LightValue {
-        return this.light[x][y];
+        return this.light.get(x, y) || [0, 0, 0];
     }
     setLight(x: number, y: number, light: Color.LightValue) {
-        const val = this.light[x][y];
+        const val = this.light.get(x, y);
+        if (!val) return;
         for (let i = 0; i < 3; ++i) {
             val[i] = light[i];
         }
     }
 
+    _getFlag(x: number, y: number): number {
+        return this.flags.get(x, y) || 0;
+    }
+
     isLit(x: number, y: number): boolean {
-        return !!(this.flags[x][y] & LightFlags.LIT);
+        return !!(this._getFlag(x, y) & LightFlags.LIT);
     }
     isDark(x: number, y: number): boolean {
-        return !!(this.flags[x][y] & LightFlags.DARK);
+        return !!(this._getFlag(x, y) & LightFlags.DARK);
     }
     isInShadow(x: number, y: number): boolean {
-        return !!(this.flags[x][y] & LightFlags.IN_SHADOW);
+        return !!(this._getFlag(x, y) & LightFlags.IN_SHADOW);
     }
     // isMagicDark(x: number, y: number): boolean {
-    //     return !!(this.flags[x][y] & LightFlags.MAGIC_DARK);
+    //     return !!(this.flags.get(x,y) & LightFlags.MAGIC_DARK);
     // }
     lightChanged(x: number, y: number): boolean {
-        return !!(this.flags[x][y] & LightFlags.CHANGED);
+        return !!(this._getFlag(x, y) & LightFlags.CHANGED);
     }
 
     // setMagicDark(x: number, y: number, isDark = true) {
     //     if (isDark) {
     //         this.flags[x][y] |= LightFlags.MAGIC_DARK;
     //     } else {
-    //         this.flags[x][y] &= ~LightFlags.MAGIC_DARK;
+    //         this.flags.get(x,y) &= ~LightFlags.MAGIC_DARK;
     //     }
     // }
 
@@ -279,26 +284,26 @@ export class LightSystem implements LightSystemType, PaintSite {
             : 0;
         this.light.forEach((val, x, y) => {
             for (i = 0; i < 3; ++i) {
-                this.oldLight[x][y][i] = val[i];
+                this.oldLight._data[x][y][i] = val[i];
                 val[i] = this.ambient[i];
             }
-            this.flags[x][y] = flag;
+            this.flags.set(x, y, flag);
         });
     }
 
     finishLightUpdate(): void {
         XY.forRect(this.width, this.height, (x, y) => {
             // clear light flags
-            // this.flags[x][y] &= ~(LightFlags.LIT | LightFlags.DARK);
-            const oldLight = this.oldLight[x][y];
-            const light = this.light[x][y];
+            // this.flags.get(x,y) &= ~(LightFlags.LIT | LightFlags.DARK);
+            const oldLight = this.oldLight.get(x, y) || [0, 0, 0];
+            const light = this.light.get(x, y) || [0, 0, 0];
             if (light.some((v, i) => v !== oldLight[i])) {
-                this.flags[x][y] |= LightFlags.CHANGED;
+                this.flags._data[x][y] |= LightFlags.CHANGED;
             }
             if (Light.isDarkLight(light)) {
-                this.flags[x][y] |= LightFlags.DARK;
+                this.flags._data[x][y] |= LightFlags.DARK;
             } else if (!Light.isShadowLight(light)) {
-                this.flags[x][y] |= LightFlags.LIT;
+                this.flags._data[x][y] |= LightFlags.LIT;
             }
         });
     }
@@ -306,7 +311,7 @@ export class LightSystem implements LightSystemType, PaintSite {
     recordGlowLights(): void {
         let i = 0;
         this.light.forEach((val, x, y) => {
-            const glowLight = this.glowLight[x][y];
+            const glowLight = this.glowLight.get(x, y)!;
             for (i = 0; i < 3; ++i) {
                 glowLight[i] = val[i];
             }
@@ -316,7 +321,7 @@ export class LightSystem implements LightSystemType, PaintSite {
     restoreGlowLights(): void {
         let i = 0;
         this.light.forEach((val, x, y) => {
-            const glowLight = this.glowLight[x][y];
+            const glowLight = this.glowLight.get(x, y)!;
             for (i = 0; i < 3; ++i) {
                 val[i] = glowLight[i];
             }
@@ -351,12 +356,12 @@ export class LightSystem implements LightSystemType, PaintSite {
         light: Color.LightValue,
         dispelShadows: boolean
     ) {
-        const val = this.light[x][y];
+        const val = this.light.get(x, y)!;
         for (let i = 0; i < 3; ++i) {
             val[i] += light[i];
         }
         if (dispelShadows && !Light.isShadowLight(light)) {
-            this.flags[x][y] &= ~LightFlags.IN_SHADOW;
+            this.flags._data[x][y] &= ~LightFlags.IN_SHADOW;
         }
     }
 }

@@ -70,20 +70,20 @@ export type GridMatch<T> = (
 ) => boolean;
 export type GridFormat<T> = (value: T, x: number, y: number) => string;
 
-export class Grid<T> extends Array<Array<T>> {
+export class Grid<T> {
     protected _width: number;
     protected _height: number;
+    _data: T[][] = []; // TODO - Can this stay protected?
 
     constructor(w: number, h: number, v: GridInit<T> | T) {
-        super(w);
         const grid = this;
         for (let x = 0; x < w; ++x) {
             if (typeof v === 'function') {
-                this[x] = new Array(h)
+                this._data[x] = new Array(h)
                     .fill(0)
                     .map((_: any, i: number) => (v as GridInit<T>)(x, i, grid));
             } else {
-                this[x] = new Array(h).fill(v);
+                this._data[x] = new Array(h).fill(v);
             }
         }
         this._width = w;
@@ -97,28 +97,28 @@ export class Grid<T> extends Array<Array<T>> {
         return this._height;
     }
 
-    get(x: number, y: number) {
-        if (!this.hasXY(x, y)) return undefined;
-        return this[x][y];
+    get(x: number, y: number): T | undefined {
+        if (!this.hasXY(x, y)) {
+            return undefined;
+        }
+        return this._data[x][y];
     }
 
     set(x: number, y: number, v: T) {
         if (!this.hasXY(x, y)) return false;
-        this[x][y] = v;
+        this._data[x][y] = v;
         return true;
     }
 
     /**
      * Calls the supplied function for each cell in the grid.
      * @param fn - The function to call on each item in the grid.
-     * TSIGNORE
      */
-    // @ts-ignore
     forEach(fn: GridEach<T>) {
         let i, j;
         for (i = 0; i < this.width; i++) {
             for (j = 0; j < this.height; j++) {
-                fn(this[i][j], i, j, this);
+                fn(this._data[i][j], i, j, this);
             }
         }
     }
@@ -127,7 +127,7 @@ export class Grid<T> extends Array<Array<T>> {
         let i, j;
         for (i = 0; i < this.width; i++) {
             for (j = 0; j < this.height; j++) {
-                await fn(this[i][j], i, j, this);
+                await fn(this._data[i][j], i, j, this);
             }
         }
     }
@@ -138,7 +138,7 @@ export class Grid<T> extends Array<Array<T>> {
             y,
             (i, j) => {
                 if (this.hasXY(i, j)) {
-                    fn(this[i][j], i, j, this);
+                    fn(this._data[i][j], i, j, this);
                 }
             },
             only4dirs
@@ -157,7 +157,7 @@ export class Grid<T> extends Array<Array<T>> {
             const i = x + dir[0];
             const j = y + dir[1];
             if (this.hasXY(i, j)) {
-                await fn(this[i][j], i, j, this);
+                await fn(this._data[i][j], i, j, this);
             }
         }
     }
@@ -165,7 +165,7 @@ export class Grid<T> extends Array<Array<T>> {
     forRect(x: number, y: number, w: number, h: number, fn: GridEach<T>) {
         XY.forRect(x, y, w, h, (i, j) => {
             if (this.hasXY(i, j)) {
-                fn(this[i][j], i, j, this);
+                fn(this._data[i][j], i, j, this);
             }
         });
     }
@@ -176,7 +176,7 @@ export class Grid<T> extends Array<Array<T>> {
             const n = sequence[i];
             const x = n % this.width;
             const y = Math.floor(n / this.width);
-            if (fn(this[x][y], x, y, this) === true) return true;
+            if (fn(this._data[x][y], x, y, this) === true) return true;
         }
         return false;
     }
@@ -187,9 +187,7 @@ export class Grid<T> extends Array<Array<T>> {
      * TODO - Do we need this???
      * TODO - Should this only be in NumGrid?
      * TODO - Should it alloc instead of using constructor?
-     * TSIGNORE
      */
-    // @ts-ignore
     map(fn: GridEach<T>) {
         // @ts-ignore
         const other = new this.constructor(this.width, this.height);
@@ -204,18 +202,16 @@ export class Grid<T> extends Array<Array<T>> {
      * TODO - Do we need this???
      * TODO - Should this only be in NumGrid?
      * TODO - Should it alloc instead of using constructor?
-     * TSIGNORE
      */
-    // @ts-ignore
     some(fn: GridMatch<T>): boolean {
-        return super.some((col, x) =>
+        return this._data.some((col, x) =>
             col.some((data, y) => fn(data, x, y, this))
         );
     }
 
     forCircle(x: number, y: number, radius: number, fn: GridEach<T>) {
         XY.forCircle(x, y, radius, (i, j) => {
-            if (this.hasXY(i, j)) fn(this[i][j], i, j, this);
+            if (this.hasXY(i, j)) fn(this._data[i][j], i, j, this);
         });
     }
 
@@ -249,7 +245,7 @@ export class Grid<T> extends Array<Array<T>> {
 
     update(fn: GridUpdate<T>) {
         XY.forRect(this.width, this.height, (i, j) => {
-            this[i][j] = fn(this[i][j], i, j, this);
+            this._data[i][j] = fn(this._data[i][j], i, j, this);
         });
     }
 
@@ -261,14 +257,15 @@ export class Grid<T> extends Array<Array<T>> {
         fn: GridUpdate<T>
     ) {
         XY.forRect(x, y, width, height, (i, j) => {
-            if (this.hasXY(i, j)) this[i][j] = fn(this[i][j], i, j, this);
+            if (this.hasXY(i, j))
+                this._data[i][j] = fn(this._data[i][j], i, j, this);
         });
     }
 
     updateCircle(x: number, y: number, radius: number, fn: GridUpdate<T>) {
         XY.forCircle(x, y, radius, (i, j) => {
             if (this.hasXY(i, j)) {
-                this[i][j] = fn(this[i][j], i, j, this);
+                this._data[i][j] = fn(this._data[i][j], i, j, this);
             }
         });
     }
@@ -276,9 +273,7 @@ export class Grid<T> extends Array<Array<T>> {
     /**
      * Fills the entire grid with the supplied value
      * @param v - The fill value or a function that returns the fill value.
-     * TSIGNORE
      */
-    // @ts-ignore
     fill(v: T | GridUpdate<T>) {
         const fn: GridUpdate<T> =
             typeof v === 'function' ? (v as GridUpdate<T>) : () => v;
@@ -303,7 +298,7 @@ export class Grid<T> extends Array<Array<T>> {
 
     copy(from: Grid<T>) {
         // TODO - check width, height?
-        this.update((_: any, i: number, j: number) => from[i][j]);
+        this.update((_: any, i: number, j: number) => from._data[i][j]);
     }
 
     count(match: GridMatch<T> | T) {
@@ -322,9 +317,7 @@ export class Grid<T> extends Array<Array<T>> {
      * Finds the first matching value/result and returns that location as an xy.Loc
      * @param v - The fill value or a function that returns the fill value.
      * @returns xy.Loc | null - The location of the first cell matching the criteria or null if not found.
-     * TSIGNORE
      */
-    // @ts-ignore
     find(match: GridMatch<T> | T): XY.Loc | null {
         const fn: GridMatch<T> =
             typeof match === 'function'
@@ -332,7 +325,7 @@ export class Grid<T> extends Array<Array<T>> {
                 : (v: T) => v == match;
         for (let x = 0; x < this.width; ++x) {
             for (let y = 0; y < this.height; ++y) {
-                const v = this[x][y];
+                const v = this._data[x][y];
                 if (fn(v, x, y, this)) return [x, y] as XY.Loc;
             }
         }
@@ -412,7 +405,7 @@ export class Grid<T> extends Array<Array<T>> {
 
         for (let i = 0; i < this.width; ++i) {
             for (let j = 0; j < this.height; ++j) {
-                if (fn(this[i][j], i, j, this)) {
+                if (fn(this._data[i][j], i, j, this)) {
                     return [i, j];
                 }
             }
@@ -423,7 +416,7 @@ export class Grid<T> extends Array<Array<T>> {
     randomMatchingLoc(v: T | GridMatch<T>): Loc {
         const fn: XY.XYMatchFunc =
             typeof v === 'function'
-                ? (x, y) => (v as GridMatch<T>)(this[x][y], x, y, this)
+                ? (x, y) => (v as GridMatch<T>)(this._data[x][y], x, y, this)
                 : (x, y) => this.get(x, y) === v;
 
         return random.matchingLoc(this.width, this.height, fn);
@@ -432,7 +425,7 @@ export class Grid<T> extends Array<Array<T>> {
     matchingLocNear(x: number, y: number, v: T | GridMatch<T>): Loc {
         const fn: XY.XYMatchFunc =
             typeof v === 'function'
-                ? (x, y) => (v as GridMatch<T>)(this[x][y], x, y, this)
+                ? (x, y) => (v as GridMatch<T>)(this._data[x][y], x, y, this)
                 : (x, y) => this.get(x, y) === v;
 
         return random.matchingLocNear(x, y, fn);
@@ -447,7 +440,7 @@ export class Grid<T> extends Array<Array<T>> {
     //		Five or more means there is a bug.
     arcCount(x: number, y: number, testFn: GridMatch<T>) {
         return XY.arcCount(x, y, (i, j) => {
-            return this.hasXY(i, j) && testFn(this[i][j], i, j, this);
+            return this.hasXY(i, j) && testFn(this._data[i][j], i, j, this);
         });
     }
 }
@@ -517,13 +510,13 @@ export class NumGrid extends Grid<number> {
         const fn: GridInit<number> =
             typeof v === 'function' ? (v as GridInit<number>) : () => v;
 
-        while (this.length < width) this.push([]);
-        this.length = width;
+        while (this._data.length < width) this._data.push([]);
+        this._data.length = width;
 
         let x = 0;
         let y = 0;
         for (x = 0; x < width; ++x) {
-            const col = this[x];
+            const col = this._data[x];
             for (y = 0; y < height; ++y) {
                 col[y] = fn(x, y, this);
             }
@@ -535,6 +528,11 @@ export class NumGrid extends Grid<number> {
             this.x = undefined;
             this.y = undefined;
         }
+    }
+
+    increment(x: number, y: number, inc: number = 1): number {
+        this._data[x][y] += inc;
+        return this._data[x][y];
     }
 
     findReplaceRange(
@@ -571,13 +569,13 @@ export class NumGrid extends Grid<number> {
         const ok = (x: number, y: number) => {
             return (
                 this.hasXY(x, y) &&
-                this[x][y] >= eligibleValueMin &&
-                this[x][y] <= eligibleValueMax
+                this._data[x][y] >= eligibleValueMin &&
+                this._data[x][y] <= eligibleValueMax
             );
         };
 
         if (!ok(x, y)) return 0;
-        this[x][y] = fillValue;
+        this._data[x][y] = fillValue;
         for (dir = 0; dir < 4; dir++) {
             newX = x + DIRS[dir][0];
             newY = y + DIRS[dir][1];
@@ -626,7 +624,7 @@ export class NumGrid extends Grid<number> {
         for (i = 0; i < this.width; i++) {
             foundValueAtThisLine = false;
             for (j = 0; j < this.height; j++) {
-                if (this[i][j] == value) {
+                if (this._data[i][j] == value) {
                     foundValueAtThisLine = true;
                     break;
                 }
@@ -645,7 +643,7 @@ export class NumGrid extends Grid<number> {
         for (j = 0; j < this.height; j++) {
             foundValueAtThisLine = false;
             for (i = 0; i < this.width; i++) {
-                if (this[i][j] == value) {
+                if (this._data[i][j] == value) {
                     foundValueAtThisLine = true;
                     break;
                 }
@@ -695,10 +693,10 @@ export class NumGrid extends Grid<number> {
             [x, y] = item;
             free.push(item);
 
-            if (!this.hasXY(x, y) || done[x][y]) continue;
-            if (!matchFn(this[x][y], x, y, this)) continue;
-            this[x][y] = fillFn(this[x][y], x, y, this);
-            done[x][y] = 1;
+            if (!this.hasXY(x, y) || done._data[x][y]) continue;
+            if (!matchFn(this._data[x][y], x, y, this)) continue;
+            this._data[x][y] = fillFn(this._data[x][y], x, y, this);
+            done._data[x][y] = 1;
             ++count;
 
             // Iterate through the four cardinal neighbors.
@@ -757,13 +755,22 @@ export function offsetZip<T, U>(
         typeof value === 'function'
             ? (value as GridZip<T, U>)
             : (_d: T, _s: U, dx: number, dy: number) =>
-                  (destGrid[dx][dy] = value);
+                  (destGrid._data[dx][dy] = value);
     srcGrid.forEach((c, i, j) => {
         const destX = i + srcToDestX;
         const destY = j + srcToDestY;
         if (!destGrid.hasXY(destX, destY)) return;
         if (!c) return;
-        fn(destGrid[destX][destY], c, destX, destY, i, j, destGrid, srcGrid);
+        fn(
+            destGrid._data[destX][destY],
+            c,
+            destX,
+            destY,
+            i,
+            j,
+            destGrid,
+            srcGrid
+        );
     });
 }
 
@@ -772,7 +779,7 @@ export function offsetZip<T, U>(
 export function intersection(onto: NumGrid, a: NumGrid, b?: NumGrid) {
     b = b || onto;
     // @ts-ignore
-    onto.update((_, i, j) => (a[i][j] && b[i][j]) || 0);
+    onto.update((_, i, j) => (a.get(i, j) && b!.get(i, j)) || 0);
 }
 
 // Grid.intersection = intersection;
@@ -780,5 +787,5 @@ export function intersection(onto: NumGrid, a: NumGrid, b?: NumGrid) {
 export function unite(onto: NumGrid, a: NumGrid, b?: NumGrid) {
     b = b || onto;
     // @ts-ignore
-    onto.update((_, i, j) => b[i][j] || a[i][j]);
+    onto.update((_, i, j) => b!.get(i, j) || a.get(i, j));
 }

@@ -79,7 +79,7 @@ export class Light implements Types.LightType {
 
         const grid = Grid.alloc(site.width, site.height, 0);
         site.calcFov(x, y, outerRadius, this.passThroughActors, (i, j) => {
-            grid[i][j] = 1;
+            grid.set(i, j, 1);
         });
 
         // let overlappedFieldOfView = false;

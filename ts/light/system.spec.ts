@@ -22,7 +22,7 @@ describe('light system', () => {
 
     function makeSite(w: number, h: number): TestLightSite {
         const grid = Grid.alloc(w, h);
-        XY.forBorder(0, 0, w, h, (x, y) => (grid[x][y] = 1));
+        XY.forBorder(0, 0, w, h, (x, y) => grid.set(x, y, 1));
 
         const flags = Grid.alloc(w, h);
 
@@ -48,7 +48,7 @@ describe('light system', () => {
 
             hasActor: jest.fn().mockReturnValue(false),
             blocksVision(x: number, y: number): boolean {
-                return grid[x][y] > 0;
+                return grid.get(x, y)! > 0;
             },
 
             eachGlowLight: jest.fn().mockImplementation((cb: Light.LightCb) => {

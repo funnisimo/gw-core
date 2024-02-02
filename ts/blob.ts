@@ -29,8 +29,10 @@ export class Blob {
 
     constructor(opts: Partial<BlobConfig> = {}) {
         Object.assign(this.options, opts);
-        this.options.birthParameters = this.options.birthParameters.toLowerCase();
-        this.options.survivalParameters = this.options.survivalParameters.toLowerCase();
+        this.options.birthParameters =
+            this.options.birthParameters.toLowerCase();
+        this.options.survivalParameters =
+            this.options.survivalParameters.toLowerCase();
 
         if (this.options.minWidth >= this.options.maxWidth) {
             this.options.minWidth = Math.round(0.75 * this.options.maxWidth);
@@ -68,7 +70,7 @@ export class Blob {
             // Fill relevant portion with noise based on the percentSeeded argument.
             for (i = 0; i < maxWidth; i++) {
                 for (j = 0; j < maxHeight; j++) {
-                    dest[i + left][j + top] = this.options.rng.chance(
+                    dest._data[i + left][j + top] = this.options.rng.chance(
                         this.options.percentSeeded
                     )
                         ? 1
@@ -92,7 +94,7 @@ export class Blob {
 
             for (i = 0; i < dest.width; i++) {
                 for (j = 0; j < dest.height; j++) {
-                    if (dest[i][j] == 1) {
+                    if (dest._data[i][j] == 1) {
                         // an unmarked blob
                         // Mark all the cells and returns the total size:
                         blobSize = dest.floodFill(i, j, 1, blobNumber);
@@ -118,7 +120,7 @@ export class Blob {
         // Replace the winning blob with 1's, and everything else with 0's:
         for (i = 0; i < dest.width; i++) {
             for (j = 0; j < dest.height; j++) {
-                if (dest[i][j] == topBlobNumber) {
+                if (dest._data[i][j] == topBlobNumber) {
                     setFn(i, j);
                 }
             }
@@ -144,23 +146,23 @@ export class Blob {
                 for (dir = 0; dir < XY.DIRS.length; dir++) {
                     newX = i + XY.DIRS[dir][0];
                     newY = j + XY.DIRS[dir][1];
-                    if (grid.hasXY(newX, newY) && buffer2[newX][newY]) {
+                    if (grid.hasXY(newX, newY) && buffer2._data[newX][newY]) {
                         nbCount++;
                     }
                 }
                 if (
-                    !buffer2[i][j] &&
+                    !buffer2._data[i][j] &&
                     this.options.birthParameters[nbCount] == 't'
                 ) {
-                    grid[i][j] = 1; // birth
+                    grid._data[i][j] = 1; // birth
                     didSomething = true;
                 } else if (
-                    buffer2[i][j] &&
+                    buffer2._data[i][j] &&
                     this.options.survivalParameters[nbCount] == 't'
                 ) {
                     // survival
                 } else {
-                    grid[i][j] = 0; // death
+                    grid._data[i][j] = 0; // death
                     didSomething = true;
                 }
             }
@@ -176,7 +178,11 @@ export function fillBlob(
     opts: Partial<BlobConfig> = {}
 ): XY.Bounds {
     const blob = new Blob(opts);
-    return blob.carve(grid.width, grid.height, (x, y) => (grid[x][y] = 1));
+    return blob.carve(
+        grid.width,
+        grid.height,
+        (x, y) => (grid._data[x][y] = 1)
+    );
 }
 
 export function make(opts: Partial<BlobConfig> = {}) {

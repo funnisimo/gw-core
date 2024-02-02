@@ -19,7 +19,7 @@ describe('GW.grid', () => {
         a = GW.grid.alloc(10, 10, 0);
         expect(a.width).toEqual(10);
         expect(a.height).toEqual(10);
-        expect(a[9][9]).toEqual(0);
+        expect(a._data[9][9]).toEqual(0);
         expect(a.hasXY(0, 0)).toBeTruthy();
 
         GW.grid.free(a);
@@ -59,14 +59,14 @@ describe('GW.grid', () => {
     test('realloc', () => {
         a = GW.grid.alloc(10, 10);
         a.fill(1);
-        expect(a[0][0]).toEqual(1);
+        expect(a._data[0][0]).toEqual(1);
         a.x = 4;
         a.y = 3;
         GW.grid.free(a);
 
         const b = GW.grid.alloc(10, 10);
         expect(b).toBe(a);
-        expect(b[0][0]).toEqual(0);
+        expect(b._data[0][0]).toEqual(0);
         expect(b.x).toBeUndefined();
         expect(b.y).toBeUndefined();
         GW.grid.free(b);
@@ -75,7 +75,7 @@ describe('GW.grid', () => {
     test('alloc a clone', () => {
         a = GW.grid.alloc(10, 10);
         a.update(() => GW.rng.random.number(100) + 1);
-        expect(a[0][0]).toBeGreaterThan(0);
+        expect(a._data[0][0]).toBeGreaterThan(0);
 
         const b = GW.grid.alloc(a);
         b.forEach((v, x, y) => expect(a.get(x, y)).toEqual(v));
@@ -124,10 +124,10 @@ describe('GW.grid', () => {
             bottom: 0,
         });
 
-        a[3][3] = 1;
-        a[4][4] = 1;
-        a[5][3] = 1;
-        a[5][5] = 1;
+        a._data[3][3] = 1;
+        a._data[4][4] = 1;
+        a._data[5][3] = 1;
+        a._data[5][5] = 1;
         expect(a.calcBounds()).toEqual({
             left: 3,
             top: 3,
@@ -222,7 +222,7 @@ describe('GW.grid', () => {
 
     test('some', () => {
         a = GW.grid.alloc(10, 10);
-        a[3][7] = 1;
+        a._data[3][7] = 1;
 
         const fn = jest.fn().mockImplementation((v) => v === 1);
         expect(a.some(fn)).toBeTruthy();
@@ -236,14 +236,14 @@ describe('GW.grid', () => {
         a.fill(4);
         const fn = jest
             .fn()
-            .mockImplementation((v, x, y, g) => (g[x][y] = v / 2));
+            .mockImplementation((v, x, y, g) => (g._data[x][y] = v / 2));
         a.forCircle(4, 4, 3, fn);
         expect(fn).toHaveBeenCalledTimes(37);
         expect(a.count(2)).toEqual(37);
-        expect(a[0][4]).toEqual(4);
-        expect(a[4][0]).toEqual(4);
-        expect(a[8][4]).toEqual(4);
-        expect(a[4][8]).toEqual(4);
+        expect(a._data[0][4]).toEqual(4);
+        expect(a._data[4][0]).toEqual(4);
+        expect(a._data[8][4]).toEqual(4);
+        expect(a._data[4][8]).toEqual(4);
 
         fn.mockClear();
         a.forCircle(-1, -1, 3, fn);
@@ -254,7 +254,7 @@ describe('GW.grid', () => {
         a = GW.grid.alloc(10, 10);
 
         a.update(() => 2);
-        expect(a[2][2]).toEqual(2);
+        expect(a._data[2][2]).toEqual(2);
     });
 
     test('updateRect', () => {
@@ -311,15 +311,15 @@ describe('GW.grid', () => {
 
     test('replace', () => {
         a = GW.grid.alloc(10, 10);
-        a[3][3] = 4;
-        expect(a[3][3]).toEqual(4);
+        a._data[3][3] = 4;
+        expect(a._data[3][3]).toEqual(4);
         a.replace(4, 5);
-        expect(a[3][3]).toEqual(5);
+        expect(a._data[3][3]).toEqual(5);
     });
 
     test('count', () => {
         a = GW.grid.alloc(10, 10);
-        a[2][5] = 1;
+        a._data[2][5] = 1;
 
         expect(a.count(1)).toEqual(1);
         expect(a.count((v) => !!v)).toEqual(1);
@@ -327,7 +327,7 @@ describe('GW.grid', () => {
 
     test('find', () => {
         a = GW.grid.alloc(10, 10);
-        a[3][7] = 1;
+        a._data[3][7] = 1;
         expect(a.find(1)).toEqual([3, 7]);
         expect(a.find(2)).toBeNull();
         const fn = jest.fn().mockImplementation((v) => v === 1);
@@ -338,17 +338,17 @@ describe('GW.grid', () => {
 
     test('dump', () => {
         a = GW.grid.alloc(10, 10, 10);
-        a[1][1] = 1;
+        a._data[1][1] = 1;
         // @ts-ignore
-        a[2][2] = false;
+        a._data[2][2] = false;
         // @ts-ignore
-        a[3][3] = true;
-        a[4][4] = 14;
-        a[5][5] = 56;
+        a._data[3][3] = true;
+        a._data[4][4] = 14;
+        a._data[5][5] = 56;
         // @ts-ignore
-        a[6][6] = 'Fred';
+        a._data[6][6] = 'Fred';
         // @ts-ignore
-        a[7][7] = [4, 5, 6];
+        a._data[7][7] = [4, 5, 6];
 
         jest.spyOn(console, 'log').mockReturnValue(undefined);
         a.dump();
@@ -368,17 +368,17 @@ describe('GW.grid', () => {
 
     test('dumpAround', () => {
         a = GW.grid.alloc(10, 10, 10);
-        a[1][1] = 1;
+        a._data[1][1] = 1;
         // @ts-ignore
-        a[2][2] = false;
+        a._data[2][2] = false;
         // @ts-ignore
-        a[3][3] = true;
-        a[4][4] = 14;
-        a[5][5] = 56;
+        a._data[3][3] = true;
+        a._data[4][4] = 14;
+        a._data[5][5] = 56;
         // @ts-ignore
-        a[6][6] = 'Fred';
+        a._data[6][6] = 'Fred';
         // @ts-ignore
-        a[7][7] = [4, 5, 6];
+        a._data[7][7] = [4, 5, 6];
 
         jest.spyOn(console, 'log').mockReturnValue(undefined);
         a.dumpAround(4, 4, 3);
@@ -419,8 +419,8 @@ describe('GW.grid', () => {
         random.seed(5);
 
         a = GW.grid.alloc(10, 10, 0);
-        a[4][1] = 1;
-        a[2][3] = 1;
+        a._data[4][1] = 1;
+        a._data[2][3] = 1;
 
         function one(v: number) {
             return v == 1;
@@ -438,8 +438,8 @@ describe('GW.grid', () => {
 
     test('firstMatchingLoc', () => {
         a = GW.grid.alloc(10, 10, 0);
-        a[4][1] = 1;
-        a[2][3] = 1;
+        a._data[4][1] = 1;
+        a._data[2][3] = 1;
 
         function one(v: number) {
             return v == 1;
@@ -459,8 +459,8 @@ describe('GW.grid', () => {
         random.seed(5);
 
         a = GW.grid.alloc(10, 10, 0);
-        a[4][1] = 1;
-        a[2][3] = 1;
+        a._data[4][1] = 1;
+        a._data[2][3] = 1;
 
         function one(v: number) {
             return v == 1;
@@ -496,8 +496,8 @@ describe('GW.grid', () => {
         random.seed(12345);
 
         a = GW.grid.alloc(10, 10, 0);
-        a[4][1] = 1;
-        a[2][3] = 1;
+        a._data[4][1] = 1;
+        a._data[2][3] = 1;
 
         expect(a.matchingLocNear(3, 0, 1)).toEqual([4, 1]);
         expect(a.matchingLocNear(2, 3, 1)).toEqual([2, 3]);
@@ -508,7 +508,7 @@ describe('GW.grid', () => {
         }
         expect(a.matchingLocNear(3, 0, one)).toEqual([4, 1]);
 
-        a[4][3] = 1;
+        a._data[4][3] = 1;
         expect(a.matchingLocNear(4, 2, 1)).toEqual([4, 1]);
         // expect(a.matchingLocNear(4, 2, 1, true)).toEqual([4, 3]);
 
@@ -532,27 +532,27 @@ describe('GW.grid', () => {
         expect(a.arcCount(4, 3, GW.IS_ZERO)).toEqual(1);
 
         // one blocked
-        a[3][3] = 1;
+        a._data[3][3] = 1;
         expect(a.arcCount(4, 3, GW.IS_ZERO)).toEqual(1);
-        a[3][2] = 1;
+        a._data[3][2] = 1;
         expect(a.arcCount(4, 3, GW.IS_ZERO)).toEqual(1);
-        a[3][4] = 1;
+        a._data[3][4] = 1;
         expect(a.arcCount(4, 3, GW.IS_ZERO)).toEqual(1);
 
         // two blocked
-        a[5][3] = 1;
+        a._data[5][3] = 1;
         expect(a.arcCount(4, 3, GW.IS_ZERO)).toEqual(2);
-        a[5][2] = 1;
+        a._data[5][2] = 1;
         expect(a.arcCount(4, 3, GW.IS_ZERO)).toEqual(2);
-        a[5][4] = 1;
+        a._data[5][4] = 1;
         expect(a.arcCount(4, 3, GW.IS_ZERO)).toEqual(2);
 
         // T intersection
-        a[5][3] = 0;
+        a._data[5][3] = 0;
         expect(a.arcCount(4, 3, GW.IS_ZERO)).toEqual(3);
 
         // + intersection
-        a[3][3] = 0;
+        a._data[3][3] = 0;
         expect(a.arcCount(4, 3, GW.IS_ZERO)).toEqual(4);
 
         // all filled around
@@ -563,10 +563,10 @@ describe('GW.grid', () => {
     test('findReplaceRange', () => {
         a = GW.grid.alloc(10, 10);
 
-        a[5][4] = 5;
-        a[3][2] = 4;
-        a[1][2] = 3;
-        a[7][6] = 2;
+        a._data[5][4] = 5;
+        a._data[3][2] = 4;
+        a._data[1][2] = 3;
+        a._data[7][6] = 2;
 
         expect(a.count(6)).toEqual(0);
         expect(a.count(3)).toEqual(1);
@@ -587,12 +587,12 @@ describe('GW.grid', () => {
         a.fillRect(6, 2, 4, 4, 4);
         a.fillRect(4, 5, 3, 3, 6);
 
-        expect(a[2][7]).toEqual(3);
-        expect(a[9][2]).toEqual(4);
+        expect(a._data[2][7]).toEqual(3);
+        expect(a._data[9][2]).toEqual(4);
 
         expect(a.floodFillRange(4, 4, 2, 5, 9)).toEqual(25);
-        expect(a[2][7]).toEqual(9);
-        expect(a[9][2]).toEqual(9);
+        expect(a._data[2][7]).toEqual(9);
+        expect(a._data[9][2]).toEqual(9);
 
         expect(a.count(2)).toEqual(9);
         expect(a.count(1)).toEqual(16);
@@ -671,13 +671,13 @@ describe('GW.grid', () => {
         const g = GW.grid.make(5, 6, () => 'taco');
         expect(g.width).toEqual(5);
         expect(g.height).toEqual(6);
-        expect(g[0][0]).toEqual('taco');
+        expect(g._data[0][0]).toEqual('taco');
 
         const v = GW.grid.make(3, 4, 6);
-        expect(v[0][0]).toEqual(6);
+        expect(v._data[0][0]).toEqual(6);
 
         const u = GW.grid.make(10, 10);
-        expect(u[0][0]).toEqual(0);
+        expect(u._data[0][0]).toEqual(0);
     });
 
     test('offsetZip', () => {
@@ -687,8 +687,8 @@ describe('GW.grid', () => {
         const dest = Grid.make(10, 10, 0);
 
         Grid.offsetZip(dest, a, 3, 2, 6);
-        expect(dest[5][4]).toEqual(6);
-        expect(dest[2][2]).toEqual(0);
+        expect(dest._data[5][4]).toEqual(6);
+        expect(dest._data[2][2]).toEqual(0);
     });
 
     test('intersection', () => {
@@ -699,9 +699,9 @@ describe('GW.grid', () => {
         b.fillRect(4, 4, 3, 3, 2);
 
         Grid.intersection(b, a);
-        expect(b[4][4]).toEqual(2);
-        expect(b[2][2]).toEqual(0);
-        expect(b[5][5]).toEqual(0);
+        expect(b._data[4][4]).toEqual(2);
+        expect(b._data[2][2]).toEqual(0);
+        expect(b._data[5][5]).toEqual(0);
     });
 
     test('unite', () => {
@@ -712,9 +712,9 @@ describe('GW.grid', () => {
         b.fillRect(4, 4, 3, 3, 2);
 
         Grid.unite(b, a);
-        expect(b[4][4]).toEqual(2);
-        expect(b[2][2]).toEqual(1);
-        expect(b[5][5]).toEqual(2);
+        expect(b._data[4][4]).toEqual(2);
+        expect(b._data[2][2]).toEqual(1);
+        expect(b._data[5][5]).toEqual(2);
     });
 });
 

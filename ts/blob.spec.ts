@@ -73,7 +73,7 @@ describe('Blob', () => {
             percentSeeded: 55,
         });
 
-        let results = blob.carve(a.width, a.height, (x, y) => (a[x][y] = 1));
+        let results = blob.carve(a.width, a.height, (x, y) => a.set(x, y, 1));
         expect(results).toEqual({
             x: 16,
             y: 23,
@@ -87,7 +87,7 @@ describe('Blob', () => {
         jest.spyOn(blob, '_cellularAutomataRound').mockReturnValueOnce(false);
 
         a.fill(0);
-        results = blob.carve(a.width, a.height, (x, y) => (a[x][y] = 1));
+        results = blob.carve(a.width, a.height, (x, y) => a.set(x, y, 1));
 
         expect(results).toEqual({
             x: 23,
