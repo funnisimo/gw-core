@@ -92,12 +92,13 @@ export class Scenes {
 
     start(id: string, opts?: SceneStartOpts): Scene {
         let scene: Scene = this.get(id) || this.create(id, {});
-        scene.start(opts);
+        this._start(scene, opts);
         return scene;
     }
 
     _start(scene: Scene, opts: SceneStartOpts = {}) {
         this._app.io.clear();
+        this.stop(); // stop all running scenes
         if (this.isBusy) {
             this._pending.push({ action: '_start', scene, data: opts });
         } else {

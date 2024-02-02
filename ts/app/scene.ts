@@ -167,7 +167,6 @@ export class Scene {
     }
 
     start(opts: SceneStartOpts = {}): this {
-        this.app.scenes.stop(); // stop all running scenes
         this.app.scenes._start(this, opts); // start me
         return this;
     }
@@ -236,6 +235,7 @@ export class Scene {
         if (e.defaultPrevented || e.propagationStopped) return;
 
         if (e.type === IO.KEYPRESS) {
+            // TODO - check a flag that enables auto tabs
             let w = this.focused;
             if (w && (w.hidden || w.disabled)) {
                 this.nextTabStop();
@@ -243,11 +243,15 @@ export class Scene {
             }
             w && w.keypress(e);
 
-            if (!e.defaultPrevented) {
+            if (w && !e.defaultPrevented) {
                 if (e.key === 'Tab') {
-                    this.nextTabStop();
+                    if (this.nextTabStop()) {
+                        e.stopPropagation(); // should we do this?
+                    }
                 } else if (e.key === 'TAB') {
-                    this.prevTabStop();
+                    if (this.prevTabStop()) {
+                        e.stopPropagation(); // should we do this?
+                    }
                 }
             }
         } else if (e.type === IO.MOUSEMOVE) {
@@ -523,6 +527,7 @@ export class Scene {
         }
     }
 
+    /** Returns true if the focus changed */
     nextTabStop(): boolean {
         if (!this.focused) {
             this.setFocusWidget(
@@ -546,6 +551,7 @@ export class Scene {
         return false;
     }
 
+    /** Returns true if the focus changed */
     prevTabStop(): boolean {
         if (!this.focused) {
             this.setFocusWidget(

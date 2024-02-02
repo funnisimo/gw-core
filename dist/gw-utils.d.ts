@@ -2147,7 +2147,9 @@ declare class Scene {
     childAt(xy: XY | number, y?: number): Widget | null;
     widgetAt(xy: XY | number, y?: number): Widget | null;
     setFocusWidget(w: Widget | null, reverse?: boolean): void;
+    /** Returns true if the focus changed */
     nextTabStop(): boolean;
+    /** Returns true if the focus changed */
     prevTabStop(): boolean;
     on(cfg: CallbackObj): CancelFn;
     on(ev: string | string[], cb: CallbackFn): CancelFn;
