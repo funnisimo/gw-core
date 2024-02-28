@@ -12,6 +12,7 @@ describe('CALC', () => {
         expect(fn(random)).toEqual(6);
         expect(fn.min).toEqual(6);
         expect(fn.max).toEqual(6);
+        expect(fn.toString()).toEqual('6');
 
         expect(CALC.make(-6)(random)).toEqual(-6);
     });
@@ -21,6 +22,7 @@ describe('CALC', () => {
         expect(fn(random)).toEqual(6);
         expect(fn.min).toEqual(6);
         expect(fn.max).toEqual(6);
+        expect(fn.toString()).toEqual('6');
 
         expect(CALC.make('-6')(random)).toEqual(-6);
     });
@@ -30,6 +32,7 @@ describe('CALC', () => {
         expect(fn(random)).toEqual(2);
         expect(fn.min).toEqual(2);
         expect(fn.max).toEqual(2);
+        expect(fn.toString()).toEqual('2');
     });
 
     test('can do simple dice', () => {
@@ -37,6 +40,7 @@ describe('CALC', () => {
         expect(fn(random)).toBeWithin(1, 7);
         expect(fn.min).toEqual(1);
         expect(fn.max).toEqual(6);
+        expect(fn.toString()).toEqual('1-6');
     });
 
     test('can combine dice', () => {
@@ -44,6 +48,7 @@ describe('CALC', () => {
         expect(fn(random)).toBeWithin(3, 15);
         expect(fn.min).toEqual(3);
         expect(fn.max).toEqual(14);
+        expect(fn.toString()).toEqual('3-14');
     });
 
     test('can do multipliers', () => {
@@ -51,6 +56,7 @@ describe('CALC', () => {
         expect(fn(random)).toEqual(12);
         expect(fn.min).toEqual(12);
         expect(fn.max).toEqual(12);
+        expect(fn.toString()).toEqual('12');
 
         expect(CALC.make('1d6*2')(random)).toBeEven();
     });
@@ -60,6 +66,7 @@ describe('CALC', () => {
         expect(fn(random)).toEqual(3);
         expect(fn.min).toEqual(3);
         expect(fn.max).toEqual(3);
+        expect(fn.toString()).toEqual('3');
 
         expect(CALC.make('2d6/2')(random)).toBeWithin(1, 7);
     });
@@ -69,6 +76,7 @@ describe('CALC', () => {
         let fn = CALC.make('3:6');
         expect(fn.min).toEqual(3);
         expect(fn.max).toEqual(6);
+        expect(fn.toString()).toEqual('3-6');
     });
 
     test('can handle a min/max range as an array', () => {
@@ -76,6 +84,7 @@ describe('CALC', () => {
         const fn = CALC.make([2, 6]);
         expect(fn.min).toEqual(2);
         expect(fn.max).toEqual(6);
+        expect(fn.toString()).toEqual('2-6');
     });
 
     test.todo('normal distributions?');

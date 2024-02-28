@@ -15252,6 +15252,8 @@ function makeCalc(fn, min = 0, max = 0) {
     const out = fn;
     out.min = min;
     out.max = max;
+    const text = `${min}-${max}`;
+    out.toString = () => text;
     return out;
 }
 function make(config) {

@@ -15258,6 +15258,8 @@ void main() {
 	    const out = fn;
 	    out.min = min;
 	    out.max = max;
+	    const text = `${min}-${max}`;
+	    out.toString = () => text;
 	    return out;
 	}
 	function make(config) {

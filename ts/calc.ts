@@ -17,6 +17,9 @@ function makeCalc(fn: CalcFn, min: number = 0, max: number = 0): Calc {
     const out = fn as Calc;
     out.min = min;
     out.max = max;
+
+    const text = min != max ? `${min}-${max}` : `${min}`;
+    out.toString = () => text;
     return out;
 }
 
