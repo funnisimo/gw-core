@@ -7,24 +7,56 @@ const RE = /(?:([+-]?\d*)[Dd](\d+)|(\d+):(\d+)|([+-]?\d+))([*/]\d+)?/g;
 export type CalcFn = (rng: Random) => number;
 export type CalcConfig = string | number | boolean | CalcFn | [number, number];
 
-export function make(config: CalcConfig): CalcFn {
-    if (typeof config == 'function') return config;
-    if (config === undefined || config === null) return () => 0;
-    if (typeof config == 'number') return () => config;
-    if (config === true) return ONE;
-    if (config === false) return ZERO;
+export interface Calc {
+    (rng: Random): number;
+    min: number;
+    max: number;
+}
+
+function makeCalc(fn: CalcFn, min: number = 0, max: number = 0): Calc {
+    const out = fn as Calc;
+    out.min = min;
+    out.max = max;
+    return out;
+}
+
+export function make(config: CalcConfig): Calc {
+    if (typeof config == 'function') {
+        let out = config as Calc;
+        if (!('min' in out)) {
+            // @ts-ignore
+            out.min = 0;
+        }
+        if (!('max' in out)) {
+            // @ts-ignore
+            out.max = 0;
+        }
+        return out;
+    }
+    if (config === undefined || config === null) return makeCalc(ZERO, 0, 0);
+    if (typeof config == 'number')
+        return makeCalc(() => config, config, config);
+    if (config === true) return makeCalc(ONE, 1, 1);
+    if (config === false) return makeCalc(ZERO, 0, 0);
 
     if (Array.isArray(config) && config.length == 2) {
-        return (rng) => {
-            rng = rng || random;
-            return rng.range(config[0], config[1]);
-        };
+        return makeCalc(
+            (rng) => {
+                rng = rng || random;
+                return rng.range(config[0], config[1]);
+            },
+            config[0],
+            config[1]
+        );
     }
     if (typeof config !== 'string')
         throw new Error('Calculations must be strings.');
-    if (config.length == 0) return ZERO;
+    if (config.length == 0) return makeCalc(ZERO, 0, 0);
 
     const calcParts: CalcFn[] = [];
+    let min = 0;
+    let max = 0;
+
     let results;
     while ((results = RE.exec(config)) !== null) {
         // console.log(results);
@@ -46,26 +78,36 @@ export function make(config: CalcConfig): CalcFn {
                 rng = rng || random;
                 return rng.dice(count, sides) * mult;
             });
+            min += count * mult;
+            max += count * sides * mult;
         } else if (results[3] && results[4]) {
-            const min = Number.parseInt(results[3]);
-            const max = Number.parseInt(results[4]);
+            const lo = Number.parseInt(results[3]);
+            const hi = Number.parseInt(results[4]);
             calcParts.push((rng) => {
                 rng = rng || random;
-                return rng.range(min, max) * mult;
+                return rng.range(lo, hi) * mult;
             });
+            min += lo * mult;
+            max += hi * mult;
         } else if (results[5]) {
             const v = Number.parseInt(results[5]);
             calcParts.push(() => v * mult);
+            min += v * mult;
+            max += v * mult;
         }
     }
 
     if (calcParts.length == 0) {
-        return ZERO;
+        return makeCalc(ZERO, 0, 0);
     }
     if (calcParts.length == 1) {
-        return calcParts[0];
+        return makeCalc(calcParts[0], min, max);
     }
-    return (rng) => calcParts.reduce((out, calc) => out + calc(rng), 0);
+    return makeCalc(
+        (rng) => calcParts.reduce((out, calc) => out + calc(rng), 0),
+        min,
+        max
+    );
 }
 
 export function calc(config: CalcConfig, rng?: Random): number {

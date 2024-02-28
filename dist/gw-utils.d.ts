@@ -3388,15 +3388,21 @@ declare namespace index {
 
 type CalcFn = (rng: Random) => number;
 type CalcConfig = string | number | boolean | CalcFn | [number, number];
-declare function make(config: CalcConfig): CalcFn;
+interface Calc {
+    (rng: Random): number;
+    min: number;
+    max: number;
+}
+declare function make(config: CalcConfig): Calc;
 declare function calc(config: CalcConfig, rng?: Random): number;
 
+type calc$1_Calc = Calc;
 type calc$1_CalcConfig = CalcConfig;
 type calc$1_CalcFn = CalcFn;
 declare const calc$1_calc: typeof calc;
 declare const calc$1_make: typeof make;
 declare namespace calc$1 {
-  export { type calc$1_CalcConfig as CalcConfig, type calc$1_CalcFn as CalcFn, calc$1_calc as calc, calc$1_make as make };
+  export { type calc$1_Calc as Calc, type calc$1_CalcConfig as CalcConfig, type calc$1_CalcFn as CalcFn, calc$1_calc as calc, calc$1_make as make };
 }
 
 export { DIRS, ERROR, FALSE, IDENTITY, IS_NONZERO, IS_ZERO, type Loc$1 as Loc, NOOP, ONE, TRUE, WARN, type XY, ZERO, index$5 as app, blob, buffer, calc$1 as calc, index$4 as canvas, index$9 as color, colors, cosmetic, flag, index$7 as fov, frequency, grid, index$2 as light, list, message, object, index$6 as path, queue, random, range, rng, schedule, index$3 as sprite, tags, index$8 as text, tween, types, index$1 as ui, utils, index as widget, xy };

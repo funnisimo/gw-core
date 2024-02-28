@@ -15248,28 +15248,46 @@ var index = /*#__PURE__*/Object.freeze({
 
 // const RE = /(?:([+-]?\d*)[Dd](\d*)|([+-]?\d+))([*/]\d+)?/g;
 const RE = /(?:([+-]?\d*)[Dd](\d+)|(\d+):(\d+)|([+-]?\d+))([*/]\d+)?/g;
+function makeCalc(fn, min = 0, max = 0) {
+    const out = fn;
+    out.min = min;
+    out.max = max;
+    return out;
+}
 function make(config) {
-    if (typeof config == 'function')
-        return config;
+    if (typeof config == 'function') {
+        let out = config;
+        if (!('min' in out)) {
+            // @ts-ignore
+            out.min = 0;
+        }
+        if (!('max' in out)) {
+            // @ts-ignore
+            out.max = 0;
+        }
+        return out;
+    }
     if (config === undefined || config === null)
-        return () => 0;
+        return makeCalc(ZERO, 0, 0);
     if (typeof config == 'number')
-        return () => config;
+        return makeCalc(() => config, config, config);
     if (config === true)
-        return ONE;
+        return makeCalc(ONE, 1, 1);
     if (config === false)
-        return ZERO;
+        return makeCalc(ZERO, 0, 0);
     if (Array.isArray(config) && config.length == 2) {
-        return (rng) => {
+        return makeCalc((rng) => {
             rng = rng || random;
             return rng.range(config[0], config[1]);
-        };
+        }, config[0], config[1]);
     }
     if (typeof config !== 'string')
         throw new Error('Calculations must be strings.');
     if (config.length == 0)
-        return ZERO;
+        return makeCalc(ZERO, 0, 0);
     const calcParts = [];
+    let min = 0;
+    let max = 0;
     let results;
     while ((results = RE.exec(config)) !== null) {
         // console.log(results);
@@ -15291,27 +15309,33 @@ function make(config) {
                 rng = rng || random;
                 return rng.dice(count, sides) * mult;
             });
+            min += count * mult;
+            max += count * sides * mult;
         }
         else if (results[3] && results[4]) {
-            const min = Number.parseInt(results[3]);
-            const max = Number.parseInt(results[4]);
+            const lo = Number.parseInt(results[3]);
+            const hi = Number.parseInt(results[4]);
             calcParts.push((rng) => {
                 rng = rng || random;
-                return rng.range(min, max) * mult;
+                return rng.range(lo, hi) * mult;
             });
+            min += lo * mult;
+            max += hi * mult;
         }
         else if (results[5]) {
             const v = Number.parseInt(results[5]);
             calcParts.push(() => v * mult);
+            min += v * mult;
+            max += v * mult;
         }
     }
     if (calcParts.length == 0) {
-        return ZERO;
+        return makeCalc(ZERO, 0, 0);
     }
     if (calcParts.length == 1) {
-        return calcParts[0];
+        return makeCalc(calcParts[0], min, max);
     }
-    return (rng) => calcParts.reduce((out, calc) => out + calc(rng), 0);
+    return makeCalc((rng) => calcParts.reduce((out, calc) => out + calc(rng), 0), min, max);
 }
 function calc(config, rng) {
     const fn = make(config);
