@@ -1909,6 +1909,7 @@
 		xave: xave
 	});
 
+	// TODO - Is this the right way to do this?  Should it be DIRS4 and DIRS8 (both clockwise)?
 	// DIRS are organized clockwise
 	// - first 4 are arrow directions
 	//   >> rotate 90 degrees clockwise ==>> newIndex = (oldIndex + 1) % 4
@@ -1926,6 +1927,27 @@
 	    [-1, 1],
 	    [-1, -1],
 	];
+	const NAMED_DIRS = {
+	    up: [0, -1],
+	    right: [1, 0],
+	    down: [0, 1],
+	    left: [-1, 0],
+	    right_up: [1, -1],
+	    right_down: [1, 1],
+	    left_down: [-1, 1],
+	    left_up: [-1, -1],
+	};
+	// DIRS4 are organized clockwise
+	// - first 4 are arrow directions
+	//   >> rotate 90 degrees clockwise ==>> newIndex = (oldIndex + 1) % 4
+	//   >> opposite direction ==>> oppIndex = (index + 2) % 4
+	const DIRS4 = [
+	    [0, -1],
+	    [1, 0],
+	    [0, 1],
+	    [-1, 0],
+	];
+	const NO_DIR = [0, 0];
 	const NO_DIRECTION = -1;
 	const UP = 0;
 	const RIGHT = 1;
@@ -2438,10 +2460,13 @@
 		Bounds: Bounds,
 		CLOCK_DIRS: CLOCK_DIRS,
 		DIRS: DIRS$2,
+		DIRS4: DIRS4,
 		DOWN: DOWN,
 		LEFT: LEFT,
 		LEFT_DOWN: LEFT_DOWN,
 		LEFT_UP: LEFT_UP,
+		NAMED_DIRS: NAMED_DIRS,
+		NO_DIR: NO_DIR,
 		NO_DIRECTION: NO_DIRECTION,
 		RIGHT: RIGHT,
 		RIGHT_DOWN: RIGHT_DOWN,
@@ -2817,6 +2842,78 @@
 	    }
 	    return undefined;
 	}
+	function defaultMergeFn(current, updated, _key, _target, _source) {
+	    if (Array.isArray(updated)) {
+	        if (Array.isArray(current)) {
+	            return current.concat(updated);
+	        }
+	        return updated.slice();
+	    }
+	    if (updated === null) {
+	        return updated;
+	    }
+	    if (typeof updated === 'object') {
+	        if (typeof current !== 'object' || !current) {
+	            return Object.assign({}, updated);
+	        }
+	        current = Object.assign({}, current);
+	        for (let key in updated) {
+	            const value = updated[key];
+	            if (value !== undefined) {
+	                current[key] = value;
+	            }
+	        }
+	        return current;
+	    }
+	    return updated;
+	}
+	function makeMergeFn(fieldMap, defaultFn) {
+	    if (!fieldMap)
+	        return defaultMergeFn;
+	    if (typeof fieldMap === 'function')
+	        return fieldMap;
+	    defaultFn = defaultFn || fieldMap._default || defaultMergeFn;
+	    return function (current, updated, key, target, source) {
+	        // console.log('custom: ' + key);
+	        if (fieldMap[key]) {
+	            const result = fieldMap[key](current, updated, key, target, source);
+	            return result;
+	        }
+	        return defaultFn(current, updated, key, target, source);
+	    };
+	}
+	function mergePropertiesWith(target, source, customizer) {
+	    for (let key of Object.keys(source)) {
+	        // const updated = source[key];
+	        let updated = Object.getOwnPropertyDescriptor(source, key);
+	        if (!updated)
+	            continue;
+	        const current = target[key];
+	        // const value = customizer(current, updated, key, target, source);
+	        const value = customizer(current, updated.value, key, target, source);
+	        if (value === undefined)
+	            continue;
+	        // target[key] = value;
+	        updated.value = value;
+	        Object.defineProperty(target, key, updated);
+	    }
+	}
+	function mergeWith(target, source, customizer) {
+	    customizer = makeMergeFn(customizer || defaultMergeFn);
+	    if (Array.isArray(source)) {
+	        source.forEach((src) => mergeWith(target, src, customizer));
+	        return target;
+	    }
+	    mergePropertiesWith(target, source, customizer);
+	    // for( let k of Reflect.ownKeys(source)) {
+	    // 	const current = target[k];
+	    //   const updated = source[k];
+	    //
+	    //   const value = customizer(current, updated, k, target, source);
+	    //   target[k] = value;
+	    // }
+	    return target;
+	}
 
 	var object = /*#__PURE__*/Object.freeze({
 		__proto__: null,
@@ -2824,10 +2921,14 @@
 		assignOmitting: assignOmitting,
 		clearObject: clearObject,
 		copyObject: copyObject,
+		defaultMergeFn: defaultMergeFn,
 		firstOpt: firstOpt,
 		getOpt: getOpt,
 		getValue: getValue,
 		kindDefaults: kindDefaults,
+		makeMergeFn: makeMergeFn,
+		mergePropertiesWith: mergePropertiesWith,
+		mergeWith: mergeWith,
 		pick: pick,
 		setDefault: setDefault,
 		setDefaults: setDefaults,
@@ -3166,6 +3267,39 @@
 	            return this.hasXY(i, j) && testFn(this._data[i][j], i, j, this);
 	        });
 	    }
+	    walkFrom(x, y, withDiagonals, callback) {
+	        if (typeof withDiagonals === 'function') {
+	            callback = withDiagonals;
+	            withDiagonals = true;
+	        }
+	        const seen = alloc$1(this.width, this.height);
+	        seen.set(x, y, 1);
+	        let nextSteps = [{ x, y }];
+	        let distance = 0;
+	        const dirs = withDiagonals ? DIRS$1 : DIRS$1.slice(4);
+	        while (nextSteps.length) {
+	            const current = nextSteps;
+	            nextSteps = [];
+	            for (let step of current) {
+	                seen.set(step.x, step.y, 1);
+	                const data = this.get(step.x, step.y);
+	                if (callback(step.x, step.y, data, distance)) {
+	                    for (let dir of dirs) {
+	                        const x2 = step.x + dir[0];
+	                        const y2 = step.y + dir[1];
+	                        if (!seen.hasXY(x2, y2))
+	                            continue;
+	                        if (!seen.get(x2, y2)) {
+	                            seen.set(x2, y2, 1);
+	                            nextSteps.push({ x: x2, y: y2 });
+	                        }
+	                    }
+	                }
+	            }
+	            ++distance;
+	        }
+	        free$1(seen);
+	    }
 	}
 	const GRID_CACHE = [];
 	const stats = {
@@ -3371,7 +3505,7 @@
 	// Grid.fillBlob = fillBlob;
 	const alloc$1 = NumGrid.alloc.bind(NumGrid);
 	const free$1 = NumGrid.free.bind(NumGrid);
-	function make$e(w, h, v) {
+	function make$f(w, h, v) {
 	    if (v === undefined)
 	        return new NumGrid(w, h, 0);
 	    if (typeof v === 'number')
@@ -3412,7 +3546,7 @@
 		alloc: alloc$1,
 		free: free$1,
 		intersection: intersection,
-		make: make$e,
+		make: make$f,
 		makeArray: makeArray,
 		offsetZip: offsetZip,
 		stats: stats,
@@ -3716,7 +3850,7 @@
 	}
 	const random = new Random();
 	const cosmetic = new Random();
-	function make$d(seed) {
+	function make$e(seed) {
 	    return new Random(seed);
 	}
 
@@ -3726,7 +3860,7 @@
 		Random: Random,
 		configure: configure$1,
 		cosmetic: cosmetic,
-		make: make$d,
+		make: make$e,
 		random: random
 	});
 
@@ -3767,7 +3901,7 @@
 	        return `${this.lo}-${this.hi}`;
 	    }
 	}
-	function make$c(config) {
+	function make$d(config) {
 	    if (!config)
 	        return new Range(0, 0, 0);
 	    if (config instanceof Range)
@@ -3823,13 +3957,13 @@
 	    }
 	    throw new Error('Not a valid range - ' + config);
 	}
-	const from$4 = make$c;
+	const from$4 = make$d;
 	function asFn(config) {
-	    const range = make$c(config);
+	    const range = make$d(config);
 	    return () => range.value();
 	}
 	function value(base) {
-	    const r = make$c(base);
+	    const r = make$d(base);
 	    return r.value();
 	}
 
@@ -3838,11 +3972,11 @@
 		Range: Range,
 		asFn: asFn,
 		from: from$4,
-		make: make$c,
+		make: make$d,
 		value: value
 	});
 
-	function make$b(base) {
+	function make$c(base) {
 	    if (!base)
 	        return [];
 	    if (typeof base === 'string') {
@@ -3898,12 +4032,29 @@
 	    const matchFn = makeMatch(matchRules);
 	    return matchFn(tags);
 	}
+	function merge(current, updated) {
+	    const updatedTags = make$c(updated);
+	    const out = current.slice();
+	    updatedTags.forEach((t) => {
+	        if (t.startsWith('!')) {
+	            const index = out.indexOf(t.slice(1));
+	            if (index >= 0) {
+	                out.splice(index, 1);
+	            }
+	        }
+	        else {
+	            out.push(t);
+	        }
+	    });
+	    return out;
+	}
 
 	var tags = /*#__PURE__*/Object.freeze({
 		__proto__: null,
-		make: make$b,
+		make: make$c,
 		makeMatch: makeMatch,
-		match: match$1
+		match: match$1,
+		merge: merge
 	});
 
 	///////////////////////////////////
@@ -4018,7 +4169,7 @@
 	function from_safe(flagObj, ...args) {
 	    return from_base(flagObj, false, ...args);
 	}
-	function make$a(obj) {
+	function make$b(obj) {
 	    const out = {};
 	    if (typeof obj === 'string') {
 	        obj = obj.split(/[|,]/).map((v) => v.trim());
@@ -4080,7 +4231,7 @@
 		fl: fl,
 		from: from$3,
 		from_safe: from_safe,
-		make: make$a,
+		make: make$b,
 		toString: toString
 	});
 
@@ -4308,7 +4459,7 @@
 	    clamp() {
 	        if (this.isNull())
 	            return this;
-	        return make$9(this._data.map((v) => clamp(v, 0, 100)));
+	        return make$a(this._data.map((v) => clamp(v, 0, 100)));
 	    }
 	    blend(other) {
 	        const O = from$2(other);
@@ -4318,7 +4469,7 @@
 	            return O;
 	        const pct = O.a / 100;
 	        const keepPct = 1 - pct;
-	        const newColor = make$9(Math.round(this._data[0] * keepPct + O._data[0] * pct), Math.round(this._data[1] * keepPct + O._data[1] * pct), Math.round(this._data[2] * keepPct + O._data[2] * pct), Math.round(O.a + this._data[3] * keepPct));
+	        const newColor = make$a(Math.round(this._data[0] * keepPct + O._data[0] * pct), Math.round(this._data[1] * keepPct + O._data[1] * pct), Math.round(this._data[2] * keepPct + O._data[2] * pct), Math.round(O.a + this._data[3] * keepPct));
 	        if (this._rand) {
 	            newColor._rand = this._rand.map((v) => Math.round(v * keepPct));
 	            newColor.dances = this.dances;
@@ -4342,7 +4493,7 @@
 	            return O;
 	        const pct = clamp(percent, 0, 100) / 100;
 	        const keepPct = 1 - pct;
-	        const newColor = make$9(Math.round(this._data[0] * keepPct + O._data[0] * pct), Math.round(this._data[1] * keepPct + O._data[1] * pct), Math.round(this._data[2] * keepPct + O._data[2] * pct), (this.isNull() ? 100 : this._data[3]) * keepPct + O._data[3] * pct);
+	        const newColor = make$a(Math.round(this._data[0] * keepPct + O._data[0] * pct), Math.round(this._data[1] * keepPct + O._data[1] * pct), Math.round(this._data[2] * keepPct + O._data[2] * pct), (this.isNull() ? 100 : this._data[3]) * keepPct + O._data[3] * pct);
 	        if (this._rand) {
 	            newColor._rand = this._rand.slice();
 	            newColor.dances = this.dances;
@@ -4370,7 +4521,7 @@
 	            return this;
 	        const pct = clamp(O.a, 0, 100) / 100;
 	        const keepPct = ((1 - pct) * this.a) / 100;
-	        const newColor = make$9(Math.round(this._data[0] * keepPct + O._data[0] * pct), Math.round(this._data[1] * keepPct + O._data[1] * pct), Math.round(this._data[2] * keepPct + O._data[2] * pct), Math.round(this._data[3] * keepPct + O._data[3] * pct));
+	        const newColor = make$a(Math.round(this._data[0] * keepPct + O._data[0] * pct), Math.round(this._data[1] * keepPct + O._data[1] * pct), Math.round(this._data[2] * keepPct + O._data[2] * pct), Math.round(this._data[3] * keepPct + O._data[3] * pct));
 	        if (this._rand) {
 	            newColor._rand = this._rand.slice();
 	            newColor.dances = this.dances;
@@ -4396,7 +4547,7 @@
 	            return this;
 	        const pct = clamp(percent, 0, 100) / 100;
 	        const keepPct = 1 - pct;
-	        return make$9(Math.round(this._data[0] * keepPct + 100 * pct), Math.round(this._data[1] * keepPct + 100 * pct), Math.round(this._data[2] * keepPct + 100 * pct), this._a);
+	        return make$a(Math.round(this._data[0] * keepPct + 100 * pct), Math.round(this._data[1] * keepPct + 100 * pct), Math.round(this._data[2] * keepPct + 100 * pct), this._a);
 	    }
 	    // Only adjusts r,g,b
 	    darken(percent) {
@@ -4404,7 +4555,7 @@
 	            return this;
 	        const pct = clamp(percent, 0, 100) / 100;
 	        const keepPct = 1 - pct;
-	        return make$9(Math.round(this._data[0] * keepPct + 0 * pct), Math.round(this._data[1] * keepPct + 0 * pct), Math.round(this._data[2] * keepPct + 0 * pct), this._a);
+	        return make$a(Math.round(this._data[0] * keepPct + 0 * pct), Math.round(this._data[1] * keepPct + 0 * pct), Math.round(this._data[2] * keepPct + 0 * pct), this._a);
 	    }
 	    bake(clearDancing = false) {
 	        if (this.isNull())
@@ -4418,7 +4569,7 @@
 	        const redRand = cosmetic.number(d[1]);
 	        const greenRand = cosmetic.number(d[2]);
 	        const blueRand = cosmetic.number(d[3]);
-	        return make$9(this._r + rand + redRand, this._g + rand + greenRand, this._b + rand + blueRand, this._a);
+	        return make$a(this._r + rand + redRand, this._g + rand + greenRand, this._b + rand + blueRand, this._a);
 	    }
 	    // Adds a color to this one
 	    add(other, percent = 100) {
@@ -4426,13 +4577,13 @@
 	        if (O.isNull())
 	            return this;
 	        const alpha = (O.a / 100) * (percent / 100);
-	        return make$9(Math.round(this._data[0] + O._data[0] * alpha), Math.round(this._data[1] + O._data[1] * alpha), Math.round(this._data[2] + O._data[2] * alpha), clamp(Math.round(this._a + alpha * 100), 0, 100));
+	        return make$a(Math.round(this._data[0] + O._data[0] * alpha), Math.round(this._data[1] + O._data[1] * alpha), Math.round(this._data[2] + O._data[2] * alpha), clamp(Math.round(this._a + alpha * 100), 0, 100));
 	    }
 	    scale(percent) {
 	        if (this.isNull() || percent == 100)
 	            return this;
 	        const pct = Math.max(0, percent) / 100;
-	        return make$9(Math.round(this._data[0] * pct), Math.round(this._data[1] * pct), Math.round(this._data[2] * pct), this._a);
+	        return make$a(Math.round(this._data[0] * pct), Math.round(this._data[1] * pct), Math.round(this._data[2] * pct), this._a);
 	    }
 	    multiply(other) {
 	        if (this.isNull())
@@ -4449,7 +4600,7 @@
 	            data = other._data;
 	        }
 	        const pct = (data[3] || 100) / 100;
-	        return make$9(Math.round(this._ra * (data[0] / 100) * pct), Math.round(this._ga * (data[1] / 100) * pct), Math.round(this._ba * (data[2] / 100) * pct), 100);
+	        return make$a(Math.round(this._ra * (data[0] / 100) * pct), Math.round(this._ga * (data[1] / 100) * pct), Math.round(this._ba * (data[2] / 100) * pct), 100);
 	    }
 	    // scales rgb down to a max of 100
 	    normalize() {
@@ -4458,7 +4609,7 @@
 	        const max = Math.max(this._ra, this._ga, this._ba);
 	        if (max <= 100)
 	            return this;
-	        return make$9(Math.round((100 * this._ra) / max), Math.round((100 * this._ga) / max), Math.round((100 * this._ba) / max), 100);
+	        return make$a(Math.round((100 * this._ra) / max), Math.round((100 * this._ga) / max), Math.round((100 * this._ba) / max), 100);
 	    }
 	    inverse() {
 	        const other = new Color(100 - this.r, 100 - this.g, 100 - this.b, this.a);
@@ -4548,7 +4699,7 @@
 	        return new Color(Math.round((((val & 0xf00) >> 8) * 100) / 15), Math.round((((val & 0xf0) >> 4) * 100) / 15), Math.round(((val & 0xf) * 100) / 15), 100);
 	    }
 	}
-	function make$9(...args) {
+	function make$a(...args) {
 	    let arg = args[0];
 	    let base256 = args[1];
 	    if (args.length == 0)
@@ -4592,7 +4743,7 @@
 	    else if (arg === -1) {
 	        return NONE;
 	    }
-	    return make$9(arg, args[1]);
+	    return make$a(arg, args[1]);
 	}
 	// adjusts the luminosity of 2 colors to ensure there is enough separation between them
 	function separate(a, b) {
@@ -4648,7 +4799,7 @@
 	    if (args.length == 1) {
 	        info = args[0];
 	    }
-	    const c = info instanceof Color ? info : make$9(info);
+	    const c = info instanceof Color ? info : make$a(info);
 	    // @ts-ignore
 	    c._const = true;
 	    colors[name] = c;
@@ -4718,7 +4869,7 @@
 		fromNumber: fromNumber,
 		install: install$2,
 		installSpread: installSpread,
-		make: make$9,
+		make: make$a,
 		relativeLuminance: relativeLuminance,
 		separate: separate,
 		smoothScalar: smoothScalar
@@ -4727,8 +4878,8 @@
 	class Mixer {
 	    constructor(base = {}) {
 	        this.ch = firstDefined(base.ch, null);
-	        this.fg = make$9(base.fg);
-	        this.bg = make$9(base.bg);
+	        this.fg = make$a(base.fg);
+	        this.bg = make$a(base.bg);
 	    }
 	    _changed() {
 	        return this;
@@ -6278,7 +6429,7 @@
 	        console.log(data.join('\n'));
 	    }
 	};
-	function make$8(...args) {
+	function make$9(...args) {
 	    return new Buffer$1(args[0], args[1]);
 	}
 
@@ -6286,10 +6437,10 @@
 		__proto__: null,
 		Buffer: Buffer$1,
 		BufferBase: BufferBase,
-		make: make$8
+		make: make$9
 	});
 
-	const FovFlags = make$a([
+	const FovFlags = make$b([
 	    'VISIBLE', // cell has sufficient light and is in field of view, ready to draw.
 	    'WAS_VISIBLE',
 	    'CLAIRVOYANT_VISIBLE',
@@ -6441,7 +6592,7 @@
 	            flag |= FovFlags.REVEALED;
 	        if (visible)
 	            flag |= FovFlags.VISIBLE;
-	        this.flags = make$e(site.width, site.height, flag);
+	        this.flags = make$f(site.width, site.height, flag);
 	        // this.needsUpdate = true;
 	        if (opts.callback) {
 	            this.callback = opts.callback;
@@ -7292,7 +7443,7 @@
 		fromTo: fromTo
 	});
 
-	function make$7(v) {
+	function make$8(v) {
 	    if (v === undefined)
 	        return () => 100;
 	    if (v === null)
@@ -7349,10 +7500,57 @@
 
 	var frequency = /*#__PURE__*/Object.freeze({
 		__proto__: null,
-		make: make$7
+		make: make$8
 	});
 
-	class Scheduler {
+	var TaskResultType;
+	(function (TaskResultType) {
+	    TaskResultType[TaskResultType["OK"] = 0] = "OK";
+	    TaskResultType[TaskResultType["DONE"] = 1] = "DONE";
+	    TaskResultType[TaskResultType["RETRY"] = 2] = "RETRY";
+	})(TaskResultType || (TaskResultType = {}));
+	class TaskResult {
+	    constructor(result, time = 0) {
+	        this._time = 0;
+	        this._result = TaskResultType.DONE;
+	        this._result = result;
+	        this._time = Math.floor(time);
+	    }
+	    static Ok(time) {
+	        return new TaskResult(TaskResultType.OK, time);
+	    }
+	    static Stop() {
+	        return new TaskResult(TaskResultType.DONE);
+	    }
+	    static Retry() {
+	        return new TaskResult(TaskResultType.RETRY);
+	    }
+	    isOk() {
+	        return this._result == TaskResultType.OK;
+	    }
+	    isStop() {
+	        return this._result == TaskResultType.DONE;
+	    }
+	    isRetry() {
+	        return this._result == TaskResultType.RETRY;
+	    }
+	    time() {
+	        return this._time;
+	    }
+	    toString() {
+	        if (this.isStop())
+	            return 'ActResult.Stop';
+	        if (this.isRetry())
+	            return 'ActResult.Retry';
+	        return `ActResult.Ok(${this._time})`;
+	    }
+	    valueOf() {
+	        if (this.isOk())
+	            return this._time;
+	        return 0;
+	    }
+	}
+	class Schedule {
 	    constructor() {
 	        this.next = null;
 	        this.time = 0;
@@ -7427,10 +7625,132 @@
 	        }
 	    }
 	}
+	class TurnBased {
+	    constructor(interrupt) {
+	        this.schedule = new Schedule();
+	        this.interrupt = interrupt || FALSE;
+	    }
+	    add(task, delay) {
+	        this.schedule.push(task, delay);
+	    }
+	    remove(task) {
+	        this.schedule.remove(task);
+	    }
+	    update(dt) {
+	        let cur = this.schedule.peek();
+	        while (cur) {
+	            let res;
+	            if (typeof cur === 'function') {
+	                res = cur(dt);
+	            }
+	            else {
+	                res = cur.perform();
+	            }
+	            if (!res || res.isStop()) {
+	                this.schedule.pop();
+	            }
+	            else if (res.isOk()) {
+	                this.schedule.pop();
+	                this.schedule.push(cur, res.time());
+	            }
+	            else {
+	                // RETRY
+	                return;
+	            }
+	            if (this.interrupt(cur))
+	                return;
+	            cur = this.schedule.peek();
+	        }
+	    }
+	}
+	class TimeoutTurn {
+	    constructor(ready, interrupt) {
+	        this.schedule = new Schedule();
+	        this.interrupt = interrupt || FALSE;
+	        this.ready = ready;
+	    }
+	    add(task, delay) {
+	        this.schedule.push(task, delay);
+	    }
+	    remove(task) {
+	        this.schedule.remove(task);
+	    }
+	    update(dt) {
+	        if (!this.ready())
+	            return;
+	        let cur = this.schedule.peek();
+	        while (cur) {
+	            let res;
+	            if (typeof cur === 'function') {
+	                res = cur(dt);
+	            }
+	            else {
+	                res = cur.perform();
+	            }
+	            if (res.isOk()) {
+	                this.schedule.pop();
+	                this.schedule.push(cur, res.time());
+	            }
+	            else if (res.isStop()) {
+	                this.schedule.pop();
+	            }
+	            else {
+	                // RETRY
+	                return;
+	            }
+	            if (this.interrupt(cur))
+	                return;
+	            cur = this.schedule.peek();
+	        }
+	    }
+	}
+	class RealTime {
+	    constructor(interrupt) {
+	        this.items = [];
+	        this.interrupt = interrupt || FALSE;
+	    }
+	    add(task, _delay) {
+	        let nullIndex = this.items.findIndex((a) => a === null);
+	        if (nullIndex >= 0) {
+	            this.items[nullIndex] = task;
+	            return;
+	        }
+	        this.items.push(task);
+	    }
+	    remove(task) {
+	        arrayNullify(this.items, task);
+	    }
+	    update(dt) {
+	        let items = this.items;
+	        let done = false;
+	        this.items = [];
+	        items.forEach((cur, i) => {
+	            if (!cur || done)
+	                return;
+	            let res;
+	            if (typeof cur === 'function') {
+	                res = cur(dt);
+	            }
+	            else {
+	                res = cur.perform();
+	            }
+	            if (res.isStop()) {
+	                this.items[i] = null;
+	            }
+	            if (this.interrupt(cur)) {
+	                done = true;
+	            }
+	        });
+	    }
+	}
 
-	var scheduler = /*#__PURE__*/Object.freeze({
+	var schedule = /*#__PURE__*/Object.freeze({
 		__proto__: null,
-		Scheduler: Scheduler
+		RealTime: RealTime,
+		Schedule: Schedule,
+		TaskResult: TaskResult,
+		TimeoutTurn: TimeoutTurn,
+		TurnBased: TurnBased
 	});
 
 	class Glyphs {
@@ -8680,7 +9000,7 @@ void main() {
 	    }
 	}
 
-	function make$6(...args) {
+	function make$7(...args) {
 	    let width = args[0];
 	    let height = args[1];
 	    let opts = args[2];
@@ -8727,7 +9047,7 @@ void main() {
 		VERTICES_PER_TILE: VERTICES_PER_TILE,
 		createProgram: createProgram,
 		initGlyphs: initGlyphs,
-		make: make$6,
+		make: make$7,
 		withFont: withFont,
 		withImage: withImage
 	});
@@ -8758,7 +9078,7 @@ void main() {
 	    }
 	}
 	const sprites = {};
-	function make$5(...args) {
+	function make$6(...args) {
 	    let ch = null, fg = -1, bg = -1, opacity;
 	    if (args.length == 0) {
 	        return new Sprite(null, -1, -1);
@@ -8803,13 +9123,13 @@ void main() {
 	    if (typeof fg === 'string')
 	        fg = from$2(fg);
 	    else if (Array.isArray(fg))
-	        fg = make$9(fg);
+	        fg = make$a(fg);
 	    else if (fg === undefined || fg === null)
 	        fg = -1;
 	    if (typeof bg === 'string')
 	        bg = from$2(bg);
 	    else if (Array.isArray(bg))
-	        bg = make$9(bg);
+	        bg = make$a(bg);
 	    else if (bg === undefined || bg === null)
 	        bg = -1;
 	    return new Sprite(ch, fg, bg, opacity);
@@ -8821,12 +9141,12 @@ void main() {
 	            throw new Error('Failed to find sprite: ' + config);
 	        return sprite;
 	    }
-	    return make$5(config);
+	    return make$6(config);
 	}
 	function install$1(name, ...args) {
 	    let sprite;
 	    // @ts-ignore
-	    sprite = make$5(...args);
+	    sprite = make$6(...args);
 	    sprite.name = name;
 	    sprites[name] = sprite;
 	    return sprite;
@@ -8838,7 +9158,7 @@ void main() {
 		Sprite: Sprite,
 		from: from$1,
 		install: install$1,
-		make: make$5,
+		make: make$6,
 		makeMixer: makeMixer,
 		sprites: sprites
 	});
@@ -8954,10 +9274,35 @@ void main() {
 	        return count;
 	    }
 	}
+	class MessageManager {
+	    constructor() {
+	        // _replace: Record<string, MessageFn> = {};
+	        this._messages = {};
+	    }
+	    // addReplace(text: string, replace: (args: MessageArgs) => string) {
+	    //     this._replace[text] = replace;
+	    // }
+	    // addReplaces(info: Record<string, MessageFn>) {
+	    //     Object.entries(info).forEach(([k, v]) => this.addReplace(k, v));
+	    // }
+	    add(id, fn) {
+	        this._messages[id] = fn;
+	    }
+	    addMany(msgs) {
+	        Object.entries(msgs).forEach(([k, v]) => this.add(k, v));
+	    }
+	    format(id, args) {
+	        const msg = this._messages[id] || (() => 'UNKNOWN MESSAGE: ' + id);
+	        return msg(args);
+	    }
+	}
+	const manager = new MessageManager();
 
 	var message = /*#__PURE__*/Object.freeze({
 		__proto__: null,
-		Cache: Cache
+		Cache: Cache,
+		MessageManager: MessageManager,
+		manager: manager
 	});
 
 	class Blob {
@@ -9093,7 +9438,7 @@ void main() {
 	    const blob = new Blob(opts);
 	    return blob.carve(grid.width, grid.height, (x, y) => (grid._data[x][y] = 1));
 	}
-	function make$4(opts = {}) {
+	function make$5(opts = {}) {
 	    return new Blob(opts);
 	}
 
@@ -9101,7 +9446,7 @@ void main() {
 		__proto__: null,
 		Blob: Blob,
 		fillBlob: fillBlob,
-		make: make$4
+		make: make$5
 	});
 
 	// const LIGHT_SMOOTHING_THRESHOLD = 150;       // light components higher than this magnitude will be toned down a little
@@ -9109,14 +9454,14 @@ void main() {
 	//     INTENSITY_DARK: 20,
 	//     INTENSITY_SHADOW: 50,
 	// }); // less than 20% for highest color in rgb
-	let LIGHT_COMPONENTS = make$9();
+	let LIGHT_COMPONENTS = make$a();
 	class Light {
 	    constructor(color, radius = 1, fadeTo = 0, pass = false) {
 	        this.fadeTo = 0;
 	        this.passThroughActors = false;
 	        this.id = null;
 	        this.color = from$2(color); /* color */
-	        this.radius = make$c(radius);
+	        this.radius = make$d(radius);
 	        this.fadeTo = fadeTo;
 	        this.passThroughActors = pass; // generally no, but miner light does (TODO - string parameter?  'false' or 'true')
 	    }
@@ -9195,7 +9540,7 @@ void main() {
 	function isShadowLight(light, threshold = 40) {
 	    return intensity(light) <= threshold;
 	}
-	function make$3(...args) {
+	function make$4(...args) {
 	    if (args.length == 1) {
 	        const config = args[0];
 	        if (typeof config === 'string') {
@@ -9235,15 +9580,15 @@ void main() {
 	    }
 	    if (arg && arg.paint)
 	        return arg;
-	    return make$3(arg);
+	    return make$4(arg);
 	}
 	function install(id, ...args) {
 	    let source;
 	    if (args.length == 1) {
-	        source = make$3(args[0]);
+	        source = make$4(args[0]);
 	    }
 	    else {
-	        source = make$3(args[0], args[1], args[2], args[3]);
+	        source = make$4(args[0], args[1], args[2], args[3]);
 	    }
 	    lights[id] = source;
 	    source.id = id;
@@ -9270,7 +9615,7 @@ void main() {
 	//     // );
 	// }
 
-	const LightFlags = make$a([
+	const LightFlags = make$b([
 	    'LIT',
 	    'IN_SHADOW',
 	    'DARK',
@@ -9285,10 +9630,10 @@ void main() {
 	        this.changed = false;
 	        this.glowLightChanged = false;
 	        this.dynamicLightChanged = false;
-	        this.light = make$e(map.width, map.height, () => this.ambient.slice());
-	        this.glowLight = make$e(map.width, map.height, () => this.ambient.slice());
-	        this.oldLight = make$e(map.width, map.height, () => this.ambient.slice());
-	        this.flags = make$e(map.width, map.height);
+	        this.light = make$f(map.width, map.height, () => this.ambient.slice());
+	        this.glowLight = make$f(map.width, map.height, () => this.ambient.slice());
+	        this.oldLight = make$f(map.width, map.height, () => this.ambient.slice());
+	        this.flags = make$f(map.width, map.height);
 	        this.finishLightUpdate();
 	    }
 	    copy(other) {
@@ -9553,7 +9898,7 @@ void main() {
 		isDarkLight: isDarkLight,
 		isShadowLight: isShadowLight,
 		lights: lights,
-		make: make$3
+		make: make$4
 	});
 
 	// import * as IO from './io';
@@ -9938,10 +10283,10 @@ void main() {
 	        return madeChange;
 	    }
 	}
-	function make$2(src, duration = 1000) {
+	function make$3(src, duration = 1000) {
 	    return new Tween(src).duration(duration);
 	}
-	const move = make$2;
+	const move = make$3;
 	function linear(pct) {
 	    return clamp(pct, 0, 1);
 	}
@@ -9961,7 +10306,7 @@ void main() {
 		Tween: Tween,
 		interpolate: interpolate,
 		linear: linear,
-		make: make$2,
+		make: make$3,
 		move: move
 	});
 
@@ -10744,7 +11089,7 @@ void main() {
 	        return this.fadeTo(widget, 0, ms);
 	    }
 	    fadeTo(widget, opacity, ms) {
-	        const tween$1 = make$2({ pct: widget.style('opacity') })
+	        const tween$1 = make$3({ pct: widget.style('opacity') })
 	            .to({ pct: opacity })
 	            .duration(ms)
 	            .onUpdate((info) => {
@@ -10789,7 +11134,7 @@ void main() {
 	        return this.slide(widget, widget.bounds, dest, ms);
 	    }
 	    slide(widget, from, to, ms) {
-	        const tween$1 = make$2({ x: x(from), y: y(from) })
+	        const tween$1 = make$3({ x: x(from), y: y(from) })
 	            .to({ x: x(to), y: y(to) })
 	            .duration(ms)
 	            .onUpdate((info) => {
@@ -14558,7 +14903,7 @@ void main() {
 	// //     return layer;
 	// // };
 
-	function make$1(opts) {
+	function make$2(opts) {
 	    const w = new Widget(opts);
 	    if (opts.with) {
 	        Object.entries(opts.with).forEach(([name, fn]) => {
@@ -14595,7 +14940,7 @@ void main() {
 		alignChildren: alignChildren,
 		dialog: dialog,
 		drawBorder: drawBorder,
-		make: make$1,
+		make: make$2,
 		spaceChildren: spaceChildren,
 		toPadArray: toPadArray,
 		wrapChildren: wrapChildren
@@ -14654,7 +14999,7 @@ void main() {
 	        }
 	        this.name = opts.name || 'Goblinwerks';
 	        this.styles = defaultStyle;
-	        this.canvas = opts.canvas || make$6(opts);
+	        this.canvas = opts.canvas || make$7(opts);
 	        this.io = new Queue();
 	        this.events = new Events(this);
 	        this.timers = new Timers(this);
@@ -14858,7 +15203,7 @@ void main() {
 	        return prompt;
 	    }
 	}
-	function make(opts) {
+	function make$1(opts) {
 	    const app = new App(opts);
 	    return app;
 	}
@@ -14894,7 +15239,7 @@ void main() {
 		installScene: installScene,
 		isControlCode: isControlCode,
 		keyCodeDirection: keyCodeDirection,
-		make: make,
+		make: make$1,
 		makeCustomEvent: makeCustomEvent,
 		makeKeyEvent: makeKeyEvent,
 		makeMouseEvent: makeMouseEvent,
@@ -14905,6 +15250,84 @@ void main() {
 		scenes: scenes,
 		spaceChildren: spaceChildren,
 		wrapChildren: wrapChildren
+	});
+
+	// const RE = /(?:([+-]?\d*)[Dd](\d*)|([+-]?\d+))([*/]\d+)?/g;
+	const RE = /(?:([+-]?\d*)[Dd](\d+)|(\d+):(\d+)|([+-]?\d+))([*/]\d+)?/g;
+	function make(config) {
+	    if (typeof config == 'function')
+	        return config;
+	    if (config === undefined || config === null)
+	        return () => 0;
+	    if (typeof config == 'number')
+	        return () => config;
+	    if (config === true)
+	        return ONE;
+	    if (config === false)
+	        return ZERO;
+	    if (Array.isArray(config) && config.length == 2) {
+	        return (rng) => {
+	            rng = rng || random;
+	            return rng.range(config[0], config[1]);
+	        };
+	    }
+	    if (typeof config !== 'string')
+	        throw new Error('Calculations must be strings.');
+	    if (config.length == 0)
+	        return ZERO;
+	    const calcParts = [];
+	    let results;
+	    while ((results = RE.exec(config)) !== null) {
+	        // console.log(results);
+	        let mult = 1;
+	        if (results[6]) {
+	            mult = Number.parseInt(results[6].substring(1));
+	            if (results[6].startsWith('/')) {
+	                mult = 1 / mult;
+	            }
+	        }
+	        if (results[1] && results[2]) {
+	            let count = Number.parseInt(results[1]);
+	            if (count < 0) {
+	                count = Math.abs(count);
+	                mult *= -1;
+	            }
+	            const sides = Number.parseInt(results[2]);
+	            calcParts.push((rng) => {
+	                rng = rng || random;
+	                return rng.dice(count, sides) * mult;
+	            });
+	        }
+	        else if (results[3] && results[4]) {
+	            const min = Number.parseInt(results[3]);
+	            const max = Number.parseInt(results[4]);
+	            calcParts.push((rng) => {
+	                rng = rng || random;
+	                return rng.range(min, max) * mult;
+	            });
+	        }
+	        else if (results[5]) {
+	            const v = Number.parseInt(results[5]);
+	            calcParts.push(() => v * mult);
+	        }
+	    }
+	    if (calcParts.length == 0) {
+	        return ZERO;
+	    }
+	    if (calcParts.length == 1) {
+	        return calcParts[0];
+	    }
+	    return (rng) => calcParts.reduce((out, calc) => out + calc(rng), 0);
+	}
+	function calc(config, rng) {
+	    const fn = make(config);
+	    return fn(rng || random);
+	}
+
+	var calc$1 = /*#__PURE__*/Object.freeze({
+		__proto__: null,
+		calc: calc,
+		make: make
 	});
 
 	// src/errors.ts
@@ -16093,6 +16516,7 @@ void main() {
 	  throw new UndefinedBehaviorError(`only boolean type, Option or Result instance are allowed`, { cause: { value, type: typeof value, ctor: value.constructor?.name } });
 	}
 
+	exports.DIRS = DIRS$2;
 	exports.ERROR = ERROR;
 	exports.Err = Err;
 	exports.FALSE = FALSE;
@@ -16113,6 +16537,7 @@ void main() {
 	exports.app = index;
 	exports.blob = blob;
 	exports.buffer = buffer;
+	exports.calc = calc$1;
 	exports.canvas = index$5;
 	exports.color = index$9;
 	exports.colors = colors;
@@ -16131,7 +16556,7 @@ void main() {
 	exports.random = random;
 	exports.range = range;
 	exports.rng = rng;
-	exports.scheduler = scheduler;
+	exports.schedule = schedule;
 	exports.sprite = index$4;
 	exports.tags = tags;
 	exports.text = index$8;

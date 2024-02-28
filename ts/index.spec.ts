@@ -12,7 +12,7 @@ describe('GW', () => {
         expect(GW.path).toBeDefined();
         // expect(GW.events).toBeDefined();
         expect(GW.frequency).toBeDefined();
-        expect(GW.scheduler).toBeDefined();
+        expect(GW.schedule).toBeDefined();
         expect(GW.canvas).toBeDefined();
         expect(GW.color).toBeDefined();
         expect(GW.sprite).toBeDefined();

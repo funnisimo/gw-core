@@ -3,6 +3,7 @@ import { Loc, XY, Size, Pos } from './types';
 
 export { Loc, XY, Size, Pos };
 
+// TODO - Is this the right way to do this?  Should it be DIRS4 and DIRS8 (both clockwise)?
 // DIRS are organized clockwise
 // - first 4 are arrow directions
 //   >> rotate 90 degrees clockwise ==>> newIndex = (oldIndex + 1) % 4
@@ -20,6 +21,30 @@ export const DIRS: Loc[] = [
     [-1, 1],
     [-1, -1],
 ];
+
+export const NAMED_DIRS: Record<string, Loc> = {
+    up: [0, -1],
+    right: [1, 0],
+    down: [0, 1],
+    left: [-1, 0],
+    right_up: [1, -1],
+    right_down: [1, 1],
+    left_down: [-1, 1],
+    left_up: [-1, -1],
+};
+
+// DIRS4 are organized clockwise
+// - first 4 are arrow directions
+//   >> rotate 90 degrees clockwise ==>> newIndex = (oldIndex + 1) % 4
+//   >> opposite direction ==>> oppIndex = (index + 2) % 4
+export const DIRS4: Loc[] = [
+    [0, -1],
+    [1, 0],
+    [0, 1],
+    [-1, 0],
+];
+
+export const NO_DIR: Loc = [0, 0];
 
 export const NO_DIRECTION = -1;
 export const UP = 0;

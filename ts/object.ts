@@ -221,3 +221,113 @@ export function firstOpt(field: string, ...args: any[]) {
     }
     return undefined;
 }
+
+export type MergeFn = (
+    current: any,
+    updated: any,
+    key: string,
+    target: AnyObj,
+    source: AnyObj
+) => any;
+export type FieldMap = Record<string, MergeFn>;
+
+export function defaultMergeFn(
+    current: any,
+    updated: any,
+    _key: string,
+    _target: AnyObj,
+    _source: AnyObj
+): any {
+    if (Array.isArray(updated)) {
+        if (Array.isArray(current)) {
+            return current.concat(updated);
+        }
+        return updated.slice();
+    }
+    if (updated === null) {
+        return updated;
+    }
+    if (typeof updated === 'object') {
+        if (typeof current !== 'object' || !current) {
+            return Object.assign({}, updated);
+        }
+        current = Object.assign({}, current);
+
+        for (let key in updated) {
+            const value = updated[key];
+            if (value !== undefined) {
+                current[key] = value;
+            }
+        }
+        return current;
+    }
+
+    return updated;
+}
+
+export function makeMergeFn(): MergeFn;
+export function makeMergeFn(defaultFn: MergeFn | FieldMap): MergeFn;
+export function makeMergeFn(fieldMap: FieldMap, defaultFn?: MergeFn): MergeFn;
+export function makeMergeFn(
+    fieldMap?: MergeFn | FieldMap,
+    defaultFn?: MergeFn
+): MergeFn {
+    if (!fieldMap) return defaultMergeFn;
+    if (typeof fieldMap === 'function') return fieldMap;
+
+    defaultFn = defaultFn || fieldMap._default || defaultMergeFn;
+
+    return function (current, updated, key, target, source) {
+        // console.log('custom: ' + key);
+        if (fieldMap[key]) {
+            const result = fieldMap[key](current, updated, key, target, source);
+            return result;
+        }
+        return defaultFn!(current, updated, key, target, source);
+    };
+}
+
+export function mergePropertiesWith(
+    target: AnyObj,
+    source: AnyObj,
+    customizer: MergeFn
+) {
+    for (let key of Object.keys(source)) {
+        // const updated = source[key];
+        let updated = Object.getOwnPropertyDescriptor(source, key);
+        if (!updated) continue;
+
+        const current = target[key];
+        // const value = customizer(current, updated, key, target, source);
+        const value = customizer(current, updated.value, key, target, source);
+        if (value === undefined) continue;
+        // target[key] = value;
+        updated.value = value;
+        Object.defineProperty(target, key, updated);
+    }
+}
+
+export function mergeWith(
+    target: AnyObj,
+    source: AnyObj | AnyObj[],
+    customizer?: MergeFn | FieldMap
+): AnyObj {
+    customizer = makeMergeFn(customizer || defaultMergeFn);
+
+    if (Array.isArray(source)) {
+        source.forEach((src) => mergeWith(target, src, customizer));
+        return target;
+    }
+
+    mergePropertiesWith(target, source, customizer);
+
+    // for( let k of Reflect.ownKeys(source)) {
+    // 	const current = target[k];
+    //   const updated = source[k];
+    //
+    //   const value = customizer(current, updated, k, target, source);
+    //   target[k] = value;
+    // }
+
+    return target;
+}

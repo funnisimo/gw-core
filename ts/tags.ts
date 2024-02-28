@@ -72,3 +72,19 @@ export function match(tags: Tags, matchRules: string): boolean {
     const matchFn = makeMatch(matchRules);
     return matchFn(tags);
 }
+
+export function merge(current: Tags, updated: TagBase): Tags {
+    const updatedTags = make(updated);
+    const out = current.slice();
+    updatedTags.forEach((t) => {
+        if (t.startsWith('!')) {
+            const index = out.indexOf(t.slice(1));
+            if (index >= 0) {
+                out.splice(index, 1);
+            }
+        } else {
+            out.push(t);
+        }
+    });
+    return out;
+}

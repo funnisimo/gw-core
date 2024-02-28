@@ -1,0 +1,14 @@
+Canvas:
+    [] Allow multiple canvases at once - each with different glyphs
+        - Panels
+    [] Resize+Move panels on HTML canvas - setExtents
+
+App:
+    [] plugins?
+    [] events for create scene (allows generic updates to all screens)?
+
+Build:
+    [] Experiment with `tsup` for bundling
+
+Messages:
+    [] Message templating system

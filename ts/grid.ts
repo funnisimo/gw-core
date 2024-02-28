@@ -70,6 +70,13 @@ export type GridMatch<T> = (
 ) => boolean;
 export type GridFormat<T> = (value: T, x: number, y: number) => string;
 
+export type WalkFromCb<T> = (
+    x: number,
+    y: number,
+    data: T,
+    distance: number
+) => boolean;
+
 export class Grid<T> {
     protected _width: number;
     protected _height: number;
@@ -442,6 +449,55 @@ export class Grid<T> {
         return XY.arcCount(x, y, (i, j) => {
             return this.hasXY(i, j) && testFn(this._data[i][j], i, j, this);
         });
+    }
+
+    walkFrom(x: number, y: number, callback: WalkFromCb<T>): void;
+    walkFrom(
+        x: number,
+        y: number,
+        withDiagonals: boolean,
+        callback: WalkFromCb<T>
+    ): void;
+    walkFrom(
+        x: number,
+        y: number,
+        withDiagonals: boolean | WalkFromCb<T>,
+        callback?: WalkFromCb<T>
+    ) {
+        if (typeof withDiagonals === 'function') {
+            callback = withDiagonals;
+            withDiagonals = true;
+        }
+        const seen = alloc(this.width, this.height);
+
+        seen.set(x, y, 1);
+        let nextSteps = [{ x, y }];
+        let distance = 0;
+
+        const dirs = withDiagonals ? DIRS : DIRS.slice(4);
+
+        while (nextSteps.length) {
+            const current = nextSteps;
+            nextSteps = [];
+            for (let step of current) {
+                seen.set(step.x, step.y, 1);
+
+                const data = this.get(step.x, step.y)!;
+                if (callback!(step.x, step.y, data, distance)) {
+                    for (let dir of dirs) {
+                        const x2 = step.x + dir[0];
+                        const y2 = step.y + dir[1];
+                        if (!seen.hasXY(x2, y2)) continue;
+                        if (!seen.get(x2, y2)) {
+                            seen.set(x2, y2, 1);
+                            nextSteps.push({ x: x2, y: y2 });
+                        }
+                    }
+                }
+            }
+            ++distance;
+        }
+        free(seen);
     }
 }
 

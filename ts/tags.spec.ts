@@ -22,4 +22,26 @@ describe('tags', () => {
         expect(TAGS.match(tags, 'taco | !food')).toBeTruthy();
         expect(TAGS.match(tags, 'taco, !food')).toBeTruthy();
     });
+
+    test('merge', () => {
+        const tags = ['taco', 'food', 'cheesy'];
+
+        expect(TAGS.merge(tags, 'fried')).toEqual([
+            'taco',
+            'food',
+            'cheesy',
+            'fried',
+        ]);
+        expect(TAGS.merge(tags, '!cheesy')).toEqual(['taco', 'food']);
+        expect(TAGS.merge(tags, '!cheesy, fried')).toEqual([
+            'taco',
+            'food',
+            'fried',
+        ]);
+        expect(TAGS.merge(tags, ['!cheesy', 'fried'])).toEqual([
+            'taco',
+            'food',
+            'fried',
+        ]);
+    });
 });

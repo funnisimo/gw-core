@@ -168,11 +168,11 @@ declare function fromArray(vals: ColorData, base256?: boolean): Color;
 declare function fromCss(css: string): Color;
 declare function fromName(name: string): Color;
 declare function fromNumber(val: number, base256?: boolean): Color;
-declare function make$e(): Color;
-declare function make$e(rgb: number, base256?: boolean): Color;
-declare function make$e(color?: ColorBase | null): Color;
-declare function make$e(arrayLike: ColorData, base256?: boolean): Color;
-declare function make$e(...rgb: number[]): Color;
+declare function make$f(): Color;
+declare function make$f(rgb: number, base256?: boolean): Color;
+declare function make$f(color?: ColorBase | null): Color;
+declare function make$f(arrayLike: ColorData, base256?: boolean): Color;
+declare function make$f(...rgb: number[]): Color;
 declare function from$4(): Color;
 declare function from$4(rgb: number, base256?: boolean): Color;
 declare function from$4(color?: ColorBase | null): Color;
@@ -209,7 +209,7 @@ declare const index$9_relativeLuminance: typeof relativeLuminance;
 declare const index$9_separate: typeof separate;
 declare const index$9_smoothScalar: typeof smoothScalar;
 declare namespace index$9 {
-  export { index$9_BLACK as BLACK, index$9_Color as Color, type index$9_ColorBase as ColorBase, type index$9_ColorData as ColorData, type index$9_LightValue as LightValue, index$9_NONE as NONE, index$9_WHITE as WHITE, index$9_colors as colors, index$9_distance as distance, from$4 as from, index$9_fromArray as fromArray, index$9_fromCss as fromCss, index$9_fromName as fromName, index$9_fromNumber as fromNumber, install$2 as install, index$9_installSpread as installSpread, make$e as make, index$9_relativeLuminance as relativeLuminance, index$9_separate as separate, index$9_smoothScalar as smoothScalar };
+  export { index$9_BLACK as BLACK, index$9_Color as Color, type index$9_ColorBase as ColorBase, type index$9_ColorData as ColorData, type index$9_LightValue as LightValue, index$9_NONE as NONE, index$9_WHITE as WHITE, index$9_colors as colors, index$9_distance as distance, from$4 as from, index$9_fromArray as fromArray, index$9_fromCss as fromCss, index$9_fromName as fromName, index$9_fromNumber as fromNumber, install$2 as install, index$9_installSpread as installSpread, make$f as make, index$9_relativeLuminance as relativeLuminance, index$9_separate as separate, index$9_smoothScalar as smoothScalar };
 }
 
 type Loc$1 = [number, number];
@@ -253,6 +253,9 @@ declare namespace types {
 }
 
 declare const DIRS: Loc$1[];
+declare const NAMED_DIRS: Record<string, Loc$1>;
+declare const DIRS4: Loc$1[];
+declare const NO_DIR: Loc$1;
 declare const NO_DIRECTION = -1;
 declare const UP = 0;
 declare const RIGHT = 1;
@@ -357,10 +360,13 @@ declare const xy_Bounds: typeof Bounds;
 type xy_BoundsOpts = BoundsOpts;
 declare const xy_CLOCK_DIRS: typeof CLOCK_DIRS;
 declare const xy_DIRS: typeof DIRS;
+declare const xy_DIRS4: typeof DIRS4;
 declare const xy_DOWN: typeof DOWN;
 declare const xy_LEFT: typeof LEFT;
 declare const xy_LEFT_DOWN: typeof LEFT_DOWN;
 declare const xy_LEFT_UP: typeof LEFT_UP;
+declare const xy_NAMED_DIRS: typeof NAMED_DIRS;
+declare const xy_NO_DIR: typeof NO_DIR;
 declare const xy_NO_DIRECTION: typeof NO_DIRECTION;
 type xy_NeighborFunc = NeighborFunc;
 type xy_NeighborMatchFunc = NeighborMatchFunc;
@@ -415,7 +421,7 @@ declare const xy_straightDistanceBetween: typeof straightDistanceBetween;
 declare const xy_x: typeof x;
 declare const xy_y: typeof y;
 declare namespace xy {
-  export { xy_Bounds as Bounds, type xy_BoundsOpts as BoundsOpts, xy_CLOCK_DIRS as CLOCK_DIRS, xy_DIRS as DIRS, xy_DOWN as DOWN, xy_LEFT as LEFT, xy_LEFT_DOWN as LEFT_DOWN, xy_LEFT_UP as LEFT_UP, type Loc$1 as Loc, xy_NO_DIRECTION as NO_DIRECTION, type xy_NeighborFunc as NeighborFunc, type xy_NeighborMatchFunc as NeighborMatchFunc, type xy_Pos as Pos, xy_RIGHT as RIGHT, xy_RIGHT_DOWN as RIGHT_DOWN, xy_RIGHT_UP as RIGHT_UP, type xy_Size as Size, xy_UP as UP, type xy_XY as XY, type xy_XYFunc as XYFunc, type xy_XYMatchFunc as XYMatchFunc, xy_add as add, xy_addTo as addTo, xy_arcCount as arcCount, xy_asLoc as asLoc, xy_asXY as asXY, xy_calcRadius as calcRadius, xy_closestMatchingLocs as closestMatchingLocs, xy_contains as contains, xy_copy as copy, xy_dirBetween as dirBetween, xy_dirFromTo as dirFromTo, xy_dirIndex as dirIndex, xy_dirSpread as dirSpread, xy_distanceBetween as distanceBetween, xy_distanceFromTo as distanceFromTo, xy_dumpAround as dumpAround, xy_dumpRect as dumpRect, xy_eachNeighbor as eachNeighbor, xy_eachNeighborAsync as eachNeighborAsync, xy_equals as equals, xy_forBorder as forBorder, xy_forCircle as forCircle, xy_forLine as forLine, xy_forLineBetween as forLineBetween, xy_forLineFromTo as forLineFromTo, xy_forRect as forRect, xy_getLine as getLine, xy_getLineThru as getLineThru, xy_isDiagonal as isDiagonal, xy_isLoc as isLoc, xy_isOppositeDir as isOppositeDir, xy_isSameDir as isSameDir, xy_isXY as isXY, xy_lerp as lerp, xy_matchingNeighbor as matchingNeighbor, xy_maxAxisBetween as maxAxisBetween, xy_maxAxisFromTo as maxAxisFromTo, xy_stepFromTo as stepFromTo, xy_straightDistanceBetween as straightDistanceBetween, xy_x as x, xy_y as y };
+  export { xy_Bounds as Bounds, type xy_BoundsOpts as BoundsOpts, xy_CLOCK_DIRS as CLOCK_DIRS, xy_DIRS as DIRS, xy_DIRS4 as DIRS4, xy_DOWN as DOWN, xy_LEFT as LEFT, xy_LEFT_DOWN as LEFT_DOWN, xy_LEFT_UP as LEFT_UP, type Loc$1 as Loc, xy_NAMED_DIRS as NAMED_DIRS, xy_NO_DIR as NO_DIR, xy_NO_DIRECTION as NO_DIRECTION, type xy_NeighborFunc as NeighborFunc, type xy_NeighborMatchFunc as NeighborMatchFunc, type xy_Pos as Pos, xy_RIGHT as RIGHT, xy_RIGHT_DOWN as RIGHT_DOWN, xy_RIGHT_UP as RIGHT_UP, type xy_Size as Size, xy_UP as UP, type xy_XY as XY, type xy_XYFunc as XYFunc, type xy_XYMatchFunc as XYMatchFunc, xy_add as add, xy_addTo as addTo, xy_arcCount as arcCount, xy_asLoc as asLoc, xy_asXY as asXY, xy_calcRadius as calcRadius, xy_closestMatchingLocs as closestMatchingLocs, xy_contains as contains, xy_copy as copy, xy_dirBetween as dirBetween, xy_dirFromTo as dirFromTo, xy_dirIndex as dirIndex, xy_dirSpread as dirSpread, xy_distanceBetween as distanceBetween, xy_distanceFromTo as distanceFromTo, xy_dumpAround as dumpAround, xy_dumpRect as dumpRect, xy_eachNeighbor as eachNeighbor, xy_eachNeighborAsync as eachNeighborAsync, xy_equals as equals, xy_forBorder as forBorder, xy_forCircle as forCircle, xy_forLine as forLine, xy_forLineBetween as forLineBetween, xy_forLineFromTo as forLineFromTo, xy_forRect as forRect, xy_getLine as getLine, xy_getLineThru as getLineThru, xy_isDiagonal as isDiagonal, xy_isLoc as isLoc, xy_isOppositeDir as isOppositeDir, xy_isSameDir as isSameDir, xy_isXY as isXY, xy_lerp as lerp, xy_matchingNeighbor as matchingNeighbor, xy_maxAxisBetween as maxAxisBetween, xy_maxAxisFromTo as maxAxisFromTo, xy_stepFromTo as stepFromTo, xy_straightDistanceBetween as straightDistanceBetween, xy_x as x, xy_y as y };
 }
 
 type ListEntry<T> = T | null;
@@ -495,23 +501,37 @@ declare function pick(obj: AnyObj, ...fields: string[]): any;
 declare function clearObject(obj: AnyObj): void;
 declare function getOpt(obj: AnyObj, member: string, _default: any): any;
 declare function firstOpt(field: string, ...args: any[]): any;
+type MergeFn = (current: any, updated: any, key: string, target: AnyObj, source: AnyObj) => any;
+type FieldMap = Record<string, MergeFn>;
+declare function defaultMergeFn(current: any, updated: any, _key: string, _target: AnyObj, _source: AnyObj): any;
+declare function makeMergeFn(): MergeFn;
+declare function makeMergeFn(defaultFn: MergeFn | FieldMap): MergeFn;
+declare function makeMergeFn(fieldMap: FieldMap, defaultFn?: MergeFn): MergeFn;
+declare function mergePropertiesWith(target: AnyObj, source: AnyObj, customizer: MergeFn): void;
+declare function mergeWith(target: AnyObj, source: AnyObj | AnyObj[], customizer?: MergeFn | FieldMap): AnyObj;
 
 type object_AnyObj = AnyObj;
 type object_AssignCallback = AssignCallback;
+type object_FieldMap = FieldMap;
+type object_MergeFn = MergeFn;
 declare const object_assignObject: typeof assignObject;
 declare const object_assignOmitting: typeof assignOmitting;
 declare const object_clearObject: typeof clearObject;
 declare const object_copyObject: typeof copyObject;
+declare const object_defaultMergeFn: typeof defaultMergeFn;
 declare const object_firstOpt: typeof firstOpt;
 declare const object_getOpt: typeof getOpt;
 declare const object_getValue: typeof getValue;
 declare const object_kindDefaults: typeof kindDefaults;
+declare const object_makeMergeFn: typeof makeMergeFn;
+declare const object_mergePropertiesWith: typeof mergePropertiesWith;
+declare const object_mergeWith: typeof mergeWith;
 declare const object_pick: typeof pick;
 declare const object_setDefault: typeof setDefault;
 declare const object_setDefaults: typeof setDefaults;
 declare const object_setOptions: typeof setOptions;
 declare namespace object {
-  export { type object_AnyObj as AnyObj, type object_AssignCallback as AssignCallback, object_assignObject as assignObject, object_assignOmitting as assignOmitting, object_clearObject as clearObject, object_copyObject as copyObject, object_firstOpt as firstOpt, object_getOpt as getOpt, object_getValue as getValue, object_kindDefaults as kindDefaults, object_pick as pick, object_setDefault as setDefault, object_setDefaults as setDefaults, object_setOptions as setOptions };
+  export { type object_AnyObj as AnyObj, type object_AssignCallback as AssignCallback, type object_FieldMap as FieldMap, type object_MergeFn as MergeFn, object_assignObject as assignObject, object_assignOmitting as assignOmitting, object_clearObject as clearObject, object_copyObject as copyObject, object_defaultMergeFn as defaultMergeFn, object_firstOpt as firstOpt, object_getOpt as getOpt, object_getValue as getValue, object_kindDefaults as kindDefaults, object_makeMergeFn as makeMergeFn, object_mergePropertiesWith as mergePropertiesWith, object_mergeWith as mergeWith, object_pick as pick, object_setDefault as setDefault, object_setDefaults as setDefaults, object_setOptions as setOptions };
 }
 
 /**
@@ -557,7 +577,7 @@ declare class Random {
 }
 declare const random: Random;
 declare const cosmetic: Random;
-declare function make$d(seed?: number): Random;
+declare function make$e(seed?: number): Random;
 
 declare const rng_Alea: typeof Alea;
 type rng_Random = Random;
@@ -569,7 +589,7 @@ type rng_WeightedObject = WeightedObject;
 declare const rng_cosmetic: typeof cosmetic;
 declare const rng_random: typeof random;
 declare namespace rng {
-  export { rng_Alea as Alea, rng_Random as Random, type rng_RandomConfig as RandomConfig, type rng_RandomFunction as RandomFunction, type rng_WeightedArray as WeightedArray, type rng_WeightedObject as WeightedObject, configure$1 as configure, rng_cosmetic as cosmetic, make$d as make, rng_random as random };
+  export { rng_Alea as Alea, rng_Random as Random, type rng_RandomConfig as RandomConfig, type rng_RandomFunction as RandomFunction, type rng_WeightedArray as WeightedArray, type rng_WeightedObject as WeightedObject, configure$1 as configure, rng_cosmetic as cosmetic, make$e as make, rng_random as random };
 }
 
 type RangeBase = Range | string | number[] | number;
@@ -584,8 +604,8 @@ declare class Range {
     copy(other: Range): this;
     toString(): string;
 }
-declare function make$c(config: RangeBase | null): Range;
-declare const from$3: typeof make$c;
+declare function make$d(config: RangeBase | null): Range;
+declare const from$3: typeof make$d;
 declare function asFn(config: RangeBase | null): () => number;
 declare function value(base: RangeBase): number;
 
@@ -595,7 +615,7 @@ type range_RangeBase = RangeBase;
 declare const range_asFn: typeof asFn;
 declare const range_value: typeof value;
 declare namespace range {
-  export { range_Range as Range, type range_RangeBase as RangeBase, range_asFn as asFn, from$3 as from, make$c as make, range_value as value };
+  export { range_Range as Range, type range_RangeBase as RangeBase, range_asFn as asFn, from$3 as from, make$d as make, range_value as value };
 }
 
 type TagBase = string | string[];
@@ -605,9 +625,10 @@ interface TagMatchOptions {
     tags: string | string[];
     forbidTags?: string | string[];
 }
-declare function make$b(base: TagBase): Tags;
+declare function make$c(base: TagBase): Tags;
 declare function makeMatch(rules: string | TagMatchOptions): TagMatchFn;
 declare function match(tags: Tags, matchRules: string): boolean;
+declare function merge(current: Tags, updated: TagBase): Tags;
 
 type tags_TagBase = TagBase;
 type tags_TagMatchFn = TagMatchFn;
@@ -615,8 +636,9 @@ type tags_TagMatchOptions = TagMatchOptions;
 type tags_Tags = Tags;
 declare const tags_makeMatch: typeof makeMatch;
 declare const tags_match: typeof match;
+declare const tags_merge: typeof merge;
 declare namespace tags {
-  export { type tags_TagBase as TagBase, type tags_TagMatchFn as TagMatchFn, type tags_TagMatchOptions as TagMatchOptions, type tags_Tags as Tags, make$b as make, tags_makeMatch as makeMatch, tags_match as match };
+  export { type tags_TagBase as TagBase, type tags_TagMatchFn as TagMatchFn, type tags_TagMatchOptions as TagMatchOptions, type tags_Tags as Tags, make$c as make, tags_makeMatch as makeMatch, tags_match as match, tags_merge as merge };
 }
 
 type FlagSource = number | string;
@@ -640,14 +662,14 @@ declare function from$2<T>(obj: T, ...args: (FlagBase | undefined)[]): number;
  * @returns {number}
  */
 declare function from_safe<T>(flagObj: T, ...args: (FlagBase | undefined)[]): number;
-declare function make$a(obj: Record<string, FlagBase> | string[] | string): Record<string, number>;
+declare function make$b(obj: Record<string, FlagBase> | string[] | string): Record<string, number>;
 
 type flag_FlagBase = FlagBase;
 declare const flag_fl: typeof fl;
 declare const flag_from_safe: typeof from_safe;
 declare const flag_toString: typeof toString;
 declare namespace flag {
-  export { type flag_FlagBase as FlagBase, flag_fl as fl, from$2 as from, flag_from_safe as from_safe, make$a as make, flag_toString as toString };
+  export { type flag_FlagBase as FlagBase, flag_fl as fl, from$2 as from, flag_from_safe as from_safe, make$b as make, flag_toString as toString };
 }
 
 type Loc = Loc$1;
@@ -659,6 +681,7 @@ type AsyncGridEach<T> = (value: T, x: number, y: number, grid: Grid<T>) => Promi
 type GridUpdate<T> = (value: T, x: number, y: number, grid: Grid<T>) => T;
 type GridMatch<T> = (value: T, x: number, y: number, grid: Grid<T>) => boolean;
 type GridFormat<T> = (value: T, x: number, y: number) => string;
+type WalkFromCb<T> = (x: number, y: number, data: T, distance: number) => boolean;
 declare class Grid<T> {
     protected _width: number;
     protected _height: number;
@@ -739,6 +762,8 @@ declare class Grid<T> {
     randomMatchingLoc(v: T | GridMatch<T>): Loc;
     matchingLocNear(x: number, y: number, v: T | GridMatch<T>): Loc;
     arcCount(x: number, y: number, testFn: GridMatch<T>): number;
+    walkFrom(x: number, y: number, callback: WalkFromCb<T>): void;
+    walkFrom(x: number, y: number, withDiagonals: boolean, callback: WalkFromCb<T>): void;
 }
 declare const stats: {
     active: number;
@@ -766,8 +791,8 @@ declare class NumGrid extends Grid<number> {
 }
 declare const alloc$1: typeof NumGrid.alloc;
 declare const free$1: typeof NumGrid.free;
-declare function make$9<T>(w: number, h: number, v?: number | GridInit<number>): NumGrid;
-declare function make$9<T>(w: number, h: number, v?: T | GridInit<T>): Grid<T>;
+declare function make$a<T>(w: number, h: number, v?: number | GridInit<number>): NumGrid;
+declare function make$a<T>(w: number, h: number, v?: T | GridInit<T>): Grid<T>;
 type GridZip<T, U> = (destVal: T, sourceVal: U, destX: number, destY: number, sourceX: number, sourceY: number, destGrid: Grid<T>, sourceGrid: Grid<U>) => void;
 declare function offsetZip<T, U>(destGrid: Grid<T>, srcGrid: Grid<U>, srcToDestX: number, srcToDestY: number, value: T | GridZip<T, U>): void;
 declare function intersection(onto: NumGrid, a: NumGrid, b?: NumGrid): void;
@@ -785,13 +810,14 @@ type grid_GridUpdate<T> = GridUpdate<T>;
 type grid_GridZip<T, U> = GridZip<T, U>;
 type grid_NumGrid = NumGrid;
 declare const grid_NumGrid: typeof NumGrid;
+type grid_WalkFromCb<T> = WalkFromCb<T>;
 declare const grid_intersection: typeof intersection;
 declare const grid_makeArray: typeof makeArray;
 declare const grid_offsetZip: typeof offsetZip;
 declare const grid_stats: typeof stats;
 declare const grid_unite: typeof unite;
 declare namespace grid {
-  export { type grid_ArrayInit as ArrayInit, type grid_AsyncGridEach as AsyncGridEach, grid_Grid as Grid, type grid_GridEach as GridEach, type grid_GridFormat as GridFormat, type grid_GridInit as GridInit, type grid_GridMatch as GridMatch, type grid_GridUpdate as GridUpdate, type grid_GridZip as GridZip, grid_NumGrid as NumGrid, alloc$1 as alloc, free$1 as free, grid_intersection as intersection, make$9 as make, grid_makeArray as makeArray, grid_offsetZip as offsetZip, grid_stats as stats, grid_unite as unite };
+  export { type grid_ArrayInit as ArrayInit, type grid_AsyncGridEach as AsyncGridEach, grid_Grid as Grid, type grid_GridEach as GridEach, type grid_GridFormat as GridFormat, type grid_GridInit as GridInit, type grid_GridMatch as GridMatch, type grid_GridUpdate as GridUpdate, type grid_GridZip as GridZip, grid_NumGrid as NumGrid, type grid_WalkFromCb as WalkFromCb, alloc$1 as alloc, free$1 as free, grid_intersection as intersection, make$a as make, grid_makeArray as makeArray, grid_offsetZip as offsetZip, grid_stats as stats, grid_unite as unite };
 }
 
 type AsyncQueueHandlerFn<T> = (obj: T) => void;
@@ -1054,17 +1080,17 @@ declare class Buffer$1 extends BufferBase {
     nullify(): void;
     dump(): void;
 }
-declare function make$8(opts: {
+declare function make$9(opts: {
     width: number;
     height: number;
 }): Buffer$1;
-declare function make$8(width: number, height: number): Buffer$1;
+declare function make$9(width: number, height: number): Buffer$1;
 
 type buffer_BufferBase = BufferBase;
 declare const buffer_BufferBase: typeof BufferBase;
 type buffer_DrawData = DrawData;
 declare namespace buffer {
-  export { Buffer$1 as Buffer, buffer_BufferBase as BufferBase, type buffer_DrawData as DrawData, make$8 as make };
+  export { Buffer$1 as Buffer, buffer_BufferBase as BufferBase, type buffer_DrawData as DrawData, make$9 as make };
 }
 
 declare const FovFlags: Record<string, number>;
@@ -1290,35 +1316,106 @@ declare namespace index$6 {
 
 type FrequencyFn = (danger: number) => number;
 type FrequencyConfig = FrequencyFn | number | string | Record<string, number | FrequencyFn> | null;
-declare function make$7(v?: FrequencyConfig): FrequencyFn;
+declare function make$8(v?: FrequencyConfig): FrequencyFn;
 
 type frequency_FrequencyConfig = FrequencyConfig;
 type frequency_FrequencyFn = FrequencyFn;
 declare namespace frequency {
-  export { type frequency_FrequencyConfig as FrequencyConfig, type frequency_FrequencyFn as FrequencyFn, make$7 as make };
+  export { type frequency_FrequencyConfig as FrequencyConfig, type frequency_FrequencyFn as FrequencyFn, make$8 as make };
 }
 
-interface Event$1 {
-    item: any;
-    time: number;
-    next: Event$1 | null;
+declare enum TaskResultType {
+    OK = 0,
+    DONE = 1,
+    RETRY = 2
 }
-declare class Scheduler {
+declare class TaskResult {
+    _time: number;
+    _result: TaskResultType;
+    protected constructor(result: TaskResultType, time?: number);
+    static Ok(time: number): TaskResult;
+    static Stop(): TaskResult;
+    static Retry(): TaskResult;
+    isOk(): boolean;
+    isStop(): boolean;
+    isRetry(): boolean;
+    time(): number;
+    toString(): string;
+    valueOf(): number;
+}
+type TaskFn = (dt: number) => TaskResult;
+interface Task {
+    update(dt: number): TaskResult;
+    perform(): TaskResult;
+}
+type TaskType = TaskFn | Task;
+interface TaskInfo<T> {
+    item: T | null;
+    time: number;
+    next: TaskInfo<T> | null;
+}
+declare class Schedule<T> {
     private next;
     time: number;
     private cache;
     constructor();
     clear(): void;
-    push(item: any, delay?: number): Event$1;
-    pop(): any;
-    peek(): any;
-    remove(item: any): void;
+    push(item: T, delay?: number): TaskInfo<T>;
+    pop(): T | null;
+    peek(): T | null;
+    remove(item: T): void;
+}
+type ShouldStopFn = (cur: TaskType) => boolean;
+interface Runner {
+    add(task: TaskType, delay: number): void;
+    remove(task: TaskType): void;
+    update(dt: number): void;
+}
+declare class TurnBased implements Runner {
+    schedule: Schedule<TaskType>;
+    interrupt: ShouldStopFn;
+    constructor(interrupt?: ShouldStopFn);
+    add(task: TaskType, delay: number): void;
+    remove(task: TaskType): void;
+    update(dt: number): void;
+}
+type ReadyFn = () => boolean;
+declare class TimeoutTurn implements Runner {
+    schedule: Schedule<TaskType>;
+    interrupt: ShouldStopFn;
+    ready: ReadyFn;
+    constructor(ready: ReadyFn, interrupt?: ShouldStopFn);
+    add(task: TaskType, delay: number): void;
+    remove(task: TaskType): void;
+    update(dt: number): void;
+}
+declare class RealTime implements Runner {
+    items: (TaskType | null)[];
+    interrupt: ShouldStopFn;
+    constructor(interrupt?: ShouldStopFn);
+    add(task: TaskType, _delay: number): void;
+    remove(task: TaskType): void;
+    update(dt: number): void;
 }
 
-type scheduler_Scheduler = Scheduler;
-declare const scheduler_Scheduler: typeof Scheduler;
-declare namespace scheduler {
-  export { scheduler_Scheduler as Scheduler };
+type schedule_ReadyFn = ReadyFn;
+type schedule_RealTime = RealTime;
+declare const schedule_RealTime: typeof RealTime;
+type schedule_Runner = Runner;
+type schedule_Schedule<T> = Schedule<T>;
+declare const schedule_Schedule: typeof Schedule;
+type schedule_ShouldStopFn = ShouldStopFn;
+type schedule_Task = Task;
+type schedule_TaskFn = TaskFn;
+type schedule_TaskResult = TaskResult;
+declare const schedule_TaskResult: typeof TaskResult;
+type schedule_TaskType = TaskType;
+type schedule_TimeoutTurn = TimeoutTurn;
+declare const schedule_TimeoutTurn: typeof TimeoutTurn;
+type schedule_TurnBased = TurnBased;
+declare const schedule_TurnBased: typeof TurnBased;
+declare namespace schedule {
+  export { type schedule_ReadyFn as ReadyFn, schedule_RealTime as RealTime, type schedule_Runner as Runner, schedule_Schedule as Schedule, type schedule_ShouldStopFn as ShouldStopFn, type schedule_Task as Task, type schedule_TaskFn as TaskFn, schedule_TaskResult as TaskResult, type schedule_TaskType as TaskType, schedule_TimeoutTurn as TimeoutTurn, schedule_TurnBased as TurnBased };
 }
 
 type CTX = CanvasRenderingContext2D;
@@ -1595,8 +1692,8 @@ declare class Tween<T> extends BaseObj<Tween<T>> implements TweenUpdate {
     stop(success?: boolean): void;
     _updateProperties(obj: T, start: Partial<T>, goal: Partial<T>, pct: number): boolean;
 }
-declare function make$6<T>(src: T, duration?: number): Tween<T>;
-declare const move: typeof make$6;
+declare function make$7<T>(src: T, duration?: number): Tween<T>;
+declare const move: typeof make$7;
 declare function linear(pct: number): number;
 declare function interpolate(start: any, goal: any, pct: number): any;
 
@@ -1615,7 +1712,7 @@ declare const tween_interpolate: typeof interpolate;
 declare const tween_linear: typeof linear;
 declare const tween_move: typeof move;
 declare namespace tween {
-  export { tween_BaseObj as BaseObj, type tween_EasingFn as EasingFn, type tween_InterpolateFn as InterpolateFn, tween_Tween as Tween, type tween_TweenCb as TweenCb, type tween_TweenFinishCb as TweenFinishCb, type tween_TweenUpdate as TweenUpdate, tween_interpolate as interpolate, tween_linear as linear, make$6 as make, tween_move as move };
+  export { tween_BaseObj as BaseObj, type tween_EasingFn as EasingFn, type tween_InterpolateFn as InterpolateFn, tween_Tween as Tween, type tween_TweenCb as TweenCb, type tween_TweenFinishCb as TweenFinishCb, type tween_TweenUpdate as TweenUpdate, tween_interpolate as interpolate, tween_linear as linear, make$7 as make, tween_move as move };
 }
 
 declare class Tweens {
@@ -1715,7 +1812,7 @@ declare const index$5_scenes: typeof scenes;
 declare const index$5_spaceChildren: typeof spaceChildren;
 declare const index$5_wrapChildren: typeof wrapChildren;
 declare namespace index$5 {
-  export { index$5_App as App, AppOpts, index$5_CLICK as CLICK, type index$5_Callback as Callback, type index$5_CallbackFn as CallbackFn, type index$5_CallbackObj as CallbackObj, type index$5_CancelFn as CancelFn, index$5_ComputedStyle as ComputedStyle, type index$5_ControlFn as ControlFn, type index$5_DataItem as DataItem, type index$5_DataObject as DataObject, type index$5_DataType as DataType, type index$5_DataValue as DataValue, index$5_Event as Event, type index$5_EventCb as EventCb, type index$5_EventFn as EventFn, type index$5_EventMatchFn as EventMatchFn, type index$5_EventType as EventType, index$5_Events as Events, type index$5_IOMap as IOMap, index$5_KEYPRESS as KEYPRESS, index$5_Loop as Loop, index$5_MOUSEMOVE as MOUSEMOVE, index$5_MOUSEUP as MOUSEUP, type index$5_MatchFn as MatchFn, type index$5_PropType as PropType, index$5_Queue as Queue, index$5_STOP as STOP, index$5_Scene as Scene, type index$5_SceneCallback as SceneCallback, type index$5_SceneCreateOpts as SceneCreateOpts, type index$5_SceneMakeFn as SceneMakeFn, type index$5_SceneObj as SceneObj, type index$5_ScenePauseOpts as ScenePauseOpts, type index$5_SceneResumeOpts as SceneResumeOpts, type index$5_SceneStartOpts as SceneStartOpts, index$5_Scenes as Scenes, index$5_Selector as Selector, type index$5_SetParentOptions as SetParentOptions, index$5_Sheet as Sheet, index$5_Style as Style, type index$5_StyleOptions as StyleOptions, type index$5_StyleType as StyleType, index$5_TICK as TICK, type index$5_TimerFn as TimerFn, index$5_Timers as Timers, index$5_Tweens as Tweens, type index$5_UISelectable as UISelectable, type index$5_UIStylable as UIStylable, type index$5_UIStyle as UIStyle, type index$5_UnhandledFn as UnhandledFn, type index$5_UpdatePosOpts as UpdatePosOpts, index$5_Widget as Widget, type index$5_WidgetOpts as WidgetOpts, index$5_active as active, index$5_alignChildren as alignChildren, index$5_compile as compile, index$5_defaultStyle as defaultStyle, index$5_ignoreKeyEvent as ignoreKeyEvent, index$5_installScene as installScene, index$5_isControlCode as isControlCode, index$5_keyCodeDirection as keyCodeDirection, make$5 as make, index$5_makeCustomEvent as makeCustomEvent, index$5_makeKeyEvent as makeKeyEvent, index$5_makeMouseEvent as makeMouseEvent, index$5_makeStopEvent as makeStopEvent, index$5_makeStyle as makeStyle, index$5_makeTickEvent as makeTickEvent, index$5_recycleEvent as recycleEvent, index$5_scenes as scenes, index$5_spaceChildren as spaceChildren, index$5_wrapChildren as wrapChildren };
+  export { index$5_App as App, AppOpts, index$5_CLICK as CLICK, type index$5_Callback as Callback, type index$5_CallbackFn as CallbackFn, type index$5_CallbackObj as CallbackObj, type index$5_CancelFn as CancelFn, index$5_ComputedStyle as ComputedStyle, type index$5_ControlFn as ControlFn, type index$5_DataItem as DataItem, type index$5_DataObject as DataObject, type index$5_DataType as DataType, type index$5_DataValue as DataValue, index$5_Event as Event, type index$5_EventCb as EventCb, type index$5_EventFn as EventFn, type index$5_EventMatchFn as EventMatchFn, type index$5_EventType as EventType, index$5_Events as Events, type index$5_IOMap as IOMap, index$5_KEYPRESS as KEYPRESS, index$5_Loop as Loop, index$5_MOUSEMOVE as MOUSEMOVE, index$5_MOUSEUP as MOUSEUP, type index$5_MatchFn as MatchFn, type index$5_PropType as PropType, index$5_Queue as Queue, index$5_STOP as STOP, index$5_Scene as Scene, type index$5_SceneCallback as SceneCallback, type index$5_SceneCreateOpts as SceneCreateOpts, type index$5_SceneMakeFn as SceneMakeFn, type index$5_SceneObj as SceneObj, type index$5_ScenePauseOpts as ScenePauseOpts, type index$5_SceneResumeOpts as SceneResumeOpts, type index$5_SceneStartOpts as SceneStartOpts, index$5_Scenes as Scenes, index$5_Selector as Selector, type index$5_SetParentOptions as SetParentOptions, index$5_Sheet as Sheet, index$5_Style as Style, type index$5_StyleOptions as StyleOptions, type index$5_StyleType as StyleType, index$5_TICK as TICK, type index$5_TimerFn as TimerFn, index$5_Timers as Timers, index$5_Tweens as Tweens, type index$5_UISelectable as UISelectable, type index$5_UIStylable as UIStylable, type index$5_UIStyle as UIStyle, type index$5_UnhandledFn as UnhandledFn, type index$5_UpdatePosOpts as UpdatePosOpts, index$5_Widget as Widget, type index$5_WidgetOpts as WidgetOpts, index$5_active as active, index$5_alignChildren as alignChildren, index$5_compile as compile, index$5_defaultStyle as defaultStyle, index$5_ignoreKeyEvent as ignoreKeyEvent, index$5_installScene as installScene, index$5_isControlCode as isControlCode, index$5_keyCodeDirection as keyCodeDirection, make$6 as make, index$5_makeCustomEvent as makeCustomEvent, index$5_makeKeyEvent as makeKeyEvent, index$5_makeMouseEvent as makeMouseEvent, index$5_makeStopEvent as makeStopEvent, index$5_makeStyle as makeStyle, index$5_makeTickEvent as makeTickEvent, index$5_recycleEvent as recycleEvent, index$5_scenes as scenes, index$5_spaceChildren as spaceChildren, index$5_wrapChildren as wrapChildren };
 }
 
 interface PendingInfo {
@@ -2031,14 +2128,14 @@ declare class App {
     confirm(text: string, opts?: Omit<ConfirmOptions, 'text'>): Scene;
     prompt(text: string, opts?: Omit<PromptOptions$1, 'prompt'>): Scene;
 }
-declare function make$5(opts: AppOpts): App;
+declare function make$6(opts: AppOpts): App;
 declare var active: App;
 
 type SceneCallback = (this: Scene, ...args: any[]) => void;
 type SceneMakeFn = (id: string, app: App) => Scene;
 interface SceneCreateOpts {
     bg?: ColorBase;
-    data?: Record<string, string>;
+    data?: Record<string, any>;
     styles?: Sheet;
     make?: SceneMakeFn;
     create?: SceneCallback;
@@ -2501,8 +2598,8 @@ interface BaseOptions {
     image?: HTMLImageElement | string;
 }
 type CanvasOptions = BaseOptions & GlyphOptions;
-declare function make$4(opts: Partial<CanvasOptions>): Canvas;
-declare function make$4(width: number, height: number, opts?: Partial<CanvasOptions>): Canvas;
+declare function make$5(opts: Partial<CanvasOptions>): Canvas;
+declare function make$5(width: number, height: number, opts?: Partial<CanvasOptions>): Canvas;
 
 type index$4_Buffer = Buffer;
 declare const index$4_Buffer: typeof Buffer;
@@ -2529,7 +2626,7 @@ declare const index$4_initGlyphs: typeof initGlyphs;
 declare const index$4_withFont: typeof withFont;
 declare const index$4_withImage: typeof withImage;
 declare namespace index$4 {
-  export { index$4_Buffer as Buffer, type index$4_BufferTarget as BufferTarget, index$4_Canvas as Canvas, type index$4_CanvasOptions as CanvasOptions, type index$4_FontOptions as FontOptions, type index$4_GlyphInitFn as GlyphInitFn, type index$4_GlyphOptions as GlyphOptions, index$4_Glyphs as Glyphs, type index$4_IOCallback as IOCallback, type index$4_ImageOptions as ImageOptions, index$4_Layer as Layer, index$4_NotSupportedError as NotSupportedError, type index$4_Options as Options, index$4_QUAD as QUAD, index$4_VERTICES_PER_TILE as VERTICES_PER_TILE, index$4_createProgram as createProgram, index$4_initGlyphs as initGlyphs, make$4 as make, index$4_withFont as withFont, index$4_withImage as withImage };
+  export { index$4_Buffer as Buffer, type index$4_BufferTarget as BufferTarget, index$4_Canvas as Canvas, type index$4_CanvasOptions as CanvasOptions, type index$4_FontOptions as FontOptions, type index$4_GlyphInitFn as GlyphInitFn, type index$4_GlyphOptions as GlyphOptions, index$4_Glyphs as Glyphs, type index$4_IOCallback as IOCallback, type index$4_ImageOptions as ImageOptions, index$4_Layer as Layer, index$4_NotSupportedError as NotSupportedError, type index$4_Options as Options, index$4_QUAD as QUAD, index$4_VERTICES_PER_TILE as VERTICES_PER_TILE, index$4_createProgram as createProgram, index$4_initGlyphs as initGlyphs, make$5 as make, index$4_withFont as withFont, index$4_withImage as withImage };
 }
 
 interface SpriteConfig {
@@ -2549,11 +2646,11 @@ declare class Sprite implements SpriteData$1 {
     toString(): string;
 }
 declare const sprites: Record<string, Sprite>;
-declare function make$3(): Sprite;
-declare function make$3(bg: ColorBase, opacity?: number): Sprite;
-declare function make$3(ch?: string | null, fg?: ColorBase | null, bg?: ColorBase | null, opacity?: number): Sprite;
-declare function make$3(args: any[]): Sprite;
-declare function make$3(info: SpriteConfig): Sprite;
+declare function make$4(): Sprite;
+declare function make$4(bg: ColorBase, opacity?: number): Sprite;
+declare function make$4(ch?: string | null, fg?: ColorBase | null, bg?: ColorBase | null, opacity?: number): Sprite;
+declare function make$4(args: any[]): Sprite;
+declare function make$4(info: SpriteConfig): Sprite;
 declare function from$1(name: string): Sprite;
 declare function from$1(config: SpriteConfig): Sprite;
 declare function install$1(name: string, bg: ColorBase, opacity?: number): Sprite;
@@ -2578,7 +2675,7 @@ type index$3_SpriteData = SpriteData;
 declare const index$3_makeMixer: typeof makeMixer;
 declare const index$3_sprites: typeof sprites;
 declare namespace index$3 {
-  export { type index$3_DrawInfo as DrawInfo, index$3_Mixer as Mixer, index$3_Sprite as Sprite, type index$3_SpriteConfig as SpriteConfig, type index$3_SpriteData as SpriteData, from$1 as from, install$1 as install, make$3 as make, index$3_makeMixer as makeMixer, index$3_sprites as sprites };
+  export { type index$3_DrawInfo as DrawInfo, index$3_Mixer as Mixer, index$3_Sprite as Sprite, type index$3_SpriteConfig as SpriteConfig, type index$3_SpriteData as SpriteData, from$1 as from, install$1 as install, make$4 as make, index$3_makeMixer as makeMixer, index$3_sprites as sprites };
 }
 
 interface CacheOptions {
@@ -2607,13 +2704,27 @@ declare class Cache {
     forEach(fn: EachMsgFn): void;
     get length(): number;
 }
+type MessageArgs = Record<string, any>;
+type MessageFn = (args: MessageArgs) => string;
+declare class MessageManager {
+    _messages: Record<string, MessageFn>;
+    add(id: string, fn: MessageFn): void;
+    addMany(msgs: Record<string, MessageFn>): void;
+    format(id: string, args: MessageArgs): string;
+}
+declare const manager: MessageManager;
 
 type message_Cache = Cache;
 declare const message_Cache: typeof Cache;
 type message_CacheOptions = CacheOptions;
 type message_EachMsgFn = EachMsgFn;
+type message_MessageArgs = MessageArgs;
+type message_MessageFn = MessageFn;
+type message_MessageManager = MessageManager;
+declare const message_MessageManager: typeof MessageManager;
+declare const message_manager: typeof manager;
 declare namespace message {
-  export { message_Cache as Cache, type message_CacheOptions as CacheOptions, type message_EachMsgFn as EachMsgFn };
+  export { message_Cache as Cache, type message_CacheOptions as CacheOptions, type message_EachMsgFn as EachMsgFn, type message_MessageArgs as MessageArgs, type message_MessageFn as MessageFn, message_MessageManager as MessageManager, message_manager as manager };
 }
 
 interface BlobConfig {
@@ -2634,14 +2745,14 @@ declare class Blob {
     _cellularAutomataRound(grid: NumGrid): boolean;
 }
 declare function fillBlob(grid: NumGrid, opts?: Partial<BlobConfig>): Bounds;
-declare function make$2(opts?: Partial<BlobConfig>): Blob;
+declare function make$3(opts?: Partial<BlobConfig>): Blob;
 
 type blob_Blob = Blob;
 declare const blob_Blob: typeof Blob;
 type blob_BlobConfig = BlobConfig;
 declare const blob_fillBlob: typeof fillBlob;
 declare namespace blob {
-  export { blob_Blob as Blob, type blob_BlobConfig as BlobConfig, blob_fillBlob as fillBlob, make$2 as make };
+  export { blob_Blob as Blob, type blob_BlobConfig as BlobConfig, blob_fillBlob as fillBlob, make$3 as make };
 }
 
 interface LightConfig {
@@ -2709,8 +2820,8 @@ declare class Light implements LightType {
 declare function intensity(light: Color | LightValue): number;
 declare function isDarkLight(light: Color | LightValue, threshold?: number): boolean;
 declare function isShadowLight(light: Color | LightValue, threshold?: number): boolean;
-declare function make$1(color: ColorBase, radius?: RangeBase, fadeTo?: number, pass?: boolean): Light;
-declare function make$1(light: LightBase): Light;
+declare function make$2(color: ColorBase, radius?: RangeBase, fadeTo?: number, pass?: boolean): Light;
+declare function make$2(light: LightBase): Light;
 declare const lights: Record<string, Light>;
 declare function from(light: LightBase | LightType): Light;
 declare function install(id: string, color: ColorBase, radius: RangeBase, fadeTo?: number, pass?: boolean): Light;
@@ -2786,7 +2897,7 @@ declare const index$2_isDarkLight: typeof isDarkLight;
 declare const index$2_isShadowLight: typeof isShadowLight;
 declare const index$2_lights: typeof lights;
 declare namespace index$2 {
-  export { index$2_Light as Light, type index$2_LightBase as LightBase, type index$2_LightCb as LightCb, type index$2_LightConfig as LightConfig, index$2_LightSystem as LightSystem, type index$2_LightSystemOptions as LightSystemOptions, type index$2_LightSystemSite as LightSystemSite, type index$2_LightSystemType as LightSystemType, type index$2_LightType as LightType, type index$2_PaintSite as PaintSite, type index$2_StaticLightInfo as StaticLightInfo, index$2_from as from, index$2_install as install, index$2_installAll as installAll, index$2_intensity as intensity, index$2_isDarkLight as isDarkLight, index$2_isShadowLight as isShadowLight, index$2_lights as lights, make$1 as make };
+  export { index$2_Light as Light, type index$2_LightBase as LightBase, type index$2_LightCb as LightCb, type index$2_LightConfig as LightConfig, index$2_LightSystem as LightSystem, type index$2_LightSystemOptions as LightSystemOptions, type index$2_LightSystemSite as LightSystemSite, type index$2_LightSystemType as LightSystemType, type index$2_LightType as LightType, type index$2_PaintSite as PaintSite, type index$2_StaticLightInfo as StaticLightInfo, index$2_from as from, index$2_install as install, index$2_installAll as installAll, index$2_intensity as intensity, index$2_isDarkLight as isDarkLight, index$2_isShadowLight as isShadowLight, index$2_lights as lights, make$2 as make };
 }
 
 interface Rec<T> {
@@ -3181,7 +3292,7 @@ declare class Builder {
 interface WidgetMake<T> extends WidgetOpts {
     with?: T;
 }
-declare function make<T>(opts: WidgetMake<T>): Widget & T;
+declare function make$1<T>(opts: WidgetMake<T>): Widget & T;
 
 type index_ActionConfig = ActionConfig;
 type index_AddDialogOptions = AddDialogOptions;
@@ -3268,12 +3379,24 @@ type index_WidgetOpts = WidgetOpts;
 declare const index_alignChildren: typeof alignChildren;
 declare const index_dialog: typeof dialog;
 declare const index_drawBorder: typeof drawBorder;
-declare const index_make: typeof make;
 declare const index_spaceChildren: typeof spaceChildren;
 declare const index_toPadArray: typeof toPadArray;
 declare const index_wrapChildren: typeof wrapChildren;
 declare namespace index {
-  export { type index_ActionConfig as ActionConfig, type index_AddDialogOptions as AddDialogOptions, index_Border as Border, type index_BorderOptions as BorderOptions, type index_BorderType as BorderType, index_Builder as Builder, index_Button as Button, type index_ButtonConfig as ButtonConfig, type index_ButtonOptions as ButtonOptions, index_Choice as Choice, type index_ChoiceOptions as ChoiceOptions, index_Column as Column, type index_ColumnOptions as ColumnOptions, type index_DataItem as DataItem, index_DataList as DataList, type index_DataListOptions as DataListOptions, type index_DataObject as DataObject, index_DataTable as DataTable, type index_DataTableOptions as DataTableOptions, type index_DataType as DataType, type index_DataValue as DataValue, index_Dialog as Dialog, type index_DialogOptions as DialogOptions, type index_DropdownConfig as DropdownConfig, type index_EventCb as EventCb, index_Field as Field, type index_FieldOptions as FieldOptions, index_Fieldset as Fieldset, type index_FieldsetOptions as FieldsetOptions, type index_FormatFn as FormatFn, type index_HoverType as HoverType, index_Input as Input, type index_InputOptions as InputOptions, index_Inquiry as Inquiry, index_Menu as Menu, index_MenuButton as MenuButton, type index_MenuButtonOptions as MenuButtonOptions, type MenuOptions$1 as MenuOptions, index_Menubar as Menubar, type index_MenubarOptions as MenubarOptions, type index_NextType as NextType, index_OrderedList as OrderedList, type index_OrderedListOptions as OrderedListOptions, type index_PadInfo as PadInfo, type index_PrefixType as PrefixType, index_Prompt as Prompt, type index_PromptChoice as PromptChoice, type index_PromptOptions as PromptOptions, type index_PropType as PropType, type index_Rec as Rec, index_Select as Select, type index_SelectOptions as SelectOptions, type index_SelectType as SelectType, type index_SetParentOptions as SetParentOptions, index_Text as Text, type index_TextOptions as TextOptions, index_UnorderedList as UnorderedList, type index_UnorderedListOptions as UnorderedListOptions, type index_UpdatePosOpts as UpdatePosOpts, index_Widget as Widget, type index_WidgetMake as WidgetMake, type index_WidgetOpts as WidgetOpts, index_alignChildren as alignChildren, index_dialog as dialog, index_drawBorder as drawBorder, index_make as make, index_spaceChildren as spaceChildren, index_toPadArray as toPadArray, index_wrapChildren as wrapChildren };
+  export { type index_ActionConfig as ActionConfig, type index_AddDialogOptions as AddDialogOptions, index_Border as Border, type index_BorderOptions as BorderOptions, type index_BorderType as BorderType, index_Builder as Builder, index_Button as Button, type index_ButtonConfig as ButtonConfig, type index_ButtonOptions as ButtonOptions, index_Choice as Choice, type index_ChoiceOptions as ChoiceOptions, index_Column as Column, type index_ColumnOptions as ColumnOptions, type index_DataItem as DataItem, index_DataList as DataList, type index_DataListOptions as DataListOptions, type index_DataObject as DataObject, index_DataTable as DataTable, type index_DataTableOptions as DataTableOptions, type index_DataType as DataType, type index_DataValue as DataValue, index_Dialog as Dialog, type index_DialogOptions as DialogOptions, type index_DropdownConfig as DropdownConfig, type index_EventCb as EventCb, index_Field as Field, type index_FieldOptions as FieldOptions, index_Fieldset as Fieldset, type index_FieldsetOptions as FieldsetOptions, type index_FormatFn as FormatFn, type index_HoverType as HoverType, index_Input as Input, type index_InputOptions as InputOptions, index_Inquiry as Inquiry, index_Menu as Menu, index_MenuButton as MenuButton, type index_MenuButtonOptions as MenuButtonOptions, type MenuOptions$1 as MenuOptions, index_Menubar as Menubar, type index_MenubarOptions as MenubarOptions, type index_NextType as NextType, index_OrderedList as OrderedList, type index_OrderedListOptions as OrderedListOptions, type index_PadInfo as PadInfo, type index_PrefixType as PrefixType, index_Prompt as Prompt, type index_PromptChoice as PromptChoice, type index_PromptOptions as PromptOptions, type index_PropType as PropType, type index_Rec as Rec, index_Select as Select, type index_SelectOptions as SelectOptions, type index_SelectType as SelectType, type index_SetParentOptions as SetParentOptions, index_Text as Text, type index_TextOptions as TextOptions, index_UnorderedList as UnorderedList, type index_UnorderedListOptions as UnorderedListOptions, type index_UpdatePosOpts as UpdatePosOpts, index_Widget as Widget, type index_WidgetMake as WidgetMake, type index_WidgetOpts as WidgetOpts, index_alignChildren as alignChildren, index_dialog as dialog, index_drawBorder as drawBorder, make$1 as make, index_spaceChildren as spaceChildren, index_toPadArray as toPadArray, index_wrapChildren as wrapChildren };
 }
 
-export { ERROR, FALSE, IDENTITY, IS_NONZERO, IS_ZERO, NOOP, ONE, TRUE, WARN, type XY, ZERO, index$5 as app, blob, buffer, index$4 as canvas, index$9 as color, colors, cosmetic, flag, index$7 as fov, frequency, grid, index$2 as light, list, message, object, index$6 as path, queue, random, range, rng, scheduler, index$3 as sprite, tags, index$8 as text, tween, types, index$1 as ui, utils, index as widget, xy };
+type CalcFn = (rng: Random) => number;
+type CalcConfig = string | number | boolean | CalcFn | [number, number];
+declare function make(config: CalcConfig): CalcFn;
+declare function calc(config: CalcConfig, rng?: Random): number;
+
+type calc$1_CalcConfig = CalcConfig;
+type calc$1_CalcFn = CalcFn;
+declare const calc$1_calc: typeof calc;
+declare const calc$1_make: typeof make;
+declare namespace calc$1 {
+  export { type calc$1_CalcConfig as CalcConfig, type calc$1_CalcFn as CalcFn, calc$1_calc as calc, calc$1_make as make };
+}
+
+export { DIRS, ERROR, FALSE, IDENTITY, IS_NONZERO, IS_ZERO, type Loc$1 as Loc, NOOP, ONE, TRUE, WARN, type XY, ZERO, index$5 as app, blob, buffer, calc$1 as calc, index$4 as canvas, index$9 as color, colors, cosmetic, flag, index$7 as fov, frequency, grid, index$2 as light, list, message, object, index$6 as path, queue, random, range, rng, schedule, index$3 as sprite, tags, index$8 as text, tween, types, index$1 as ui, utils, index as widget, xy };

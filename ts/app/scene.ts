@@ -22,7 +22,7 @@ export type SceneMakeFn = (id: string, app: App) => Scene;
 export interface SceneCreateOpts {
     bg?: COLOR.ColorBase;
 
-    data?: Record<string, string>;
+    data?: Record<string, any>;
     styles?: STYLE.Sheet;
 
     make?: SceneMakeFn;

@@ -134,4 +134,62 @@ describe('Object functions', () => {
             expect(dest.flags).toEqual(['B', 'C', 'A', 'B']);
         });
     });
+
+    describe('mergeWith', () => {
+        test('simple objects', () => {
+            const a = { a: 1, b: 2 };
+            const b = { c: 3, d: 4, a: 5 };
+
+            const r = ObjectFn.mergeWith(a, b);
+            expect(r).toBe(a);
+            expect(r.c).toEqual(b.c);
+            expect(r.d).toEqual(b.d);
+            expect(r.a).toEqual(b.a);
+        });
+
+        test('with functions', () => {
+            const a = {
+                a() {
+                    return 1;
+                },
+                b: 2,
+            };
+            const b = {
+                c: 3,
+                d() {
+                    return 4;
+                },
+                a: 5,
+            };
+
+            const r = ObjectFn.mergeWith(a, b);
+            expect(r).toBe(a);
+            expect(r.c).toEqual(b.c);
+            expect(r.d()).toEqual(b.d());
+            expect(r.a).toEqual(b.a);
+            expect(r.b).toEqual(2);
+        });
+
+        test('customizer', () => {
+            const a = { a: 1, b: 2 };
+            const b = { c: 3, d: 4, a: 5 };
+
+            const fieldMap: ObjectFn.FieldMap = {
+                a(_c, u) {
+                    return u + 1;
+                },
+                d() {
+                    return () => 99;
+                },
+            };
+
+            const r = ObjectFn.mergeWith(a, b, fieldMap);
+            expect(r).toBe(a);
+            expect(r.c).toEqual(b.c);
+            expect(r.d()).toEqual(99);
+            expect(r.a).toEqual(b.a + 1);
+        });
+
+        test.todo("Used defaults syntax?  e.g. { 'a.b.c': 4 } ");
+    });
 });

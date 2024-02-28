@@ -134,3 +134,34 @@ export class Cache {
         return count;
     }
 }
+
+export type MessageArgs = Record<string, any>;
+export type MessageFn = (args: MessageArgs) => string;
+
+export class MessageManager {
+    // _replace: Record<string, MessageFn> = {};
+    _messages: Record<string, MessageFn> = {};
+
+    // addReplace(text: string, replace: (args: MessageArgs) => string) {
+    //     this._replace[text] = replace;
+    // }
+
+    // addReplaces(info: Record<string, MessageFn>) {
+    //     Object.entries(info).forEach(([k, v]) => this.addReplace(k, v));
+    // }
+
+    add(id: string, fn: MessageFn) {
+        this._messages[id] = fn;
+    }
+
+    addMany(msgs: Record<string, MessageFn>) {
+        Object.entries(msgs).forEach(([k, v]) => this.add(k, v));
+    }
+
+    format(id: string, args: MessageArgs): string {
+        const msg = this._messages[id] || (() => 'UNKNOWN MESSAGE: ' + id);
+        return msg(args);
+    }
+}
+
+export const manager = new MessageManager();
