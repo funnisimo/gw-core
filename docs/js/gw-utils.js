@@ -2358,11 +2358,32 @@
 	// CIRCLE
 	function forCircle(x, y, radius, fn) {
 	    let i, j;
+	    if (radius <= 0) {
+	        fn(x, y);
+	        return;
+	    }
 	    for (i = x - radius - 1; i < x + radius + 1; i++) {
 	        for (j = y - radius - 1; j < y + radius + 1; j++) {
 	            if ((i - x) * (i - x) + (j - y) * (j - y) <
 	                radius * radius + radius) {
 	                // + radius softens the circle
+	                fn(i, j);
+	            }
+	        }
+	    }
+	}
+	function forRadius(x, y, radius, fn) {
+	    let i, j;
+	    if (radius <= 0) {
+	        fn(x, y);
+	        return;
+	    }
+	    const r2 = radius * radius + radius;
+	    const r1 = (radius - 1) * (radius - 1) + (radius - 1) || 1; // || 1 saves us in radius = 1 (makes r1 0 which makes it include origin)
+	    for (i = x - radius; i < x + radius + 1; i++) {
+	        for (j = y - radius; j < y + radius + 1; j++) {
+	            const p2 = (i - x) * (i - x) + (j - y) * (j - y);
+	            if (p2 < r2 && p2 >= r1) {
 	                fn(i, j);
 	            }
 	        }
@@ -2512,6 +2533,7 @@
 		forLine: forLine,
 		forLineBetween: forLineBetween,
 		forLineFromTo: forLineFromTo,
+		forRadius: forRadius,
 		forRect: forRect,
 		getLine: getLine,
 		getLineThru: getLineThru,
@@ -3279,27 +3301,27 @@
 	        this.dumpRect(x - radius, y - radius, 2 * radius + 1, 2 * radius + 1, fmtFn, log);
 	    }
 	    // TODO - Use for(radius) loop to speed this up (do not look at each cell)
-	    closestMatchingLoc(x, y, v) {
-	        let bestLoc = [-1, -1];
-	        let bestDistance = 100 * (this.width + this.height);
-	        const fn = typeof v === 'function'
-	            ? v
-	            : (val) => val == v;
-	        this.forEach((v, i, j) => {
-	            if (fn(v, i, j, this)) {
-	                const dist = Math.floor(100 * distanceBetween(x, y, i, j));
-	                if (dist < bestDistance) {
-	                    bestLoc[0] = i;
-	                    bestLoc[1] = j;
-	                    bestDistance = dist;
-	                }
-	                else if (dist == bestDistance && random.chance(50)) {
-	                    bestLoc[0] = i;
-	                    bestLoc[1] = j;
-	                }
-	            }
-	        });
-	        return bestLoc;
+	    closestMatchingLoc(x, y, match) {
+	        // let bestLoc: Loc = [-1, -1];
+	        // let bestDistance = 100 * (this.width + this.height);
+	        const fn = typeof match === 'function'
+	            ? (val, x, y) => match(val, x, y, this)
+	            : (val) => val == match;
+	        // this.forEach((v, i, j) => {
+	        //     if (fn(v, i, j, this)) {
+	        //         const dist = Math.floor(100 * XY.distanceBetween(x, y, i, j));
+	        //         if (dist < bestDistance) {
+	        //             bestLoc[0] = i;
+	        //             bestLoc[1] = j;
+	        //             bestDistance = dist;
+	        //         } else if (dist == bestDistance && random.chance(50)) {
+	        //             bestLoc[0] = i;
+	        //             bestLoc[1] = j;
+	        //         }
+	        //     }
+	        // });
+	        // return bestLoc;
+	        return closestMatchingLoc([x, y], (x, y) => this.get(x, y), fn);
 	    }
 	    firstMatchingLoc(v) {
 	        const fn = typeof v === 'function'
@@ -3618,12 +3640,35 @@
 	    // @ts-ignore
 	    onto.update((_, i, j) => b.get(i, j) || a.get(i, j));
 	}
+	//////////////////////
+	function closestMatchingLoc(loc, source, match, opts = {}) {
+	    if (opts instanceof Random) {
+	        opts = { rng: opts };
+	    }
+	    const maxRadius = opts.maxRadius || 100;
+	    const rng = opts.rng || random;
+	    let radius = 0;
+	    while (radius < maxRadius) {
+	        let matches = [];
+	        forRadius(x(loc), y(loc), radius, (x, y) => {
+	            const v = source(x, y);
+	            if (v !== undefined && match(v, x, y)) {
+	                matches.push([x, y]);
+	            }
+	        });
+	        if (matches.length) {
+	            return rng.item(matches);
+	        }
+	        radius += 1;
+	    }
+	}
 
 	var grid = /*#__PURE__*/Object.freeze({
 		__proto__: null,
 		Grid: Grid,
 		NumGrid: NumGrid,
 		alloc: alloc$1,
+		closestMatchingLoc: closestMatchingLoc,
 		free: free$1,
 		intersection: intersection,
 		make: make$f,

@@ -436,30 +436,38 @@ export class Grid<T> {
     }
 
     // TODO - Use for(radius) loop to speed this up (do not look at each cell)
-    closestMatchingLoc(x: number, y: number, v: T | GridMatch<T>): Loc {
-        let bestLoc: Loc = [-1, -1];
-        let bestDistance = 100 * (this.width + this.height);
+    closestMatchingLocs(
+        x: number,
+        y: number,
+        match: T | GridMatch<T>
+    ): Loc[] | null {
+        // let bestLoc: Loc = [-1, -1];
+        // let bestDistance = 100 * (this.width + this.height);
 
         const fn: GridMatch<T> =
-            typeof v === 'function'
-                ? (v as GridMatch<T>)
-                : (val: T) => val == v;
+            typeof match === 'function'
+                ? (match as GridMatch<T>)
+                : (val: T) => val == match;
 
-        this.forEach((v, i, j) => {
-            if (fn(v, i, j, this)) {
-                const dist = Math.floor(100 * XY.distanceBetween(x, y, i, j));
-                if (dist < bestDistance) {
-                    bestLoc[0] = i;
-                    bestLoc[1] = j;
-                    bestDistance = dist;
-                } else if (dist == bestDistance && random.chance(50)) {
-                    bestLoc[0] = i;
-                    bestLoc[1] = j;
-                }
-            }
+        // this.forEach((v, i, j) => {
+        //     if (fn(v, i, j, this)) {
+        //         const dist = Math.floor(100 * XY.distanceBetween(x, y, i, j));
+        //         if (dist < bestDistance) {
+        //             bestLoc[0] = i;
+        //             bestLoc[1] = j;
+        //             bestDistance = dist;
+        //         } else if (dist == bestDistance && random.chance(50)) {
+        //             bestLoc[0] = i;
+        //             bestLoc[1] = j;
+        //         }
+        //     }
+        // });
+
+        // return bestLoc;
+        return XY.closestMatchingLocs(x, y, (x, y) => {
+            if (!this.hasXY(x, y)) return false;
+            return fn(this.get(x, y)!, x, y, this);
         });
-
-        return bestLoc;
     }
 
     firstMatchingLoc(v: T | GridMatch<T>): Loc {
@@ -909,3 +917,37 @@ export function unite(onto: NumGrid, a: NumGrid, b?: NumGrid) {
     // @ts-ignore
     onto.update((_, i, j) => b!.get(i, j) || a.get(i, j));
 }
+
+export interface ClosestMatchingOpts {
+    rng?: Random;
+    maxRadius?: number;
+}
+
+// //////////////////////
+// export function closestMatchingLoc<T>(
+//     loc: XY.XY | XY.Loc,
+//     source: (x: number, y: number) => T | undefined,
+//     match: (v: T, x: number, y: number) => boolean,
+//     opts: ClosestMatchingOpts | Random = {}
+// ): Loc | undefined {
+//     if (opts instanceof Random) {
+//         opts = { rng: opts };
+//     }
+//     const maxRadius = opts.maxRadius || 100;
+//     const rng = opts.rng || random;
+
+//     let radius = 0;
+//     while (radius < maxRadius) {
+//         let matches: XY.Loc[] = [];
+//         XY.forRadius(XY.x(loc), XY.y(loc), radius, (x, y) => {
+//             const v = source(x, y);
+//             if (v !== undefined && match(v, x, y)) {
+//                 matches.push([x, y]);
+//             }
+//         });
+//         if (matches.length) {
+//             return rng.item(matches);
+//         }
+//         radius += 1;
+//     }
+// }

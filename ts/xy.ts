@@ -392,8 +392,8 @@ export function distanceBetween(
 ) {
     const x = Math.abs(x1 - x2);
     const y = Math.abs(y1 - y2);
-    const min = Math.min(x, y);
-    return x + y - 0.6 * min;
+    const diag = Math.min(x, y);
+    return x + y - 0.6 * diag;
 }
 
 export function distanceFromTo(a: XY | Loc, b: XY | Loc): number {
@@ -634,6 +634,11 @@ export function getLineThru(
 export function forCircle(x: number, y: number, radius: number, fn: XYFunc) {
     let i, j;
 
+    if (radius <= 0) {
+        fn(x, y);
+        return;
+    }
+
     for (i = x - radius - 1; i < x + radius + 1; i++) {
         for (j = y - radius - 1; j < y + radius + 1; j++) {
             if (
@@ -641,6 +646,26 @@ export function forCircle(x: number, y: number, radius: number, fn: XYFunc) {
                 radius * radius + radius
             ) {
                 // + radius softens the circle
+                fn(i, j);
+            }
+        }
+    }
+}
+
+export function forRadius(x: number, y: number, radius: number, fn: XYFunc) {
+    let i, j;
+
+    if (radius <= 0) {
+        fn(x, y);
+        return;
+    }
+
+    const r2 = radius * radius + radius;
+    const r1 = (radius - 1) * (radius - 1) + (radius - 1) || 1; // || 1 saves us in radius = 1 (makes r1 0 which makes it include origin)
+    for (i = x - radius; i < x + radius + 1; i++) {
+        for (j = y - radius; j < y + radius + 1; j++) {
+            const p2 = (i - x) * (i - x) + (j - y) * (j - y);
+            if (p2 < r2 && p2 >= r1) {
                 fn(i, j);
             }
         }

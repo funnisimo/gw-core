@@ -404,10 +404,7 @@ describe('GW.grid', () => {
         expect(a.count(5)).toEqual(81);
     });
 
-    test('closestMatchingLoc', () => {
-        // UTILS.mockRandom();
-        random.seed(5);
-
+    test('closestMatchingLocs', () => {
         a = GW.grid.alloc(10, 10, 0);
         a._data[4][1] = 1;
         a._data[2][3] = 1;
@@ -415,15 +412,29 @@ describe('GW.grid', () => {
         function one(v: number) {
             return v == 1;
         }
-        expect(a.closestMatchingLoc(2, 2, one)).toEqual([2, 3]);
-        expect(a.closestMatchingLoc(4, 4, one)).toEqual([2, 3]);
-        expect(a.closestMatchingLoc(4, 2, one)).toEqual([4, 1]);
-        expect(a.closestMatchingLoc(3, 2, one)).toEqual([4, 1]);
+        expect(a.closestMatchingLocs(2, 2, one)).toEqual([[2, 3]]);
+        expect(a.closestMatchingLocs(4, 4, one)).toEqual([
+            [2, 3],
+            [4, 1],
+        ]);
+        expect(a.closestMatchingLocs(4, 2, one)).toEqual([[4, 1]]);
+        expect(a.closestMatchingLocs(3, 2, one)).toEqual([
+            [2, 3],
+            [4, 1],
+        ]);
 
-        expect(a.closestMatchingLoc(2, 2, 1)).toEqual([2, 3]);
-        expect(a.closestMatchingLoc(4, 4, 1)).toEqual([2, 3]);
-        expect(a.closestMatchingLoc(4, 2, 1)).toEqual([4, 1]);
-        expect(a.closestMatchingLoc(3, 2, 1)).toEqual([4, 1]);
+        expect(a.closestMatchingLocs(2, 2, 1)).toEqual([[2, 3]]);
+        expect(a.closestMatchingLocs(4, 4, 1)).toEqual([
+            [2, 3],
+            [4, 1],
+        ]);
+        expect(a.closestMatchingLocs(4, 2, 1)).toEqual([[4, 1]]);
+        expect(a.closestMatchingLocs(3, 2, 1)).toEqual([
+            [2, 3],
+            [4, 1],
+        ]);
+
+        GW.grid.free(a);
     });
 
     test('firstMatchingLoc', () => {

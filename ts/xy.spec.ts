@@ -417,4 +417,130 @@ describe('XY', () => {
             ]);
         });
     });
+
+    describe('forCircle', () => {
+        test('radius 0', () => {
+            const pts: XY.Loc[] = [];
+            XY.forCircle(5, 5, 0, (x, y) => pts.push([x, y]));
+            expect(pts).toEqual([[5, 5]]);
+        });
+        test('radius 1', () => {
+            const pts: XY.Loc[] = [];
+            XY.forCircle(5, 5, 1, (x, y) => pts.push([x, y]));
+            expect(pts).toEqual([
+                [4, 5],
+                [5, 4],
+                [5, 5],
+                [5, 6],
+                [6, 5],
+            ]);
+        });
+        test('radius 2', () => {
+            const pts: XY.Loc[] = [];
+            XY.forCircle(5, 5, 2, (x, y) => pts.push([x, y]));
+            expect(pts).toHaveLength(21);
+            //  -XXX-
+            //  XXXXX
+            //  XXXXX
+            //  XXXXX
+            //  -XXX-
+            // Left
+            expect(pts).not.toContainEqual([3, 3]);
+            expect(pts).toContainEqual([3, 4]);
+            expect(pts).toContainEqual([3, 5]);
+            expect(pts).toContainEqual([3, 6]);
+            expect(pts).not.toContainEqual([3, 7]);
+            // Right
+            expect(pts).not.toContainEqual([7, 3]);
+            expect(pts).toContainEqual([7, 4]);
+            expect(pts).toContainEqual([7, 5]);
+            expect(pts).toContainEqual([7, 6]);
+            expect(pts).not.toContainEqual([7, 7]);
+            // Top
+            expect(pts).toContainEqual([4, 3]);
+            expect(pts).toContainEqual([5, 3]);
+            expect(pts).toContainEqual([6, 3]);
+            // Bottom
+            expect(pts).toContainEqual([4, 7]);
+            expect(pts).toContainEqual([5, 7]);
+            expect(pts).toContainEqual([6, 7]);
+        });
+        test('radius 3', () => {
+            const pts: XY.Loc[] = [];
+            XY.forCircle(5, 5, 3, (x, y) => pts.push([x, y]));
+            expect(pts).toHaveLength(37);
+            // --XXX--
+            // -XXXXX-
+            // XXXXXXX
+            // XXXXXXX
+            // XXXXXXX
+            // -XXXXX-
+            // --XXX--
+        });
+    });
+
+    describe('forRadius', () => {
+        test('radius 0', () => {
+            const pts: XY.Loc[] = [];
+            XY.forRadius(5, 5, 0, (x, y) => pts.push([x, y]));
+            // X
+            expect(pts).toEqual([[5, 5]]);
+        });
+        test('radius 1', () => {
+            const pts: XY.Loc[] = [];
+            XY.forRadius(5, 5, 1, (x, y) => pts.push([x, y]));
+            // -X-
+            // X-X
+            // -X-
+            expect(pts).toHaveLength(4);
+            expect(pts).toEqual([
+                [4, 5],
+                [5, 4],
+                [5, 6],
+                [6, 5],
+            ]);
+        });
+        test('radius 2', () => {
+            const pts: XY.Loc[] = [];
+            XY.forRadius(5, 5, 2, (x, y) => pts.push([x, y]));
+            expect(pts).toHaveLength(16);
+            //  -XXX-
+            //  XX-XX
+            //  X---X
+            //  XX-XX
+            //  -XXX-
+            // Left
+            expect(pts).not.toContainEqual([3, 3]);
+            expect(pts).toContainEqual([3, 4]);
+            expect(pts).toContainEqual([3, 5]);
+            expect(pts).toContainEqual([3, 6]);
+            expect(pts).not.toContainEqual([3, 7]);
+            // Right
+            expect(pts).not.toContainEqual([7, 3]);
+            expect(pts).toContainEqual([7, 4]);
+            expect(pts).toContainEqual([7, 5]);
+            expect(pts).toContainEqual([7, 6]);
+            expect(pts).not.toContainEqual([7, 7]);
+            // Top
+            expect(pts).toContainEqual([4, 3]);
+            expect(pts).toContainEqual([5, 3]);
+            expect(pts).toContainEqual([6, 3]);
+            // Bottom
+            expect(pts).toContainEqual([4, 7]);
+            expect(pts).toContainEqual([5, 7]);
+            expect(pts).toContainEqual([6, 7]);
+        });
+        test('radius 3', () => {
+            const pts: XY.Loc[] = [];
+            XY.forRadius(5, 5, 3, (x, y) => pts.push([x, y]));
+            expect(pts).toHaveLength(16);
+            // --XXX--
+            // -X---X-
+            // X-----X
+            // X-----X
+            // X-----X
+            // -X---X-
+            // --XXX--
+        });
+    });
 });

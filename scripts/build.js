@@ -4,6 +4,7 @@ import * as fs from 'node:fs';
 import * as process from 'node:process';
 import * as path from 'node:path';
 import * as child_process from 'node:child_process';
+import { globSync } from 'glob';
 import terminal from 'terminal-kit';
 
 function getBaseDir() {
@@ -68,7 +69,7 @@ const main = async () => {
         process.exit(1);
     }
 
-    term('Running ^yfixz_types.sh^ ...\n');
+    term('Running ^yfix_types.sh^ ...\n');
     try {
         const output = child_process.execSync('./scripts/fix_types.sh');
         if (output.length) {
@@ -86,6 +87,13 @@ const main = async () => {
     term('Copying ^gREADME.md^ to ^bdist\n');
     fs.copyFileSync('README.md', 'dist/README.md');
 
+    // Copy files for docs
+    term('Copying build files to ^bdocs\n');
+    const buildFiles = globSync('dist/gw-utils.js*');
+    for (let file of buildFiles) {
+        fs.copyFileSync(file, 'docs/js/' + path.basename(file));
+    }
+
     term('Reading ^gpackage.json\n');
     var packageJson = JSON.parse(fs.readFileSync('package.json'));
     packageJson.devDependencies = {};
@@ -93,12 +101,15 @@ const main = async () => {
     packageJson.prettier = {};
     packageJson.main = './index.js';
     packageJson.types = './index.d.ts';
-    packageJson.browser = './gw-utils.min.js';
 
     term('Writing updated ^gpackage.json^ to ^bdist\n');
     fs.writeFileSync('dist/package.json', JSON.stringify(packageJson, null, 4));
 
-    term('^gok\n');
+    // Create version file for docs
+    term('Creating ^gVERSION^ file in ^bdocs\n');
+    fs.writeFileSync('docs/VERSION', `${packageJson.version}\n`, { flag: 'w' });
+
+    term('^gok^ - ' + packageJson.version + '\n');
 };
 
 main();
