@@ -9518,6 +9518,7 @@ void main() {
 	                        ++topBlobSize;
 	                });
 	                dest.calcBounds((v) => v > 0, bounds);
+	                topBlobNumber = 1;
 	            }
 	            // Calc the percent of that area that is filled
 	            pctFilled = Math.floor((100 * topBlobSize) / (bounds.width * bounds.height));

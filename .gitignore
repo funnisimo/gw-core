@@ -1,9 +1,11 @@
+# ignore build output
+dist/
+
 # ignore <root>/js
 .DS_Store
 .rollup.cache/
 .vscode/
 .theia/
-dist/_temp/
 
 # Logs
 logs
