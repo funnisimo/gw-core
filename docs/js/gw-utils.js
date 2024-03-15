@@ -1977,6 +1977,9 @@
 	        typeof a[0] === 'number' &&
 	        typeof a[1] === 'number');
 	}
+	function xy(x, y) {
+	    return { x, y };
+	}
 	function isXY(a) {
 	    return a && typeof a.x === 'number' && typeof a.y === 'number';
 	}
@@ -2099,15 +2102,25 @@
 	    dest.x = x(src);
 	    dest.y = y(src);
 	}
-	function addTo(dest, src) {
+	function add(dest, src) {
 	    dest.x += x(src);
 	    dest.y += y(src);
 	}
-	function add(a, b) {
+	function sub(dest, src) {
+	    dest.x -= x(src);
+	    dest.y -= y(src);
+	}
+	function plus(a, b) {
 	    if (Array.isArray(a)) {
 	        return [a[0] + x(b), a[1] + y(b)];
 	    }
 	    return { x: a.x + x(b), y: a.y + y(b) };
+	}
+	function minus(a, b) {
+	    if (Array.isArray(a)) {
+	        return [a[0] - x(b), a[1] - y(b)];
+	    }
+	    return { x: a.x - x(b), y: a.y - y(b) };
 	}
 	function equals(dest, src) {
 	    if (!dest && !src)
@@ -2159,10 +2172,13 @@
 	    }
 	    return [-1, -1];
 	}
-	function straightDistanceBetween(x1, y1, x2, y2) {
-	    const x = Math.abs(x1 - x2);
-	    const y = Math.abs(y1 - y2);
-	    return x + y;
+	function manhattanDistanceFromTo(a, b) {
+	    return manhattanDistanceBetween(x(a), y(a), x(b), y(b));
+	}
+	function manhattanDistanceBetween(x1, y1, x2, y2) {
+	    const dx = Math.abs(x1 - x2);
+	    const dy = Math.abs(y1 - y2);
+	    return dx + dy;
 	}
 	function maxAxisFromTo(a, b) {
 	    const xa = Math.abs(x(a) - x(b));
@@ -2455,7 +2471,7 @@
 	    return locs.length ? locs : null;
 	}
 
-	var xy = /*#__PURE__*/Object.freeze({
+	var xy$1 = /*#__PURE__*/Object.freeze({
 		__proto__: null,
 		Bounds: Bounds,
 		CLOCK_DIRS: CLOCK_DIRS,
@@ -2473,7 +2489,6 @@
 		RIGHT_UP: RIGHT_UP,
 		UP: UP,
 		add: add,
-		addTo: addTo,
 		arcCount: arcCount,
 		asLoc: asLoc,
 		asXY: asXY,
@@ -2506,12 +2521,17 @@
 		isSameDir: isSameDir,
 		isXY: isXY,
 		lerp: lerp,
+		manhattanDistanceBetween: manhattanDistanceBetween,
+		manhattanDistanceFromTo: manhattanDistanceFromTo,
 		matchingNeighbor: matchingNeighbor,
 		maxAxisBetween: maxAxisBetween,
 		maxAxisFromTo: maxAxisFromTo,
+		minus: minus,
+		plus: plus,
 		stepFromTo: stepFromTo,
-		straightDistanceBetween: straightDistanceBetween,
+		sub: sub,
 		x: x,
+		xy: xy,
 		y: y
 	});
 
@@ -3055,8 +3075,9 @@
 	            }
 	        });
 	    }
-	    randomEach(fn) {
-	        const sequence = random.sequence(this.width * this.height);
+	    randomEach(fn, rng) {
+	        rng = rng || random;
+	        const sequence = rng.sequence(this.width * this.height);
 	        for (let i = 0; i < sequence.length; ++i) {
 	            const n = sequence[i];
 	            const x = n % this.width;
@@ -3103,25 +3124,75 @@
 	        return (this.hasXY(x, y) &&
 	            (x == 0 || x == this.width - 1 || y == 0 || y == this.height - 1));
 	    }
-	    calcBounds() {
-	        const bounds = {
-	            left: this.width,
-	            top: this.height,
-	            right: 0,
-	            bottom: 0,
-	        };
-	        this.forEach((v, i, j) => {
-	            if (!v)
-	                return;
-	            if (bounds.left > i)
-	                bounds.left = i;
-	            if (bounds.right < i)
-	                bounds.right = i;
-	            if (bounds.top > j)
-	                bounds.top = j;
-	            if (bounds.bottom < j)
-	                bounds.bottom = j;
-	        });
+	    calcBounds(val, bounds) {
+	        bounds = bounds || new Bounds(0, 0, this.width, this.height);
+	        let fn;
+	        if (val === undefined) {
+	            fn = (v) => !!v;
+	        }
+	        else if (typeof val !== 'function') {
+	            fn = (t) => t == val;
+	        }
+	        else {
+	            fn = val;
+	        }
+	        let foundValueAtThisLine = false;
+	        let i, j;
+	        let left = this.width - 1, right = 0, top = this.height - 1, bottom = 0;
+	        // Figure out the top blob's height and width:
+	        // First find the max & min x:
+	        for (i = 0; i < this.width; i++) {
+	            foundValueAtThisLine = false;
+	            for (j = 0; j < this.height; j++) {
+	                if (fn(this._data[i][j])) {
+	                    foundValueAtThisLine = true;
+	                    break;
+	                }
+	            }
+	            if (foundValueAtThisLine) {
+	                if (i < left) {
+	                    left = i;
+	                }
+	                if (i > right) {
+	                    right = i;
+	                }
+	            }
+	        }
+	        // Then the max & min y:
+	        for (j = 0; j < this.height; j++) {
+	            foundValueAtThisLine = false;
+	            for (i = 0; i < this.width; i++) {
+	                if (fn(this._data[i][j])) {
+	                    foundValueAtThisLine = true;
+	                    break;
+	                }
+	            }
+	            if (foundValueAtThisLine) {
+	                if (j < top) {
+	                    top = j;
+	                }
+	                if (j > bottom) {
+	                    bottom = j;
+	                }
+	            }
+	        }
+	        bounds = bounds || new Bounds(0, 0, 0, 0);
+	        if (right > 0) {
+	            bounds.x = left;
+	            bounds.width = right - left + 1;
+	        }
+	        else {
+	            bounds.x = 0;
+	            bounds.width = 0;
+	        }
+	        if (bottom > 0) {
+	            bounds.y = top;
+	            bounds.height = bottom - top + 1;
+	        }
+	        else {
+	            bounds.y = 0;
+	            bounds.height = 0;
+	        }
 	        return bounds;
 	    }
 	    update(fn) {
@@ -3417,54 +3488,63 @@
 	        const targetValue = this.leastPositiveValue();
 	        return this.randomMatchingLoc(targetValue);
 	    }
-	    valueBounds(value, bounds) {
-	        let foundValueAtThisLine = false;
-	        let i, j;
-	        let left = this.width - 1, right = 0, top = this.height - 1, bottom = 0;
-	        // Figure out the top blob's height and width:
-	        // First find the max & min x:
-	        for (i = 0; i < this.width; i++) {
-	            foundValueAtThisLine = false;
-	            for (j = 0; j < this.height; j++) {
-	                if (this._data[i][j] == value) {
-	                    foundValueAtThisLine = true;
-	                    break;
-	                }
-	            }
-	            if (foundValueAtThisLine) {
-	                if (i < left) {
-	                    left = i;
-	                }
-	                if (i > right) {
-	                    right = i;
-	                }
-	            }
-	        }
-	        // Then the max & min y:
-	        for (j = 0; j < this.height; j++) {
-	            foundValueAtThisLine = false;
-	            for (i = 0; i < this.width; i++) {
-	                if (this._data[i][j] == value) {
-	                    foundValueAtThisLine = true;
-	                    break;
-	                }
-	            }
-	            if (foundValueAtThisLine) {
-	                if (j < top) {
-	                    top = j;
-	                }
-	                if (j > bottom) {
-	                    bottom = j;
-	                }
-	            }
-	        }
-	        bounds = bounds || new Bounds(0, 0, 0, 0);
-	        bounds.x = left;
-	        bounds.y = top;
-	        bounds.width = right - left + 1;
-	        bounds.height = bottom - top + 1;
-	        return bounds;
-	    }
+	    // valueBounds(value: number | ((v: number) => boolean), bounds?: XY.Bounds) {
+	    //     let fn: (v: number) => boolean;
+	    //     if (typeof value === 'number') {
+	    //         fn = (v) => v == value;
+	    //     } else {
+	    //         fn = value;
+	    //     }
+	    //     let foundValueAtThisLine = false;
+	    //     let i: number, j: number;
+	    //     let left = this.width - 1,
+	    //         right = 0,
+	    //         top = this.height - 1,
+	    //         bottom = 0;
+	    //     // Figure out the top blob's height and width:
+	    //     // First find the max & min x:
+	    //     for (i = 0; i < this.width; i++) {
+	    //         foundValueAtThisLine = false;
+	    //         for (j = 0; j < this.height; j++) {
+	    //             if (fn(this._data[i][j])) {
+	    //                 foundValueAtThisLine = true;
+	    //                 break;
+	    //             }
+	    //         }
+	    //         if (foundValueAtThisLine) {
+	    //             if (i < left) {
+	    //                 left = i;
+	    //             }
+	    //             if (i > right) {
+	    //                 right = i;
+	    //             }
+	    //         }
+	    //     }
+	    //     // Then the max & min y:
+	    //     for (j = 0; j < this.height; j++) {
+	    //         foundValueAtThisLine = false;
+	    //         for (i = 0; i < this.width; i++) {
+	    //             if (fn(this._data[i][j])) {
+	    //                 foundValueAtThisLine = true;
+	    //                 break;
+	    //             }
+	    //         }
+	    //         if (foundValueAtThisLine) {
+	    //             if (j < top) {
+	    //                 top = j;
+	    //             }
+	    //             if (j > bottom) {
+	    //                 bottom = j;
+	    //             }
+	    //         }
+	    //     }
+	    //     bounds = bounds || new XY.Bounds(0, 0, 0, 0);
+	    //     bounds.x = left;
+	    //     bounds.y = top;
+	    //     bounds.width = right - left + 1;
+	    //     bounds.height = bottom - top + 1;
+	    //     return bounds;
+	    // }
 	    // Marks a cell as being a member of blobNumber, then recursively iterates through the rest of the blob
 	    floodFill(x, y, matchValue, fillValue) {
 	        const matchFn = typeof matchValue == 'function'
@@ -4830,6 +4910,7 @@
 	installSpread('tan', [80, 70, 55]); // 80, 67,		15);
 	installSpread('pink', [100, 60, 66]);
 	installSpread('gray', [50, 50, 50]);
+	installSpread('grey', [50, 50, 50]);
 	installSpread('yellow', [100, 100, 0]);
 	installSpread('purple', [100, 0, 100]);
 	installSpread('green', [0, 100, 0]);
@@ -6575,7 +6656,7 @@
 	    });
 	}
 
-	// import * as GWU from 'gw-utils';
+	// import * as GWU from 'gw-utils/dist';
 	// import * as Flags from './mapFlags';
 	// import * as Cell from './cell';
 	// import * as Map from './map';
@@ -9317,12 +9398,27 @@ void main() {
 	            percentSeeded: 50,
 	            birthParameters: 'ffffffttt',
 	            survivalParameters: 'ffffttttt',
+	            tries: 10,
+	            seedWidth: 0,
+	            seedHeight: 0,
+	            minPercentFilled: 50,
+	            maxPercentFilled: 90,
+	            largestOnly: true,
 	        };
 	        Object.assign(this.options, opts);
 	        this.options.birthParameters =
 	            this.options.birthParameters.toLowerCase();
 	        this.options.survivalParameters =
 	            this.options.survivalParameters.toLowerCase();
+	        if (this.options.percentSeeded < 1) {
+	            this.options.percentSeeded = Math.floor(this.options.percentSeeded * 100);
+	        }
+	        if (this.options.minPercentFilled < 1) {
+	            this.options.minPercentFilled = Math.floor(this.options.minPercentFilled * 100);
+	        }
+	        if (this.options.maxPercentFilled < 1) {
+	            this.options.maxPercentFilled = Math.floor(this.options.maxPercentFilled * 100);
+	        }
 	        if (this.options.minWidth >= this.options.maxWidth) {
 	            this.options.minWidth = Math.round(0.75 * this.options.maxWidth);
 	            this.options.maxWidth = Math.round(1.25 * this.options.maxWidth);
@@ -9330,6 +9426,12 @@ void main() {
 	        if (this.options.minHeight >= this.options.maxHeight) {
 	            this.options.minHeight = Math.round(0.75 * this.options.maxHeight);
 	            this.options.maxHeight = Math.round(1.25 * this.options.maxHeight);
+	        }
+	        if (!this.options.seedWidth) {
+	            this.options.seedWidth = this.options.maxWidth;
+	        }
+	        if (!this.options.seedHeight) {
+	            this.options.seedHeight = this.options.maxHeight;
 	        }
 	    }
 	    carve(width, height, setFn) {
@@ -9341,25 +9443,51 @@ void main() {
 	        const maxHeight = Math.min(height, this.options.maxHeight);
 	        const minWidth = Math.min(width, this.options.minWidth);
 	        const minHeight = Math.min(height, this.options.minHeight);
-	        const left = Math.floor((dest.width - maxWidth) / 2);
-	        const top = Math.floor((dest.height - maxHeight) / 2);
-	        let tries = 10;
+	        const seedWidth = this.options.seedWidth;
+	        const seedHeight = this.options.seedHeight;
+	        const seedLeft = Math.floor((dest.width - seedWidth) / 2);
+	        const seedTop = Math.floor((dest.height - seedHeight) / 2);
+	        const minPctFilled = this.options.minPercentFilled;
+	        const maxPctFilled = this.options.maxPercentFilled;
+	        let pctFilled = 0;
+	        let tries = this.options.tries;
 	        // Generate blobs until they satisfy the minBlobWidth and minBlobHeight restraints
 	        do {
 	            // Clear buffer.
 	            dest.fill(0);
 	            // Fill relevant portion with noise based on the percentSeeded argument.
-	            for (i = 0; i < maxWidth; i++) {
-	                for (j = 0; j < maxHeight; j++) {
-	                    dest._data[i + left][j + top] = this.options.rng.chance(this.options.percentSeeded)
-	                        ? 1
-	                        : 0;
+	            for (i = 0; i < seedWidth; i++) {
+	                for (j = 0; j < seedHeight; j++) {
+	                    dest._data[i + seedLeft][j + seedTop] =
+	                        this.options.rng.chance(this.options.percentSeeded)
+	                            ? 1
+	                            : 0;
 	                }
 	            }
 	            // Some iterations of cellular automata
 	            for (k = 0; k < this.options.rounds; k++) {
-	                if (!this._cellularAutomataRound(dest)) {
+	                if (!cellularAutomataRound(dest, this.options.birthParameters, this.options.survivalParameters)) {
+	                    // TODO - why not just break?
 	                    k = this.options.rounds; // cellularAutomataRound did not make any changes
+	                }
+	            }
+	            dest.calcBounds(1, bounds);
+	            if (bounds.width > maxWidth) {
+	                const iters = Math.floor((dest.width - maxWidth) / 2);
+	                for (let x = 0; x < iters; ++x) {
+	                    for (let y = 0; y < height; ++y) {
+	                        dest.set(x, y, 0);
+	                        dest.set(width - x - 1, y, 0);
+	                    }
+	                }
+	            }
+	            if (bounds.height > maxHeight) {
+	                const iters = Math.floor((dest.height - maxHeight) / 2);
+	                for (let y = 0; y < iters; ++y) {
+	                    for (let x = 0; x < width; ++x) {
+	                        dest.set(x, y, 0);
+	                        dest.set(x, height - y - 1, 0);
+	                    }
 	                }
 	            }
 	            // Now to measure the result. These are best-of variables; start them out at worst-case values.
@@ -9367,9 +9495,9 @@ void main() {
 	            topBlobNumber = 0;
 	            // Fill each blob with its own number, starting with 2 (since 1 means floor), and keeping track of the biggest:
 	            blobNumber = 2;
-	            for (i = 0; i < dest.width; i++) {
-	                for (j = 0; j < dest.height; j++) {
-	                    if (dest._data[i][j] == 1) {
+	            if (this.options.largestOnly) {
+	                dest.forEach((v, i, j) => {
+	                    if (v == 1) {
 	                        // an unmarked blob
 	                        // Mark all the cells and returns the total size:
 	                        blobSize = dest.floodFill(i, j, 1, blobNumber);
@@ -9380,58 +9508,56 @@ void main() {
 	                        }
 	                        blobNumber++;
 	                    }
-	                }
+	                });
+	                // Figure out the top blob's height and width:
+	                dest.calcBounds(topBlobNumber, bounds);
 	            }
-	            // Figure out the top blob's height and width:
-	            dest.valueBounds(topBlobNumber, bounds);
+	            else {
+	                dest.forEach((v) => {
+	                    if (v > 0)
+	                        ++topBlobSize;
+	                });
+	                dest.calcBounds((v) => v > 0, bounds);
+	            }
+	            // Calc the percent of that area that is filled
+	            pctFilled = Math.floor((100 * topBlobSize) / (bounds.width * bounds.height));
 	        } while ((bounds.width < minWidth ||
 	            bounds.height < minHeight ||
-	            topBlobNumber == 0) &&
+	            bounds.width > maxWidth ||
+	            bounds.height > maxHeight ||
+	            topBlobNumber == 0 ||
+	            pctFilled < minPctFilled ||
+	            pctFilled > maxPctFilled) &&
 	            --tries);
-	        // Replace the winning blob with 1's, and everything else with 0's:
-	        for (i = 0; i < dest.width; i++) {
-	            for (j = 0; j < dest.height; j++) {
-	                if (dest._data[i][j] == topBlobNumber) {
-	                    setFn(i, j);
-	                }
-	            }
+	        if (tries <= 0) {
+	            console.warn('Failed to find successful blob, returning last attempt.');
+	            if (bounds.width < minWidth)
+	                console.log(' - too narrow');
+	            if (bounds.height < minHeight)
+	                console.log(' - too short');
+	            if (bounds.width > maxWidth)
+	                console.log(' - too wide');
+	            if (bounds.height > maxHeight)
+	                console.log(' - too tall');
+	            if (topBlobNumber == 0)
+	                console.log(' - empty');
+	            if (pctFilled < minPctFilled)
+	                console.log(' - too sparse');
+	            if (pctFilled > maxPctFilled)
+	                console.log(' - too dense');
+	            dest.dump();
 	        }
+	        // Replace the winning blob with 1's, and everything else with 0's:
+	        dest.forEach((v, i, j) => {
+	            if (!v)
+	                return;
+	            if (!this.options.largestOnly || v == topBlobNumber) {
+	                setFn(i, j);
+	            }
+	        });
 	        free$1(dest);
 	        // Populate the returned variables.
 	        return bounds;
-	    }
-	    _cellularAutomataRound(grid$1) {
-	        let i, j, nbCount, newX, newY;
-	        let dir;
-	        let buffer2;
-	        buffer2 = alloc$1(grid$1.width, grid$1.height);
-	        buffer2.copy(grid$1); // Make a backup of this in buffer2, so that each generation is isolated.
-	        let didSomething = false;
-	        for (i = 0; i < grid$1.width; i++) {
-	            for (j = 0; j < grid$1.height; j++) {
-	                nbCount = 0;
-	                for (dir = 0; dir < DIRS$2.length; dir++) {
-	                    newX = i + DIRS$2[dir][0];
-	                    newY = j + DIRS$2[dir][1];
-	                    if (grid$1.hasXY(newX, newY) && buffer2._data[newX][newY]) {
-	                        nbCount++;
-	                    }
-	                }
-	                if (!buffer2._data[i][j] &&
-	                    this.options.birthParameters[nbCount] == 't') {
-	                    grid$1._data[i][j] = 1; // birth
-	                    didSomething = true;
-	                }
-	                else if (buffer2._data[i][j] &&
-	                    this.options.survivalParameters[nbCount] == 't') ;
-	                else {
-	                    grid$1._data[i][j] = 0; // death
-	                    didSomething = true;
-	                }
-	            }
-	        }
-	        free$1(buffer2);
-	        return didSomething;
 	    }
 	}
 	function fillBlob(grid, opts = {}) {
@@ -9441,10 +9567,43 @@ void main() {
 	function make$5(opts = {}) {
 	    return new Blob(opts);
 	}
+	function cellularAutomataRound(grid$1, birthParameters, survivalParameters) {
+	    let i, j, nbCount, newX, newY;
+	    let dir;
+	    let buffer2;
+	    buffer2 = alloc$1(grid$1.width, grid$1.height);
+	    buffer2.copy(grid$1); // Make a backup of this in buffer2, so that each generation is isolated.
+	    let didSomething = false;
+	    for (i = 0; i < grid$1.width; i++) {
+	        for (j = 0; j < grid$1.height; j++) {
+	            nbCount = 0;
+	            for (dir = 0; dir < DIRS$2.length; dir++) {
+	                newX = i + DIRS$2[dir][0];
+	                newY = j + DIRS$2[dir][1];
+	                if (grid$1.hasXY(newX, newY) && buffer2._data[newX][newY]) {
+	                    nbCount++;
+	                }
+	            }
+	            if (!buffer2._data[i][j] && birthParameters[nbCount] == 't') {
+	                grid$1._data[i][j] = 1; // birth
+	                didSomething = true;
+	            }
+	            else if (buffer2._data[i][j] &&
+	                survivalParameters[nbCount] == 't') ;
+	            else {
+	                grid$1._data[i][j] = 0; // death
+	                didSomething = true;
+	            }
+	        }
+	    }
+	    free$1(buffer2);
+	    return didSomething;
+	}
 
 	var blob = /*#__PURE__*/Object.freeze({
 		__proto__: null,
 		Blob: Blob,
+		cellularAutomataRound: cellularAutomataRound,
 		fillBlob: fillBlob,
 		make: make$5
 	});
@@ -10972,7 +11131,7 @@ void main() {
 	            draw: true,
 	        };
 	        Object.assign(this.paused, opts);
-	        this.events.emit('pause');
+	        this.events.emit('pause', opts);
 	    }
 	    resume(opts) {
 	        opts = opts || {
@@ -10988,7 +11147,7 @@ void main() {
 	            }
 	        });
 	        this.needsDraw = true;
-	        this.events.emit('resume');
+	        this.events.emit('resume', opts);
 	    }
 	    // FRAME STEPS
 	    frameStart() {
@@ -11054,8 +11213,8 @@ void main() {
 	        if (this.stopped)
 	            return;
 	        if (!this.paused.update) {
-	            this.events.emit('fixed_update', dt);
-	            this.all.forEach((c) => c.fixed_update(dt));
+	            this.events.emit('fixedUpdate', dt);
+	            this.all.forEach((c) => c.fixedUpdate(dt));
 	        }
 	    }
 	    draw(buffer) {
@@ -11300,11 +11459,10 @@ void main() {
 	        }
 	        return this.timers.setTimeout(fn, delay);
 	    }
-	    repeat(delay, fn, ctx) {
+	    repeat(delay, fn, ...args) {
 	        if (typeof fn === 'string') {
 	            const ev = fn;
-	            ctx = ctx || {};
-	            fn = () => this.emit(ev, ctx);
+	            fn = () => this.emit(ev, ...args);
 	        }
 	        return this.timers.setInterval(fn, delay);
 	    }
@@ -12009,13 +12167,13 @@ void main() {
 	            return;
 	        child.setParent(null);
 	    }
-	    childAt(xy$1, y) {
-	        if (!isXY(xy$1)) {
-	            xy$1 = { x: xy$1, y: y };
+	    childAt(xy, y) {
+	        if (!isXY(xy)) {
+	            xy = { x: xy, y: y };
 	        }
 	        // if (!this.contains(xy)) return null;
 	        for (let child of this.children) {
-	            if (child.contains(xy$1))
+	            if (child.contains(xy))
 	                return child;
 	        }
 	        return null;
@@ -12162,8 +12320,8 @@ void main() {
 	    update(dt) {
 	        this.emit('update', dt);
 	    }
-	    fixed_update(dt) {
-	        this.emit('fixed_update', dt);
+	    fixedUpdate(dt) {
+	        this.emit('fixedUpdate', dt);
 	    }
 	    destroy() {
 	        if (this.parent) {
@@ -12221,7 +12379,7 @@ void main() {
 	    widget.bounds.pad(pad);
 	}
 
-	// import * as GWU from 'gw-utils';
+	// import * as GWU from 'gw-utils/dist';
 	class Text extends Widget {
 	    constructor(opts) {
 	        super(opts);
@@ -12336,9 +12494,9 @@ void main() {
 	    return list;
 	};
 	*/
-	function drawBorder(buffer, x, y, w, h, style, ascii) {
-	    const fg = style.fg;
-	    const bg = style.bg;
+	function drawBorder(buffer, x, y, w, h, color, ascii = true) {
+	    const fg = color.fg || null;
+	    const bg = color.bg || null;
 	    if (ascii) {
 	        for (let i = 1; i < w; ++i) {
 	            buffer.draw(x + i, y, '-', fg, bg);
@@ -12360,7 +12518,7 @@ void main() {
 	    }
 	}
 
-	// import * as GWU from 'gw-utils';
+	// import * as GWU from 'gw-utils/dist';
 	function toPadArray(pad) {
 	    if (!pad)
 	        return [0, 0, 0, 0];
@@ -12539,7 +12697,7 @@ void main() {
 	};
 	installScene('alert', AlertScene);
 
-	// import * as GWU from 'gw-utils';
+	// import * as GWU from 'gw-utils/dist';
 	class Button extends Text {
 	    constructor(opts) {
 	        super((() => {
@@ -12584,7 +12742,7 @@ void main() {
 	};
 	*/
 
-	// import * as GWU from 'gw-utils';
+	// import * as GWU from 'gw-utils/dist';
 	const ConfirmScene = {
 	    create() {
 	        this.on('keypress', (e) => {
@@ -12679,7 +12837,7 @@ void main() {
 	};
 	installScene('confirm', ConfirmScene);
 
-	// import * as GWU from 'gw-utils';
+	// import * as GWU from 'gw-utils/dist';
 	defaultStyle.add('input', {
 	    bg: 'light_gray',
 	    fg: 'black',
@@ -12862,7 +13020,7 @@ void main() {
 	};
 	*/
 
-	// import * as GWU from 'gw-utils';
+	// import * as GWU from 'gw-utils/dist';
 	const PromptScene = {
 	    create() {
 	        this.on('mousemove', (e) => {
@@ -12874,8 +13032,8 @@ void main() {
 	        this.on('keypress', (e) => {
 	            e.stopPropagation();
 	        });
-	        this.on('INPUT', () => {
-	            const input = this.get('INPUT');
+	        this.on('PROMPT', () => {
+	            const input = this.get('PROMPT');
 	            this.stop(input ? input.text() : null);
 	        });
 	        this.on('Escape', () => {
@@ -12925,11 +13083,11 @@ void main() {
 	            parent: dialog,
 	            class: opts.inputClass || opts.class,
 	            width,
-	            id: 'INPUT',
+	            id: 'PROMPT',
 	            x,
 	            bottom: -1,
 	        });
-	        this.once('INPUT', () => {
+	        this.once('PROMPT', () => {
 	            if (opts.done)
 	                opts.done(input.text());
 	        });
@@ -12977,7 +13135,7 @@ void main() {
 		PromptScene: PromptScene
 	});
 
-	// import * as GWU from 'gw-utils';
+	// import * as GWU from 'gw-utils/dist';
 	class Fieldset extends Dialog {
 	    static { this.default = {
 	        tag: 'fieldset',
@@ -13193,7 +13351,7 @@ void main() {
 	};
 	*/
 
-	// import * as GWU from 'gw-utils';
+	// import * as GWU from 'gw-utils/dist';
 	defaultStyle.add('datatable', { bg: 'black' });
 	// STYLE.defaultStyle.add('th', { bg: 'light_teal', fg: 'dark_blue' });
 	// STYLE.defaultStyle.add('td', { bg: 'darker_gray' });
@@ -14206,7 +14364,7 @@ void main() {
 	}
 	*/
 
-	// import * as GWU from 'gw-utils';
+	// import * as GWU from 'gw-utils/dist';
 	class Select extends Widget {
 	    constructor(opts) {
 	        super((() => {
@@ -14276,7 +14434,7 @@ void main() {
 	};
 	*/
 
-	// import * as GWU from 'gw-utils';
+	// import * as GWU from 'gw-utils/dist';
 	class Prompt {
 	    constructor(question, field = {}) {
 	        this._id = null;
@@ -14974,7 +15132,7 @@ void main() {
 	}
 
 	class App {
-	    constructor(opts = {}) {
+	    constructor(opts = { div: 'game' }) {
 	        this.dt = 16; // 16 ms per frame
 	        this.time = 0;
 	        this.realTime = 0;
@@ -15011,6 +15169,7 @@ void main() {
 	        this.canvas.onclick = this.io.enqueue.bind(this.io);
 	        this.canvas.onmousemove = this.io.enqueue.bind(this.io);
 	        this.canvas.onclick = this.io.enqueue.bind(this.io);
+	        // TODO - Document?
 	        this.canvas.onkeydown = this.io.enqueue.bind(this.io);
 	        this.buffer = new Buffer$1(this.canvas.width, this.canvas.height);
 	        if (opts.scenes) {
@@ -15097,8 +15256,9 @@ void main() {
 	    // }
 	    start() {
 	        if (this.loop.isRunning)
-	            return;
+	            return this;
 	        this.loop.start(this._frame.bind(this));
+	        return this;
 	    }
 	    stop() {
 	        this.emit('stop', this);
@@ -15207,6 +15367,9 @@ void main() {
 	    const app = new App(opts);
 	    return app;
 	}
+	function start(opts) {
+	    return make$1(opts);
+	}
 	var active;
 
 	var index = /*#__PURE__*/Object.freeze({
@@ -15249,6 +15412,7 @@ void main() {
 		recycleEvent: recycleEvent,
 		scenes: scenes,
 		spaceChildren: spaceChildren,
+		start: start,
 		wrapChildren: wrapChildren
 	});
 
@@ -15258,7 +15422,7 @@ void main() {
 	    const out = fn;
 	    out.min = min;
 	    out.max = max;
-	    const text = `${min}-${max}`;
+	    const text = min != max ? `${min}-${max}` : `${min}`;
 	    out.toString = () => text;
 	    return out;
 	}
@@ -16591,7 +16755,7 @@ void main() {
 	exports.ui = index$2;
 	exports.utils = utils;
 	exports.widget = index$1;
-	exports.xy = xy;
+	exports.xy = xy$1;
 
 }));
 //# sourceMappingURL=gw-utils.js.map

@@ -1,4 +1,4 @@
-// import * as GWU from 'gw-utils';
+// import * as GWU from 'gw-utils/dist';
 import * as TEXT from '../text';
 import * as Buffer from '../buffer';
 
@@ -33,8 +33,8 @@ export class Text extends Widget {
         let w = this._fixedWidth
             ? this.bounds.width
             : this.scene
-            ? this.scene.width
-            : 100;
+              ? this.scene.width
+              : 100;
         this._lines = TEXT.splitIntoLines(this._text, w);
         if (!this._fixedWidth) {
             this.bounds.width = this._lines.reduce(

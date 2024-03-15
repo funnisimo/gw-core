@@ -1,4 +1,5 @@
 import * as GW from './index';
+// import { xy } from './xy';
 // import * as UTILS from '../test/utils';
 
 describe('Blob', () => {
@@ -81,19 +82,12 @@ describe('Blob', () => {
             height: 12,
         });
 
-        // force an odd return from '_cellularAutomataRound'
-
-        // @ts-ignore
-        jest.spyOn(blob, '_cellularAutomataRound').mockReturnValueOnce(false);
+        // force an odd return from 'cellularAutomataRound'
+        jest.spyOn(GW.blob, 'cellularAutomataRound').mockReturnValueOnce(false);
 
         a.fill(0);
         results = blob.carve(a.width, a.height, (x, y) => a.set(x, y, 1));
 
-        expect(results).toEqual({
-            x: 23,
-            y: 15,
-            width: 12,
-            height: 14,
-        });
+        expect(results).toEqual(new GW.xy.Bounds(24, 15, 9, 13));
     });
 });

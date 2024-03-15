@@ -14,7 +14,15 @@ import * as STYLE from './style';
 import { Widget, UpdatePosOpts } from './widget';
 
 // TODO - this: Event, scene: Scene, ...args: any[]) => void;
-export type SceneCallback = (this: Scene, ...args: any[]) => void;
+export type SceneCallback = (this: Scene) => void;
+export type SceneCreateCb = (this: Scene, opts: SceneCreateOpts) => void;
+export type SceneDataCb = (this: Scene, data: any) => void;
+export type SceneStartCb = (this: Scene, opts: any) => void;
+export type ScenePauseCb = (this: Scene, opts: SceneResumeOpts) => void;
+export type SceneUpdateCb = (this: Scene, dt: number) => void;
+export type SceneBufferCb = (this: Scene, buffer: BUFFER.Buffer) => void;
+export type SceneEventCb = (this: Scene, event: IO.Event) => void;
+export type SceneAnyCb = (this: Scene, ...args: any[]) => void;
 
 // TODO - add => (..., opts: SceneCreateOpts )?
 export type SceneMakeFn = (id: string, app: App) => Scene;
@@ -28,26 +36,31 @@ export interface SceneCreateOpts {
     make?: SceneMakeFn;
 
     // add/remove from scene manager (app)
-    create?: SceneCallback;
-    delete?: SceneCallback;
+    create?: SceneCreateCb;
+    destroy?: SceneDataCb;
 
     // start/stop?
-    start?: SceneCallback;
-    stop?: SceneCallback;
+    start?: SceneStartCb;
+    stop?: SceneDataCb;
 
-    pause?: SceneCallback;
-    resume?: SceneCallback;
+    pause?: ScenePauseCb;
+    resume?: ScenePauseCb;
 
     // run in this order each frame
     frameStart?: SceneCallback;
-    input?: SceneCallback;
-    update?: SceneCallback;
-    draw?: SceneCallback;
-    frameDebug?: SceneCallback;
-    frameEnd?: SceneCallback;
+    input?: SceneEventCb;
+    update?: SceneUpdateCb;
+    fixedUpdate?: SceneUpdateCb;
+    draw?: SceneBufferCb;
+    frameDebug?: SceneBufferCb;
+    frameEnd?: SceneBufferCb;
+
+    click?: SceneEventCb;
+    keypress?: SceneEventCb;
+    mousemove?: SceneEventCb;
 
     // other event handlers
-    on?: Record<string, SceneCallback>;
+    on?: Record<string, SceneAnyCb>;
 }
 
 // This data is specific to your scene - have fun with it
@@ -202,7 +215,7 @@ export class Scene {
             draw: true,
         };
         Object.assign(this.paused, opts);
-        this.events.emit('pause');
+        this.events.emit('pause', opts);
     }
 
     resume(opts?: SceneResumeOpts) {
@@ -219,7 +232,7 @@ export class Scene {
             }
         });
         this.needsDraw = true;
-        this.events.emit('resume');
+        this.events.emit('resume', opts);
     }
 
     // FRAME STEPS
@@ -285,8 +298,8 @@ export class Scene {
         if (this.stopped) return;
 
         if (!this.paused.update) {
-            this.events.emit('fixed_update', dt);
-            this.all.forEach((c) => c.fixed_update(dt));
+            this.events.emit('fixedUpdate', dt);
+            this.all.forEach((c) => c.fixedUpdate(dt));
         }
     }
 
@@ -609,20 +622,15 @@ export class Scene {
     }
 
     repeat(delay: number, fn: TIMERS.TimerFn): EVENTS.CancelFn;
-    repeat(
-        delay: number,
-        fn: string,
-        ctx?: Record<string, any>
-    ): EVENTS.CancelFn;
+    repeat(delay: number, fn: string, ...args: any[]): EVENTS.CancelFn;
     repeat(
         delay: number,
         fn: TIMERS.TimerFn | string,
-        ctx?: Record<string, any>
+        ...args: any[]
     ): EVENTS.CancelFn {
         if (typeof fn === 'string') {
             const ev = fn;
-            ctx = ctx || {};
-            fn = () => this.emit(ev, ctx!);
+            fn = () => this.emit(ev, ...args);
         }
         return this.timers.setInterval(fn, delay);
     }

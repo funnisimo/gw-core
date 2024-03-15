@@ -1,4 +1,4 @@
-// import * as GWU from 'gw-utils';
+// import * as GWU from 'gw-utils/dist';
 import * as Selector from './selector';
 // import * as Types from './types';
 

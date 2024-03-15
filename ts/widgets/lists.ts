@@ -1,4 +1,4 @@
-// import * as GWU from 'gw-utils';
+// import * as GWU from 'gw-utils/dist';
 import * as Buffer from '../buffer';
 
 import * as Widget from '../app/widget';

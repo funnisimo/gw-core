@@ -202,7 +202,7 @@ export class Color {
                 number,
                 number,
                 number,
-                number
+                number,
             ]
         );
     }
@@ -226,7 +226,7 @@ export class Color {
                 number,
                 number,
                 number,
-                number
+                number,
             ];
             newColor.dances = this.dances;
         }
@@ -262,7 +262,7 @@ export class Color {
                 number,
                 number,
                 number,
-                number
+                number,
             ];
             newColor.dances = this.dances;
         }
@@ -273,7 +273,7 @@ export class Color {
                     number,
                     number,
                     number,
-                    number
+                    number,
                 ];
             } else {
                 for (let i = 0; i < 4; ++i) {
@@ -308,7 +308,7 @@ export class Color {
                 number,
                 number,
                 number,
-                number
+                number,
             ];
             newColor.dances = this.dances;
         }
@@ -319,7 +319,7 @@ export class Color {
                     number,
                     number,
                     number,
-                    number
+                    number,
                 ];
             } else {
                 for (let i = 0; i < 4; ++i) {
@@ -706,6 +706,7 @@ installSpread('brown', [60, 40, 0]);
 installSpread('tan', [80, 70, 55]); // 80, 67,		15);
 installSpread('pink', [100, 60, 66]);
 installSpread('gray', [50, 50, 50]);
+installSpread('grey', [50, 50, 50]);
 installSpread('yellow', [100, 100, 0]);
 installSpread('purple', [100, 0, 100]);
 installSpread('green', [0, 100, 0]);

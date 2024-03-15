@@ -1,4 +1,4 @@
-import { random } from './rng';
+import { Random, random } from './rng';
 import * as XY from './xy';
 
 type Loc = XY.Loc;
@@ -177,8 +177,9 @@ export class Grid<T> {
         });
     }
 
-    randomEach(fn: GridEach<T>): boolean {
-        const sequence = random.sequence(this.width * this.height);
+    randomEach(fn: GridEach<T>, rng?: Random): boolean {
+        rng = rng || random;
+        const sequence = rng.sequence(this.width * this.height);
         for (let i = 0; i < sequence.length; ++i) {
             const n = sequence[i];
             const x = n % this.width;
@@ -233,20 +234,77 @@ export class Grid<T> {
         );
     }
 
-    calcBounds() {
-        const bounds = {
-            left: this.width,
-            top: this.height,
-            right: 0,
-            bottom: 0,
-        };
-        this.forEach((v, i, j) => {
-            if (!v) return;
-            if (bounds.left > i) bounds.left = i;
-            if (bounds.right < i) bounds.right = i;
-            if (bounds.top > j) bounds.top = j;
-            if (bounds.bottom < j) bounds.bottom = j;
-        });
+    calcBounds(val?: T | ((t: T) => boolean), bounds?: XY.Bounds): XY.Bounds {
+        bounds = bounds || new XY.Bounds(0, 0, this.width, this.height);
+        let fn: (t: T) => boolean;
+        if (val === undefined) {
+            fn = (v) => !!v;
+        } else if (typeof val !== 'function') {
+            fn = (t) => t == val;
+        } else {
+            fn = val as (t: T) => boolean;
+        }
+        let foundValueAtThisLine = false;
+        let i: number, j: number;
+        let left = this.width - 1,
+            right = 0,
+            top = this.height - 1,
+            bottom = 0;
+
+        // Figure out the top blob's height and width:
+        // First find the max & min x:
+        for (i = 0; i < this.width; i++) {
+            foundValueAtThisLine = false;
+            for (j = 0; j < this.height; j++) {
+                if (fn(this._data[i][j])) {
+                    foundValueAtThisLine = true;
+                    break;
+                }
+            }
+            if (foundValueAtThisLine) {
+                if (i < left) {
+                    left = i;
+                }
+                if (i > right) {
+                    right = i;
+                }
+            }
+        }
+
+        // Then the max & min y:
+        for (j = 0; j < this.height; j++) {
+            foundValueAtThisLine = false;
+            for (i = 0; i < this.width; i++) {
+                if (fn(this._data[i][j])) {
+                    foundValueAtThisLine = true;
+                    break;
+                }
+            }
+            if (foundValueAtThisLine) {
+                if (j < top) {
+                    top = j;
+                }
+                if (j > bottom) {
+                    bottom = j;
+                }
+            }
+        }
+
+        bounds = bounds || new XY.Bounds(0, 0, 0, 0);
+        if (right > 0) {
+            bounds.x = left;
+            bounds.width = right - left + 1;
+        } else {
+            bounds.x = 0;
+            bounds.width = 0;
+        }
+        if (bottom > 0) {
+            bounds.y = top;
+            bounds.height = bottom - top + 1;
+        } else {
+            bounds.y = 0;
+            bounds.height = 0;
+        }
         return bounds;
     }
 
@@ -667,60 +725,66 @@ export class NumGrid extends Grid<number> {
         return this.randomMatchingLoc(targetValue);
     }
 
-    valueBounds(value: number, bounds?: XY.Bounds) {
-        let foundValueAtThisLine = false;
-        let i: number, j: number;
-        let left = this.width - 1,
-            right = 0,
-            top = this.height - 1,
-            bottom = 0;
+    // valueBounds(value: number | ((v: number) => boolean), bounds?: XY.Bounds) {
+    //     let fn: (v: number) => boolean;
+    //     if (typeof value === 'number') {
+    //         fn = (v) => v == value;
+    //     } else {
+    //         fn = value;
+    //     }
+    //     let foundValueAtThisLine = false;
+    //     let i: number, j: number;
+    //     let left = this.width - 1,
+    //         right = 0,
+    //         top = this.height - 1,
+    //         bottom = 0;
 
-        // Figure out the top blob's height and width:
-        // First find the max & min x:
-        for (i = 0; i < this.width; i++) {
-            foundValueAtThisLine = false;
-            for (j = 0; j < this.height; j++) {
-                if (this._data[i][j] == value) {
-                    foundValueAtThisLine = true;
-                    break;
-                }
-            }
-            if (foundValueAtThisLine) {
-                if (i < left) {
-                    left = i;
-                }
-                if (i > right) {
-                    right = i;
-                }
-            }
-        }
+    //     // Figure out the top blob's height and width:
+    //     // First find the max & min x:
+    //     for (i = 0; i < this.width; i++) {
+    //         foundValueAtThisLine = false;
+    //         for (j = 0; j < this.height; j++) {
+    //             if (fn(this._data[i][j])) {
+    //                 foundValueAtThisLine = true;
+    //                 break;
+    //             }
+    //         }
+    //         if (foundValueAtThisLine) {
+    //             if (i < left) {
+    //                 left = i;
+    //             }
+    //             if (i > right) {
+    //                 right = i;
+    //             }
+    //         }
+    //     }
 
-        // Then the max & min y:
-        for (j = 0; j < this.height; j++) {
-            foundValueAtThisLine = false;
-            for (i = 0; i < this.width; i++) {
-                if (this._data[i][j] == value) {
-                    foundValueAtThisLine = true;
-                    break;
-                }
-            }
-            if (foundValueAtThisLine) {
-                if (j < top) {
-                    top = j;
-                }
-                if (j > bottom) {
-                    bottom = j;
-                }
-            }
-        }
+    //     // Then the max & min y:
+    //     for (j = 0; j < this.height; j++) {
+    //         foundValueAtThisLine = false;
+    //         for (i = 0; i < this.width; i++) {
+    //             if (fn(this._data[i][j])) {
+    //                 foundValueAtThisLine = true;
+    //                 break;
+    //             }
+    //         }
+    //         if (foundValueAtThisLine) {
+    //             if (j < top) {
+    //                 top = j;
+    //             }
+    //             if (j > bottom) {
+    //                 bottom = j;
+    //             }
+    //         }
+    //     }
 
-        bounds = bounds || new XY.Bounds(0, 0, 0, 0);
-        bounds.x = left;
-        bounds.y = top;
-        bounds.width = right - left + 1;
-        bounds.height = bottom - top + 1;
-        return bounds;
-    }
+    //     bounds = bounds || new XY.Bounds(0, 0, 0, 0);
+    //     bounds.x = left;
+    //     bounds.y = top;
+    //     bounds.width = right - left + 1;
+    //     bounds.height = bottom - top + 1;
+    //     return bounds;
+    // }
 
     // Marks a cell as being a member of blobNumber, then recursively iterates through the rest of the blob
     floodFill(

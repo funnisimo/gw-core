@@ -202,13 +202,13 @@ export class Random {
         return lotteryDrawObject(this, weights);
     }
 
-    item(list: any[]): any;
-    item(obj: { [k: string]: any }): any;
-    item(list: any[] | { [k: string]: any }): any {
+    item<T>(list: T[]): T;
+    item<T>(obj: { [k: string]: T }): T;
+    item<T>(list: T[] | { [k: string]: T }): T {
         if (!Array.isArray(list)) {
             list = Object.values(list) as any[];
         }
-        return (<any[]>list)[this.range(0, list.length - 1)];
+        return list[this.range(0, list.length - 1)];
     }
 
     key(obj: object) {

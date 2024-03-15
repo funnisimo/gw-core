@@ -20,12 +20,11 @@ declare global {
     var APP: App;
 }
 
-export interface AppOpts {
+export interface AppOptsBase {
     // CanvasBase
     width?: number;
     height?: number;
     glyphs?: CANVAS.Glyphs;
-    div?: HTMLElement | string;
     seed?: number;
     // io?: true; // if true, hookup events to standard IO loop.
     // loop?: IO.Loop; // The loop to attach to
@@ -49,10 +48,21 @@ export interface AppOpts {
     name?: string;
     loop?: Loop;
     dt?: number; // fixed_update ms
-    canvas?: CANVAS.Canvas;
 
     data?: { [id: string]: any };
 }
+
+export type AppOpts = AppOptsBase &
+    (
+        | {
+              div: HTMLElement | string;
+              canvas?: CANVAS.Canvas;
+          }
+        | {
+              div?: HTMLElement | string;
+              canvas: CANVAS.Canvas;
+          }
+    );
 
 export class App {
     name: string;
@@ -82,7 +92,7 @@ export class App {
     buffer: Buffer;
     data: { [id: string]: any };
 
-    constructor(opts: Partial<AppOpts> = {}) {
+    constructor(opts: AppOpts = { div: 'game' }) {
         if (typeof opts.seed === 'number' && opts.seed > 0) {
             rng.random.seed(opts.seed);
         }
@@ -110,6 +120,7 @@ export class App {
         this.canvas.onclick = this.io.enqueue.bind(this.io);
         this.canvas.onmousemove = this.io.enqueue.bind(this.io);
         this.canvas.onclick = this.io.enqueue.bind(this.io);
+        // TODO - Document?
         this.canvas.onkeydown = this.io.enqueue.bind(this.io);
 
         this.buffer = new Buffer(this.canvas.width, this.canvas.height);
@@ -219,9 +230,10 @@ export class App {
     //     this.stopped = false;
     // }
 
-    start() {
-        if (this.loop.isRunning) return;
+    start(): this {
+        if (this.loop.isRunning) return this;
         this.loop.start(this._frame.bind(this));
+        return this;
     }
 
     stop() {
@@ -361,6 +373,10 @@ export class App {
 export function make(opts: AppOpts): App {
     const app = new App(opts);
     return app;
+}
+
+export function start(opts: AppOpts): App {
+    return make(opts);
 }
 
 export var active: App;

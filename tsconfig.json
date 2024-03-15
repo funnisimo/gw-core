@@ -4,7 +4,7 @@
     "compilerOptions": {
         "strict": true,
         "module": "es6",
-        "outDir": "_temp",
+        "outDir": "dist",
         "target": "esNext",
         "noUnusedLocals": true,
         "noUnusedParameters": true,
@@ -15,6 +15,6 @@
         "sourceMap": true,
 
         // see: https://github.com/Swatinem/rollup-plugin-dts/issues/156
-        "useDefineForClassFields": false
-    }
+        "useDefineForClassFields": false,
+    },
 }

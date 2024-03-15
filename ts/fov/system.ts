@@ -1,4 +1,4 @@
-// import * as GWU from 'gw-utils';
+// import * as GWU from 'gw-utils/dist';
 // import * as Flags from './mapFlags';
 // import * as Cell from './cell';
 // import * as Map from './map';

@@ -27,7 +27,8 @@ describe('Body', () => {
         expect(app.scene).toBe(scene);
 
         const stopFn = jest.fn();
-        const prompt = app.prompt('What do you want to eat?');
+        const doneFn = jest.fn();
+        const prompt = app.prompt('What do you want to eat?', { done: doneFn });
         prompt.once('stop', stopFn);
         expect(app.scene).toBe(prompt);
 
@@ -57,8 +58,10 @@ describe('Body', () => {
         );
 
         app._input(TEST.keypress('Enter'));
-
+        expect(doneFn).toHaveBeenCalledWith('Tacos');
         expect(stopFn).toHaveBeenCalledWith('Tacos');
+
+        expect(app.scene).toBe(scene);
     });
 
     test(' cancel', () => {

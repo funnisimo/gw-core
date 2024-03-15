@@ -824,8 +824,8 @@ export class Widget {
         this.emit('update', dt);
     }
 
-    fixed_update(dt: number) {
-        this.emit('fixed_update', dt);
+    fixedUpdate(dt: number) {
+        this.emit('fixedUpdate', dt);
     }
 
     destroy() {

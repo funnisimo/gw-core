@@ -1,16 +1,31 @@
-// import * as GWU from 'gw-utils';
+// import * as GWU from 'gw-utils/dist';
 import * as Color from '../color';
 // import * as TextUtils from '../text';
 
 import '../widgets/button';
-import { Scene } from '../app/scene';
+import { Scene, SceneStartOpts } from '../app/scene';
 import { installScene } from '../app/scenes';
 import * as DIALOG from '../widgets/dialog';
 import { Text } from '../widgets/text';
 import { Input } from '../widgets/input';
 
+// TODO - Should this be removed?
+type WidgetEvents =
+    | 'create'
+    | 'input'
+    | 'update'
+    | 'draw'
+    | 'destroy'
+    | 'keypress'
+    | 'mouseenter'
+    | 'mousemove'
+    | 'mouseleave'
+    | 'click'
+    | 'on';
+
 export interface PromptOptions
-    extends Omit<DIALOG.DialogOptions, 'width' | 'height'> {
+    extends Omit<DIALOG.DialogOptions, 'width' | 'height' | WidgetEvents>,
+        SceneStartOpts {
     width?: number;
     height?: number;
 
@@ -48,8 +63,8 @@ export const PromptScene = {
         this.on('keypress', (e) => {
             e.stopPropagation();
         });
-        this.on('INPUT', () => {
-            const input = this.get('INPUT');
+        this.on('PROMPT', () => {
+            const input = this.get('PROMPT');
             this.stop(input ? input.text() : null);
         });
         this.on('Escape', () => {
@@ -105,12 +120,12 @@ export const PromptScene = {
             parent: dialog,
             class: opts.inputClass || opts.class,
             width,
-            id: 'INPUT',
+            id: 'PROMPT',
             x,
             bottom: -1,
         });
 
-        this.once('INPUT', () => {
+        this.once('PROMPT', () => {
             if (opts.done) opts.done(input.text());
         });
 

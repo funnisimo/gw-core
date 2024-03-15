@@ -2,9 +2,8 @@
     "name": "gw-utils",
     "version": "0.6.0",
     "description": "Basic Roguelike functionality",
-    "main": "dist/gw-utils.js",
+    "main": "dist/index.js",
     "browser": "dist/gw-utils.min.js",
-    "module": "dist/gw-utils.mjs",
     "types": "dist/gw-utils.d.ts",
     "type": "module",
     "devDependencies": {
@@ -22,19 +21,20 @@
         "replace": "^1.2.0",
         "rollup": "^4.9.6",
         "rollup-plugin-dts": "^6.1.0",
+        "terminal-kit": "^3.1.1",
         "ts-jest": "^29.1",
         "tslib": "^2.6.2",
         "typescript": "^5.3.3"
     },
-    "peerDependencies": {
-        "lodash": "^4.17.21",
-        "@rslike/std": "^2.1.2"
+    "dependencies": {
+        "@rslike/std": "^2.1.2",
+        "lodash": "^4.17.21"
     },
     "scripts": {
         "copy": "cp dist/gw-utils.js* docs/js",
         "fixTypes": "./scripts/fix_types.sh",
-        "compile": "rollup -c",
-        "build": "npm run compile && npm run fixTypes && npm run copy",
+        "compile": "tsc && rollup -c",
+        "build": "./scripts/build.js && npm run copy",
         "serve": "cd docs && http-server -p 8080",
         "test": "jest",
         "coverage": "jest --coverage",

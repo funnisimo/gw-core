@@ -1,9 +1,8 @@
-// import * as GWU from 'gw-utils';
+// import * as GWU from 'gw-utils/dist';
 import * as Buffer from '../buffer';
 import * as XY from '../xy';
-
-import { UIStyle } from '../app/style';
 import * as Widget from '../app/widget';
+import { ColorBase } from '../color';
 
 export interface BorderOptions extends Widget.WidgetOpts {
     width: number;
@@ -70,11 +69,11 @@ export function drawBorder(
     y: number,
     w: number,
     h: number,
-    style: UIStyle,
-    ascii: boolean
+    color: { fg?: ColorBase; bg?: ColorBase },
+    ascii: boolean = true
 ) {
-    const fg = style.fg;
-    const bg = style.bg;
+    const fg = color.fg || null;
+    const bg = color.bg || null;
     if (ascii) {
         for (let i = 1; i < w; ++i) {
             buffer.draw(x + i, y, '-', fg, bg);

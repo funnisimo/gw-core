@@ -117,23 +117,13 @@ describe('GW.grid', () => {
 
     test('calcBounds', () => {
         a = GW.grid.alloc(10, 10);
-        expect(a.calcBounds()).toEqual({
-            left: 10,
-            top: 10,
-            right: 0,
-            bottom: 0,
-        });
+        expect(a.calcBounds()).toEqual(new GW.xy.Bounds(0, 0, 0, 0));
 
         a._data[3][3] = 1;
         a._data[4][4] = 1;
         a._data[5][3] = 1;
         a._data[5][5] = 1;
-        expect(a.calcBounds()).toEqual({
-            left: 3,
-            top: 3,
-            right: 5,
-            bottom: 5,
-        });
+        expect(a.calcBounds()).toEqual(new GW.xy.Bounds(3, 3, 3, 3));
     });
 
     test('forEachAsync', async () => {
@@ -652,14 +642,14 @@ describe('GW.grid', () => {
 
         a.fillRect(3, 3, 4, 4, 1);
         const b = new GW.xy.Bounds();
-        expect(a.valueBounds(1, b)).toBe(b);
+        expect(a.calcBounds(1, b)).toBe(b);
         expect(b).toMatchObject({
             x: 3,
             y: 3,
             width: 4,
             height: 4,
         });
-        expect(a.valueBounds(1)).toMatchObject({
+        expect(a.calcBounds(1)).toMatchObject({
             x: 3,
             y: 3,
             width: 4,

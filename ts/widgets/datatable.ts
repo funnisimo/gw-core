@@ -1,4 +1,4 @@
-// import * as GWU from 'gw-utils';
+// import * as GWU from 'gw-utils/dist';
 import * as Utils from '../utils';
 import * as TextUtils from '../text';
 import * as Buffer from '../buffer';
@@ -197,8 +197,8 @@ export class DataTable extends WIDGET.Widget {
             (this.parent
                 ? this.parent.bounds.height
                 : this.scene
-                ? this.scene.height
-                : 0);
+                  ? this.scene.height
+                  : 0);
 
         this.bounds.width = 0;
         opts.columns.forEach((o) => {

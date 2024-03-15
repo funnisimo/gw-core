@@ -1,4 +1,4 @@
-// import * as GWU from 'gw-utils';
+// import * as GWU from 'gw-utils/dist';
 import * as COLOR from '../color';
 // import * as EVENTS from '../app/events';
 

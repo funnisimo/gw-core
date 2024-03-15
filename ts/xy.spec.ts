@@ -120,10 +120,10 @@ describe('XY', () => {
     test('addTo', () => {
         const dest = { x: 0, y: 0 };
 
-        XY.addTo(dest, { x: 4, y: 5 });
+        XY.add(dest, { x: 4, y: 5 });
         expect(dest).toEqual({ x: 4, y: 5 });
 
-        XY.addTo(dest, [2, 3]);
+        XY.add(dest, [2, 3]);
         expect(dest).toEqual({ x: 6, y: 8 });
     });
 
@@ -188,10 +188,10 @@ describe('XY', () => {
     });
 
     test('straightDistanceBetween', () => {
-        expect(XY.straightDistanceBetween(5, 5, 6, 6)).toEqual(2);
-        expect(XY.straightDistanceBetween(5, 0, 10, 0)).toEqual(5);
-        expect(XY.straightDistanceBetween(0, 5, 0, 10)).toEqual(5);
-        expect(XY.straightDistanceBetween(5, 5, 10, 10)).toEqual(10);
+        expect(XY.manhattanDistanceBetween(5, 5, 6, 6)).toEqual(2);
+        expect(XY.manhattanDistanceBetween(5, 0, 10, 0)).toEqual(5);
+        expect(XY.manhattanDistanceBetween(0, 5, 0, 10)).toEqual(5);
+        expect(XY.manhattanDistanceBetween(5, 5, 10, 10)).toEqual(10);
     });
 
     test('distanceBetween', () => {

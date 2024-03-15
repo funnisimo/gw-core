@@ -80,6 +80,10 @@ export function isLoc(a: any): a is Loc {
     );
 }
 
+export function xy(x: number, y: number): XY {
+    return { x, y };
+}
+
 export function isXY(a: any): a is XY {
     return a && typeof a.x === 'number' && typeof a.y === 'number';
 }
@@ -243,18 +247,32 @@ export function copy(dest: XY, src: XY | Loc) {
     dest.y = y(src);
 }
 
-export function addTo(dest: XY, src: XY | Loc) {
+export function add(dest: XY, src: XY | Loc) {
     dest.x += x(src);
     dest.y += y(src);
 }
 
-export function add(a: XY, b: XY | Loc): XY;
-export function add(a: Loc, b: XY | Loc): Loc;
-export function add(a: XY | Loc, b: XY | Loc): XY | Loc {
+export function sub(dest: XY, src: XY | Loc) {
+    dest.x -= x(src);
+    dest.y -= y(src);
+}
+
+export function plus(a: XY, b: XY | Loc): XY;
+export function plus(a: Loc, b: XY | Loc): Loc;
+export function plus(a: XY | Loc, b: XY | Loc): XY | Loc {
     if (Array.isArray(a)) {
         return [a[0] + x(b), a[1] + y(b)] as Loc;
     }
     return { x: a.x + x(b), y: a.y + y(b) } as XY;
+}
+
+export function minus(a: XY, b: XY | Loc): XY;
+export function minus(a: Loc, b: XY | Loc): Loc;
+export function minus(a: XY | Loc, b: XY | Loc): XY | Loc {
+    if (Array.isArray(a)) {
+        return [a[0] - x(b), a[1] - y(b)] as Loc;
+    }
+    return { x: a.x - x(b), y: a.y - y(b) } as XY;
 }
 
 export function equals(
@@ -334,15 +352,19 @@ export function matchingNeighbor(
     return [-1, -1];
 }
 
-export function straightDistanceBetween(
+export function manhattanDistanceFromTo(a: XY | Loc, b: XY | Loc): number {
+    return manhattanDistanceBetween(x(a), y(a), x(b), y(b));
+}
+
+export function manhattanDistanceBetween(
     x1: number,
     y1: number,
     x2: number,
     y2: number
-) {
-    const x = Math.abs(x1 - x2);
-    const y = Math.abs(y1 - y2);
-    return x + y;
+): number {
+    const dx = Math.abs(x1 - x2);
+    const dy = Math.abs(y1 - y2);
+    return dx + dy;
 }
 
 export function maxAxisFromTo(a: XY | Loc, b: XY | Loc): number {
