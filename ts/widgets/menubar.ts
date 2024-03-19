@@ -187,7 +187,7 @@ export class Menubar extends Widget.Widget {
                     this.emit(value);
                     this.scene!.emit(value);
                 } else {
-                    this.scene!.app.scenes.run('menu', {
+                    this.scene!.app.scenes.show('menu', {
                         menu,
                         origin: this.scene,
                     });

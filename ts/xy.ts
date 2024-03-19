@@ -98,18 +98,31 @@ export function asXY(v: Pos): XY {
     return { x: x(v), y: y(v) };
 }
 
-export function x(src: XY | Loc): number {
+export function x(src: Readonly<XY> | Readonly<Loc>): number {
+    if (Array.isArray(src)) return src[0];
+    if (typeof src !== 'object') throw new Error('Not an XY or Loc.');
     // @ts-ignore
-    return src.x || src[0] || 0;
+    return src.x || 0;
 }
 
-export function y(src: XY | Loc): number {
+export function y(src: Readonly<XY> | Readonly<Loc>): number {
+    if (Array.isArray(src)) return src[1];
+    if (typeof src !== 'object') throw new Error('Not an XY or Loc.');
     // @ts-ignore
-    return src.y || src[1] || 0;
+    return src.y || 0;
 }
 
-export function contains(size: Size, x: number, y: number): boolean {
+export function contains(size: Readonly<Size>, x: number, y: number): boolean {
     return x >= 0 && y >= 0 && x < size.width && y < size.height;
+}
+
+export function dirName(dir: Readonly<Loc>): string {
+    for (let [name, xy] of Object.entries(NAMED_DIRS)) {
+        if (equals(dir, xy)) {
+            return name;
+        }
+    }
+    throw new Error('Failed to find name for dir: ' + dir);
 }
 
 export interface BoundsOpts {
@@ -192,7 +205,7 @@ export class Bounds {
     }
 
     contains(x: number, y: number): boolean;
-    contains(loc: Loc | XY): boolean;
+    contains(loc: Readonly<Loc> | Readonly<XY>): boolean;
     contains(...args: any[]) {
         let i = args[0];
         let j = args[1];
@@ -208,7 +221,7 @@ export class Bounds {
         );
     }
 
-    include(xy: Loc | XY | Bounds) {
+    include(xy: Readonly<Loc> | Readonly<XY> | Readonly<Bounds>) {
         const left = Math.min(x(xy), this.x);
         const top = Math.min(y(xy), this.y);
         const right = Math.max(
@@ -242,53 +255,65 @@ export class Bounds {
     }
 }
 
-export function copy(dest: XY, src: XY | Loc) {
+export function copy(dest: XY, src: Readonly<XY> | Readonly<Loc>) {
     dest.x = x(src);
     dest.y = y(src);
 }
 
-export function add(dest: XY, src: XY | Loc) {
+export function add(dest: XY, src: Readonly<XY> | Readonly<Loc>) {
     dest.x += x(src);
     dest.y += y(src);
 }
 
-export function sub(dest: XY, src: XY | Loc) {
+export function sub(dest: XY, src: Readonly<XY> | Readonly<Loc>) {
     dest.x -= x(src);
     dest.y -= y(src);
 }
 
-export function plus(a: XY, b: XY | Loc): XY;
-export function plus(a: Loc, b: XY | Loc): Loc;
-export function plus(a: XY | Loc, b: XY | Loc): XY | Loc {
+export function plus(a: XY, b: Readonly<XY> | Readonly<Loc>): XY;
+export function plus(a: Loc, b: Readonly<XY> | Readonly<Loc>): Loc;
+export function plus(
+    a: Readonly<XY> | Readonly<Loc>,
+    b: Readonly<XY> | Readonly<Loc>
+): XY | Loc {
     if (Array.isArray(a)) {
         return [a[0] + x(b), a[1] + y(b)] as Loc;
     }
+    // @ts-ignore
     return { x: a.x + x(b), y: a.y + y(b) } as XY;
 }
 
-export function minus(a: XY, b: XY | Loc): XY;
-export function minus(a: Loc, b: XY | Loc): Loc;
-export function minus(a: XY | Loc, b: XY | Loc): XY | Loc {
+export function minus(a: XY, b: Readonly<XY> | Readonly<Loc>): XY;
+export function minus(a: Loc, b: Readonly<XY> | Readonly<Loc>): Loc;
+export function minus(
+    a: Readonly<XY> | Readonly<Loc>,
+    b: Readonly<XY> | Readonly<Loc>
+): XY | Loc {
     if (Array.isArray(a)) {
         return [a[0] - x(b), a[1] - y(b)] as Loc;
     }
+    // @ts-ignore
     return { x: a.x - x(b), y: a.y - y(b) } as XY;
 }
 
 export function equals(
-    dest: XY | Loc | null | undefined,
-    src: XY | Loc | null | undefined
+    dest: Readonly<XY> | Readonly<Loc> | null | undefined,
+    src: Readonly<XY> | Readonly<Loc> | null | undefined
 ) {
     if (!dest && !src) return true;
     if (!dest || !src) return false;
     return x(dest) == x(src) && y(dest) == y(src);
 }
 
-export function isDiagonal(xy: XY | Loc): boolean {
+export function isDiagonal(xy: Readonly<XY> | Readonly<Loc>): boolean {
     return x(xy) != 0 && y(xy) != 0;
 }
 
-export function lerp(a: XY | Loc, b: XY | Loc, pct: number) {
+export function lerp(
+    a: Readonly<XY> | Readonly<Loc>,
+    b: Readonly<XY> | Readonly<Loc>,
+    pct: number
+) {
     if (pct > 1) {
         pct = pct / 100;
     }
@@ -352,7 +377,10 @@ export function matchingNeighbor(
     return [-1, -1];
 }
 
-export function manhattanDistanceFromTo(a: XY | Loc, b: XY | Loc): number {
+export function manhattanDistanceFromTo(
+    a: Readonly<XY> | Readonly<Loc>,
+    b: Readonly<XY> | Readonly<Loc>
+): number {
     return manhattanDistanceBetween(x(a), y(a), x(b), y(b));
 }
 
@@ -367,7 +395,10 @@ export function manhattanDistanceBetween(
     return dx + dy;
 }
 
-export function maxAxisFromTo(a: XY | Loc, b: XY | Loc): number {
+export function maxAxisFromTo(
+    a: Readonly<XY> | Readonly<Loc>,
+    b: Readonly<XY> | Readonly<Loc>
+): number {
     const xa = Math.abs(x(a) - x(b));
     const ya = Math.abs(y(a) - y(b));
     return Math.max(xa, ya);
@@ -396,7 +427,10 @@ export function distanceBetween(
     return x + y - 0.6 * diag;
 }
 
-export function distanceFromTo(a: XY | Loc, b: XY | Loc): number {
+export function distanceFromTo(
+    a: Readonly<XY> | Readonly<Loc>,
+    b: Readonly<XY> | Readonly<Loc>
+): number {
     return distanceBetween(x(a), y(a), x(b), y(b));
 }
 
@@ -424,29 +458,32 @@ export function dirBetween(
     return [Math.sign(diffX), Math.sign(diffY)];
 }
 
-export function dirFromTo(a: XY | Loc, b: XY | Loc): Loc {
+export function dirFromTo(
+    a: Readonly<XY> | Readonly<Loc>,
+    b: Readonly<XY> | Readonly<Loc>
+): Loc {
     return dirBetween(x(a), y(a), x(b), y(b));
 }
 
-export function dirIndex(dir: XY | Loc): number {
+export function dirIndex(dir: Readonly<XY> | Readonly<Loc>): number {
     const x0 = x(dir);
     const y0 = y(dir);
     return DIRS.findIndex((a) => a[0] == x0 && a[1] == y0);
 }
 
-export function isOppositeDir(a: Loc, b: Loc): boolean {
+export function isOppositeDir(a: Readonly<Loc>, b: Readonly<Loc>): boolean {
     if (Math.sign(a[0]) + Math.sign(b[0]) != 0) return false;
     if (Math.sign(a[1]) + Math.sign(b[1]) != 0) return false;
     return true;
 }
 
-export function isSameDir(a: Loc, b: Loc): boolean {
+export function isSameDir(a: Readonly<Loc>, b: Readonly<Loc>): boolean {
     return (
         Math.sign(a[0]) == Math.sign(b[0]) && Math.sign(a[1]) == Math.sign(b[1])
     );
 }
 
-export function dirSpread(dir: Loc): [Loc, Loc, Loc] {
+export function dirSpread(dir: Readonly<Loc>): [Loc, Loc, Loc] {
     const result = [dir];
     if (dir[0] == 0) {
         result.push([1, dir[1]]);
@@ -462,8 +499,8 @@ export function dirSpread(dir: Loc): [Loc, Loc, Loc] {
 }
 
 export function stepFromTo(
-    a: XY | Loc,
-    b: XY | Loc,
+    a: Readonly<XY> | Readonly<Loc>,
+    b: Readonly<XY> | Readonly<Loc>,
     fn: (x: number, y: number) => any
 ): void {
     const x0 = x(a);
@@ -578,8 +615,8 @@ export function forLineBetween(
 }
 
 export function forLineFromTo(
-    a: XY | Loc,
-    b: XY | Loc,
+    a: Readonly<XY> | Readonly<Loc>,
+    b: Readonly<XY> | Readonly<Loc>,
     stepFn: (x: number, y: number) => boolean | void
 ) {
     return forLineBetween(x(a), y(a), x(b), y(b), stepFn);

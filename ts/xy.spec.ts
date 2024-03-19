@@ -1,6 +1,31 @@
 import * as XY from './xy';
 
 describe('XY', () => {
+    test('x & y', () => {
+        // @ts-ignore
+        expect(() => XY.x(undefined)).toThrow();
+        // @ts-ignore
+        expect(() => XY.y(undefined)).toThrow();
+
+        expect(XY.x([3, 4])).toEqual(3);
+        expect(XY.y([3, 4])).toEqual(4);
+
+        // @ts-ignore
+        expect(XY.x({ x: 3 })).toEqual(3);
+        // @ts-ignore
+        expect(XY.y({ y: 3 })).toEqual(3);
+
+        // @ts-ignore
+        expect(XY.x({})).toEqual(0);
+        // @ts-ignore
+        expect(XY.y({})).toEqual(0);
+
+        // @ts-ignore
+        expect(() => XY.x(4)).toThrow();
+        // @ts-ignore
+        expect(() => XY.y(4)).toThrow();
+    });
+
     test('contains', () => {
         expect(XY.contains({ width: 10, height: 10 }, 5, 5)).toBeTruthy();
         expect(XY.contains({ width: 10, height: 10 }, 0, 5)).toBeTruthy();

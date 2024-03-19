@@ -6,7 +6,7 @@ import * as IO from '../app/io';
 import { ScenePauseOpts } from '.';
 
 interface PendingInfo {
-    action: '_start' | 'stop' | 'run';
+    action: '_start' | 'stop' | 'show';
     scene: Scene;
     data: any;
 }
@@ -90,13 +90,13 @@ export class Scenes {
     //     return this._create(id, data);
     // }
 
-    start(id: string, opts?: SceneStartOpts): Scene {
-        let scene: Scene = this.get(id) || this.create(id, {});
-        this._start(scene, opts);
+    switchTo(id: string | Scene, opts?: SceneStartOpts): Scene {
+        let scene: Scene = id instanceof Scene ? id : this.create(id, {});
+        this._switchTo(scene, opts);
         return scene;
     }
 
-    _start(scene: Scene, opts: SceneStartOpts = {}) {
+    _switchTo(scene: Scene, opts: SceneStartOpts = {}) {
         this._app.io.clear();
         this.stop(); // stop all running scenes
         if (this.isBusy) {
@@ -106,13 +106,13 @@ export class Scenes {
         }
     }
 
-    run(id: string, data?: SceneStartOpts): Scene {
-        let scene: Scene = this.get(id) || this.create(id, data);
+    show(id: string | Scene, data?: SceneStartOpts): Scene {
+        let scene: Scene = id instanceof Scene ? id : this.create(id, data);
         this._app.io.clear();
         if (this.isBusy) {
-            this._pending.push({ action: 'run', scene, data });
+            this._pending.push({ action: 'show', scene, data });
         } else {
-            scene.run(data);
+            scene.show(data);
         }
 
         return scene;
@@ -187,6 +187,7 @@ export class Scenes {
     }
     input(ev: IO.Event) {
         UTILS.arrayRevEach(this._active, (s) => {
+            // TODO - should this be: defaultPrevented?
             if (!ev.propagationStopped) s.input(ev);
         });
     }

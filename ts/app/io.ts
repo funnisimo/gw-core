@@ -8,8 +8,8 @@ export interface EventType {
     // key?: string;
     // code?: string;
 
-    defaultPrevented: boolean;
-    propagationStopped: boolean;
+    defaultPrevented: boolean | undefined;
+    propagationStopped: boolean | undefined;
     // immediatePropagationStopped: boolean;
 
     doDefault(): void;
@@ -29,8 +29,8 @@ export class Event implements EventType {
     target: Widget | null = null; // current handler information
 
     // Used in UI
-    defaultPrevented = false;
-    propagationStopped = false;
+    defaultPrevented: boolean | undefined = undefined;
+    propagationStopped: boolean | undefined = undefined;
     // immediatePropagationStopped = false;
 
     // Key Event
@@ -80,8 +80,8 @@ export class Event implements EventType {
     reset(type: string, opts?: Partial<Event>) {
         this.type = type;
         this.target = null;
-        this.defaultPrevented = false;
-        this.propagationStopped = false;
+        this.defaultPrevented = undefined;
+        this.propagationStopped = undefined;
 
         this.shiftKey = false;
         this.ctrlKey = false;
@@ -105,23 +105,34 @@ export class Event implements EventType {
         return other;
     }
 
-    dispatch(handler: { emit(name: string, e: Event): void }) {
+    dispatch(handler: { emit(name: string, e: Event): boolean }): boolean {
+        let didSomething = false;
         if (this.type === KEYPRESS) {
             // this.propagationStopped = true;
             if (this.dir) {
-                handler.emit('dir', this);
+                if (handler.emit('dir', this)) {
+                    didSomething = true;
+                }
             }
             if (!this.propagationStopped) {
-                handler.emit(this.key, this);
+                if (handler.emit(this.key, this)) {
+                    didSomething = true;
+                }
             }
             if (this.code !== this.key) {
                 if (!this.propagationStopped) {
-                    handler.emit(this.code, this);
+                    if (handler.emit(this.code, this)) {
+                        didSomething = true;
+                    }
                 }
             }
-            if (this.defaultPrevented || this.propagationStopped) return;
+            if (this.defaultPrevented || this.propagationStopped)
+                return didSomething;
         }
-        handler.emit(this.type, this);
+        if (handler.emit(this.type, this)) {
+            didSomething = true;
+        }
+        return didSomething;
     }
 }
 
@@ -289,7 +300,8 @@ export function makeKeyEvent(e: KeyboardEvent) {
     ev.metaKey = e.metaKey;
 
     ev.type = KEYPRESS;
-    ev.defaultPrevented = false;
+    ev.defaultPrevented = undefined;
+    ev.propagationStopped = undefined;
     ev.key = key;
     ev.code = code;
     ev.x = -1;
@@ -336,7 +348,8 @@ export function makeMouseEvent(e: MouseEvent, x: number, y: number) {
     if (e.buttons && e.type !== 'mouseup') {
         ev.type = CLICK;
     }
-    ev.defaultPrevented = false;
+    ev.defaultPrevented = undefined;
+    ev.propagationStopped = undefined;
     ev.key = '';
     ev.code = '';
     ev.x = x;

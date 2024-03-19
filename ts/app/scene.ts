@@ -179,8 +179,8 @@ export class Scene {
         this.tweens.clear();
     }
 
-    start(opts: SceneStartOpts = {}): this {
-        this.app.scenes._start(this, opts); // start me
+    switchTo(opts: SceneStartOpts = {}): this {
+        this.app.scenes._switchTo(this, opts); // start me
         return this;
     }
 
@@ -194,7 +194,7 @@ export class Scene {
         this.events.emit('start', opts); // this will start this one in the app.scenes obj
     }
 
-    run(data: SceneStartOpts = {}): this {
+    show(data: SceneStartOpts = {}): this {
         this.app.scenes.pause();
         this._start(data);
         this.once('stop', () => this.app.scenes.resume());
@@ -281,6 +281,14 @@ export class Scene {
         }
         if (e.propagationStopped || e.defaultPrevented) return;
         e.dispatch(this.events);
+        // If you are silent on this event then it stops here.
+        // To propagate it to a parent scene call: ev.propagate()
+        if (
+            e.propagationStopped === undefined &&
+            e.defaultPrevented === undefined
+        ) {
+            e.stopPropagation();
+        }
     }
 
     update(dt: number) {
@@ -600,7 +608,7 @@ export class Scene {
     once(ev: string, cb: EVENTS.CallbackFn): EVENTS.CancelFn {
         return this.events.once(ev, cb);
     }
-    emit(ev: string | string[], ...args: any[]) {
+    emit(ev: string | string[], ...args: any[]): boolean {
         return this.events.emit(ev, ...args);
     }
 

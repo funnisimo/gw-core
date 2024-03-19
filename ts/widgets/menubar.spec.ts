@@ -167,13 +167,13 @@ describe('Text Widget', () => {
             const fileBtn = menubar.getChild('File')!;
             fileBtn.on('click', fileClickFn);
 
-            jest.spyOn(app.scenes, 'run');
+            jest.spyOn(app.scenes, 'show');
 
             app._input(TEST.click(2, 0));
 
             expect(fileClickFn).toHaveBeenCalled();
             expect(pauseFn).toHaveBeenCalled();
-            expect(app.scenes.run).toHaveBeenCalledWith('menu', {
+            expect(app.scenes.show).toHaveBeenCalledWith('menu', {
                 menu: fileBtn.data('menu'),
                 origin: scene,
             });

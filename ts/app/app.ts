@@ -128,9 +128,9 @@ export class App {
         if (opts.scenes) {
             this.scenes.config(opts.scenes);
             if (typeof opts.scene === 'string') {
-                this.scenes.start(opts.scene, opts.sceneStartOpts);
+                this.scenes.switchTo(opts.scene, opts.sceneStartOpts);
             } else {
-                this.scenes.start(
+                this.scenes.switchTo(
                     Object.keys(opts.scenes)[0],
                     opts.sceneStartOpts
                 );
@@ -143,7 +143,7 @@ export class App {
             }
             if (opts.scene === true) opts.scene = {};
             this.scenes.config('default', opts.scene);
-            this.scenes.start('default', opts.sceneStartOpts);
+            this.scenes.switchTo('default', opts.sceneStartOpts);
         }
 
         if (opts.start !== false) {
@@ -346,7 +346,14 @@ export class App {
 
     alert(text: string, opts: Omit<AlertOptions, 'text'> = {}): SCENE.Scene {
         (<AlertOptions>opts).text = text;
-        return this.scenes.run('alert', opts);
+        return this.scenes.show('alert', opts);
+    }
+
+    show(id: string | SCENE.Scene, opts?: SceneStartOpts): SCENE.Scene {
+        return this.scenes.show(id, opts);
+    }
+    switchTo(id: string | SCENE.Scene, opts?: SceneStartOpts): SCENE.Scene {
+        return this.scenes.switchTo(id, opts);
     }
 
     confirm(
@@ -354,7 +361,7 @@ export class App {
         opts: Omit<ConfirmOptions, 'text'> = {}
     ): SCENE.Scene {
         (<ConfirmOptions>opts).text = text;
-        return this.scenes.run('confirm', opts);
+        return this.scenes.show('confirm', opts);
     }
 
     prompt(
@@ -365,7 +372,7 @@ export class App {
         // NEED TO CREATE A NEW SCENE EVERY TIME SO WE DON"T HAVE HOLDOVER EVENTS, etc...
         (<PromptOptions>opts).prompt = text;
         const prompt = this.scenes.create('prompt', PromptScene);
-        prompt.run(opts);
+        prompt.show(opts);
         return prompt;
     }
 }

@@ -5,6 +5,9 @@ import * as GW from './index';
 describe('Blob', () => {
     let a: GW.grid.NumGrid;
 
+    beforeEach(() => {
+        GW.random.seed(12345);
+    });
     afterEach(() => {
         GW.grid.free(a);
     });

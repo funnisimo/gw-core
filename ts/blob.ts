@@ -34,7 +34,7 @@ export class Blob {
         tries: 10,
         seedWidth: 0,
         seedHeight: 0,
-        minPercentFilled: 50,
+        minPercentFilled: 30,
         maxPercentFilled: 90,
         largestOnly: true,
     };
