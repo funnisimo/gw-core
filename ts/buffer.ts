@@ -221,6 +221,54 @@ export abstract class BufferBase {
         return this;
     }
 
+    drawLineH(
+        x: number,
+        y: number,
+        w: number,
+        ch: string,
+        fg: Color.ColorBase,
+        bg: Color.ColorBase = null
+    ) {
+        for (let dx = 0; dx < w; ++dx) {
+            this.draw(x + dx, y, ch, fg, bg);
+        }
+    }
+
+    drawLineV(
+        x: number,
+        y: number,
+        h: number,
+        ch: string,
+        fg: Color.ColorBase,
+        bg: Color.ColorBase = null
+    ) {
+        for (let dy = 0; dy < h; ++dy) {
+            this.draw(x, y + dy, ch, fg, bg);
+        }
+    }
+
+    drawProgress(
+        x: number,
+        y: number,
+        w: number,
+        fg: Color.ColorBase,
+        bg: Color.ColorBase,
+        val: number,
+        max: number,
+        text = ''
+    ) {
+        const pct = val / max;
+        const full = Math.floor(w * pct);
+        const partialPct = Math.floor(100 * (w * pct - full));
+
+        this.fillRect(x, y, full, 1, null, null, bg);
+        this.draw(x + full, y, null, null, Color.from(bg).alpha(partialPct));
+
+        if (text && text.length) {
+            this.drawText(x, y, text, fg, null, w, 'center');
+        }
+    }
+
     blackOutBounds(bounds: Bounds, bg: Color.ColorBase = 0): this {
         return this.blackOutRect(
             bounds.x,
