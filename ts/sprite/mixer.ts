@@ -2,13 +2,9 @@ import * as Color from '../color';
 import { SpriteData } from '../types';
 import * as Utils from '../utils';
 
-export interface DrawInfo {
-    ch?: string | null;
-    fg?: Color.ColorBase;
-    bg?: Color.ColorBase;
-}
+export type DrawInfo = Omit<SpriteData, 'opacity'>;
 
-export class Mixer implements DrawInfo {
+export class Mixer implements SpriteData {
     public ch: string | null;
     public fg: Color.Color;
     public bg: Color.Color;
@@ -17,6 +13,10 @@ export class Mixer implements DrawInfo {
         this.ch = Utils.firstDefined(base.ch, null);
         this.fg = Color.make(base.fg);
         this.bg = Color.make(base.bg);
+    }
+
+    get opacity(): number {
+        return 100;
     }
 
     protected _changed() {
@@ -43,11 +43,11 @@ export class Mixer implements DrawInfo {
         return other;
     }
 
-    equals(other: Mixer) {
+    equals(other: SpriteData) {
         return (
             this.ch == other.ch &&
-            this.fg.equals(other.fg) &&
-            this.bg.equals(other.bg)
+            this.fg.equals(other.fg || null) &&
+            this.bg.equals(other.bg || null)
         );
     }
 
