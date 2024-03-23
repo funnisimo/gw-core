@@ -110,7 +110,7 @@ export class Scene {
     paused: SceneResumeOpts = {};
     debug = false;
 
-    needsDraw = true;
+    _needsDraw = true;
     styles: STYLE.Sheet;
 
     bg: COLOR.Color = COLOR.BLACK;
@@ -122,6 +122,16 @@ export class Scene {
         this.app = app;
         this.buffer = new BUFFER.Buffer(app.width, app.height);
         this.styles.setParent(app.styles);
+    }
+
+    get needsDraw(): boolean {
+        return this._needsDraw;
+    }
+
+    set needsDraw(val: boolean) {
+        if (val) {
+            this._needsDraw = true;
+        }
     }
 
     get width() {
@@ -195,7 +205,7 @@ export class Scene {
     }
 
     show(data: SceneStartOpts = {}): this {
-        this.app.scenes.pause();
+        this.app.scenes.pause(); // TODO - do not pause draw if we are not full screen!!
         this._start(data);
         this.once('stop', () => this.app.scenes.resume());
         return this;
@@ -317,7 +327,7 @@ export class Scene {
             this._draw(this.buffer);
             this.emit('draw', this.buffer);
             this.children.forEach((c) => c.draw(this.buffer));
-            this.needsDraw = false;
+            this._needsDraw = false; // Bybass getter to ensure we change it (this is the only place that should really set it to false)
         }
         // if (this.buffer.changed) {
         buffer.apply(this.buffer);
