@@ -1,3 +1,5 @@
+import { XY } from './types';
+
 // Floating point stability
 const precision = 8;
 const p = Math.pow(10, precision);
@@ -22,7 +24,7 @@ function clean(val: any): number {
     return Math.round(val * p) / p;
 }
 
-export class Vec2 {
+export class Vec2 implements XY {
     x: number;
     y: number;
 

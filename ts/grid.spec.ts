@@ -74,7 +74,7 @@ describe('GW.grid', () => {
 
     test('alloc a clone', () => {
         a = GW.grid.alloc(10, 10);
-        a.update(() => GW.rng.random.number(100) + 1);
+        a.update(() => GW.rng.random.int(100) + 1);
         expect(a._data[0][0]).toBeGreaterThan(0);
 
         const b = GW.grid.alloc(a);

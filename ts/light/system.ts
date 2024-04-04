@@ -1,4 +1,4 @@
-import { FOV } from '../fov';
+import { Shadowcast } from '../fov';
 import {
     LightSystemType,
     LightSystemSite,
@@ -13,13 +13,11 @@ import * as Light from './light';
 import * as XY from '../xy';
 import * as Color from '../color';
 import * as FLAG from '../flag';
-import * as List from '../list';
 
 export interface StaticLightInfo {
     x: number;
     y: number;
     light: LightType;
-    next: StaticLightInfo | null;
 }
 
 const LightFlags = FLAG.make([
@@ -36,7 +34,7 @@ export interface LightSystemOptions {
 
 export class LightSystem implements LightSystemType, PaintSite {
     site: LightSystemSite;
-    staticLights: StaticLightInfo | null = null;
+    staticLights: (StaticLightInfo | null)[] = [];
     ambient: Color.LightValue;
     glowLightChanged: boolean;
     dynamicLightChanged: boolean;
@@ -81,9 +79,10 @@ export class LightSystem implements LightSystemType, PaintSite {
         this.dynamicLightChanged = true;
         this.changed = true;
 
-        this.staticLights = null;
-        List.forEach(other.staticLights, (info: StaticLightInfo) =>
-            this.addStatic(info.x, info.y, info.light)
+        this.staticLights = [];
+        other.staticLights.forEach(
+            (info: StaticLightInfo | null) =>
+                info && this.addStatic(info.x, info.y, info.light)
         );
     }
 
@@ -157,9 +156,13 @@ export class LightSystem implements LightSystemType, PaintSite {
             x,
             y,
             light: Light.from(light),
-            next: this.staticLights,
         };
-        this.staticLights = info;
+        const index = this.staticLights.indexOf(null);
+        if (index < 0) {
+            this.staticLights.push(info);
+        } else {
+            this.staticLights[index] = info;
+        }
         this.glowLightChanged = true;
         return info;
     }
@@ -168,33 +171,23 @@ export class LightSystem implements LightSystemType, PaintSite {
         let prev = this.staticLights;
         if (!prev) return;
 
-        function matches(info: StaticLightInfo) {
+        function matches(info: StaticLightInfo | null) {
+            if (!info) return false;
             if (info.x != x || info.y != y) return false;
             return !light || light === info.light;
         }
 
         this.glowLightChanged = true;
 
-        while (prev && matches(prev)) {
-            prev = this.staticLights = prev.next;
-        }
-
-        if (!prev) return;
-
-        let current = prev.next;
-        while (current) {
-            if (matches(current)) {
-                prev.next = current.next;
-            } else {
-                prev = current;
-            }
-            current = current.next;
-        }
+        const index = this.staticLights.findIndex(matches);
+        if (index < 0) return;
+        this.staticLights[index] = null;
     }
 
     eachStaticLight(fn: LightCb) {
-        List.forEach(this.staticLights, (info: StaticLightInfo) =>
-            fn(info.x, info.y, info.light)
+        this.staticLights.forEach(
+            (info: StaticLightInfo | null) =>
+                info && fn(info.x, info.y, info.light)
         );
         this.site.eachGlowLight((x, y, light) => {
             fn(x, y, light);
@@ -338,7 +331,7 @@ export class LightSystem implements LightSystemType, PaintSite {
         cb: (x: number, y: number) => void
     ) {
         const site = this.site;
-        const fov = new FOV({
+        const fov = new Shadowcast({
             isBlocked(x: number, y: number): boolean {
                 if (!passThroughActors && site.hasActor(x, y)) return false;
                 return site.blocksVision(x, y);

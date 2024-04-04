@@ -2,7 +2,7 @@ import * as GW from '../index';
 import { SetVisibleFn } from './types';
 
 describe('FOV', () => {
-    let fov: GW.fov.FOV;
+    let fov: GW.fov.Shadowcast;
     let tiles: GW.grid.NumGrid;
     let results: GW.grid.NumGrid;
     let msgs: string[] = [];
@@ -31,7 +31,7 @@ describe('FOV', () => {
         //     };
         // }
 
-        fov = new GW.fov.FOV({
+        fov = new GW.fov.Shadowcast({
             isBlocked(x: number, y: number) {
                 return tiles._data[x][y] > 0;
             },
@@ -70,7 +70,7 @@ describe('FOV', () => {
         //     };
         // }
 
-        fov = new GW.fov.FOV({
+        fov = new GW.fov.Shadowcast({
             isBlocked(x: number, y: number) {
                 return !tiles.hasXY(x, y) || tiles._data[x][y] > 0;
             },

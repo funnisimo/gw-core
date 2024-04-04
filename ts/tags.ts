@@ -21,13 +21,14 @@ export function make(base: TagBase): Tags {
 // TACO & STEAK << A -AND- B
 // TACO | STEAK << A -OR- B
 // TACO, STEAK  << SPLITS GROUPS - groups are -OR-
+// TACO; STEAK  << SPLITS GROUPS - groups are -OR-
 export function makeMatch(rules: string | TagMatchOptions): TagMatchFn {
     if (!rules) return () => true;
 
     const fns: ((tags: Tags) => boolean)[] = [];
 
     if (typeof rules === 'string') {
-        const groups = rules.split(',').map((t) => t.trim());
+        const groups = rules.split(/[,;]/g).map((t) => t.trim());
 
         groups.forEach((info) => {
             const ors = info.split(/[|]/).map((t) => t.trim());
@@ -49,6 +50,7 @@ export function makeMatch(rules: string | TagMatchOptions): TagMatchFn {
         return (tags) => fns.some((f) => f(tags));
     } else {
         if (typeof rules.tags === 'string') {
+            // TODO - colon?
             rules.tags = rules.tags.split(/[:,|]/g).map((t) => t.trim());
         }
         if (typeof rules.forbidTags === 'string') {

@@ -1,6 +1,6 @@
 import * as XY from '../xy';
 import { ONE } from '../utils';
-import { OBSTRUCTION } from './dijkstra';
+import { MoveCost } from './dijkstra';
 
 interface Item {
     x: number;
@@ -10,11 +10,11 @@ interface Item {
     prev: Item | null;
 }
 
-export type CostFn = (x: number, y: number) => number;
+export type CostFn = (x: number, y: number) => number | MoveCost;
 
 export function fromTo(
-    from: XY.Pos,
-    to: XY.Pos,
+    from: XY.AnyPoint,
+    to: XY.AnyPoint,
     costFn: CostFn = ONE,
     only4dirs = false
 ): XY.Loc[] {
@@ -28,12 +28,12 @@ class AStar {
     goal: XY.Loc;
     costFn: CostFn;
 
-    constructor(goal: XY.Pos, costFn: CostFn = ONE) {
+    constructor(goal: XY.AnyPoint, costFn: CostFn = ONE) {
         this.goal = XY.asLoc(goal);
         this.costFn = costFn;
     }
 
-    _add(loc: XY.Pos, cost = 1, prev: Item | null = null) {
+    _add(loc: XY.AnyPoint, cost = 1, prev: Item | null = null) {
         const h = XY.distanceFromTo(loc, this.goal);
         let newItem = {
             x: XY.x(loc),
@@ -67,7 +67,7 @@ class AStar {
         this._todo.push(newItem);
     }
 
-    from(from: XY.Pos, only4dirs = false): XY.Loc[] {
+    from(from: XY.AnyPoint, only4dirs = false): XY.Loc[] {
         this._add(from);
 
         let item: Item | null = null;
@@ -97,8 +97,8 @@ class AStar {
                     if (XY.isDiagonal(dir)) {
                         mult = 1.4;
                         if (
-                            this.costFn(item!.x, y) === OBSTRUCTION ||
-                            this.costFn(x, item!.y) === OBSTRUCTION
+                            this.costFn(item!.x, y) === MoveCost.Obstruction ||
+                            this.costFn(x, item!.y) === MoveCost.Obstruction
                         ) {
                             return;
                         }

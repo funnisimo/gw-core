@@ -42,6 +42,8 @@ export class Sprite implements SpriteData {
 
         return '{ ' + parts.join(', ') + ' }';
     }
+
+    // TODO - toJSON
 }
 
 export const sprites: Record<string, Sprite> = {};

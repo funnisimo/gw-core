@@ -4,7 +4,7 @@ import { cosmetic } from '../rng';
 
 describe('Color', () => {
     beforeEach(() => {
-        jest.spyOn(cosmetic, 'number').mockImplementation((n?: number) =>
+        jest.spyOn(cosmetic, 'int').mockImplementation((n?: number) =>
             n ? Math.floor(n / 2) : 0
         );
     });
@@ -492,7 +492,7 @@ describe('Color', () => {
     });
 
     test('installSpread', () => {
-        Color.installSpread('test', 75, 75, 25);
+        Color.installSpread('test', [75, 75, 25]);
         expect(Color.colors.test).toBeObject();
         expect(Color.colors.dark_test).toBeObject();
         expect(Color.colors.light_test).toBeObject();

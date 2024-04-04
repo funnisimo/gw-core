@@ -145,19 +145,15 @@ export class Random {
         return this.value();
     }
 
-    number(max = Number.MAX_SAFE_INTEGER) {
+    int(max: number = Number.MAX_SAFE_INTEGER) {
         if (max <= 0) return 0;
         return Math.floor(this.value() * max);
-    }
-
-    int(max: number = 0) {
-        return this.number(max);
     }
 
     range(lo: number, hi: number) {
         if (hi <= lo) return hi;
         const diff = hi - lo + 1;
-        return lo + this.number(diff);
+        return lo + this.int(diff);
     }
 
     /**
@@ -247,7 +243,7 @@ export class Random {
     chance(percent: number, outOf = 100) {
         if (percent <= 0) return false;
         if (percent >= outOf) return true;
-        return this.number(outOf) < percent;
+        return this.int(outOf) < percent;
     }
 
     // Get a random int between lo and hi, inclusive, with probability distribution
@@ -338,7 +334,7 @@ export class Random {
         }
 
         // and pick one
-        randIndex = 1 + this.number(candidateLocs);
+        randIndex = 1 + this.int(candidateLocs);
 
         --k;
         // for (k = 0; k < 50; k++) {

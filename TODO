@@ -6,9 +6,25 @@ Canvas:
 App:
     [] plugins?
     [] events for create scene (allows generic updates to all screens)?
+    [] allow `onkeydown` to be bound to `document` or Canvas
 
 Build:
     [] Experiment with `tsup` for bundling
 
 Messages:
     [] Message templating system
+
+Canvas2d:
+    [] Allow non-GL canvas
+    
+lodash:
+    [] Can we remove this?
+    [] Is any of the usage necessary/really helpful?
+
+rslike/std:
+    [] Can we remove this?
+    [] Is any of the usage necessary/really helpful?
+
+vec2 vs xy:
+    [] Review these to see if we can combine any of it
+    [] Do we ever even use Vec2?

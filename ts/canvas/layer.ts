@@ -69,8 +69,8 @@ export class Layer extends BufferBase implements BufferTarget {
         x: number,
         y: number,
         glyph: string | null = null,
-        fg: number | Color.ColorData = 0xfff,
-        bg: number | Color.ColorData = -1
+        fg: number | Color.ColorVals = 0xfff,
+        bg: number | Color.ColorVals = -1
     ): this {
         return this.draw(x, y, glyph, fg, bg);
     }

@@ -120,7 +120,7 @@ export class App {
         this.canvas.onclick = this.io.enqueue.bind(this.io);
         this.canvas.onmousemove = this.io.enqueue.bind(this.io);
         this.canvas.onclick = this.io.enqueue.bind(this.io);
-        // TODO - Document?
+        // TODO - Allow setting capture from Document?
         this.canvas.onkeydown = this.io.enqueue.bind(this.io);
 
         this.buffer = new Buffer(this.canvas.width, this.canvas.height);

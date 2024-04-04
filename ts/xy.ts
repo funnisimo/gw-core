@@ -1,7 +1,7 @@
 import { clamp } from './utils';
-import { Loc, XY, Size, Pos } from './types';
+import { Loc, XY, Size, AnyPoint } from './types';
 
-export { Loc, XY, Size, Pos };
+export { Loc, XY, Size, AnyPoint };
 
 // TODO - Is this the right way to do this?  Should it be DIRS4 and DIRS8 (both clockwise)?
 // DIRS are organized clockwise
@@ -88,13 +88,17 @@ export function isXY(a: any): a is XY {
     return a && typeof a.x === 'number' && typeof a.y === 'number';
 }
 
-export function asLoc(v: Pos): Loc {
+export function asLoc(v: AnyPoint): Loc {
     if (Array.isArray(v)) return v;
     return [x(v), y(v)];
 }
 
-export function asXY(v: Pos): XY {
+export function asXY(v: AnyPoint): XY {
     if (!Array.isArray(v)) return v;
+    return { x: x(v), y: y(v) };
+}
+
+export function newXY(v: AnyPoint): XY {
     return { x: x(v), y: y(v) };
 }
 

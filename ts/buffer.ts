@@ -294,7 +294,7 @@ export abstract class BufferBase {
         x: number,
         y: number,
         color: Color.ColorBase,
-        strength: number
+        strength: number = 50
     ): this {
         if (!this.hasXY(x, y)) return this;
 
@@ -305,6 +305,14 @@ export abstract class BufferBase {
         mixer.fg = mixer.fg.add(color, strength);
         mixer.bg = mixer.bg.add(color, strength);
         this.drawSprite(x, y, mixer);
+        return this;
+    }
+
+    invert(x: number, y: number): this {
+        if (!this.hasXY(x, y)) return this;
+        const data = this.get(x, y);
+        this.draw(x, y, data.ch, data.bg, data.fg);
+
         return this;
     }
 

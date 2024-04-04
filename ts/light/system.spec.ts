@@ -110,7 +110,7 @@ describe('light system', () => {
 
         expect(other.getLight(10, 10)).not.toEqual(system.getLight(10, 10));
         expect(system.getAmbient()).not.toEqual(other.getAmbient());
-        expect(system.staticLights).toBeNull();
+        expect(system.staticLights).toHaveLength(0);
 
         // Copy copies the data
         system.copy(other);
@@ -118,7 +118,7 @@ describe('light system', () => {
         expect(system.getAmbient()).toEqual(other.getAmbient());
         expect(system.changed).toBeTruthy();
         expect(system.needsUpdate).toBeTruthy();
-        expect(system.staticLights).not.toBeNull();
+        expect(system.staticLights).not.toHaveLength(0);
         expect(system.staticLights).toEqual(other.staticLights);
 
         // Update redoes the calculations
@@ -197,7 +197,6 @@ describe('light system', () => {
                 x: 10,
                 y: 10,
                 light: torch,
-                next: null,
             });
 
             expect(system.update()).toBeTruthy();
@@ -220,7 +219,6 @@ describe('light system', () => {
                 x: 10,
                 y: 10,
                 light: Light.lights.TORCH,
-                next: null,
             });
 
             system.update();
@@ -272,9 +270,9 @@ describe('light system', () => {
             system.removeStatic(10, 10, Light.lights.TORCH);
             system.removeStatic(5, 5, Light.lights.TORCH);
 
-            expect(system.staticLights).toBeNull();
+            expect(system.staticLights.filter((v) => !!v)).toHaveLength(0); // deletes nullify
             system.removeStatic(5, 5, Light.lights.TORCH);
-            expect(system.staticLights).toBeNull();
+            expect(system.staticLights.filter((v) => !!v)).toHaveLength(0); // deletes nullify
         });
     });
 
@@ -288,7 +286,6 @@ describe('light system', () => {
             x: 3,
             y: 3,
             light: Light.make('white, 3, 100'),
-            next: null,
         });
         system.dynamicLightChanged = true;
 
@@ -309,7 +306,6 @@ describe('light system', () => {
             x: 3,
             y: 3,
             light: Light.make('white, 3, 100'),
-            next: null,
         });
 
         system.glowLightChanged = true;

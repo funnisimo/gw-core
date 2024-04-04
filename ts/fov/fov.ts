@@ -6,7 +6,7 @@ import * as XY from '../xy';
 
 import { FovStrategy, SetVisibleFn } from './types';
 
-export class FOV {
+export class Shadowcast {
     protected _isBlocked: (x: number, y: number) => boolean;
     protected _calcRadius: (x: number, y: number) => number;
     protected _setVisible: SetVisibleFn | null = null;
@@ -190,7 +190,7 @@ export function calculate(
 ) {
     dest.fill(0);
 
-    const fov = new FOV({
+    const fov = new Shadowcast({
         isBlocked,
         hasXY: dest.hasXY.bind(dest),
     });

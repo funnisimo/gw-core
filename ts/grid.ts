@@ -308,7 +308,15 @@ export class Grid<T> {
         return bounds;
     }
 
-    update(fn: GridUpdate<T>) {
+    update(fn: GridUpdate<T>): void;
+    update(x: number, y: number, fn: GridUpdate<T>): void;
+    update(...args: any[]): void {
+        if (args.length > 1) {
+            const [x, y, fn] = args;
+            this._data[x][y] = fn(this._data[x][y], x, y, this);
+            return;
+        }
+        const fn = args[0];
         XY.forRect(this.width, this.height, (i, j) => {
             this._data[i][j] = fn(this._data[i][j], i, j, this);
         });

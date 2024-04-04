@@ -1,32 +1,19 @@
 import { cosmetic } from '../rng';
 import { clamp } from '../utils';
 
-export type ColorData =
-    | [number, number, number]
-    | [number, number, number, number];
-export type ColorBase = string | number | ColorData | Color | null;
+export type ColorVals = [number, number, number, number?];
+export type ColorBase = string | number | ColorVals | Color | null;
 
 export type LightValue = [number, number, number];
-
-// function toColorInt(r: number, g: number, b: number, base256: boolean) {
-//     if (base256) {
-//         r = Math.max(0, Math.min(255, Math.round(r * 2.550001)));
-//         g = Math.max(0, Math.min(255, Math.round(g * 2.550001)));
-//         b = Math.max(0, Math.min(255, Math.round(b * 2.550001)));
-//         return (r << 16) + (g << 8) + b;
-//     }
-//     r = Math.max(0, Math.min(15, Math.round((r / 100) * 15)));
-//     g = Math.max(0, Math.min(15, Math.round((g / 100) * 15)));
-//     b = Math.max(0, Math.min(15, Math.round((b / 100) * 15)));
-//     return (r << 8) + (g << 4) + b;
-// }
+export type ColorData = [number, number, number, number];
 
 export const colors: Record<string, Color> = {};
 
 // All colors are const!!!
+// All color data stored 0-100 (percent)
 export class Color {
-    _data: [number, number, number, number];
-    _rand: [number, number, number, number] | null = null;
+    _data: ColorData;
+    _rand: ColorData | null = null;
     public dances = false;
     public name?: string;
 
@@ -37,6 +24,8 @@ export class Color {
             r = 0;
         }
         this._data = [r, g, b, a];
+        // TODO - Warn if r,g,b,a > 100?  Maybe - what about light colors and weird Brogue stuff (rainbow colors)
+        // TODO - clamp r,g,b,a?
     }
 
     rgb() {
@@ -174,10 +163,10 @@ export class Color {
         let a = this._a;
 
         if (useRand && (this._rand || this.dances)) {
-            const rand = cosmetic.number(this._rand![0]);
-            const redRand = cosmetic.number(this._rand![1]);
-            const greenRand = cosmetic.number(this._rand![2]);
-            const blueRand = cosmetic.number(this._rand![3]);
+            const rand = cosmetic.int(this._rand![0]);
+            const redRand = cosmetic.int(this._rand![1]);
+            const greenRand = cosmetic.int(this._rand![2]);
+            const blueRand = cosmetic.int(this._rand![3]);
             r = Math.round(((r + rand + redRand) * a) / 100);
             g = Math.round(((g + rand + greenRand) * a) / 100);
             b = Math.round(((b + rand + blueRand) * a) / 100);
@@ -197,50 +186,44 @@ export class Color {
     clamp(): Color {
         if (this.isNull()) return this;
 
-        return make(
-            this._data.map((v) => clamp(v, 0, 100)) as [
-                number,
-                number,
-                number,
-                number,
-            ]
-        );
+        return make(this._data.map((v) => clamp(v, 0, 100)) as ColorData);
     }
 
     blend(other: ColorBase): Color {
         const O = from(other);
-        if (O.isNull()) return this;
-        if (O.a === 100) return O;
+        return this.mix(O, O.a);
+        // if (O.isNull()) return this;
+        // if (O.a === 100) return O;
 
-        const pct = O.a / 100;
-        const keepPct = 1 - pct;
+        // const pct = O.a / 100;
+        // const keepPct = 1 - pct;
 
-        const newColor = make(
-            Math.round(this._data[0] * keepPct + O._data[0] * pct),
-            Math.round(this._data[1] * keepPct + O._data[1] * pct),
-            Math.round(this._data[2] * keepPct + O._data[2] * pct),
-            Math.round(O.a + this._data[3] * keepPct)
-        );
-        if (this._rand) {
-            newColor._rand = this._rand.map((v) => Math.round(v * keepPct)) as [
-                number,
-                number,
-                number,
-                number,
-            ];
-            newColor.dances = this.dances;
-        }
+        // const newColor = make(
+        //     Math.round(this._data[0] * keepPct + O._data[0] * pct),
+        //     Math.round(this._data[1] * keepPct + O._data[1] * pct),
+        //     Math.round(this._data[2] * keepPct + O._data[2] * pct),
+        //     Math.round(O.a + this._data[3] * keepPct)
+        // );
+        // if (this._rand) {
+        //     newColor._rand = this._rand.map((v) => Math.round(v * keepPct)) as [
+        //         number,
+        //         number,
+        //         number,
+        //         number,
+        //     ];
+        //     newColor.dances = this.dances;
+        // }
 
-        if (O._rand) {
-            if (!newColor._rand) {
-                newColor._rand = [0, 0, 0, 0];
-            }
-            for (let i = 0; i < 4; ++i) {
-                newColor._rand[i] += Math.round(O._rand[i] * pct);
-            }
-            newColor.dances = newColor.dances || O.dances;
-        }
-        return newColor;
+        // if (O._rand) {
+        //     if (!newColor._rand) {
+        //         newColor._rand = [0, 0, 0, 0];
+        //     }
+        //     for (let i = 0; i < 4; ++i) {
+        //         newColor._rand[i] += Math.round(O._rand[i] * pct);
+        //     }
+        //     newColor.dances = newColor.dances || O.dances;
+        // }
+        // return newColor;
     }
 
     mix(other: ColorBase, percent: number): Color {
@@ -258,29 +241,18 @@ export class Color {
             (this.isNull() ? 100 : this._data[3]) * keepPct + O._data[3] * pct
         );
         if (this._rand) {
-            newColor._rand = this._rand.slice() as [
-                number,
-                number,
-                number,
-                number,
-            ];
+            newColor._rand = this._rand.slice() as ColorData;
             newColor.dances = this.dances;
         }
 
         if (O._rand) {
             if (!newColor._rand) {
-                newColor._rand = O._rand.map((v) => Math.round(v * pct)) as [
-                    number,
-                    number,
-                    number,
-                    number,
-                ];
-            } else {
-                for (let i = 0; i < 4; ++i) {
-                    newColor._rand[i] = Math.round(
-                        newColor._rand[i] * keepPct + O._rand[i] * pct
-                    );
-                }
+                newColor._rand = [0, 0, 0, 0];
+            }
+            for (let i = 0; i < 4; ++i) {
+                newColor._rand[i] = Math.round(
+                    newColor._rand[i] * keepPct + O._rand[i] * pct
+                );
             }
             newColor.dances = newColor.dances || O.dances;
         }
@@ -304,23 +276,15 @@ export class Color {
             Math.round(this._data[3] * keepPct + O._data[3] * pct)
         );
         if (this._rand) {
-            newColor._rand = this._rand.slice() as [
-                number,
-                number,
-                number,
-                number,
-            ];
+            newColor._rand = this._rand.slice() as ColorData;
             newColor.dances = this.dances;
         }
 
         if (O._rand) {
             if (!newColor._rand) {
-                newColor._rand = O._rand.map((v) => Math.round(v * pct)) as [
-                    number,
-                    number,
-                    number,
-                    number,
-                ];
+                newColor._rand = O._rand.map((v) =>
+                    Math.round(v * pct)
+                ) as ColorData;
             } else {
                 for (let i = 0; i < 4; ++i) {
                     newColor._rand[i] = Math.round(
@@ -370,10 +334,10 @@ export class Color {
         if (this.dances && !clearDancing) return this;
 
         const d = this._rand;
-        const rand = cosmetic.number(d[0]);
-        const redRand = cosmetic.number(d[1]);
-        const greenRand = cosmetic.number(d[2]);
-        const blueRand = cosmetic.number(d[3]);
+        const rand = cosmetic.int(d[0]);
+        const redRand = cosmetic.int(d[1]);
+        const greenRand = cosmetic.int(d[2]);
+        const blueRand = cosmetic.int(d[3]);
 
         return make(
             this._r + rand + redRand,
@@ -409,7 +373,7 @@ export class Color {
         );
     }
 
-    multiply(other: ColorData | Color): Color {
+    multiply(other: ColorVals | Color): Color {
         if (this.isNull()) return this;
 
         let data: number[];
@@ -478,7 +442,8 @@ export class Color {
     }
 }
 
-export function fromArray(vals: ColorData, base256 = false) {
+// TODO - Change default base256 = false everywhere!!!  It is an artifact of working with Brogue colors (0-100)
+export function fromArray(vals: ColorVals, base256 = false) {
     while (vals.length < 3) vals.push(0);
     if (base256) {
         for (let i = 0; i < 3; ++i) {
@@ -529,6 +494,7 @@ export function fromName(name: string) {
     return c;
 }
 
+// TODO - Change default base256 = false everywhere!!!  It is an artifact of working with Brogue colors (0-100)
 export function fromNumber(val: number, base256 = false): Color {
     if (val < 0) {
         return new Color();
@@ -552,7 +518,7 @@ export function fromNumber(val: number, base256 = false): Color {
 export function make(): Color;
 export function make(rgb: number, base256?: boolean): Color;
 export function make(color?: ColorBase | null): Color;
-export function make(arrayLike: ColorData, base256?: boolean): Color;
+export function make(arrayLike: ColorVals, base256?: boolean): Color;
 export function make(...rgb: number[]): Color; // TODO - Remove!
 export function make(...args: any[]): Color {
     let arg = args[0];
@@ -561,7 +527,7 @@ export function make(...args: any[]): Color {
     if (args.length == 0) return new Color();
     if (args.length > 2) {
         arg = args;
-        base256 = false; // TODO - Change this!!!
+        base256 = false; // TODO - Change this everywhere!!!  It is an artifact of working with Brogue colors (0-100)
     }
     if (arg === undefined || arg === null) return new Color();
     if (arg instanceof Color) {
@@ -573,7 +539,7 @@ export function make(...args: any[]): Color {
         }
         return fromName(arg);
     } else if (Array.isArray(arg)) {
-        return fromArray(arg as ColorData, base256);
+        return fromArray(arg as ColorVals, base256);
     } else if (typeof arg === 'number') {
         return fromNumber(arg, base256);
     }
@@ -585,7 +551,7 @@ export function make(...args: any[]): Color {
 export function from(): Color;
 export function from(rgb: number, base256?: boolean): Color;
 export function from(color?: ColorBase | null): Color;
-export function from(arrayLike: ColorData, base256?: boolean): Color;
+export function from(arrayLike: ColorVals, base256?: boolean): Color;
 export function from(...rgb: number[]): Color; // TODO - Remove!
 export function from(...args: any[]): Color {
     const arg = args[0];
@@ -665,7 +631,7 @@ export function smoothScalar(rgb: number, maxRgb = 255) {
 }
 
 export function install(name: string, info: ColorBase): Color;
-export function install(name: string, ...rgb: ColorData): Color; // TODO - Remove!
+export function install(name: string, ...rgb: ColorVals): Color; // TODO - Remove!
 export function install(name: string, ...args: any[]) {
     let info = args;
     if (args.length == 1) {
@@ -679,15 +645,17 @@ export function install(name: string, ...args: any[]) {
     return c;
 }
 
-export function installSpread(name: string, info: ColorBase): Color;
-export function installSpread(name: string, ...rgb: ColorData): Color; // TODO - Remove!
-export function installSpread(name: string, ...args: any[]) {
-    let c: Color;
-    if (args.length == 1) {
-        c = install(name, args[0]);
-    } else {
-        c = install(name, ...(args as ColorData));
-    }
+// TODO - add base256=true arg
+export function installSpread(name: string, info: ColorBase): Color {
+    // export function installSpread(name: string, ...rgb: ColorVals): Color; // TODO - Remove!
+    // export function installSpread(name: string, ...args: any[])
+    // let c: Color;
+    // if (args.length == 1) {
+    // c = install(name, args[0]);
+    // } else {
+    //     c = install(name, ...(args as ColorVals));
+    // }
+    const c = install(name, info);
     install('light_' + name, c.lighten(25));
     install('lighter_' + name, c.lighten(50));
     install('lightest_' + name, c.lighten(75));

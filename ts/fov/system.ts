@@ -27,7 +27,7 @@ export interface FovSystemOptions {
 export class FovSystem implements TYPES.FovTracker {
     site: TYPES.FovSite;
     flags: Grid.NumGrid; // FovFlags
-    fov: FOV.FOV;
+    fov: FOV.Shadowcast;
     // needsUpdate: boolean;
     changed = true;
     protected _callback: FovChangeFn = NOOP;
@@ -48,7 +48,7 @@ export class FovSystem implements TYPES.FovTracker {
             this.callback = opts.callback;
         }
 
-        this.fov = new FOV.FOV({
+        this.fov = new FOV.Shadowcast({
             isBlocked: (x: number, y: number): boolean => {
                 return this.site.blocksVision(x, y);
             },

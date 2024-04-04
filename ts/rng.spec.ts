@@ -29,9 +29,9 @@ describe('random', () => {
 
         random.seed(12345);
         // expect(make).toHaveBeenCalledWith(12345);
-        expect(random.number(100)).toEqual(1);
-        expect(random.number(100)).toEqual(86);
-        expect(random.number(100)).toEqual(63);
+        expect(random.int(100)).toEqual(1);
+        expect(random.int(100)).toEqual(86);
+        expect(random.int(100)).toEqual(63);
         // expect(rnd).toHaveBeenCalled();
         // make.mockClear();
         // rnd.mockClear();
@@ -41,18 +41,18 @@ describe('random', () => {
 
         random.seed(12345);
         // expect(make).toHaveBeenCalledWith(12345);
-        expect(random.number(100)).toEqual(1);
-        expect(random.number(100)).toEqual(86);
-        expect(random.number(100)).toEqual(63);
+        expect(random.int(100)).toEqual(1);
+        expect(random.int(100)).toEqual(86);
+        expect(random.int(100)).toEqual(63);
         // expect(rnd2).toHaveBeenCalled();
     });
 
-    test('number', () => {
+    test('int', () => {
         // setupMocks();
         random.seed(12345);
-        expect(random.number(100)).toEqual(1);
-        expect(random.number(0)).toEqual(0);
-        expect(random.number()).toEqual(7789004359467007);
+        expect(random.int(100)).toEqual(1);
+        expect(random.int(0)).toEqual(0);
+        expect(random.int()).toEqual(7789004359467007);
     });
 
     test('gives random percents => [0, 1)', () => {

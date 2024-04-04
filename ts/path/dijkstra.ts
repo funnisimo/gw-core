@@ -2,16 +2,23 @@ import * as DIJKSTRA from '../grid';
 import * as XY from '../xy';
 import * as UTILS from '../utils';
 
-export type SimpleCostFn = (x: number, y: number) => number;
-export type UpdateFn = (value: number, x: number, y: number) => number;
-export type EachFn = (value: number, x: number, y: number) => void;
+export type SimpleCostFn = (x: number, y: number) => number | MoveCost;
+export type UpdateFn = (
+    value: number | MoveCost,
+    x: number,
+    y: number
+) => number | MoveCost;
+export type EachFn = (value: number | MoveCost, x: number, y: number) => void;
 
 const DIRS = XY.DIRS;
 
-export const OK = 1;
-export const AVOIDED = 10;
-export const BLOCKED = 10000;
-export const OBSTRUCTION = 20000; // Blocks Diagonal
+export enum MoveCost {
+    Ok = 1,
+    Avoided = 10,
+    Blocked = 10000,
+    Obstruction = 20000, // Blocks Diagonal
+}
+
 export const NOT_DONE = 30000;
 
 interface Item {
@@ -83,7 +90,7 @@ export class DijkstraMap {
         this._todo.next = this._todo.prev = null;
     }
 
-    _get(pos: XY.Pos): Item;
+    _get(pos: XY.AnyPoint): Item;
     _get(x: number, y: number): Item;
     _get(...args: any[]): Item {
         if (args.length == 1) {
@@ -95,7 +102,7 @@ export class DijkstraMap {
         }
     }
 
-    setGoal(pos: XY.Pos, cost?: number): void;
+    setGoal(pos: XY.AnyPoint, cost?: number): void;
     setGoal(x: number, y: number, cost?: number): void;
     setGoal(...args: any[]): void {
         if (typeof args[0] === 'number') {
@@ -109,7 +116,7 @@ export class DijkstraMap {
         this._add(x, y, 0, distance);
     }
 
-    _add(x: number, y: number, distance: number, cost: number) {
+    _add(x: number, y: number, distance: number, cost: number | MoveCost) {
         if (!this.hasXY(x, y)) return false;
 
         const item = this._get(x, y);
@@ -126,11 +133,11 @@ export class DijkstraMap {
         }
         item.prev = item.next = null;
 
-        if (cost >= OBSTRUCTION) {
-            item.distance = OBSTRUCTION;
+        if (cost >= MoveCost.Obstruction) {
+            item.distance = MoveCost.Obstruction;
             return false;
-        } else if (cost >= BLOCKED) {
-            item.distance = BLOCKED;
+        } else if (cost >= MoveCost.Blocked) {
+            item.distance = MoveCost.Blocked;
             return false;
         }
 
@@ -175,8 +182,8 @@ export class DijkstraMap {
                         mult = 1.4;
                         // check to see if obstruction blocks this move
                         if (
-                            costFn(x, current!.y) >= OBSTRUCTION ||
-                            costFn(current!.x, y) >= OBSTRUCTION
+                            costFn(x, current!.y) >= MoveCost.Obstruction ||
+                            costFn(current!.x, y) >= MoveCost.Obstruction
                         ) {
                             return;
                         }
@@ -197,7 +204,7 @@ export class DijkstraMap {
     rescan(costFn: SimpleCostFn, only4dirs = false) {
         this._data.forEach((item) => {
             item.next = item.prev = null;
-            if (item.distance < BLOCKED) {
+            if (item.distance < MoveCost.Blocked) {
                 this._insert(item);
             }
         });
@@ -237,7 +244,7 @@ export class DijkstraMap {
                 if (done.findIndex((e) => e[0] === i && e[1] === j) >= 0) {
                     return;
                 }
-                if (stepCost >= BLOCKED) {
+                if (stepCost >= MoveCost.Blocked) {
                     return;
                 }
 
@@ -272,8 +279,8 @@ export class DijkstraMap {
 
             if (XY.isDiagonal(dir)) {
                 if (
-                    this._get(newX, fromY).distance >= OBSTRUCTION ||
-                    this._get(fromX, newY).distance >= OBSTRUCTION
+                    this._get(newX, fromY).distance >= MoveCost.Obstruction ||
+                    this._get(fromX, newY).distance >= MoveCost.Obstruction
                 ) {
                     continue; // diagonal blocked
                 }
@@ -334,9 +341,9 @@ export class DijkstraMap {
             return count;
         }
 
-        if (dist >= BLOCKED) {
+        if (dist >= MoveCost.Blocked) {
             const locs = XY.closestMatchingLocs(x, y, (v) => {
-                return v < BLOCKED;
+                return v < MoveCost.Blocked;
             });
             if (!locs || locs.length === 0) return 0;
 
@@ -454,15 +461,15 @@ export class DijkstraMap {
 }
 
 function _format(v: number) {
-    if (v < BLOCKED) {
+    if (v < MoveCost.Blocked) {
         return v.toFixed(1).padStart(3, ' ') + ' ';
         // } else if (v < 36) {
         //     return String.fromCharCode('a'.charCodeAt(0) + v - 10);
         // } else if (v < 62) {
         //     return String.fromCharCode('A'.charCodeAt(0) + v - 10 - 26);
-    } else if (v >= OBSTRUCTION) {
+    } else if (v >= MoveCost.Obstruction) {
         return ' ## ';
-    } else if (v >= BLOCKED) {
+    } else if (v >= MoveCost.Blocked) {
         return ' XX ';
     } else {
         return ' >> ';
@@ -471,7 +478,7 @@ function _format(v: number) {
 
 export function computeDistances(
     grid: DIJKSTRA.NumGrid,
-    from: XY.Pos,
+    from: XY.AnyPoint,
     costFn: SimpleCostFn = UTILS.ONE,
     only4dirs = false
 ): void {

@@ -7,7 +7,7 @@ import * as UTILS from '../utils';
 describe('Path', () => {
     test('scan with empty', () => {
         function costFn(_x: number, _y: number) {
-            return DIJKSTRA.OK;
+            return DIJKSTRA.MoveCost.Ok;
         }
 
         const dm = new DIJKSTRA.DijkstraMap();
@@ -34,9 +34,9 @@ describe('Path', () => {
 
     test('scan with blocked', () => {
         function costFn(x: number, y: number) {
-            if (y != 2) return DIJKSTRA.OK;
-            if (x >= 3 && x <= 6) return DIJKSTRA.BLOCKED;
-            return DIJKSTRA.OK;
+            if (y != 2) return DIJKSTRA.MoveCost.Ok;
+            if (x >= 3 && x <= 6) return DIJKSTRA.MoveCost.Blocked;
+            return DIJKSTRA.MoveCost.Ok;
         }
 
         const dm = new DIJKSTRA.DijkstraMap();
@@ -65,9 +65,9 @@ describe('Path', () => {
 
     test('scan with obstruction', () => {
         function costFn(x: number, y: number) {
-            if (y != 2) return DIJKSTRA.OK;
-            if (x >= 3 && x <= 6) return DIJKSTRA.OBSTRUCTION;
-            return DIJKSTRA.OK;
+            if (y != 2) return DIJKSTRA.MoveCost.Ok;
+            if (x >= 3 && x <= 6) return DIJKSTRA.MoveCost.Obstruction;
+            return DIJKSTRA.MoveCost.Ok;
         }
 
         const dm = new DIJKSTRA.DijkstraMap();
@@ -93,9 +93,9 @@ describe('Path', () => {
 
     test('gets path - around obstructions', () => {
         function costFn(x: number, y: number) {
-            if (y != 2) return DIJKSTRA.OK;
-            if (x >= 3 && x <= 6) return DIJKSTRA.OBSTRUCTION;
-            return DIJKSTRA.OK;
+            if (y != 2) return DIJKSTRA.MoveCost.Ok;
+            if (x >= 3 && x <= 6) return DIJKSTRA.MoveCost.Obstruction;
+            return DIJKSTRA.MoveCost.Ok;
         }
 
         function blockedFn() {
@@ -132,12 +132,12 @@ describe('Path', () => {
 
         function getCost(x: number, y: number): number {
             const ob = obstacles.findIndex((o) => o[0] == x && o[1] == y);
-            if (ob >= 0) return DIJKSTRA.OBSTRUCTION;
+            if (ob >= 0) return DIJKSTRA.MoveCost.Obstruction;
             const bl = blocked.findIndex((b) => b[0] == x && b[1] == y);
-            if (bl >= 0) return DIJKSTRA.BLOCKED;
+            if (bl >= 0) return DIJKSTRA.MoveCost.Blocked;
             const ac = actors.findIndex((a) => a[0] == x && a[1] == y);
-            if (ac >= 0) return DIJKSTRA.AVOIDED;
-            return DIJKSTRA.OK;
+            if (ac >= 0) return DIJKSTRA.MoveCost.Avoided;
+            return DIJKSTRA.MoveCost.Ok;
         }
 
         function isBlocked(x: number, y: number): boolean {
@@ -181,12 +181,12 @@ describe('Path', () => {
 
         function getCost(x: number, y: number): number {
             const ob = obstacles.findIndex((o) => o[0] == x && o[1] == y);
-            if (ob >= 0) return DIJKSTRA.OBSTRUCTION;
+            if (ob >= 0) return DIJKSTRA.MoveCost.Obstruction;
             const bl = blocked.findIndex((b) => b[0] == x && b[1] == y);
-            if (bl >= 0) return DIJKSTRA.BLOCKED;
+            if (bl >= 0) return DIJKSTRA.MoveCost.Blocked;
             const ac = actors.findIndex((a) => a[0] == x && a[1] == y);
-            if (ac >= 0) return DIJKSTRA.AVOIDED;
-            return DIJKSTRA.OK;
+            if (ac >= 0) return DIJKSTRA.MoveCost.Avoided;
+            return DIJKSTRA.MoveCost.Ok;
         }
 
         function isBlocked(x: number, y: number): boolean {
@@ -202,7 +202,7 @@ describe('Path', () => {
 
         // dm.dump();
 
-        dm.update((v) => (v >= DIJKSTRA.BLOCKED ? v : -1.2 * v));
+        dm.update((v) => (v >= DIJKSTRA.MoveCost.Blocked ? v : -1.2 * v));
         dm.rescan(getCost);
 
         // dm.dump();

@@ -99,4 +99,6 @@ describe('CALC', () => {
         expect(CALC.calc(undefined)).toEqual(0);
         expect(CALC.calc('')).toEqual(0);
     });
+
+    test.todo('Allow variables');
 });

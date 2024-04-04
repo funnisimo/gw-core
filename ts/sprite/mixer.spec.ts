@@ -4,7 +4,7 @@ import { cosmetic } from '../rng';
 
 describe('Mixer', () => {
     beforeEach(() => {
-        jest.spyOn(cosmetic, 'number').mockImplementation((n?: number) =>
+        jest.spyOn(cosmetic, 'int').mockImplementation((n?: number) =>
             n ? Math.floor(n / 2) : 5
         );
     });
