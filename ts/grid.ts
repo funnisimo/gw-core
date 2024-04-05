@@ -548,7 +548,7 @@ export class Grid<T> {
         let nextSteps = [{ x, y }];
         let distance = 0;
 
-        const dirs = withDiagonals ? DIRS : DIRS.slice(4);
+        const dirs = withDiagonals ? DIRS : DIRS.slice(0, 4);
 
         while (nextSteps.length) {
             const current = nextSteps;
