@@ -671,12 +671,18 @@ export function getLineThru(
 }
 
 // CIRCLE
+export type XYDistFunc = (x: number, y: number, dist: number) => void;
 
-export function forCircle(x: number, y: number, radius: number, fn: XYFunc) {
+export function forCircle(
+    x: number,
+    y: number,
+    radius: number,
+    fn: XYDistFunc
+) {
     let i, j;
 
     if (radius <= 0) {
-        fn(x, y);
+        fn(x, y, 0);
         return;
     }
 
@@ -687,17 +693,22 @@ export function forCircle(x: number, y: number, radius: number, fn: XYFunc) {
                 radius * radius + radius
             ) {
                 // + radius softens the circle
-                fn(i, j);
+                fn(i, j, distanceBetween(i, j, x, y));
             }
         }
     }
 }
 
-export function forRadius(x: number, y: number, radius: number, fn: XYFunc) {
+export function forRadius(
+    x: number,
+    y: number,
+    radius: number,
+    fn: XYDistFunc
+) {
     let i, j;
 
     if (radius <= 0) {
-        fn(x, y);
+        fn(x, y, 0);
         return;
     }
 
@@ -707,7 +718,7 @@ export function forRadius(x: number, y: number, radius: number, fn: XYFunc) {
         for (j = y - radius; j < y + radius + 1; j++) {
             const p2 = (i - x) * (i - x) + (j - y) * (j - y);
             if (p2 < r2 && p2 >= r1) {
-                fn(i, j);
+                fn(i, j, distanceBetween(i, j, x, y));
             }
         }
     }
