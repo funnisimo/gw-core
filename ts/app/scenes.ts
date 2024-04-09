@@ -4,6 +4,7 @@ import { Scene, SceneCreateOpts, SceneStartOpts, SceneMakeFn } from './scene';
 import { App } from './app';
 import * as IO from '../app/io';
 import { ScenePauseOpts } from '.';
+import { mergeDeep } from '../object';
 
 interface PendingInfo {
     action: '_start' | 'stop' | 'show';
@@ -64,7 +65,7 @@ export class Scenes {
 
     create(id: string, opts: SceneCreateOpts = {}): Scene {
         let cfg = this._config[id] || {};
-        const used = UTILS.mergeDeep(cfg, opts);
+        const used = mergeDeep(cfg, opts);
 
         let scene: Scene;
 

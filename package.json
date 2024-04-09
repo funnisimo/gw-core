@@ -27,8 +27,7 @@
         "typescript": "^5.3.3"
     },
     "dependencies": {
-        "@rslike/std": "^2.1.2",
-        "lodash": "^4.17.21"
+        "@rslike/std": "^2.1.2"
     },
     "scripts": {
         "compile": "tsc",

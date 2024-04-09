@@ -13,7 +13,7 @@ import * as STYLE from './style';
 import { Buffer } from '../buffer';
 import * as rng from '../rng';
 import { SceneStartOpts } from './scene';
-import { mergeDeep } from '../utils';
+import { mergeDeep } from '../object';
 // import * as COLOR from '../color';
 
 declare global {

@@ -339,7 +339,7 @@ describe('compile', () => {
             const myHelper = jest
                 .fn()
                 .mockImplementation(
-                    (_, v, a) => 'test:' + OBJECT.getValue(v, a[0])
+                    (_, v, a) => 'test:' + OBJECT.getPath(v, a[0])
                 );
             Config.addHelper('myHelper', myHelper);
 
@@ -388,11 +388,11 @@ describe('compile', () => {
                 .mockImplementation((name, view, args) => {
                     if (args[0] === 'you') {
                         const field = args[1] || 'actor';
-                        return `you:${OBJECT.getValue(view, field)}`;
+                        return `you:${OBJECT.getPath(view, field)}`;
                     }
                     if (args[0] === 'the') {
                         const field = args[1] || 'actor';
-                        return `the:${OBJECT.getValue(view, field)}`;
+                        return `the:${OBJECT.getPath(view, field)}`;
                     }
                     if (args[0] === 'verb') {
                         return 'verb:' + args[1];
@@ -422,7 +422,7 @@ describe('compile', () => {
             Config.addHelper('you', youHelper);
 
             const theHelper = jest.fn().mockImplementation((_, view, args) => {
-                return `the:${OBJECT.getValue(view, args[0])}`;
+                return `the:${OBJECT.getPath(view, args[0])}`;
             });
             Config.addHelper('the', theHelper);
 

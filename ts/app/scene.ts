@@ -12,6 +12,7 @@ import { Tweens } from './tweens';
 import * as BUFFER from '../buffer';
 import * as STYLE from './style';
 import { Widget, UpdatePosOpts } from './widget';
+import { isPlainObject, mergeDeep } from '../object';
 
 // TODO - this: Event, scene: Scene, ...args: any[]) => void;
 export type SceneCallback = (this: Scene) => void;
@@ -157,8 +158,8 @@ export class Scene {
         opts.bg && (this.bg = COLOR.from(opts.bg));
 
         if (opts.data) {
-            if (UTILS.isPlainObject(opts.data)) {
-                this.data = UTILS.mergeDeep(this.data, opts.data);
+            if (isPlainObject(opts.data)) {
+                this.data = mergeDeep(this.data, opts.data);
             } else {
                 throw new Error(
                     "SceneCreateOpts 'data' field must be plain object."

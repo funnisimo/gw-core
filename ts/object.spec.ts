@@ -1,6 +1,36 @@
 import * as ObjectFn from './object';
 
 describe('Object functions', () => {
+    test('getPath/setPath', () => {
+        const d: { [id: string]: any } = {};
+
+        ObjectFn.setPath(d, 'test', 4);
+        expect(ObjectFn.getPath(d, 'test')).toEqual(4);
+        expect(d.test).toEqual(4);
+
+        ObjectFn.setPath(d, 'kind', 'apple');
+        expect(ObjectFn.getPath(d, 'kind')).toEqual('apple');
+        expect(d.kind).toEqual('apple');
+    });
+
+    test('getPath', () => {
+        const d: { [id: string]: any } = { a: 4, b: { c: 5 } };
+
+        expect(ObjectFn.getPath(d, 'a')).toEqual(4);
+        expect(ObjectFn.getPath(d, 'b.c')).toEqual(5);
+    });
+
+    test('mergeDeep - copies objects by reference', () => {
+        const d: { [id: string]: any } = { a: 4, b: { c: 5 } };
+
+        const m = new Map();
+        ObjectFn.setPath(d, 'a.b.c', m);
+
+        const e = ObjectFn.mergeDeep({ b: { c: { d: 1 } } }, d);
+        expect(ObjectFn.getPath(e, 'a.b.c')).toBe(m);
+        expect(ObjectFn.getPath(d, 'a.b.c')).toBe(m);
+    });
+
     test('assignOmitting', () => {
         const dest = {};
         ObjectFn.assignOmitting(['a', 'b', 'c'], dest, {

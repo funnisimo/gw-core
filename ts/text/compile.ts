@@ -238,7 +238,7 @@ export function makeVariable(
     function base(this: Config.HelperObj, view: Config.View) {
         return helper.call(this, name, view, parts);
     }
-    const valueFn = base.bind({ get: OBJECT.getValue });
+    const valueFn = base.bind({ get: OBJECT.getPath });
 
     if (format.length) {
         if (format.endsWith('d')) {

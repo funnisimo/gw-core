@@ -1,8 +1,5 @@
 import { ERROR } from './utils';
 
-import get from 'lodash/get';
-
-export const getValue = get;
 export type AnyObj = Record<string, any>;
 
 // export function extend(obj, name, fn) {
@@ -35,6 +32,86 @@ export type AnyObj = Record<string, any>;
 //   assignObject(other, obj);
 //   return other;
 // }
+
+/// https://www.30secondsofcode.org/js/s/is-plain-object/
+export function isPlainObject(val: any): boolean {
+    return !!val && typeof val === 'object' && val.constructor === Object;
+}
+
+export function isObject(item: any): boolean {
+    return !!item && typeof item === 'object' && !Array.isArray(item);
+}
+
+/**
+ * Like lodash set, but without array index support.
+ * @param obj
+ * @param path
+ * @returns
+ */
+export function getPath(
+    obj: Record<string, any>,
+    path: string
+): any | undefined {
+    const parts = path.split('.');
+    let current: Record<string, any> = obj;
+    while (parts.length > 0) {
+        const part = parts.shift()!;
+        current = current[part];
+    }
+    return current;
+}
+
+/**
+ * Like lodash set, but without array index support.
+ * @param obj
+ * @param path
+ * @param val
+ * @returns
+ */
+export function setPath(obj: Record<string, any>, path: string, val: any) {
+    const parts = path.split('.');
+    if (parts.length == 0) return;
+
+    let current: Record<string, any> = obj;
+    while (parts.length > 1) {
+        const part = parts.shift()!;
+        if (!(part in current)) {
+            current[part] = {};
+        } else if (typeof current[part] !== 'object') {
+            current[part] = {};
+        }
+        current = current[part];
+    }
+    current[parts.shift()!] = val;
+}
+
+// https://stackoverflow.com/questions/27936772/how-to-deep-merge-instead-of-shallow-merge
+//
+// Modified to use: isPlainObject
+// Modified to mergeDeep recursively if key is not in target
+export function mergeDeep(
+    target: { [id: string]: any },
+    source: { [id: string]: any }
+): { [id: string]: any } {
+    let output = Object.assign({}, target);
+    if (isPlainObject(target) && isPlainObject(source)) {
+        Object.keys(source).forEach((key) => {
+            if (isPlainObject(source[key])) {
+                if (!(key in target))
+                    Object.assign(output, {
+                        [key]: mergeDeep({}, source[key]),
+                    });
+                else output[key] = mergeDeep(target[key], source[key]);
+            } else {
+                Object.assign(output, { [key]: source[key] });
+            }
+        });
+    } else {
+        throw new Error('mergeDeep only works on plain objects, not classes.');
+    }
+    return output;
+}
+///
 
 function assignField(dest: AnyObj, src: AnyObj, key: string) {
     const current = dest[key];

@@ -54,9 +54,9 @@ export var helpers: Record<string, HelperFn> = {
     default: (name: string, view: View, args: string[]) => {
         if (args.length === 0) return name;
         if (args.length === 1) {
-            return '' + OBJECT.getValue(view, args[0]);
+            return '' + OBJECT.getPath(view, args[0]);
         }
-        return args.map((a) => OBJECT.getValue(view, a)).join(' ');
+        return args.map((a) => OBJECT.getPath(view, a)).join(' ');
     },
     debug: (name: string, _view: View, args: string[]) => {
         if (args.length) {

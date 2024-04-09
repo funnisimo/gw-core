@@ -3,10 +3,6 @@
  * @module utils
  */
 
-import { default as _clamp } from 'lodash/clamp';
-import { default as _getPath } from 'lodash/get';
-import { default as _setPath } from 'lodash/set';
-
 export function NOOP() {}
 export function TRUE(): boolean {
     return true;
@@ -45,16 +41,11 @@ export function WARN(...args: string[]) {
  * @param max {Number} the maximum value
  * @returns {Number} the clamped value
  */
-export const clamp = _clamp;
-
-export const getPath = _getPath;
-export const setPath = _setPath;
-
-// export function clamp(v: number, min: number, max: number) {
-//     if (v < min) return min;
-//     if (v > max) return max;
-//     return v;
-// }
+export function clamp(v: number, min: number, max: number) {
+    if (v < min) return min;
+    if (v > max) return max;
+    return v;
+}
 
 export function lerp(from: number, to: number, pct: number) {
     if (pct > 1) pct = 1;
@@ -193,40 +184,3 @@ export function valueType(a: any): string {
     }
     return ta;
 }
-
-/// https://www.30secondsofcode.org/js/s/is-plain-object/
-export function isPlainObject(val: any): boolean {
-    return !!val && typeof val === 'object' && val.constructor === Object;
-}
-
-/// https://stackoverflow.com/questions/27936772/how-to-deep-merge-instead-of-shallow-merge
-///
-export function isObject(item: any): boolean {
-    return !!item && typeof item === 'object' && !Array.isArray(item);
-}
-
-// Modified to use: isPlainObject
-// Modified to mergeDeep recursively if key is not in target
-export function mergeDeep(
-    target: { [id: string]: any },
-    source: { [id: string]: any }
-): { [id: string]: any } {
-    let output = Object.assign({}, target);
-    if (isPlainObject(target) && isPlainObject(source)) {
-        Object.keys(source).forEach((key) => {
-            if (isPlainObject(source[key])) {
-                if (!(key in target))
-                    Object.assign(output, {
-                        [key]: mergeDeep({}, source[key]),
-                    });
-                else output[key] = mergeDeep(target[key], source[key]);
-            } else {
-                Object.assign(output, { [key]: source[key] });
-            }
-        });
-    } else {
-        throw new Error('mergeDeep only works on plain objects, not classes.');
-    }
-    return output;
-}
-///
