@@ -1,6 +1,6 @@
 Canvas:
     [] Allow multiple canvases at once - each with different glyphs
-        - Panels
+        - Panels?
     [] Resize+Move panels on HTML canvas - setExtents
 
 App:
@@ -12,14 +12,14 @@ Build:
     [] Experiment with `tsup` for bundling
 
 Messages:
-    [] Message templating system
+    [] Message templating system?
 
 Canvas2d:
     [] Allow non-GL canvas
     
 lodash:
-    [] Can we remove this?
-    [] Is any of the usage necessary/really helpful?
+    [X] Can we remove this?
+    [X] Is any of the usage necessary/really helpful?
 
 rslike/std:
     [] Can we remove this?
