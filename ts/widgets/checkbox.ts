@@ -1,10 +1,10 @@
 // import * as GWU from 'gw-utils/dist';
-import * as IO from '../app/io';
-import * as Buffer from '../buffer';
-import * as COLOR from '../color';
+import * as IO from '../app/io.js';
+import * as Buffer from '../buffer.js';
+import * as COLOR from '../color/index.js';
 
-import * as Text from './text';
-// import { Widget } from '../app/widget';
+import * as Text from './text.js';
+// import { Widget } from '../app/widget.js';
 
 export interface CheckboxOptions extends Text.TextOptions {
     uncheck?: string;

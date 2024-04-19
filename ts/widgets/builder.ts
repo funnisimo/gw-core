@@ -1,26 +1,26 @@
-import { Scene } from '../app/scene';
+import { Scene } from '../app/scene.js';
 
-import * as Utils from '../utils';
-import * as Color from '../color';
-import * as XY from '../xy';
-// import * as IO from '../io';
-// import { Grid } from '../ui/grid';
+import * as Utils from '../utils.js';
+import * as Color from '../color/index.js';
+import * as XY from '../xy.js';
+// import * as IO from '../io.js';
+// import { Grid } from '../ui/grid.js';
 
-import * as Widget from '../app/widget';
-// import { Body } from './body';
-import { StyleOptions } from '../app/style';
-// import { Layer, LayerOptions } from '../ui/layer';
-// import { UI } from '../ui/ui';
-// import * as Style from '../ui/style';
-import * as TEXT from './text';
-import * as BORDER from './border';
-import * as BUTTON from './button';
-import * as CHECK from './checkbox';
-import * as INPUT from './input';
-import * as FIELD from './fieldset';
-import * as TABLE from './datatable';
-import * as LIST from './datalist';
-import * as MENUBAR from './menubar';
+import * as Widget from '../app/widget.js';
+// import { Body } from './body.js';
+import { StyleOptions } from '../app/style.js';
+// import { Layer, LayerOptions } from '../ui/layer.js';
+// import { UI } from '../ui/ui.js';
+// import * as Style from '../ui/style.js';
+import * as TEXT from './text.js';
+import * as BORDER from './border.js';
+import * as BUTTON from './button.js';
+import * as CHECK from './checkbox.js';
+import * as INPUT from './input.js';
+import * as FIELD from './fieldset.js';
+import * as TABLE from './datatable.js';
+import * as LIST from './datalist.js';
+import * as MENUBAR from './menubar.js';
 
 // export interface WidgetLayerOptions extends LayerOptions {}
 

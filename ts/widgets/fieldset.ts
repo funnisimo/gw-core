@@ -1,12 +1,12 @@
 // import * as GWU from 'gw-utils/dist';
-import * as TextUtils from '../text';
+import * as TextUtils from '../text/index.js';
 
-// import { Body } from './body';
-import * as Text from './text';
-import * as Widget from '../app/widget';
-import * as Dialog from './dialog';
-import { BorderType } from './datatable';
-import { DialogOptions } from '.';
+// import { Body } from './body.js';
+import * as Text from './text.js';
+import * as Widget from '../app/widget.js';
+import * as Dialog from './dialog.js';
+import { BorderType } from './datatable.js';
+import { DialogOptions } from './index.js';
 
 export interface FieldsetOptions
     extends Omit<Dialog.DialogOptions, 'width' | 'height'> {

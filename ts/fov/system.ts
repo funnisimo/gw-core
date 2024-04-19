@@ -3,13 +3,13 @@
 // import * as Cell from './cell';
 // import * as Map from './map';
 
-import { FovFlags } from './flags';
-import * as Grid from '../grid';
-import * as FOV from './fov';
-import * as TYPES from './types';
-import { NOOP } from '../utils';
-import * as XY from '../xy';
-import { FovSubject } from '.';
+import { FovFlags } from './flags.js';
+import * as Grid from '../grid.js';
+import * as FOV from './fov.js';
+import * as TYPES from './types.js';
+import { NOOP } from '../utils.js';
+import * as XY from '../xy.js';
+import { FovSubject } from './index.js';
 // import * as Flag from '../flag';
 
 export type FovChangeFn = (x: number, y: number, isVisible: boolean) => void;

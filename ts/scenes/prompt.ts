@@ -1,13 +1,13 @@
 // import * as GWU from 'gw-utils/dist';
-import * as Color from '../color';
+import * as Color from '../color/index.js';
 // import * as TextUtils from '../text';
 
-import '../widgets/button';
-import { Scene, SceneStartOpts } from '../app/scene';
-import { installScene } from '../app/scenes';
-import * as DIALOG from '../widgets/dialog';
-import { Text } from '../widgets/text';
-import { Input } from '../widgets/input';
+import '../widgets/button.js';
+import { Scene, SceneStartOpts } from '../app/scene.js';
+import { installScene } from '../app/scenes.js';
+import * as DIALOG from '../widgets/dialog.js';
+import { Text } from '../widgets/text.js';
+import { Input } from '../widgets/input.js';
 
 // TODO - Should this be removed?
 type WidgetEvents =

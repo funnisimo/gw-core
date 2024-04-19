@@ -1,12 +1,12 @@
 // Based on: https://github.com/ondras/fastiles/blob/master/ts/scene.ts (v2.1.0)
 
-import * as shaders from './shaders';
-import { Glyphs, GlyphOptions } from './glyphs';
-import { Layer } from './layer';
-import * as Color from '../color';
-import * as IO from '../app/io';
-import * as XY from '../xy';
-import { Buffer } from '../buffer';
+import * as shaders from './shaders.js';
+import { Glyphs, GlyphOptions } from './glyphs.js';
+import { Layer } from './layer.js';
+import * as Color from '../color/index.js';
+import * as IO from '../app/io.js';
+import * as XY from '../xy.js';
+import { Buffer } from '../buffer.js';
 
 export type IOCallback = IO.EventFn | null;
 

@@ -1,8 +1,8 @@
 // import * as GWU from 'gw-utils/dist';
-import * as TEXT from '../text';
-import * as Buffer from '../buffer';
+import * as TEXT from '../text/index.js';
+import * as Buffer from '../buffer.js';
 
-import { Widget, WidgetOpts } from '../app/widget';
+import { Widget, WidgetOpts } from '../app/widget.js';
 
 export interface TextOptions extends WidgetOpts {
     text?: string;

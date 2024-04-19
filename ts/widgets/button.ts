@@ -1,6 +1,6 @@
 // import * as GWU from 'gw-utils/dist';
-import * as Text from './text';
-// import * as Widget from '../app/widget';
+import * as Text from './text.js';
+// import * as Widget from '../app/widget.js';
 
 export interface ButtonOptions extends Omit<Text.TextOptions, 'text'> {
     text?: string; // don't have to have text

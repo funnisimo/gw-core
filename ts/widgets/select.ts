@@ -1,8 +1,8 @@
 // import * as GWU from 'gw-utils/dist';
-import * as Widget from '../app/widget';
-import * as Menu from './menu';
-import * as Text from './text';
-// import { Body } from './body';
+import * as Widget from '../app/widget.js';
+import * as Menu from './menu.js';
+import * as Text from './text.js';
+// import { Body } from './body.js';
 
 export interface SelectOptions extends Widget.WidgetOpts {
     text: string;

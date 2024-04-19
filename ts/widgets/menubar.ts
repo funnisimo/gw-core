@@ -1,7 +1,7 @@
-import * as Widget from '../app/widget';
-import { DropdownConfig, Menu } from './menu';
-import * as TEXT from './text';
-import * as BUTTON from './button';
+import * as Widget from '../app/widget.js';
+import { DropdownConfig, Menu } from './menu.js';
+import * as TEXT from './text.js';
+import * as BUTTON from './button.js';
 
 export interface MenubarOptions extends Widget.WidgetOpts {
     buttons: DropdownConfig;

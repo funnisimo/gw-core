@@ -1,18 +1,18 @@
-import * as UTILS from '../utils';
-import * as COLOR from '../color';
-import * as XY from '../xy';
-import * as TWEEN from '../tween';
+import * as UTILS from '../utils.js';
+import * as COLOR from '../color/index.js';
+import * as XY from '../xy.js';
+import * as TWEEN from '../tween.js';
 
-import * as EVENTS from './events';
-import * as TIMERS from './timers';
-import * as IO from '../app/io';
-import { App } from './app';
-// import * as CANVAS from '../canvas';
-import { Tweens } from './tweens';
-import * as BUFFER from '../buffer';
-import * as STYLE from './style';
-import { Widget, UpdatePosOpts } from './widget';
-import { isPlainObject, mergeDeep } from '../object';
+import * as EVENTS from './events.js';
+import * as TIMERS from './timers.js';
+import * as IO from '../app/io.js';
+import { App } from './app.js';
+// import * as CANVAS from '../canvas.js';
+import { Tweens } from './tweens.js';
+import * as BUFFER from '../buffer.js';
+import * as STYLE from './style.js';
+import { Widget, UpdatePosOpts } from './widget.js';
+import { isPlainObject, mergeDeep } from '../object.js';
 
 // TODO - this: Event, scene: Scene, ...args: any[]) => void;
 export type SceneCallback = (this: Scene) => void;

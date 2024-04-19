@@ -1,4 +1,4 @@
-import { FALSE, arrayNullify } from './utils';
+import { FALSE, arrayNullify } from './utils.js';
 
 enum TaskResultType {
     OK,

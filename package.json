@@ -3,7 +3,7 @@
     "version": "0.7.0",
     "description": "Basic Roguelike functionality",
     "main": "dist/index.js",
-    "types": "dist/gw-utils.d.ts",
+    "types": "dist/index.d.ts",
     "type": "module",
     "devDependencies": {
         "@babel/types": "^7.23.9",
@@ -12,7 +12,6 @@
         "@rollup/plugin-terser": "^0.4.4",
         "@rollup/plugin-typescript": "^11.1.6",
         "@types/jest": "^29.5",
-        "@types/lodash": "^4.14.178",
         "glob": "^10.3.10",
         "http-server": "^14.1.0",
         "jest": "^29.7",

@@ -1,11 +1,11 @@
-import * as XY from './xy';
-import * as GRID from './grid';
+import * as XY from './xy.js';
+// import * as GRID from './grid.js';
 import {
     RandomFunction,
     WeightedArray,
     RandomConfig,
     WeightedObject,
-} from './types';
+} from './types.js';
 
 export { WeightedArray, WeightedObject, RandomConfig, RandomFunction };
 
@@ -270,92 +270,6 @@ export class Random {
 
         return total + lo;
     }
-
-    matchingLoc(
-        width: number,
-        height: number,
-        matchFn: XY.XYMatchFunc
-    ): XY.Loc {
-        let locationCount = 0;
-        let i, j, index;
-        const grid = GRID.alloc(width, height);
-
-        locationCount = 0;
-        grid.update((_v, x, y) => {
-            if (matchFn(x, y)) {
-                ++locationCount;
-                return 1;
-            }
-            return 0;
-        });
-
-        if (locationCount) {
-            index = this.range(0, locationCount - 1);
-
-            for (i = 0; i < width && index >= 0; i++) {
-                for (j = 0; j < height && index >= 0; j++) {
-                    if (grid.get(i, j)) {
-                        if (index == 0) {
-                            GRID.free(grid);
-                            return [i, j];
-                        }
-                        index--;
-                    }
-                }
-            }
-        }
-
-        GRID.free(grid);
-        return [-1, -1];
-    }
-
-    matchingLocNear(x: number, y: number, matchFn: XY.XYMatchFunc): XY.Loc {
-        let loc: XY.Loc = [-1, -1];
-        let i, j, k, candidateLocs, randIndex;
-
-        candidateLocs = 0;
-
-        // count up the number of candidate locations
-        for (k = 0; k < 50 && !candidateLocs; k++) {
-            for (i = x - k; i <= x + k; i++) {
-                for (j = y - k; j <= y + k; j++) {
-                    if (
-                        Math.ceil(XY.distanceBetween(x, y, i, j)) == k &&
-                        matchFn(i, j)
-                    ) {
-                        candidateLocs++;
-                    }
-                }
-            }
-        }
-
-        if (candidateLocs == 0) {
-            return [-1, -1];
-        }
-
-        // and pick one
-        randIndex = 1 + this.int(candidateLocs);
-
-        --k;
-        // for (k = 0; k < 50; k++) {
-        for (i = x - k; i <= x + k; i++) {
-            for (j = y - k; j <= y + k; j++) {
-                if (
-                    Math.ceil(XY.distanceBetween(x, y, i, j)) == k &&
-                    matchFn(i, j)
-                ) {
-                    if (--randIndex == 0) {
-                        loc[0] = i;
-                        loc[1] = j;
-                        return loc;
-                    }
-                }
-            }
-        }
-        // }
-
-        return [-1, -1]; // should never reach this point
-    }
 }
 
 export const random = new Random();
@@ -363,4 +277,65 @@ export const cosmetic = new Random();
 
 export function make(seed?: number): Random {
     return new Random(seed);
+}
+
+export class RandomXY {
+    _indexes: number[];
+    _width: number;
+    _current: number;
+
+    constructor(width: number, height: number, rng?: Random) {
+        this._indexes = Array.apply(null, Array(width * height)).map(
+            function (_x, i) {
+                return i;
+            }
+        );
+        this._width = width;
+        this._current = 0;
+        this.shuffle(rng);
+    }
+
+    shuffle(rng?: Random) {
+        rng = rng || random;
+        rng.shuffle(this._indexes);
+    }
+
+    next(): XY.XY {
+        this._current = (this._current + 1) % this._indexes.length;
+        const val = this._indexes[this._current];
+        return { x: val % this._width, y: Math.floor(val / this._width) };
+    }
+
+    find(fn: (xy: XY.XY) => boolean): XY.XY | undefined {
+        for (let offset = 0; offset < this._indexes.length; ++offset) {
+            let xy = this.next();
+            if (fn(xy)) {
+                return xy;
+            }
+        }
+    }
+}
+
+export function randomMatchingLoc(
+    width: number,
+    height: number,
+    match: XY.XYMatchFunc,
+    rng?: Random
+): XY.Loc | undefined {
+    const locs = new RandomXY(width, height, rng);
+    const xy = locs.find((xy) => match(xy.x, xy.y));
+    if (!xy) return undefined;
+    return [xy.x, xy.y];
+}
+
+export function randomMatchingLocNear(
+    x: number,
+    y: number,
+    match: XY.XYMatchFunc,
+    rng?: Random
+): XY.Loc | undefined {
+    rng = rng || random;
+    const locs = XY.closestMatchingLocs(x, y, match);
+    if (!locs || locs.length == 0) return undefined;
+    return rng.item(locs);
 }

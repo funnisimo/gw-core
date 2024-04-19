@@ -1,8 +1,8 @@
-import { Canvas, VERTICES_PER_TILE } from './canvas';
-import { BufferTarget } from './buffer';
-import { Buffer, BufferBase } from '../buffer';
-import { DrawInfo } from '../sprite/mixer';
-import * as Color from '../color';
+import { Canvas, VERTICES_PER_TILE } from './canvas.js';
+import { BufferTarget } from './buffer.js';
+import { Buffer, BufferBase } from '../buffer.js';
+import { DrawInfo } from '../sprite/mixer.js';
+import * as Color from '../color/index.js';
 
 export class Layer extends BufferBase implements BufferTarget {
     canvas: Canvas;

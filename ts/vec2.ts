@@ -1,4 +1,4 @@
-import { XY } from './types';
+import { XY } from './types.js';
 
 // Floating point stability
 const precision = 8;

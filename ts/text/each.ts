@@ -1,10 +1,9 @@
-import { NOOP } from '../utils';
-import { ColorBase } from '../color';
-import * as Config from './config';
+import { NOOP } from '../utils.js';
+import * as Config from './config.js';
 
 interface Colors {
-    fg: ColorBase | null;
-    bg: ColorBase | null;
+    fg: any | null;
+    bg: any | null;
 }
 
 type ColorFunction = (colors: Colors) => void;
@@ -14,8 +13,8 @@ type EachFn = (ch: string, fg: any, bg: any, i: number, n: number) => void;
 type EachWordFn = (ch: string, fg: any, bg: any, prefix: string) => void;
 
 export interface EachOptions {
-    fg?: ColorBase;
-    bg?: ColorBase;
+    fg?: any;
+    bg?: any;
     eachColor?: ColorFunction;
 }
 

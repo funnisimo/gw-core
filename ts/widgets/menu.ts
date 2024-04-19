@@ -1,10 +1,10 @@
 // import * as GWU from 'gw-utils/dist';
-import * as XY from '../xy';
-import * as TextUtils from '../text';
+import * as XY from '../xy.js';
+import * as TextUtils from '../text/index.js';
 
-import * as Widget from '../app/widget';
-import * as Text from './text';
-import * as IO from '../app/io';
+import * as Widget from '../app/widget.js';
+import * as Text from './text.js';
+import * as IO from '../app/io.js';
 
 export interface Rec<T> {
     [keys: string]: T;

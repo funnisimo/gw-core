@@ -1,6 +1,6 @@
-import * as Config from './config';
-import * as OBJECT from '../object';
-import * as UTILS from './utils';
+import * as Config from './config.js';
+import * as OBJECT from '../object.js';
+import * as UTILS from './utils.js';
 
 // export type Args = any;
 

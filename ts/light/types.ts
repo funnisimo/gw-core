@@ -1,5 +1,5 @@
-import { Color, ColorBase, LightValue } from '../color';
-import { Range } from '../range';
+import { Color, ColorBase, LightValue } from '../color/index.js';
+import { Range } from '../range.js';
 
 export interface LightConfig {
     color: ColorBase;

@@ -1,13 +1,13 @@
 // import * as GWU from 'gw-utils/dist';
-import * as Utils from '../utils';
-import * as TextUtils from '../text';
-import * as Buffer from '../buffer';
-import * as IO from '../app/io';
+import * as Utils from '../utils.js';
+import * as TextUtils from '../text/index.js';
+import * as Buffer from '../buffer.js';
+import * as IO from '../app/io.js';
 
-import * as WIDGET from '../app/widget';
-import { Text } from './text';
-import { drawBorder } from './border';
-import * as STYLE from '../app/style';
+import * as WIDGET from '../app/widget.js';
+import { Text } from './text.js';
+import { drawBorder } from './border.js';
+import * as STYLE from '../app/style.js';
 
 STYLE.defaultStyle.add('datatable', { bg: 'black' });
 // STYLE.defaultStyle.add('th', { bg: 'light_teal', fg: 'dark_blue' });

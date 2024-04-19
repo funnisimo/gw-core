@@ -1,6 +1,6 @@
-import * as Color from '../color';
-import { SpriteData } from '../types';
-import { clamp } from '../utils';
+import * as Color from '../color/index.js';
+import { SpriteData } from '../types.js';
+import { clamp } from '../utils.js';
 
 export interface SpriteConfig {
     ch?: string | null;

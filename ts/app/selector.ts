@@ -1,5 +1,5 @@
-import * as Utils from '../utils';
-import { PropType } from './widget';
+import * as Utils from '../utils.js';
+import { PropType } from './widget.js';
 
 export interface UISelectable {
     readonly tag: string;
@@ -68,7 +68,8 @@ export class Selector {
     }
 
     protected _matchElement(text: string): BuildFn {
-        const CSS_RE = /(?:(\w+|\*|\$)|#(\w+)|\.([^\.: ]+))|(?::(?:(?:not\(\.([^\)]+)\))|(?:not\(:([^\)]+)\))|([^\.: ]+)))/g;
+        const CSS_RE =
+            /(?:(\w+|\*|\$)|#(\w+)|\.([^\.: ]+))|(?::(?:(?:not\(\.([^\)]+)\))|(?:not\(:([^\)]+)\))|([^\.: ]+)))/g;
 
         const parts: MatchFn[] = [];
         const re = new RegExp(CSS_RE, 'g');

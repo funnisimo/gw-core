@@ -1,10 +1,10 @@
-import * as XY from '../xy';
-import * as Utils from '../utils';
-import * as Range from '../range';
-import * as Grid from '../grid';
-import * as Color from '../color';
+import * as XY from '../xy.js';
+import * as Utils from '../utils.js';
+import * as Range from '../range.js';
+import * as Grid from '../grid.js';
+import * as Color from '../color/index.js';
 // import { config as CONFIG } from '../data';
-import * as Types from './types';
+import * as Types from './types.js';
 
 // const LIGHT_SMOOTHING_THRESHOLD = 150;       // light components higher than this magnitude will be toned down a little
 

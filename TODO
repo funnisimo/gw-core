@@ -28,3 +28,7 @@ rslike/std:
 vec2 vs xy:
     [] Review these to see if we can combine any of it
     [] Do we ever even use Vec2?
+
+Pathfinding:
+    [] Pathfinding with ice/slide forcing movement
+    [] One way tiles?

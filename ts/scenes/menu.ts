@@ -1,8 +1,8 @@
 // import * as Color from '../color';
 
-import { Scene } from '../app/scene';
-import { installScene } from '../app/scenes';
-import { Menu } from '../widgets/menu';
+import { Scene } from '../app/scene.js';
+import { installScene } from '../app/scenes.js';
+import { Menu } from '../widgets/menu.js';
 
 export interface MenuOptions {
     menu: Menu;

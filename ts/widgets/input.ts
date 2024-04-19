@@ -1,12 +1,12 @@
 // import * as GWU from 'gw-utils/dist';
-import * as TextUtils from '../text';
-import * as IO from '../app/io';
-import * as Buffer from '../buffer';
+import * as TextUtils from '../text/index.js';
+import * as IO from '../app/io.js';
+import * as Buffer from '../buffer.js';
 
-import * as Text from './text';
-// import * as Widget from '../app/widget';
-import { PropType } from '../app/widget';
-import * as Style from '../app/style';
+import * as Text from './text.js';
+// import * as Widget from '../app/widget.js';
+import { PropType } from '../app/widget.js';
+import * as Style from '../app/style.js';
 
 export interface InputOptions extends Text.TextOptions {
     id: string; // have to have id

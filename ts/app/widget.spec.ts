@@ -1,4 +1,4 @@
-import _ from 'lodash';
+// import _ from 'lodash';
 import * as TEST from '../../test/utils';
 import * as CANVAS from '../canvas';
 import * as APP from './app';

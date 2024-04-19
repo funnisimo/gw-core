@@ -1,10 +1,15 @@
-import * as UTILS from '../utils';
-import * as BUFFER from '../buffer';
-import { Scene, SceneCreateOpts, SceneStartOpts, SceneMakeFn } from './scene';
-import { App } from './app';
-import * as IO from '../app/io';
-import { ScenePauseOpts } from '.';
-import { mergeDeep } from '../object';
+import * as UTILS from '../utils.js';
+import * as BUFFER from '../buffer.js';
+import {
+    Scene,
+    SceneCreateOpts,
+    SceneStartOpts,
+    SceneMakeFn,
+} from './scene.js';
+import { App } from './app.js';
+import * as IO from '../app/io.js';
+import { ScenePauseOpts } from './index.js';
+import { mergeDeep } from '../object.js';
 
 interface PendingInfo {
     action: '_start' | 'stop' | 'show';

@@ -1,5 +1,5 @@
-import * as EVENTS from './events';
-import * as UTILS from '../utils';
+import * as EVENTS from './events.js';
+import * as UTILS from '../utils.js';
 
 export type TimerFn = () => void | boolean;
 

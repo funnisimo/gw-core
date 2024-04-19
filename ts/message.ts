@@ -1,4 +1,4 @@
-import * as Text from './text/index';
+import * as Text from './text/index.js';
 
 ////////////////////////////////////
 // Messages

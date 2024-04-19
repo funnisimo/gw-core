@@ -1,8 +1,8 @@
-export { compile, apply, Template, CompileOptions } from './compile';
-export { eachChar, EachOptions } from './each';
-export * from './utils';
-export { wordWrap, splitIntoLines } from './lines';
-export * from './tensable';
+export { compile, apply, Template, CompileOptions } from './compile.js';
+export { eachChar, EachOptions } from './each.js';
+export * from './utils.js';
+export { wordWrap, splitIntoLines } from './lines.js';
+export * from './tensable.js';
 
 export {
     addHelper,
@@ -12,7 +12,7 @@ export {
     View,
     HelperFn,
     HelperObj,
-} from './config';
+} from './config.js';
 
 interface Options {
     fg?: any;
@@ -22,7 +22,7 @@ interface Options {
     field?: string;
 }
 
-import { options } from './config';
+import { options } from './config.js';
 
 export function configure(opts: Options = {}) {
     if (opts.fg !== undefined) {

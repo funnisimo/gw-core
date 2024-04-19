@@ -1,6 +1,6 @@
 // import * as IO from '../io';
-import * as XY from '../xy';
-import { Widget } from './widget';
+import * as XY from '../xy.js';
+import { Widget } from './widget.js';
 
 export interface EventType {
     type: string;

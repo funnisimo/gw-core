@@ -1,5 +1,5 @@
-// import { FovFlags } from './flags';
-import * as XY from '../xy';
+// import { FovFlags } from './flags.js';
+import * as XY from '../xy.js';
 
 export interface FovStrategy {
     isBlocked: XY.XYMatchFunc;

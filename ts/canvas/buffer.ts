@@ -1,4 +1,4 @@
-import * as BUFFER from '../buffer';
+import * as BUFFER from '../buffer.js';
 
 export interface BufferTarget {
     readonly width: number;

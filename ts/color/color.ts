@@ -1,5 +1,5 @@
-import { cosmetic } from '../rng';
-import { clamp } from '../utils';
+import { cosmetic } from '../rng.js';
+import { clamp } from '../utils.js';
 
 export type ColorVals = [number, number, number, number?];
 export type ColorBase = string | number | ColorVals | Color | null;

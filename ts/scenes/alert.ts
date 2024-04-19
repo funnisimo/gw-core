@@ -1,10 +1,10 @@
 // import * as Color from '../color';
-import * as TEXT from '../text';
+import * as TEXT from '../text/index.js';
 
-import { Scene } from '../app/scene';
-import { installScene } from '../app/scenes';
-import { Dialog, DialogOptions } from '../widgets/dialog';
-import { Text } from '../widgets/text';
+import { Scene } from '../app/scene.js';
+import { installScene } from '../app/scenes.js';
+import { Dialog, DialogOptions } from '../widgets/dialog.js';
+import { Text } from '../widgets/text.js';
 
 export interface AlertOptions extends Partial<DialogOptions> {
     duration?: number;

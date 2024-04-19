@@ -1,6 +1,6 @@
-import * as DIJKSTRA from '../grid';
-import * as XY from '../xy';
-import * as UTILS from '../utils';
+import * as DIJKSTRA from '../grid.js';
+import * as XY from '../xy.js';
+import * as UTILS from '../utils.js';
 
 export type SimpleCostFn = (x: number, y: number) => number | MoveCost;
 export type UpdateFn = (
@@ -15,11 +15,11 @@ const DIRS = XY.DIRS;
 export enum MoveCost {
     Ok = 1,
     Avoided = 10,
-    Blocked = 10000,
-    Obstruction = 20000, // Blocks Diagonal
+    Blocked = 100000,
+    Obstruction = 200000, // Blocks Diagonal
 }
 
-export const NOT_DONE = 30000;
+export const NOT_DONE = 300000;
 
 interface Item {
     x: number;

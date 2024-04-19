@@ -1,5 +1,5 @@
-import * as UTILS from '../utils';
-import { TweenUpdate } from '../tween';
+import * as UTILS from '../utils.js';
+import { TweenUpdate } from '../tween.js';
 
 export class Tweens {
     _tweens: TweenUpdate[] = [];

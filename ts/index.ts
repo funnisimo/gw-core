@@ -1,32 +1,32 @@
-export * as utils from './utils';
-export * as xy from './xy';
-export { XY, Loc, DIRS } from './xy';
-export * as object from './object';
-export * as range from './range';
-export * as tags from './tags';
-export * as flag from './flag';
-export * as grid from './grid';
-export * as buffer from './buffer';
-export * as fov from './fov';
-export * as path from './path';
-export * as frequency from './frequency';
-export * as schedule from './schedule';
-export * as canvas from './canvas';
-export * as sprite from './sprite';
-export * as color from './color';
-export * as text from './text';
-export * as types from './types';
-export * as message from './message';
-export { cosmetic, random } from './rng';
-export * as rng from './rng';
-export { colors } from './color';
-export * as blob from './blob';
-export * as light from './light';
-export * as tween from './tween';
-export * as ui from './scenes';
-export * as widget from './widgets';
-export * as app from './app';
-export * as calc from './calc';
+export * as utils from './utils.js';
+export * as xy from './xy.js';
+export { XY, Loc, DIRS } from './xy.js';
+export * as object from './object.js';
+export * as range from './range.js';
+export * as tags from './tags.js';
+export * as flag from './flag.js';
+export * as grid from './grid.js';
+export * as buffer from './buffer.js';
+export * as fov from './fov/index.js';
+export * as path from './path/index.js';
+export * as frequency from './frequency.js';
+export * as schedule from './schedule.js';
+export * as canvas from './canvas/index.js';
+export * as sprite from './sprite/index.js';
+export * as color from './color/index.js';
+export * as text from './text/index.js';
+export * as types from './types.js';
+export * as message from './message.js';
+export { cosmetic, random } from './rng.js';
+export * as rng from './rng.js';
+export { colors } from './color/index.js';
+export * as blob from './blob.js';
+export * as light from './light/index.js';
+export * as tween from './tween.js';
+export * as ui from './scenes/index.js';
+export * as widget from './widgets/index.js';
+export * as app from './app/index.js';
+export * as calc from './calc.js';
 
 import {
     NOOP,
@@ -39,7 +39,7 @@ import {
     IS_NONZERO,
     ERROR,
     WARN,
-} from './utils';
+} from './utils.js';
 export {
     NOOP,
     TRUE,
@@ -53,14 +53,14 @@ export {
     WARN,
 };
 
-import {
-    Err,
-    Ok,
-    Result,
-    Some,
-    None,
-    Option,
-    UndefinedBehaviorError,
-    match,
-} from '@rslike/std';
-export { Err, Ok, Result, Some, None, Option, UndefinedBehaviorError, match };
+// import {
+//     Err,
+//     Ok,
+//     Result,
+//     Some,
+//     None,
+//     Option,
+//     UndefinedBehaviorError,
+//     match,
+// } from '@rslike/std';
+// export { Err, Ok, Result, Some, None, Option, UndefinedBehaviorError, match };

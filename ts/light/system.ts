@@ -1,4 +1,4 @@
-import { Shadowcast } from '../fov';
+import { Shadowcast } from '../fov/fov.js';
 import {
     LightSystemType,
     LightSystemSite,
@@ -6,13 +6,13 @@ import {
     LightType,
     LightCb,
     LightBase,
-} from './types';
-import * as Grid from '../grid';
-import * as Light from './light';
+} from './types.js';
+import * as Grid from '../grid.js';
+import * as Light from './light.js';
 // import { data as DATA } from '../data';
-import * as XY from '../xy';
-import * as Color from '../color';
-import * as FLAG from '../flag';
+import * as XY from '../xy.js';
+import * as Color from '../color/index.js';
+import * as FLAG from '../flag.js';
 
 export interface StaticLightInfo {
     x: number;

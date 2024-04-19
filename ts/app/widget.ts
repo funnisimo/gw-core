@@ -1,13 +1,13 @@
-import * as UTILS from '../utils';
-import * as XY from '../xy';
-import * as BUFFER from '../buffer';
-import * as TEXT from '../text';
-// import * as Tween from '../tween';
-import * as IO from '../app/io';
-import * as EVENTS from '../app/events';
-import * as STYLE from './style';
+import * as UTILS from '../utils.js';
+import * as XY from '../xy.js';
+import * as BUFFER from '../buffer.js';
+import * as TEXT from '../text/index.js';
+// import * as Tween from '../tween.js';
+import * as IO from '../app/io.js';
+import * as EVENTS from '../app/events.js';
+import * as STYLE from './style.js';
 
-import { Scene } from '../app/scene';
+import { Scene } from '../app/scene.js';
 
 export type DataValue = any;
 export type DataObject = Record<string, DataValue>;
@@ -896,7 +896,7 @@ export function wrapChildren(widget: Widget, pad = 0) {
 
     widget.bounds.copy(widget.children[0].bounds);
     widget.children.forEach((c) => {
-        widget.bounds.include(c.bounds);
+        widget.bounds.expandToInclude(c.bounds);
     });
 
     widget.bounds.pad(pad);

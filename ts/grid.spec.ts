@@ -455,7 +455,7 @@ describe('GW.grid', () => {
         expect(a.firstMatchingLoc(2)).toEqual([-1, -1]);
     });
 
-    test('randomMatchingLoc', () => {
+    test('randomMatchingXY', () => {
         // UTILS.mockRandom();
         random.seed(5);
 
@@ -469,8 +469,8 @@ describe('GW.grid', () => {
 
         const results: Record<number, number> = {};
         for (let i = 0; i < 1000; ++i) {
-            const xy = a.randomMatchingLoc(one);
-            const v = xy[0] * 10 + xy[1];
+            const xy = GW.grid.randomMatchingXY(a, one)!;
+            const v = xy.x * 10 + xy.y;
             results[v] = (results[v] || 0) + 1;
         }
 
@@ -481,50 +481,50 @@ describe('GW.grid', () => {
         function two(v: number) {
             return v == 2;
         }
-        expect(a.randomMatchingLoc(two)).toEqual([-1, -1]);
+        expect(GW.grid.randomMatchingXY(a, two)).toBeUndefined();
 
         // random.seed(5);
-        // expect(a.randomMatchingLoc(one)).toEqual([4, 1]);
+        // expect(a.randomMatchingXY(one)).toEqual([4, 1]);
         // random.seed(50);
-        // expect(a.randomMatchingLoc(one)).toEqual([4, 1]);
+        // expect(a.randomMatchingXY(one)).toEqual([4, 1]);
 
         // some kind of error!
         const test = jest.fn().mockReturnValue(false);
-        expect(a.randomMatchingLoc(test)).toEqual([-1, -1]);
+        expect(GW.grid.randomMatchingXY(a, test)).toBeUndefined();
     });
 
-    test('matchingLocNear', () => {
-        random.seed(12345);
+    // test('matchingLocNear', () => {
+    //     random.seed(12345);
 
-        a = GW.grid.alloc(10, 10, 0);
-        a._data[4][1] = 1;
-        a._data[2][3] = 1;
+    //     a = GW.grid.alloc(10, 10, 0);
+    //     a._data[4][1] = 1;
+    //     a._data[2][3] = 1;
 
-        expect(a.matchingLocNear(3, 0, 1)).toEqual([4, 1]);
-        expect(a.matchingLocNear(2, 3, 1)).toEqual([2, 3]);
-        expect(a.matchingLocNear(2, 3, 2)).toEqual([-1, -1]);
+    //     expect(a.matchingLocNear(3, 0, 1)).toEqual([4, 1]);
+    //     expect(a.matchingLocNear(2, 3, 1)).toEqual([2, 3]);
+    //     expect(a.matchingLocNear(2, 3, 2)).toEqual([-1, -1]);
 
-        function one(v: number) {
-            return v == 1;
-        }
-        expect(a.matchingLocNear(3, 0, one)).toEqual([4, 1]);
+    //     function one(v: number) {
+    //         return v == 1;
+    //     }
+    //     expect(a.matchingLocNear(3, 0, one)).toEqual([4, 1]);
 
-        a._data[4][3] = 1;
-        expect(a.matchingLocNear(4, 2, 1)).toEqual([4, 1]);
-        // expect(a.matchingLocNear(4, 2, 1, true)).toEqual([4, 3]);
+    //     a._data[4][3] = 1;
+    //     expect(a.matchingLocNear(4, 2, 1)).toEqual([4, 1]);
+    //     // expect(a.matchingLocNear(4, 2, 1, true)).toEqual([4, 3]);
 
-        // // This is an error condition...
-        // let normal = true;
-        // const match = jest
-        //     .fn()
-        //     .mockImplementation((v: number, x: number, y: number) => {
-        //         if (!normal) return false;
-        //         if (x == 4 && y == 3) normal = false;
-        //         return v == 1;
-        //     });
+    //     // // This is an error condition...
+    //     // let normal = true;
+    //     // const match = jest
+    //     //     .fn()
+    //     //     .mockImplementation((v: number, x: number, y: number) => {
+    //     //         if (!normal) return false;
+    //     //         if (x == 4 && y == 3) normal = false;
+    //     //         return v == 1;
+    //     //     });
 
-        // expect(a.matchingLocNear(4, 2, match)).toEqual([-1, -1]);
-    });
+    //     // expect(a.matchingLocNear(4, 2, match)).toEqual([-1, -1]);
+    // });
 
     test('arcCount', () => {
         a = GW.grid.alloc(10, 10, 0);
@@ -634,7 +634,7 @@ describe('GW.grid', () => {
         expect(a.leastPositiveValue()).toEqual(2);
     });
 
-    test('randomLeastPositiveLoc', () => {
+    test('randomLeastPositiveXY', () => {
         GW.rng.random.seed(12345);
         a = GW.grid.alloc(10, 10);
         a.fillRect(0, 0, 4, 4, -1);
@@ -643,9 +643,9 @@ describe('GW.grid', () => {
         a.fillRect(6, 2, 4, 4, -4);
         a.fillRect(4, 5, 3, 3, 6);
         // a.dump();
-        expect(a.randomLeastPositiveLoc()).toEqual([7, 7]);
-        expect(a.randomLeastPositiveLoc()).toEqual([9, 8]);
-        expect(a.randomLeastPositiveLoc()).toEqual([8, 9]);
+        expect(GW.grid.randomLeastPositiveXY(a)).toEqual({ x: 8, y: 8 });
+        expect(GW.grid.randomLeastPositiveXY(a)).toEqual({ x: 9, y: 9 });
+        expect(GW.grid.randomLeastPositiveXY(a)).toEqual({ x: 8, y: 9 });
     });
 
     test('valueBounds', () => {

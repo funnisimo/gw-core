@@ -1,6 +1,6 @@
-import * as XY from './xy';
-import * as GRID from './grid';
-import { random, Random } from './rng';
+import * as XY from './xy.js';
+import * as GRID from './grid.js';
+import { random, Random } from './rng.js';
 
 export interface BlobConfig {
     rng: Random;

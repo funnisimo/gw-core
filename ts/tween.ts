@@ -1,7 +1,7 @@
 // Tweeing API based on - http://tweenjs.github.io/tween.js/
 
-import * as EVENTS from './app/events';
-import * as Utils from './utils';
+import * as EVENTS from './app/events.js';
+import * as Utils from './utils.js';
 
 // export type AnyObj = Record<string, any>;
 export type TweenCb<T> = (obj: T, dt: number) => any;

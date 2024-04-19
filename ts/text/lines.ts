@@ -1,7 +1,7 @@
 // import { Color } from '../color';
 // import * as Utils from './utils';
-import { eachWord } from './each';
-import * as UTILS from '../utils';
+import { eachWord } from './each.js';
+import * as UTILS from '../utils.js';
 
 export interface WrapOptions {
     hyphenate?: number | boolean;

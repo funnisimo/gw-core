@@ -1,4 +1,4 @@
-import * as OBJECT from '../object';
+import * as OBJECT from '../object.js';
 
 export var options = {
     colorStart: '#{', // alt-z

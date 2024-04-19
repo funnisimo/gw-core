@@ -1,4 +1,4 @@
-import * as ObjectFn from './object';
+import * as ObjectFn from './object.js';
 
 describe('Object functions', () => {
     test('getPath/setPath', () => {

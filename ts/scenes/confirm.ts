@@ -1,12 +1,12 @@
 // import * as GWU from 'gw-utils/dist';
-import * as COLOR from '../color';
-// import * as EVENTS from '../app/events';
+import * as COLOR from '../color/index.js';
+// import * as EVENTS from '../app/events.js';
 
-import { Scene } from '../app/scene';
-import { installScene } from '../app/scenes';
-import { Dialog, DialogOptions } from '../widgets/dialog';
-import { Text } from '../widgets/text';
-import { Button } from '../widgets/button';
+import { Scene } from '../app/scene.js';
+import { installScene } from '../app/scenes.js';
+import { Dialog, DialogOptions } from '../widgets/dialog.js';
+import { Text } from '../widgets/text.js';
+import { Button } from '../widgets/button.js';
 
 export interface ConfirmOptions extends Partial<DialogOptions> {
     text: string;

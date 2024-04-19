@@ -1,8 +1,8 @@
-import { Color, ColorBase } from './color';
-// import { LightType } from './light/types';
-// import { Chainable } from './utils/chain';
+import type { Color, ColorBase } from './color/index.js';
+// import { LightType } from './light/types.js';
+// import { Chainable } from './utils/chain.js';
 
-// import { CellType, MapType } from './map/types';
+// import { CellType, MapType } from './map/types.js';
 // export { CellType, MapType };
 
 export type Loc = [number, number];

@@ -1,4 +1,4 @@
-import { TRUE } from '../utils';
+import { TRUE } from '../utils.js';
 
 export function length(text: string) {
     if (!text || text.length == 0) return 0;

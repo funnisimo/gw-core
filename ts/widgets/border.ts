@@ -1,8 +1,8 @@
 // import * as GWU from 'gw-utils/dist';
-import * as Buffer from '../buffer';
-import * as XY from '../xy';
-import * as Widget from '../app/widget';
-import { ColorBase } from '../color';
+import * as Buffer from '../buffer.js';
+import * as XY from '../xy.js';
+import * as Widget from '../app/widget.js';
+import { ColorBase } from '../color/index.js';
 
 export interface BorderOptions extends Widget.WidgetOpts {
     width: number;

@@ -1,15 +1,15 @@
 // import * as GWU from 'gw-utils/dist';
-import * as Utils from '../utils';
-import * as TextUtils from '../text';
-import * as Buffer from '../buffer';
-import * as IO from '../app/io';
+import * as Utils from '../utils.js';
+import * as TextUtils from '../text/index.js';
+import * as Buffer from '../buffer.js';
+import * as IO from '../app/io.js';
 
-// import { Body } from './body';
-import * as Text from './text';
-import * as Widget from '../app/widget';
-import { BorderType } from './datatable';
-import { drawBorder } from './border';
-import { DataList } from './datalist';
+// import { Body } from './body.js';
+import * as Text from './text.js';
+import * as Widget from '../app/widget.js';
+import { BorderType } from './datatable.js';
+import { drawBorder } from './border.js';
+import { DataList } from './datalist.js';
 
 ////////////////////////////////////////////////////////////////////////////////
 // PROMPT

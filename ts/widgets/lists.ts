@@ -1,7 +1,6 @@
 // import * as GWU from 'gw-utils/dist';
-import * as Buffer from '../buffer';
-
-import * as Widget from '../app/widget';
+import * as Buffer from '../buffer.js';
+import * as Widget from '../app/widget.js';
 
 export interface OrderedListOptions extends Widget.WidgetOpts {
     pad?: number;

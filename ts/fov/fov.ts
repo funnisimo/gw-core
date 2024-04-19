@@ -1,10 +1,10 @@
 // CREDIT - This is adapted from: http://roguebasin.roguelikedevelopment.org/index.php?title=Improved_Shadowcasting_in_Java
 
-import * as Grid from '../grid';
-import * as Utils from '../utils';
-import * as XY from '../xy';
+import * as Grid from '../grid.js';
+import * as Utils from '../utils.js';
+import * as XY from '../xy.js';
 
-import { FovStrategy, SetVisibleFn } from './types';
+import { FovStrategy, SetVisibleFn } from './types.js';
 
 export class Shadowcast {
     protected _isBlocked: (x: number, y: number) => boolean;

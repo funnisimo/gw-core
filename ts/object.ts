@@ -1,4 +1,4 @@
-import { ERROR } from './utils';
+import { ERROR } from './utils.js';
 
 export type AnyObj = Record<string, any>;
 

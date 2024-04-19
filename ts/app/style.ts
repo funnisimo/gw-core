@@ -1,9 +1,9 @@
-import * as Color from '../color';
-import * as Text from '../text';
-import * as Utils from '../utils';
+import * as Color from '../color/index.js';
+import * as Text from '../text/index.js';
+import * as Utils from '../utils.js';
 
-import { UISelectable } from './selector';
-import { Selector } from './selector';
+import { UISelectable } from './selector.js';
+import { Selector } from './selector.js';
 
 export interface UIStyle {
     readonly selector: Selector;

@@ -1,5 +1,5 @@
-import { Random, random } from './rng';
-import { ONE, ZERO } from './utils';
+import { Random, random } from './rng.js';
+import { ONE, ZERO } from './utils.js';
 
 // const RE = /(?:([+-]?\d*)[Dd](\d*)|([+-]?\d+))([*/]\d+)?/g;
 const RE = /(?:([+-]?\d*)[Dd](\d+)|(\d+):(\d+)|([+-]?\d+))([*/]\d+)?/g;

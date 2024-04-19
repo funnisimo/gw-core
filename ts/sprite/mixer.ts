@@ -1,6 +1,6 @@
-import * as Color from '../color';
-import { SpriteData } from '../types';
-import * as Utils from '../utils';
+import * as Color from '../color/index.js';
+import { SpriteData } from '../types.js';
+import * as Utils from '../utils.js';
 
 export type DrawInfo = Omit<SpriteData, 'opacity'>;
 

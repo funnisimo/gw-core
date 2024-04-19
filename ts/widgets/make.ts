@@ -1,4 +1,4 @@
-import * as WIDGET from '../app/widget';
+import * as WIDGET from '../app/widget.js';
 
 export interface WidgetMake<T> extends WIDGET.WidgetOpts {
     with?: T;

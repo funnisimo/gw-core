@@ -1,6 +1,6 @@
-import { Glyphs, GlyphOptions } from './glyphs';
-import { Canvas } from './canvas';
-// import * as IO from '../io';
+import { Glyphs, GlyphOptions } from './glyphs.js';
+import { Canvas } from './canvas.js';
+// import * as IO from '../io.js';
 
 interface BaseOptions {
     width?: number;

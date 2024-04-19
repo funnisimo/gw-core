@@ -1,4 +1,4 @@
-import { random, Random } from './rng';
+import { random, Random } from './rng.js';
 
 export type RangeBase = Range | string | number[] | number;
 
@@ -75,7 +75,8 @@ export function make(config: RangeBase | null): Range {
     }
     if (config.length == 0) return new Range(0, 0, 0);
 
-    const RE = /^(?:([+-]?\d*)[Dd](\d+)([+-]?\d*)|([+-]?\d+)-(\d+):?(\d+)?|([+-]?\d+)~(\d+)|([+-]?\d+)\+|([+-]?\d+))$/g;
+    const RE =
+        /^(?:([+-]?\d*)[Dd](\d+)([+-]?\d*)|([+-]?\d+)-(\d+):?(\d+)?|([+-]?\d+)~(\d+)|([+-]?\d+)\+|([+-]?\d+))$/g;
     let results;
     while ((results = RE.exec(config)) !== null) {
         if (results[2]) {

@@ -1,5 +1,5 @@
-import * as DataTable from './datatable';
-import * as Widget from '../app/widget';
+import * as DataTable from './datatable.js';
+import * as Widget from '../app/widget.js';
 
 export interface DataListOptions
     extends DataTable.ColumnOptions,

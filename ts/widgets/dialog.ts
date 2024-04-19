@@ -1,12 +1,12 @@
 // import * as GWU from 'gw-utils/dist';
-import * as TextUtils from '../text';
-import * as Buffer from '../buffer';
+import * as TextUtils from '../text/index.js';
+import * as Buffer from '../buffer.js';
 
-import * as Text from './text';
-import * as Widget from '../app/widget';
-import { BorderType } from './datatable';
-import { drawBorder } from './border';
-import * as Style from '../app/style';
+import * as Text from './text.js';
+import * as Widget from '../app/widget.js';
+import { BorderType } from './datatable.js';
+import { drawBorder } from './border.js';
+import * as Style from '../app/style.js';
 
 export type PadInfo =
     | boolean

@@ -1,7 +1,7 @@
-import { Mixer, DrawInfo } from './sprite/mixer';
-import * as Color from './color';
-import * as Text from './text';
-import { Bounds } from './xy';
+import { Mixer, DrawInfo } from './sprite/mixer.js';
+import * as Color from './color/index.js';
+import * as Text from './text/index.js';
+import { Bounds } from './xy.js';
 
 export interface DrawData {
     glyph: number;
@@ -311,7 +311,11 @@ export abstract class BufferBase {
     invert(x: number, y: number): this {
         if (!this.hasXY(x, y)) return this;
         const data = this.get(x, y);
-        this.draw(x, y, data.ch, data.bg, data.fg);
+        if (data.fg == data.bg) {
+            this.draw(x, y, data.ch, data.bg, Color.from(data.fg).inverse());
+        } else {
+            this.draw(x, y, data.ch, data.bg, data.fg);
+        }
 
         return this;
     }

@@ -1,4 +1,4 @@
-import { ColorBase } from '../color';
+import { ColorBase } from '../color/index.js';
 
 export interface SpriteData {
     readonly ch: string | null;

@@ -1,5 +1,5 @@
-import { clamp } from './utils';
-import { Loc, XY, Size, AnyPoint } from './types';
+import { clamp } from './utils.js';
+import { Loc, XY, Size, AnyPoint } from './types.js';
 
 export { Loc, XY, Size, AnyPoint };
 
@@ -116,6 +116,18 @@ export function y(src: Readonly<XY> | Readonly<Loc>): number {
     return src.y || 0;
 }
 
+export function magnitude(xy: Readonly<AnyPoint>): number {
+    return distanceFromTo([0, 0], xy);
+}
+
+// Returns whether or not both x and y are in the set [-1,0,1]
+// [0,0] is a unit dir
+export function isUnitDir(xy: Readonly<AnyPoint>): boolean {
+    const x0 = x(xy);
+    const y0 = y(xy);
+    return [-1, 0, 1].includes(x0) && [-1, 0, 1].includes(y0);
+}
+
 export function contains(size: Readonly<Size>, x: number, y: number): boolean {
     return x >= 0 && y >= 0 && x < size.width && y < size.height;
 }
@@ -225,7 +237,7 @@ export class Bounds {
         );
     }
 
-    include(xy: Readonly<Loc> | Readonly<XY> | Readonly<Bounds>) {
+    expandToInclude(xy: Readonly<Loc> | Readonly<XY> | Readonly<Bounds>) {
         const left = Math.min(x(xy), this.x);
         const top = Math.min(y(xy), this.y);
         const right = Math.max(
@@ -256,6 +268,30 @@ export class Bounds {
 
     toString() {
         return `[${this.x},${this.y} -> ${this.right},${this.bottom}]`;
+    }
+
+    getInternalXY(x: number, y: number): XY;
+    getInternalXY(loc: Readonly<Loc> | Readonly<XY>): XY;
+    getInternalXY(...args: any[]): XY {
+        let i = args[0];
+        let j = args[1];
+        if (typeof i !== 'number') {
+            j = y(i);
+            i = x(i);
+        }
+        return { x: i - this.x, y: j - this.y };
+    }
+
+    getExternalXY(x: number, y: number): XY;
+    getExternalXY(loc: Readonly<Loc> | Readonly<XY>): XY;
+    getExternalXY(...args: any[]): XY {
+        let i = args[0];
+        let j = args[1];
+        if (typeof i !== 'number') {
+            j = y(i);
+            i = x(i);
+        }
+        return { x: i + this.x, y: j + this.y };
     }
 }
 

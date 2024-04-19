@@ -1,5 +1,5 @@
 // import * as IO from './io';
-import * as UTILS from '../utils';
+import * as UTILS from '../utils.js';
 
 // TODO - Support event handler ordering
 //      - Use prefixes for event names for "easy" ordering
@@ -54,9 +54,9 @@ export class Events {
     on(ev: string | string[], fn: CallbackFn): CancelFn;
     on(...args: any[]) {
         if (args.length === 1) {
-            const cancel = Object.entries(
-                args[0] as CallbackObj
-            ).map(([ev, cb]) => this.on(ev, cb));
+            const cancel = Object.entries(args[0] as CallbackObj).map(
+                ([ev, cb]) => this.on(ev, cb)
+            );
             return () => cancel.forEach((c) => c());
         }
 

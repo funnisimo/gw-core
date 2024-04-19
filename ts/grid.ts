@@ -1,5 +1,5 @@
-import { Random, random } from './rng';
-import * as XY from './xy';
+import { Random, RandomXY, random } from './rng.js';
+import * as XY from './xy.js';
 
 type Loc = XY.Loc;
 const DIRS = XY.DIRS;
@@ -494,23 +494,23 @@ export class Grid<T> {
         return [-1, -1];
     }
 
-    randomMatchingLoc(v: T | GridMatch<T>): Loc {
-        const fn: XY.XYMatchFunc =
-            typeof v === 'function'
-                ? (x, y) => (v as GridMatch<T>)(this._data[x][y], x, y, this)
-                : (x, y) => this.get(x, y) === v;
+    // randomMatchingLoc(v: T | GridMatch<T>): Loc {
+    //     const fn: XY.XYMatchFunc =
+    //         typeof v === 'function'
+    //             ? (x, y) => (v as GridMatch<T>)(this._data[x][y], x, y, this)
+    //             : (x, y) => this.get(x, y) === v;
 
-        return random.matchingLoc(this.width, this.height, fn);
-    }
+    //     return random.matchingLoc(this.width, this.height, fn);
+    // }
 
-    matchingLocNear(x: number, y: number, v: T | GridMatch<T>): Loc {
-        const fn: XY.XYMatchFunc =
-            typeof v === 'function'
-                ? (x, y) => (v as GridMatch<T>)(this._data[x][y], x, y, this)
-                : (x, y) => this.get(x, y) === v;
+    // matchingLocNear(x: number, y: number, v: T | GridMatch<T>): Loc {
+    //     const fn: XY.XYMatchFunc =
+    //         typeof v === 'function'
+    //             ? (x, y) => (v as GridMatch<T>)(this._data[x][y], x, y, this)
+    //             : (x, y) => this.get(x, y) === v;
 
-        return random.matchingLocNear(x, y, fn);
-    }
+    //     return random.matchingLocNear(x, y, fn);
+    // }
 
     // Rotates around the cell, counting up the number of distinct strings of neighbors with the same test result in a single revolution.
     //		Zero means there are no impassable tiles adjacent.
@@ -736,10 +736,10 @@ export class NumGrid extends Grid<number> {
         return least;
     }
 
-    randomLeastPositiveLoc(): Loc {
-        const targetValue = this.leastPositiveValue();
-        return this.randomMatchingLoc(targetValue);
-    }
+    // randomLeastPositiveLoc(): Loc {
+    //     const targetValue = this.leastPositiveValue();
+    //     return this.randomMatchingLoc(targetValue);
+    // }
 
     // valueBounds(value: number | ((v: number) => boolean), bounds?: XY.Bounds) {
     //     let fn: (v: number) => boolean;
@@ -959,3 +959,106 @@ export interface ClosestMatchingOpts {
 //         radius += 1;
 //     }
 // }
+
+// matchingLoc(
+//     width: number,
+//     height: number,
+//     matchFn: XY.XYMatchFunc
+// ): XY.Loc {
+//     let locationCount = 0;
+//     let i, j, index;
+//     const grid = GRID.alloc(width, height);
+
+//     locationCount = 0;
+//     grid.update((_v, x, y) => {
+//         if (matchFn(x, y)) {
+//             ++locationCount;
+//             return 1;
+//         }
+//         return 0;
+//     });
+
+//     if (locationCount) {
+//         index = this.range(0, locationCount - 1);
+
+//         for (i = 0; i < width && index >= 0; i++) {
+//             for (j = 0; j < height && index >= 0; j++) {
+//                 if (grid.get(i, j)) {
+//                     if (index == 0) {
+//                         GRID.free(grid);
+//                         return [i, j];
+//                     }
+//                     index--;
+//                 }
+//             }
+//         }
+//     }
+
+//     GRID.free(grid);
+//     return [-1, -1];
+// }
+
+// matchingLocNear(x: number, y: number, matchFn: XY.XYMatchFunc): XY.Loc {
+//     let loc: XY.Loc = [-1, -1];
+//     let i, j, k, candidateLocs, randIndex;
+
+//     candidateLocs = 0;
+
+//     // count up the number of candidate locations
+//     for (k = 0; k < 50 && !candidateLocs; k++) {
+//         for (i = x - k; i <= x + k; i++) {
+//             for (j = y - k; j <= y + k; j++) {
+//                 if (
+//                     Math.ceil(XY.distanceBetween(x, y, i, j)) == k &&
+//                     matchFn(i, j)
+//                 ) {
+//                     candidateLocs++;
+//                 }
+//             }
+//         }
+//     }
+
+//     if (candidateLocs == 0) {
+//         return [-1, -1];
+//     }
+
+//     // and pick one
+//     randIndex = 1 + this.int(candidateLocs);
+
+//     --k;
+//     // for (k = 0; k < 50; k++) {
+//     for (i = x - k; i <= x + k; i++) {
+//         for (j = y - k; j <= y + k; j++) {
+//             if (
+//                 Math.ceil(XY.distanceBetween(x, y, i, j)) == k &&
+//                 matchFn(i, j)
+//             ) {
+//                 if (--randIndex == 0) {
+//                     loc[0] = i;
+//                     loc[1] = j;
+//                     return loc;
+//                 }
+//             }
+//         }
+//     }
+//     // }
+
+//     return [-1, -1]; // should never reach this point
+// }
+
+export function randomMatchingXY<T>(
+    grid: Grid<T>,
+    match: GridMatch<T>
+): XY.XY | undefined {
+    const locs = new RandomXY(grid.width, grid.height);
+    return locs.find((xy) => match(grid.get(xy.x, xy.y)!, xy.x, xy.y, grid));
+}
+
+export function randomLeastPositiveXY(grid: NumGrid): XY.XY | undefined {
+    const locs = new RandomXY(grid.width, grid.height);
+    const lpv = grid.leastPositiveValue();
+    return locs.find((xy) => {
+        const v = grid.get(xy.x, xy.y);
+        return v === lpv;
+    });
+}

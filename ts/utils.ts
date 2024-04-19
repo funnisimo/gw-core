@@ -3,6 +3,10 @@
  * @module utils
  */
 
+export interface ErrorOptions {
+    cause?: unknown;
+}
+
 export function NOOP() {}
 export function TRUE(): boolean {
     return true;

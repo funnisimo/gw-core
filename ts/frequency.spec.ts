@@ -1,4 +1,4 @@
-import * as Frequency from './frequency';
+import * as Frequency from './frequency.js';
 
 describe('frequency', () => {
     test('undefined', () => {

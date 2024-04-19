@@ -1,4 +1,4 @@
-import * as FLAG from '../flag';
+import * as FLAG from '../flag.js';
 
 export const FovFlags = FLAG.make([
     'VISIBLE', // cell has sufficient light and is in field of view, ready to draw.

@@ -1,20 +1,20 @@
-import * as CANVAS from '../canvas';
-import * as EVENTS from './events';
-import * as IO from './io';
+import * as CANVAS from '../canvas/index.js';
+import * as EVENTS from './events.js';
+import * as IO from './io.js';
 
-import { Loop } from './loop';
-import * as TIMERS from './timers';
-import { Scenes } from './scenes';
-import * as SCENE from './scene';
-import { AlertOptions } from '../scenes/alert';
-import { ConfirmOptions } from '../scenes/confirm';
-import { PromptOptions, PromptScene } from '../scenes/prompt';
-import * as STYLE from './style';
-import { Buffer } from '../buffer';
-import * as rng from '../rng';
-import { SceneStartOpts } from './scene';
-import { mergeDeep } from '../object';
-// import * as COLOR from '../color';
+import { Loop } from './loop.js';
+import * as TIMERS from './timers.js';
+import { Scenes } from './scenes.js';
+import * as SCENE from './scene.js';
+import { AlertOptions } from '../scenes/alert.js';
+import { ConfirmOptions } from '../scenes/confirm.js';
+import { PromptOptions, PromptScene } from '../scenes/prompt.js';
+import * as STYLE from './style.js';
+import { Buffer } from '../buffer.js';
+import * as rng from '../rng.js';
+import { SceneStartOpts } from './scene.js';
+import { mergeDeep } from '../object.js';
+// import * as COLOR from '../color/index.js';
 
 declare global {
     var APP: App;
