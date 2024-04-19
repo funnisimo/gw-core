@@ -363,7 +363,7 @@ export function makeMouseEvent(e: MouseEvent, x: number, y: number) {
     return ev;
 }
 
-export class Queue {
+export class EventQueue {
     _events: Event[];
     lastClick: XY.XY = { x: -1, y: -1 };
 

@@ -70,7 +70,7 @@ export class App {
     events: EVENTS.Events;
     timers: TIMERS.Timers;
     scenes: Scenes;
-    io: IO.Queue;
+    io: IO.EventQueue;
     loop: Loop;
     styles: STYLE.Sheet;
 
@@ -107,7 +107,7 @@ export class App {
         this.name = opts.name || 'Goblinwerks';
         this.styles = STYLE.defaultStyle;
         this.canvas = opts.canvas || CANVAS.make(opts);
-        this.io = new IO.Queue();
+        this.io = new IO.EventQueue();
         this.events = new EVENTS.Events(this);
         this.timers = new TIMERS.Timers(this);
         this.scenes = new Scenes(this);
